@@ -44,15 +44,30 @@ Opticon is a financial terminal app with:
 
 ## Situation Monitor Data Sources
 
-- Flights: `/api/flights`
-- Traffic flow + nearby incidents: `/api/traffic`
-- Construction/barrier incidents: `/api/incidents`
-- Earthquakes: `/api/earthquakes`
-- Global geopolitical events feed: `/api/events`
-- Weather alerts: `/api/weather-alerts`
-- Crime data: `/api/crime`
-- Local events: `/api/local-events`
-- News feed: `/api/news` (GDELT GDoc API, free, no auth, 15-min update cycle, server-side deduplication via Jaccard similarity on titles + URL normalization, 30+ city geo-keyword matching)
+All endpoints are routed through `api/gateway.js` to handlers in `server/api/`.
+
+| Endpoint | Provider | Auth | Status |
+|---|---|---|---|
+| `/api/flights` | OpenSky Network | Free, no key | Working |
+| `/api/traffic` | TomTom Flow + HERE Incidents | `TOMTOM_API_KEY` + `HERE_API_KEY` | **Needs keys** -- falls back to time-based congestion estimates without them |
+| `/api/incidents` | OpenStreetMap Overpass | Free, no key | Working |
+| `/api/earthquakes` | USGS GeoJSON Feed | Free, no key | Working |
+| `/api/events` | GDELT Project | Free, no key | Working |
+| `/api/weather-alerts` | -- | -- | Implemented |
+| `/api/crime` | -- | -- | Implemented |
+| `/api/local-events` | -- | -- | Implemented |
+| `/api/news` | GDELT GDoc API | Free, no key | Working (15-min cycle, Jaccard dedup, 30+ city geo-matching) |
+
+### Traffic API Setup (not yet configured)
+
+To enable live traffic data instead of time-based estimates:
+
+1. **TomTom** (traffic flow): Register at https://developer.tomtom.com, get a free-tier API key (2500 req/day)
+   - Set Vercel env var: `TOMTOM_API_KEY`
+2. **HERE** (traffic incidents): Register at https://platform.here.com, get a freemium API key (250k req/month)
+   - Set Vercel env var: `HERE_API_KEY`
+
+Without these keys, `/api/traffic` returns estimated congestion based on time-of-day and day-of-week heuristics. Incident data is omitted entirely.
 
 Notes:
 - Map overlays include traffic/construction/seismic/global-event/crime/local-event/news markers.
