@@ -2,12 +2,11 @@ import { kv } from '@vercel/kv';
 
 export function parseCookies(req) {
   const header = req.headers.cookie || '';
-  const cookies = {};
-  header.split(';').forEach(pair => {
+  return header.split(';').reduce((cookies, pair) => {
     const [key, ...rest] = pair.trim().split('=');
     if (key) cookies[key] = rest.join('=');
-  });
-  return cookies;
+    return cookies;
+  }, {});
 }
 
 export async function getSessionUser(req) {

@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useSituation } from '../hooks/useSituation';
 import { Card, BlinkingDot } from './ui';
 
+const CONGESTION_LEVELS = { heavy: 85, moderate: 55, clear: 15 };
+
 function CongestionBar({ value, t, font }) {
-  const pct = value === 'heavy' ? 85 : value === 'moderate' ? 55 : value === 'clear' ? 15 : 0;
+  const pct = CONGESTION_LEVELS[value] ?? 0;
   const color = pct > 70 ? t.red : pct > 40 ? t.yellow : t.green;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -94,6 +96,12 @@ export default function SituationMonitor({
 
         // User pin (drop pin)
         if (userLocation?.lat != null && userLocation?.lon != null) {
+          const locationData = {
+            type: 'location',
+            title: userLocation.city || 'Current location',
+            subtitle: `${userLocation.lat.toFixed(4)}, ${userLocation.lon.toFixed(4)}`,
+            level: 'local',
+          };
           const pin = document.createElement('div');
           pin.style.cssText = `
             width:14px;height:14px;border-radius:50% 50% 50% 0;
@@ -104,21 +112,11 @@ export default function SituationMonitor({
             animation:pulse-blue 2.2s infinite;
             cursor:pointer;
           `;
-          pin.title = `You: ${userLocation.city || 'Current location'}`;
-          pin.addEventListener('mouseenter', () => setMapSelection({
-            type: 'location',
-            title: userLocation.city || 'Current location',
-            subtitle: `${userLocation.lat.toFixed(4)}, ${userLocation.lon.toFixed(4)}`,
-            level: 'local',
-          }));
+          pin.title = `You: ${locationData.title}`;
+          pin.addEventListener('mouseenter', () => setMapSelection(locationData));
           pin.addEventListener('click', (e) => {
             e.stopPropagation();
-            setMapSelection({
-              type: 'location',
-              title: userLocation.city || 'Current location',
-              subtitle: `${userLocation.lat.toFixed(4)}, ${userLocation.lon.toFixed(4)}`,
-              level: 'local',
-            });
+            setMapSelection(locationData);
           });
           markersRef.current.push(
             new maplibregl.Marker({ element: pin }).setLngLat([userLocation.lon, userLocation.lat]).addTo(mapInstanceRef.current)
@@ -183,7 +181,8 @@ export default function SituationMonitor({
 
   const nearbyFlights = flights.slice(0, 6);
   const congestion = traffic?.flow?.congestion ?? null;
-  const tradeExits = trades.filter(t => t?.pnl).length;
+  const tradeExits = trades.filter(tr => tr?.pnl).length;
+  const significantQuakes = earthquakes.filter(e => e.mag >= 4);
   const cityList = userLocation
     ? [{ id: 'me', label: userLocation.city, lat: userLocation.lat, lon: userLocation.lon }, ...worldCities]
     : worldCities;
@@ -451,12 +450,12 @@ export default function SituationMonitor({
       </div>
 
       {/* Earthquakes (significant only, M4+) */}
-      {earthquakes.filter(e => e.mag >= 4).length > 0 && (
+      {significantQuakes.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: t.red, fontFamily: font, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Seismic ({earthquakes.filter(e => e.mag >= 4).length} M4+)
+            Seismic ({significantQuakes.length} M4+)
           </div>
-          {earthquakes.filter(e => e.mag >= 4).slice(0, 4).map((eq, i) => (
+          {significantQuakes.slice(0, 4).map((eq, i) => (
             <div key={i} style={{ display: 'flex', gap: 8, fontSize: 10, padding: '2px 0', fontFamily: font }}>
               <span style={{ color: eq.mag >= 6 ? t.red : t.yellow, fontWeight: 700, minWidth: 28 }}>M{eq.mag.toFixed(1)}</span>
               <span style={{ color: t.textSecondary }}>{eq.place}</span>

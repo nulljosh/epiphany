@@ -1,24 +1,23 @@
 import { kv } from '@vercel/kv';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 
+const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving'];
+
 function validatePortfolioPayload(data) {
   if (!data || typeof data !== 'object') return { valid: false, error: 'Invalid data format' };
 
   const errors = [];
 
-  if (data.holdings) {
-    if (!Array.isArray(data.holdings)) errors.push('holdings must be an array');
-    else data.holdings.forEach((h, i) => {
+  for (const field of ARRAY_FIELDS) {
+    if (data[field] && !Array.isArray(data[field])) errors.push(`${field} must be an array`);
+  }
+
+  if (Array.isArray(data.holdings)) {
+    data.holdings.forEach((h, i) => {
       if (!h.symbol || typeof h.symbol !== 'string') errors.push(`holdings[${i}]: missing symbol`);
       if (typeof h.shares !== 'number' || h.shares < 0) errors.push(`holdings[${i}]: invalid shares`);
     });
   }
-
-  if (data.accounts && !Array.isArray(data.accounts)) errors.push('accounts must be an array');
-  if (data.debt && !Array.isArray(data.debt)) errors.push('debt must be an array');
-  if (data.goals && !Array.isArray(data.goals)) errors.push('goals must be an array');
-  if (data.spending && !Array.isArray(data.spending)) errors.push('spending must be an array');
-  if (data.giving && !Array.isArray(data.giving)) errors.push('giving must be an array');
 
   if (data.budget && typeof data.budget === 'object') {
     if (data.budget.income && !Array.isArray(data.budget.income)) errors.push('budget.income must be an array');

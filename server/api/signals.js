@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
     try {
       const signals = await kv.get(`signals:${userId}`) || [];
-      let filtered = asset
+      const filtered = asset
         ? signals.filter(s => s.ticker === asset.toUpperCase())
         : signals;
       const sliced = filtered.slice(0, Math.min(parseInt(limit, 10), 100));

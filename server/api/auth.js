@@ -22,6 +22,7 @@ function checkRateLimit(ip) {
 
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 const VERIFY_TTL = 24 * 60 * 60; // 24 hours
+const DEFAULT_BASE_URL = 'https://opticon-production.vercel.app';
 
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -38,6 +39,12 @@ function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', [
     'opticon_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax',
   ]);
+}
+
+function getBaseUrl() {
+  return process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : DEFAULT_BASE_URL;
 }
 
 export default async function handler(req, res) {
@@ -71,15 +78,15 @@ export default async function handler(req, res) {
   if (action === 'register') {
     const { email, password } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+      return errorResponse(res, 400, 'Email and password required');
     }
     if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+      return errorResponse(res, 400, 'Password must be at least 8 characters');
     }
 
     const existing = await kv.get(`user:${email.toLowerCase()}`);
     if (existing) {
-      return res.status(409).json({ error: 'Account already exists' });
+      return errorResponse(res, 409, 'Account already exists');
     }
 
     const id = crypto.randomUUID();
@@ -111,11 +118,7 @@ export default async function handler(req, res) {
     await kv.set(`session:${sessionToken}`, session, { ex: SESSION_TTL });
     setSessionCookie(res, sessionToken);
 
-    // Log verification link (email sending requires SMTP config)
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'https://opticon-production.vercel.app';
-    const verifyUrl = `${baseUrl}/api/auth?action=verify-email&token=${verifyToken}`;
+    const verifyUrl = `${getBaseUrl()}/api/auth?action=verify-email&token=${verifyToken}`;
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[AUTH] Verify email for ${email}: ${verifyUrl}`);
     }
@@ -131,22 +134,22 @@ export default async function handler(req, res) {
   if (action === 'login') {
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
     if (!checkRateLimit(clientIp)) {
-      return res.status(429).json({ error: 'Too many login attempts. Try again in 15 minutes.' });
+      return errorResponse(res, 429, 'Too many login attempts. Try again in 15 minutes.');
     }
 
     const { email, password } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+      return errorResponse(res, 400, 'Email and password required');
     }
 
     const user = await kv.get(`user:${email.toLowerCase()}`);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return errorResponse(res, 401, 'Invalid credentials');
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return errorResponse(res, 401, 'Invalid credentials');
     }
 
     const sessionToken = generateToken();
@@ -175,12 +178,12 @@ export default async function handler(req, res) {
   if (action === 'verify-email') {
     const { token } = req.method === 'GET' ? req.query : (req.body || {});
     if (!token) {
-      return res.status(400).json({ error: 'Verification token required' });
+      return errorResponse(res, 400, 'Verification token required');
     }
 
     const verification = await kv.get(`verify:${token}`);
     if (!verification) {
-      return res.status(400).json({ error: 'Invalid or expired verification token' });
+      return errorResponse(res, 400, 'Invalid or expired verification token');
     }
 
     const user = await kv.get(`user:${verification.email}`);
@@ -190,11 +193,7 @@ export default async function handler(req, res) {
     }
     await kv.del(`verify:${token}`);
 
-    // Redirect to app with success
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'https://opticon-production.vercel.app';
-    res.writeHead(302, { Location: `${baseUrl}?verified=1` });
+    res.writeHead(302, { Location: `${getBaseUrl()}?verified=1` });
     return res.end();
   }
 
