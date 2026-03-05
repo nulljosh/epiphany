@@ -24,20 +24,19 @@ export const DEMO_BUDGET = {
     { name: 'Food', amount: 374, frequency: 'monthly', note: '4-month avg' },
     { name: 'Phone + Watch', amount: 165, frequency: 'monthly', note: 'Telus 5G+ $115 + device $50.38' },
     { name: 'Gym', amount: 30, frequency: 'monthly' },
-    { name: 'Claude Pro', amount: 35, frequency: 'monthly', note: '$288 USD/year billed annually' },
+    { name: 'Claude Max 5x', amount: 137, frequency: 'monthly', note: 'CA$136.60/mo (upgraded from Pro)' },
     { name: 'ChatGPT Plus', amount: 20, frequency: 'monthly', note: '$20 USD (considering $100/mo AI tools budget)' },
   ],
 };
 
 export const DEMO_DEBT = [
-  { name: 'Mom', balance: 140, rate: 0, minPayment: 0, note: 'Movies + YouTube Premium + misc' },
   { name: 'RBC VISA', balance: 5500, rate: 0, minPayment: 0, note: 'Collections' },
   { name: 'Bell', balance: 906.22, rate: 0, minPayment: 0, note: 'Suspended if unpaid' },
   { name: 'Telus', balance: 525.39, rate: 0, minPayment: 50.38, note: 'Easy Payment: $50.38/mo x 20mo' },
 ];
 
 export const DEMO_GOALS = [
-  { name: 'Pay off debt', target: 7071.61, saved: 0, priority: 'high', deadline: '2027-07' },
+  { name: 'Pay off debt', target: 6931.61, saved: 0, priority: 'high', deadline: '2027-07' },
   { name: 'MacBook Pro', target: 3500, saved: 0, priority: 'medium', note: 'After debt' },
   { name: 'Apple Watch Ultra', target: 1200, saved: 0, priority: 'medium', note: '$50/mo financing' },
   { name: 'GBA SP + Pokemon Sapphire', target: 320, saved: 0, priority: 'low' },
