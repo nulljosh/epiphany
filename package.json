@@ -24,6 +24,9 @@
     "recharts": "^3.6.0",
     "stripe": "^20.3.1"
   },
+  "overrides": {
+    "serialize-javascript": ">=7.0.4"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.58.0",
