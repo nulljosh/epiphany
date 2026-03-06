@@ -33,6 +33,14 @@ npm test -- --run
 npm run build
 ```
 
+## Recent
+
+- Fixed pricing modal viewport overflow (vertical scroll)
+- Fixed Pro button invisible (missing theme `blue` property)
+- Map zoom controls relocated to bottom-left
+- Faster marker rendering (user pin + local pulse no longer blocked by API)
+- Eliminated false FALLBACK status on cold start
+
 ## Roadmap
 
 - [x] iOS companion app

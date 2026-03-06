@@ -144,6 +144,14 @@ To activate paid tiers:
 5. For Apple Pay: Stripe Dashboard > Settings > Payment methods > Apple Pay > add + verify domain
 6. Webhook (optional): create endpoint at `https://opticon.heyitsmejosh.com/api/stripe?action=webhook` for `checkout.session.completed` events
 
+## Recent Fixes (2026-03-06)
+
+- Theme: added `blue` and `backgroundSecondary` to both themes (fixes invisible Pro button, Current Plan pill, footer)
+- PricingPage: vertical scroll + `maxHeight: calc(100dvh - 40px)` on inner container
+- Map NavigationControl moved to `bottom-left`
+- User pin + local pulse markers split into separate useEffect (renders immediately, not blocked by API)
+- useStocks: `cacheAttempted` ref prevents FALLBACK status until cache seed attempt completes
+
 ## Current Priorities
 
 - Keep simulator and monitor responsive
