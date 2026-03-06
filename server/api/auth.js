@@ -22,6 +22,7 @@ function checkRateLimit(ip) {
 
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 const VERIFY_TTL = 24 * 60 * 60; // 24 hours
+const RESET_TTL = 60 * 60; // 1 hour
 const DEFAULT_BASE_URL = 'https://opticon-production.vercel.app';
 
 function generateToken() {
@@ -195,6 +196,52 @@ export default async function handler(req, res) {
 
     res.writeHead(302, { Location: `${getBaseUrl()}?verified=1` });
     return res.end();
+  }
+
+  // POST: forgot-password
+  if (action === 'forgot-password') {
+    const { email } = req.body || {};
+    // Always return generic message to prevent email enumeration
+    const genericMsg = 'If an account exists with that email, a reset link has been generated.';
+    if (!email) {
+      return errorResponse(res, 400, 'Email is required');
+    }
+    try {
+      const user = await kv.get(`user:${email.toLowerCase()}`);
+      if (user) {
+        const resetToken = generateToken();
+        await kv.set(`reset:${resetToken}`, { email: email.toLowerCase() }, { ex: RESET_TTL });
+        const resetUrl = `${getBaseUrl()}/reset?token=${resetToken}`;
+        // TODO: Send email with resetUrl (Resend or nodemailer)
+        console.log(`[AUTH] Password reset for ${email}: ${resetUrl}`);
+      }
+    } catch {
+      // Swallow errors -- always return generic message
+    }
+    return res.status(200).json({ ok: true, message: genericMsg });
+  }
+
+  // POST: reset-password
+  if (action === 'reset-password') {
+    const { token, password } = req.body || {};
+    if (!token || !password) {
+      return errorResponse(res, 400, 'Token and new password are required');
+    }
+    if (password.length < 8) {
+      return errorResponse(res, 400, 'Password must be at least 8 characters');
+    }
+    const resetData = await kv.get(`reset:${token}`);
+    if (!resetData) {
+      return errorResponse(res, 400, 'Invalid or expired reset token');
+    }
+    const user = await kv.get(`user:${resetData.email}`);
+    if (!user) {
+      return errorResponse(res, 400, 'Invalid or expired reset token');
+    }
+    user.passwordHash = await bcrypt.hash(password, 10);
+    await kv.set(`user:${resetData.email}`, user);
+    await kv.del(`reset:${token}`);
+    return res.status(200).json({ ok: true, message: 'Password has been reset successfully' });
   }
 
   // POST: logout
