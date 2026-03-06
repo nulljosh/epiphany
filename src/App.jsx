@@ -18,6 +18,7 @@ import { useWatchlist } from './hooks/useWatchlist';
 import { useWeather } from './hooks/useWeather';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -150,7 +151,8 @@ const categoryKeywords = {
 
 export default function App() {
   const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout } = useAuth();
-  const [authView, setAuthView] = useState('login'); // 'login' | 'register'
+  const resetToken = useMemo(() => new URLSearchParams(window.location.search).get('token'), []);
+  const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
 
   const [dark, setDark] = useState(true);
   const [hideSimulator, setHideSimulator] = useState(true);
@@ -873,6 +875,14 @@ const reset = useCallback(() => {
   }
 
   if (!isAuthenticated) {
+    if (authView === 'reset' && resetToken) {
+      return (
+        <ResetPasswordPage
+          token={resetToken}
+          onBack={() => { window.history.replaceState({}, '', '/'); setAuthView('login'); }}
+        />
+      );
+    }
     if (authView === 'register') {
       return (
         <RegisterPage

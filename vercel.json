@@ -9,6 +9,10 @@
     {
       "source": "/api/:path*",
       "destination": "/api/gateway?path=:path*"
+    },
+    {
+      "source": "/reset",
+      "destination": "/index.html"
     }
   ],
   "crons": [
