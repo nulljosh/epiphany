@@ -218,7 +218,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       }}
     >
       {/* Header */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 2, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)' }}>
+      <div style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: t.text, letterSpacing: '-0.3px' }}>Portfolio</span>
           {isDemo && <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: t.glass, color: t.textTertiary, fontWeight: 600 }}>DEMO</span>}
@@ -235,9 +235,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               Reset
             </button>
           )}
-          <button onClick={onClose} style={{ background: t.glass, border: `1px solid ${t.border}`, borderRadius: 6, width: 28, height: 28, fontSize: 14, color: t.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: font }}>
-            x
-          </button>
         </div>
         <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
       </div>
@@ -249,12 +246,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       )}
 
       {/* Net Worth Hero */}
-      <div style={{ textAlign: 'center', padding: '32px 16px 24px' }}>
-        <div style={{ fontSize: 11, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Net Worth</div>
-        <div style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 700, color: netWorth >= 0 ? t.text : t.red, fontVariantNumeric: 'tabular-nums', letterSpacing: '-2px', lineHeight: 1 }}>
+      <div style={{ padding: '16px 16px 12px' }}>
+        <div style={{ fontSize: 11, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Net Worth</div>
+        <div style={{ fontSize: 'clamp(28px, 6vw, 40px)', fontWeight: 700, color: netWorth >= 0 ? t.text : t.red, fontVariantNumeric: 'tabular-nums', letterSpacing: '-1.5px', lineHeight: 1 }}>
           {formatCurrency(netWorth)}
         </div>
-        <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 8, display: 'flex', justifyContent: 'center', gap: 16 }}>
+        <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 6, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <span>Stocks: {formatCurrency(stocksValue)}</span>
           <span>Cash: {formatCurrency(cashValue, 'CAD')}</span>
           <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>

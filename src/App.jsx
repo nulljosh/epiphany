@@ -12,6 +12,7 @@ import Ticker from './components/Ticker';
 import PricingPage from './components/PricingPage';
 import FinancePanel from './components/FinancePanel';
 import LiveMapBackdrop from './components/LiveMapBackdrop';
+import SituationMonitor from './components/SituationMonitor';
 import { useSubscription } from './hooks/useSubscription';
 import { useAuth } from './hooks/useAuth';
 import { useWatchlist } from './hooks/useWatchlist';
@@ -155,12 +156,12 @@ export default function App() {
   const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
 
   const [dark, setDark] = useState(true);
-  const [hideSimulator, setHideSimulator] = useState(true);
-  const mapFocus = hideSimulator;
+  const [activeTab, setActiveTab] = useState('simulator');
+  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: false });
+  const mapInstanceRef = useRef(null);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const [showPricing, setShowPricing] = useState(false);
-  const [showFinance, setShowFinance] = useState(false);
   const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -902,24 +903,64 @@ const reset = useCallback(() => {
     );
   }
 
+  const handleMapReady = useCallback((map) => {
+    mapInstanceRef.current = map;
+  }, []);
+
+  const pmEdges = markets.filter(m => m.probability >= 0.85 || m.probability <= 0.15);
+
+  const simData = running || tick > 0 ? {
+    equity: formatNumber(equity),
+    pnl: `${pnl >= 0 ? '+' : ''}${formatNumber(Math.abs(pnl))}`,
+    pnlPositive: pnl >= 0,
+    winRate: `${winRate.toFixed(0)}%`,
+    trades: `${exits.length}`,
+    runtime: formatTime(elapsedTime),
+    allTime: runStats?.bestTime ? formatTime(runStats.bestTime) : null,
+    position: position ? {
+      sym: position.sym,
+      color: ASSETS[position.sym]?.color || t.text,
+      entry: position.entry.toFixed(2),
+      unrealized: `${unrealized >= 0 ? '+' : ''}${formatNumber(Math.abs(unrealized))}`,
+    } : null,
+  } : null;
+
+  const TAB_PILLS = [
+    { key: 'simulator', label: 'SIM' },
+    { key: 'portfolio', label: 'PORT' },
+    { key: 'situation', label: 'SIT' },
+  ];
+
   return (
     <div style={{
-      minHeight: '100dvh',
-      display: 'flex',
-      flexDirection: 'column',
+      height: '100dvh',
+      display: 'grid',
+      gridTemplateRows: 'auto auto 40vh 1fr auto',
+      gridTemplateColumns: '1fr',
+      overflow: 'hidden',
       background: pnlBg,
       color: t.text,
       fontFamily: font,
       transition: running ? 'none' : 'background 220ms ease',
     }}>
-      <LiveMapBackdrop dark={dark} />
-      {/* Scrolling Ticker Tape (top-most UI row) */}
-      <div style={{ position: 'relative', zIndex: 5, pointerEvents: mapFocus ? 'none' : 'auto' }}>
+      <style>{`
+        @media (min-width: 768px) {
+          .opticon-root {
+            grid-template-rows: auto auto 1fr auto !important;
+            grid-template-columns: 1fr 420px !important;
+          }
+          .opticon-map { grid-row: 3; grid-column: 1; height: auto !important; }
+          .opticon-panel { grid-row: 3; grid-column: 2; }
+        }
+      `}</style>
+
+      {/* Ticker */}
+      <div style={{ gridColumn: '1 / -1' }}>
         <Ticker items={tickerItems} theme={t} />
       </div>
 
       {/* Header */}
-      <header style={{ position: 'relative', zIndex: 5, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, pointerEvents: 'auto' }}>
+      <header style={{ gridColumn: '1 / -1', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <a href="https://heyitsmejosh.com" style={{ color: t.textSecondary, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>~</a>
           <span style={{ color: t.textTertiary, fontSize: 13 }}>/</span>
@@ -935,8 +976,61 @@ const reset = useCallback(() => {
             </>
           )}
         </div>
-        {isMobileNav ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Tab pills */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TAB_PILLS.map(pill => (
+              <button
+                key={pill.key}
+                onClick={() => setActiveTab(pill.key)}
+                style={{
+                  padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
+                  fontFamily: font, cursor: 'pointer', border: 'none',
+                  background: activeTab === pill.key ? t.text : t.glass,
+                  color: activeTab === pill.key ? t.bg : t.textSecondary,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {pill.label}
+              </button>
+            ))}
+          </div>
+          {!isMobileNav && (
+            <>
+              <span style={{ width: 1, height: 14, background: t.border }} />
+              <span style={{ fontSize: 10, color: t.textTertiary, fontVariantNumeric: 'tabular-nums' }}>{formatLastUpdated(lastUpdated)}</span>
+              {isFree && (
+                <button
+                  onClick={() => setShowPricing(true)}
+                  style={{ background: '#0071e3', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  UPGRADE
+                </button>
+              )}
+              <button
+                onClick={() => setDark(!dark)}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                style={{ background: t.surface, border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {dark ? (
+                    <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>
+                  ) : (
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  )}
+                </svg>
+              </button>
+              <button
+                onClick={logout}
+                style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6, padding: '5px 10px', color: '#ef4444', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font }}
+              >
+                LOGOUT
+              </button>
+            </>
+          )}
+          {isMobileNav && (
             <MobileMenu t={t} font={font}>
               {weather && (
                 <>
@@ -946,18 +1040,6 @@ const reset = useCallback(() => {
                   <MobileMenuDivider t={t} />
                 </>
               )}
-              <MobileMenuItem t={t} font={font} style={{ color: t.textTertiary, fontSize: 10 }}>
-                {formatLastUpdated(lastUpdated)}
-              </MobileMenuItem>
-              {pmError && (
-                <MobileMenuItem t={t} font={font} style={{ color: t.red, fontSize: 10 }}>
-                  API error
-                </MobileMenuItem>
-              )}
-              <MobileMenuDivider t={t} />
-              <MobileMenuItem t={t} font={font} onClick={() => setShowFinance(true)}>
-                PORTFOLIO
-              </MobileMenuItem>
               {isFree && (
                 <MobileMenuItem t={t} font={font} onClick={() => setShowPricing(true)} style={{ color: '#0071e3' }}>
                   UPGRADE
@@ -971,229 +1053,131 @@ const reset = useCallback(() => {
                 LOGOUT
               </MobileMenuItem>
             </MobileMenu>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 10, color: t.textTertiary, fontVariantNumeric: 'tabular-nums' }}>{formatLastUpdated(lastUpdated)}</span>
-            {pmError && <span style={{ fontSize: 9, color: t.red }}>API error</span>}
-            <span style={{ width: 1, height: 14, background: t.border }} />
-            <button
-              onClick={() => setShowFinance(true)}
-              style={{ background: t.glass, border: `1px solid ${t.border}`, borderRadius: 6, padding: '5px 10px', color: t.textSecondary, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font, transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              PORTFOLIO
-            </button>
-            {isFree && (
-              <button
-                onClick={() => setShowPricing(true)}
-                style={{ background: '#0071e3', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                UPGRADE
-              </button>
-            )}
-            <button
-              onClick={() => setDark(!dark)}
-              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              style={{ background: t.surface, border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {dark ? (
-                  <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>
-                ) : (
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                )}
-              </svg>
-            </button>
-            <button
-              onClick={logout}
-              style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6, padding: '5px 10px', color: '#ef4444', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font }}
-            >
-              LOGOUT
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
-      <div style={{ position: 'relative', zIndex: 4, padding: 16, maxWidth: 1400, margin: '0 auto', flex: 1, pointerEvents: mapFocus ? 'none' : 'auto', opacity: mapFocus ? 0.58 : 1, transition: 'opacity 180ms ease' }}>
+      {/* Map cell */}
+      <div className="opticon-map" style={{ gridColumn: '1 / -1', height: '40vh', position: 'relative', overflow: 'hidden' }}>
+        <LiveMapBackdrop
+          dark={dark}
+          mapLayers={mapLayers}
+          onMapReady={handleMapReady}
+          livePrices={liveAssets}
+        />
+      </div>
 
-        {/* HERO */}
-        {!hideSimulator && (
-        <div style={{ textAlign: 'center', padding: '40px 16px 32px', marginBottom: 24 }}>
-          {busted ? (
-            <>
-              <div style={{ fontSize: 'clamp(56px, 10vw, 112px)', fontWeight: 700, color: t.red, fontVariantNumeric: 'tabular-nums', letterSpacing: '-3px', lineHeight: 1 }}>BUSTED</div>
-              <div style={{ fontSize: 15, color: t.textSecondary, marginTop: 12 }}>
-                {formatNumber(balance)} &middot; {realWorldTime(tick)} of trading &middot; {exits.length} trades
-              </div>
-            </>
-          ) : won ? (
-            <>
-              <div style={{ fontSize: 'clamp(56px, 10vw, 112px)', fontWeight: 700, color: t.green, fontVariantNumeric: 'tabular-nums', letterSpacing: '-3px', lineHeight: 1 }}>
-                {targetTrillion ? '$1T' : '$1B'}
-              </div>
-              <div style={{ fontSize: 15, color: t.textSecondary, marginTop: 12 }}>
-                {exits.length} trades &middot; {winRate.toFixed(0)}% wins &middot; {formatTime(elapsedTime)}
-              </div>
-              {biggestWinner && (
-                <div style={{ fontSize: 12, marginTop: 6 }}>
-                  <span style={{ color: t.green }}>MVP: {biggestWinner[0]} (+{formatNumber(biggestWinner[1]).replace('$', '')})</span>
-                  {biggestLoser && <span style={{ color: t.red }}> &middot; Worst: {biggestLoser[0]} ({formatNumber(biggestLoser[1]).replace('$', '')})</span>}
+      {/* Panel cell */}
+      <div className="opticon-panel" style={{ gridColumn: '1 / -1', overflow: 'auto', minHeight: 0 }}>
+        {activeTab === 'simulator' && (
+          <div style={{ padding: 16 }}>
+            {busted ? (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 700, color: t.red, fontVariantNumeric: 'tabular-nums', letterSpacing: '-2px', lineHeight: 1 }}>BUSTED</div>
+                <div style={{ fontSize: 13, color: t.textSecondary, marginTop: 8 }}>
+                  {formatNumber(balance)} -- {realWorldTime(tick)} of trading -- {exits.length} trades
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div style={{
-                fontSize: 'clamp(56px, 10vw, 112px)',
-                fontWeight: 700,
-                color: t.text,
-                fontVariantNumeric: 'tabular-nums',
-                letterSpacing: '-3px',
-                lineHeight: 1,
-                textShadow: heroTextShadow,
-                minHeight: '1.1em',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                {formatNumber(equity)}
               </div>
-              <div style={{ fontSize: 15, marginTop: 12 }}>
-                <span style={{ color: pnl >= 0 ? pnlGreen : t.red }}>
-                  {pnl >= 0 ? '+' : ''}{formatNumber(Math.abs(pnl)).replace('$', '')}
-                </span>
-                {position
-                  ? <span style={{ color: t.textSecondary, fontSize: 13 }}> &middot; in {position.sym}</span>
-                  : <span style={{ color: t.textTertiary, fontSize: 13 }}> &middot; {winRate.toFixed(0)}% WR &middot; {exits.length} trades</span>
-                }
+            ) : won ? (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 700, color: t.green, fontVariantNumeric: 'tabular-nums', letterSpacing: '-2px', lineHeight: 1 }}>
+                  {targetTrillion ? '$1T' : '$1B'}
+                </div>
+                <div style={{ fontSize: 13, color: t.textSecondary, marginTop: 8 }}>
+                  {exits.length} trades -- {winRate.toFixed(0)}% wins -- {formatTime(elapsedTime)}
+                </div>
               </div>
-            </>
-          )}
+            ) : (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 700, color: t.text, fontVariantNumeric: 'tabular-nums', letterSpacing: '-2px', lineHeight: 1, textShadow: heroTextShadow }}>
+                  {formatNumber(equity)}
+                </div>
+                <div style={{ fontSize: 13, marginTop: 8 }}>
+                  <span style={{ color: pnl >= 0 ? pnlGreen : t.red }}>
+                    {pnl >= 0 ? '+' : ''}{formatNumber(Math.abs(pnl)).replace('$', '')}
+                  </span>
+                  {position
+                    ? <span style={{ color: t.textSecondary, fontSize: 12 }}> -- in {position.sym}</span>
+                    : <span style={{ color: t.textTertiary, fontSize: 12 }}> -- {winRate.toFixed(0)}% WR -- {exits.length} trades</span>
+                  }
+                </div>
+              </div>
+            )}
 
-          {/* Chart toggle */}
-          <div style={{ marginTop: 20, marginBottom: showChart ? 12 : 0 }}>
-            <button
-              onClick={() => setShowChart(!showChart)}
-              style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 8, padding: '5px 14px', fontSize: 11, color: t.textSecondary, cursor: 'pointer', fontFamily: font }}
-            >
-              {showChart ? 'Hide Chart' : 'Show Chart'}
-            </button>
-          </div>
-
-          {/* Chart */}
-          {showChart && (
-            <div style={{ background: t.surface, borderRadius: 14, padding: 14, marginBottom: 4, maxWidth: 600, margin: '0 auto 16px' }}>
-              <svg width="100%" height="120" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-                <line x1="0" y1={toY(0)} x2={W} y2={toY(0)} stroke={t.border} strokeDasharray="4" />
-                {SYMS.map(sym => prices[sym].length > 1 && (
-                  <path
-                    key={sym}
-                    d={makePath(sym)}
-                    fill="none"
-                    stroke={ASSETS[sym].color}
-                    strokeWidth={position?.sym === sym ? 2.5 : 1}
-                    opacity={position ? (position.sym === sym ? 1 : 0.15) : 0.5}
-                  />
-                ))}
-              </svg>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                {SYMS.map(sym => (
-                  <div key={sym} style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: position ? (position.sym === sym ? 1 : 0.3) : 0.6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 1, background: ASSETS[sym].color }} />
-                    <span style={{ fontSize: 9, color: t.textTertiary }}>{sym}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Chart toggle */}
+            <div style={{ textAlign: 'center', marginBottom: showChart ? 12 : 0 }}>
+              <button
+                onClick={() => setShowChart(!showChart)}
+                style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 8, padding: '5px 14px', fontSize: 11, color: t.textSecondary, cursor: 'pointer', fontFamily: font }}
+              >
+                {showChart ? 'Hide Chart' : 'Show Chart'}
+              </button>
             </div>
-          )}
 
-          {/* Start / Stop + Reset */}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24 }}>
-            <button
-              onClick={() => setRunning(!running)}
-              disabled={busted || won}
-              style={{ padding: '14px 40px', borderRadius: 100, border: 'none', fontSize: 16, fontWeight: 600, fontFamily: font, background: (busted || won) ? t.border : running ? t.red : t.green, color: '#fff', cursor: (busted || won) ? 'default' : 'pointer', minWidth: 140 }}
-            >
-              {busted ? 'Busted' : won ? 'Won!' : running ? 'Stop' : 'Start'}
-            </button>
-            <button
-              onClick={reset}
-              style={{ padding: '14px 20px', borderRadius: 100, border: `1px solid ${t.border}`, background: 'transparent', color: t.textSecondary, fontFamily: font, fontSize: 20, cursor: 'pointer' }}
-            >
-              ↺
-            </button>
+            {showChart && (
+              <div style={{ background: t.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
+                <svg width="100%" height="120" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+                  <line x1="0" y1={toY(0)} x2={W} y2={toY(0)} stroke={t.border} strokeDasharray="4" />
+                  {SYMS.map(sym => prices[sym].length > 1 && (
+                    <path
+                      key={sym}
+                      d={makePath(sym)}
+                      fill="none"
+                      stroke={ASSETS[sym].color}
+                      strokeWidth={position?.sym === sym ? 2.5 : 1}
+                      opacity={position ? (position.sym === sym ? 1 : 0.15) : 0.5}
+                    />
+                  ))}
+                </svg>
+              </div>
+            )}
+
+            {/* Start / Stop + Reset */}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16 }}>
+              <button
+                onClick={() => setRunning(!running)}
+                disabled={busted || won}
+                style={{ padding: '12px 32px', borderRadius: 100, border: 'none', fontSize: 14, fontWeight: 600, fontFamily: font, background: (busted || won) ? t.border : running ? t.red : t.green, color: '#fff', cursor: (busted || won) ? 'default' : 'pointer', minWidth: 120 }}
+              >
+                {busted ? 'Busted' : won ? 'Won!' : running ? 'Stop' : 'Start'}
+              </button>
+              <button
+                onClick={reset}
+                style={{ padding: '12px 18px', borderRadius: 100, border: `1px solid ${t.border}`, background: 'transparent', color: t.textSecondary, fontFamily: font, fontSize: 18, cursor: 'pointer' }}
+              >
+                ↺
+              </button>
+            </div>
+            <div style={{ fontSize: 10, color: t.textTertiary, marginTop: 8, textAlign: 'center' }}>
+              [Space] Start/Stop -- [R] Reset
+            </div>
           </div>
-          <div style={{ fontSize: 10, color: t.textTertiary, marginTop: 10 }}>
-            [Space] Start/Stop &middot; [R] Reset
-          </div>
-        </div>
         )}
 
-        {/* Map-first mode: removed tile views; data is projected directly on the live map. */}
+        {activeTab === 'portfolio' && (
+          <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
+        )}
 
+        {activeTab === 'situation' && (
+          <SituationMonitor
+            dark={dark} t={t} font={font}
+            sim={simData}
+            pmEdges={pmEdges}
+            lastPmBetMap={lastPmBetRef.current}
+            trades={trades}
+            pmExits={pmExits}
+            mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
+            mapLayers={mapLayers}
+            setMapLayers={setMapLayers}
+          />
+        )}
       </div>
 
       {/* Pricing Modal */}
       {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} />}
 
-      {/* Finance Panel */}
-      {showFinance && <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} onClose={() => setShowFinance(false)} />}
-
-      {/* Simulator toggle hidden until reimplementation */}
-
-
-      {/* Market tooltip */}
-      {(hoveredMarket || tappedMarket) && (() => {
-        const market = tappedMarket || hoveredMarket;
-        const isMobile = !!tappedMarket;
-        return (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'fixed',
-              left: isMobile ? '50%' : mousePos.x + 15,
-              top: isMobile ? '50%' : mousePos.y + 15,
-              transform: isMobile ? 'translate(-50%, -50%)' : 'none',
-              background: dark ? 'rgba(20,20,22,0.95)' : 'rgba(255,255,255,0.95)',
-              backdropFilter: 'blur(20px)',
-              border: `1px solid ${t.border}`,
-              borderRadius: 12,
-              padding: 14,
-              maxWidth: 320,
-              zIndex: 1000,
-              boxShadow: dark ? '0 2px 8px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.08)',
-              pointerEvents: isMobile ? 'auto' : 'none',
-            }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, lineHeight: 1.4 }}>{market.question}</div>
-            {market.description && (
-              <div style={{ fontSize: 11, color: t.textSecondary, marginBottom: 8, lineHeight: 1.5 }}>
-                {market.description.length > 200 ? market.description.slice(0, 200) + '...' : market.description}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 12, fontSize: 10, color: t.textTertiary }}>
-              <span>24h Vol: ${((market.volume24h || 0) / 1000).toFixed(0)}K</span>
-              <span>Liquidity: ${((market.liquidity || 0) / 1000).toFixed(0)}K</span>
-            </div>
-            {isMobile && (
-              <a
-                href={`https://polymarket.com/event/${market.eventSlug || market.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ display: 'block', fontSize: 11, color: t.cyan, marginTop: 10, textDecoration: 'underline' }}
-              >
-                Open on Polymarket →
-              </a>
-            )}
-          </div>
-        );
-      })()}
-
       {/* Footer */}
-      <footer style={{ position: 'relative', zIndex: 5, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textTertiary, pointerEvents: 'auto' }}>
+      <footer style={{ gridColumn: '1 / -1', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textTertiary }}>
         <span>MIT License</span>
         <span>&copy; 2026 &middot;{' '}<a href="https://heyitsmejosh.com" target="_blank" rel="noopener noreferrer" style={{ color: t.textSecondary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textSecondary}>Portfolio</a></span>
         <a href="https://github.com/nulljosh/opticon" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textTertiary}>GitHub</a>
