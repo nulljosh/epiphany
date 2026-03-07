@@ -1058,7 +1058,7 @@ const reset = useCallback(() => {
       </header>
 
       {/* Map cell */}
-      <div className="opticon-map" style={{ gridColumn: '1 / -1', height: '40vh', position: 'relative', overflow: 'hidden' }}>
+      <div className="opticon-map" style={{ gridColumn: '1 / -1', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
         <LiveMapBackdrop
           dark={dark}
           mapLayers={mapLayers}
