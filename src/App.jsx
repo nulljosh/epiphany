@@ -963,8 +963,6 @@ const reset = useCallback(() => {
       {/* Header */}
       <header style={{ gridColumn: '1 / -1', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <a href="https://heyitsmejosh.com" style={{ color: t.textSecondary, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>~</a>
-          <span style={{ color: t.textTertiary, fontSize: 13 }}>/</span>
           <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>opticon</span>
           <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
           <StatusBar t={t} reliability={stocksReliability} />
@@ -1179,9 +1177,9 @@ const reset = useCallback(() => {
       {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} />}
 
       {/* Footer */}
-      <footer style={{ gridColumn: '1 / -1', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
-        <span>MIT License</span>
-        <span>&copy; 2026 &middot;{' '}<a href="https://heyitsmejosh.com" target="_blank" rel="noopener noreferrer" style={{ color: t.textSecondary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textSecondary}>Portfolio</a></span>
+      <footer style={{ gridColumn: '1 / -1', padding: '12px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
+        <span>&copy; 2026 Opticon</span>
+        <a href="https://github.com/nulljosh/opticon/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textTertiary}>Apache 2.0</a>
         <a href="https://github.com/nulljosh/opticon" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textTertiary}>GitHub</a>
       </footer>
     </div>
