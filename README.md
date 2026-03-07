@@ -33,6 +33,11 @@ npm test -- --run
 npm run build
 ```
 
+## Recent Changes
+
+- Fixed auth crash: KV calls now return proper JSON errors instead of 500/502
+- Updated demo account balances (Vacation, TFSA, Starbucks Card)
+
 ## Roadmap
 
 - [ ] Apple Pay via Stripe
