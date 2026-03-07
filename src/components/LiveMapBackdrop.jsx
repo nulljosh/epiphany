@@ -131,6 +131,7 @@ export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapRe
   const storedGeo = loadStoredGeo();
   const initPos = storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : DEFAULT_CENTER;
 
+  const [mapLegendOpen, setMapLegendOpen] = useState(false);
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -478,24 +479,44 @@ export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapRe
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto', filter: dark ? 'saturate(1.12) brightness(0.9)' : 'saturate(1.1) brightness(0.95)' }}
       />
       {mapLayers && setMapLayers && (
-        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {Object.entries(mapLayers).map(([key, enabled]) => (
-            <button
-              key={key}
-              onClick={() => setMapLayers(prev => ({ ...prev, [key]: !prev[key] }))}
-              style={{
-                padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
-                border: 'none', cursor: 'pointer',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
-                background: enabled ? (dark ? '#FFFFFF' : '#111111') : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.92)'),
-                color: enabled ? (dark ? '#000000' : '#ffffff') : (dark ? 'rgba(255,255,255,0.6)' : 'rgba(60,60,67,0.6)'),
-                backdropFilter: 'blur(12px)', textTransform: 'uppercase', letterSpacing: '0.05em',
-                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              {key}
-            </button>
-          ))}
+        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 4 }}>
+          <button
+            onClick={() => setMapLegendOpen(o => !o)}
+            style={{
+              width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.85)',
+              color: dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(12px)', fontSize: 16, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            {mapLegendOpen ? '\u00d7' : '\u2261'}
+          </button>
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4,
+            maxHeight: mapLegendOpen ? 300 : 0, opacity: mapLegendOpen ? 1 : 0, overflow: 'hidden',
+            transition: 'max-height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
+          }}>
+            {Object.entries(mapLayers).map(([key, enabled]) => (
+              <button
+                key={key}
+                onClick={() => setMapLayers(prev => ({ ...prev, [key]: !prev[key] }))}
+                style={{
+                  padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
+                  border: 'none', cursor: 'pointer',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+                  background: enabled ? (dark ? '#FFFFFF' : '#111111') : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.92)'),
+                  color: enabled ? (dark ? '#000000' : '#ffffff') : (dark ? 'rgba(255,255,255,0.6)' : 'rgba(60,60,67,0.6)'),
+                  backdropFilter: 'blur(12px)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                  transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <button

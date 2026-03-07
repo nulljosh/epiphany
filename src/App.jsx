@@ -157,7 +157,7 @@ export default function App() {
 
   const [dark, setDark] = useState(true);
   const [activeTab, setActiveTab] = useState('simulator');
-  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: false });
+  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true });
   const mapInstanceRef = useRef(null);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
