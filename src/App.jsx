@@ -162,6 +162,7 @@ export default function App() {
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const [showPricing, setShowPricing] = useState(false);
+  const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
   const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -945,8 +946,11 @@ const reset = useCallback(() => {
       transition: running ? 'none' : 'background-color 220ms ease, background-image 220ms ease',
     }}>
       <style>{`
-        .opticon-panel { display: none; }
+        .opticon-ticker, .opticon-header, .opticon-footer, .opticon-panel { display: none; }
+        .opticon-mobile-nav { display: flex; }
         @media (min-width: 768px) {
+          .opticon-ticker, .opticon-header, .opticon-footer { display: flex; }
+          .opticon-mobile-nav { display: none; }
           .opticon-root {
             grid-template-rows: auto auto 1fr auto !important;
             grid-template-columns: 1fr 420px !important;
@@ -957,12 +961,12 @@ const reset = useCallback(() => {
       `}</style>
 
       {/* Ticker */}
-      <div style={{ gridColumn: '1 / -1' }}>
+      <div className="opticon-ticker" style={{ gridColumn: '1 / -1' }}>
         <Ticker items={tickerItems} theme={t} />
       </div>
 
       {/* Header */}
-      <header style={{ gridColumn: '1 / -1', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}` }}>
+      <header className="opticon-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>opticon</span>
           <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
@@ -1066,6 +1070,75 @@ const reset = useCallback(() => {
           onMapReady={handleMapReady}
           livePrices={liveAssets}
         />
+        {/* Floating mobile nav */}
+        <div className="opticon-mobile-nav" style={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 5, justifyContent: 'space-between', alignItems: 'flex-start', pointerEvents: 'none' }}>
+          {/* Left: tab pills (toggled) */}
+          <div style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button
+              onClick={() => setMobileTabsOpen(p => !p)}
+              style={{
+                width: 36, height: 36, borderRadius: 10, border: 'none',
+                background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                color: t.text, fontSize: 16, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              }}
+            >
+              {mobileTabsOpen ? '\u00d7' : '\u2630'}
+            </button>
+            {mobileTabsOpen && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: 4,
+                background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                borderRadius: 10, padding: 4,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              }}>
+                {TAB_PILLS.map(pill => (
+                  <button
+                    key={pill.key}
+                    onClick={() => { setActiveTab(pill.key); setMobileTabsOpen(false); }}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 10, fontWeight: 600,
+                      fontFamily: font, cursor: 'pointer', border: 'none', textAlign: 'left',
+                      background: activeTab === pill.key ? t.text : 'transparent',
+                      color: activeTab === pill.key ? t.bg : t.textSecondary,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Right: hamburger menu */}
+          <div style={{ pointerEvents: 'auto' }}>
+            <MobileMenu t={t} font={font}>
+              {weather && (
+                <>
+                  <MobileMenuItem t={t} font={font} style={{ color: t.textTertiary, fontSize: 11, cursor: 'default' }}>
+                    {weather.icon} {weather.temp}&deg;C {weather.description}
+                  </MobileMenuItem>
+                  <MobileMenuDivider t={t} />
+                </>
+              )}
+              {isFree && (
+                <MobileMenuItem t={t} font={font} onClick={() => setShowPricing(true)} style={{ color: '#0071e3' }}>
+                  UPGRADE
+                </MobileMenuItem>
+              )}
+              <MobileMenuItem t={t} font={font} onClick={() => setDark(!dark)}>
+                {dark ? 'LIGHT MODE' : 'DARK MODE'}
+              </MobileMenuItem>
+              <MobileMenuDivider t={t} />
+              <MobileMenuItem t={t} font={font} onClick={logout} style={{ color: '#ef4444' }}>
+                LOGOUT
+              </MobileMenuItem>
+            </MobileMenu>
+          </div>
+        </div>
       </div>
 
       {/* Panel cell */}
@@ -1178,10 +1251,9 @@ const reset = useCallback(() => {
       {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} />}
 
       {/* Footer */}
-      <footer style={{ gridColumn: '1 / -1', padding: '12px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
+      <footer className="opticon-footer" style={{ gridColumn: '1 / -1', padding: '12px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
         <span>&copy; 2026 Opticon</span>
         <a href="https://github.com/nulljosh/opticon/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textTertiary}>Apache 2.0</a>
-        <a href="https://github.com/nulljosh/opticon" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'none', transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color = t.text} onMouseLeave={e => e.target.style.color = t.textTertiary}>GitHub</a>
       </footer>
     </div>
   );
