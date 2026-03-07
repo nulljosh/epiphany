@@ -932,7 +932,7 @@ const reset = useCallback(() => {
   ];
 
   return (
-    <div style={{
+    <div className="opticon-root" style={{
       height: '100dvh',
       display: 'grid',
       gridTemplateRows: 'auto auto 40vh 1fr auto',

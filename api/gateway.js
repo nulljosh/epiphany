@@ -13,6 +13,7 @@ import markets from '../server/api/markets.js';
 import news from '../server/api/news.js';
 import prices from '../server/api/prices.js';
 import signals from '../server/api/signals.js';
+import statements from '../server/api/statements.js';
 import stocks from '../server/api/stocks.js';
 import stocksFree from '../server/api/stocks-free.js';
 import stripe from '../server/api/stripe.js';
@@ -47,6 +48,7 @@ const ROUTES = {
   news,
   prices,
   signals,
+  statements,
   stocks,
   'stocks-free': stocksFree,
   stripe,
