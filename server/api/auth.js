@@ -53,22 +53,27 @@ export default async function handler(req, res) {
 
   // GET: check current session
   if (req.method === 'GET' && action === 'me') {
-    const session = await getSessionUser(req);
-    if (!session) {
+    try {
+      const session = await getSessionUser(req);
+      if (!session) {
+        return res.status(200).json({ authenticated: false });
+      }
+      const user = await kv.get(`user:${session.email}`);
+      return res.status(200).json({
+        authenticated: true,
+        user: {
+          id: user?.id,
+          email: session.email,
+          verified: user?.verified ?? false,
+          tier: user?.tier || 'free',
+          stripeCustomerId: user?.stripeCustomerId || null,
+          watchlist: user?.watchlist || null,
+        },
+      });
+    } catch (err) {
+      console.error('[AUTH] Session check failed:', err.message);
       return res.status(200).json({ authenticated: false });
     }
-    const user = await kv.get(`user:${session.email}`);
-    return res.status(200).json({
-      authenticated: true,
-      user: {
-        id: user?.id,
-        email: session.email,
-        verified: user?.verified ?? false,
-        tier: user?.tier || 'free',
-        stripeCustomerId: user?.stripeCustomerId || null,
-        watchlist: user?.watchlist || null,
-      },
-    });
   }
 
   if (req.method !== 'POST') {
@@ -85,50 +90,55 @@ export default async function handler(req, res) {
       return errorResponse(res, 400, 'Password must be at least 8 characters');
     }
 
-    const existing = await kv.get(`user:${email.toLowerCase()}`);
-    if (existing) {
-      return errorResponse(res, 409, 'Account already exists');
+    try {
+      const existing = await kv.get(`user:${email.toLowerCase()}`);
+      if (existing) {
+        return errorResponse(res, 409, 'Account already exists');
+      }
+
+      const id = crypto.randomUUID();
+      const passwordHash = await bcrypt.hash(password, 10);
+      const verifyToken = generateToken();
+
+      const user = {
+        id,
+        email: email.toLowerCase(),
+        passwordHash,
+        verified: false,
+        tier: 'free',
+        stripeCustomerId: null,
+        watchlist: null,
+        createdAt: new Date().toISOString(),
+      };
+
+      await kv.set(`user:${email.toLowerCase()}`, user);
+      await kv.set(`verify:${verifyToken}`, { email: email.toLowerCase() }, { ex: VERIFY_TTL });
+
+      // Create session immediately (allow usage before verification)
+      const sessionToken = generateToken();
+      const session = {
+        userId: id,
+        email: email.toLowerCase(),
+        tier: 'free',
+        expiresAt: Date.now() + SESSION_TTL * 1000,
+      };
+      await kv.set(`session:${sessionToken}`, session, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+
+      const verifyUrl = `${getBaseUrl()}/api/auth?action=verify-email&token=${verifyToken}`;
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[AUTH] Verify email for ${email}: ${verifyUrl}`);
+      }
+
+      return res.status(201).json({
+        ok: true,
+        user: { id, email: email.toLowerCase(), verified: false, tier: 'free' },
+        verifyUrl: process.env.NODE_ENV !== 'production' ? verifyUrl : undefined,
+      });
+    } catch (err) {
+      console.error('[AUTH] Register KV error:', err.message);
+      return errorResponse(res, 503, 'Service temporarily unavailable');
     }
-
-    const id = crypto.randomUUID();
-    const passwordHash = await bcrypt.hash(password, 10);
-    const verifyToken = generateToken();
-
-    const user = {
-      id,
-      email: email.toLowerCase(),
-      passwordHash,
-      verified: false,
-      tier: 'free',
-      stripeCustomerId: null,
-      watchlist: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    await kv.set(`user:${email.toLowerCase()}`, user);
-    await kv.set(`verify:${verifyToken}`, { email: email.toLowerCase() }, { ex: VERIFY_TTL });
-
-    // Create session immediately (allow usage before verification)
-    const sessionToken = generateToken();
-    const session = {
-      userId: id,
-      email: email.toLowerCase(),
-      tier: 'free',
-      expiresAt: Date.now() + SESSION_TTL * 1000,
-    };
-    await kv.set(`session:${sessionToken}`, session, { ex: SESSION_TTL });
-    setSessionCookie(res, sessionToken);
-
-    const verifyUrl = `${getBaseUrl()}/api/auth?action=verify-email&token=${verifyToken}`;
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[AUTH] Verify email for ${email}: ${verifyUrl}`);
-    }
-
-    return res.status(201).json({
-      ok: true,
-      user: { id, email: email.toLowerCase(), verified: false, tier: 'free' },
-      verifyUrl: process.env.NODE_ENV !== 'production' ? verifyUrl : undefined,
-    });
   }
 
   // POST: login
@@ -143,36 +153,41 @@ export default async function handler(req, res) {
       return errorResponse(res, 400, 'Email and password required');
     }
 
-    const user = await kv.get(`user:${email.toLowerCase()}`);
-    if (!user) {
-      return errorResponse(res, 401, 'Invalid credentials');
-    }
+    try {
+      const user = await kv.get(`user:${email.toLowerCase()}`);
+      if (!user) {
+        return errorResponse(res, 401, 'Invalid credentials');
+      }
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return errorResponse(res, 401, 'Invalid credentials');
-    }
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        return errorResponse(res, 401, 'Invalid credentials');
+      }
 
-    const sessionToken = generateToken();
-    const session = {
-      userId: user.id,
-      email: user.email,
-      tier: user.tier || 'free',
-      expiresAt: Date.now() + SESSION_TTL * 1000,
-    };
-    await kv.set(`session:${sessionToken}`, session, { ex: SESSION_TTL });
-    setSessionCookie(res, sessionToken);
-
-    return res.status(200).json({
-      ok: true,
-      user: {
-        id: user.id,
+      const sessionToken = generateToken();
+      const session = {
+        userId: user.id,
         email: user.email,
-        verified: user.verified,
         tier: user.tier || 'free',
-        stripeCustomerId: user.stripeCustomerId || null,
-      },
-    });
+        expiresAt: Date.now() + SESSION_TTL * 1000,
+      };
+      await kv.set(`session:${sessionToken}`, session, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+
+      return res.status(200).json({
+        ok: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          verified: user.verified,
+          tier: user.tier || 'free',
+          stripeCustomerId: user.stripeCustomerId || null,
+        },
+      });
+    } catch (err) {
+      console.error('[AUTH] Login KV error:', err.message);
+      return errorResponse(res, 503, 'Service temporarily unavailable');
+    }
   }
 
   // GET (handled via query): verify email
