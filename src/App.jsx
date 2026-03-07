@@ -938,10 +938,11 @@ const reset = useCallback(() => {
       gridTemplateRows: 'auto auto 40vh 1fr auto',
       gridTemplateColumns: '1fr',
       overflow: 'hidden',
-      background: pnlBg,
+      backgroundColor: t.bg,
+      backgroundImage: pnlBg === 'transparent' ? 'none' : pnlBg,
       color: t.text,
       fontFamily: font,
-      transition: running ? 'none' : 'background 220ms ease',
+      transition: running ? 'none' : 'background-color 220ms ease, background-image 220ms ease',
     }}>
       <style>{`
         @media (min-width: 768px) {
