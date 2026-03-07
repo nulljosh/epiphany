@@ -935,7 +935,7 @@ const reset = useCallback(() => {
     <div className="opticon-root" style={{
       height: '100dvh',
       display: 'grid',
-      gridTemplateRows: 'auto auto 40vh 1fr auto',
+      gridTemplateRows: 'auto auto 1fr auto',
       gridTemplateColumns: '1fr',
       overflow: 'hidden',
       backgroundColor: t.bg,
@@ -945,13 +945,14 @@ const reset = useCallback(() => {
       transition: running ? 'none' : 'background-color 220ms ease, background-image 220ms ease',
     }}>
       <style>{`
+        .opticon-panel { display: none; }
         @media (min-width: 768px) {
           .opticon-root {
             grid-template-rows: auto auto 1fr auto !important;
             grid-template-columns: 1fr 420px !important;
           }
           .opticon-map { grid-row: 3; grid-column: 1; height: auto !important; }
-          .opticon-panel { grid-row: 3; grid-column: 2; }
+          .opticon-panel { display: block; grid-row: 3; grid-column: 2; }
         }
       `}</style>
 
