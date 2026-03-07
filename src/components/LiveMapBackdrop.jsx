@@ -127,7 +127,7 @@ function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat,
   );
 }
 
-export default function LiveMapBackdrop({ dark, mapLayers, onMapReady, livePrices }) {
+export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapReady, livePrices }) {
   const storedGeo = loadStoredGeo();
   const initPos = storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : DEFAULT_CENTER;
 
@@ -477,19 +477,20 @@ export default function LiveMapBackdrop({ dark, mapLayers, onMapReady, livePrice
         ref={mapRef}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto', filter: dark ? 'saturate(1.12) brightness(0.9)' : 'saturate(1.1) brightness(0.95)' }}
       />
-      {mapLayers && (
+      {mapLayers && setMapLayers && (
         <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {Object.entries(mapLayers).map(([key, enabled]) => (
             <button
               key={key}
-              onClick={() => {/* no-op, controlled from parent */}}
+              onClick={() => setMapLayers(prev => ({ ...prev, [key]: !prev[key] }))}
               style={{
-                padding: '3px 8px', borderRadius: 6, fontSize: 9, fontWeight: 600,
-                border: enabled ? '1px solid rgba(34,211,238,0.5)' : '1px solid rgba(255,255,255,0.15)',
-                background: enabled ? 'rgba(34,211,238,0.15)' : 'rgba(0,0,0,0.5)',
-                color: enabled ? '#22D3EE' : 'rgba(255,255,255,0.4)',
-                cursor: 'default', fontFamily: 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace',
-                backdropFilter: 'blur(8px)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
+                border: 'none', cursor: 'pointer',
+                fontFamily: 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace',
+                background: enabled ? (dark ? '#FFFFFF' : '#111111') : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.92)'),
+                color: enabled ? (dark ? '#000000' : '#ffffff') : (dark ? 'rgba(255,255,255,0.6)' : 'rgba(60,60,67,0.6)'),
+                backdropFilter: 'blur(12px)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             >
               {key}

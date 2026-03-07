@@ -76,7 +76,7 @@ const Ticker = memo(({ items, theme }) => {
       style={{
         overflowX: 'auto',
         borderBottom: `0.5px solid ${theme.border}`,
-        background: theme.surface,
+        background: theme.bg, color: theme.text,
         cursor: isDragging ? 'grabbing' : 'grab',
         WebkitOverflowScrolling: 'touch',
         userSelect: 'none',
