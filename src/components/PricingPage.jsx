@@ -55,6 +55,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
       if (url) window.location.href = url;
     } catch (err) {
       console.error('Portal error:', err);
+      alert('Failed to open subscription portal. Please try again.');
     }
   };
 
@@ -145,7 +146,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
               cursor: 'pointer',
               padding: 8,
             }}
-          >x</button>
+          >{'\u00d7'}</button>
         </div>
 
         <div style={{
@@ -237,7 +238,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
           {/* Pro Tier */}
           <Card t={t} dark={dark} style={{
             padding: 32,
-            border: currentTier === 'pro' ? `2px solid ${t.blue}` : `2px solid ${t.blue}`,
+            border: currentTier === 'pro' ? `2px solid ${t.blue}` : `1px solid ${t.border}`,
             boxShadow: `0 0 12px ${t.blue}20`,
           }}>
             <div style={{ marginBottom: 24 }}>
