@@ -170,7 +170,7 @@ export default function App() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-  const { isPro, isStarter, isFree, refetch: refetchSubscription } = useSubscription();
+  const { isPro, isStarter, isFree, subscription, refetch: refetchSubscription } = useSubscription();
 
   // Capture session_id from Stripe checkout redirect
   useEffect(() => {
@@ -1275,7 +1275,7 @@ const reset = useCallback(() => {
       </div>
 
       {/* Pricing Modal */}
-      {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} />}
+      {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} subscription={subscription} />}
 
       {/* Footer */}
       <footer className="opticon-footer" style={{ gridColumn: '1 / -1', padding: '12px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
