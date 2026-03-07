@@ -11,13 +11,13 @@ export const PLANS = {
   pro: {
     name: 'Pro',
     price: 9,
-    priceId: 'price_REPLACE_ME_PRO', // paste from Stripe dashboard
+    priceId: 'price_1T8SCnBmnhdgU9sGTBO4nrIF',
     features: ['Everything in Free', '10 projects', 'Priority support', 'Analytics'],
   },
   premium: {
     name: 'Premium',
     price: 29,
-    priceId: 'price_REPLACE_ME_PREMIUM', // paste from Stripe dashboard
+    priceId: 'price_1T8SCyBmnhdgU9sGAS9YVbjs',
     features: ['Everything in Pro', 'Unlimited projects', 'Dedicated support', 'API access'],
   },
 };
