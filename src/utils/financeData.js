@@ -11,7 +11,7 @@ export const DEMO_HOLDINGS = [
 ];
 
 export const DEMO_ACCOUNTS = [
-  { name: 'Vacation', type: 'chequing', balance: 106.54, currency: 'CAD' },
+  { name: 'Vacation', type: 'chequing', balance: 78.21, currency: 'CAD' },
   { name: 'TFSA', type: 'investment', balance: 196.13, currency: 'CAD' },
   { name: 'Starbucks Card', type: 'gift', balance: 13.45, currency: 'CAD' },
 ];
