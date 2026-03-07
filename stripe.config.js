@@ -11,13 +11,13 @@ export const PLANS = {
   pro: {
     name: 'Pro',
     price: 9,
-    priceId: 'price_1T8SCnBmnhdgU9sGTBO4nrIF',
+    priceId: 'price_1T8SfBBmnhdgU9sGvUWirw9h',
     features: ['Everything in Free', '10 projects', 'Priority support', 'Analytics'],
   },
   premium: {
     name: 'Premium',
     price: 29,
-    priceId: 'price_1T8SCyBmnhdgU9sGAS9YVbjs',
+    priceId: 'price_1T8SfJBmnhdgU9sG7fUJ0J5h',
     features: ['Everything in Pro', 'Unlimited projects', 'Dedicated support', 'API access'],
   },
 };
