@@ -62,24 +62,6 @@ All endpoints are routed through `api/gateway.js` to handlers in `server/api/`.
 | `/api/local-events` | -- | -- | Implemented |
 | `/api/news` | GDELT GDoc API | Free, no key | Working (15-min cycle, Jaccard dedup, 30+ city geo-matching) |
 
-### Traffic API Setup (not yet configured)
-
-To enable live traffic data instead of time-based estimates:
-
-1. **TomTom** (traffic flow): Register at https://developer.tomtom.com, get a free-tier API key (2500 req/day)
-   - Set Vercel env var: `TOMTOM_API_KEY`
-2. **HERE** (traffic incidents): Register at https://platform.here.com, get a freemium API key (250k req/month)
-   - Set Vercel env var: `HERE_API_KEY`
-
-Without these keys, `/api/traffic` returns estimated congestion based on time-of-day and day-of-week heuristics. Incident data is omitted entirely.
-
-Notes:
-- Map overlays include traffic/construction/seismic/global-event/crime/local-event/news markers.
-- News articles appear as blue markers on the map and in the SituationMonitor sidebar.
-- Local overlays refresh by current map viewport center.
-- Fallback markers are intentionally injected when upstream feeds are sparse, to avoid empty-city states.
-- Predictions are shown only when a confident geographic anchor is inferred.
-
 ## Development
 
 ```bash
@@ -90,17 +72,6 @@ git push origin main         # triggers Vercel production deploy
 
 Keep endpoint logic in `server/api/`; only `api/gateway.js` deploys as the runtime function.
 
-## Billing / Upgrade
-
-- Pricing modal offers `Free`, `Starter ($20)`, and `Pro ($50)`.
-- Checkout endpoint is `POST /api/stripe?action=checkout` with `{ priceId }`.
-- Allowed price IDs are controlled by:
-  - `STRIPE_PRICE_ID_STARTER`
-  - `STRIPE_PRICE_ID_PRO`
-  - `VITE_STRIPE_PRICE_ID_STARTER`
-  - `VITE_STRIPE_PRICE_ID_PRO`
-- Apple Pay is handled by Stripe Checkout on supported devices once domain verification is enabled in Stripe.
-
 ## Stock Data API
 
 - FMP (Financial Modeling Prep) is the primary stock data source. Requires `FMP_API_KEY` env var.
@@ -109,7 +80,9 @@ Keep endpoint logic in `server/api/`; only `api/gateway.js` deploys as the runti
 - Cron job caches all 100 symbols (FMP batch first, Yahoo chunked fallback) to Vercel Blob daily.
 - `X-Opticon-Data-Source` header shows which provider served the data (`fmp`/`yahoo`/`mixed`).
 
-## Stripe Setup
+## Stripe / Billing
+
+Pricing: `Free`, `Starter ($20)`, `Pro ($50)`. Checkout via `POST /api/stripe?action=checkout` with `{ priceId }`. Apple Pay handled by Stripe Checkout on supported devices.
 
 To activate paid tiers:
 
@@ -128,15 +101,3 @@ To activate paid tiers:
 5. For Apple Pay: Stripe Dashboard > Settings > Payment methods > Apple Pay > add + verify domain
 6. Webhook (optional): create endpoint at `https://opticon.heyitsmejosh.com/api/stripe?action=webhook` for `checkout.session.completed` events
 
-## Recent Fixes (2026-03-06)
-
-- Theme: `blue` + `backgroundSecondary` added to both themes
-- PricingPage: vertical scroll fix
-- Map nav control moved to bottom-left
-- User markers split to separate useEffect (no API blocking)
-- useStocks: cache-seed guard on FALLBACK status
-
-## Current Priorities
-
-- Keep API handlers small and test-covered
-- Deduplicate logic before adding new features
