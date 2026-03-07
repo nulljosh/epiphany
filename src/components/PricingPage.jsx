@@ -195,7 +195,7 @@ export default function PricingPage({ dark, t, onClose }) {
                 fontWeight: 700,
                 cursor: loadingPlan ? 'not-allowed' : 'pointer',
                 opacity: loadingPlan ? 0.6 : 1,
-                transition: 'all 0.2s ease',
+                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
               }}
             >
               {loadingPlan === 'starter' ? 'Loading...' : 'Upgrade to Starter'}
@@ -255,7 +255,7 @@ export default function PricingPage({ dark, t, onClose }) {
                 fontWeight: 700,
                 cursor: loadingPlan ? 'not-allowed' : 'pointer',
                 opacity: loadingPlan ? 0.6 : 1,
-                transition: 'all 0.2s ease',
+                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
               }}
             >
               {loadingPlan === 'pro' ? 'Loading...' : 'Upgrade to Pro'}

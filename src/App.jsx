@@ -170,7 +170,34 @@ export default function App() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-  const { isPro, isFree } = useSubscription();
+  const { isPro, isStarter, isFree, refetch: refetchSubscription } = useSubscription();
+
+  // Capture session_id from Stripe checkout redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (!sessionId) return;
+
+    // Strip session_id from URL immediately
+    const url = new URL(window.location);
+    url.searchParams.delete('session_id');
+    window.history.replaceState({}, '', url.pathname + url.search);
+
+    fetch('/api/stripe?action=resolve-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ sessionId }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.customerId) {
+          localStorage.setItem('stripe_customer_id', data.customerId);
+          refetchSubscription();
+        }
+      })
+      .catch(err => console.error('Failed to resolve checkout session:', err));
+  }, [refetchSubscription]);
   const { watchlist, addSymbol, removeSymbol, toggleSymbol } = useWatchlist(user);
   const weather = useWeather();
 

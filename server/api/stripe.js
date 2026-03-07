@@ -7,10 +7,24 @@ function getStripe() {
   return stripe;
 }
 
+function getTierFromPriceId(priceId) {
+  if (priceId === process.env.STRIPE_PRICE_ID_STARTER) return 'starter';
+  if (priceId === process.env.STRIPE_PRICE_ID_PRO) return 'pro';
+  return 'pro'; // backward compat default
+}
+
+// Helper: extract session token from cookie header
+function getSessionToken(req) {
+  const cookie = req.headers?.cookie || '';
+  const match = cookie.match(/(?:^|;\s*)session=([^;]+)/);
+  return match ? match[1] : null;
+}
+
 // Routes:
-//   POST ?action=checkout  { priceId }    → create checkout session
-//   POST ?action=portal    { customerId } → create billing portal session
-//   GET  ?action=status&customerId=...    → subscription status
+//   POST ?action=checkout         { priceId }    → create checkout session
+//   POST ?action=portal           { customerId } → create billing portal session
+//   POST ?action=resolve-session  { sessionId }  → resolve checkout session → customerId
+//   GET  ?action=status&customerId=...           → subscription status
 
 export default async function handler(req, res) {
   const { action, customerId } = req.query;
@@ -28,10 +42,10 @@ export default async function handler(req, res) {
       if (!subscription) {
         return res.status(200).json({ status: null, tier: 'free' });
       }
-      return res.status(200).json({
-        ...subscription,
-        tier: subscription.status === 'active' ? 'pro' : 'free',
-      });
+      const tier = subscription.status === 'active'
+        ? getTierFromPriceId(subscription.priceId)
+        : 'free';
+      return res.status(200).json({ ...subscription, tier });
     } catch (err) {
       console.error('[STRIPE/status] Error:', err.message);
       return res.status(500).json({ error: err.message });
@@ -50,10 +64,21 @@ export default async function handler(req, res) {
       if (allowedPriceIds.size > 0 && !allowedPriceIds.has(priceId)) {
         return res.status(400).json({ error: 'Invalid price ID' });
       }
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
         : 'https://opticon-production.vercel.app';
-      const session = await getStripe().checkout.sessions.create({
+
+      // Link checkout to authenticated user if session cookie exists
+      const sessionToken = getSessionToken(req);
+      let clientReferenceId;
+      if (sessionToken) {
+        const sessionData = await kv.get(`session:${sessionToken}`);
+        if (sessionData?.email) {
+          clientReferenceId = sessionData.email;
+        }
+      }
+
+      const sessionParams = {
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
@@ -61,10 +86,46 @@ export default async function handler(req, res) {
         cancel_url: baseUrl,
         customer_creation: 'always',
         allow_promotion_codes: true,
-      });
+      };
+      if (clientReferenceId) {
+        sessionParams.client_reference_id = clientReferenceId;
+      }
+
+      const session = await getStripe().checkout.sessions.create(sessionParams);
       return res.status(200).json({ sessionId: session.id, url: session.url });
     } catch (err) {
       console.error('[STRIPE/checkout] Error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // POST: resolve-session (after checkout redirect)
+  if (action === 'resolve-session') {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
+
+      const session = await getStripe().checkout.sessions.retrieve(sessionId);
+      const stripeCustomerId = session.customer;
+
+      // Persist stripe_customer_id to user's KV record if authenticated
+      const sessionToken = getSessionToken(req);
+      if (sessionToken) {
+        const sessionData = await kv.get(`session:${sessionToken}`);
+        if (sessionData?.email) {
+          const user = await kv.get(`user:${sessionData.email}`);
+          if (user) {
+            await kv.set(`user:${sessionData.email}`, {
+              ...user,
+              stripe_customer_id: stripeCustomerId,
+            });
+          }
+        }
+      }
+
+      return res.status(200).json({ customerId: stripeCustomerId });
+    } catch (err) {
+      console.error('[STRIPE/resolve-session] Error:', err.message);
       return res.status(500).json({ error: err.message });
     }
   }
@@ -74,8 +135,8 @@ export default async function handler(req, res) {
     try {
       const { customerId: cid } = req.body;
       if (!cid) return res.status(400).json({ error: 'Customer ID required' });
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
         : 'https://opticon-production.vercel.app';
       const session = await getStripe().billingPortal.sessions.create({
         customer: cid,

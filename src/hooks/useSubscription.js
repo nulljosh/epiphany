@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export function useSubscription() {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check localStorage for customer ID (saved after checkout)
-    // Also check auth user record for stripe_customer_id
+  const fetchStatus = useCallback(() => {
     const customerId = localStorage.getItem('stripe_customer_id');
 
     if (!customerId) {
@@ -15,6 +13,7 @@ export function useSubscription() {
       return;
     }
 
+    setLoading(true);
     fetch(`/api/stripe?action=status&customerId=${customerId}`)
       .then(r => r.json())
       .then(data => {
@@ -28,10 +27,16 @@ export function useSubscription() {
       });
   }, []);
 
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+
   return {
     isPro: subscription?.tier === 'pro',
+    isStarter: subscription?.tier === 'starter',
     isFree: subscription?.tier === 'free' || !subscription,
     subscription,
     loading,
+    refetch: fetchStatus,
   };
 }
