@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Card } from './ui';
 
@@ -11,6 +11,15 @@ const PRICE_IDS = {
 export default function PricingPage({ dark, t, onClose, subscription }) {
   const [loadingPlan, setLoadingPlan] = useState(null);
   const currentTier = subscription?.tier || 'free';
+
+  const handleEscape = useCallback((e) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [handleEscape]);
 
   const handleUpgrade = async (plan) => {
     const priceId = PRICE_IDS[plan];
@@ -106,7 +115,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
   };
 
   return (
-    <div style={{
+    <div onClick={onClose} style={{
       position: 'fixed',
       inset: 0,
       background: 'rgba(0,0,0,0.8)',
@@ -117,7 +126,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
       zIndex: 1000,
       padding: 20,
     }}>
-      <div style={{
+      <div onClick={(e) => e.stopPropagation()} style={{
         maxWidth: 900,
         width: '100%',
         overflowX: 'hidden',

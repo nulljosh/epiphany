@@ -991,6 +991,8 @@ const reset = useCallback(() => {
           right: 0;
           max-height: 60vh;
           overflow-y: auto;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
           border-radius: 16px 16px 0 0;
           z-index: 10;
           transform: translateY(100%);
@@ -1397,7 +1399,8 @@ const reset = useCallback(() => {
 
       {showHelp && (
         <div onClick={() => setShowHelp(false)} style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: t.cardBg || t.bg, border: `1px solid ${t.border}`, borderRadius: 12, padding: '24px 32px', minWidth: 280, fontFamily: font }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: t.cardBg || t.bg, border: `1px solid ${t.border}`, borderRadius: 12, padding: '24px 32px', minWidth: 280, fontFamily: font, position: 'relative' }}>
+            <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: t.textSecondary, fontSize: 20, cursor: 'pointer', padding: 4, lineHeight: 1 }}>{'\u00d7'}</button>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: t.text }}>Keyboard Shortcuts</div>
             {SHORTCUTS.map(s => (
               <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: t.textSecondary }}>
