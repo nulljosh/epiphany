@@ -5,7 +5,7 @@
 
 :root {
   /* Typography */
-  --font-primary: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-secondary: SF Soft Time;
 
   --text-xs: 10px;
