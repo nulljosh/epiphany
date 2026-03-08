@@ -101,3 +101,14 @@ To activate paid tiers:
 5. For Apple Pay: Stripe Dashboard > Settings > Payment methods > Apple Pay > add + verify domain
 6. Webhook (optional): create endpoint at `https://opticon.heyitsmejosh.com/api/stripe?action=webhook` for `checkout.session.completed` events
 
+## Planned: OpenPlanter Integration
+
+Embed OpenPlanter's recursive investigation engine into Opticon as a "Follow the Money" / entity analysis tab. Plan:
+
+- Embed `op-core` (Rust crate from `~/Documents/Code/openplanter/openplanter-desktop/crates/op-core/`) as a library
+- Adapter layer to feed existing GDELT/market data into OpenPlanter's ingestion pipeline
+- Cytoscape.js knowledge graph in a new tab (entity connections, subsidiaries, lobbyists, contracts)
+- Gate behind Pro tier ($50) due to recursive sub-agent token cost
+- Support Ollama for self-hosted users who want to avoid API costs
+- Credential flow: reuse Opticon's existing auth, pass model access through to OpenPlanter engine
+
