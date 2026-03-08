@@ -146,6 +146,7 @@ export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapRe
   const [geoState, setGeoState] = useState(storedGeo ? 'cached' : 'checking');
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [] });
   const [selected, setSelected] = useState(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => { centerRef.current = center; }, [center]);
 
@@ -256,6 +257,7 @@ export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapRe
           });
         });
         mapInstanceRef.current = map;
+        setMapLoaded(true);
         if (onMapReady) onMapReady(map);
         map.on('load', () => {
           if (pendingFlyRef.current) {
@@ -273,6 +275,7 @@ export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapRe
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        setMapLoaded(false);
       }
     };
   }, [dark]);
@@ -351,7 +354,7 @@ export default function LiveMapBackdrop({ dark, mapLayers, setMapLayers, onMapRe
       }
     })();
     return () => { userMarkersRef.current.forEach(m => m.remove()); userMarkersRef.current = []; };
-  }, [userPosition.lat, userPosition.lon, locLabel, geoState]);
+  }, [userPosition.lat, userPosition.lon, locLabel, geoState, mapLoaded]);
 
   // API-dependent markers
   useEffect(() => {

@@ -1193,7 +1193,7 @@ const reset = useCallback(() => {
       </div>
 
       {/* Panel cell */}
-      <div className="opticon-panel" style={{ display: 'none', gridColumn: '1 / -1', overflow: 'auto', minHeight: 0 }}>
+      <div className="opticon-panel" style={{ gridColumn: '1 / -1', overflow: 'auto', minHeight: 0 }}>
         {activeTab === 'simulator' && (
           <div style={{ padding: 16 }}>
             {busted ? (
