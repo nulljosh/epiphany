@@ -5,6 +5,11 @@
   "installCommand": "npm install",
   "framework": "vite",
   "public": true,
+  "functions": {
+    "api/gateway.js": {
+      "includeFiles": "server/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
