@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { getKv } from './_kv.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
@@ -49,6 +49,7 @@ function getBaseUrl() {
 }
 
 export default async function handler(req, res) {
+  const kv = await getKv();
   const { action } = req.query;
 
   // GET: check current session

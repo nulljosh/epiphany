@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { kv } from '@vercel/kv';
+import { getKv } from './_kv.js';
 
 let stripe;
 function getStripe() {
@@ -27,6 +27,7 @@ function getSessionToken(req) {
 //   GET  ?action=status&customerId=...           → subscription status
 
 export default async function handler(req, res) {
+  const kv = await getKv();
   const { action, customerId } = req.query;
   const allowedPriceIds = new Set(
     [process.env.STRIPE_PRICE_ID_STARTER, process.env.STRIPE_PRICE_ID_PRO].filter(Boolean)

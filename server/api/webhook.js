@@ -1,10 +1,11 @@
 import { applyCors } from './_cors.js';
-import { kv } from '@vercel/kv';
+import { getKv } from './_kv.js';
 import crypto from 'crypto';
 
 export const config = { api: { bodyParser: true } };
 
 export default async function handler(req, res) {
+  const kv = await getKv();
   applyCors(req, res, {
     methods: 'GET, POST, OPTIONS',
     headers: 'Content-Type, X-Webhook-Secret',

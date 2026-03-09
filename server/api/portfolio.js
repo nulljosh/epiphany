@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 
 const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving'];
@@ -28,6 +28,7 @@ function validatePortfolioPayload(data) {
 }
 
 export default async function handler(req, res) {
+  const kv = await getKv();
   const session = await getSessionUser(req);
   if (!session) {
     return errorResponse(res, 401, 'Authentication required');

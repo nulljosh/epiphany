@@ -1,5 +1,6 @@
 // Stock API: FMP batch quotes (primary) + Yahoo Finance chart (fallback)
 // FMP handles up to 100 symbols in one batch call
+import { getKv } from './_kv.js';
 import {
   parseSymbols,
   setStockResponseHeaders,
@@ -8,20 +9,6 @@ import {
   getFmpApiKey,
   isMarketHours,
 } from './stocks-shared.js';
-
-let _kv = null;
-async function getKv() {
-  if (!_kv) {
-    try {
-      const mod = await import('@vercel/kv');
-      _kv = mod.kv;
-    } catch (err) {
-      console.warn('Failed to load @vercel/kv:', err.message);
-      _kv = null;
-    }
-  }
-  return _kv;
-}
 
 const YAHOO_URLS = [
   'https://query1.finance.yahoo.com',

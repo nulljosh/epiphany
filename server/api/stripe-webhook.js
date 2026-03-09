@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { kv } from '@vercel/kv';
+import { getKv } from './_kv.js';
 
 let stripe;
 const getStripe = () => stripe || (stripe = new Stripe(process.env.STRIPE_SECRET_KEY));
@@ -19,6 +19,7 @@ async function buffer(readable) {
 }
 
 export default async function handler(req, res) {
+  const kv = await getKv();
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

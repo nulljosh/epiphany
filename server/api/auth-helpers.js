@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { getKv } from './_kv.js';
 
 export function parseCookies(req) {
   const header = req.headers.cookie || '';
@@ -13,10 +13,12 @@ export async function getSessionUser(req) {
   const cookies = parseCookies(req);
   const token = cookies.opticon_session;
   if (!token) return null;
+  const kv = await getKv();
+  if (!kv) return null;
   const session = await kv.get(`session:${token}`);
   if (!session) return null;
   if (session.expiresAt && Date.now() > session.expiresAt) {
-    await kv.del(`session:${token}`);
+    await kv?.del(`session:${token}`);
     return null;
   }
   return session;
