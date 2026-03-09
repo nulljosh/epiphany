@@ -7,8 +7,26 @@ import {
   YAHOO_HEADERS,
   FMP_BASE,
   getFmpApiKey,
-  isMarketHours,
 } from './stocks-shared.js';
+
+// Inlined to avoid Vercel bundler cache issues with new exports in stocks-shared.js
+function isMarketHours(now = new Date()) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const weekday = parts.find(p => p.type === 'weekday')?.value;
+  const hour = Number(parts.find(p => p.type === 'hour')?.value);
+  const minute = Number(parts.find(p => p.type === 'minute')?.value);
+  if (!weekday || Number.isNaN(hour) || Number.isNaN(minute)) return false;
+  if (weekday === 'Sat' || weekday === 'Sun') return false;
+  const totalMinutes = (hour * 60) + minute;
+  return totalMinutes >= 570 && totalMinutes < 960;
+}
 
 const YAHOO_URLS = [
   'https://query1.finance.yahoo.com',
