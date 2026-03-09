@@ -1,5 +1,20 @@
 import { applyCors } from './_cors.js';
-export const DEFAULT_SYMBOLS = 'AAPL,MSFT,GOOGL,AMZN,META,TSLA,NVDA';
+export const DEFAULT_SYMBOLS = [
+  // Mag 7
+  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'NVDA',
+  // ETFs
+  'SPY', 'QQQ', 'DIA', 'IWM',
+  // Tech / Growth
+  'PLTR', 'HOOD', 'COIN', 'SQ', 'SHOP', 'SNOW', 'NET', 'CRWD',
+  // Commodities / Energy
+  'XOM', 'CVX', 'OXY', 'COP',
+  // Precious Metals / Mining
+  'GLD', 'SLV', 'NEM', 'FCX', 'COPX',
+  // Finance
+  'JPM', 'GS', 'V', 'MA',
+  // Healthcare / Defense
+  'UNH', 'LMT', 'RTX',
+].join(',');
 
 export const YAHOO_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
