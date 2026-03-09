@@ -4,38 +4,24 @@ const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
 const REQUEST_TIMEOUT_MS = 8000;
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
-const SERIES_MAP = {
-  deficit: 'FYFSD',
-  treasury2y: 'DGS2',
-  treasury10y: 'DGS10',
-  treasury30y: 'DGS30',
-  cpi: 'CPIAUCSL',
-  fedFunds: 'FEDFUNDS',
-  gdp: 'A191RL1Q225SBEA',
-};
+const SERIES = [
+  { id: 'fedFunds',    seriesId: 'FEDFUNDS',        name: 'Fed Funds Rate',    unit: '%' },
+  { id: 'cpi',         seriesId: 'CPIAUCSL',        name: 'CPI',              unit: 'index' },
+  { id: 'gdp',         seriesId: 'A191RL1Q225SBEA', name: 'GDP Growth',        unit: '%' },
+  { id: 'treasury2y',  seriesId: 'DGS2',            name: '2Y Treasury',       unit: '%' },
+  { id: 'treasury10y', seriesId: 'DGS10',           name: '10Y Treasury',      unit: '%' },
+  { id: 'treasury30y', seriesId: 'DGS30',           name: '30Y Treasury',      unit: '%' },
+  { id: 'deficit',     seriesId: 'FYFSD',           name: 'Federal Deficit',   unit: 'B USD' },
+];
 
-let cache = {
-  ts: 0,
-  data: null,
-};
-
-function parseObservation(seriesId, observation) {
-  const valueRaw = observation?.value;
-  const parsed = Number(valueRaw);
-
-  return {
-    value: Number.isFinite(parsed) ? parsed : null,
-    date: observation?.date ?? null,
-    series: seriesId,
-  };
-}
+let cache = { ts: 0, data: null };
 
 async function fetchSeries(seriesId, apiKey) {
   const params = new URLSearchParams({
     series_id: seriesId,
     api_key: apiKey,
     sort_order: 'desc',
-    limit: '1',
+    limit: '12',
     file_type: 'json',
   });
 
@@ -54,45 +40,50 @@ async function fetchSeries(seriesId, apiKey) {
     }
 
     const payload = await response.json();
-    const observation = payload?.observations?.[0];
+    const observations = (payload?.observations || [])
+      .filter(o => o.value !== '.' && Number.isFinite(Number(o.value)))
+      .map(o => ({ date: o.date, value: Number(o.value) }));
 
-    if (!observation) {
-      return {
-        value: null,
-        date: null,
-        series: seriesId,
-      };
-    }
-
-    return parseObservation(seriesId, observation);
+    return observations;
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-async function fetchMacroData(apiKey) {
-  const entries = Object.entries(SERIES_MAP);
-  const settled = await Promise.allSettled(
-    entries.map(([key, seriesId]) => fetchSeries(seriesId, apiKey).then(result => [key, result]))
-  );
+function buildIndicator(spec, observations) {
+  // observations are desc order (newest first)
+  const current = observations[0] || null;
+  const previous = observations[1] || null;
+  const sparkline = [...observations].reverse(); // asc for sparkline
 
-  const data = {};
-
-  settled.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
-      const [key, value] = result.value;
-      data[key] = value;
-      return;
-    }
-
-    const [key, seriesId] = entries[index];
-    data[key] = { value: null, date: null, series: seriesId };
-  });
+  const value = current?.value ?? 0;
+  const prevValue = previous?.value ?? value;
+  const change = value - prevValue;
+  const changePercent = prevValue !== 0 ? (change / Math.abs(prevValue)) * 100 : 0;
 
   return {
-    ...data,
-    updatedAt: new Date().toISOString(),
+    id: spec.id,
+    name: spec.name,
+    value: Math.round(value * 100) / 100,
+    unit: spec.unit,
+    change: Math.round(change * 100) / 100,
+    changePercent: Math.round(changePercent * 100) / 100,
+    date: current?.date ?? '',
+    series: sparkline,
   };
+}
+
+async function fetchMacroData(apiKey) {
+  const settled = await Promise.allSettled(
+    SERIES.map(spec => fetchSeries(spec.seriesId, apiKey).then(obs => ({ spec, obs })))
+  );
+
+  return settled.map((result, i) => {
+    if (result.status === 'fulfilled') {
+      return buildIndicator(result.value.spec, result.value.obs);
+    }
+    return buildIndicator(SERIES[i], []);
+  });
 }
 
 export default async function handler(req, res) {

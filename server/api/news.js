@@ -108,6 +108,12 @@ function normalizeUrl(rawUrl) {
   }
 }
 
+function isEnglishTitle(title) {
+  if (!title || title.length < 10) return false;
+  const latinCount = [...title].filter(c => c.charCodeAt(0) < 128).length;
+  return (latinCount / Math.max(title.length, 1)) > 0.6;
+}
+
 function dedup(articles) {
   const seen = [];
   const seenUrls = new Set();
@@ -225,7 +231,7 @@ export default async function handler(req, res) {
       };
     });
 
-    const articles = dedup(raw);
+    const articles = dedup(raw).filter(a => isEnglishTitle(a.title));
     const data = { articles };
     cache.set(cacheKey, { ts: Date.now(), data });
     res.setHeader('Cache-Control', 's-maxage=300');
@@ -233,6 +239,14 @@ export default async function handler(req, res) {
   } catch (err) {
     clearTimeout(timer);
     console.warn('GDELT news error:', err.message);
+
+    // Return stale cache on failure instead of empty array
+    const stale = cache.get(cacheKey);
+    if (stale) {
+      res.setHeader('Cache-Control', 's-maxage=60');
+      return res.status(200).json(stale.data);
+    }
+
     return res.status(502).json({ error: 'GDELT unavailable', articles: [] });
   }
 }
