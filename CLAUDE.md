@@ -16,6 +16,7 @@ Opticon is a financial terminal app with:
 - High-speed simulator UI (`src/App.jsx`)
 - Personal finance panel (`src/components/FinancePanel.jsx`) -- portfolio, budget, debt, goals, spending
 - Prediction market feed and filters
+- Top stock ticker waits for real prices before it appears; it should not show built-in placeholder prices on first load
 - Map-first backdrop + overlays (`src/components/LiveMapBackdrop.jsx`)
 - Tactical HUD styling pass (grid overlay + live status badge + neon map controls)
 - Single serverless API entry (`api/gateway.js`) with handlers under `server/api/`
@@ -57,9 +58,9 @@ All endpoints are routed through `api/gateway.js` to handlers in `server/api/`.
 | `/api/incidents` | OpenStreetMap Overpass | Free, no key | Working |
 | `/api/earthquakes` | USGS GeoJSON Feed | Free, no key | Working |
 | `/api/events` | GDELT Project | Free, no key | Working |
-| `/api/weather-alerts` | -- | -- | Implemented |
-| `/api/crime` | -- | -- | Implemented |
-| `/api/local-events` | -- | -- | Implemented |
+| `/api/weather-alerts` | NOAA + Open-Meteo | Free, no key | Working |
+| `/api/crime` | City open data + news fallback | Free, no key | Working |
+| `/api/local-events` | PredictHQ + free fallbacks | Optional key | Working |
 | `/api/news` | GDELT GDoc API | Free, no key | Working (15-min cycle, Jaccard dedup, 30+ city geo-matching) |
 
 ## Development
@@ -67,10 +68,11 @@ All endpoints are routed through `api/gateway.js` to handlers in `server/api/`.
 ```bash
 npm install && npm run dev   # localhost:5173
 npm test -- --run && npm run build
-git push origin main         # triggers Vercel production deploy
+./push.sh                    # local checks + one Vercel production deploy
 ```
 
 Keep endpoint logic in `server/api/`; only `api/gateway.js` deploys as the runtime function.
+Vercel free plan does not allow the old every-5-minutes cron here, so only the once-a-day jobs stay on Vercel for now.
 
 ## Stock Data API
 
@@ -115,6 +117,3 @@ Embed OpenPlanter's recursive investigation engine into Opticon as a "Follow the
 
 ## Quick Commands
 - `./scripts/simplify.sh`
-- `./scripts/monetize.sh . --write`
-- `./scripts/audit.sh .`
-- `./scripts/ship.sh .`

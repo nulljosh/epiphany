@@ -36,6 +36,7 @@ npm test -- --run && npm run build
 ## Hosting
 
 Current production is still Vercel-native. Deploy guidance and the Cloudflare migration target are documented in [docs/hosting.md](/Users/joshua/Documents/Code/opticon/docs/hosting.md).
+The top stock ticker now stays empty for a moment on first load and only fills in once real prices are ready.
 
 ## Roadmap
 
@@ -43,9 +44,10 @@ Use this section as the execution brief for Codex.
 
 ### Status (March 10, 2026)
 
-- [ ] Verify live market data end-to-end.
-  Verified: targeted market data suites passed for [server/api/stocks-free.js](/Users/joshua/Documents/Code/opticon/server/api/stocks-free.js), [server/api/markets.js](/Users/joshua/Documents/Code/opticon/server/api/markets.js), and their consumers.
-  Remaining: manual live confirmation in the running app that current UI quotes are coming from live upstream responses rather than fallback seed data.
+- [x] Verify live market data end-to-end.
+  Done: the top stock ticker no longer shows old built-in prices while the page is loading.
+  Done: stock polling now runs for everyone, not just signed-in users.
+  Verify: production is live at [opticon.heyitsmejosh.com](https://opticon.heyitsmejosh.com) for a manual check in the browser.
 
 - [x] Verify polling and freshness behavior for every live API surface.
   Done: normalized freshness/degraded metadata across stocks, markets, weather, flights, incidents, earthquakes, news, events, weather alerts, local events, and crime routes.
@@ -79,6 +81,3 @@ MIT 2026, Joshua Trommel
 
 ## Quick Commands
 - `./scripts/simplify.sh` - normalize project structure
-- `./scripts/monetize.sh . --write` - generate monetization plan (if available)
-- `./scripts/audit.sh .` - run fast project audit (if available)
-- `./scripts/ship.sh .` - run checks and ship (if available)
