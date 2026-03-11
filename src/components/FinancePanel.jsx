@@ -790,7 +790,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                     <button onClick={() => updateDraft('accounts', (list) => list.filter((_, idx) => idx !== index))} style={{ ...pillButtonStyle, color: t.red }}>Remove</button>
                   </div>
                 ))}
-                <button onClick={() => updateDraft('accounts', (list) => [...list, { name: 'Vacation', type: 'savings', currency: 'CAD', balance: 0 }])} style={pillButtonStyle}>Add account</button>
+                <button onClick={() => updateDraft('accounts', (list) => [...list, { name: 'Vacation', type: 'chequing', currency: 'CAD', balance: 0 }])} style={pillButtonStyle}>Add account</button>
               </div>
             </EditorSection>
 
