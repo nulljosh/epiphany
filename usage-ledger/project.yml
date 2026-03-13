@@ -1,0 +1,27 @@
+name: UsageLedger
+options:
+  bundleIdPrefix: com.heyitsmejosh
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  SWIFT_VERSION: "6.0"
+  MARKETING_VERSION: "0.1.0"
+  CURRENT_PROJECT_VERSION: "1"
+  DEVELOPMENT_TEAM: QMM486NPYC
+  CODE_SIGN_STYLE: Automatic
+targets:
+  UsageLedger:
+    type: application
+    platform: iOS
+    sources:
+      - path: UsageLedger
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.usageledger
+      GENERATE_INFOPLIST_FILE: YES
+schemes:
+  UsageLedger:
+    build:
+      targets:
+        UsageLedger: all
+    run:
+      config: Debug

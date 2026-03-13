@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300">
+  <style>
+    text { font-family: -apple-system, system-ui, sans-serif; fill: #24292f; }
+    .title { font-size: 14px; font-weight: 600; }
+    .sub { font-size: 11px; fill: #57606a; }
+    .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; }
+    .core { fill: #0969da; }
+    .local { fill: #8250df; }
+    .text-white { fill: #ffffff; }
+    .arrow { stroke: #57606a; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="300" fill="#ffffff"/>
+
+  <!-- Browser -->
+  <rect x="30" y="110" width="140" height="80" rx="8" class="box"/>
+  <rect x="30" y="110" width="140" height="24" rx="8" class="core"/>
+  <text x="100" y="126" text-anchor="middle" class="title text-white">Browser</text>
+  <text x="100" y="152" text-anchor="middle" class="sub">Vanilla JS SPA</text>
+  <text x="100" y="168" text-anchor="middle" class="sub">Apple Liquid Glass</text>
+
+  <!-- Express Server -->
+  <rect x="230" y="70" width="160" height="160" rx="8" class="box"/>
+  <rect x="230" y="70" width="160" height="24" rx="8" class="core"/>
+  <text x="310" y="86" text-anchor="middle" class="title text-white">Express + Vite</text>
+  <text x="310" y="112" text-anchor="middle" class="sub">REST API</text>
+  <text x="310" y="128" text-anchor="middle" class="sub">WebSocket logs</text>
+  <text x="310" y="144" text-anchor="middle" class="sub">Model switching</text>
+  <text x="310" y="160" text-anchor="middle" class="sub">Device management</text>
+  <text x="310" y="176" text-anchor="middle" class="sub">Config editor</text>
+
+  <!-- OpenClaw -->
+  <rect x="450" y="30" width="150" height="70" rx="8" class="box"/>
+  <rect x="450" y="30" width="150" height="24" rx="8" class="local"/>
+  <text x="525" y="46" text-anchor="middle" class="title text-white">OpenClaw</text>
+  <text x="525" y="72" text-anchor="middle" class="sub">Gateway + CLI</text>
+  <text x="525" y="86" text-anchor="middle" class="sub">iMessage bridge</text>
+
+  <!-- Ollama -->
+  <rect x="450" y="120" width="150" height="60" rx="8" class="box"/>
+  <rect x="450" y="120" width="150" height="24" rx="8" class="local"/>
+  <text x="525" y="136" text-anchor="middle" class="title text-white">Ollama</text>
+  <text x="525" y="162" text-anchor="middle" class="sub">qwen3:14b-fast</text>
+
+  <!-- File System -->
+  <rect x="450" y="200" width="150" height="70" rx="8" class="box"/>
+  <text x="525" y="224" text-anchor="middle" class="title">~/.openclaw/</text>
+  <text x="525" y="242" text-anchor="middle" class="sub">devices, config, logs</text>
+  <text x="525" y="258" text-anchor="middle" class="sub">sessions, agents</text>
+
+  <!-- Fallback APIs -->
+  <rect x="650" y="80" width="130" height="100" rx="8" class="box"/>
+  <text x="715" y="104" text-anchor="middle" class="title">Fallbacks</text>
+  <text x="715" y="124" text-anchor="middle" class="sub">Codex (OpenAI)</text>
+  <text x="715" y="140" text-anchor="middle" class="sub">Haiku (Anthropic)</text>
+  <text x="715" y="156" text-anchor="middle" class="sub">Sonnet (Anthropic)</text>
+
+  <!-- Arrows -->
+  <line x1="170" y1="150" x2="228" y2="150" class="arrow"/>
+  <line x1="390" y1="105" x2="448" y2="65" class="arrow"/>
+  <line x1="390" y1="150" x2="448" y2="150" class="arrow"/>
+  <line x1="390" y1="185" x2="448" y2="230" class="arrow"/>
+  <line x1="600" y1="130" x2="648" y2="130" class="arrow"/>
+</svg>
