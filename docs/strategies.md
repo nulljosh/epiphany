@@ -1,4 +1,4 @@
-<!-- HIDDEN: Arby content folded into rise. Uncomment when ready to surface as a strategies tab.
+<!-- HIDDEN: Arby content folded into opticon. Uncomment when ready to surface as a strategies tab.
 
 # Strategies Reference
 

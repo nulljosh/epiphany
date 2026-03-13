@@ -872,5 +872,5 @@
     - generic [ref=e1103]:
       - text: © 2026 ·
       - link "GitHub" [ref=e1104] [cursor=pointer]:
-        - /url: https://github.com/nulljosh/bread
+        - /url: https://github.com/nulljosh/opticon
 ```

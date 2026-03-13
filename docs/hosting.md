@@ -9,7 +9,7 @@ Opticon is currently deployed on Vercel using:
 - Vercel cron jobs for market refresh and broker runs
 - Vercel KV / Blob integrations in server routes
 
-The linked Vercel project in `.vercel/project.json` still uses the legacy project name `rise`. Treat that as the current production linkage unless it is explicitly relinked.
+The linked Vercel project in `.vercel/project.json` may still use the legacy project name `rise`. Treat that as the current production linkage unless it is explicitly relinked to `opticon`.
 
 Vercel Hobby also rejects the intraday `*/5 13-20 * * 1-5` cron schedule. On the free plan, Opticon can only keep the once-per-day cron jobs on Vercel. Restore the intraday refresh schedule after moving to Cloudflare Workers cron or upgrading Vercel.
 
