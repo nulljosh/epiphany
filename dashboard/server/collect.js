@@ -12,7 +12,7 @@ const LIVE_URLS = {
   opticon: 'https://opticon.heyitsmejosh.com',
   spark: 'https://spark.heyitsmejosh.com',
   tally: 'https://tally.heyitsmejosh.com',
-  chi: 'https://fs-one-gamma.vercel.app',
+  chi: 'https://chi.heyitsmejosh.com',
   arthur: 'https://arthur.heyitsmejosh.com',
   rabbit: 'https://rabbit-lyart.vercel.app',
   lingo: 'https://lingo.heyitsmejosh.com',

@@ -3,3 +3,4 @@ dist
 public/data.json
 .DS_Store
 .vercel
+package-lock.json
