@@ -6,8 +6,8 @@ import { supabaseRequest, supabaseConfigured } from './supabase.js';
 
 // In-memory rate limiter for login attempts
 const loginAttempts = new Map();
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_MAX = 15;
 
 function checkRateLimit(ip) {
   const now = Date.now();
@@ -57,6 +57,7 @@ function publicUser(user) {
     tier: user?.tier || 'free',
     stripeCustomerId: user?.stripeCustomerId || null,
     watchlist: user?.watchlist || null,
+    avatarUrl: user?.avatarUrl || null,
   };
 }
 
