@@ -1,4 +1,4 @@
-# Rise: Technical Whitepaper
+# Opticon: Technical Whitepaper
 
 **Version**: 2.0
 **Date**: February 2026
@@ -9,7 +9,7 @@
 
 ## Abstract
 
-Rise is a low-latency financial terminal combining quantitative simulation, prediction market analysis, and live market data in under 10MB of runtime memory. This paper documents the core algorithms — trading simulator, Monte Carlo engine, Kelly sizing, and edge detection — along with the system architecture that makes extreme efficiency possible.
+Opticon is a low-latency financial terminal combining quantitative simulation, prediction market analysis, and live market data in under 10MB of runtime memory. This paper documents the core algorithms - trading simulator, Monte Carlo engine, Kelly sizing, and edge detection - along with the system architecture that makes extreme efficiency possible.
 
 ---
 
@@ -258,7 +258,7 @@ Fallback: If the Blob cache is stale (>24h), the client falls back to direct API
 
 ## 9. Monetization
 
-Rise is freemium.
+Opticon is freemium.
 
 **Free**: All simulation, Monte Carlo, prediction market, and live data features. No account required.
 
@@ -283,7 +283,7 @@ The free tier is complete by design. Pro is for users who want to act on signals
 
 ## Disclaimer
 
-Rise is a simulation and research tool. Nothing in this document or the software constitutes financial advice. All simulations use synthetic price data. Past simulated performance does not predict real market outcomes.
+Opticon is a simulation and research tool. Nothing in this document or the software constitutes financial advice. All simulations use synthetic price data. Past simulated performance does not predict real market outcomes.
 
 ---
 
