@@ -1,35 +1,17 @@
 # Opticon Notes
 
-## What This App Is
+## What It Is
 
-Opticon is a live map and market app.
+Live map and market app. Map is the main view. Top bar shows prices. Side panel (or mobile sheet) shows the active tab.
 
-The map is the main view. The other views sit on top of it.
+## Rules
 
-The top bar shows live prices. The right side or mobile sheet shows the current view.
+- Map stays steady -- no jumps on load, no flashing on state changes
+- No fake prices before real data arrives
+- Mobile-first layout, same-tab toggle opens/closes sheet
+- Simulator stays centered, does not push the map
 
-## What To Protect
-
-- Keep the map feeling steady.
-- Do not let the app jump to a random city on load.
-- Do not show fake stock prices before real ones arrive.
-- Keep the phone view simple and easy to tap.
-- Keep the account menu easy to find.
-
-## Layout Rules
-
-- Start with the phone layout first.
-- The map should stay visible behind the panels.
-- On phones, tapping the same tab should open and hide the sheet.
-- On larger screens, the side panel should stay clear and readable.
-
-## Simulator Notes
-
-- The simulator should feel centered and calm.
-- Updating the simulator number should not make the map flash.
-- The simulator should not push the map out of place.
-
-## Running It
+## Running
 
 ```bash
 npm install
@@ -38,14 +20,13 @@ npm test -- --run
 npm run build
 ```
 
-## Deploy Notes
+## Deploy
 
-Production is still on Vercel.
+Production on Vercel. Cloudflare is future migration path (API first).
 
-Cloudflare is the slow, safe path for later. Move the API first, test it, then move more only when it feels solid.
+## Features
 
-## Current Priorities
-
-- keep the phone layout stable
-- keep the top bar moving cleanly
-- keep the map locked to the best real location available
+- Income scenario overlays on spending chart (+$500, +$1000, x2)
+- Stacked category bar charts
+- Expandable monthly breakdowns with per-category progress bars
+- Debt payoff projections (avalanche method)

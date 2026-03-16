@@ -7,6 +7,25 @@ import { buildSpendingForecast } from '../utils/spendingForecast';
 
 const TABS = ['portfolio', 'budget', 'spending'];
 
+const INCOME_SCENARIOS = [
+  { label: '+$500', delta: 500, color: '#30D158' },
+  { label: '+$1000', delta: 1000, color: '#FF9F0A' },
+  { label: 'x2 Income', multiplier: 2, color: '#BF5AF2' },
+];
+
+const CAT_COLORS = {
+  housing: '#0071e3',
+  food: '#30D158',
+  transport: '#FF9F0A',
+  utilities: '#BF5AF2',
+  entertainment: '#FF453A',
+  health: '#64D2FF',
+  shopping: '#FF375F',
+  other: '#FFD60A',
+  insurance: '#AC8E68',
+  subscriptions: '#5E5CE6',
+};
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -193,7 +212,105 @@ function ProgressBar({ value, max, color, t }) {
   );
 }
 
-function SpendingChart({ spending, t, totalIncome, totalExpenses }) {
+function StackedBarChart({ spending, t }) {
+  if (!spending || spending.length === 0) return null;
+
+  const allCategories = new Set();
+  for (const entry of spending) {
+    for (const cat of Object.keys(entry.categories || {})) {
+      allCategories.add(cat);
+    }
+  }
+  const categories = [...allCategories].sort();
+  const maxTotal = Math.max(1, ...spending.map((e) => e.total));
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {spending.map((entry, entryIndex) => (
+          <div key={entry.month || entryIndex}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: t.textTertiary, marginBottom: 2 }}>
+              <span>{monthLabelShort(entry.month)}</span>
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{compactCurrency(entry.total)}</span>
+            </div>
+            <div style={{ display: 'flex', height: 18, borderRadius: 4, overflow: 'hidden', background: t.glass }}>
+              {categories.map((cat) => {
+                const amount = entry.categories?.[cat] || 0;
+                if (amount <= 0) return null;
+                const pct = (amount / maxTotal) * 100;
+                return (
+                  <div
+                    key={cat}
+                    title={`${cat}: ${compactCurrency(amount)}`}
+                    style={{
+                      width: `${pct}%`,
+                      background: CAT_COLORS[cat] || '#888',
+                      transition: 'width 0.3s ease',
+                      minWidth: pct > 0 ? 2 : 0,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+        {categories.map((cat) => (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: CAT_COLORS[cat] || '#888' }} />
+            <span style={{ color: t.textSecondary }}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DebtPayoffProjection({ debt, surplus, t }) {
+  if (!debt || debt.length === 0 || surplus <= 0) return null;
+
+  const sorted = [...debt].sort((a, b) => a.balance - b.balance);
+  let remaining = surplus;
+  const projections = [];
+  let cumulativeMonths = 0;
+
+  for (const entry of sorted) {
+    if (entry.balance <= 0) continue;
+    const minPay = entry.minPayment || 0;
+    const extraPay = Math.max(0, remaining - minPay);
+    const totalPay = minPay + extraPay;
+    const months = totalPay > 0 ? Math.ceil(entry.balance / totalPay) : Infinity;
+    cumulativeMonths += months;
+    projections.push({ name: entry.name, balance: entry.balance, months, cumulativeMonths, totalPay });
+    remaining = surplus;
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>
+        Debt Payoff Projection (Avalanche)
+      </div>
+      {projections.map((proj, index) => (
+        <div key={proj.name || index} style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
+            <span>{proj.name}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(proj.balance)}</span>
+          </div>
+          <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 2 }}>
+            ~{proj.months === Infinity ? '--' : proj.months} months at {formatCurrency(proj.totalPay)}/mo
+          </div>
+          <ProgressBar value={proj.months === Infinity ? 0 : 1} max={1} color={t.green} t={t} />
+        </div>
+      ))}
+      <div style={{ fontSize: 12, fontWeight: 600, color: t.green, marginTop: 8 }}>
+        Debt-free in ~{projections[projections.length - 1]?.cumulativeMonths || '--'} months total
+      </div>
+    </div>
+  );
+}
+
+function SpendingChart({ spending, t, totalIncome, totalExpenses, activeScenarios = [] }) {
   const [activePoint, setActivePoint] = useState(null);
 
   if (!spending || spending.length === 0) return null;
@@ -333,6 +450,37 @@ function SpendingChart({ spending, t, totalIncome, totalExpenses }) {
             strokeLinejoin="round"
           />
         )}
+        {activeScenarios.map((scenario) => {
+          const scenarioIncome = scenario.multiplier
+            ? (totalIncome || 0) * scenario.multiplier
+            : (totalIncome || 0) + (scenario.delta || 0);
+          if (scenarioIncome <= 0) return null;
+          const lineY = yForValue(scenarioIncome);
+          return (
+            <g key={scenario.label}>
+              <line
+                x1={padding.left}
+                y1={lineY}
+                x2={W - padding.right}
+                y2={lineY}
+                stroke={scenario.color}
+                strokeWidth="1.2"
+                strokeDasharray="6 4"
+                opacity="0.7"
+              />
+              <text
+                x={W - padding.right + 2}
+                y={lineY + 3}
+                fill={scenario.color}
+                fontSize="7"
+                fontFamily="-apple-system, system-ui, sans-serif"
+                fontWeight="600"
+              >
+                {scenario.label}
+              </text>
+            </g>
+          );
+        })}
         <path d={actualPath} fill="none" stroke={t.green} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
         {forecastPath && (
           <path
@@ -486,6 +634,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [statementUploading, setStatementUploading] = useState(false);
   const [isEditingPortfolio, setIsEditingPortfolio] = useState(false);
   const [portfolioDraft, setPortfolioDraft] = useState(null);
+  const [activeScenarios, setActiveScenarios] = useState([]);
+  const [selectedSpendingMonth, setSelectedSpendingMonth] = useState(null);
   const fileInputRef = useRef(null);
   const statementInputRef = useRef(null);
 
@@ -1014,12 +1164,17 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               </div>
             </Card>
             {surplus > 0 && (
-              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-                <div style={labelStyle}>Payoff Timeline</div>
-                <div style={{ fontSize: 13, color: t.textSecondary }}>
-                  At {formatCurrency(surplus)}/mo surplus: ~{Math.ceil(totalDebt / surplus)} months to debt-free
-                </div>
-              </Card>
+              <>
+                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                  <div style={labelStyle}>Payoff Timeline</div>
+                  <div style={{ fontSize: 13, color: t.textSecondary }}>
+                    At {formatCurrency(surplus)}/mo surplus: ~{Math.ceil(totalDebt / surplus)} months to debt-free
+                  </div>
+                </Card>
+                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                  <DebtPayoffProjection debt={debt} surplus={surplus} t={t} />
+                </Card>
+              </>
             )}
           </>
         )}
@@ -1063,29 +1218,74 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             )}
 
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+              <div style={labelStyle}>Income Scenarios</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                {INCOME_SCENARIOS.map((scenario) => {
+                  const isActive = activeScenarios.some((s) => s.label === scenario.label);
+                  return (
+                    <button
+                      key={scenario.label}
+                      onClick={() => setActiveScenarios((prev) =>
+                        isActive ? prev.filter((s) => s.label !== scenario.label) : [...prev, scenario]
+                      )}
+                      style={{
+                        ...pillButtonStyle,
+                        background: isActive ? scenario.color : t.glass,
+                        color: isActive ? '#000' : t.textSecondary,
+                        borderColor: isActive ? scenario.color : t.border,
+                      }}
+                    >
+                      {scenario.label}
+                    </button>
+                  );
+                })}
+              </div>
               <div style={labelStyle}>Spending Trends</div>
-              <SpendingChart spending={spendingChronological} t={t} totalIncome={totalIncome} totalExpenses={totalExpenses} />
+              <SpendingChart spending={spendingChronological} t={t} totalIncome={totalIncome} totalExpenses={totalExpenses} activeScenarios={activeScenarios} />
+            </Card>
+
+            <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+              <div style={labelStyle}>Category Breakdown</div>
+              <StackedBarChart spending={spendingChronological} t={t} />
             </Card>
 
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
                 <div style={labelStyle}>Monthly Breakdown</div>
-                {spendingRecentFirst.map((entry, index) => (
-                  <div key={`${entry.month}-${index}`} style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 6 }}>
-                      <span>{entry.month}</span>
-                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(entry.total)}</span>
-                    </div>
-                    {Object.entries(entry.categories).sort((a, b) => b[1] - a[1]).map(([category, amount]) => (
-                      <div key={category} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: t.textSecondary, padding: '2px 0' }}>
-                        <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                          {formatCurrency(amount)} ({entry.total > 0 ? Math.round(amount / entry.total * 100) : 0}%)
-                        </span>
+                {spendingRecentFirst.map((entry, index) => {
+                  const isExpanded = selectedSpendingMonth === entry.month;
+                  const sortedCats = Object.entries(entry.categories).sort((a, b) => b[1] - a[1]);
+                  return (
+                    <div key={`${entry.month}-${index}`} style={{ marginBottom: 16 }}>
+                      <div
+                        onClick={() => setSelectedSpendingMonth(isExpanded ? null : entry.month)}
+                        style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <span>{isExpanded ? '- ' : '+ '}{entry.month}</span>
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(entry.total)}</span>
                       </div>
-                    ))}
-                  </div>
-                ))}
+                      {isExpanded && sortedCats.map(([category, amount]) => (
+                        <div key={category} style={{ marginBottom: 6 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: t.textSecondary, marginBottom: 2 }}>
+                            <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                              {formatCurrency(amount)} ({entry.total > 0 ? Math.round(amount / entry.total * 100) : 0}%)
+                            </span>
+                          </div>
+                          <ProgressBar value={amount} max={entry.total} color={CAT_COLORS[category] || '#888'} t={t} />
+                        </div>
+                      ))}
+                      {!isExpanded && sortedCats.slice(0, 3).map(([category, amount]) => (
+                        <div key={category} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: t.textSecondary, padding: '2px 0' }}>
+                          <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {formatCurrency(amount)} ({entry.total > 0 ? Math.round(amount / entry.total * 100) : 0}%)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             </Card>
           </>
