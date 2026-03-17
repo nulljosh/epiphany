@@ -725,14 +725,18 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       const res = await fetch('/api/statements', { credentials: 'include' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const files = Array.isArray(data?.statements) ? data.statements.filter((item) => item?.spendingMonth?.month) : [];
+      const allStatements = Array.isArray(data?.statements) ? data.statements : [];
+      const files = allStatements.filter((item) => item?.spendingMonth?.month);
+      if (allStatements.length > 0 && files.length < allStatements.length) {
+        console.warn(`[STATEMENTS] Dropped ${allStatements.length - files.length}/${allStatements.length} statements missing spendingMonth.month`);
+      }
       setStatementFiles(files);
       const result = syncSpendingMonths(files.map((item) => item.spendingMonth));
       if (!result.success) setImportError(result.error);
     } catch (err) {
       setStatementFiles([]);
       if (err?.message?.includes('401')) {
-        setImportError(null);
+        setImportError('Sign in to view saved statements');
       } else {
         setImportError('Could not load saved statements');
       }

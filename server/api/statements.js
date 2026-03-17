@@ -98,7 +98,8 @@ export default async function handler(req, res) {
     }
 
     return errorResponse(res, 405, 'Method not allowed');
-  } catch {
-    return res.status(200).json({ statements: [] });
+  } catch (err) {
+    console.error('[STATEMENTS] Unhandled error:', err?.message || err);
+    return res.status(500).json({ error: 'Internal server error', statements: [] });
   }
 }
