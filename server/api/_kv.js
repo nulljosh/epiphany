@@ -16,7 +16,14 @@ export async function getKv() {
             return async (...args) => {
               const result = await target.get(...args);
               if (typeof result === 'string') {
-                try { return JSON.parse(result); } catch { return result; }
+                try {
+                  let parsed = JSON.parse(result);
+                  // Double-serialization safety: if still a string after first parse, parse again
+                  if (typeof parsed === 'string') {
+                    try { parsed = JSON.parse(parsed); } catch { /* use first parse */ }
+                  }
+                  return parsed;
+                } catch { return result; }
               }
               return result;
             };

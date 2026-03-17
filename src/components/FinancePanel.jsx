@@ -1183,6 +1183,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
         {tab === 'spending' && (
           <>
+            {importError && (
+              <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,69,58,0.15)', borderRadius: 8, fontSize: 11, color: t.red }}>
+                {importError}
+              </div>
+            )}
             {!shouldHideStatementsCard && (
               <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                 <div style={labelStyle}>Saved Statements</div>

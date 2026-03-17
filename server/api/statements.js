@@ -55,6 +55,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const statements = await kv.get(statementsKey);
+      console.log(`[STATEMENTS] KV get for ${statementsKey}: type=${typeof statements}, isArray=${Array.isArray(statements)}, length=${Array.isArray(statements) ? statements.length : 'N/A'}`);
       const storedStatements = Array.isArray(statements) ? statements : [];
       const refreshed = await refreshStoredStatements(kv, storedStatements);
 
