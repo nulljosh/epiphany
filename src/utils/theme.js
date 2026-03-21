@@ -1,13 +1,13 @@
 // Apple Liquid Glass Theme
 export const darkTheme = {
-  bg: '#000000',
+  bg: '#111111',
   surface: 'rgba(28,28,30,0.8)',
   glass: 'rgba(255,255,255,0.06)',
   glassHover: 'rgba(255,255,255,0.12)',
-  border: 'rgba(255,255,255,0.06)',
-  text: '#FFFFFF',
-  textSecondary: 'rgba(255,255,255,0.6)',
-  textTertiary: 'rgba(255,255,255,0.4)',
+  border: 'rgba(255,255,255,0.1)',
+  text: '#e8e8e8',
+  textSecondary: 'rgba(255,255,255,0.5)',
+  textTertiary: 'rgba(255,255,255,0.25)',
   accent: '#0a84ff',
   blue: '#0a84ff',
   backgroundSecondary: 'rgba(255,255,255,0.08)',
@@ -21,14 +21,14 @@ export const darkTheme = {
 };
 
 export const lightTheme = {
-  bg: '#ffffff',
-  surface: '#FFFFFF',                   // Opaque white — no grey bleed through semi-transparent layers
-  glass: 'rgba(255,255,255,0.92)',      // Slight transparency for cards on grey bg
+  bg: '#fafafa',
+  surface: '#FFFFFF',
+  glass: 'rgba(255,255,255,0.92)',
   glassHover: '#FFFFFF',
-  border: 'rgba(0,0,0,0.09)',
-  text: '#111111',                       // Near-black — readout style
-  textSecondary: 'rgba(60,60,67,0.6)', // Apple secondary label
-  textTertiary: 'rgba(60,60,67,0.45)', // Apple tertiary — readable at small sizes
+  border: 'rgba(0,0,0,0.1)',
+  text: '#000000',
+  textSecondary: 'rgba(0,0,0,0.5)',
+  textTertiary: 'rgba(0,0,0,0.3)',
   accent: '#0a84ff',                    // Readout blue
   blue: '#0a84ff',
   backgroundSecondary: 'rgba(0,0,0,0.04)',
@@ -79,11 +79,11 @@ export function applyResolvedTheme(themeName) {
   const root = document.documentElement;
   root.dataset.theme = resolved;
   root.style.colorScheme = resolved;
-  root.style.backgroundColor = resolved === 'dark' ? '#000000' : '#ffffff';
-  document.body.style.backgroundColor = resolved === 'dark' ? '#000000' : '#ffffff';
+  root.style.backgroundColor = resolved === 'dark' ? '#111111' : '#fafafa';
+  document.body.style.backgroundColor = resolved === 'dark' ? '#111111' : '#fafafa';
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute('content', resolved === 'dark' ? '#000000' : '#ffffff');
+    themeMeta.setAttribute('content', resolved === 'dark' ? '#111111' : '#fafafa');
   }
 }
 
