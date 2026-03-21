@@ -39,12 +39,14 @@ function saveToStorage(data) {
 async function fetchServerPortfolio() {
   try {
     const res = await fetch('/api/portfolio?action=get', { credentials: 'include' });
-    if (!res.ok) return null;
+    if (!res.ok) { console.warn('[portfolio] fetch failed:', res.status); return null; }
     const data = await res.json();
     if (data.empty) return null;
-    const { valid } = validatePortfolioData(data);
+    const { valid, error } = validatePortfolioData(data);
+    if (!valid) { console.warn('[portfolio] validation failed:', error); }
     return valid ? normalizePortfolioData(data) : null;
-  } catch {
+  } catch (err) {
+    console.warn('[portfolio] fetch error:', err);
     return null;
   }
 }
