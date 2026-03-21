@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Opticon
-![version](https://img.shields.io/badge/version-v2.4.0-blue)
+![version](https://img.shields.io/badge/version-v2.5.0-blue)
 
 Live map and market app. Prices, news, and local activity on one screen.
 
@@ -36,6 +36,12 @@ Deploy: Vercel (Cloudflare migration planned for API).
 - [ ] Multi-account portfolio aggregation
 - [ ] Historical spending trends
 - [ ] macOS companion feature parity
+
+## Changelog
+
+### v2.5.0 (2026-03-21)
+- Incident radius fix (111km -> 16km)
+- Restored transactions in statements API
 
 ## License
 

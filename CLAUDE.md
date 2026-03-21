@@ -1,5 +1,7 @@
 # Opticon
 
+v2.5.0
+
 ## Rules
 
 - Map stays steady -- no jumps on load, no flashing on state changes
