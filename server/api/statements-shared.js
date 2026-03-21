@@ -1,5 +1,6 @@
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONEY_RE = /^[–-]?\$?[\d,]+\.\d{2}$/;
+const INLINE_RE = /^(\d{4}-\d{2}-\d{2})(\d{4}-\d{2}-\d{2})(.+?)([–−-]?\$?[\d,]+\.\d{2})(\$?[–−-]?[\d,]+\.\d{2})$/;
 
 function parseMoney(raw) {
   if (typeof raw !== 'string') return null;
@@ -49,9 +50,29 @@ export function parseStatementText(text = '') {
     .filter(Boolean)
     .filter((line) => !/^page \d+ of \d+$/i.test(line))
     .filter((line) => !line.startsWith('Wealthsimple Payments Inc.'))
-    .filter((line) => line !== 'DATE' && line !== 'POSTED DATE' && line !== 'DESCRIPTION' && line !== 'AMOUNT (CAD)' && line !== 'BALANCE (CAD)');
+    .filter((line) => line !== 'DATE' && line !== 'POSTED DATE' && line !== 'DESCRIPTION' && line !== 'AMOUNT (CAD)' && line !== 'BALANCE (CAD)')
+    .filter((line) => !line.startsWith('DATEPOSTED DATE'));
 
   const transactions = [];
+
+  for (const line of lines) {
+    const m = INLINE_RE.exec(line);
+    if (!m) continue;
+    const amount = parseMoney(m[4]);
+    const balance = parseMoney(m[5]);
+    if (amount === null || balance === null) continue;
+    const description = m[3].trim();
+    transactions.push({
+      date: m[1],
+      postedDate: m[2],
+      description,
+      amount,
+      balance,
+      category: categorizeTransaction(description),
+    });
+  }
+
+  if (transactions.length > 0) return transactions;
 
   for (let i = 0; i < lines.length - 4; i += 1) {
     if (!DATE_RE.test(lines[i]) || !DATE_RE.test(lines[i + 1])) continue;

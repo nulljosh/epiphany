@@ -7,6 +7,12 @@ import { parseStatementText, summarizeTransactions } from './statements-shared.j
 const execFileAsync = promisify(execFile);
 const DEFAULT_STATEMENTS_DIR = path.join(process.env.HOME || '', 'Documents/Misc/statement/');
 
+async function parsePdfBuffer(buffer) {
+  const pdfParse = (await import('pdf-parse')).default;
+  const data = await pdfParse(buffer);
+  return data?.text || '';
+}
+
 export async function readPdfText(filePath) {
   try {
     const { stdout } = await execFileAsync('pdftotext', [filePath, '-'], { maxBuffer: 10 * 1024 * 1024 });
@@ -16,30 +22,18 @@ export async function readPdfText(filePath) {
   }
 
   const buffer = await readFile(filePath);
-  const { PDFParse } = await import('pdf-parse');
-  const parser = new PDFParse({ data: buffer });
   try {
-    const result = await parser.getText();
-    return result?.text || '';
+    return await parsePdfBuffer(buffer);
   } catch (err) {
     console.warn(`[PDF] Failed to parse ${filePath}: ${err.message}`);
     return '';
-  } finally {
-    await parser.destroy();
   }
 }
 
 export async function summarizeStatementBuffer(buffer, filename) {
   let text = '';
   try {
-    const { PDFParse } = await import('pdf-parse');
-    const parser = new PDFParse({ data: buffer });
-    try {
-      const result = await parser.getText();
-      text = result?.text || '';
-    } finally {
-      await parser.destroy();
-    }
+    text = await parsePdfBuffer(buffer);
   } catch (err) {
     console.warn(`[PDF] Failed to parse ${filename}: ${err.message}`);
     return { transactions: [], spendingMonth: null };
