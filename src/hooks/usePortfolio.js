@@ -57,7 +57,7 @@ async function pushToServer(data) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, _fullReplace: true }),
     });
   } catch {
     // best-effort server sync

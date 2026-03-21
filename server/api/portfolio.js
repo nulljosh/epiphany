@@ -83,14 +83,35 @@ export default async function handler(req, res) {
       return res.status(400).json({ error });
     }
 
+    // When _fullReplace is true, the client is sending a complete portfolio
+    // (e.g. from the web/iOS editor). Accept it as-is including empty arrays.
+    // Otherwise, merge: empty arrays in the request do not overwrite non-empty
+    // arrays on the server. This prevents accidental data wipes from partial
+    // update clients like `balance update`.
+    const fullReplace = body._fullReplace === true;
+    const existing = fullReplace ? {} : (await kv.get(kvKey) || {});
+
+    const mergeField = (field) => {
+      const incoming = Array.isArray(body[field]) ? body[field] : [];
+      const current = Array.isArray(existing[field]) ? existing[field] : [];
+      return incoming.length > 0 ? incoming : current;
+    };
+
+    const mergeBudget = () => {
+      const incoming = body.budget || { income: [], expenses: [] };
+      const current = existing.budget || { income: [], expenses: [] };
+      const hasIncoming = (incoming.income?.length > 0) || (incoming.expenses?.length > 0);
+      return hasIncoming ? incoming : current;
+    };
+
     const payload = {
-      holdings: body.holdings || [],
-      accounts: body.accounts || [],
-      budget: body.budget || { income: [], expenses: [] },
-      debt: body.debt || [],
-      goals: body.goals || [],
-      spending: body.spending || [],
-      giving: body.giving || [],
+      holdings: mergeField('holdings'),
+      accounts: mergeField('accounts'),
+      budget: mergeBudget(),
+      debt: mergeField('debt'),
+      goals: mergeField('goals'),
+      spending: mergeField('spending'),
+      giving: mergeField('giving'),
       updatedAt: new Date().toISOString(),
     };
 
