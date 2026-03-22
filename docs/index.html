@@ -1,227 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Opticon - Financial Terminal</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            line-height: 1.6;
-            color: #1d1d1f;
-            background: #f5f5f7;
-            padding: 2rem 1rem;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border-radius: 18px;
-            padding: 3rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #1d1d1f;
-        }
-        .subtitle {
-            font-size: 1.25rem;
-            color: #6e6e73;
-            margin-bottom: 2rem;
-        }
-        .cta {
-            display: inline-block;
-            background: #0071e3;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 3rem;
-            transition: background 0.2s;
-        }
-        .cta:hover {
-            background: #0077ed;
-        }
-        h2 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            margin: 2rem 0 1rem;
-            color: #1d1d1f;
-        }
-        ul {
-            list-style: none;
-            padding-left: 1rem;
-        }
-        li {
-            margin: 0.5rem 0;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-        li:before {
-            content: "\2192";
-            position: absolute;
-            left: 0;
-            color: #0071e3;
-        }
-        code {
-            background: #f5f5f7;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 0.9em;
-        }
-        pre {
-            background: #1d1d1f;
-            color: #f5f5f7;
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-        pre code {
-            background: none;
-            color: inherit;
-            padding: 0;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-        .stat {
-            text-align: center;
-            padding: 1rem;
-            background: #f5f5f7;
-            border-radius: 8px;
-        }
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0071e3;
-        }
-        .stat-label {
-            font-size: 0.875rem;
-            color: #6e6e73;
-            margin-top: 0.25rem;
-        }
-        .section-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #6e6e73;
-            margin-bottom: 0.5rem;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opticon — Financial Terminal</title>
+<meta name="description" content="Live map and market terminal. Prices, news, and local activity on one screen.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a14;--surface:#12121f;--border:#1e1e32;
+  --text:#c8c8d4;--text-dim:#6a6a7e;--accent:#059669;
+  --accent-dim:rgba(5,150,105,.12);--glow:rgba(5,150,105,.06);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow),transparent),
+    radial-gradient(circle at 80% 90%,rgba(5,150,105,.03),transparent);
+}
+
+/* Scanline overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+}
+
+.container{max-width:720px;margin:0 auto;padding:4rem 1.5rem 6rem}
+
+/* Header */
+.header{display:flex;align-items:center;gap:1.25rem;margin-bottom:3.5rem}
+.icon{width:56px;height:56px;flex-shrink:0}
+.title-block h1{
+  font-family:'Instrument Serif',serif;font-size:2.4rem;font-weight:400;
+  color:#e8e8f0;letter-spacing:-.02em;line-height:1.1;
+}
+.title-block .ver{
+  font-size:.7rem;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;
+  margin-top:.25rem;
+}
+
+/* Live badge */
+.live{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);padding:.3rem .7rem;
+  border:1px solid rgba(5,150,105,.25);border-radius:2px;
+  margin-bottom:2.5rem;
+}
+.live::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Tagline */
+.tagline{
+  font-family:'Instrument Serif',serif;font-size:1.15rem;font-weight:400;
+  color:#9898aa;line-height:1.6;margin-bottom:3rem;
+  border-left:2px solid var(--border);padding-left:1rem;
+}
+
+/* Sections */
+.section{margin-bottom:2.5rem}
+.section-label{
+  font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:.75rem;
+}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.feat{
+  padding:.6rem .75rem;border:1px solid var(--border);border-radius:3px;
+  font-size:.75rem;color:var(--text);transition:border-color .2s;
+}
+.feat:hover{border-color:rgba(5,150,105,.3)}
+.feat strong{color:#d0d0dc;font-weight:500}
+
+/* Stack */
+.stack{display:flex;flex-wrap:wrap;gap:.35rem}
+.stack span{
+  font-size:.65rem;padding:.25rem .5rem;
+  border:1px solid var(--border);border-radius:2px;color:var(--text-dim);
+}
+
+/* Links */
+.links{display:flex;gap:.75rem;margin-top:3rem}
+.links a{
+  font-size:.75rem;letter-spacing:.06em;text-decoration:none;
+  padding:.55rem 1.25rem;border-radius:3px;transition:all .2s;
+}
+.links .primary{
+  background:var(--accent);color:#0a0a14;font-weight:500;
+}
+.links .primary:hover{background:#06b47a}
+.links .secondary{
+  border:1px solid var(--border);color:var(--text-dim);
+}
+.links .secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Footer */
+.footer{
+  margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--border);
+  font-size:.6rem;color:var(--text-dim);
+  display:flex;justify-content:space-between;
+}
+
+/* Responsive */
+@media(max-width:520px){
+  .features{grid-template-columns:1fr}
+  .title-block h1{font-size:1.8rem}
+  .container{padding:2.5rem 1rem 4rem}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Opticon</h1>
-        <p class="subtitle">Map-first situation monitor with scrolling stock tickers, personal finance dashboard, and integrated data feeds</p>
+<div class="container">
 
-        <a href="https://opticon.heyitsmejosh.com" class="cta">Launch App</a>
-
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value">100</div>
-                <div class="stat-label">Live Assets</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">30s</div>
-                <div class="stat-label">Refresh Rate</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">8</div>
-                <div class="stat-label">Data Feeds</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">20+</div>
-                <div class="stat-label">API Routes</div>
-            </div>
-        </div>
-
-        <h2>Live Map</h2>
-        <ul>
-            <li>Full-page MapLibre GL backdrop with tactical HUD overlay</li>
-            <li>Traffic incidents and construction barriers (OSM)</li>
-            <li>Real-time earthquake markers (USGS)</li>
-            <li>Crime data feeds with local overlays</li>
-            <li>Local events: concerts, sports, community (PredictHQ)</li>
-            <li>Global geopolitical events (GDELT)</li>
-            <li>Prediction markets geo-anchored as map pins (Polymarket)</li>
-            <li>Weather alerts overlay</li>
-            <li>Flight tracking</li>
-            <li>GPS user pin with viewport-based refresh</li>
-        </ul>
-
-        <h2>Stock Tickers</h2>
-        <ul>
-            <li>Scrolling horizontal ticker: Mag 7 + 100 US stocks, commodities, ETFs</li>
-            <li>FMP batch quotes (primary) + Yahoo Finance fallback, 30s refresh</li>
-            <li>Click any ticker to open Yahoo Finance detail</li>
-        </ul>
-
-        <h2>Personal Finance</h2>
-        <ul>
-            <li>Portfolio panel: live-valued holdings, accounts, net worth</li>
-            <li>Budget tracker: income, expenses, surplus</li>
-            <li>Debt tracker with payoff timeline</li>
-            <li>Spending trends with category breakdown</li>
-            <li>Server-side persistence via <code>/api/portfolio</code> (Vercel KV)</li>
-            <li>CLI access: <code>balance</code> command for terminal summary</li>
-        </ul>
-
-        <h2>Coming Soon</h2>
-        <ul>
-            <li>Live markets panel with per-stock charts and detail views</li>
-            <li>Trading simulator UI (coded, not yet visible)</li>
-            <li>Custom watchlist with autocomplete ticker search</li>
-        </ul>
-
-        <h2>API</h2>
-        <ul>
-            <li><code>/api/stocks-free</code> -- batch stock quotes (FMP/Yahoo)</li>
-            <li><code>/api/portfolio</code> -- portfolio CRUD (get, update, summary)</li>
-            <li><code>/api/auth</code> -- register, login, logout, verify-email</li>
-            <li><code>/api/traffic</code> -- traffic incidents</li>
-            <li><code>/api/earthquakes</code> -- USGS seismic feed</li>
-            <li><code>/api/events</code> -- GDELT geopolitical events</li>
-            <li><code>/api/crime</code> -- crime data</li>
-            <li><code>/api/weather</code> -- weather + alerts</li>
-            <li><code>/api/flights</code> -- flight tracking</li>
-        </ul>
-
-        <h2>Quick Start</h2>
-        <pre><code>git clone https://github.com/nulljosh/opticon.git
-cd opticon
-npm install
-npm run dev</code></pre>
-
-        <h2>Stack</h2>
-        <ul>
-            <li>React 19 + Vite</li>
-            <li>MapLibre GL + CartoCDN tiles</li>
-            <li>Vercel serverless (single gateway function)</li>
-            <li>Vercel KV (Upstash Redis) for auth + portfolio</li>
-            <li>FMP + Yahoo Finance + Polymarket + GDELT + USGS + OSM</li>
-            <li>Vitest + Playwright</li>
-        </ul>
-
-        <h2>Links</h2>
-        <ul>
-            <li><a href="https://opticon.heyitsmejosh.com">Live App</a></li>
-            <li><a href="https://github.com/nulljosh/opticon">GitHub</a></li>
-        </ul>
+  <div class="header">
+    <img src="../icon.svg" alt="Opticon" class="icon">
+    <div class="title-block">
+      <h1>Opticon</h1>
+      <div class="ver">v2.6.0</div>
     </div>
+  </div>
+
+  <div class="live">Operational</div>
+
+  <p class="tagline">Live map and market terminal. Prices, news, predictions, and local activity — one screen, real-time.</p>
+
+  <div class="section">
+    <div class="section-label">Capabilities</div>
+    <div class="features">
+      <div class="feat"><strong>Map</strong> — flights, traffic, quakes, weather</div>
+      <div class="feat"><strong>Markets</strong> — 167 assets, Kelly sizing, Fibonacci</div>
+      <div class="feat"><strong>Portfolio</strong> — holdings, budgets, debt, spending</div>
+      <div class="feat"><strong>News</strong> — GDELT, Polymarket, live ticker</div>
+      <div class="feat"><strong>Auth</strong> — sessions, Stripe billing, Apple Pay</div>
+      <div class="feat"><strong>PWA</strong> — offline, installable, mobile-first</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Stack</div>
+    <div class="stack">
+      <span>Node.js</span><span>MapLibre GL</span><span>Vercel</span>
+      <span>Stripe</span><span>KV Sessions</span><span>GDELT</span>
+      <span>FRED</span><span>Polymarket</span><span>Service Worker</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Companions</div>
+    <div class="stack">
+      <span>opticon-ios</span><span>opticon-macos</span>
+    </div>
+  </div>
+
+  <div class="links">
+    <a href="https://opticon.heyitsmejosh.com" class="primary">Open Opticon</a>
+    <a href="https://github.com/nulljosh/opticon" class="secondary">Source</a>
+  </div>
+
+  <div class="footer">
+    <span>MIT 2026, Joshua Trommel</span>
+    <span>Deployed on Vercel</span>
+  </div>
+
+</div>
 </body>
 </html>
