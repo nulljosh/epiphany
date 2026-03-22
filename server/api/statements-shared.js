@@ -33,10 +33,11 @@ export function categorizeTransaction(description = '') {
 
   if (lower.includes('interac e-transfer') || lower.includes('transfer out')) return 'transfers';
   if (lower.includes('starbucks') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("a&w") || lower.includes("chachi")) return 'food';
+  if (lower.includes('apple.com') || lower.includes('mac mini') || lower.includes('macbook') || lower.includes('apple computer')) return 'tech';
   if (lower.includes('apple store') || lower.includes('london drugs') || lower.includes('dollarama') || lower.includes('marshalls') || lower.includes('homesense') || lower.includes('langley toy') || lower.includes('super fantastic')) return 'shopping';
   if (lower.includes('vapory')) return 'vape';
   if (lower.includes('liquor')) return 'alcohol';
-  if (lower.includes('claude') || lower.includes('anthropic') || lower.includes('openai') || lower.includes('chatgpt') || lower.includes('twilio')) return 'apps';
+  if (lower.includes('claude') || lower.includes('anthropic') || lower.includes('openai') || lower.includes('chatgpt') || lower.includes('twilio') || lower.includes('codex')) return 'apps';
   if (lower.includes('compass') || lower.includes('chv')) return 'transit';
   if (lower.includes('club')) return 'fitness';
   if (lower.includes('bclc')) return 'entertainment';
