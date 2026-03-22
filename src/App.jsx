@@ -16,6 +16,8 @@ import SituationMonitor from './components/SituationMonitor';
 import { useSubscription } from './hooks/useSubscription';
 import { useAuth } from './hooks/useAuth';
 import { useWatchlist } from './hooks/useWatchlist';
+import { useAlerts } from './hooks/useAlerts';
+import AlertsPanel from './components/AlertsPanel';
 import { useWeather } from './hooks/useWeather';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
@@ -279,6 +281,8 @@ export default function App() {
       .catch(err => console.error('Failed to resolve checkout session:', err));
   }, [refetchSubscription]);
   const { watchlist, addSymbol, removeSymbol, toggleSymbol } = useWatchlist(user);
+  const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts();
+  const [showAlerts, setShowAlerts] = useState(false);
   const weather = useWeather();
 
   // Fibonacci levels from $1 to $10T
@@ -359,6 +363,11 @@ export default function App() {
   useEffect(() => {
     if (stocks) liveStocksRef.current = stocks;
   }, [stocks]);
+
+  // Check price alerts on stock updates
+  useEffect(() => {
+    if (stocks) checkAlerts(stocks);
+  }, [stocks, checkAlerts]);
 
   // Prediction market scanning - every 10s when running
   useEffect(() => {
@@ -1241,6 +1250,27 @@ const reset = useCallback(() => {
               </button>
             ))}
           </div>
+          {/* Alerts bell */}
+          <button
+            onClick={() => setShowAlerts(true)}
+            style={{
+              position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
+              color: t.textSecondary, fontSize: 16, padding: '4px 6px', lineHeight: 1,
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = t.text}
+            onMouseLeave={e => e.currentTarget.style.color = t.textSecondary}
+            title="Price Alerts"
+          >
+            &#128276;
+            {activeCount > 0 && (
+              <span style={{
+                position: 'absolute', top: 0, right: 0, background: '#ef4444',
+                color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: '50%',
+                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>{activeCount}</span>
+            )}
+          </button>
           {!isMobileNav && (
             <>
               <span style={{ width: 1, height: 14, background: t.border }} />
@@ -1486,6 +1516,17 @@ const reset = useCallback(() => {
 
       {/* Pricing Modal */}
       {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} subscription={subscription} />}
+
+      {showAlerts && (
+        <AlertsPanel
+          onClose={() => setShowAlerts(false)}
+          alerts={alerts}
+          onAdd={addAlert}
+          onRemove={removeAlert}
+          onClearTriggered={clearTriggered}
+          watchlist={watchlist}
+        />
+      )}
 
       {/* Footer */}
       <footer className="opticon-footer" style={{ gridColumn: '1 / -1', padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
