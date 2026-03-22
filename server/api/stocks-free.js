@@ -143,6 +143,9 @@ async function fetchFmpBatch(symbolList) {
         prevClose: q.previousClose ?? q.price,
         fiftyTwoWeekHigh: q.yearHigh ?? null,
         fiftyTwoWeekLow: q.yearLow ?? null,
+        marketCap: q.marketCap ?? null,
+        peRatio: q.pe ?? null,
+        eps: q.eps ?? null,
         source: 'fmp',
       }));
   } catch (err) {
@@ -191,6 +194,9 @@ async function fetchYahooSymbol(symbol) {
           prevClose,
           fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh ?? null,
           fiftyTwoWeekLow: meta.fiftyTwoWeekLow ?? null,
+          marketCap: meta.marketCap ?? null,
+          peRatio: null,
+          eps: null,
           source: 'yahoo',
         };
       } catch (err) {
