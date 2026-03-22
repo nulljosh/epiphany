@@ -55,6 +55,7 @@ async function fetchFmpQuotes(symbolList) {
         volume: q.volume ?? 0,
         marketCap: q.marketCap ?? q.market_cap ?? q.marketCapitalization ?? null,
         peRatio: q.pe ?? q.priceEarningsRatio ?? q.trailingPE ?? null,
+        eps: q.eps ?? q.epsTTM ?? null,
         fiftyTwoWeekHigh: q.yearHigh ?? null,
         fiftyTwoWeekLow: q.yearLow ?? null,
       }));
@@ -96,6 +97,7 @@ async function fetchYahooChartSingle(symbol, provider) {
       volume: meta.regularMarketVolume ?? 0,
       marketCap: null,
       peRatio: null,
+      eps: null,
       fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh ?? null,
       fiftyTwoWeekLow: meta.fiftyTwoWeekLow ?? null,
     };
@@ -149,6 +151,47 @@ async function fetchYahooQuotes(symbolList) {
   return results;
 }
 
+async function enrichWithFundamentals(stocks) {
+  const symbols = stocks.filter(s => s.marketCap == null).map(s => s.symbol);
+  if (symbols.length === 0) return stocks;
+
+  const provider = YAHOO_PROVIDERS[0];
+  const url = `${provider}/v7/finance/quote?symbols=${symbols.join(',')}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      headers: YAHOO_HEADERS,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return stocks;
+
+    const data = await response.json();
+    const quotes = data?.quoteResponse?.result || [];
+    const quoteMap = {};
+    for (const q of quotes) {
+      if (q.symbol) quoteMap[q.symbol] = q;
+    }
+
+    return stocks.map(s => {
+      const q = quoteMap[s.symbol];
+      if (!q) return s;
+      return {
+        ...s,
+        marketCap: s.marketCap ?? q.marketCap ?? null,
+        peRatio: s.peRatio ?? q.trailingPE ?? q.forwardPE ?? null,
+        eps: s.eps ?? q.epsTrailingTwelveMonths ?? null,
+      };
+    });
+  } catch {
+    clearTimeout(timeoutId);
+    return stocks;
+  }
+}
+
 export default async function handler(req, res) {
   const parsed = parseSymbols(req.query.symbols, {
     max: 50,
@@ -179,6 +222,15 @@ export default async function handler(req, res) {
     }
 
     stocks = stocks.filter(q => q.symbol && typeof q.price === 'number');
+
+    // Enrich with fundamentals if missing
+    const needsEnrichment = stocks.some(s => s.marketCap == null);
+    if (needsEnrichment) {
+      try {
+        const enriched = await enrichWithFundamentals(stocks);
+        stocks = enriched;
+      } catch { /* non-critical */ }
+    }
 
     if (ENABLE_CACHE) {
       cache.set(cacheKey, { ts: Date.now(), data: stocks });
