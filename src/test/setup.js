@@ -36,3 +36,19 @@ if (typeof window !== 'undefined') {
     }
   };
 }
+
+// Mock localStorage (jsdom only)
+if (typeof window !== 'undefined' && (!window.localStorage || typeof window.localStorage.clear !== 'function')) {
+  const store = {};
+  Object.defineProperty(window, 'localStorage', {
+    writable: true,
+    value: {
+      getItem: (key) => store[key] ?? null,
+      setItem: (key, val) => { store[key] = String(val); },
+      removeItem: (key) => { delete store[key]; },
+      clear: () => { Object.keys(store).forEach(k => delete store[k]); },
+      get length() { return Object.keys(store).length; },
+      key: (i) => Object.keys(store)[i] ?? null,
+    },
+  });
+}
