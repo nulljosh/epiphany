@@ -241,6 +241,75 @@ export default async function handler(req, res) {
     }
   }
 
+  // POST: Sign in with Apple
+  if (action === 'signin-apple') {
+    const { identityToken, email, fullName } = req.body || {};
+    if (!identityToken) {
+      return errorResponse(res, 400, 'Identity token required');
+    }
+
+    try {
+      // Decode Apple JWT payload (base64url)
+      const parts = identityToken.split('.');
+      if (parts.length !== 3) return errorResponse(res, 400, 'Invalid token format');
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      const appleUserId = payload.sub;
+      const appleEmail = payload.email || email;
+
+      if (!appleUserId) return errorResponse(res, 400, 'Invalid Apple token');
+
+      // Check if Apple ID is already linked
+      let user = await kv.get(`apple:${appleUserId}`);
+
+      if (!user && appleEmail) {
+        // Check if email account exists -- link it
+        const existingUser = await kv.get(`user:${appleEmail.toLowerCase()}`);
+        if (existingUser) {
+          existingUser.appleId = appleUserId;
+          await kv.set(`user:${appleEmail.toLowerCase()}`, existingUser);
+          await kv.set(`apple:${appleUserId}`, existingUser);
+          user = existingUser;
+        }
+      }
+
+      if (!user) {
+        // Create new account
+        const newEmail = appleEmail || `${appleUserId}@privaterelay.appleid.com`;
+        const id = crypto.randomUUID();
+        user = {
+          id,
+          email: newEmail,
+          passwordHash: null,
+          tier: 'free',
+          verified: true,
+          appleId: appleUserId,
+          fullName: fullName || null,
+          createdAt: Date.now(),
+        };
+        await kv.set(`user:${newEmail.toLowerCase()}`, user);
+        await kv.set(`apple:${appleUserId}`, user);
+      }
+
+      const sessionToken = generateToken();
+      const session = {
+        userId: user.id,
+        email: user.email,
+        tier: user.tier || 'free',
+        expiresAt: Date.now() + SESSION_TTL * 1000,
+      };
+      await kv.set(`session:${sessionToken}`, session, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+
+      return res.status(200).json({
+        ok: true,
+        user: publicUser(user),
+      });
+    } catch (err) {
+      console.error('[AUTH] Apple sign-in error:', err.message);
+      return errorResponse(res, 500, 'Apple sign-in failed');
+    }
+  }
+
   // GET (handled via query): verify email
   if (action === 'verify-email') {
     const { token } = req.method === 'GET' ? req.query : (req.body || {});
