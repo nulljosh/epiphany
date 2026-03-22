@@ -2,172 +2,317 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Opticon — Financial Terminal</title>
 <meta name="description" content="Live map and market terminal. Prices, news, and local activity on one screen.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0a0a14;--surface:#12121f;--border:#1e1e32;
-  --text:#c8c8d4;--text-dim:#6a6a7e;--accent:#059669;
-  --accent-dim:rgba(5,150,105,.12);--glow:rgba(5,150,105,.06);
-}
-html{font-size:16px;scroll-behavior:smooth}
-body{
-  font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);
-  min-height:100vh;overflow-x:hidden;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow),transparent),
-    radial-gradient(circle at 80% 90%,rgba(5,150,105,.03),transparent);
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #fafafa;
+    --text: #000;
+    --text-secondary: rgba(0,0,0,0.5);
+    --text-tertiary: rgba(0,0,0,0.3);
+    --border: rgba(0,0,0,0.1);
+    --accent: #059669;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
 }
 
-/* Scanline overlay */
-body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+[data-theme="dark"] {
+    --bg: #111;
+    --text: #e8e8e8;
+    --text-secondary: rgba(255,255,255,0.5);
+    --text-tertiary: rgba(255,255,255,0.25);
+    --border: rgba(255,255,255,0.1);
 }
 
-.container{max-width:720px;margin:0 auto;padding:4rem 1.5rem 6rem}
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font);
+    font-weight: 400;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: clamp(4rem, 10vw, 8rem) clamp(1.25rem, 5vw, 3rem) 3rem;
+    padding-left: max(clamp(1.25rem, 5vw, 3rem), env(safe-area-inset-left));
+    padding-right: max(clamp(1.25rem, 5vw, 3rem), env(safe-area-inset-right));
+    padding-bottom: max(3rem, env(safe-area-inset-bottom));
+}
+
+/* Fade-up animation */
+.fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
 
 /* Header */
-.header{display:flex;align-items:center;gap:1.25rem;margin-bottom:3.5rem}
-.icon{width:56px;height:56px;flex-shrink:0}
-.title-block h1{
-  font-family:'Instrument Serif',serif;font-size:2.4rem;font-weight:400;
-  color:#e8e8f0;letter-spacing:-.02em;line-height:1.1;
+header { margin-bottom: clamp(4rem, 8vw, 6rem); }
+
+header .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
-.title-block .ver{
-  font-size:.7rem;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;
-  margin-top:.25rem;
+
+h1 {
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1.1;
+}
+
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: color 0.4s ease-out, border-color 0.4s ease-out;
+    display: flex;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.theme-toggle:hover {
+    color: var(--text);
+    border-color: var(--text-tertiary);
+}
+.theme-toggle svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.4s ease-out;
+}
+
+.version {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    letter-spacing: 0.08em;
+    font-weight: 400;
+}
+
+.intro {
+    color: var(--text-secondary);
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: 1.8;
+    max-width: 520px;
+    font-weight: 400;
 }
 
 /* Live badge */
-.live{
-  display:inline-flex;align-items:center;gap:.4rem;
-  font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--accent);padding:.3rem .7rem;
-  border:1px solid rgba(5,150,105,.25);border-radius:2px;
-  margin-bottom:2.5rem;
+.live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
 }
-.live::before{
-  content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);
-  animation:pulse 2s ease-in-out infinite;
+.live::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
 }
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* Tagline */
-.tagline{
-  font-family:'Instrument Serif',serif;font-size:1.15rem;font-weight:400;
-  color:#9898aa;line-height:1.6;margin-bottom:3rem;
-  border-left:2px solid var(--border);padding-left:1rem;
-}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 /* Sections */
-.section{margin-bottom:2.5rem}
-.section-label{
-  font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
-  color:var(--text-dim);margin-bottom:.75rem;
+.section-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    margin-bottom: 1.25rem;
+    display: block;
 }
-.features{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
-.feat{
-  padding:.6rem .75rem;border:1px solid var(--border);border-radius:3px;
-  font-size:.75rem;color:var(--text);transition:border-color .2s;
-}
-.feat:hover{border-color:rgba(5,150,105,.3)}
-.feat strong{color:#d0d0dc;font-weight:500}
 
-/* Stack */
-.stack{display:flex;flex-wrap:wrap;gap:.35rem}
-.stack span{
-  font-size:.65rem;padding:.25rem .5rem;
-  border:1px solid var(--border);border-radius:2px;color:var(--text-dim);
+section { margin-bottom: clamp(3rem, 6vw, 4rem); }
+
+/* Item rows */
+.items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
+.items li {
+    padding: 0.875rem 0;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.4s ease-out;
+}
+.items li:first-child { border-top: 1px solid var(--border); }
+.items li:hover { opacity: 0.6; }
+.items li strong {
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* Stack tags */
+.stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.stack span {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-secondary);
+    transition: opacity 0.4s ease-out;
+}
+.stack span:hover { opacity: 0.6; }
 
 /* Links */
-.links{display:flex;gap:.75rem;margin-top:3rem}
-.links a{
-  font-size:.75rem;letter-spacing:.06em;text-decoration:none;
-  padding:.55rem 1.25rem;border-radius:3px;transition:all .2s;
+.links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
 }
-.links .primary{
-  background:var(--accent);color:#0a0a14;font-weight:500;
+.links a {
+    font-size: 0.875rem;
+    text-decoration: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 3px;
+    font-weight: 500;
+    transition: opacity 0.4s ease-out;
 }
-.links .primary:hover{background:#06b47a}
-.links .secondary{
-  border:1px solid var(--border);color:var(--text-dim);
+.links .primary {
+    background: var(--text);
+    color: var(--bg);
 }
-.links .secondary:hover{border-color:var(--accent);color:var(--accent)}
+.links .primary:hover { opacity: 0.7; }
+.links .secondary {
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+.links .secondary:hover { opacity: 0.6; }
 
 /* Footer */
-.footer{
-  margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--border);
-  font-size:.6rem;color:var(--text-dim);
-  display:flex;justify-content:space-between;
+footer {
+    margin-top: clamp(3rem, 6vw, 4rem);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    display: flex;
+    justify-content: space-between;
 }
-
-/* Responsive */
-@media(max-width:520px){
-  .features{grid-template-columns:1fr}
-  .title-block h1{font-size:1.8rem}
-  .container{padding:2.5rem 1rem 4rem}
+footer a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+    transition: opacity 0.4s ease-out;
 }
+footer a:hover { opacity: 0.5; }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <div class="header">
-    <img src="icon.svg" alt="Opticon" class="icon">
-    <div class="title-block">
-      <h1>Opticon</h1>
-      <div class="ver">v2.6.0</div>
-    </div>
-  </div>
+    <header class="fade-up">
+        <div class="top-row">
+            <div>
+                <h1>Opticon</h1>
+                <span class="version">v2.6.0</span>
+            </div>
+            <button class="theme-toggle" aria-label="Toggle theme">
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+        </div>
+        <div class="live">Operational</div>
+        <p class="intro">Live map and market terminal. Prices, news, predictions, and local activity — one screen, real-time.</p>
+    </header>
 
-  <div class="live">Operational</div>
+    <section class="fade-up">
+        <span class="section-label">Capabilities</span>
+        <ul class="items">
+            <li><strong>Map</strong> — flights, traffic, earthquakes, weather overlays</li>
+            <li><strong>Markets</strong> — 167 assets, Kelly sizing, Fibonacci levels, PnL</li>
+            <li><strong>Portfolio</strong> — holdings, budgets, debt payoff, spending analysis</li>
+            <li><strong>News</strong> — GDELT, Polymarket predictions, live ticker bar</li>
+            <li><strong>Auth</strong> — sessions, Stripe billing, Apple Pay</li>
+            <li><strong>PWA</strong> — offline service worker, installable</li>
+        </ul>
+    </section>
 
-  <p class="tagline">Live map and market terminal. Prices, news, predictions, and local activity — one screen, real-time.</p>
+    <section class="fade-up">
+        <span class="section-label">Stack</span>
+        <div class="stack">
+            <span>Node.js</span><span>MapLibre GL</span><span>Vercel</span>
+            <span>Stripe</span><span>KV Sessions</span><span>GDELT</span>
+            <span>FRED</span><span>Polymarket</span><span>Service Worker</span>
+        </div>
+    </section>
 
-  <div class="section">
-    <div class="section-label">Capabilities</div>
-    <div class="features">
-      <div class="feat"><strong>Map</strong> — flights, traffic, quakes, weather</div>
-      <div class="feat"><strong>Markets</strong> — 167 assets, Kelly sizing, Fibonacci</div>
-      <div class="feat"><strong>Portfolio</strong> — holdings, budgets, debt, spending</div>
-      <div class="feat"><strong>News</strong> — GDELT, Polymarket, live ticker</div>
-      <div class="feat"><strong>Auth</strong> — sessions, Stripe billing, Apple Pay</div>
-      <div class="feat"><strong>PWA</strong> — offline, installable, mobile-first</div>
-    </div>
-  </div>
+    <section class="fade-up">
+        <span class="section-label">Companions</span>
+        <div class="stack">
+            <span>opticon-ios</span><span>opticon-macos</span>
+        </div>
+    </section>
 
-  <div class="section">
-    <div class="section-label">Stack</div>
-    <div class="stack">
-      <span>Node.js</span><span>MapLibre GL</span><span>Vercel</span>
-      <span>Stripe</span><span>KV Sessions</span><span>GDELT</span>
-      <span>FRED</span><span>Polymarket</span><span>Service Worker</span>
-    </div>
-  </div>
+    <section class="fade-up">
+        <div class="links">
+            <a href="https://opticon.heyitsmejosh.com" class="primary">Open Opticon</a>
+            <a href="https://github.com/nulljosh/opticon" class="secondary">Source</a>
+        </div>
+    </section>
 
-  <div class="section">
-    <div class="section-label">Companions</div>
-    <div class="stack">
-      <span>opticon-ios</span><span>opticon-macos</span>
-    </div>
-  </div>
-
-  <div class="links">
-    <a href="https://opticon.heyitsmejosh.com" class="primary">Open Opticon</a>
-    <a href="https://github.com/nulljosh/opticon" class="secondary">Source</a>
-  </div>
-
-  <div class="footer">
-    <span>MIT 2026, Joshua Trommel</span>
-    <span>Deployed on Vercel</span>
-  </div>
+    <footer class="fade-up">
+        <span>MIT 2026, Joshua Trommel</span>
+        <a href="https://heyitsmejosh.com">heyitsmejosh.com</a>
+    </footer>
 
 </div>
+
+<script>
+// Theme toggle
+const toggle = document.querySelector('.theme-toggle');
+const stored = localStorage.getItem('theme');
+if (stored === 'dark' || (!stored && matchMedia('(prefers-color-scheme:dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+}
+toggle.addEventListener('click', () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    localStorage.setItem('theme', dark ? 'light' : 'dark');
+    toggle.querySelector('svg').classList.add('icon-spin');
+    setTimeout(() => toggle.querySelector('svg').classList.remove('icon-spin'), 400);
+});
+
+// Fade-up on scroll
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
