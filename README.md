@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Opticon
-![version](https://img.shields.io/badge/version-v2.5.1-blue)
+![version](https://img.shields.io/badge/version-v2.6.0-blue)
 
 Live map and market app. Prices, news, and local activity on one screen.
 
@@ -38,6 +38,10 @@ Deploy: Vercel (Cloudflare migration planned for API).
 - [ ] macOS companion feature parity
 
 ## Changelog
+
+### v2.6.0 (2026-03-21)
+- Tally integration: /api/tally endpoint with BC payment schedule fallback
+- Macro API: hardcoded fallback data when FRED key is missing (no more 503)
 
 ### v2.5.1 (2026-03-21)
 - Fix: transaction categorization -- Apple.com/Mac purchases now classify as "tech" instead of uncategorized
