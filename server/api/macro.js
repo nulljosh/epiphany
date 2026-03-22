@@ -100,7 +100,7 @@ export default async function handler(req, res) {
         const fallbackObservationsById = {
           fedFunds: [
             { date: '2026-03-01', value: 5.33 },
-            { date: '2026-02-01', value: 5.33 },
+            { date: '2026-02-01', value: 5.25 },
           ],
           cpi: [
             { date: '2026-02-01', value: 314.0 },

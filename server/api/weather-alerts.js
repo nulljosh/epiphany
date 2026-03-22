@@ -34,6 +34,8 @@ async function fetchNoaa(lat, lon) {
       severity: f.properties.severity,
       headline: f.properties.headline,
       expires: f.properties.expires,
+      lat,
+      lon,
     }));
   } catch {
     return [];
@@ -53,6 +55,8 @@ async function fetchOpenMeteo(lat, lon) {
         severity: 'Moderate',
         headline: `Severe weather code ${code} at ${lat.toFixed(2)},${lon.toFixed(2)}`,
         expires: null,
+        lat,
+        lon,
       }];
     }
     return [];
