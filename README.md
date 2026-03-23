@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Opticon
-![version](https://img.shields.io/badge/version-v2.6.0-blue)
+![version](https://img.shields.io/badge/version-v2.7.0-blue)
 
 Live map and market app. Prices, news, and local activity on one screen.
 

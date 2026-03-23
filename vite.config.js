@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import compression from 'vite-plugin-compression'
 import { getStatementsPayload } from './server/api/statements-data.js'
 
 const PROD_API = 'https://opticon.heyitsmejosh.com';
@@ -34,8 +35,21 @@ function localStatementsPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
+  build: {
+    minify: 'terser',
+    terserOptions: { compress: { passes: 2 } },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
+    compression({ algorithm: 'brotliCompress', ext: '.br' }),
+    compression({ algorithm: 'gzip', ext: '.gz' }),
     localStatementsPlugin(),
     VitePWA({
       registerType: 'autoUpdate',

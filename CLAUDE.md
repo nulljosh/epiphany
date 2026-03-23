@@ -1,6 +1,6 @@
 # Opticon
 
-v2.6.0
+v2.7.0
 
 ## Rules
 
