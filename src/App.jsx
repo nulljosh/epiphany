@@ -24,6 +24,7 @@ import RegisterPage from './components/RegisterPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import Settings from './components/Settings';
+import MarketsPanel from './components/MarketsPanel';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -1044,6 +1045,7 @@ const reset = useCallback(() => {
 
   const TAB_PILLS = [
     { key: 'simulator', label: 'Simulator' },
+    { key: 'markets', label: 'Markets' },
     { key: 'portfolio', label: 'Portfolio' },
     { key: 'situation', label: 'Situation' },
     { key: 'settings', label: 'Settings' },
@@ -1411,6 +1413,10 @@ const reset = useCallback(() => {
           <>
             {activeTab === 'simulator' && simulatorPanel}
 
+            {activeTab === 'markets' && (
+              <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} />
+            )}
+
             {activeTab === 'portfolio' && (
               <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
             )}
@@ -1493,6 +1499,9 @@ const reset = useCallback(() => {
             >{'\u00d7'}</button>
           </div>
           {activeTab === 'simulator' && simulatorPanel}
+          {activeTab === 'markets' && (
+            <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} />
+          )}
           {activeTab === 'portfolio' && (
             <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
           )}
