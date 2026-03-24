@@ -281,7 +281,7 @@ export default function App() {
       .catch(err => console.error('Failed to resolve checkout session:', err));
   }, [refetchSubscription]);
   const { watchlist, addSymbol, removeSymbol, toggleSymbol } = useWatchlist(user);
-  const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts();
+  const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts(user);
   const [showAlerts, setShowAlerts] = useState(false);
   const weather = useWeather();
 
@@ -1533,7 +1533,7 @@ const reset = useCallback(() => {
         <span>&copy; 2026 Opticon</span>
         <a href="https://github.com/nulljosh/opticon/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
         <a href="https://github.com/nulljosh/opticon" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
-        <a href="https://github.com/nulljosh/opticon-ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
+        <a href="https://github.com/nulljosh/opticon/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
       </footer>
 
       {showHelp && (
