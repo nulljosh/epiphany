@@ -70,7 +70,7 @@ export function resolveAutoTheme({
 
   if (darkMatch) return 'dark';
   if (lightMatch) return 'light';
-  return isNightTime(now) ? 'dark' : 'light';
+  return 'dark';
 }
 
 export function applyResolvedTheme(themeName) {

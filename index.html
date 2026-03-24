@@ -21,7 +21,7 @@
           prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
           prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
         } catch (_) {}
-        var theme = prefersDark ? 'dark' : (!prefersLight || isNight ? 'dark' : 'light');
+        var theme = prefersLight ? 'light' : 'dark';
         window.__OPTICON_THEME__ = theme;
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
