@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e27"/>
+      <stop offset="100%" stop-color="#050811"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="topEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4a9eff" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#4a9eff" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#4a9eff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4a9eff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+
+  <!-- Frosted glass card -->
+  <rect x="232" y="302" width="560" height="420" rx="32" fill="url(#glass)"/>
+  <rect x="232" y="302" width="560" height="420" rx="32" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+
+  <!-- Blue highlight along top edge of glass card -->
+  <rect x="280" y="302" width="464" height="2" rx="1" fill="url(#topEdge)"/>
+
+  <!-- Candlestick 1 (green, up) -->
+  <line x1="392" y1="440" x2="392" y2="580" stroke="#34c759" stroke-width="3" opacity="0.5"/>
+  <rect x="374" y="460" width="36" height="80" rx="4" fill="#34c759" opacity="0.75"/>
+
+  <!-- Candlestick 2 (red, down) -->
+  <line x1="512" y1="400" x2="512" y2="600" stroke="#ff3b30" stroke-width="3" opacity="0.5"/>
+  <rect x="494" y="430" width="36" height="100" rx="4" fill="#ff3b30" opacity="0.70"/>
+
+  <!-- Candlestick 3 (green, up) -->
+  <line x1="632" y1="380" x2="632" y2="560" stroke="#34c759" stroke-width="3" opacity="0.5"/>
+  <rect x="614" y="400" width="36" height="90" rx="4" fill="#34c759" opacity="0.80"/>
+
+  <!-- Trend line arcing upward -->
+  <path d="M 330 550 Q 420 510 512 480 Q 600 450 694 390" fill="none" stroke="#34c759" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Subtle glow behind trend line -->
+  <path d="M 330 550 Q 420 510 512 480 Q 600 450 694 390" fill="none" stroke="#34c759" stroke-width="12" stroke-linecap="round" opacity="0.08"/>
+</svg>
