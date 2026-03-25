@@ -1,4 +1,4 @@
-name: Opticon
+name: Monica
 options:
   bundleIdPrefix: com.heyitsmejosh
   deploymentTarget:
@@ -6,11 +6,11 @@ options:
 settings:
   DEVELOPMENT_TEAM: QMM486NPYC
   SWIFT_VERSION: "6.0"
-  MARKETING_VERSION: "3.1.0"
+  MARKETING_VERSION: "5.0.0"
   CURRENT_PROJECT_VERSION: "1"
   CODE_SIGN_STYLE: Automatic
 targets:
-  Opticon:
+  Monica:
     type: application
     platform: iOS
     sources:
@@ -26,16 +26,18 @@ targets:
           - Tests
     settings:
       INFOPLIST_FILE: Info.plist
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.opticon
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-      # CODE_SIGN_ENTITLEMENTS: Opticon.entitlements  # Requires paid Apple Developer Program
-  OpticonTests:
+      PRODUCT_NAME: Monica
+      PRODUCT_MODULE_NAME: Opticon
+      # CODE_SIGN_ENTITLEMENTS: Monica.entitlements  # Requires paid Apple Developer Program
+  MonicaTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: Tests
     dependencies:
-      - target: Opticon
+      - target: Monica
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.opticon.tests
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.tests
       GENERATE_INFOPLIST_FILE: YES

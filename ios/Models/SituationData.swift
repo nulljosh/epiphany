@@ -430,7 +430,7 @@ struct LocalEvent: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case title, source, date, url, venue
-        case latitude, longitude, lat, lon
+        case latitude, longitude, lat, lon, lng
     }
 
     init(from decoder: Decoder) throws {
@@ -441,6 +441,7 @@ struct LocalEvent: Codable, Identifiable {
             ?? container.lossyDouble(forKey: .lat)
         longitude = container.lossyDouble(forKey: .longitude)
             ?? container.lossyDouble(forKey: .lon)
+            ?? container.lossyDouble(forKey: .lng)
         date = try? container.decodeIfPresent(String.self, forKey: .date)
         url = try? container.decodeIfPresent(String.self, forKey: .url)
         venue = try? container.decodeIfPresent(String.self, forKey: .venue)

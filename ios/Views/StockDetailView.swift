@@ -12,6 +12,7 @@ struct StockDetailView: View {
     @State private var relatedNews: [NewsArticle] = []
     @State private var newsError = false
     @State private var scrubPrice: (date: Date, price: Double)?
+    @State private var selectedNewsURL: URL?
 
     private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
 
@@ -130,7 +131,9 @@ struct StockDetailView: View {
                     } else {
                         ForEach(relatedNews.prefix(5)) { article in
                             if let url = URL(string: article.url) {
-                                Link(destination: url) {
+                                Button {
+                                    selectedNewsURL = url
+                                } label: {
                                     CompactNewsRow(article: article)
                                 }
                             } else {
@@ -143,6 +146,10 @@ struct StockDetailView: View {
 
                 Spacer()
             }
+        }
+        .sheet(item: $selectedNewsURL) { url in
+            SafariView(url: url)
+                .ignoresSafeArea()
         }
         .toolbar {
             if appState.isLoggedIn {
@@ -285,15 +292,38 @@ struct StockDetailView: View {
     private func loadRelatedNews() async {
         do {
             let allNews = try await OpticonAPI.shared.fetchNews()
-            let symbolLower = stock.symbol.lowercased()
-            let nameLower = stock.name.lowercased()
+            let terms = newsSearchTerms(symbol: stock.symbol, name: stock.name)
             relatedNews = allNews.filter { article in
-                let titleLower = article.title.lowercased()
-                return titleLower.contains(symbolLower) || titleLower.contains(nameLower)
+                let text = article.title.lowercased()
+                return terms.contains { text.contains($0) }
             }
         } catch {
             newsError = true
         }
+    }
+
+    private func newsSearchTerms(symbol: String, name: String) -> [String] {
+        var terms = [symbol.lowercased(), name.lowercased()]
+        // Add common short names for major companies
+        let map: [String: [String]] = [
+            "AAPL": ["apple"], "MSFT": ["microsoft"], "GOOGL": ["google", "alphabet"],
+            "AMZN": ["amazon"], "META": ["meta", "facebook"], "TSLA": ["tesla"],
+            "NVDA": ["nvidia"], "PLTR": ["palantir"], "HOOD": ["robinhood"],
+            "COIN": ["coinbase"], "JPM": ["jpmorgan", "jp morgan"],
+            "GS": ["goldman"], "XOM": ["exxon"], "CVX": ["chevron"],
+            "UNH": ["unitedhealth"], "LMT": ["lockheed"], "RTX": ["raytheon"],
+            "SQ": ["block inc", "square"], "SHOP": ["shopify"],
+            "SNOW": ["snowflake"], "NET": ["cloudflare"], "CRWD": ["crowdstrike"],
+        ]
+        if let extras = map[symbol.uppercased()] {
+            terms.append(contentsOf: extras)
+        }
+        // Also try first word of company name (e.g. "Apple" from "Apple Inc")
+        let firstName = name.components(separatedBy: " ").first?.lowercased() ?? ""
+        if firstName.count >= 4 && !terms.contains(firstName) {
+            terms.append(firstName)
+        }
+        return terms.filter { !$0.isEmpty }
     }
 }
 

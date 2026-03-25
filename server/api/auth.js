@@ -57,6 +57,7 @@ function publicUser(user) {
   return {
     id: user?.id,
     email: user?.email,
+    name: user?.name || user?.fullName || null,
     verified: user?.verified ?? false,
     tier: user?.tier || 'free',
     stripeCustomerId: user?.stripeCustomerId || null,
@@ -491,6 +492,23 @@ export default async function handler(req, res) {
     await kv.del(`user:${user.email}`);
     clearSessionCookie(res);
     return res.status(200).json({ ok: true, message: 'Account deleted successfully' });
+  }
+
+  // POST: change-name
+  if (action === 'change-name') {
+    const { name } = req.body || {};
+    if (!name || !name.trim()) {
+      return errorResponse(res, 400, 'Name is required');
+    }
+
+    const { user } = await requireAuthenticatedUser(req, kv);
+    if (!user) {
+      return errorResponse(res, 401, 'Authentication required');
+    }
+
+    user.name = name.trim();
+    await kv.set(`user:${user.email}`, user);
+    return res.status(200).json({ ok: true, user: publicUser(user) });
   }
 
   // POST: logout

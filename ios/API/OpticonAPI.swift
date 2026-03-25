@@ -129,6 +129,17 @@ final class OpticonAPI: @unchecked Sendable {
         )
     }
 
+    func changeName(name: String) async throws -> User {
+        let response: AuthActionResponse = try await postAuthAction(
+            "change-name",
+            body: ["name": name]
+        )
+        guard let user = response.user else {
+            throw APIError.decodingError("No user in change-name response")
+        }
+        return user
+    }
+
     func deleteAccount(password: String) async throws {
         let _: AuthActionResponse = try await postAuthAction(
             "delete-account",

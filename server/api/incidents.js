@@ -1,5 +1,5 @@
 // Road incidents from OpenStreetMap Overpass API (free, no auth)
-// Returns construction zones, barriers, road works within bbox
+// Returns construction zones, road works, emergency services, police stations within bbox
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 const CACHE_TTL = 10 * 60 * 1000;
 const cache = new Map();
@@ -20,7 +20,7 @@ async function fetchIncidents(bbox) {
   }
 
   const { lamin, lomin, lamax, lomax } = bbox;
-  const query = `[out:json][timeout:10];(way["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["barrier"](${lamin},${lomin},${lamax},${lomax});node["highway"="road_works"](${lamin},${lomin},${lamax},${lomax}););out center 20;`;
+  const query = `[out:json][timeout:10];(way["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="road_works"](${lamin},${lomin},${lamax},${lomax});node["emergency"](${lamin},${lomin},${lamax},${lomax});node["amenity"="police"](${lamin},${lomin},${lamax},${lomax}););out center 20;`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
@@ -36,7 +36,7 @@ async function fetchIncidents(bbox) {
     const json = await res.json();
     const data = (json.elements || [])
       .map(el => ({
-        type: el.tags?.highway || el.tags?.barrier || 'incident',
+        type: el.tags?.highway || el.tags?.emergency || el.tags?.amenity || 'incident',
         lat: el.center?.lat ?? el.lat,
         lon: el.center?.lon ?? el.lon,
         description: el.tags?.name || el.tags?.description || null,

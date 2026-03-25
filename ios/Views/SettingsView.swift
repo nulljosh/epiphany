@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var hasLoadedAvatar = false
     @State private var isUploadingAvatar = false
     @State private var showConnectTally = false
+    @State private var showChangeName = false
 
     @AppStorage("showEarthquakes") private var showEarthquakes = true
     @AppStorage("showFlights") private var showFlights = true
@@ -51,8 +52,13 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
 
                         VStack(alignment: .leading, spacing: 2) {
+                            if let name = appState.user?.name, !name.isEmpty {
+                                Text(name)
+                                    .font(.body.weight(.semibold))
+                            }
                             Text(appState.user?.email ?? "")
-                                .font(.body)
+                                .font(.subheadline)
+                                .foregroundStyle(appState.user?.name != nil ? .secondary : .primary)
                             Text(tierLabel)
                                 .font(.caption)
                                 .foregroundStyle(tierColor)
@@ -107,6 +113,10 @@ struct SettingsView: View {
                 }
 
                 Section("Account") {
+                    Button("Change Name") {
+                        showChangeName = true
+                    }
+
                     Button("Change Email") {
                         showChangeEmail = true
                     }
@@ -172,6 +182,10 @@ struct SettingsView: View {
                 mapSourcesSection
             }
         }
+        .sheet(isPresented: $showChangeName) {
+            ChangeNameSheet()
+                .environment(appState)
+        }
         .sheet(isPresented: $showChangeEmail) {
             ChangeEmailSheet()
                 .environment(appState)
@@ -234,6 +248,9 @@ struct SettingsView: View {
     }
 
     private var avatarInitial: String {
+        if let name = appState.user?.name, let first = name.first {
+            return String(first).uppercased()
+        }
         guard let email = appState.user?.email, let first = email.first else { return "?" }
         return String(first).uppercased()
     }
@@ -447,7 +464,7 @@ private struct DeleteAccountSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("This permanently deletes your Opticon account and associated data.")
+                    Text("This permanently deletes your Monica account and associated data.")
                         .foregroundStyle(.secondary)
                 }
 
@@ -577,6 +594,62 @@ private struct ConnectTallySheet: View {
             dismiss()
         } else {
             localError = errorMsg
+        }
+    }
+}
+
+private struct ChangeNameSheet: View {
+    @Environment(AppState.self) private var appState
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var name = ""
+    @State private var isSubmitting = false
+    @State private var localError: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Display Name") {
+                    TextField("Your name", text: $name)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                }
+
+                if let localError {
+                    Section {
+                        Text(localError)
+                            .foregroundStyle(.red)
+                    }
+                }
+
+                Section {
+                    Button(isSubmitting ? "Saving..." : "Save") {
+                        Task { await submit() }
+                    }
+                    .disabled(isSubmitting || name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .navigationTitle("Change Name")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+            .onAppear {
+                name = appState.user?.name ?? ""
+            }
+        }
+    }
+
+    private func submit() async {
+        isSubmitting = true
+        defer { isSubmitting = false }
+        let success = await appState.changeName(name: name.trimmingCharacters(in: .whitespaces))
+        if success {
+            dismiss()
+        } else {
+            localError = appState.error
         }
     }
 }

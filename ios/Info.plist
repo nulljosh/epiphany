@@ -44,10 +44,10 @@
         <false/>
     </dict>
     <key>NSFaceIDUsageDescription</key>
-    <string>Sign in to Opticon with Face ID</string>
+    <string>Sign in to Monica with Face ID</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Opticon uses your location to show nearby earthquakes, flights, incidents, and weather alerts.</string>
+    <string>Monica uses your location to show nearby earthquakes, flights, incidents, and weather alerts.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Choose a profile photo for your Opticon account.</string>
+    <string>Choose a profile photo for your Monica account.</string>
 </dict>
 </plist>

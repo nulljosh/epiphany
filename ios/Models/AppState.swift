@@ -124,7 +124,7 @@ final class AppState {
     func biometricLogin() async {
         error = nil
         do {
-            try await biometricAuth.authenticate(localizedReason: "Sign in to Opticon")
+            try await biometricAuth.authenticate(localizedReason: "Sign in to Monica")
             guard let creds = biometricAuth.loadSavedCredentials() else {
                 error = "No saved credentials found"
                 return
@@ -172,6 +172,17 @@ final class AppState {
         do {
             user = try await OpticonAPI.shared.changeEmail(newEmail: newEmail, password: password)
             biometricAuth.saveCredentials(email: newEmail, password: password)
+            return true
+        } catch {
+            self.error = error.localizedDescription
+            return false
+        }
+    }
+
+    func changeName(name: String) async -> Bool {
+        error = nil
+        do {
+            user = try await OpticonAPI.shared.changeName(name: name)
             return true
         } catch {
             self.error = error.localizedDescription

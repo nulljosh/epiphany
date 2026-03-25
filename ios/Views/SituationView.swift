@@ -362,7 +362,15 @@ struct SituationView: View {
             localEventResult.error,
         ].compactMap { $0 }
         if !failures.isEmpty {
-            error = failures.joined(separator: "  ")
+            withAnimation(.easeInOut) {
+                error = failures.joined(separator: "  ")
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(5))
+                withAnimation(.easeInOut) {
+                    error = nil
+                }
+            }
         }
     }
 

@@ -370,10 +370,12 @@ struct MarketsView: View {
                 async let watchlist: Void = appState.loadWatchlist()
                 async let commodities: Void = appState.loadCommodities()
                 async let crypto: Void = appState.loadCrypto()
+                _ = await (stocks, watchlist, commodities, crypto)
+                // Defer heavier loads after market data renders
                 async let finance: Void = appState.loadFinanceData()
                 async let statements: Void = appState.loadStatements()
                 async let tally: Void = appState.loadTallyData()
-                _ = await (stocks, watchlist, commodities, crypto, finance, statements, tally)
+                _ = await (finance, statements, tally)
             }
         }
         .onDisappear { isVisible = false }

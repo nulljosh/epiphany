@@ -49,6 +49,7 @@ async function fetchFmpQuotes(symbolList) {
       .filter(q => q.symbol && typeof q.price === 'number')
       .map(q => ({
         symbol: yahooSymbolMap[q.symbol] || q.symbol,
+        name: q.name || q.companyName || yahooSymbolMap[q.symbol] || q.symbol,
         price: q.price,
         change: q.change ?? 0,
         changePercent: q.changesPercentage ?? 0,
@@ -58,6 +59,10 @@ async function fetchFmpQuotes(symbolList) {
         eps: q.eps ?? q.epsTTM ?? null,
         fiftyTwoWeekHigh: q.yearHigh ?? null,
         fiftyTwoWeekLow: q.yearLow ?? null,
+        open: q.open ?? null,
+        prevClose: q.previousClose ?? null,
+        high: q.dayHigh ?? null,
+        low: q.dayLow ?? null,
       }));
   } catch (err) {
     clearTimeout(timeoutId);
@@ -91,6 +96,7 @@ async function fetchYahooChartSingle(symbol, provider) {
 
     return {
       symbol,
+      name: meta.shortName || meta.longName || symbol,
       price: meta.regularMarketPrice,
       change: Math.round(change * 100) / 100,
       changePercent: Math.round(changePercent * 100) / 100,
@@ -151,12 +157,61 @@ async function fetchYahooQuotes(symbolList) {
   return results;
 }
 
+async function enrichWithFmpProfile(stocks) {
+  const apiKey = getFmpApiKey();
+  if (!apiKey) return stocks;
+
+  const symbols = stocks.filter(s => s.marketCap == null || !s.name || s.name === s.symbol).map(s => s.symbol.replace('-', '.'));
+  if (symbols.length === 0) return stocks;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const url = `${FMP_BASE}/profile/${symbols.join(',')}?apikey=${apiKey}`;
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!response.ok) return stocks;
+
+    const data = await response.json();
+    if (!Array.isArray(data)) return stocks;
+
+    const profileMap = {};
+    for (const p of data) {
+      if (p.symbol) profileMap[p.symbol] = p;
+    }
+
+    return stocks.map(s => {
+      const p = profileMap[s.symbol.replace('-', '.')];
+      if (!p) return s;
+      return {
+        ...s,
+        name: s.name && s.name !== s.symbol ? s.name : (p.companyName || s.name),
+        marketCap: s.marketCap ?? p.mktCap ?? null,
+        peRatio: s.peRatio ?? p.pe ?? null,
+        eps: s.eps ?? p.eps ?? null,
+      };
+    });
+  } catch {
+    clearTimeout(timeoutId);
+    return stocks;
+  }
+}
+
 async function enrichWithFundamentals(stocks) {
   const symbols = stocks.filter(s => s.marketCap == null).map(s => s.symbol);
   if (symbols.length === 0) return stocks;
 
+  // Try FMP profile first (more reliable than Yahoo v7)
+  const fmpEnriched = await enrichWithFmpProfile(stocks);
+  if (fmpEnriched.every(s => s.marketCap != null)) return fmpEnriched;
+
+  // Fallback to Yahoo v7 for remaining
+  const remaining = fmpEnriched.filter(s => s.marketCap == null).map(s => s.symbol);
+  if (remaining.length === 0) return fmpEnriched;
+
   const provider = YAHOO_PROVIDERS[0];
-  const url = `${provider}/v7/finance/quote?symbols=${symbols.join(',')}`;
+  const url = `${provider}/v7/finance/quote?symbols=${remaining.join(',')}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -167,7 +222,7 @@ async function enrichWithFundamentals(stocks) {
     });
     clearTimeout(timeoutId);
 
-    if (!response.ok) return stocks;
+    if (!response.ok) return fmpEnriched;
 
     const data = await response.json();
     const quotes = data?.quoteResponse?.result || [];
@@ -176,11 +231,12 @@ async function enrichWithFundamentals(stocks) {
       if (q.symbol) quoteMap[q.symbol] = q;
     }
 
-    return stocks.map(s => {
+    return fmpEnriched.map(s => {
       const q = quoteMap[s.symbol];
       if (!q) return s;
       return {
         ...s,
+        name: s.name || q.shortName || q.longName || s.symbol,
         marketCap: s.marketCap ?? q.marketCap ?? null,
         peRatio: s.peRatio ?? q.trailingPE ?? q.forwardPE ?? null,
         eps: s.eps ?? q.epsTrailingTwelveMonths ?? null,
@@ -188,7 +244,7 @@ async function enrichWithFundamentals(stocks) {
     });
   } catch {
     clearTimeout(timeoutId);
-    return stocks;
+    return fmpEnriched;
   }
 }
 
@@ -224,7 +280,7 @@ export default async function handler(req, res) {
     stocks = stocks.filter(q => q.symbol && typeof q.price === 'number');
 
     // Enrich with fundamentals if missing
-    const needsEnrichment = stocks.some(s => s.marketCap == null);
+    const needsEnrichment = stocks.some(s => s.marketCap == null || !s.name || s.name === s.symbol);
     if (needsEnrichment) {
       try {
         const enriched = await enrichWithFundamentals(stocks);

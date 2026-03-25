@@ -6,7 +6,7 @@ struct NewsView: View {
     @State private var isLoading = false
     @State private var error: String?
     @State private var hasLoaded = false
-    @Environment(\.openURL) private var openURL
+    @State private var selectedNewsURL: URL?
 
     private var cleanArticles: [NewsArticle] {
         articles.filter { article in
@@ -52,7 +52,7 @@ struct NewsView: View {
                         ForEach(cleanArticles) { article in
                             Button {
                                 guard !article.url.isEmpty, let url = URL(string: article.url) else { return }
-                                openURL(url)
+                                selectedNewsURL = url
                             } label: {
                                 NewsRow(article: article)
                             }
@@ -70,6 +70,10 @@ struct NewsView: View {
                 }
             }
             .navigationTitle("News")
+            .sheet(item: $selectedNewsURL) { url in
+                SafariView(url: url)
+                    .ignoresSafeArea()
+            }
         }
         .onAppear {
             guard !hasLoaded else { return }

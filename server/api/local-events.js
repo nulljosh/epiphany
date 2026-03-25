@@ -163,6 +163,35 @@ async function fetchEventNews(lat, lon, cityName) {
   return events;
 }
 
+// Ticketmaster Discovery API
+async function fetchTicketmaster(lat, lon) {
+  const events = [];
+  try {
+    const apiKey = process.env.TICKETMASTER_API_KEY;
+    const keyParam = apiKey ? `&apikey=${apiKey}` : '';
+    const url = `https://app.ticketmaster.com/discovery/v2/events.json?latlong=${lat},${lon}&radius=25&unit=km&size=20&sort=date,asc${keyParam}`;
+    const data = await fetchWithTimeout(url);
+    for (const e of (data._embedded?.events || [])) {
+      const venue = e._embedded?.venues?.[0];
+      const loc = venue?.location;
+      if (!loc?.latitude || !loc?.longitude) continue;
+      events.push({
+        lat: parseFloat(loc.latitude),
+        lng: parseFloat(loc.longitude),
+        type: 'local-event',
+        category: e.classifications?.[0]?.segment?.name?.toLowerCase() || 'event',
+        title: e.name || 'Event',
+        severity: 'low',
+        timestamp: e.dates?.start?.dateTime || new Date().toISOString(),
+        source: 'ticketmaster',
+        venue: venue?.name || null,
+        date: e.dates?.start?.localDate || null,
+      });
+    }
+  } catch { /* Ticketmaster unavailable */ }
+  return events;
+}
+
 async function reverseGeocode(lat, lon) {
   try {
     const data = await fetchWithTimeout(
@@ -208,9 +237,10 @@ export default async function handler(req, res) {
     }
 
     // Free fallbacks (always run)
-    attemptedSources.push('eventbrite', 'osm_venues');
+    attemptedSources.push('eventbrite', 'osm_venues', 'ticketmaster');
     fetchers.push(fetchEventbrite(lat, lon).catch(() => []));
     fetchers.push(fetchOSMVenues(lat, lon).catch(() => []));
+    fetchers.push(fetchTicketmaster(lat, lon).catch(() => []));
 
     // News fallback with city name
     const cityName = await reverseGeocode(lat, lon);
