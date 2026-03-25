@@ -95,51 +95,24 @@ async function fetchEventbrite(lat, lon) {
   return events;
 }
 
-// OpenStreetMap Overpass: find notable places nearby
-async function fetchOSMVenues(lat, lon) {
+// Wikipedia GeoSearch: find notable places nearby (fast, reliable, no auth)
+async function fetchWikipediaPlaces(lat, lon) {
   const events = [];
-  const radius = 15000; // 15km
-  const query = `[out:json][timeout:15];(
-    nwr["amenity"="community_centre"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="theatre"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="arts_centre"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="library"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="cinema"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="hospital"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="school"]["name"](around:${radius},${lat},${lon});
-    nwr["amenity"="fuel"]["name"](around:${radius},${lat},${lon});
-    nwr["leisure"="stadium"]["name"](around:${radius},${lat},${lon});
-    nwr["leisure"="fitness_centre"]["name"](around:${radius},${lat},${lon});
-    nwr["leisure"="park"]["name"](around:${radius},${lat},${lon});
-    nwr["tourism"="museum"]["name"](around:${radius},${lat},${lon});
-    nwr["tourism"="attraction"]["name"](around:${radius},${lat},${lon});
-    nwr["shop"="supermarket"]["name"](around:${radius},${lat},${lon});
-    nwr["shop"="mall"]["name"](around:${radius},${lat},${lon});
-  );out center body 50;`;
-
   try {
-    const data = await fetchWithTimeout(
-      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-      {}, 12000
-    );
-    for (const el of (data.elements || []).slice(0, 40)) {
-      const name = el.tags?.name;
-      if (!name) continue;
-      const cat = el.tags?.amenity || el.tags?.leisure || el.tags?.tourism || el.tags?.shop || 'venue';
-      const elLat = el.center?.lat || el.lat;
-      const elLon = el.center?.lon || el.lon;
-      if (!elLat || !elLon) continue;
+    const url = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=50&format=json`;
+    const data = await fetchWithTimeout(url, {}, 8000);
+    for (const place of (data.query?.geosearch || [])) {
       events.push({
-        lat: elLat, lng: elLon, type: 'local-event',
-        category: cat,
-        title: name,
-        venue: name,
+        lat: place.lat, lng: place.lon, type: 'local-event',
+        category: 'place',
+        title: place.title,
+        venue: place.title,
         severity: 'low',
         timestamp: new Date().toISOString(),
-        source: 'osm_venues',
+        source: 'wikipedia',
       });
     }
-  } catch { /* OSM unavailable */ }
+  } catch { /* Wikipedia unavailable */ }
   return events;
 }
 
@@ -253,9 +226,9 @@ export default async function handler(req, res) {
     }
 
     // Free fallbacks (always run)
-    attemptedSources.push('eventbrite', 'osm_venues', 'ticketmaster');
+    attemptedSources.push('eventbrite', 'wikipedia', 'ticketmaster');
     fetchers.push(fetchEventbrite(lat, lon).catch(() => []));
-    fetchers.push(fetchOSMVenues(lat, lon).catch(() => []));
+    fetchers.push(fetchWikipediaPlaces(lat, lon).catch(() => []));
     fetchers.push(fetchTicketmaster(lat, lon).catch(() => []));
 
     // News fallback with city name
