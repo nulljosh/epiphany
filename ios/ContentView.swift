@@ -4,6 +4,7 @@ struct ContentView: View {
     @Environment(AppState.self) private var appState
     @State private var selectedTab = 0
     @State private var tickerSelectedStock: Stock?
+    @State private var showTicker = false
  
     var body: some View {
         @Bindable var appState = appState
@@ -36,10 +37,20 @@ struct ContentView: View {
         }
         .tint(Palette.appleBlue)
         .safeAreaInset(edge: .top, spacing: 0) {
-            if selectedTab == 1 && !appState.stocks.isEmpty {
+            if showTicker {
                 TickerBarView(appState: appState) { stock in
                     tickerSelectedStock = stock
                 }
+            }
+        }
+        .onChange(of: selectedTab) { _, tab in
+            if tab == 1 && !appState.stocks.isEmpty {
+                Task {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    withAnimation(.easeIn(duration: 0.2)) { showTicker = true }
+                }
+            } else {
+                showTicker = false
             }
         }
         .sheet(item: $tickerSelectedStock) { stock in
