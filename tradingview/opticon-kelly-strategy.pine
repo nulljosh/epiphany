@@ -1,0 +1,144 @@
+// Opticon Kelly Criterion Momentum Strategy (Backtestable)
+// Ported from Opticon's trading simulator (simBenchmark.js + trading.js)
+// Pine Script v6
+//
+// This is the strategy version -- use TradingView's Strategy Tester tab
+// to backtest and see equity curve, drawdown, trade list, etc.
+
+//@version=6
+strategy("Opticon Kelly Strategy", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10, initial_capital=10000, commission_type=strategy.commission.percent, commission_value=0.1, slippage=1)
+
+// ---- Inputs ----------------------------------------------------------------
+
+grp_kelly   = "Kelly Criterion"
+grp_entry   = "Entry Signal (Momentum)"
+grp_exit    = "Exit Signal"
+
+i_kellyFrac   = input.float(0.25,    "Kelly Fraction",       minval=0.01, maxval=1.0, step=0.05, group=grp_kelly)
+i_kellyCap    = input.float(0.10,    "Max Position Size (%)", minval=0.01, maxval=1.0, step=0.01, group=grp_kelly)
+
+i_smaFast     = input.int(10,    "Fast MA Length",          minval=2,     group=grp_entry)
+i_smaSlow     = input.int(20,    "Slow MA Length",          minval=2,     group=grp_entry)
+i_strength    = input.float(0.01, "Momentum Strength Threshold", minval=0.001, step=0.001, group=grp_entry)
+i_volCap      = input.float(0.025, "Volatility Cap (stddev/SMA)", minval=0.001, step=0.005, group=grp_entry)
+i_risingBars  = input.int(5,     "Min Rising Bars (of last 10)", minval=1, maxval=10, group=grp_entry)
+
+i_stopPct     = input.float(1.7,  "Stop Loss %",    minval=0.1, step=0.1, group=grp_exit)
+i_targetPct   = input.float(5.0,  "Take Profit %",  minval=0.1, step=0.1, group=grp_exit)
+i_trailTrig   = input.float(2.0,  "Trailing Stop Trigger %", minval=0.1, step=0.1, group=grp_exit)
+i_trailPct    = input.float(3.0,  "Trailing Stop Distance %", minval=0.1, step=0.1, group=grp_exit)
+
+// ---- Kelly from Backtest Stats ----------------------------------------------
+// After enough trades, use the strategy's own win rate to compute Kelly dynamically.
+
+totalTrades = strategy.closedtrades
+winCount    = strategy.wintrades
+winRate     = totalTrades > 10 ? winCount / totalTrades : 0.55
+
+// Compute average win and average loss for actual reward/risk ratio
+avgWin  = strategy.grossprofit / math.max(winCount, 1)
+avgLoss = math.abs(strategy.grossloss) / math.max(totalTrades - winCount, 1)
+rr      = avgLoss > 0 ? avgWin / avgLoss : 2.94
+
+kellyFull = (rr * winRate - (1.0 - winRate)) / rr
+kellyPct  = math.max(0.0, math.min(kellyFull * i_kellyFrac, i_kellyCap))
+
+// ---- Moving Averages --------------------------------------------------------
+
+smaFast = ta.sma(close, i_smaFast)
+smaSlow = ta.sma(close, i_smaSlow)
+
+// ---- Momentum Strength ------------------------------------------------------
+
+strength     = (close - smaFast) / smaFast
+prevStrength = (close[1] - smaFast[1]) / smaFast[1]
+
+// ---- Volatility Filter ------------------------------------------------------
+
+volRaw  = ta.stdev(close, i_smaFast)
+volNorm = volRaw / smaFast
+
+// ---- Rising Bar Count -------------------------------------------------------
+
+risingCount = 0
+for i = 1 to 10
+    if close[i - 1] > close[i]
+        risingCount += 1
+
+// ---- Entry Conditions -------------------------------------------------------
+
+momentumOk   = strength >= i_strength
+prevMomOk    = prevStrength > 0.0
+volOk        = volNorm < i_volCap
+risingOk     = risingCount >= i_risingBars
+aboveSlowMA  = close > smaSlow
+kellyPositive = kellyPct > 0.0
+
+entrySignal = momentumOk and prevMomOk and volOk and risingOk and aboveSlowMA and kellyPositive
+
+// ---- Position Sizing --------------------------------------------------------
+// Kelly-based: use kellyPct of equity
+
+equityNow     = strategy.equity
+positionDollars = equityNow * kellyPct
+qtyShares     = math.floor(positionDollars / close)
+
+// ---- Strategy Entries -------------------------------------------------------
+
+if entrySignal and strategy.position_size == 0 and qtyShares > 0
+    strategy.entry("Long", strategy.long, qty=qtyShares)
+
+// ---- Exit Management --------------------------------------------------------
+// Fixed stop + take profit, with trailing stop upgrade
+
+if strategy.position_size > 0
+    entryPrice = strategy.position_avg_price
+    stopPrice  = entryPrice * (1.0 - i_stopPct / 100.0)
+    tgtPrice   = entryPrice * (1.0 + i_targetPct / 100.0)
+    pnlPct     = (close - entryPrice) / entryPrice
+
+    // Trailing stop kicks in after trigger threshold
+    if pnlPct > i_trailTrig / 100.0
+        trailStop = close * (1.0 - i_trailPct / 100.0)
+        effectiveStop = math.max(stopPrice, trailStop)
+        strategy.exit("Exit", "Long", stop=effectiveStop, limit=tgtPrice)
+    else
+        strategy.exit("Exit", "Long", stop=stopPrice, limit=tgtPrice)
+
+// ---- Plots ------------------------------------------------------------------
+
+plot(smaFast, "SMA Fast", color=color.new(color.blue, 40), linewidth=1)
+plot(smaSlow, "SMA Slow", color=color.new(color.orange, 40), linewidth=1)
+
+plotshape(entrySignal and strategy.position_size == 0, "Entry", shape.triangleup, location.belowbar, color.new(color.green, 0), size=size.small)
+
+bgcolor(entrySignal ? color.new(color.green, 92) : na)
+
+// ---- Performance Table ------------------------------------------------------
+
+if barstate.islast
+    var table tbl = table.new(position.top_right, 2, 8, border_width=1)
+
+    table.cell(tbl, 0, 0, "Opticon Strategy", text_color=color.white, bgcolor=color.new(color.blue, 20), text_size=size.small)
+    table.cell(tbl, 1, 0, "", bgcolor=color.new(color.blue, 20))
+
+    table.cell(tbl, 0, 1, "Total Trades", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 1, str.tostring(totalTrades), text_color=color.white, text_size=size.tiny)
+
+    table.cell(tbl, 0, 2, "Win Rate", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 2, str.tostring(winRate * 100, "#.#") + "%", text_color=winRate > 0.5 ? color.lime : color.red, text_size=size.tiny)
+
+    table.cell(tbl, 0, 3, "R:R Ratio", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 3, str.tostring(rr, "#.##"), text_color=color.white, text_size=size.tiny)
+
+    table.cell(tbl, 0, 4, "Full Kelly", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 4, str.tostring(kellyFull * 100, "#.##") + "%", text_color=color.white, text_size=size.tiny)
+
+    table.cell(tbl, 0, 5, "Frac Kelly", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 5, str.tostring(kellyPct * 100, "#.##") + "%", text_color=kellyPct > 0 ? color.lime : color.red, text_size=size.tiny)
+
+    table.cell(tbl, 0, 6, "Position $", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 6, "$" + str.tostring(positionDollars, "#,###"), text_color=color.white, text_size=size.tiny)
+
+    table.cell(tbl, 0, 7, "Net Profit", text_color=color.gray, text_size=size.tiny)
+    table.cell(tbl, 1, 7, "$" + str.tostring(strategy.netprofit, "#,###.##"), text_color=strategy.netprofit > 0 ? color.lime : color.red, text_size=size.tiny)

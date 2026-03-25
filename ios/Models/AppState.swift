@@ -12,7 +12,7 @@ final class AppState {
     var portfolio: Portfolio?
     var watchlist: [WatchlistItem] = []
     var alerts: [PriceAlert] = []
-    var markets: [PredictionMarket] = []
+
     var commodities: [CommodityData] = []
     var crypto: [CryptoData] = []
     var financeData: FinanceData?
@@ -154,7 +154,6 @@ final class AppState {
         alerts = []
         stocks = []
         error = nil
-        markets = []
         commodities = []
         crypto = []
         financeData = nil

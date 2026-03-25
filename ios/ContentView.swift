@@ -10,10 +10,10 @@ struct ContentView: View {
 
         TabView(selection: $selectedTab) {
             DeferredTab(isActive: selectedTab == 0) {
-                PortfolioView()
+                SituationView()
             }
                 .tabItem {
-                    Label("Portfolio", systemImage: "briefcase")
+                    Label("Map", systemImage: "map")
                 }
                 .tag(0)
 
@@ -25,19 +25,11 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            DeferredTab(isActive: selectedTab == 2) {
-                SituationView()
-            }
-                .tabItem {
-                    Label("Map", systemImage: "map")
-                }
-                .tag(2)
-
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-                .tag(3)
+                .tag(2)
         }
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()

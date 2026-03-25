@@ -69,19 +69,6 @@ final class OpticonAPI: @unchecked Sendable {
         try await authRequest(action: "register", email: email, password: password)
     }
 
-    func signInWithApple(identityToken: String, email: String?, fullName: String?) async throws -> User {
-        let url = try makeURL("/api/auth", query: ["action": "signin-apple"])
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        var body: [String: String] = ["identityToken": identityToken]
-        if let email { body["email"] = email }
-        if let fullName { body["fullName"] = fullName }
-        request.httpBody = try JSONEncoder().encode(body)
-        let data = try await perform(request)
-        return try decode(User.self, from: data)
-    }
-
     private func authRequest(action: String, email: String, password: String) async throws -> User {
         let url = try makeURL("/api/auth", query: ["action": action])
         var request = URLRequest(url: url)
@@ -413,20 +400,6 @@ final class OpticonAPI: @unchecked Sendable {
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(TrafficData.self, from: data)
-    }
-
-    // MARK: - Prediction Markets
-
-    func fetchMarkets(limit: Int = 50, order: String = "volume24hr") async throws -> [PredictionMarket] {
-        let url = try makeURL("/api/markets", query: [
-            "limit": String(limit),
-            "order": order,
-            "closed": "false",
-            "ascending": "false"
-        ])
-        let request = URLRequest(url: url)
-        let data = try await perform(request)
-        return try decode([PredictionMarket].self, from: data)
     }
 
     // MARK: - Avatar

@@ -11,6 +11,8 @@ struct MarketsView: View {
     @State private var sortField: MarketSortField = .changePercent
     @State private var sortAscending = false
     @State private var selectedMarketItem: MarketItem?
+    @State private var selectedNewsURL: URL?
+    @State private var portfolioExpanded = true
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -103,6 +105,86 @@ struct MarketsView: View {
                     )
                 } else {
                     List {
+                        if appState.isLoggedIn {
+                            Section(isExpanded: $portfolioExpanded) {
+                                if let financeData = appState.financeData {
+                                    let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
+                                    if !portfolio.holdings.isEmpty {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
+                                                    .font(.title2.weight(.bold))
+                                                HStack(spacing: 4) {
+                                                    Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
+                                                    Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                                                }
+                                                .font(.caption.weight(.medium))
+                                                .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
+                                            }
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 4)
+                                    }
+
+                                    let debt = financeData.debt
+                                    let goals = financeData.goals
+                                    let budget = financeData.budget
+
+                                    if !debt.isEmpty || !goals.isEmpty || appState.tallyPayment != nil {
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 10) {
+                                                if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
+                                                    portfolioTimelineChip(
+                                                        icon: "calendar.badge.clock",
+                                                        label: "Payday",
+                                                        detail: "\(days)d",
+                                                        color: Palette.appleBlue
+                                                    )
+                                                }
+
+                                                ForEach(debt.sorted { a, b in
+                                                    let aMonths = debtMonthsToPayoff(item: a, budget: budget)
+                                                    let bMonths = debtMonthsToPayoff(item: b, budget: budget)
+                                                    return aMonths < bMonths
+                                                }, id: \.name) { item in
+                                                    let months = debtMonthsToPayoff(item: item, budget: budget)
+                                                    if months > 0 {
+                                                        portfolioTimelineChip(
+                                                            icon: debtIcon(for: item.name),
+                                                            label: item.name,
+                                                            detail: "\(months)mo",
+                                                            color: months <= 2 ? Palette.warningAmber : Palette.dangerRed
+                                                        )
+                                                    }
+                                                }
+
+                                                ForEach(goals, id: \.name) { goal in
+                                                    portfolioTimelineChip(
+                                                        icon: "flag",
+                                                        label: goal.name,
+                                                        detail: String(format: "%.0f%%", goal.progress * 100),
+                                                        color: Color(hex: goal.priorityColor)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                                    }
+                                } else {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                }
+                            } header: {
+                                Text("Portfolio")
+                            }
+                            .listRowBackground(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.ultraThinMaterial)
+                                    .padding(2)
+                            )
+                        }
+
                         Section {
                             HStack {
                                 Circle()
@@ -275,6 +357,10 @@ struct MarketsView: View {
                 MarketItemDetailPageView(items: items, initialIndex: initialIndex)
             }
         }
+        .sheet(item: $selectedNewsURL) { url in
+            SafariView(url: url)
+                .ignoresSafeArea()
+        }
         .onAppear {
             isVisible = true
             guard !hasLoaded else { return }
@@ -284,7 +370,10 @@ struct MarketsView: View {
                 async let watchlist: Void = appState.loadWatchlist()
                 async let commodities: Void = appState.loadCommodities()
                 async let crypto: Void = appState.loadCrypto()
-                _ = await (stocks, watchlist, commodities, crypto)
+                async let finance: Void = appState.loadFinanceData()
+                async let statements: Void = appState.loadStatements()
+                async let tally: Void = appState.loadTallyData()
+                _ = await (stocks, watchlist, commodities, crypto, finance, statements, tally)
             }
         }
         .onDisappear { isVisible = false }
@@ -307,6 +396,42 @@ struct MarketsView: View {
 }
 
 private extension MarketsView {
+    func portfolioTimelineChip(icon: String, label: String, detail: String, color: Color) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.body)
+                .foregroundStyle(color)
+            Text(label)
+                .font(.caption2)
+                .lineLimit(1)
+            Text(detail)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(color)
+        }
+        .frame(width: 72, height: 72)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    func debtMonthsToPayoff(item: FinanceData.DebtItem, budget: FinanceData.Budget?) -> Int {
+        let surplus = max(0, budget?.monthlySurplus ?? 0)
+        let payment = item.minPayment > 0
+            ? max(item.minPayment, item.minPayment + surplus * 0.5)
+            : max(1, surplus * 0.3)
+        guard payment > 0, item.balance > 0 else { return 0 }
+        return max(1, Int(ceil(item.balance / payment)))
+    }
+
+    func debtIcon(for name: String) -> String {
+        let lower = name.lowercased()
+        if lower.contains("bell") { return "phone.connection" }
+        if lower.contains("telus") { return "antenna.radiowaves.left.and.right" }
+        if lower.contains("rogers") { return "wifi" }
+        if lower.contains("visa") || lower.contains("mastercard") { return "creditcard" }
+        if lower.contains("loan") { return "building.columns" }
+        if lower.contains("mom") || lower.contains("family") { return "heart" }
+        return "dollarsign.circle"
+    }
+
     var usMarketStatus: (label: String, color: Color) {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
@@ -514,6 +639,7 @@ private struct MarketItemDetailView: View {
     @State private var hasLoaded = false
     @State private var error: String?
     @State private var relatedNews: [NewsArticle] = []
+    @State private var selectedNewsURL: URL?
 
     private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
 
@@ -589,7 +715,9 @@ private struct MarketItemDetailView: View {
 
                         ForEach(relatedNews.prefix(5)) { article in
                             if let url = URL(string: article.url) {
-                                Link(destination: url) {
+                                Button {
+                                    selectedNewsURL = url
+                                } label: {
                                     CompactNewsRow(article: article)
                                 }
                             } else {
@@ -602,6 +730,10 @@ private struct MarketItemDetailView: View {
 
                 Spacer()
             }
+        }
+        .sheet(item: $selectedNewsURL) { url in
+            SafariView(url: url)
+                .ignoresSafeArea()
         }
         .navigationTitle(item.name)
         .navigationBarTitleDisplayMode(.inline)
