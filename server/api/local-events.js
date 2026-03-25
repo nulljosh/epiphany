@@ -95,29 +95,43 @@ async function fetchEventbrite(lat, lon) {
   return events;
 }
 
-// OpenStreetMap Overpass: find event venues and community spaces
+// OpenStreetMap Overpass: find notable places nearby
 async function fetchOSMVenues(lat, lon) {
   const events = [];
-  const radius = 10000; // 10km
-  const query = `[out:json][timeout:10];(
+  const radius = 15000; // 15km
+  const query = `[out:json][timeout:15];(
     node["amenity"="community_centre"](around:${radius},${lat},${lon});
     node["amenity"="theatre"](around:${radius},${lat},${lon});
     node["amenity"="arts_centre"](around:${radius},${lat},${lon});
+    node["amenity"="library"](around:${radius},${lat},${lon});
+    node["amenity"="cinema"](around:${radius},${lat},${lon});
+    node["amenity"="place_of_worship"](around:${radius},${lat},${lon});
+    node["amenity"="hospital"](around:${radius},${lat},${lon});
+    node["amenity"="school"]["name"](around:${radius},${lat},${lon});
+    node["amenity"="fuel"](around:${radius},${lat},${lon});
     node["leisure"="stadium"](around:${radius},${lat},${lon});
+    node["leisure"="fitness_centre"](around:${radius},${lat},${lon});
+    node["leisure"="park"]["name"](around:${radius},${lat},${lon});
     node["tourism"="museum"](around:${radius},${lat},${lon});
-  );out body 20;`;
+    node["tourism"="attraction"](around:${radius},${lat},${lon});
+    node["shop"="supermarket"](around:${radius},${lat},${lon});
+    node["shop"="mall"](around:${radius},${lat},${lon});
+  );out body 50;`;
 
   try {
     const data = await fetchWithTimeout(
-      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      {}, 12000
     );
-    for (const el of (data.elements || []).slice(0, 10)) {
+    for (const el of (data.elements || []).slice(0, 40)) {
       const name = el.tags?.name;
       if (!name) continue;
+      const cat = el.tags?.amenity || el.tags?.leisure || el.tags?.tourism || el.tags?.shop || 'venue';
       events.push({
         lat: el.lat, lng: el.lon, type: 'local-event',
-        category: el.tags?.amenity || el.tags?.leisure || 'venue',
+        category: cat,
         title: name,
+        venue: name,
         severity: 'low',
         timestamp: new Date().toISOString(),
         source: 'osm_venues',

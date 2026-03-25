@@ -56,10 +56,18 @@ struct ContentView: View {
                 .padding(.top, 8)
             }
         }
+        .task { await preloadMarketData() }
         .sheet(isPresented: $appState.showLogin) {
             LoginSheet()
                 .environment(appState)
         }
+    }
+
+    private func preloadMarketData() async {
+        async let s: Void = appState.loadStocks()
+        async let c: Void = appState.loadCommodities()
+        async let k: Void = appState.loadCrypto()
+        _ = await (s, c, k)
     }
 }
 

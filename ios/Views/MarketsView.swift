@@ -13,6 +13,7 @@ struct MarketsView: View {
     @State private var selectedMarketItem: MarketItem?
     @State private var selectedNewsURL: URL?
     @State private var portfolioExpanded = true
+    @State private var cachedItems: [MarketItem] = []
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -24,70 +25,46 @@ struct MarketsView: View {
         usMarketStatus.color
     }
 
-    private var allItems: [MarketItem] {
-        var items: [MarketItem] = []
-
-        for stock in appState.stocks {
-            items.append(MarketItem(
-                name: stock.name,
-                symbol: stock.symbol,
-                price: stock.price,
-                changePercent: stock.changePercent,
-                marketCap: stock.marketCap,
-                peRatio: stock.peRatio,
-                kind: .stock(stock)
-            ))
-        }
-
-        for commodity in appState.commodities {
-            items.append(MarketItem(
-                name: commodity.name,
-                symbol: commodity.name,
-                price: commodity.price,
-                changePercent: commodity.changePercent,
-                marketCap: nil,
-                peRatio: nil,
-                kind: .commodity
-            ))
-        }
-
-        for coin in appState.crypto {
-            items.append(MarketItem(
-                name: coin.symbol,
-                symbol: coin.symbol,
-                price: coin.spot,
-                changePercent: coin.chgPct,
-                marketCap: nil,
-                peRatio: nil,
-                kind: .crypto
-            ))
-        }
-
-        return items.sorted { lhs, rhs in
-            let result: Bool
-            switch sortField {
-            case .symbol:
-                result = lhs.symbol.localizedCompare(rhs.symbol) == .orderedAscending
-            case .name:
-                result = lhs.name.localizedCompare(rhs.name) == .orderedAscending
-            case .price:
-                result = lhs.price < rhs.price
-            case .peRatio:
-                result = (lhs.peRatio ?? 0) < (rhs.peRatio ?? 0)
-            case .marketCap:
-                result = (lhs.marketCap ?? 0) < (rhs.marketCap ?? 0)
-            case .changePercent:
-                result = lhs.changePercent < rhs.changePercent
-            }
-            return sortAscending ? result : !result
+    private var filteredItems: [MarketItem] {
+        if searchText.isEmpty { return cachedItems }
+        return cachedItems.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.symbol.localizedCaseInsensitiveContains(searchText)
         }
     }
 
-    private var filteredItems: [MarketItem] {
-        if searchText.isEmpty { return allItems }
-        return allItems.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.symbol.localizedCaseInsensitiveContains(searchText)
+    private func rebuildItems() {
+        var items: [MarketItem] = []
+        for stock in appState.stocks {
+            items.append(MarketItem(
+                name: stock.name, symbol: stock.symbol, price: stock.price,
+                changePercent: stock.changePercent, marketCap: stock.marketCap,
+                peRatio: stock.peRatio, kind: .stock(stock)
+            ))
+        }
+        for commodity in appState.commodities {
+            items.append(MarketItem(
+                name: commodity.name, symbol: commodity.name, price: commodity.price,
+                changePercent: commodity.changePercent, marketCap: nil, peRatio: nil, kind: .commodity
+            ))
+        }
+        for coin in appState.crypto {
+            items.append(MarketItem(
+                name: coin.symbol, symbol: coin.symbol, price: coin.spot,
+                changePercent: coin.chgPct, marketCap: nil, peRatio: nil, kind: .crypto
+            ))
+        }
+        cachedItems = items.sorted { lhs, rhs in
+            let result: Bool
+            switch sortField {
+            case .symbol: result = lhs.symbol.localizedCompare(rhs.symbol) == .orderedAscending
+            case .name: result = lhs.name.localizedCompare(rhs.name) == .orderedAscending
+            case .price: result = lhs.price < rhs.price
+            case .peRatio: result = (lhs.peRatio ?? 0) < (rhs.peRatio ?? 0)
+            case .marketCap: result = (lhs.marketCap ?? 0) < (rhs.marketCap ?? 0)
+            case .changePercent: result = lhs.changePercent < rhs.changePercent
+            }
+            return sortAscending ? result : !result
         }
     }
 
@@ -379,6 +356,11 @@ struct MarketsView: View {
             }
         }
         .onDisappear { isVisible = false }
+        .onChange(of: appState.stocks.count) { _, _ in rebuildItems() }
+        .onChange(of: appState.commodities.count) { _, _ in rebuildItems() }
+        .onChange(of: appState.crypto.count) { _, _ in rebuildItems() }
+        .onChange(of: sortField) { _, _ in rebuildItems() }
+        .onChange(of: sortAscending) { _, _ in rebuildItems() }
         .onChange(of: appState.isLoggedIn) { _, isLoggedIn in
             guard isLoggedIn, appState.watchlist.isEmpty else { return }
             Task {
