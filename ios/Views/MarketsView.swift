@@ -13,7 +13,6 @@ struct MarketsView: View {
     @State private var selectedMarketItem: MarketItem?
     @State private var selectedNewsURL: URL?
     @State private var portfolioExpanded = true
-    @State private var cachedItems: [MarketItem] = []
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -25,15 +24,7 @@ struct MarketsView: View {
         usMarketStatus.color
     }
 
-    private var filteredItems: [MarketItem] {
-        if searchText.isEmpty { return cachedItems }
-        return cachedItems.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.symbol.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    private func rebuildItems() {
+    private var allItems: [MarketItem] {
         var items: [MarketItem] = []
         for stock in appState.stocks {
             items.append(MarketItem(
@@ -54,7 +45,7 @@ struct MarketsView: View {
                 changePercent: coin.chgPct, marketCap: nil, peRatio: nil, kind: .crypto
             ))
         }
-        cachedItems = items.sorted { lhs, rhs in
+        return items.sorted { lhs, rhs in
             let result: Bool
             switch sortField {
             case .symbol: result = lhs.symbol.localizedCompare(rhs.symbol) == .orderedAscending
@@ -65,6 +56,14 @@ struct MarketsView: View {
             case .changePercent: result = lhs.changePercent < rhs.changePercent
             }
             return sortAscending ? result : !result
+        }
+    }
+
+    private var filteredItems: [MarketItem] {
+        if searchText.isEmpty { return allItems }
+        return allItems.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.symbol.localizedCaseInsensitiveContains(searchText)
         }
     }
 
@@ -350,7 +349,6 @@ struct MarketsView: View {
                     async let crypto: Void = appState.loadCrypto()
                     _ = await (stocks, watchlist, commodities, crypto)
                 }
-                rebuildItems()
                 async let finance: Void = appState.loadFinanceData()
                 async let statements: Void = appState.loadStatements()
                 async let tally: Void = appState.loadTallyData()
@@ -358,8 +356,6 @@ struct MarketsView: View {
             }
         }
         .onDisappear { isVisible = false }
-        .onChange(of: sortField) { _, _ in rebuildItems() }
-        .onChange(of: sortAscending) { _, _ in rebuildItems() }
         .onChange(of: appState.isLoggedIn) { _, isLoggedIn in
             guard isLoggedIn, appState.watchlist.isEmpty else { return }
             Task {
@@ -373,7 +369,6 @@ struct MarketsView: View {
                 async let c: Void = appState.loadCommodities(force: true)
                 async let k: Void = appState.loadCrypto(force: true)
                 _ = await (s, c, k)
-                rebuildItems()
             }
         }
     }

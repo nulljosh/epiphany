@@ -304,21 +304,6 @@ struct StockDetailView: View {
 
     private func newsSearchTerms(symbol: String, name: String) -> [String] {
         var terms = [symbol.lowercased(), name.lowercased()]
-        // Add common short names for major companies
-        let map: [String: [String]] = [
-            "AAPL": ["apple"], "MSFT": ["microsoft"], "GOOGL": ["google", "alphabet"],
-            "AMZN": ["amazon"], "META": ["meta", "facebook"], "TSLA": ["tesla"],
-            "NVDA": ["nvidia"], "PLTR": ["palantir"], "HOOD": ["robinhood"],
-            "COIN": ["coinbase"], "JPM": ["jpmorgan", "jp morgan"],
-            "GS": ["goldman"], "XOM": ["exxon"], "CVX": ["chevron"],
-            "UNH": ["unitedhealth"], "LMT": ["lockheed"], "RTX": ["raytheon"],
-            "SQ": ["block inc", "square"], "SHOP": ["shopify"],
-            "SNOW": ["snowflake"], "NET": ["cloudflare"], "CRWD": ["crowdstrike"],
-        ]
-        if let extras = map[symbol.uppercased()] {
-            terms.append(contentsOf: extras)
-        }
-        // Also try first word of company name (e.g. "Apple" from "Apple Inc")
         let firstName = name.components(separatedBy: " ").first?.lowercased() ?? ""
         if firstName.count >= 4 && !terms.contains(firstName) {
             terms.append(firstName)

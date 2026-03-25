@@ -113,12 +113,23 @@ struct SituationView: View {
                         Haptics.impact(.medium)
                         selectedEvent = .incident(incident)
                     } label: {
-                        emojiPin("🚧")
+                        emojiPin(incidentEmoji(incident.title))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private func incidentEmoji(_ title: String) -> String {
+        let t = title.lowercased()
+        if t.contains("police") { return "👮" }
+        if t.contains("fire") || t.contains("hydrant") { return "🚒" }
+        if t.contains("hospital") || t.contains("emergency") { return "🏥" }
+        if t.contains("construction") || t.contains("road_works") { return "🚧" }
+        if t.contains("border") { return "🛂" }
+        if t.contains("accident") || t.contains("crash") { return "💥" }
+        return "🚧"
     }
 
     @MapContentBuilder
