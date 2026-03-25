@@ -168,7 +168,7 @@ export default function App() {
     }
     return resolveAutoTheme() === 'dark';
   });
-  const [activeTab, setActiveTab] = useState('simulator');
+  const [activeTab, setActiveTab] = useState('situation');
   const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true });
   const mapInstanceRef = useRef(null);
   const t = getTheme(dark);
@@ -1044,7 +1044,6 @@ const reset = useCallback(() => {
   } : null;
 
   const TAB_PILLS = [
-    { key: 'simulator', label: 'Simulator' },
     { key: 'markets', label: 'Markets' },
     { key: 'portfolio', label: 'Portfolio' },
     { key: 'situation', label: 'Situation' },

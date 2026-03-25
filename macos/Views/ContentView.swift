@@ -9,8 +9,6 @@ struct ContentView: View {
         case situation = "Map"
         case markets = "Markets"
         case portfolio = "Portfolio"
-        case simulator = "Simulator"
-        case predictions = "Predictions"
         case settings = "Settings"
 
         var id: String { rawValue }
@@ -20,8 +18,6 @@ struct ContentView: View {
             case .situation: return "map"
             case .markets: return "chart.line.uptrend.xyaxis"
             case .portfolio: return "briefcase"
-            case .simulator: return "chart.xyaxis.line"
-            case .predictions: return "chart.pie"
             case .settings: return "gearshape"
             }
         }
@@ -82,12 +78,8 @@ struct ContentView: View {
             SituationView()
         case .markets:
             MarketsView()
-        case .predictions:
-            PredictionsView()
         case .portfolio:
             PortfolioView()
-        case .simulator:
-            SimulatorView()
         case .settings:
             SettingsView()
         }
@@ -189,9 +181,7 @@ private extension ContentView.AppSection {
         case .situation: return "1"
         case .markets: return "2"
         case .portfolio: return "3"
-        case .simulator: return "4"
-        case .predictions: return "5"
-        case .settings: return "6"
+        case .settings: return "4"
         }
     }
 }

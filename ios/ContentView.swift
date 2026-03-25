@@ -33,19 +33,11 @@ struct ContentView: View {
                 }
                 .tag(2)
 
-            DeferredTab(isActive: selectedTab == 3) {
-                SimulatorView()
-            }
-                .tabItem {
-                    Label("Simulator", systemImage: "bolt.fill")
-                }
-                .tag(3)
-
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-                .tag(4)
+                .tag(3)
         }
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()

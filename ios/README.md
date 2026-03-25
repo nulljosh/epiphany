@@ -4,7 +4,7 @@
 
 ![version](https://img.shields.io/badge/version-v3.1.0-blue)
 
-iPhone companion for Opticon. Five tabs: Portfolio, Markets, Map, Simulator, Settings.
+iPhone companion for Opticon. Four tabs: Portfolio, Markets, Map, Settings.
 ![Architecture](architecture.svg)
 
 ## Features
