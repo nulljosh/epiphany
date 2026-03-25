@@ -2,6 +2,7 @@ import { applyCors } from './_cors.js';
 import { getStatementsPayload, summarizeStatementBuffer } from './statements-data.js';
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
+import { checkRateLimit } from './_ratelimit.js';
 
 function safeName(name = 'statement.pdf') {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-');
@@ -67,6 +68,9 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST' && action === 'upload') {
+      if (!(await checkRateLimit(req, { prefix: 'rl:statements', max: 20 }))) {
+        return errorResponse(res, 429, 'Too many requests');
+      }
       const filename = typeof req.body?.filename === 'string' ? req.body.filename : '';
       const contentBase64 = typeof req.body?.contentBase64 === 'string' ? req.body.contentBase64 : '';
 

@@ -42,6 +42,10 @@ vi.mock('../../server/api/supabase.js', () => ({
   supabaseRequest: vi.fn(),
 }));
 
+vi.mock('../../server/api/_email.js', () => ({
+  sendEmail: vi.fn(async () => ({ id: 'mock-email-id' })),
+}));
+
 vi.mock('bcryptjs', () => ({
   default: {
     hash: vi.fn(async (password) => `hashed:${password}`),
@@ -149,7 +153,6 @@ describe('Auth API', () => {
         verified: false,
         tier: 'free',
       });
-      expect(res.data.verifyUrl).toContain('token-1');
       expect(kvStore.get('user:user@example.com')).toMatchObject({
         id: 'uuid-1',
         email: 'user@example.com',

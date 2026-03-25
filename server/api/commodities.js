@@ -155,7 +155,6 @@ export default async function handler(req, res) {
     console.error('Commodities API error:', error);
     res.status(500).json({
       error: 'Failed to fetch commodity data',
-      details: error.message
     });
   }
 }

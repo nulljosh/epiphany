@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ...subscription, tier });
     } catch (err) {
       console.error('[STRIPE/status] Error:', err.message);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: 'Failed to check subscription status' });
     }
   }
 
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ sessionId: session.id, url: session.url });
     } catch (err) {
       console.error('[STRIPE/checkout] Error:', err.message);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: 'Checkout session creation failed' });
     }
   }
 

@@ -1,5 +1,6 @@
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
+import { checkRateLimit } from './_ratelimit.js';
 
 const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving'];
 
@@ -77,6 +78,9 @@ export default async function handler(req, res) {
 
   // POST: update portfolio
   if (req.method === 'POST' && action === 'update') {
+    if (!(await checkRateLimit(req, { prefix: 'rl:portfolio' }))) {
+      return errorResponse(res, 429, 'Too many requests');
+    }
     const body = req.body;
     const { valid, error } = validatePortfolioPayload(body);
     if (!valid) {

@@ -50,6 +50,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
     }}>
       {canToggle ? (
         <button
+          aria-label={isWatchlisted ? `Remove ${symbol} from watchlist` : `Add ${symbol} to watchlist`}
           onClick={(e) => { e.stopPropagation(); onToggle(symbol); }}
           style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
@@ -170,6 +171,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <input
           type="text"
+          aria-label="Search markets"
           placeholder="Search markets..."
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -180,6 +182,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           }}
         />
         <select
+          aria-label="Sort by"
           value={sortKey}
           onChange={e => setSortKey(e.target.value)}
           style={{
@@ -193,6 +196,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           ))}
         </select>
         <button
+          aria-label={sortAsc ? 'Sort ascending' : 'Sort descending'}
           onClick={() => setSortAsc(prev => !prev)}
           style={{
             padding: '8px 10px', borderRadius: 8, border: `1px solid ${t.border}`,

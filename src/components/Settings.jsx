@@ -67,6 +67,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
           {Object.entries(mapLayers).map(([key, enabled]) => (
             <button
               key={key}
+              aria-pressed={enabled}
+              aria-label={`Toggle ${key} layer`}
               onClick={() => setMapLayers(prev => ({ ...prev, [key]: !prev[key] }))}
               style={toggleStyle(enabled)}
             >
@@ -80,12 +82,14 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         <div style={labelStyle}>Appearance</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
+            aria-pressed={!dark}
             onClick={() => setDark(false)}
             style={toggleStyle(!dark)}
           >
             Light
           </button>
           <button
+            aria-pressed={dark}
             onClick={() => setDark(true)}
             style={toggleStyle(dark)}
           >

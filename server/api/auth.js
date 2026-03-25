@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
 import { supabaseRequest, supabaseConfigured } from './supabase.js';
+import { sendEmail } from './_email.js';
 
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
 const RATE_LIMIT_MAX = 15;
@@ -183,14 +184,15 @@ export default async function handler(req, res) {
       setSessionCookie(res, sessionToken);
 
       const verifyUrl = `${getBaseUrl()}/api/auth?action=verify-email&token=${verifyToken}`;
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[AUTH] Verify email for ${email}: ${verifyUrl}`);
-      }
+      sendEmail({
+        to: normalizedEmail,
+        subject: 'Verify your Opticon account',
+        html: `<p>Click <a href="${verifyUrl}">here</a> to verify your email address.</p><p>Or copy this link: ${verifyUrl}</p>`,
+      }).catch((err) => console.warn('[AUTH] Verification email failed:', err.message));
 
       return res.status(201).json({
         ok: true,
         user: publicUser(user),
-        verifyUrl: process.env.NODE_ENV !== 'production' ? verifyUrl : undefined,
       });
     } catch (err) {
       console.error('[AUTH] Register KV error:', err.message);
@@ -346,7 +348,11 @@ export default async function handler(req, res) {
         const resetToken = generateToken();
         await kv.set(`reset:${resetToken}`, { email: email.toLowerCase() }, { ex: RESET_TTL });
         const resetUrl = `${getBaseUrl()}/reset?token=${resetToken}`;
-        console.log(`[AUTH] Password reset for ${email}: ${resetUrl}`);
+        sendEmail({
+          to: email.toLowerCase(),
+          subject: 'Reset your Opticon password',
+          html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p><p>Or copy this link: ${resetUrl}</p>`,
+        }).catch((err) => console.warn('[AUTH] Reset email failed:', err.message));
       }
     } catch {
       // Always return generic message.
