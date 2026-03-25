@@ -41,17 +41,11 @@ struct ContentView: View {
                 }
                 .tag(3)
 
-            PredictionsView()
-                .tabItem {
-                    Label("Polymarket", systemImage: "chart.pie")
-                }
-                .tag(4)
-
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-                .tag(5)
+                .tag(4)
         }
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()

@@ -8,6 +8,7 @@ settings:
   SWIFT_VERSION: "6.0"
   MARKETING_VERSION: "3.1.0"
   CURRENT_PROJECT_VERSION: "1"
+  CODE_SIGN_STYLE: Automatic
 targets:
   Opticon:
     type: application
@@ -27,6 +28,7 @@ targets:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.opticon
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      # CODE_SIGN_ENTITLEMENTS: Opticon.entitlements  # Requires paid Apple Developer Program
   OpticonTests:
     type: bundle.unit-test
     platform: iOS

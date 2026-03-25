@@ -65,7 +65,7 @@ struct PortfolioView: View {
     @State private var editingGoalItems: [FinanceData.Goal] = []
     @State private var calendarMonth = Date()
     @State private var selectedCalendarDay: Date?
-    @State private var nextPayday: OpticonAPI.TallyResponse.NextPayment?
+    // Tally payday data comes from appState.tallyPayment
     @State private var cachedPredictions: [(month: String, total: Double)] = []
     @State private var lastPredictionKey: String = ""
     @State private var showStatementManager = false
@@ -156,11 +156,8 @@ struct PortfolioView: View {
             Task {
                 async let financeLoad: Void = appState.loadFinanceData()
                 async let statementsLoad: Void = appState.loadStatements()
-                async let tallyLoad: OpticonAPI.TallyResponse.NextPayment? = {
-                    try? await OpticonAPI.shared.fetchNextPayday()
-                }()
-                let (_, _, payday) = await (financeLoad, statementsLoad, tallyLoad)
-                nextPayday = payday
+                async let tallyLoad: Void = appState.loadTallyData()
+                _ = await (financeLoad, statementsLoad, tallyLoad)
             }
         }
         .onChange(of: appState.isLoggedIn) { _, isLoggedIn in
@@ -560,15 +557,15 @@ struct PortfolioView: View {
                 }
             }
             Spacer()
-            if let payday = nextPayday {
+            if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
                 VStack(alignment: .trailing, spacing: 2) {
                     Image(systemName: "calendar.badge.clock")
                         .font(.title3)
                         .foregroundStyle(Palette.appleBlue)
-                    Text("\(payday.daysUntil)d")
+                    Text("\(days)d")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(payday.daysUntil <= 3 ? Palette.successGreen : .secondary)
-                    if let amount = payday.amount {
+                        .foregroundStyle(days <= 3 ? Palette.successGreen : .secondary)
+                    if let amount = tally.paymentAmount {
                         Text(amount)
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(Palette.successGreen)
@@ -598,29 +595,32 @@ struct PortfolioView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    if let payday = nextPayday {
+                    if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
                         timelineChip(
                             icon: "calendar.badge.clock",
                             label: "Payday",
-                            detail: "\(payday.daysUntil)d",
+                            detail: "\(days)d",
                             color: Palette.appleBlue
                         )
                     }
 
                     ForEach(debt, id: \.name) { item in
                         let monthsToPayoff: Int = {
-                            guard item.minPayment > 0 else { return 0 }
-                            let surplus = (budget?.monthlySurplus ?? 0)
-                            let payment = max(item.minPayment, item.minPayment + surplus * 0.5)
-                            guard payment > 0 else { return 0 }
+                            let surplus = max(0, budget?.monthlySurplus ?? 0)
+                            let payment = item.minPayment > 0
+                                ? max(item.minPayment, item.minPayment + surplus * 0.5)
+                                : max(1, surplus * 0.3)
+                            guard payment > 0, item.balance > 0 else { return 0 }
                             return max(1, Int(ceil(item.balance / payment)))
                         }()
-                        timelineChip(
-                            icon: debtIcon(for: item.name),
-                            label: item.name,
-                            detail: monthsToPayoff <= 1 ? "<1mo" : "\(monthsToPayoff)mo",
-                            color: monthsToPayoff <= 2 ? Palette.warningAmber : Palette.dangerRed
-                        )
+                        if monthsToPayoff > 0 {
+                            timelineChip(
+                                icon: debtIcon(for: item.name),
+                                label: item.name,
+                                detail: "\(monthsToPayoff)mo",
+                                color: monthsToPayoff <= 2 ? Palette.warningAmber : Palette.dangerRed
+                            )
+                        }
                     }
 
                     ForEach(goals, id: \.name) { goal in

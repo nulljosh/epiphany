@@ -66,29 +66,8 @@ struct LoginSheet: View {
                     .padding(.horizontal, 32)
                 }
 
-                // Sign in with Apple
-                SignInWithAppleButton(
-                    isRegistering ? .signUp : .signIn,
-                    onRequest: { request in
-                        request.requestedScopes = [.email, .fullName]
-                    },
-                    onCompletion: { result in
-                        handleAppleSignIn(result)
-                    }
-                )
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .padding(.horizontal)
-
-                HStack {
-                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
-                    Text("or")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
-                }
-                .padding(.horizontal, 32)
+                // Sign in with Apple requires paid Apple Developer Program
+                // Hidden until membership is active
 
                 VStack(spacing: 16) {
                     TextField("Email", text: $email)
