@@ -604,21 +604,14 @@ struct PortfolioView: View {
                         )
                     }
 
-                    ForEach(debt, id: \.name) { item in
-                        let monthsToPayoff: Int = {
-                            let surplus = max(0, budget?.monthlySurplus ?? 0)
-                            let payment = item.minPayment > 0
-                                ? max(item.minPayment, item.minPayment + surplus * 0.5)
-                                : max(1, surplus * 0.3)
-                            guard payment > 0, item.balance > 0 else { return 0 }
-                            return max(1, Int(ceil(item.balance / payment)))
-                        }()
-                        if monthsToPayoff > 0 {
+                    ForEach(sortedDebtByPayoff(debt: debt, budget: budget), id: \.name) { item in
+                        let months = debtMonthsToPayoff(item: item, budget: budget)
+                        if months > 0 {
                             timelineChip(
                                 icon: debtIcon(for: item.name),
                                 label: item.name,
-                                detail: "\(monthsToPayoff)mo",
-                                color: monthsToPayoff <= 2 ? Palette.warningAmber : Palette.dangerRed
+                                detail: "\(months)mo",
+                                color: months <= 2 ? Palette.warningAmber : Palette.dangerRed
                             )
                         }
                     }
@@ -651,6 +644,21 @@ struct PortfolioView: View {
         }
         .frame(width: 72, height: 72)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func debtMonthsToPayoff(item: FinanceData.DebtItem, budget: FinanceData.Budget?) -> Int {
+        let surplus = max(0, budget?.monthlySurplus ?? 0)
+        let payment = item.minPayment > 0
+            ? max(item.minPayment, item.minPayment + surplus * 0.5)
+            : max(1, surplus * 0.3)
+        guard payment > 0, item.balance > 0 else { return 0 }
+        return max(1, Int(ceil(item.balance / payment)))
+    }
+
+    private func sortedDebtByPayoff(debt: [FinanceData.DebtItem], budget: FinanceData.Budget?) -> [FinanceData.DebtItem] {
+        debt.sorted { a, b in
+            debtMonthsToPayoff(item: a, budget: budget) < debtMonthsToPayoff(item: b, budget: budget)
+        }
     }
 
     private func debtIcon(for name: String) -> String {

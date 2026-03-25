@@ -4,7 +4,7 @@ v3.1.0
 
 ## Rules
 
-- App scope: iPhone app. Six tabs: Portfolio, Markets, Map, Simulator, Polymarket, Settings
+- App scope: iPhone app. Five tabs: Portfolio, Markets, Map, Simulator, Settings
 - Map is the main feature -- no jumps on load
 - Stay logged in between launches
 - Portfolio opens to Spending

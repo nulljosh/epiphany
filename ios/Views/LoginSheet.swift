@@ -1,4 +1,3 @@
-import AuthenticationServices
 import LocalAuthentication
 import SwiftUI
 
@@ -209,32 +208,4 @@ struct LoginSheet: View {
         }
     }
 
-    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let auth):
-            guard let credential = auth.credential as? ASAuthorizationAppleIDCredential,
-                  let identityToken = credential.identityToken,
-                  let tokenString = String(data: identityToken, encoding: .utf8) else {
-                error = "Failed to get Apple ID token"
-                return
-            }
-            let appleEmail = credential.email
-            let fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
-                .compactMap { $0 }
-                .joined(separator: " ")
-
-            Task {
-                error = nil
-                await appState.signInWithApple(
-                    identityToken: tokenString,
-                    email: appleEmail,
-                    fullName: fullName.isEmpty ? nil : fullName
-                )
-                error = appState.error
-            }
-        case .failure(let err):
-            if (err as? ASAuthorizationError)?.code == .canceled { return }
-            error = "Apple Sign In failed"
-        }
-    }
 }

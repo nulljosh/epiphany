@@ -151,9 +151,7 @@ final class AppState {
         isAuthenticating = false
     }
 
-    func logout() async {
-        try? await OpticonAPI.shared.logout()
-        biometricAuth.clearCredentials()
+    private func clearAllUserData() {
         user = nil
         portfolio = nil
         watchlist = []
@@ -165,6 +163,13 @@ final class AppState {
         crypto = []
         financeData = nil
         statements = []
+        tallyPayment = nil
+    }
+
+    func logout() async {
+        try? await OpticonAPI.shared.logout()
+        biometricAuth.clearCredentials()
+        clearAllUserData()
     }
 
     func changeEmail(to newEmail: String, password: String) async -> Bool {
@@ -198,12 +203,7 @@ final class AppState {
         do {
             try await OpticonAPI.shared.deleteAccount(password: password)
             biometricAuth.clearCredentials()
-            user = nil
-            portfolio = nil
-            watchlist = []
-            alerts = []
-            financeData = nil
-            statements = []
+            clearAllUserData()
             return true
         } catch {
             self.error = error.localizedDescription
