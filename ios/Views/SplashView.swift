@@ -20,7 +20,7 @@ struct SplashView: View {
                     .scaleEffect(iconScale)
                     .opacity(iconOpacity)
 
-                Text("OPTICON")
+                Text("MONICA")
                     .font(.system(size: 16, weight: .light))
                     .tracking(8)
                     .foregroundStyle(Palette.overlay.opacity(0.5))
