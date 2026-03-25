@@ -36,7 +36,7 @@ struct ContentView: View {
         }
         .tint(Palette.appleBlue)
         .safeAreaInset(edge: .top, spacing: 0) {
-            if selectedTab == 1 {
+            if selectedTab == 1 && !appState.stocks.isEmpty {
                 TickerBarView(appState: appState) { stock in
                     tickerSelectedStock = stock
                 }

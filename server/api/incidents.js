@@ -34,13 +34,18 @@ async function fetchIncidents(bbox) {
     clearTimeout(timer);
     if (!res.ok) throw new Error(`Overpass ${res.status}`);
     const json = await res.json();
+    const junkNames = new Set(['no', 'yes', 'none', 'null', 'n/a', '']);
     const data = (json.elements || [])
-      .map(el => ({
-        type: el.tags?.highway || el.tags?.emergency || el.tags?.amenity || 'incident',
-        lat: el.center?.lat ?? el.lat,
-        lon: el.center?.lon ?? el.lon,
-        description: el.tags?.name || el.tags?.description || null,
-      }))
+      .map(el => {
+        const rawName = el.tags?.name || el.tags?.description || null;
+        const name = rawName && !junkNames.has(rawName.toLowerCase().trim()) ? rawName : null;
+        return {
+          type: el.tags?.highway || el.tags?.emergency || el.tags?.amenity || 'incident',
+          lat: el.center?.lat ?? el.lat,
+          lon: el.center?.lon ?? el.lon,
+          description: name,
+        };
+      })
       .filter(e => e.lat != null && e.lon != null);
     cache.set(key, { ts: Date.now(), data });
     return { incidents: data, state: 'live' };
