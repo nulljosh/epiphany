@@ -109,10 +109,6 @@ final class AppState {
         await authenticate { try await OpticonAPI.shared.register(email: email, password: password) }
     }
 
-    func signInWithApple(identityToken: String, email: String?, fullName: String?) async {
-        await authenticate { try await OpticonAPI.shared.signInWithApple(identityToken: identityToken, email: email, fullName: fullName) }
-    }
-
     func saveBiometricCredentials(email: String, password: String) {
         biometricAuth.saveCredentials(email: email, password: password)
     }
@@ -259,7 +255,7 @@ final class AppState {
             tallyPayment = try await TallyService.fetchPaymentInfo()
             tallyError = nil
         } catch {
-            tallyError = "Could not reach Tally"
+            tallyError = error.localizedDescription
         }
     }
 
@@ -287,13 +283,6 @@ final class AppState {
 
     // MARK: - Portfolio
 
-    func loadPortfolio() async {
-        guard isLoggedIn else { return }
-        if let financeData {
-            portfolio = Portfolio(financeData: financeData, stocks: stocks)
-        }
-    }
-
     func loadFinanceData() async {
         guard isLoggedIn else { return }
         do {
@@ -311,7 +300,7 @@ final class AppState {
         do {
             try await OpticonAPI.shared.updateFinanceData(financeData)
         } catch {
-            print("[AppState] Failed to save finance data: \(error)")
+            handleError(error)
         }
     }
 
@@ -430,13 +419,4 @@ final class AppState {
         }
     }
 
-    // MARK: - Prediction Markets
-
-    func loadMarkets() async {
-        do {
-            markets = try await OpticonAPI.shared.fetchMarkets()
-        } catch {
-            handleError(error)
-        }
-    }
 }
