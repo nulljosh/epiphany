@@ -343,12 +343,14 @@ struct MarketsView: View {
             guard !hasLoaded else { return }
             hasLoaded = true
             Task {
-                async let stocks: Void = appState.loadStocks()
-                async let watchlist: Void = appState.loadWatchlist()
-                async let commodities: Void = appState.loadCommodities()
-                async let crypto: Void = appState.loadCrypto()
-                _ = await (stocks, watchlist, commodities, crypto)
-                // Defer heavier loads after market data renders
+                if appState.stocks.isEmpty {
+                    async let stocks: Void = appState.loadStocks()
+                    async let watchlist: Void = appState.loadWatchlist()
+                    async let commodities: Void = appState.loadCommodities()
+                    async let crypto: Void = appState.loadCrypto()
+                    _ = await (stocks, watchlist, commodities, crypto)
+                }
+                rebuildItems()
                 async let finance: Void = appState.loadFinanceData()
                 async let statements: Void = appState.loadStatements()
                 async let tally: Void = appState.loadTallyData()
@@ -356,9 +358,6 @@ struct MarketsView: View {
             }
         }
         .onDisappear { isVisible = false }
-        .onChange(of: appState.stocks.count) { _, _ in rebuildItems() }
-        .onChange(of: appState.commodities.count) { _, _ in rebuildItems() }
-        .onChange(of: appState.crypto.count) { _, _ in rebuildItems() }
         .onChange(of: sortField) { _, _ in rebuildItems() }
         .onChange(of: sortAscending) { _, _ in rebuildItems() }
         .onChange(of: appState.isLoggedIn) { _, isLoggedIn in
@@ -374,6 +373,7 @@ struct MarketsView: View {
                 async let c: Void = appState.loadCommodities(force: true)
                 async let k: Void = appState.loadCrypto(force: true)
                 _ = await (s, c, k)
+                rebuildItems()
             }
         }
     }

@@ -100,22 +100,21 @@ async function fetchOSMVenues(lat, lon) {
   const events = [];
   const radius = 15000; // 15km
   const query = `[out:json][timeout:15];(
-    node["amenity"="community_centre"](around:${radius},${lat},${lon});
-    node["amenity"="theatre"](around:${radius},${lat},${lon});
-    node["amenity"="arts_centre"](around:${radius},${lat},${lon});
-    node["amenity"="library"](around:${radius},${lat},${lon});
-    node["amenity"="cinema"](around:${radius},${lat},${lon});
-    node["amenity"="place_of_worship"](around:${radius},${lat},${lon});
-    node["amenity"="hospital"](around:${radius},${lat},${lon});
+    node["amenity"="community_centre"]["name"](around:${radius},${lat},${lon});
+    node["amenity"="theatre"]["name"](around:${radius},${lat},${lon});
+    node["amenity"="arts_centre"]["name"](around:${radius},${lat},${lon});
+    node["amenity"="library"]["name"](around:${radius},${lat},${lon});
+    node["amenity"="cinema"]["name"](around:${radius},${lat},${lon});
+    node["amenity"="hospital"]["name"](around:${radius},${lat},${lon});
     node["amenity"="school"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="fuel"](around:${radius},${lat},${lon});
-    node["leisure"="stadium"](around:${radius},${lat},${lon});
-    node["leisure"="fitness_centre"](around:${radius},${lat},${lon});
+    node["amenity"="fuel"]["name"](around:${radius},${lat},${lon});
+    node["leisure"="stadium"]["name"](around:${radius},${lat},${lon});
+    node["leisure"="fitness_centre"]["name"](around:${radius},${lat},${lon});
     node["leisure"="park"]["name"](around:${radius},${lat},${lon});
-    node["tourism"="museum"](around:${radius},${lat},${lon});
-    node["tourism"="attraction"](around:${radius},${lat},${lon});
-    node["shop"="supermarket"](around:${radius},${lat},${lon});
-    node["shop"="mall"](around:${radius},${lat},${lon});
+    node["tourism"="museum"]["name"](around:${radius},${lat},${lon});
+    node["tourism"="attraction"]["name"](around:${radius},${lat},${lon});
+    node["shop"="supermarket"]["name"](around:${radius},${lat},${lon});
+    node["shop"="mall"]["name"](around:${radius},${lat},${lon});
   );out body 50;`;
 
   try {
