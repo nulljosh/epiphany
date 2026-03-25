@@ -100,22 +100,22 @@ async function fetchOSMVenues(lat, lon) {
   const events = [];
   const radius = 15000; // 15km
   const query = `[out:json][timeout:15];(
-    node["amenity"="community_centre"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="theatre"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="arts_centre"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="library"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="cinema"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="hospital"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="school"]["name"](around:${radius},${lat},${lon});
-    node["amenity"="fuel"]["name"](around:${radius},${lat},${lon});
-    node["leisure"="stadium"]["name"](around:${radius},${lat},${lon});
-    node["leisure"="fitness_centre"]["name"](around:${radius},${lat},${lon});
-    node["leisure"="park"]["name"](around:${radius},${lat},${lon});
-    node["tourism"="museum"]["name"](around:${radius},${lat},${lon});
-    node["tourism"="attraction"]["name"](around:${radius},${lat},${lon});
-    node["shop"="supermarket"]["name"](around:${radius},${lat},${lon});
-    node["shop"="mall"]["name"](around:${radius},${lat},${lon});
-  );out body 50;`;
+    nwr["amenity"="community_centre"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="theatre"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="arts_centre"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="library"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="cinema"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="hospital"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="school"]["name"](around:${radius},${lat},${lon});
+    nwr["amenity"="fuel"]["name"](around:${radius},${lat},${lon});
+    nwr["leisure"="stadium"]["name"](around:${radius},${lat},${lon});
+    nwr["leisure"="fitness_centre"]["name"](around:${radius},${lat},${lon});
+    nwr["leisure"="park"]["name"](around:${radius},${lat},${lon});
+    nwr["tourism"="museum"]["name"](around:${radius},${lat},${lon});
+    nwr["tourism"="attraction"]["name"](around:${radius},${lat},${lon});
+    nwr["shop"="supermarket"]["name"](around:${radius},${lat},${lon});
+    nwr["shop"="mall"]["name"](around:${radius},${lat},${lon});
+  );out center body 50;`;
 
   try {
     const data = await fetchWithTimeout(
@@ -126,8 +126,11 @@ async function fetchOSMVenues(lat, lon) {
       const name = el.tags?.name;
       if (!name) continue;
       const cat = el.tags?.amenity || el.tags?.leisure || el.tags?.tourism || el.tags?.shop || 'venue';
+      const elLat = el.center?.lat || el.lat;
+      const elLon = el.center?.lon || el.lon;
+      if (!elLat || !elLon) continue;
       events.push({
-        lat: el.lat, lng: el.lon, type: 'local-event',
+        lat: elLat, lng: elLon, type: 'local-event',
         category: cat,
         title: name,
         venue: name,
