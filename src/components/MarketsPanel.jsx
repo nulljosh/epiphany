@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { Card } from './ui';
 import { formatCurrency } from '../utils/formatting';
 
 const SORT_OPTIONS = [
@@ -83,7 +82,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   const [sortAsc, setSortAsc] = useState(false);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
-  const status = useMemo(() => getMarketStatus(), []);
+  const status = getMarketStatus();
 
   const allItems = useMemo(() => {
     const items = [];
@@ -102,32 +101,25 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       });
     }
 
-    // Commodities + Indices
     if (liveAssets) {
-      [...COMMODITY_KEYS, ...INDEX_KEYS].forEach(key => {
-        const a = liveAssets[key];
-        if (!a || !a.spot) return;
-        items.push({
-          symbol: a.name || key.toUpperCase(),
-          name: a.full || key,
-          price: a.spot,
-          changePercent: a.chgPct || 0,
-          kind: 'commodity',
-        });
-      });
-
-      // Crypto
-      CRYPTO_KEYS.forEach(key => {
-        const a = liveAssets[key];
-        if (!a || !a.spot) return;
-        items.push({
-          symbol: a.name || key.toUpperCase(),
-          name: a.full || key,
-          price: a.spot,
-          changePercent: a.chgPct || 0,
-          kind: 'crypto',
-        });
-      });
+      const assetGroups = [
+        [COMMODITY_KEYS, 'commodity'],
+        [INDEX_KEYS, 'commodity'],
+        [CRYPTO_KEYS, 'crypto'],
+      ];
+      for (const [keys, kind] of assetGroups) {
+        for (const key of keys) {
+          const a = liveAssets[key];
+          if (!a || !a.spot) continue;
+          items.push({
+            symbol: a.name || key.toUpperCase(),
+            name: a.full || key,
+            price: a.spot,
+            changePercent: a.chgPct || 0,
+            kind,
+          });
+        }
+      }
     }
 
     return items;
@@ -139,13 +131,12 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   }, [allItems, watchlist]);
 
   const filtered = useMemo(() => {
-    let list = allItems;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(item =>
-        item.symbol.toLowerCase().includes(q) || item.name.toLowerCase().includes(q)
-      );
-    }
+    let list = search
+      ? allItems.filter(item => {
+          const q = search.toLowerCase();
+          return item.symbol.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
+        })
+      : [...allItems];
     list.sort((a, b) => {
       let cmp = 0;
       if (sortKey === 'symbol') cmp = a.symbol.localeCompare(b.symbol);
@@ -157,7 +148,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   }, [allItems, search, sortKey, sortAsc]);
 
   const glass = {
-    background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.72)',
+    background: t.glass,
     backdropFilter: 'blur(20px) saturate(150%)',
     WebkitBackdropFilter: 'blur(20px) saturate(150%)',
     border: `1px solid ${t.cardBorder || t.border}`,

@@ -2,6 +2,15 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONEY_RE = /^[–-]?\$?[\d,]+\.\d{2}$/;
 const INLINE_RE = /^(\d{4}-\d{2}-\d{2})(\d{4}-\d{2}-\d{2})(.+?)([–−-]?\$?[\d,]+\.\d{2})(\$?[–−-]?[\d,]+\.\d{2})$/;
 
+const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+const MONTH_NAMES = Object.keys(MONTHS).join('|');
+const STATEMENT_YEAR_RE = /STATEMENT\s+(?:FROM|PERIOD)\s+\w+\.?\s+\d{1,2},?\s+(?:TO\s+)?\w+\.?\s+\d{1,2},?\s+(\d{4})/i;
+const STATEMENT_YEAR_RE2 = /(?:STATEMENT|PERIOD)\s+.*?(\d{4})/i;
+const CC_LINE_RE = new RegExp(
+  `^(${MONTH_NAMES})\\.?\\s+(\\d{1,2})\\s+(${MONTH_NAMES})\\.?\\s+(\\d{1,2})\\s+(.+?)\\s+(-?\\$?[\\d,]+\\.\\d{2})$`,
+  'i'
+);
+
 function parseMoney(raw) {
   if (typeof raw !== 'string') return null;
   const normalized = raw.replace(/[–−]/g, '-').replace(/\$/g, '').replace(/,/g, '').trim();
@@ -20,6 +29,12 @@ function monthLabelFromDate(dateString) {
     : date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
 
+function monthDayToISO(monthAbbr, day, year) {
+  const m = MONTHS[monthAbbr.toLowerCase().slice(0, 3)];
+  if (m === undefined) return null;
+  return `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 export function categorizeTransaction(description = '') {
   const lower = description.toLowerCase();
 
@@ -31,29 +46,28 @@ export function categorizeTransaction(description = '') {
     return null;
   }
 
+  if (lower.includes('payment') && (lower.includes('thank you') || lower.includes('merci') || lower.includes('paiement'))) return null;
+
   if (lower.includes('interac e-transfer') || lower.includes('transfer out')) return 'transfers';
-  if (lower.includes('starbucks') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("a&w") || lower.includes("chachi")) return 'food';
+  if (lower.includes('subway') || lower.includes('wendy') || lower.includes('starbucks') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("tripple o") || lower.includes("a&w") || lower.includes("chachi") || lower.includes('chipotle') || lower.includes('firehouse') || lower.includes('dairy queen') || lower.includes('freshslice') || lower.includes("moreno")) return 'food';
   if (lower.includes('apple.com') || lower.includes('mac mini') || lower.includes('macbook') || lower.includes('apple computer')) return 'tech';
-  if (lower.includes('apple store') || lower.includes('london drugs') || lower.includes('dollarama') || lower.includes('marshalls') || lower.includes('homesense') || lower.includes('langley toy') || lower.includes('super fantastic')) return 'shopping';
-  if (lower.includes('vapory')) return 'vape';
-  if (lower.includes('liquor')) return 'alcohol';
+  if (lower.includes('apple store') || lower.includes('london drugs') || lower.includes('dollarama') || lower.includes('marshalls') || lower.includes('homesense') || lower.includes('langley toy') || lower.includes('super fantastic') || lower.includes('costco') || lower.includes('walmart') || lower.includes('wal-mart') || lower.includes('save on') || lower.includes('nofrills') || lower.includes('no frills') || lower.includes('real cdn') || lower.includes('shoppers') || lower.includes('mcfrugal')) return 'shopping';
+  if (lower.includes('vapory') || lower.includes('vape street')) return 'vape';
+  if (lower.includes('liquor') || lower.includes('shooter')) return 'alcohol';
+  if (lower.includes('cannabis') || lower.includes('420')) return 'cannabis';
   if (lower.includes('claude') || lower.includes('anthropic') || lower.includes('openai') || lower.includes('chatgpt') || lower.includes('twilio') || lower.includes('codex')) return 'apps';
   if (lower.includes('compass') || lower.includes('chv')) return 'transit';
+  if (lower.includes('chevron') || lower.includes('super save gas') || lower.includes('petro') || lower.includes('esso') || lower.includes('shell')) return 'gas';
+  if (lower.includes('homes alive') || lower.includes('pet')) return 'pets';
+  if (lower.includes('coin laundry') || lower.includes("kim's coin")) return 'laundry';
   if (lower.includes('club')) return 'fitness';
   if (lower.includes('bclc')) return 'entertainment';
+  if (lower.includes('lordco') || lower.includes('auto')) return 'auto';
+  if (lower.includes('accounting') || lower.includes('trinity')) return 'services';
   return 'uncategorized';
 }
 
-export function parseStatementText(text = '') {
-  const lines = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((line) => !/^page \d+ of \d+$/i.test(line))
-    .filter((line) => !line.startsWith('Wealthsimple Payments Inc.'))
-    .filter((line) => line !== 'DATE' && line !== 'POSTED DATE' && line !== 'DESCRIPTION' && line !== 'AMOUNT (CAD)' && line !== 'BALANCE (CAD)')
-    .filter((line) => !line.startsWith('DATEPOSTED DATE'));
-
+function parseWealthsimple(lines) {
   const transactions = [];
 
   for (const line of lines) {
@@ -97,6 +111,63 @@ export function parseStatementText(text = '') {
   }
 
   return transactions;
+}
+
+function parseCreditCard(lines, fullText) {
+  let year = null;
+  const yearMatch = STATEMENT_YEAR_RE.exec(fullText) || STATEMENT_YEAR_RE2.exec(fullText);
+  if (yearMatch) year = parseInt(yearMatch[1], 10);
+  if (!year) year = new Date().getFullYear();
+
+  const transactions = [];
+
+  for (const line of lines) {
+    const m = CC_LINE_RE.exec(line);
+    if (!m) continue;
+
+    const date = monthDayToISO(m[1], parseInt(m[2], 10), year);
+    const postedDate = monthDayToISO(m[3], parseInt(m[4], 10), year);
+    if (!date || !postedDate) continue;
+
+    const description = m[5].trim();
+    const rawAmount = m[6];
+    const amount = parseMoney(rawAmount);
+    if (amount === null) continue;
+
+    // Credit card: positive amounts are charges, negative are payments/credits
+    // Normalize to negative = spending for consistency with bank statements
+    const normalizedAmount = rawAmount.startsWith('-') ? amount : -amount;
+
+    transactions.push({
+      date,
+      postedDate,
+      description,
+      amount: normalizedAmount,
+      balance: null,
+      category: categorizeTransaction(description),
+    });
+  }
+
+  return transactions;
+}
+
+export function parseStatementText(text = '') {
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^page \d+ of \d+$/i.test(line))
+    .filter((line) => !line.startsWith('Wealthsimple Payments Inc.'))
+    .filter((line) => line !== 'DATE' && line !== 'POSTED DATE' && line !== 'DESCRIPTION' && line !== 'AMOUNT (CAD)' && line !== 'BALANCE (CAD)')
+    .filter((line) => !line.startsWith('DATEPOSTED DATE'));
+
+  const wealthsimple = parseWealthsimple(lines);
+  if (wealthsimple.length > 0) return wealthsimple;
+
+  const creditCard = parseCreditCard(lines, text);
+  if (creditCard.length > 0) return creditCard;
+
+  return [];
 }
 
 export function summarizeTransactions(transactions = [], filename = '') {
