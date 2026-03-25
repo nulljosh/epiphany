@@ -2,7 +2,7 @@
 
 # Monica iOS
 
-![version](https://img.shields.io/badge/version-v5.0.0-blue)
+![version](https://img.shields.io/badge/version-v1.0.0-blue)
 
 Your personal intelligence layer. Monica watches everything happening around you -- markets, events, weather, crime, traffic -- and puts it all on one map. Think of it as having a friend who always knows what's going on.
 
@@ -34,7 +34,7 @@ Basically: Palantir for normal people.
 
 ## Changelog
 
-### v5.0.0 "Monica" (2026-03-25)
+### v1.0.0 "Monica" (2026-03-25)
 - Renamed from Opticon to Monica
 - New white app icon (Wealthsimple-inspired M + chart mark)
 - Map events fix: local events now properly show on map (lng coordinate decode)

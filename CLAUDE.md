@@ -1,13 +1,14 @@
-# Opticon
+# Monica
 
-v2.7.0
+v1.0.0 -- Personal intelligence platform. Palantir for regular people.
 
 ## Rules
 
 - Map stays steady -- no jumps on load, no flashing on state changes
 - No fake prices before real data arrives
-- Mobile-first layout, same-tab toggle opens/closes sheet
-- Simulator stays centered, does not push the map
+- Mobile-first layout
+- iOS app: three tabs (Map, Markets, Settings). Internal Swift code still uses "Opticon" (OpticonAPI etc)
+- Web app: same domain (opticon.heyitsmejosh.com until DNS updated)
 
 ## Run
 
@@ -17,4 +18,4 @@ npm test -- --run
 npm run build
 ```
 
-Deploy: Vercel. Cloudflare migration planned (API first).
+Deploy: Vercel. Repo: github.com/nulljosh/monica
