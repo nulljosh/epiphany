@@ -5,7 +5,7 @@ import {
   normalizeSpendingMonth, normalizeSpendingMonths, validatePortfolioData,
 } from '../utils/financeData';
 
-const STORAGE_KEY = 'opticon_portfolio';
+const STORAGE_KEY = 'monica_portfolio';
 const EMPTY_PORTFOLIO = {
   holdings: DEMO_HOLDINGS,
   accounts: DEMO_ACCOUNTS,

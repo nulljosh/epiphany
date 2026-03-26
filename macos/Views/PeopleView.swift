@@ -27,7 +27,7 @@ struct PeopleView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Palette.bg)
+        .background(Palette.bgDark)
         .onAppear { loadRecents() }
     }
 
@@ -304,7 +304,7 @@ struct PeopleView: View {
 
         Task {
             do {
-                let result = try await OpticonAPI.shared.fetchPeople(query: trimmed)
+                let result = try await MonicaAPI.shared.fetchPeople(query: trimmed)
                 profile = result
             } catch {
                 self.error = error.localizedDescription

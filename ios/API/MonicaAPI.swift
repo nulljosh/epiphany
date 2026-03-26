@@ -26,8 +26,8 @@ enum APIError: LocalizedError {
 }
 
 @MainActor
-final class OpticonAPI: @unchecked Sendable {
-    static let shared = OpticonAPI()
+final class MonicaAPI: @unchecked Sendable {
+    static let shared = MonicaAPI()
 
     private let baseURL = "https://opticon.heyitsmejosh.com"
     private let session: URLSession
@@ -212,6 +212,17 @@ final class OpticonAPI: @unchecked Sendable {
         let data = try await perform(request)
         let wrapper = try decode(NewsWrapper.self, from: data)
         setCache("news", wrapper.articles)
+        return wrapper.articles
+    }
+
+    func fetchStockNews(query: String) async throws -> [NewsArticle] {
+        let cacheKey = "news:\(query)"
+        if let cached: [NewsArticle] = cached(cacheKey) { return cached }
+        let url = try makeURL("/api/news", query: ["q": query])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let wrapper = try decode(NewsWrapper.self, from: data)
+        setCache(cacheKey, wrapper.articles)
         return wrapper.articles
     }
 

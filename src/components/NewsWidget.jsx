@@ -1,3 +1,16 @@
+function relativeTime(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
 export default function NewsWidget({ articles = [], dark, t }) {
   if (articles.length === 0) {
     return (
@@ -25,7 +38,15 @@ export default function NewsWidget({ articles = [], dark, t }) {
             borderRadius: 12,
             padding: 12,
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
+            transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
           }}
         >
           <div style={{ display: 'flex', gap: 10 }}>
@@ -33,15 +54,23 @@ export default function NewsWidget({ articles = [], dark, t }) {
               <img
                 src={article.image}
                 alt=""
-                style={{ width: 60, height: 60, borderRadius: 6, objectFit: 'cover' }}
+                style={{
+                  width: 60, height: 60, borderRadius: 6, objectFit: 'cover', flexShrink: 0,
+                  background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                }}
+                onError={e => { e.target.style.display = 'none'; }}
               />
             )}
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: 12, fontWeight: 600, marginBottom: 4, lineHeight: 1.3,
+                overflow: 'hidden', textOverflow: 'ellipsis',
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+              }}>
                 {article.title}
               </div>
               <div style={{ fontSize: 10, color: t.textTertiary }}>
-                {article.source} • {new Date(article.publishedAt).toLocaleDateString()}
+                {article.source}{article.publishedAt ? ` -- ${relativeTime(article.publishedAt)}` : ''}
               </div>
             </div>
           </div>

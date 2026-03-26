@@ -1,5 +1,5 @@
 import Testing
-@testable import Opticon
+@testable import Monica
 
 @Suite(.serialized) struct AppStateTests {
     @Test @MainActor func watchlistStocksFiltering() {

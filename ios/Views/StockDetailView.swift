@@ -268,7 +268,7 @@ struct StockDetailView: View {
         isLoading = true
         error = nil
         do {
-            let result = try await OpticonAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
+            let result = try await MonicaAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
             priceHistory = result.history
         } catch {
             self.error = error.localizedDescription
@@ -291,24 +291,28 @@ struct StockDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            let allNews = try await OpticonAPI.shared.fetchNews()
-            let terms = newsSearchTerms(symbol: stock.symbol, name: stock.name)
-            relatedNews = allNews.filter { article in
-                let text = article.title.lowercased()
-                return terms.contains { text.contains($0) }
+            // Use stock-specific news endpoint
+            let stockNews = try await MonicaAPI.shared.fetchStockNews(query: stock.symbol)
+            if !stockNews.isEmpty {
+                relatedNews = stockNews
+                return
             }
+            // Fallback: search by company name
+            let nameNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
+            relatedNews = nameNews
         } catch {
-            newsError = true
+            // Final fallback: filter global news locally
+            do {
+                let allNews = try await MonicaAPI.shared.fetchNews()
+                let terms = [stock.symbol.lowercased(), stock.name.lowercased()]
+                relatedNews = allNews.filter { article in
+                    let text = article.title.lowercased()
+                    return terms.contains { text.contains($0) }
+                }
+            } catch {
+                newsError = true
+            }
         }
-    }
-
-    private func newsSearchTerms(symbol: String, name: String) -> [String] {
-        var terms = [symbol.lowercased(), name.lowercased()]
-        let firstName = name.components(separatedBy: " ").first?.lowercased() ?? ""
-        if firstName.count >= 4 && !terms.contains(firstName) {
-            terms.append(firstName)
-        }
-        return terms.filter { !$0.isEmpty }
     }
 }
 

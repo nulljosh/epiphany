@@ -226,8 +226,8 @@ export default async function handler(req, res) {
   const freshCached = getCached(cacheKey, L1_CACHE_TTL_MS);
   if (freshCached) {
     setStockResponseHeaders(req, res);
-    res.setHeader('X-Opticon-Data-Status', 'cache');
-    res.setHeader('X-Opticon-Cache-Level', 'L1');
+    res.setHeader('X-Monica-Data-Status', 'cache');
+    res.setHeader('X-Monica-Cache-Level', 'L1');
     return res.status(200).json(freshCached);
   }
 
@@ -237,8 +237,8 @@ export default async function handler(req, res) {
       cache.set(cacheKey, { ts: Date.now(), data: kvCached });
     }
     setStockResponseHeaders(req, res);
-    res.setHeader('X-Opticon-Data-Status', 'cache');
-    res.setHeader('X-Opticon-Cache-Level', 'L2');
+    res.setHeader('X-Monica-Data-Status', 'cache');
+    res.setHeader('X-Monica-Cache-Level', 'L2');
     return res.status(200).json(kvCached);
   }
 
@@ -265,8 +265,8 @@ export default async function handler(req, res) {
       const staleCached = await getKvCached(kvKeys.stale);
       if (staleCached) {
         setStockResponseHeaders(req, res);
-        res.setHeader('X-Opticon-Data-Status', 'stale');
-        res.setHeader('X-Opticon-Cache-Level', 'L2');
+        res.setHeader('X-Monica-Data-Status', 'stale');
+        res.setHeader('X-Monica-Cache-Level', 'L2');
         return res.status(200).json(staleCached);
       }
       return res.status(500).json({ error: 'No valid stock data received' });
@@ -281,16 +281,16 @@ export default async function handler(req, res) {
     ]);
 
     setStockResponseHeaders(req, res);
-    res.setHeader('X-Opticon-Data-Status', 'live');
-    res.setHeader('X-Opticon-Data-Source', source);
+    res.setHeader('X-Monica-Data-Status', 'live');
+    res.setHeader('X-Monica-Data-Source', source);
     return res.status(200).json(stocks);
   } catch (err) {
     console.error('stocks-free handler error:', err);
     const staleCached = await getKvCached(kvKeys.stale);
     if (staleCached) {
       setStockResponseHeaders(req, res);
-      res.setHeader('X-Opticon-Data-Status', 'stale');
-      res.setHeader('X-Opticon-Cache-Level', 'L2');
+      res.setHeader('X-Monica-Data-Status', 'stale');
+      res.setHeader('X-Monica-Cache-Level', 'L2');
       return res.status(200).json(staleCached);
     }
     return res.status(500).json({ error: 'Failed to fetch stock data', details: err.message });

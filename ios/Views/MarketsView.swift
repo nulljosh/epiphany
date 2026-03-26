@@ -17,14 +17,6 @@ struct MarketsView: View {
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
-    private var marketStatusText: String {
-        usMarketStatus.label
-    }
-
-    private var marketStatusColor: Color {
-        usMarketStatus.color
-    }
-
     private func rebuildItems() {
         var items: [MarketItem] = []
         for stock in appState.stocks {
@@ -125,11 +117,13 @@ struct MarketsView: View {
                                                     return aMonths < bMonths
                                                 }, id: \.name) { item in
                                                     let months = debtMonthsToPayoff(item: item, budget: budget)
+                                                    let detail = debtPayoffLabel(months)
+                                                    let color = months < 0.1 ? Palette.successGreen : months <= 3 ? Palette.warningAmber : Palette.dangerRed
                                                     portfolioTimelineChip(
                                                         icon: debtIcon(for: item.name),
                                                         label: item.name,
-                                                        detail: months == 0 ? "now" : "\(months)mo",
-                                                        color: months == 0 ? Palette.successGreen : months <= 2 ? Palette.warningAmber : Palette.dangerRed
+                                                        detail: detail,
+                                                        color: color
                                                     )
                                                 }
 
@@ -151,7 +145,16 @@ struct MarketsView: View {
                                         .padding(.vertical, 8)
                                 }
                             } header: {
-                                Text("Portfolio")
+                                HStack {
+                                    Text("Portfolio")
+                                    Spacer()
+                                    Circle()
+                                        .fill(usMarketStatus.color)
+                                        .frame(width: 6, height: 6)
+                                    Text(usMarketStatus.label)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                             .listRowBackground(
                                 RoundedRectangle(cornerRadius: 8)
@@ -159,26 +162,6 @@ struct MarketsView: View {
                                     .padding(2)
                             )
                         }
-
-                        Section {
-                            HStack {
-                                Circle()
-                                    .fill(marketStatusColor)
-                                    .frame(width: 10, height: 10)
-                                Text(marketStatusText)
-                                    .font(.subheadline.weight(.semibold))
-                                Spacer()
-                                Text("Auto refresh: 30s")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.vertical, 4)
-                        }
-                        .listRowBackground(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.ultraThinMaterial)
-                                .padding(2)
-                        )
 
                         if !appState.watchlistStocks.isEmpty {
                             Section("Watchlist") {
@@ -397,14 +380,39 @@ private extension MarketsView {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
-    func debtMonthsToPayoff(item: FinanceData.DebtItem, budget: FinanceData.Budget?) -> Int {
+    func debtMonthsToPayoff(item: FinanceData.DebtItem, budget: FinanceData.Budget?) -> Double {
         guard item.balance > 0 else { return 0 }
-        let surplus = max(0, budget?.monthlySurplus ?? 0)
-        let payment = max(item.minPayment, surplus)
-        guard payment > 0 else { return 0 }
-        // If one month's payment covers the balance, it's payable now
-        if item.balance <= payment { return 0 }
-        return Int(ceil(item.balance / payment))
+        let payment = item.minPayment
+        guard payment > 0 else { return Double.infinity }
+
+        // If one payment covers the balance, payable within the month
+        if item.balance <= payment { return item.balance / payment }
+
+        let monthlyRate = item.rate / 100.0 / 12.0
+
+        // No interest: simple division
+        if monthlyRate <= 0 {
+            return item.balance / payment
+        }
+
+        // With interest: N = -ln(1 - balance * r / payment) / ln(1 + r)
+        let ratio = item.balance * monthlyRate / payment
+        if ratio >= 1.0 {
+            // Payment doesn't cover interest -- infinite payoff
+            return Double.infinity
+        }
+        return -log(1.0 - ratio) / log(1.0 + monthlyRate)
+    }
+
+    func debtPayoffLabel(_ months: Double) -> String {
+        if months.isInfinite { return "n/a" }
+        if months < 0.1 { return "now" }
+        let days = months * 30.44
+        if days < 30 {
+            return "\(Int(round(days)))d"
+        }
+        let m = Int(round(months))
+        return "\(m)mo"
     }
 
     func debtIcon(for name: String) -> String {
@@ -786,7 +794,7 @@ private struct MarketItemDetailView: View {
         isLoading = true
         error = nil
         do {
-            let history = try await OpticonAPI.shared.fetchPriceHistory(symbol: yahooSym, range: selectedRange)
+            let history = try await MonicaAPI.shared.fetchPriceHistory(symbol: yahooSym, range: selectedRange)
             priceHistory = history.history
         } catch {
             self.error = "Chart unavailable"
@@ -813,7 +821,7 @@ private struct MarketItemDetailView: View {
     }
 
     private func loadRelatedNews() async {
-        guard let allNews = try? await OpticonAPI.shared.fetchNews() else { return }
+        guard let allNews = try? await MonicaAPI.shared.fetchNews() else { return }
         let nameLower = item.name.lowercased()
         let symbolLower = item.symbol.lowercased()
         relatedNews = allNews.filter { article in

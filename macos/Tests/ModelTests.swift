@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Opticon
+@testable import Monica
 
 @Suite struct PortfolioTests {
     @Test func portfolioFromFinanceData() {

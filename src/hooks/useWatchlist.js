@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const STORAGE_KEY = 'opticon_watchlist';
+const STORAGE_KEY = 'monica_watchlist';
 
 const DEFAULT_WATCHLIST = [
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA',

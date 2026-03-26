@@ -20,7 +20,7 @@ struct StockRow: View {
     }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             Group {
                 if let onToggle = onToggleWatchlist {
                     Button {
@@ -38,21 +38,40 @@ struct StockRow: View {
                 }
             }
 
+            AsyncImage(url: URL(string: "https://financialmodelingprep.com/image-stock/\(stock.symbol).png")) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().aspectRatio(contentMode: .fit)
+                default:
+                    ZStack {
+                        Circle().fill(Palette.appleBlue.opacity(0.15))
+                        Text(String(stock.symbol.prefix(1)))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Palette.appleBlue)
+                    }
+                }
+            }
+            .frame(width: 28, height: 28)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(stock.symbol.uppercased())
                     .font(.body.weight(.medium))
-                Text(stock.symbol)
+                Text(stock.name)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 4) {
                 Text(String(format: "$%.2f", stock.price))
                     .font(.body.weight(.medium))
                 Text(String(format: "%@%.2f%%", changeSign, stock.changePercent))
-                    .font(.caption)
-                    .foregroundStyle(changeColor)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(changeColor, in: Capsule())
             }
         }
     }

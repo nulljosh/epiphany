@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const STORAGE_KEY = 'opticon_alerts';
+const STORAGE_KEY = 'monica_alerts';
 
 function loadAlerts() {
   try {

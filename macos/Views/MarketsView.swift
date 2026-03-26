@@ -11,8 +11,6 @@ struct MarketsView: View {
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
-    private var marketStatusText: String { usMarketStatus.label }
-    private var marketStatusColor: Color { usMarketStatus.color }
 
     private var allItems: [MarketItem] {
         var items: [MarketItem] = []
@@ -139,14 +137,12 @@ struct MarketsView: View {
                 VStack(spacing: 0) {
                     HStack {
                         Circle()
-                            .fill(marketStatusColor)
-                            .frame(width: 10, height: 10)
-                        Text(marketStatusText)
-                            .font(.subheadline.weight(.semibold))
-                        Spacer()
-                        Text("Auto refresh: 30s")
+                            .fill(usMarketStatus.color)
+                            .frame(width: 6, height: 6)
+                        Text(usMarketStatus.label)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        Spacer()
 
                         Button {
                             Task {

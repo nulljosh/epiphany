@@ -275,7 +275,7 @@ struct SituationView: View {
         lamin: Double, lomin: Double, lamax: Double, lomax: Double
     ) async -> (value: [Flight], error: String?) {
         do {
-            let feed = try await OpticonAPI.shared.fetchFlights(
+            let feed = try await MonicaAPI.shared.fetchFlights(
                 lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax
             )
             let status = (feed.meta?.status ?? "").lowercased()
@@ -300,7 +300,7 @@ struct SituationView: View {
     private func loadEarthquakesIfEnabled() async -> (value: [Earthquake], error: String?) {
         guard appState.situationEarthquakesEnabled else { return ([], nil) }
         return await loadSection(label: "Earthquakes") {
-            try await OpticonAPI.shared.fetchEarthquakes()
+            try await MonicaAPI.shared.fetchEarthquakes()
         }
     }
 
@@ -317,7 +317,7 @@ struct SituationView: View {
     ) async -> (value: [Incident], error: String?) {
         guard appState.situationIncidentsEnabled else { return ([], nil) }
         return await loadSection(label: "Incidents") {
-            try await OpticonAPI.shared.fetchIncidents(lat: lat, lon: lon)
+            try await MonicaAPI.shared.fetchIncidents(lat: lat, lon: lon)
         }
     }
 
@@ -327,7 +327,7 @@ struct SituationView: View {
     ) async -> (value: [WeatherAlert], error: String?) {
         guard appState.situationWeatherEnabled else { return ([], nil) }
         return await loadSection(label: "Weather") {
-            try await OpticonAPI.shared.fetchWeatherAlerts(lat: lat, lon: lon)
+            try await MonicaAPI.shared.fetchWeatherAlerts(lat: lat, lon: lon)
         }
     }
 
@@ -337,7 +337,7 @@ struct SituationView: View {
     ) async -> (value: [CrimeIncident], error: String?) {
         guard appState.situationCrimeEnabled else { return ([], nil) }
         return await loadSection(label: "Crime") {
-            try await OpticonAPI.shared.fetchCrime(lat: lat, lon: lon)
+            try await MonicaAPI.shared.fetchCrime(lat: lat, lon: lon)
         }
     }
 
@@ -347,7 +347,7 @@ struct SituationView: View {
     ) async -> (value: [LocalEvent], error: String?) {
         guard appState.situationLocalEventsEnabled else { return ([], nil) }
         return await loadSection(label: "Local Events") {
-            try await OpticonAPI.shared.fetchLocalEvents(lat: lat, lon: lon)
+            try await MonicaAPI.shared.fetchLocalEvents(lat: lat, lon: lon)
         }
     }
 
@@ -357,7 +357,7 @@ struct SituationView: View {
     ) async -> (value: TrafficData?, error: String?) {
         guard appState.situationTrafficEnabled else { return (nil, nil) }
         do {
-            let data = try await OpticonAPI.shared.fetchTraffic(lat: lat, lon: lon)
+            let data = try await MonicaAPI.shared.fetchTraffic(lat: lat, lon: lon)
             return (data, nil)
         } catch {
             return (nil, "Traffic unavailable")

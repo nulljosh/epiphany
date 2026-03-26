@@ -247,8 +247,27 @@ function StackedBarChart({ spending, t }) {
   );
 }
 
+function debtMonthsToPayoff(balance, minPayment, rate) {
+  if (balance <= 0) return 0;
+  if (minPayment <= 0) return Infinity;
+  if (balance <= minPayment) return balance / minPayment;
+  const monthlyRate = (rate || 0) / 100 / 12;
+  if (monthlyRate <= 0) return balance / minPayment;
+  const ratio = balance * monthlyRate / minPayment;
+  if (ratio >= 1) return Infinity;
+  return -Math.log(1 - ratio) / Math.log(1 + monthlyRate);
+}
+
+function debtPayoffLabel(months) {
+  if (!isFinite(months)) return 'n/a';
+  if (months < 0.1) return 'now';
+  const days = months * 30.44;
+  if (days < 30) return `${Math.round(days)}d`;
+  return `~${Math.round(months)}mo`;
+}
+
 function DebtPayoffProjection({ debt, surplus, t }) {
-  if (!debt || debt.length === 0 || surplus <= 0) return null;
+  if (!debt || debt.length === 0) return null;
 
   const sorted = [...debt].sort((a, b) => a.balance - b.balance);
   const projections = [];
@@ -257,17 +276,15 @@ function DebtPayoffProjection({ debt, surplus, t }) {
   for (const entry of sorted) {
     if (entry.balance <= 0) continue;
     const minPay = entry.minPayment || 0;
-    const extraPay = Math.max(0, surplus - minPay);
-    const totalPay = minPay + extraPay;
-    const months = totalPay > 0 ? Math.ceil(entry.balance / totalPay) : Infinity;
-    cumulativeMonths += months;
-    projections.push({ name: entry.name, balance: entry.balance, months, cumulativeMonths, totalPay });
+    const months = debtMonthsToPayoff(entry.balance, minPay, entry.rate);
+    cumulativeMonths += isFinite(months) ? months : 0;
+    projections.push({ name: entry.name, balance: entry.balance, months, cumulativeMonths, totalPay: minPay });
   }
 
   return (
     <div>
       <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>
-        Debt Payoff Projection (Snowball)
+        Debt Payoff Projection
       </div>
       {projections.map((proj, index) => (
         <div key={proj.name || index} style={{ marginBottom: 12 }}>
@@ -276,13 +293,13 @@ function DebtPayoffProjection({ debt, surplus, t }) {
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(proj.balance)}</span>
           </div>
           <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 2 }}>
-            ~{proj.months === Infinity ? '--' : proj.months} months at {formatCurrency(proj.totalPay)}/mo
+            {debtPayoffLabel(proj.months)} at {formatCurrency(proj.totalPay)}/mo
           </div>
-          <ProgressBar value={proj.months === Infinity ? 0 : proj.months} max={Math.max(...projections.map(p => p.months === Infinity ? 0 : p.months), 1)} color={t.green} t={t} />
+          <ProgressBar value={isFinite(proj.months) ? proj.months : 0} max={Math.max(...projections.map(p => isFinite(p.months) ? p.months : 0), 1)} color={t.green} t={t} />
         </div>
       ))}
       <div style={{ fontSize: 12, fontWeight: 600, color: t.green, marginTop: 8 }}>
-        Debt-free in ~{projections[projections.length - 1]?.cumulativeMonths || '--'} months total
+        Debt-free in {debtPayoffLabel(cumulativeMonths)} total
       </div>
     </div>
   );
@@ -1146,14 +1163,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 </div>
               </div>
             </Card>
-            {surplus > 0 && (
+            {debt.length > 0 && (
               <>
-                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-                  <div style={labelStyle}>Payoff Timeline</div>
-                  <div style={{ fontSize: 13, color: t.textSecondary }}>
-                    At {formatCurrency(surplus)}/mo surplus: ~{Math.ceil(totalDebt / surplus)} months to debt-free
-                  </div>
-                </Card>
                 <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                   <DebtPayoffProjection debt={debt} surplus={surplus} t={t} />
                 </Card>

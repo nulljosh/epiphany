@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   const freshCached = getCached(cacheKey, CACHE_TTL_MS);
   if (freshCached) {
         res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
-    res.setHeader('X-Opticon-Data-Status', 'cache');
+    res.setHeader('X-Monica-Data-Status', 'cache');
     return res.status(200).json(freshCached);
   }
 
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
     }
 
         res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
-    res.setHeader('X-Opticon-Data-Status', 'live');
+    res.setHeader('X-Monica-Data-Status', 'live');
     return res.status(200).json(validMarkets);
   } catch (error) {
     console.error('Markets API error:', error);
@@ -126,7 +126,7 @@ export default async function handler(req, res) {
     const staleCached = getCached(cacheKey, STALE_IF_ERROR_MS);
     if (staleCached) {
             res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
-      res.setHeader('X-Opticon-Data-Status', 'stale');
+      res.setHeader('X-Monica-Data-Status', 'stale');
       return res.status(200).json(staleCached);
     }
 

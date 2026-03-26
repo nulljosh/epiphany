@@ -24,8 +24,8 @@ enum APIError: LocalizedError {
 }
 
 @MainActor
-final class OpticonAPI {
-    static let shared = OpticonAPI()
+final class MonicaAPI {
+    static let shared = MonicaAPI()
 
     private let baseURL = "https://opticon.heyitsmejosh.com"
     private let session: URLSession
@@ -170,6 +170,14 @@ final class OpticonAPI {
 
     func fetchNews() async throws -> [NewsArticle] {
         let url = try makeURL("/api/news")
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let wrapper = try decode(NewsWrapper.self, from: data)
+        return wrapper.articles
+    }
+
+    func fetchStockNews(query: String) async throws -> [NewsArticle] {
+        let url = try makeURL("/api/news", query: ["q": query])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         let wrapper = try decode(NewsWrapper.self, from: data)

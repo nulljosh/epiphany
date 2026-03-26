@@ -66,7 +66,7 @@ struct MacroView: View {
         defer { isLoading = false }
 
         do {
-            indicators = try await OpticonAPI.shared.fetchMacro()
+            indicators = try await MonicaAPI.shared.fetchMacro()
             error = nil
         } catch {
             self.error = error.localizedDescription

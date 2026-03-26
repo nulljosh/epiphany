@@ -263,12 +263,69 @@ async function fetchGoogleNews(queryTerms, lat, lon) {
   }
 }
 
+async function handleStockNews(req, res, query) {
+  const cacheKey = `stock:${query.toLowerCase()}`;
+  const hit = cache.get(cacheKey);
+  if (hit && Date.now() - hit.ts < CACHE_TTL) {
+    res.setHeader('Cache-Control', 's-maxage=300');
+    return res.status(200).json({
+      ...hit.data,
+      meta: buildMeta('cache', { cached: true, cacheAgeMs: Date.now() - hit.ts }),
+    });
+  }
+
+  // Search GDELT directly for the stock symbol/company name
+  const gdeltParams = new URLSearchParams({
+    query: `"${query}" business`,
+    mode: 'artlist',
+    maxrecords: '15',
+    format: 'json',
+    sort: 'datedesc',
+    sourcelang: 'english',
+  });
+  const gdeltUrl = `${GDELT_BASE}?${gdeltParams}`;
+
+  try {
+    const [gdeltResult, googleResult] = await Promise.allSettled([
+      fetchGdelt(gdeltUrl),
+      fetchGoogleNews([query, 'stock'], null, null),
+    ]);
+
+    const gdeltArticles = gdeltResult.status === 'fulfilled' ? gdeltResult.value : [];
+    const googleArticles = googleResult.status === 'fulfilled' ? googleResult.value : [];
+    const articles = dedup([...gdeltArticles, ...googleArticles]).filter(a => isEnglishTitle(a.title));
+
+    const data = { articles, meta: buildMeta('live') };
+    cache.set(cacheKey, { ts: Date.now(), data });
+    res.setHeader('Cache-Control', 's-maxage=300');
+    return res.status(200).json(data);
+  } catch (err) {
+    // Fallback to Google News only
+    const googleArticles = await fetchGoogleNews([query, 'stock'], null, null);
+    const articles = dedup(googleArticles).filter(a => isEnglishTitle(a.title));
+
+    if (articles.length > 0) {
+      const data = { articles, meta: buildMeta('live', { degraded: true }) };
+      cache.set(cacheKey, { ts: Date.now(), data });
+      res.setHeader('Cache-Control', 's-maxage=300');
+      return res.status(200).json(data);
+    }
+
+    return res.status(200).json({ articles: [], meta: buildMeta('empty') });
+  }
+}
+
 export default async function handler(req, res) {
   applyCors(req, res);
 
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { category = 'business', lat, lon } = req.query;
+  const { category = 'business', lat, lon, q } = req.query;
+
+  // Stock-specific news query (e.g., ?q=HOOD or ?q=Robinhood)
+  if (q && q.trim()) {
+    return handleStockNews(req, res, q.trim());
+  }
 
   // Build cache key
   const cacheKey = `${category}:${lat ?? ''}:${lon ?? ''}`;

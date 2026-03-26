@@ -89,7 +89,7 @@ struct NewsView: View {
         defer { isLoading = false }
 
         do {
-            articles = try await OpticonAPI.shared.fetchNews()
+            articles = try await MonicaAPI.shared.fetchNews()
             error = nil
         } catch {
             self.error = error.localizedDescription

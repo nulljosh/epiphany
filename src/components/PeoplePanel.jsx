@@ -615,7 +615,35 @@ export default function PeoplePanel({ dark, t }) {
                 </svg>
               </div>
               <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Search for anyone</div>
-              <div style={{ fontSize: 12 }}>Find profiles, social links, and public info</div>
+              <div style={{ fontSize: 12, marginBottom: 14 }}>Find profiles, social links, and public info</div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {['Elon Musk', 'Taylor Swift', 'Justin Trudeau'].map(name => (
+                  <button
+                    key={name}
+                    onClick={() => { setSearch(name); fetchPerson(name); }}
+                    style={{
+                      padding: '6px 14px', borderRadius: 100,
+                      border: `1px solid ${t.cardBorder || t.border}`,
+                      background: t.glass,
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      color: t.text, fontSize: 12, fontWeight: 500,
+                      fontFamily: font, cursor: 'pointer',
+                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                      e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.background = t.glass;
+                    }}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

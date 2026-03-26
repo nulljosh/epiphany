@@ -92,7 +92,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(appState.user?.email ?? "")
                             .font(.headline)
-                        Text("Opticon \(tierLabel)")
+                        Text("Monica \(tierLabel)")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(tierColor)
                     }
@@ -271,7 +271,7 @@ struct SettingsView: View {
     }
 
     private var signedOutCard: some View {
-        settingsCard("Sign In", subtitle: "Authenticate to manage your Opticon account and source toggles.") {
+        settingsCard("Sign In", subtitle: "Authenticate to manage your Monica account and source toggles.") {
             Button("Open Login") {
                 appState.showLogin = true
             }
@@ -602,7 +602,7 @@ private struct DeleteAccountSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("This permanently deletes your Opticon account and associated data.")
+                    Text("This permanently deletes your Monica account and associated data.")
                         .foregroundStyle(.secondary)
                 }
 

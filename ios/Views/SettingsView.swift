@@ -272,7 +272,7 @@ struct SettingsView: View {
                 if let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
                     saveAvatarData(jpegData)
                     isUploadingAvatar = true
-                    _ = try? await OpticonAPI.shared.uploadAvatar(imageData: jpegData)
+                    _ = try? await MonicaAPI.shared.uploadAvatar(imageData: jpegData)
                     isUploadingAvatar = false
                 }
             }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { formatCurrency } from '../utils/formatting';
+import StockDetail from './StockDetail';
 
 const SORT_OPTIONS = [
   { key: 'symbol', label: 'Symbol' },
@@ -27,13 +28,12 @@ function getMarketStatus() {
 
 function ChangePill({ value }) {
   const positive = value >= 0;
-  const bg = positive ? 'rgba(48,209,88,0.15)' : 'rgba(255,69,58,0.15)';
-  const color = positive ? '#30D158' : '#FF453A';
+  const bg = positive ? '#30D158' : '#FF453A';
   const text = `${positive ? '+' : ''}${value.toFixed(2)}%`;
   return (
     <span style={{
       display: 'inline-block', padding: '2px 8px', borderRadius: 100,
-      fontSize: 11, fontWeight: 600, background: bg, color,
+      fontSize: 11, fontWeight: 600, background: bg, color: '#fff',
       whiteSpace: 'nowrap',
     }}>
       {text}
@@ -41,13 +41,19 @@ function ChangePill({ value }) {
   );
 }
 
-function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle, canToggle, t }) {
+function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle, canToggle, t, onClick }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
-      borderBottom: `1px solid ${t.border}`,
-      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
+        borderBottom: `1px solid ${t.border}`,
+        cursor: 'pointer',
+        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+      onMouseEnter={e => e.currentTarget.style.transform = 'translateX(2px)'}
+      onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
+    >
       {canToggle ? (
         <button
           aria-label={isWatchlisted ? `Remove ${symbol} from watchlist` : `Add ${symbol} to watchlist`}
@@ -81,6 +87,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('changePercent');
   const [sortAsc, setSortAsc] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
   const status = getMarketStatus();
@@ -158,16 +165,11 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
-      {/* Market Status */}
-      <div style={{ ...glass, padding: '10px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{
-          width: 8, height: 8, borderRadius: '50%', background: status.color,
-          boxShadow: `0 0 6px ${status.color}`,
-        }} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: t.text }}>{status.label}</span>
+      {/* Market status + Search + Sort */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />
+        <span style={{ fontSize: 11, color: t.textSecondary }}>{status.label}</span>
       </div>
-
-      {/* Search + Sort */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <input
           type="text"
@@ -229,6 +231,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               onToggle={toggleSymbol}
               canToggle={isAuthenticated}
               t={t}
+              onClick={() => setSelectedStock(item)}
             />
           ))}
         </div>
@@ -255,10 +258,20 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               onToggle={toggleSymbol}
               canToggle={isAuthenticated}
               t={t}
+              onClick={() => setSelectedStock(item)}
             />
           ))
         )}
       </div>
+
+      {selectedStock && (
+        <StockDetail
+          stock={selectedStock}
+          onClose={() => setSelectedStock(null)}
+          dark={dark}
+          t={t}
+        />
+      )}
     </div>
   );
 }

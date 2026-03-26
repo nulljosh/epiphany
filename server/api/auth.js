@@ -37,13 +37,13 @@ function generateToken() {
 function setSessionCookie(res, token) {
   const secure = process.env.NODE_ENV === 'production';
   res.setHeader('Set-Cookie', [
-    `opticon_session=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL}; SameSite=Lax${secure ? '; Secure' : ''}`,
+    `monica_session=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL}; SameSite=Lax${secure ? '; Secure' : ''}`,
   ]);
 }
 
 function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', [
-    'opticon_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax',
+    'monica_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax',
   ]);
 }
 
@@ -75,7 +75,7 @@ async function requireAuthenticatedUser(req, kv) {
 
 async function updateCurrentSession(req, kv, updater) {
   const cookies = parseCookies(req);
-  const token = cookies.opticon_session;
+  const token = cookies.monica_session;
   if (!token) return;
   const sessionKey = `session:${token}`;
   const current = await kv.get(sessionKey);
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
       const verifyUrl = `${getBaseUrl()}/api/auth?action=verify-email&token=${verifyToken}`;
       sendEmail({
         to: normalizedEmail,
-        subject: 'Verify your Opticon account',
+        subject: 'Verify your Monica account',
         html: `<p>Click <a href="${verifyUrl}">here</a> to verify your email address.</p><p>Or copy this link: ${verifyUrl}</p>`,
       }).catch((err) => console.warn('[AUTH] Verification email failed:', err.message));
 
@@ -351,7 +351,7 @@ export default async function handler(req, res) {
         const resetUrl = `${getBaseUrl()}/reset?token=${resetToken}`;
         sendEmail({
           to: email.toLowerCase(),
-          subject: 'Reset your Opticon password',
+          subject: 'Reset your Monica password',
           html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p><p>Or copy this link: ${resetUrl}</p>`,
         }).catch((err) => console.warn('[AUTH] Reset email failed:', err.message));
       }
@@ -484,7 +484,7 @@ export default async function handler(req, res) {
     }
 
     const cookies = parseCookies(req);
-    const token = cookies.opticon_session;
+    const token = cookies.monica_session;
     if (token) {
       await kv.del(`session:${token}`);
     }
@@ -514,7 +514,7 @@ export default async function handler(req, res) {
   // POST: logout
   if (action === 'logout') {
     const cookies = parseCookies(req);
-    const token = cookies.opticon_session;
+    const token = cookies.monica_session;
     if (token) {
       await kv.del(`session:${token}`);
     }

@@ -395,7 +395,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showEarthquakes else { earthquakes = []; return }
-            let r = await loadSection(label: "Earthquakes") { try await OpticonAPI.shared.fetchEarthquakes() }
+            let r = await loadSection(label: "Earthquakes") { try await MonicaAPI.shared.fetchEarthquakes() }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { earthquakes = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -413,7 +413,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showIncidents else { incidents = []; return }
-            let r = await loadSection(label: "Incidents") { try await OpticonAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Incidents") { try await MonicaAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { incidents = r.value.filter { !Incident.isLowSignal($0.title) } }
             if let e = r.error { await completion.addError(e) }
@@ -422,7 +422,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showWeatherAlerts else { weatherAlerts = []; return }
-            let r = await loadSection(label: "Weather") { try await OpticonAPI.shared.fetchWeatherAlerts(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Weather") { try await MonicaAPI.shared.fetchWeatherAlerts(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { weatherAlerts = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -431,7 +431,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showCrime else { crimeIncidents = []; return }
-            let r = await loadSection(label: "Crime") { try await OpticonAPI.shared.fetchCrime(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Crime") { try await MonicaAPI.shared.fetchCrime(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { crimeIncidents = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -440,7 +440,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showLocalEvents else { localEvents = []; return }
-            let r = await loadSection(label: "Local Events") { try await OpticonAPI.shared.fetchLocalEvents(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Local Events") { try await MonicaAPI.shared.fetchLocalEvents(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { localEvents = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -449,7 +449,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showTraffic else { trafficData = nil; return }
-            let result = try? await OpticonAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude)
+            let result = try? await MonicaAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude)
             guard loadRegionId == regionId else { return }
             trafficData = result
         }
@@ -482,7 +482,7 @@ struct SituationView: View {
         lomax: Double
     ) async -> (value: [Flight], error: String?) {
         do {
-            let flights = try await OpticonAPI.shared.fetchFlights(
+            let flights = try await MonicaAPI.shared.fetchFlights(
                 lamin: lamin,
                 lomin: lomin,
                 lamax: lamax,

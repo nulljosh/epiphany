@@ -1039,16 +1039,35 @@ struct PortfolioView: View {
         .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
+    private func debtMonthsToPayoff(_ item: FinanceData.DebtItem) -> Double {
+        guard item.balance > 0 else { return 0 }
+        let payment = item.minPayment
+        guard payment > 0 else { return Double.infinity }
+        if item.balance <= payment { return item.balance / payment }
+        let monthlyRate = item.rate / 100.0 / 12.0
+        if monthlyRate <= 0 { return item.balance / payment }
+        let ratio = item.balance * monthlyRate / payment
+        if ratio >= 1.0 { return Double.infinity }
+        return -log(1.0 - ratio) / log(1.0 + monthlyRate)
+    }
+
+    private func debtPayoffLabel(_ months: Double) -> String {
+        if months.isInfinite { return "n/a" }
+        if months < 0.1 { return "now" }
+        let days = months * 30.44
+        if days < 30 { return "\(Int(round(days)))d" }
+        return "~\(Int(round(months)))mo"
+    }
+
     private func debtPayoffProjection(debt: [FinanceData.DebtItem], surplus: Double) -> some View {
         let sorted = debt.sorted { $0.balance < $1.balance }
-        var projections: [(name: String, balance: Double, months: Int, cumulative: Int)] = []
-        var cumulative = 0
+        var projections: [(name: String, balance: Double, months: Double, cumulative: Double)] = []
+        var cumulative: Double = 0
 
         for item in sorted {
             guard item.balance > 0 else { continue }
-            let payment = max(item.minPayment, surplus)
-            let months = payment > 0 ? Int(ceil(item.balance / payment)) : 0
-            cumulative += months
+            let months = debtMonthsToPayoff(item)
+            cumulative += months.isFinite ? months : 0
             projections.append((name: item.name, balance: item.balance, months: months, cumulative: cumulative))
         }
 
@@ -1066,7 +1085,7 @@ struct PortfolioView: View {
                             .font(.caption)
                             .monospacedDigit()
                     }
-                    Text("~\(proj.months) months")
+                    Text(debtPayoffLabel(proj.months))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     ProgressView(value: 1.0)
@@ -1075,7 +1094,7 @@ struct PortfolioView: View {
             }
 
             if let last = projections.last {
-                Text("Debt-free in ~\(last.cumulative) months")
+                Text("Debt-free in \(debtPayoffLabel(last.cumulative))")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.successGreen)
             }

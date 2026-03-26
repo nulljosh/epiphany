@@ -262,7 +262,7 @@ struct StockDetailView: View {
         isLoading = true
         error = nil
         do {
-            let result = try await OpticonAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
+            let result = try await MonicaAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
             priceHistory = result.history
         } catch {
             self.error = error.localizedDescription
@@ -307,15 +307,24 @@ struct StockDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            let allNews = try await OpticonAPI.shared.fetchNews()
-            let symbolLower = stock.symbol.lowercased()
-            let nameLower = stock.name.lowercased()
-            relatedNews = allNews.filter { article in
-                let titleLower = article.title.lowercased()
-                return titleLower.contains(symbolLower) || titleLower.contains(nameLower)
+            let stockNews = try await MonicaAPI.shared.fetchStockNews(query: stock.symbol)
+            if !stockNews.isEmpty {
+                relatedNews = stockNews
+                return
             }
+            let nameNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
+            relatedNews = nameNews
         } catch {
-            newsError = true
+            do {
+                let allNews = try await MonicaAPI.shared.fetchNews()
+                let terms = [stock.symbol.lowercased(), stock.name.lowercased()]
+                relatedNews = allNews.filter { article in
+                    let text = article.title.lowercased()
+                    return terms.contains { text.contains($0) }
+                }
+            } catch {
+                newsError = true
+            }
         }
     }
 }

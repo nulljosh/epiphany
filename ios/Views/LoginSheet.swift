@@ -192,7 +192,7 @@ struct LoginSheet: View {
         Task {
             error = nil
             do {
-                try await OpticonAPI.shared.forgotPassword(email: email)
+                try await MonicaAPI.shared.forgotPassword(email: email)
                 error = "Reset link sent if account exists."
             } catch {
                 self.error = "Could not send reset link."
