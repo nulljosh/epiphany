@@ -1,6 +1,4 @@
 import { applyCors } from './_cors.js';
-import { Readability } from '@mozilla/readability';
-import { JSDOM } from 'jsdom';
 
 export default async function handler(req, res) {
   applyCors(req, res);
@@ -30,6 +28,8 @@ export default async function handler(req, res) {
     }
 
     const html = await response.text();
+    const { JSDOM } = await import('jsdom');
+    const { Readability } = await import('@mozilla/readability');
     const dom = new JSDOM(html, { url });
     const reader = new Readability(dom.window.document);
     const article = reader.parse();
