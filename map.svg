@@ -27,7 +27,7 @@
   <rect width="1020" height="520" rx="14" fill="url(#bg)"/>
 
   <!-- Title -->
-  <text x="510" y="32" text-anchor="middle" class="t title">opticon -- system architecture</text>
+  <text x="510" y="32" text-anchor="middle" class="t title">monica -- system architecture</text>
   <text x="510" y="50" text-anchor="middle" class="t sub">financial terminal + personal finance + live map + simulator + prediction markets</text>
 
   <!-- ===== COL 1: DATA SOURCES ===== -->
@@ -173,5 +173,5 @@
   <!-- ===== BOTTOM: INFRA ===== -->
   <rect x="20" y="440" width="980" height="52" rx="8" class="box"/>
   <text x="510" y="460" text-anchor="middle" class="t label">INFRASTRUCTURE</text>
-  <text x="510" y="478" text-anchor="middle" class="t sub">Vercel (single function) + Vercel KV (Upstash Redis) + GitHub Actions CI (vitest) + CartoCDN tiles + FMP API + opticon.heyitsmejosh.com</text>
+  <text x="510" y="478" text-anchor="middle" class="t sub">Vercel (single function) + Vercel KV (Upstash Redis) + GitHub Actions CI (vitest) + CartoCDN tiles + FMP API + monica (opticon.heyitsmejosh.com)</text>
 </svg>

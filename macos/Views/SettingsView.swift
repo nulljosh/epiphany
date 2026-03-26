@@ -49,7 +49,7 @@ struct SettingsView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Subscription upgrades are handled on the web. You will be redirected to opticon.heyitsmejosh.com to complete the upgrade.")
+            Text("Subscription upgrades are handled on the web. You will be redirected to Monica on the web to complete the upgrade.")
         }
         .sheet(isPresented: $showChangeEmail) {
             ChangeEmailSheet()

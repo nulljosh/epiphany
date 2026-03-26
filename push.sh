@@ -1,8 +1,8 @@
 #!/bin/bash
-# Validate locally and deploy Opticon to Vercel.
+# Validate locally and deploy Monica to Vercel.
 set -e
 
-REPO_DIR="/Users/joshua/Documents/Code/opticon"
+REPO_DIR="/Users/joshua/Documents/Code/monica"
 
 cd "$REPO_DIR"
 
@@ -12,7 +12,7 @@ npm test -- --run src/hooks/useStocks.test.js
 echo "Building production bundle..."
 npm run build
 
-echo "Deploying Opticon to Vercel..."
+echo "Deploying Monica to Vercel..."
 vercel --prod --yes
 
 echo "Done!"

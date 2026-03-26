@@ -1,8 +1,8 @@
 #!/bin/bash
-# Auto-update Opticon portfolio from balance check
+# Auto-update Monica portfolio from balance check
 
-OPTICON_DIR="$HOME/Documents/Code/opticon"
-cd "$OPTICON_DIR"
+MONICA_DIR="$HOME/Documents/Code/monica"
+cd "$MONICA_DIR"
 
 # Get current balances (placeholder - would parse from screenshot/API)
 CHEQUING=$(osascript -e 'display dialog "Current chequing balance (CAD):" default answer "582"' -e 'text returned of result' 2>/dev/null)
@@ -27,4 +27,4 @@ git add index.html
 git commit -m "Update balances: \$$CAD_TOTAL CAD (~\$$USD_TOTAL USD)"
 git push
 
-echo "Opticon updated: \$$CAD_TOTAL CAD"
+echo "Monica updated: \$$CAD_TOTAL CAD"
