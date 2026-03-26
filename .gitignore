@@ -107,6 +107,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 desktop.ini
+*.xcuserstate
 
 # Project Specific
 portfolio.json
