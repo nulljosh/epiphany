@@ -4,7 +4,7 @@
       "Bash(git add:*)",
       "Bash(find . -name \"*.swift\" | head -80 && echo \"---\" && wc -l Sources/**/*.swift Sources/**/**/*.swift 2>/dev/null | tail -5)",
       "Bash(xcodegen generate:*)",
-      "Bash(open /Users/joshua/Documents/Code/opticon-ios/Opticon.xcodeproj)",
+      "Bash(open /Users/joshua/Documents/Code/monica/ios/Monica.xcodeproj)",
       "Bash(xcodebuild build:*)"
     ]
   }
