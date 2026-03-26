@@ -87,9 +87,15 @@ export default function StockDetail({ stock, onClose, dark, t }) {
     finally { setNewsLoading(false); }
   }, [symbol]);
 
-  useEffect(() => { fetchDetail(); }, [fetchDetail]);
-  useEffect(() => { fetchHistory(); }, [fetchHistory]);
-  useEffect(() => { fetchNews(); }, [fetchNews]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchDetail();
+    fetchHistory();
+    fetchNews();
+    return () => controller.abort();
+  }, [symbol]);
+
+  useEffect(() => { fetchHistory(); }, [range]);
 
   // Close on Escape
   useEffect(() => {
