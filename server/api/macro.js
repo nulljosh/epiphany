@@ -73,17 +73,56 @@ function buildIndicator(spec, observations) {
   };
 }
 
+const FALLBACK_DATA = {
+  fedFunds: [
+    { date: '2026-03-01', value: 5.33 },
+    { date: '2026-02-01', value: 5.25 },
+  ],
+  cpi: [
+    { date: '2026-02-01', value: 314.0 },
+    { date: '2026-01-01', value: 313.2 },
+  ],
+  gdp: [
+    { date: '2025-12-01', value: 2.8 },
+    { date: '2025-09-01', value: 2.6 },
+  ],
+  treasury2y: [
+    { date: '2026-03-20', value: 4.25 },
+    { date: '2026-03-19', value: 4.21 },
+  ],
+  treasury10y: [
+    { date: '2026-03-20', value: 4.35 },
+    { date: '2026-03-19', value: 4.31 },
+  ],
+  treasury30y: [
+    { date: '2026-03-20', value: 4.55 },
+    { date: '2026-03-19', value: 4.5 },
+  ],
+  deficit: [
+    { date: '2025-12-01', value: -1832 },
+    { date: '2025-09-01', value: -1765 },
+  ],
+};
+
+function buildFallbackData() {
+  return SERIES.map(spec => buildIndicator(spec, FALLBACK_DATA[spec.id] || []));
+}
+
 async function fetchMacroData(apiKey) {
   const settled = await Promise.allSettled(
     SERIES.map(spec => fetchSeries(spec.seriesId, apiKey).then(obs => ({ spec, obs })))
   );
 
-  return settled.map((result, i) => {
-    if (result.status === 'fulfilled') {
+  const results = settled.map((result, i) => {
+    if (result.status === 'fulfilled' && result.value.obs.length > 0) {
       return buildIndicator(result.value.spec, result.value.obs);
     }
-    return buildIndicator(SERIES[i], []);
+    // FRED call failed or returned empty -- use fallback for this indicator
+    const fallback = FALLBACK_DATA[SERIES[i].id] || [];
+    return buildIndicator(SERIES[i], fallback);
   });
+
+  return results;
 }
 
 export default async function handler(req, res) {
@@ -96,40 +135,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.FRED_API_KEY;
   if (!apiKey) {
     res.setHeader('X-Data-Stale', 'true');
-    return res.status(200).json(SERIES.map(spec => {
-        const fallbackObservationsById = {
-          fedFunds: [
-            { date: '2026-03-01', value: 5.33 },
-            { date: '2026-02-01', value: 5.25 },
-          ],
-          cpi: [
-            { date: '2026-02-01', value: 314.0 },
-            { date: '2026-01-01', value: 313.2 },
-          ],
-          gdp: [
-            { date: '2025-12-01', value: 2.8 },
-            { date: '2025-09-01', value: 2.6 },
-          ],
-          treasury2y: [
-            { date: '2026-03-20', value: 4.25 },
-            { date: '2026-03-19', value: 4.21 },
-          ],
-          treasury10y: [
-            { date: '2026-03-20', value: 4.35 },
-            { date: '2026-03-19', value: 4.31 },
-          ],
-          treasury30y: [
-            { date: '2026-03-20', value: 4.55 },
-            { date: '2026-03-19', value: 4.5 },
-          ],
-          deficit: [
-            { date: '2025-12-01', value: -1832 },
-            { date: '2025-09-01', value: -1765 },
-          ],
-        };
-
-        return buildIndicator(spec, fallbackObservationsById[spec.id] || []);
-      }));
+    return res.status(200).json(buildFallbackData());
   }
 
   const now = Date.now();

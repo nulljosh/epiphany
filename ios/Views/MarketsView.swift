@@ -13,6 +13,7 @@ struct MarketsView: View {
     @State private var selectedMarketItem: MarketItem?
     @State private var selectedNewsURL: URL?
     @State private var portfolioExpanded = true
+    @State private var cachedItems: [MarketItem] = []
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -24,7 +25,7 @@ struct MarketsView: View {
         usMarketStatus.color
     }
 
-    private var allItems: [MarketItem] {
+    private func rebuildItems() {
         var items: [MarketItem] = []
         for stock in appState.stocks {
             items.append(MarketItem(
@@ -45,7 +46,7 @@ struct MarketsView: View {
                 changePercent: coin.chgPct, marketCap: nil, peRatio: nil, kind: .crypto
             ))
         }
-        return items.sorted { lhs, rhs in
+        cachedItems = items.sorted { lhs, rhs in
             let result: Bool
             switch sortField {
             case .symbol: result = lhs.symbol.localizedCompare(rhs.symbol) == .orderedAscending
@@ -60,8 +61,8 @@ struct MarketsView: View {
     }
 
     private var filteredItems: [MarketItem] {
-        if searchText.isEmpty { return allItems }
-        return allItems.filter {
+        if searchText.isEmpty { return cachedItems }
+        return cachedItems.filter {
             $0.name.localizedCaseInsensitiveContains(searchText) ||
             $0.symbol.localizedCaseInsensitiveContains(searchText)
         }
@@ -124,14 +125,12 @@ struct MarketsView: View {
                                                     return aMonths < bMonths
                                                 }, id: \.name) { item in
                                                     let months = debtMonthsToPayoff(item: item, budget: budget)
-                                                    if months > 0 {
-                                                        portfolioTimelineChip(
-                                                            icon: debtIcon(for: item.name),
-                                                            label: item.name,
-                                                            detail: "\(months)mo",
-                                                            color: months <= 2 ? Palette.warningAmber : Palette.dangerRed
-                                                        )
-                                                    }
+                                                    portfolioTimelineChip(
+                                                        icon: debtIcon(for: item.name),
+                                                        label: item.name,
+                                                        detail: months == 0 ? "now" : "\(months)mo",
+                                                        color: months == 0 ? Palette.successGreen : months <= 2 ? Palette.warningAmber : Palette.dangerRed
+                                                    )
                                                 }
 
                                                 ForEach(goals, id: \.name) { goal in
@@ -349,6 +348,7 @@ struct MarketsView: View {
                     async let crypto: Void = appState.loadCrypto()
                     _ = await (stocks, watchlist, commodities, crypto)
                 }
+                rebuildItems()
                 async let finance: Void = appState.loadFinanceData()
                 async let statements: Void = appState.loadStatements()
                 async let tally: Void = appState.loadTallyData()
@@ -356,6 +356,11 @@ struct MarketsView: View {
             }
         }
         .onDisappear { isVisible = false }
+        .onChange(of: appState.stocks.count) { _, _ in rebuildItems() }
+        .onChange(of: appState.commodities.count) { _, _ in rebuildItems() }
+        .onChange(of: appState.crypto.count) { _, _ in rebuildItems() }
+        .onChange(of: sortField) { _, _ in rebuildItems() }
+        .onChange(of: sortAscending) { _, _ in rebuildItems() }
         .onChange(of: appState.isLoggedIn) { _, isLoggedIn in
             guard isLoggedIn, appState.watchlist.isEmpty else { return }
             Task {
@@ -369,6 +374,7 @@ struct MarketsView: View {
                 async let c: Void = appState.loadCommodities(force: true)
                 async let k: Void = appState.loadCrypto(force: true)
                 _ = await (s, c, k)
+                rebuildItems()
             }
         }
     }
@@ -392,12 +398,13 @@ private extension MarketsView {
     }
 
     func debtMonthsToPayoff(item: FinanceData.DebtItem, budget: FinanceData.Budget?) -> Int {
+        guard item.balance > 0 else { return 0 }
         let surplus = max(0, budget?.monthlySurplus ?? 0)
-        let payment = item.minPayment > 0
-            ? max(item.minPayment, item.minPayment + surplus * 0.5)
-            : max(1, surplus * 0.3)
-        guard payment > 0, item.balance > 0 else { return 0 }
-        return max(1, Int(ceil(item.balance / payment)))
+        let payment = max(item.minPayment, surplus)
+        guard payment > 0 else { return 0 }
+        // If one month's payment covers the balance, it's payable now
+        if item.balance <= payment { return 0 }
+        return Int(ceil(item.balance / payment))
     }
 
     func debtIcon(for name: String) -> String {

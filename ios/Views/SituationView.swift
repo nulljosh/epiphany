@@ -50,9 +50,9 @@ struct SituationView: View {
         }
         .ignoresSafeArea()
         .onAppear {
+            startNetworkMonitor()
             guard !hasLoaded else { return }
             hasLoaded = true
-            startNetworkMonitor()
             restoreSnapshot()
             showLiveMap = true
             locationManager.requestLocation()
