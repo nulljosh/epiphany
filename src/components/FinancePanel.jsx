@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Card } from './ui';
 import { usePortfolio } from '../hooks/usePortfolio';
-import { formatCurrency, compactCurrency } from '../utils/formatting';
+import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
 import { normalizeSpendingMonths } from '../utils/financeData';
 import { buildSpendingForecast } from '../utils/spendingForecast';
+import FinanceDashboard from './FinanceDashboard';
 
-const TABS = ['portfolio', 'budget', 'spending'];
+const TABS = ['portfolio', 'budget', 'spending', 'dashboard'];
 
 const INCOME_SCENARIOS = [
   { label: '+$500', delta: 500, color: '#30D158' },
@@ -13,18 +14,6 @@ const INCOME_SCENARIOS = [
   { label: 'x2 Income', multiplier: 2, color: '#BF5AF2' },
 ];
 
-const CAT_COLORS = {
-  housing: '#0071e3',
-  food: '#30D158',
-  transport: '#FF9F0A',
-  utilities: '#BF5AF2',
-  entertainment: '#FF453A',
-  health: '#64D2FF',
-  shopping: '#FF375F',
-  other: '#FFD60A',
-  insurance: '#AC8E68',
-  subscriptions: '#5E5CE6',
-};
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -51,11 +40,6 @@ function clonePortfolioData(data) {
 function monthLabelShort(value) {
   return value.replace(' 20', " '");
 }
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
 
 function ActionMenu({ t, font, actions }) {
   const [open, setOpen] = useState(false);
@@ -666,8 +650,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
     () => normalizeSpendingMonths(statementFiles.map((item) => item?.spendingMonth)),
     [statementFiles]
   );
-  const spendingChronological = statementMonths.length > 0 ? statementMonths : normalizeSpendingMonths(spending);
-  const spendingRecentFirst = [...spendingChronological].reverse();
+  const spendingChronological = useMemo(
+    () => statementMonths.length > 0 ? statementMonths : normalizeSpendingMonths(spending),
+    [statementMonths, spending]
+  );
+  const spendingRecentFirst = useMemo(() => [...spendingChronological].reverse(), [spendingChronological]);
   const statementFilesRecentFirst = [...statementFiles].sort((a, b) => String(b?.spendingMonth?.sortKey || '').localeCompare(String(a?.spendingMonth?.sortKey || '')));
   const syncedMonthCount = Math.max(statementFilesRecentFirst.length, spendingChronological.length);
   const shouldHideStatementsCard = syncedMonthCount >= 3;
@@ -1292,6 +1279,16 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               </div>
             </Card>
           </>
+        )}
+
+        {tab === 'dashboard' && (
+          <FinanceDashboard
+            dark={dark}
+            t={t}
+            spending={spendingChronological}
+            totalIncome={totalIncome}
+            debt={debt}
+          />
         )}
       </div>
     </div>

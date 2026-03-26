@@ -24,6 +24,15 @@ export const DEMO_SPENDING = [
 export const DEMO_GIVING = [
 ];
 
+// User-specific income scenarios for debt projection and spending comparison.
+// Values are monthly amounts in CAD.
+export const INCOME_SCENARIOS = {
+  ei: { label: 'EI', monthly: 2200, color: '#FF9F0A' },
+  pwd_dtc: { label: 'PWD+DTC', monthly: 1750, color: '#BF5AF2' },
+  pwd_work: { label: 'PWD+Work', monthly: 2800, color: '#30D158' },
+  actual: { label: 'Actual', monthly: 0, color: '#0A84FF' },
+};
+
 function roundMoney(value) {
   return Math.round(value * 100) / 100;
 }

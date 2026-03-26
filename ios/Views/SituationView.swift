@@ -1,5 +1,6 @@
 import CoreLocation
 import MapKit
+import Network
 import SwiftUI
 import UIKit
 
@@ -22,6 +23,10 @@ struct SituationView: View {
     @State private var selectedEvent: MapEventDetail?
     @State private var loadTask: Task<Void, Never>?
     @State private var isLoadingData = false
+    @State private var isOffline = false
+    @State private var networkMonitor: NWPathMonitor?
+    @State private var lastSnapshotSave: Date = .distantPast
+    @State private var loadRegionId: UUID?
 
     @AppStorage("showEarthquakes") private var showEarthquakes = true
     @AppStorage("showFlights") private var showFlights = true
@@ -47,9 +52,14 @@ struct SituationView: View {
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true
+            startNetworkMonitor()
             restoreSnapshot()
             showLiveMap = true
             locationManager.requestLocation()
+        }
+        .onDisappear {
+            networkMonitor?.cancel()
+            networkMonitor = nil
         }
         .onChange(of: locationManager.locationUpdateCount) { _, _ in
             guard let region = locationManager.region else { return }
@@ -58,8 +68,14 @@ struct SituationView: View {
             if needsFlyTo {
                 mapPosition = .region(region)
             }
+            guard !isOffline else { return }
             Task {
                 await loadData(region: region)
+            }
+        }
+        .onChange(of: isOffline) { _, offline in
+            if !offline, let region = locationManager.region {
+                Task { await loadData(region: region) }
             }
         }
         .sheet(item: $selectedEvent) { event in
@@ -69,6 +85,8 @@ struct SituationView: View {
             .presentationDetents([.medium, .large])
         }
     }
+
+    // MARK: - Annotations
 
     @MapContentBuilder
     private var earthquakeAnnotations: some MapContent {
@@ -206,6 +224,8 @@ struct SituationView: View {
         }
     }
 
+    // MARK: - Computed helpers
+
     private var locatableLocalEvents: [LocalEvent] {
         localEvents.filter { $0.coordinate != nil }
     }
@@ -220,6 +240,8 @@ struct SituationView: View {
         !showEarthquakes && !showFlights && !showIncidents && !showWeatherAlerts
         && !showCrime && !showLocalEvents && !showTraffic
     }
+
+    // MARK: - Overlays
 
     @ViewBuilder
     private var errorOverlay: some View {
@@ -247,6 +269,53 @@ struct SituationView: View {
         }
     }
 
+    @ViewBuilder
+    private var statusOverlay: some View {
+        if isOffline {
+            HStack(spacing: 6) {
+                Image(systemName: "wifi.slash")
+                    .foregroundStyle(.secondary)
+                Text("Offline -- showing cached data")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(.ultraThinMaterial, in: Capsule())
+            .padding(.bottom, 100)
+        } else if isLoadingData {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.mini)
+                Text("Updating...")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(.ultraThinMaterial, in: Capsule())
+            .padding(.bottom, 100)
+        } else if totalEventCount == 0 && allSourcesDisabled {
+            Text("Enable data sources in Settings")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 100)
+        } else if totalEventCount > 0 {
+            Text("\(totalEventCount) events nearby")
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 100)
+        }
+    }
+
+    // MARK: - Map
+
     private var mapView: some View {
         Map(position: $mapPosition) {
             earthquakeAnnotations
@@ -265,29 +334,12 @@ struct SituationView: View {
             loadTask = Task {
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
+                guard !isOffline else { return }
                 await loadData(region: region)
             }
         }
         .overlay(alignment: .top) { errorOverlay }
-        .overlay(alignment: .bottom) {
-            if totalEventCount == 0 && allSourcesDisabled {
-                Text("Enable data sources in Settings")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 100)
-            } else if totalEventCount > 0 {
-                Text("\(totalEventCount) events nearby")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 100)
-            }
-        }
+        .overlay(alignment: .bottom) { statusOverlay }
     }
 
     private var mapPlaceholder: some View {
@@ -300,12 +352,33 @@ struct SituationView: View {
             .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
     }
 
+    // MARK: - Network monitor
+
+    private func startNetworkMonitor() {
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { path in
+            Task { @MainActor in
+                let offline = path.status != .satisfied
+                if isOffline != offline {
+                    withAnimation(.easeInOut) {
+                        isOffline = offline
+                    }
+                }
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "network-monitor"))
+        networkMonitor = monitor
+    }
+
+    // MARK: - Data loading (incremental, per-source Tasks)
+
     private func loadData(region: MKCoordinateRegion) async {
         error = nil
         flightStatusMessage = nil
-        defer {
-            saveSnapshot()
-        }
+        isLoadingData = true
+
+        let regionId = UUID()
+        loadRegionId = regionId
 
         let center = region.center
         let span = region.span
@@ -314,64 +387,79 @@ struct SituationView: View {
         let lomin = center.longitude - span.longitudeDelta / 2
         let lomax = center.longitude + span.longitudeDelta / 2
 
-        async let earthquakeLoad: (value: [Earthquake], error: String?) = showEarthquakes
-            ? loadSection(label: "Earthquakes") { try await OpticonAPI.shared.fetchEarthquakes() }
-            : ([], nil)
-        async let flightLoad: (value: [Flight], error: String?) = showFlights
-            ? loadFlights(lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
-            : ([], nil)
-        async let incidentLoad: (value: [Incident], error: String?) = showIncidents
-            ? loadSection(label: "Incidents") { try await OpticonAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude) }
-            : ([], nil)
-        async let weatherLoad: (value: [WeatherAlert], error: String?) = showWeatherAlerts
-            ? loadSection(label: "Weather") { try await OpticonAPI.shared.fetchWeatherAlerts(lat: center.latitude, lon: center.longitude) }
-            : ([], nil)
-        async let crimeLoad: (value: [CrimeIncident], error: String?) = showCrime
-            ? loadSection(label: "Crime") { try await OpticonAPI.shared.fetchCrime(lat: center.latitude, lon: center.longitude) }
-            : ([], nil)
-        async let localEventLoad: (value: [LocalEvent], error: String?) = showLocalEvents
-            ? loadSection(label: "Local Events") { try await OpticonAPI.shared.fetchLocalEvents(lat: center.latitude, lon: center.longitude) }
-            : ([], nil)
-        async let trafficLoad: TrafficData? = showTraffic
-            ? (try? await OpticonAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude))
-            : nil
+        let completion = LoadCompletion(total: 7)
 
-        let earthquakeResult = await earthquakeLoad
-        let flightResult = await flightLoad
-        let incidentResult = await incidentLoad
-        let weatherResult = await weatherLoad
-        let crimeResult = await crimeLoad
-        let localEventResult = await localEventLoad
-        let trafficResult = await trafficLoad
+        // Each source loads independently and applies state as soon as it arrives.
+        // No source blocks another.
 
-        if earthquakeResult.error == nil || !earthquakeResult.value.isEmpty {
-            earthquakes = earthquakeResult.value
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showEarthquakes else { earthquakes = []; return }
+            let r = await loadSection(label: "Earthquakes") { try await OpticonAPI.shared.fetchEarthquakes() }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { earthquakes = r.value }
+            if let e = r.error { await completion.addError(e) }
         }
-        if flightResult.error == nil || !flightResult.value.isEmpty {
-            flights = flightResult.value
-        }
-        if incidentResult.error == nil || !incidentResult.value.isEmpty {
-            incidents = incidentResult.value.filter { !Incident.isLowSignal($0.title) }
-        }
-        if weatherResult.error == nil || !weatherResult.value.isEmpty {
-            weatherAlerts = weatherResult.value
-        }
-        if crimeResult.error == nil || !crimeResult.value.isEmpty {
-            crimeIncidents = crimeResult.value
-        }
-        if localEventResult.error == nil || !localEventResult.value.isEmpty {
-            localEvents = localEventResult.value
-        }
-        trafficData = trafficResult
-        flightStatusMessage = showFlights ? flightResult.error : nil
 
-        let failures = [
-            earthquakeResult.error,
-            incidentResult.error,
-            weatherResult.error,
-            crimeResult.error,
-            localEventResult.error,
-        ].compactMap { $0 }
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showFlights else { flights = []; return }
+            let r = await loadFlights(lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { flights = r.value }
+            flightStatusMessage = r.error
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showIncidents else { incidents = []; return }
+            let r = await loadSection(label: "Incidents") { try await OpticonAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude) }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { incidents = r.value.filter { !Incident.isLowSignal($0.title) } }
+            if let e = r.error { await completion.addError(e) }
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showWeatherAlerts else { weatherAlerts = []; return }
+            let r = await loadSection(label: "Weather") { try await OpticonAPI.shared.fetchWeatherAlerts(lat: center.latitude, lon: center.longitude) }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { weatherAlerts = r.value }
+            if let e = r.error { await completion.addError(e) }
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showCrime else { crimeIncidents = []; return }
+            let r = await loadSection(label: "Crime") { try await OpticonAPI.shared.fetchCrime(lat: center.latitude, lon: center.longitude) }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { crimeIncidents = r.value }
+            if let e = r.error { await completion.addError(e) }
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showLocalEvents else { localEvents = []; return }
+            let r = await loadSection(label: "Local Events") { try await OpticonAPI.shared.fetchLocalEvents(lat: center.latitude, lon: center.longitude) }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { localEvents = r.value }
+            if let e = r.error { await completion.addError(e) }
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showTraffic else { trafficData = nil; return }
+            let result = try? await OpticonAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude)
+            guard loadRegionId == regionId else { return }
+            trafficData = result
+        }
+
+        // Wait for all sources, then finalize
+        await completion.waitForAll()
+
+        isLoadingData = false
+
+        let failures = await completion.errors
         if !failures.isEmpty {
             withAnimation(.easeInOut) {
                 error = failures.joined(separator: "  ")
@@ -383,6 +471,8 @@ struct SituationView: View {
                 }
             }
         }
+
+        throttledSaveSnapshot()
     }
 
     private func loadFlights(
@@ -420,6 +510,8 @@ struct SituationView: View {
         }
     }
 
+    // MARK: - Snapshot
+
     private func restoreSnapshot() {
         guard let data = UserDefaults.standard.data(forKey: snapshotKey),
               let snapshot = try? JSONDecoder().decode(SituationSnapshot.self, from: data)
@@ -442,6 +534,13 @@ struct SituationView: View {
         crimeIncidents = snapshot.crimeIncidents ?? []
         localEvents = snapshot.localEvents ?? []
         flightStatusMessage = snapshot.flightStatusMessage
+    }
+
+    private func throttledSaveSnapshot() {
+        let now = Date()
+        guard now.timeIntervalSince(lastSnapshotSave) >= 5 else { return }
+        lastSnapshotSave = now
+        saveSnapshot()
     }
 
     private func saveSnapshot() {
@@ -471,6 +570,44 @@ struct SituationView: View {
 
     private var snapshotKey: String {
         "situation.snapshot.v2"
+    }
+}
+
+// MARK: - Load Completion Actor
+
+private actor LoadCompletion {
+    private let total: Int
+    private var completed = 0
+    private var _errors: [String] = []
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    init(total: Int) {
+        self.total = total
+    }
+
+    func done() {
+        completed += 1
+        if completed >= total {
+            continuation?.resume()
+            continuation = nil
+        }
+    }
+
+    func addError(_ error: String) {
+        _errors.append(error)
+    }
+
+    var errors: [String] { _errors }
+
+    func waitForAll() async {
+        if completed >= total { return }
+        await withCheckedContinuation { cont in
+            if completed >= total {
+                cont.resume()
+            } else {
+                continuation = cont
+            }
+        }
     }
 }
 

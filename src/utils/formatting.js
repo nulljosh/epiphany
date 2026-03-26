@@ -18,3 +18,23 @@ export function compactCurrency(value) {
     notation: value >= 1000 ? 'compact' : 'standard',
   }).format(value);
 }
+
+export const SYSTEM_FONT = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+export function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export const CAT_COLORS = {
+  housing: '#0071e3',
+  food: '#30D158',
+  transport: '#FF9F0A',
+  utilities: '#BF5AF2',
+  entertainment: '#FF453A',
+  health: '#64D2FF',
+  shopping: '#FF375F',
+  other: '#FFD60A',
+  insurance: '#AC8E68',
+  subscriptions: '#5E5CE6',
+  vaping: '#ff453a',
+};

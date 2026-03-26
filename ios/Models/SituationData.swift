@@ -420,8 +420,9 @@ struct LocalEvent: Codable, Identifiable {
     let date: String?
     let url: String?
     let venue: String?
+    private let _stableId: String
 
-    var id: String { "\(title)-\(venue ?? "")-\(date ?? "")-\(source ?? "")" }
+    var id: String { _stableId }
 
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude, latitude != 0, longitude != 0 else { return nil }
@@ -431,6 +432,10 @@ struct LocalEvent: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case title, source, date, url, venue
         case latitude, longitude, lat, lon, lng
+    }
+
+    enum StableIdCodingKey: String, CodingKey {
+        case _stableId
     }
 
     init(from decoder: Decoder) throws {
@@ -445,6 +450,15 @@ struct LocalEvent: Codable, Identifiable {
         date = try? container.decodeIfPresent(String.self, forKey: .date)
         url = try? container.decodeIfPresent(String.self, forKey: .url)
         venue = try? container.decodeIfPresent(String.self, forKey: .venue)
+
+        if let idContainer = try? decoder.container(keyedBy: StableIdCodingKey.self),
+           let persisted = try? idContainer.decode(String.self, forKey: ._stableId) {
+            _stableId = persisted
+        } else if venue != nil || date != nil || (latitude != nil && longitude != nil) {
+            _stableId = "\(title)-\(venue ?? "")-\(date ?? "")-\(latitude ?? 0)-\(longitude ?? 0)"
+        } else {
+            _stableId = UUID().uuidString
+        }
     }
 
     func encode(to encoder: Encoder) throws {
@@ -456,6 +470,8 @@ struct LocalEvent: Codable, Identifiable {
         try container.encodeIfPresent(date, forKey: .date)
         try container.encodeIfPresent(url, forKey: .url)
         try container.encodeIfPresent(venue, forKey: .venue)
+        var idContainer = encoder.container(keyedBy: StableIdCodingKey.self)
+        try idContainer.encode(_stableId, forKey: ._stableId)
     }
 }
 
@@ -477,11 +493,16 @@ struct TrafficData: Codable {
         let latitude: Double?
         let longitude: Double?
         let severity: String?
+        private let _stableId: String
 
-        var id: String { rawId ?? "\(title ?? "")-\(latitude ?? 0)-\(longitude ?? 0)" }
+        var id: String { _stableId }
 
         enum CodingKeys: String, CodingKey {
             case id, title, severity, latitude, longitude, lat, lon
+        }
+
+        private enum StableIdCodingKey: String, CodingKey {
+            case _stableId
         }
 
         init(from decoder: Decoder) throws {
@@ -493,6 +514,15 @@ struct TrafficData: Codable {
                 ?? container.lossyDouble(forKey: .lat)
             longitude = container.lossyDouble(forKey: .longitude)
                 ?? container.lossyDouble(forKey: .lon)
+
+            if let idContainer = try? decoder.container(keyedBy: StableIdCodingKey.self),
+               let persisted = try? idContainer.decode(String.self, forKey: ._stableId) {
+                _stableId = persisted
+            } else if let raw = rawId, !raw.isEmpty {
+                _stableId = raw
+            } else {
+                _stableId = "\(title ?? "traffic")-\(latitude ?? 0)-\(longitude ?? 0)-\(UUID().uuidString)"
+            }
         }
 
         func encode(to encoder: Encoder) throws {
@@ -502,6 +532,8 @@ struct TrafficData: Codable {
             try container.encodeIfPresent(severity, forKey: .severity)
             try container.encodeIfPresent(latitude, forKey: .latitude)
             try container.encodeIfPresent(longitude, forKey: .longitude)
+            var idContainer = encoder.container(keyedBy: StableIdCodingKey.self)
+            try idContainer.encode(_stableId, forKey: ._stableId)
         }
 
         var coordinate: CLLocationCoordinate2D? {
