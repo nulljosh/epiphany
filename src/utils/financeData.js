@@ -17,9 +17,15 @@ export const DEMO_BUDGET = {
 };
 
 export const DEMO_DEBT = [
+  { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
 ];
 
 export const DEMO_GOALS = [
+  { name: 'Apple Developer Account', target: 100, saved: 0, deadline: '', priority: 'high', note: 'Enables App Store revenue' },
+  { name: 'French Bulldog', target: 5000, saved: 0, deadline: '', priority: 'low', note: '+$100/mo recurring' },
+  { name: 'Car', target: 5000, saved: 0, deadline: '', priority: 'medium', note: 'Buy used, cash' },
+  { name: 'MacBook', target: 4000, saved: 0, deadline: '', priority: 'medium', note: 'Dev tools investment' },
+  { name: 'Chain', target: 2000, saved: 0, deadline: '', priority: 'low' },
 ];
 
 export const DEMO_SPENDING = [
