@@ -413,6 +413,15 @@ final class OpticonAPI: @unchecked Sendable {
         return try decode(TrafficData.self, from: data)
     }
 
+    // MARK: - People Search
+
+    func fetchPeople(query: String) async throws -> PersonProfile {
+        let url = try makeURL("/api/people", query: ["q": query])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(PersonProfile.self, from: data)
+    }
+
     // MARK: - Avatar
 
     @discardableResult

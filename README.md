@@ -1,9 +1,9 @@
 <img src="icon.svg" width="80">
 
-# Opticon
+# Monica
 ![version](https://img.shields.io/badge/version-v2.7.0-blue)
 
-Live map and market app. Prices, news, and local activity on one screen.
+Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
 [Live](https://opticon.heyitsmejosh.com) -- [Architecture](architecture.svg)
 
@@ -31,6 +31,18 @@ Deploy: Vercel (Cloudflare migration planned for API).
 
 ## Roadmap
 
+### v1.1.0 -- Person Indexer
+Third pillar of Monica alongside Map and Markets. Search anyone by name and get an aggregated profile from public sources.
+
+- [ ] Person search tab (Map / Markets / People)
+- [ ] Google search aggregation -- scrape and structure results for a given name
+- [ ] Social profile discovery -- LinkedIn, Facebook, Twitter/X, Instagram, GitHub
+- [ ] Public records integration -- property ownership, court records, business registrations
+- [ ] Profile card builder -- photo, bio, links, news mentions, social accounts
+- [ ] Local profile cache -- store indexed profiles for instant recall
+- [ ] Relationship mapping -- visualize connections between indexed people
+
+### Ongoing
 - [ ] Cloudflare API migration
 - [ ] Watchlist with alerts
 - [ ] Multi-account portfolio aggregation

@@ -25,6 +25,7 @@ import validateLink from '../server/api/validate-link.js';
 import weatherAlerts from '../server/api/weather-alerts.js';
 import weather from '../server/api/weather.js';
 import webhook from '../server/api/webhook.js';
+import people from '../server/api/people.js';
 import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
@@ -50,6 +51,7 @@ const ROUTES = {
   macro,
   markets,
   news,
+  people,
   prices,
   signals,
   statements,

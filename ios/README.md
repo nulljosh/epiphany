@@ -19,7 +19,7 @@ Your personal intelligence layer. Monica watches everything happening around you
 Monica is becoming a full intelligence platform. The map is just the beginning.
 
 - **More data, everywhere** -- gas stations with live prices, restaurant wait times, parking availability, public transit delays. If it's happening nearby, Monica should know about it.
-- **People search** -- public records, social profiles, professional info. Search anyone and get a clean summary from public databases. Facebook, LinkedIn, court records, property ownership -- all in one place.
+- **People search (v1.1.0)** -- the third pillar. Search anyone by name and get a structured profile from public sources. Google aggregation, social discovery (LinkedIn, Facebook, X, Instagram, GitHub), public records (property, court, business). Profile cards with photo, bio, links, news mentions. Local cache for instant recall. Future: relationship mapping and network visualization.
 - **Predictions** -- not just what's happening now, but what's about to happen. Event forecasting, price movement predictions, weather pattern analysis.
 - **Alerts** -- price alerts for stocks, area alerts for crime/weather, custom triggers for anything Monica tracks.
 

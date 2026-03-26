@@ -26,11 +26,19 @@ struct ContentView: View {
                 }
                 .tag(1)
 
+            DeferredTab(isActive: selectedTab == 2) {
+                PeopleView()
+            }
+                .tabItem {
+                    Label("People", systemImage: "person.crop.rectangle.stack")
+                }
+                .tag(2)
+
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-                .tag(2)
+                .tag(3)
         }
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()
