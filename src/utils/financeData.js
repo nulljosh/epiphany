@@ -24,10 +24,21 @@ export const DEMO_SPENDING = [
 export const DEMO_GIVING = [
 ];
 
-// Upcoming government benefit payments and credits.
-// Each entry: { name, amount, date (YYYY-MM-DD), recurring, icon }
+// CRA GST/HST credit: paid ~5th of Jan, Apr, Jul, Oct
+function nextCRAQuarterlyDate() {
+  const now = new Date();
+  const quarterMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct (0-indexed)
+  for (let offset = 0; offset <= 1; offset++) {
+    for (const m of quarterMonths) {
+      const d = new Date(now.getFullYear() + offset, m, 5);
+      if (d >= new Date(now.getFullYear(), now.getMonth(), now.getDate())) return d;
+    }
+  }
+  return null;
+}
+
 export const UPCOMING_PAYMENTS = [
-  { name: 'GST/HST Credit', amount: 87.25, date: '2026-04-02', recurring: 'quarterly', icon: 'dollarsign.circle' },
+  { name: 'GST/HST Credit', amount: 87.25, get date() { const d = nextCRAQuarterlyDate(); return d ? d.toISOString().slice(0, 10) : null; }, recurring: 'quarterly', icon: 'dollarsign.circle' },
 ];
 
 // User-specific income scenarios for debt projection and spending comparison.

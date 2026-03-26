@@ -99,11 +99,11 @@ struct MarketsView: View {
                                     let debt = financeData.debt
                                     let goals = financeData.goals
 
-                                    if !debt.isEmpty || !goals.isEmpty || appState.tallyPayment != nil || !PortfolioView.upcomingPaymentsData.isEmpty {
+                                    if !debt.isEmpty || !goals.isEmpty || appState.tallyPayment != nil || !UpcomingPayments.all.isEmpty {
                                         ScrollView(.horizontal, showsIndicators: false) {
                                             HStack(spacing: 10) {
                                                 if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
-                                                    portfolioTimelineChip(
+                                                    TimelineChip(
                                                         icon: "calendar.badge.clock",
                                                         label: "Payday",
                                                         detail: "\(days)d",
@@ -111,37 +111,32 @@ struct MarketsView: View {
                                                     )
                                                 }
 
-                                                ForEach(Array(PortfolioView.upcomingPaymentsData.enumerated()), id: \.offset) { _, payment in
-                                                    let df = DateFormatter()
-                                                    let _ = df.dateFormat = "yyyy-MM-dd"
-                                                    if let payDate = df.date(from: payment.date) {
-                                                        let days = Calendar.current.dateComponents([.day], from: Date(), to: payDate).day ?? 0
-                                                        if days >= 0 {
-                                                            portfolioTimelineChip(
-                                                                icon: payment.icon,
-                                                                label: payment.name,
-                                                                detail: days == 0 ? "Today" : "\(days)d",
-                                                                color: Palette.successGreen
-                                                            )
-                                                        }
+                                                ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
+                                                    if let days = UpcomingPayments.daysUntil(payment), days >= 0 {
+                                                        TimelineChip(
+                                                            icon: payment.icon,
+                                                            label: payment.name,
+                                                            detail: days == 0 ? "Today" : "\(days)d",
+                                                            color: Palette.successGreen
+                                                        )
                                                     }
                                                 }
 
                                                 let debtWithPayoff = debt.map { item in
-                                                    (item: item, months: debtMonthsToPayoff(item: item))
+                                                    (item: item, months: DebtCalc.monthsToPayoff(item: item))
                                                 }.sorted { $0.months < $1.months }
 
                                                 ForEach(debtWithPayoff, id: \.item.name) { entry in
-                                                    portfolioTimelineChip(
-                                                        icon: debtIcon(for: entry.item.name),
+                                                    TimelineChip(
+                                                        icon: DebtCalc.icon(for: entry.item.name),
                                                         label: entry.item.name,
-                                                        detail: debtPayoffLabel(entry.months),
+                                                        detail: DebtCalc.payoffLabel(entry.months),
                                                         color: entry.months < 0.1 ? Palette.successGreen : entry.months <= 3 ? Palette.warningAmber : Palette.dangerRed
                                                     )
                                                 }
 
                                                 ForEach(goals, id: \.name) { goal in
-                                                    portfolioTimelineChip(
+                                                    TimelineChip(
                                                         icon: "flag",
                                                         label: goal.name,
                                                         detail: String(format: "%.0f%%", goal.progress * 100),
@@ -377,69 +372,6 @@ struct MarketsView: View {
 }
 
 private extension MarketsView {
-    func portfolioTimelineChip(icon: String, label: String, detail: String, color: Color) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(color)
-            Text(label)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(Palette.text)
-                .lineLimit(1)
-            Text(detail)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(color)
-        }
-        .frame(width: 76, height: 76)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(color.opacity(0.2), lineWidth: 1)
-                )
-        )
-    }
-
-    func debtMonthsToPayoff(item: FinanceData.DebtItem) -> Double {
-        guard item.balance > 0 else { return 0 }
-        let payment = item.minPayment
-        guard payment > 0 else { return Double.infinity }
-
-        // Payable in one payment = essentially done
-        if item.balance <= payment { return 0 }
-
-        let monthlyRate = item.rate / 100.0 / 12.0
-        if monthlyRate <= 0 { return item.balance / payment }
-
-        // Amortization: N = -ln(1 - B*r/P) / ln(1+r)
-        let ratio = item.balance * monthlyRate / payment
-        if ratio >= 1.0 { return Double.infinity }
-        return -log(1.0 - ratio) / log(1.0 + monthlyRate)
-    }
-
-    func debtPayoffLabel(_ months: Double) -> String {
-        if months.isInfinite { return "n/a" }
-        if months < 0.1 { return "now" }
-        let days = months * 30.44
-        if days < 30 {
-            return "\(Int(round(days)))d"
-        }
-        let m = Int(round(months))
-        return "\(m)mo"
-    }
-
-    func debtIcon(for name: String) -> String {
-        let lower = name.lowercased()
-        if lower.contains("bell") { return "phone.connection" }
-        if lower.contains("telus") { return "antenna.radiowaves.left.and.right" }
-        if lower.contains("rogers") { return "wifi" }
-        if lower.contains("visa") || lower.contains("mastercard") { return "creditcard" }
-        if lower.contains("loan") { return "building.columns" }
-        if lower.contains("mom") || lower.contains("family") { return "heart" }
-        return "dollarsign.circle"
-    }
-
     var usMarketStatus: (label: String, color: Color) {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
@@ -756,8 +688,7 @@ private struct MarketItemDetailView: View {
     @ViewBuilder
     private var chartView: some View {
         let points = priceHistory.compactMap { point -> (Date, Double)? in
-            guard let date = ISO8601DateFormatter().date(from: point.date) ??
-                  dateFormatter.date(from: point.date) else { return nil }
+            guard let date = DateParsing.parse(point.date) else { return nil }
             return (date, point.close)
         }
 
@@ -814,12 +745,6 @@ private struct MarketItemDetailView: View {
             self.error = "Chart unavailable"
         }
         isLoading = false
-    }
-
-    private var dateFormatter: DateFormatter {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f
     }
 
     private func infoRow(_ title: String, value: String) -> some View {

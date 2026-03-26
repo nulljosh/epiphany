@@ -451,10 +451,14 @@ struct PortfolioView: View {
         }
     }
 
-    private var calendarMonthLabel: String {
+    private static let monthYearFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "MMMM yyyy"
-        return f.string(from: calendarMonth)
+        return f
+    }()
+
+    private var calendarMonthLabel: String {
+        Self.monthYearFormatter.string(from: calendarMonth)
     }
 
     private var calendarDays: [Date] {
@@ -492,20 +496,13 @@ struct PortfolioView: View {
         let amount: Double?
     }
 
-    static let upcomingPaymentsData: [(name: String, amount: Double, date: String, recurring: String, icon: String)] = [
-        (name: "GST/HST Credit", amount: 87.25, date: "2026-04-02", recurring: "quarterly", icon: "dollarsign.circle"),
-    ]
-
     private func buildCalendarEvents(debt: [FinanceData.DebtItem], goals: [FinanceData.Goal], surplus: Double) -> [CalendarEvent] {
         var events: [CalendarEvent] = []
         let cal = Calendar.current
         let now = Date()
 
-        // Upcoming benefit payments
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
-        for payment in Self.upcomingPaymentsData {
-            if let payDate = df.date(from: payment.date), payDate >= cal.startOfDay(for: now) {
+        for payment in UpcomingPayments.all {
+            if let payDate = payment.dateResolver(), payDate >= cal.startOfDay(for: now) {
                 events.append(CalendarEvent(
                     date: payDate,
                     icon: payment.icon,
@@ -526,7 +523,7 @@ struct PortfolioView: View {
 
             events.append(CalendarEvent(
                 date: payoffDate,
-                icon: debtIcon(for: item.name),
+                icon: DebtCalc.icon(for: item.name),
                 label: "\(item.name) paid off",
                 detail: payoffTimeLabel(months),
                 color: months <= 2 ? Palette.successGreen : Palette.warningAmber,
@@ -534,12 +531,9 @@ struct PortfolioView: View {
             ))
         }
 
-        let deadlineFormatter = DateFormatter()
-        deadlineFormatter.dateFormat = "yyyy-MM-dd"
-
         for goal in goals {
             let remaining = goal.target - goal.saved
-            if let deadlineStr = goal.deadline, let deadlineDate = deadlineFormatter.date(from: deadlineStr) {
+            if let deadlineStr = goal.deadline, let deadlineDate = DateParsing.parse(deadlineStr) {
                 events.append(CalendarEvent(
                     date: deadlineDate,
                     icon: "flag.fill",
@@ -605,7 +599,7 @@ struct PortfolioView: View {
     private var hasDebtOrGoals: Bool {
         let debt = appState.financeData?.debt ?? []
         let goals = appState.financeData?.goals ?? []
-        return !debt.isEmpty || !goals.isEmpty || !Self.upcomingPaymentsData.isEmpty
+        return !debt.isEmpty || !goals.isEmpty || !UpcomingPayments.all.isEmpty
     }
 
     private var timelineStrip: some View {
@@ -628,34 +622,29 @@ struct PortfolioView: View {
                         )
                     }
 
-                    ForEach(Array(Self.upcomingPaymentsData.enumerated()), id: \.offset) { _, payment in
-                        let df = DateFormatter()
-                        let _ = df.dateFormat = "yyyy-MM-dd"
-                        if let payDate = df.date(from: payment.date) {
-                            let days = Calendar.current.dateComponents([.day], from: Date(), to: payDate).day ?? 0
-                            if days >= 0 {
-                                timelineChip(
-                                    icon: payment.icon,
-                                    label: payment.name,
-                                    detail: days == 0 ? "Today" : "\(days)d",
-                                    color: Palette.successGreen
-                                )
-                            }
+                    ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
+                        if let days = UpcomingPayments.daysUntil(payment), days >= 0 {
+                            TimelineChip(
+                                icon: payment.icon,
+                                label: payment.name,
+                                detail: days == 0 ? "Today" : "\(days)d",
+                                color: Palette.successGreen
+                            )
                         }
                     }
 
                     ForEach(sortedDebtByPayoff(debt: debt), id: \.name) { item in
-                        let months = debtMonthsToPayoff(item: item)
-                        timelineChip(
-                            icon: debtIcon(for: item.name),
+                        let months = DebtCalc.monthsToPayoff(item: item)
+                        TimelineChip(
+                            icon: DebtCalc.icon(for: item.name),
                             label: item.name,
-                            detail: debtPayoffLabel(months),
+                            detail: DebtCalc.payoffLabel(months),
                             color: months < 0.1 ? Palette.successGreen : months <= 3 ? Palette.warningAmber : Palette.dangerRed
                         )
                     }
 
                     ForEach(goals, id: \.name) { goal in
-                        timelineChip(
+                        TimelineChip(
                             icon: "flag",
                             label: goal.name,
                             detail: String(format: "%.0f%%", goal.progress * 100),
@@ -668,63 +657,8 @@ struct PortfolioView: View {
         .padding(.horizontal)
     }
 
-    private func timelineChip(icon: String, label: String, detail: String, color: Color) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(color)
-            Text(label)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(Palette.text)
-                .lineLimit(1)
-            Text(detail)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(color)
-        }
-        .frame(width: 76, height: 76)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(color.opacity(0.2), lineWidth: 1)
-                )
-        )
-    }
-
-    private func debtMonthsToPayoff(item: FinanceData.DebtItem) -> Double {
-        guard item.balance > 0 else { return 0 }
-        let payment = item.minPayment
-        guard payment > 0 else { return Double.infinity }
-        if item.balance <= payment { return 0 }
-        let monthlyRate = item.rate / 100.0 / 12.0
-        if monthlyRate <= 0 { return item.balance / payment }
-        let ratio = item.balance * monthlyRate / payment
-        if ratio >= 1.0 { return Double.infinity }
-        return -log(1.0 - ratio) / log(1.0 + monthlyRate)
-    }
-
-    private func debtPayoffLabel(_ months: Double) -> String {
-        if months.isInfinite { return "n/a" }
-        if months < 0.1 { return "now" }
-        let days = months * 30.44
-        if days < 30 { return "\(Int(round(days)))d" }
-        return "\(Int(round(months)))mo"
-    }
-
     private func sortedDebtByPayoff(debt: [FinanceData.DebtItem]) -> [FinanceData.DebtItem] {
-        debt.sorted { debtMonthsToPayoff(item: $0) < debtMonthsToPayoff(item: $1) }
-    }
-
-    private func debtIcon(for name: String) -> String {
-        let lower = name.lowercased()
-        if lower.contains("bell") { return "phone.connection" }
-        if lower.contains("telus") { return "antenna.radiowaves.left.and.right" }
-        if lower.contains("rogers") { return "wifi" }
-        if lower.contains("visa") || lower.contains("mastercard") { return "creditcard" }
-        if lower.contains("loan") { return "building.columns" }
-        if lower.contains("mom") || lower.contains("family") { return "heart" }
-        return "dollarsign.circle"
+        debt.sorted { DebtCalc.monthsToPayoff(item: $0) < DebtCalc.monthsToPayoff(item: $1) }
     }
 
     private var combinedSpendingCard: some View {
