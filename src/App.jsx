@@ -307,6 +307,7 @@ export default function App() {
   const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts(user);
   const [showAlerts, setShowAlerts] = useState(false);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
+  const [commandBarStock, setCommandBarStock] = useState(null);
   const weather = useWeather();
 
   // Fibonacci levels from $1 to $10T
@@ -1437,7 +1438,7 @@ const reset = useCallback(() => {
             {activeTab === 'simulator' && simulatorPanel}
 
             {activeTab === 'markets' && (
-              <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} />
+              <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} initialSymbol={commandBarStock} />
             )}
 
             {activeTab === 'portfolio' && (
@@ -1527,7 +1528,7 @@ const reset = useCallback(() => {
           </div>
           {activeTab === 'simulator' && simulatorPanel}
           {activeTab === 'markets' && (
-            <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} />
+            <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} initialSymbol={commandBarStock} />
           )}
           {activeTab === 'portfolio' && (
             <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
@@ -1583,6 +1584,7 @@ const reset = useCallback(() => {
         t={t}
         font={font}
         onSelectStock={(sym) => {
+          setCommandBarStock(sym);
           setActiveTab('markets');
           if (isMobileNav) setMobilePanelOpen(true);
           else setDesktopPanelOpen(true);

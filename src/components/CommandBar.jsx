@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { PEOPLE_RECENT_KEY } from './PeoplePanel';
 
 const COMMANDS = [
   { id: 'dark-mode', label: 'Toggle Dark Mode', category: 'command', action: 'toggleDark' },
@@ -156,7 +157,7 @@ export default function CommandBar({
 
     // Search recent people from localStorage
     try {
-      const recent = JSON.parse(localStorage.getItem('monica-people-recent') || '[]');
+      const recent = JSON.parse(localStorage.getItem(PEOPLE_RECENT_KEY) || '[]');
       recent.forEach(name => {
         const score = fuzzyMatch(q, name);
         if (score > 0) {
@@ -268,6 +269,8 @@ export default function CommandBar({
   let lastCategory = null;
 
   return (
+    <>
+    <style>{`@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
     <div
       onClick={onClose}
       style={{
@@ -380,5 +383,6 @@ export default function CommandBar({
         </div>
       </div>
     </div>
+    </>
   );
 }

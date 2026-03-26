@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { formatCurrency } from '../utils/formatting';
 import StockDetail from './StockDetail';
 
@@ -94,11 +94,21 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
   );
 }
 
-export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated }) {
+export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol }) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('changePercent');
   const [sortAsc, setSortAsc] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
+
+  // Open stock detail when navigated via command bar
+  useEffect(() => {
+    if (!initialSymbol || !stocks) return;
+    const entry = Object.entries(stocks).find(([sym]) => sym === initialSymbol);
+    if (entry) {
+      const [symbol, data] = entry;
+      setSelectedStock({ symbol, name: data.name || symbol, price: data.price, changePercent: data.changePercent || 0 });
+    }
+  }, [initialSymbol, stocks]);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
   const status = getMarketStatus();
@@ -176,7 +186,6 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
-      <style>{`@keyframes pulse-anomaly { 0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)} 70%{box-shadow:0 0 0 8px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }`}</style>
       {/* Market status + Search + Sort */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />

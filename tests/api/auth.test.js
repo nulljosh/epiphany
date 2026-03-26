@@ -300,6 +300,7 @@ describe('Auth API', () => {
         user: {
           id: 'user-1',
           email: 'user@example.com',
+          name: null,
           verified: true,
           tier: 'free',
           stripeCustomerId: null,

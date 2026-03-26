@@ -136,8 +136,6 @@ const Ticker = memo(({ items, theme }) => {
   );
 
   return (
-    <>
-    <style>{`@keyframes pulse-amber-tick { 0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)} 70%{box-shadow:0 0 0 6px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }`}</style>
     <div
       className="ticker-container"
       onPointerDown={handlePointerDown}
@@ -191,7 +189,6 @@ const Ticker = memo(({ items, theme }) => {
         </div>
       </div>
     </div>
-    </>
   );
 }, (prevProps, nextProps) => {
   if (prevProps.items.length !== nextProps.items.length) return false;

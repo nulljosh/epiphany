@@ -115,21 +115,19 @@ export default function SituationMonitor({
   // Track data freshness
   useEffect(() => {
     if (flights.length > 0) loadTimestamps.current.flights = Date.now();
-  }, [flights]);
-  useEffect(() => {
     if (traffic) loadTimestamps.current.traffic = Date.now();
-  }, [traffic]);
-  useEffect(() => {
     if (earthquakes.length > 0) loadTimestamps.current.earthquakes = Date.now();
-  }, [earthquakes]);
-  useEffect(() => {
     if (events.length > 0) loadTimestamps.current.events = Date.now();
-  }, [events]);
+  }, [flights, traffic, earthquakes, events]);
+
+  // Stable ref for mapFlyTo to avoid busting detections memo
+  const mapFlyToRef = useRef(mapFlyTo);
+  useEffect(() => { mapFlyToRef.current = mapFlyTo; }, [mapFlyTo]);
 
   const nearbyFlights = flights.slice(0, 6);
   const congestion = traffic?.flow?.congestion ?? null;
   const tradeExits = trades.filter(tr => tr?.pnl).length;
-  const significantQuakes = earthquakes.filter(e => e.mag >= 4);
+  const significantQuakes = useMemo(() => earthquakes.filter(e => e.mag >= 4), [earthquakes]);
 
   // Build detection feed from all sources
   const detections = useMemo(() => {
@@ -160,7 +158,7 @@ export default function SituationMonitor({
         color: '#ef4444',
         time: eq.time ? new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
         ts: eq.time || Date.now(),
-        onClick: () => mapFlyTo?.({ center: [eq.lon, eq.lat], zoom: 8, duration: 1200 }),
+        onClick: () => mapFlyToRef.current?.({ center: [eq.lon, eq.lat], zoom: 8, duration: 1200 }),
       });
     });
 
@@ -193,7 +191,7 @@ export default function SituationMonitor({
     items.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9) || (b.ts || 0) - (a.ts || 0));
 
     return items;
-  }, [weatherAlerts, significantQuakes, alerts, traffic, mapFlyTo]);
+  }, [weatherAlerts, significantQuakes, alerts, traffic]);
 
   // Build unified timeline
   const timelineEntries = useMemo(() => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const STORAGE_KEY = 'monica-people-recent';
+export const PEOPLE_RECENT_KEY = 'monica-people-recent';
+const STORAGE_KEY = PEOPLE_RECENT_KEY;
 const SAVED_KEY = 'monica-people-saved';
 const CACHE_KEY = 'monica-people-cache';
 const MAX_RECENT = 10;
