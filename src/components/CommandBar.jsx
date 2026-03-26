@@ -270,7 +270,6 @@ export default function CommandBar({
 
   return (
     <>
-    <style>{`@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
     <div
       onClick={onClose}
       style={{
@@ -291,7 +290,7 @@ export default function CommandBar({
           borderRadius: 14,
           overflow: 'hidden',
           boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
-          animation: 'fadeUp 0.15s ease-out',
+          animation: 'fadeUpSmall 0.15s ease-out',
           margin: '0 16px',
         }}
       >

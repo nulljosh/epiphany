@@ -1438,7 +1438,7 @@ const reset = useCallback(() => {
             {activeTab === 'simulator' && simulatorPanel}
 
             {activeTab === 'markets' && (
-              <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} initialSymbol={commandBarStock} />
+              <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} initialSymbol={commandBarStock} onConsumeInitialSymbol={() => setCommandBarStock(null)} />
             )}
 
             {activeTab === 'portfolio' && (
@@ -1528,7 +1528,7 @@ const reset = useCallback(() => {
           </div>
           {activeTab === 'simulator' && simulatorPanel}
           {activeTab === 'markets' && (
-            <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} initialSymbol={commandBarStock} />
+            <MarketsPanel dark={dark} t={t} stocks={stocks} liveAssets={liveAssets} watchlist={watchlist} toggleSymbol={toggleSymbol} isAuthenticated={isAuthenticated} initialSymbol={commandBarStock} onConsumeInitialSymbol={() => setCommandBarStock(null)} />
           )}
           {activeTab === 'portfolio' && (
             <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />

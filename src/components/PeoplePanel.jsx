@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const PEOPLE_RECENT_KEY = 'monica-people-recent';
-const STORAGE_KEY = PEOPLE_RECENT_KEY;
 const SAVED_KEY = 'monica-people-saved';
 const CACHE_KEY = 'monica-people-cache';
 const MAX_RECENT = 10;
@@ -104,19 +103,19 @@ function PersonPlaceholder({ size = 72, bgColor, borderColor }) {
 
 function getRecent() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return JSON.parse(localStorage.getItem(PEOPLE_RECENT_KEY) || '[]');
   } catch { return []; }
 }
 
 function saveRecent(query) {
   const recent = getRecent().filter(q => q.toLowerCase() !== query.toLowerCase());
   recent.unshift(query);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
+  localStorage.setItem(PEOPLE_RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
 }
 
 function removeRecent(query) {
   const recent = getRecent().filter(q => q !== query);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+  localStorage.setItem(PEOPLE_RECENT_KEY, JSON.stringify(recent));
 }
 
 function getSaved() {

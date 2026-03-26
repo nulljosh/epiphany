@@ -94,7 +94,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
   );
 }
 
-export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol }) {
+export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol, onConsumeInitialSymbol }) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('changePercent');
   const [sortAsc, setSortAsc] = useState(false);
@@ -103,12 +103,13 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   // Open stock detail when navigated via command bar
   useEffect(() => {
     if (!initialSymbol || !stocks) return;
-    const entry = Object.entries(stocks).find(([sym]) => sym === initialSymbol);
-    if (entry) {
-      const [symbol, data] = entry;
-      setSelectedStock({ symbol, name: data.name || symbol, price: data.price, changePercent: data.changePercent || 0 });
+    const data = stocks[initialSymbol];
+    if (data) {
+      setSelectedStock({ symbol: initialSymbol, name: data.name || initialSymbol, price: data.price, changePercent: data.changePercent || 0 });
     }
-  }, [initialSymbol, stocks]);
+    onConsumeInitialSymbol?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSymbol]);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
   const status = getMarketStatus();

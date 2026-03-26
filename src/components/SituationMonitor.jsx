@@ -112,13 +112,11 @@ export default function SituationMonitor({
     incidents, earthquakes, events, weatherAlerts,
   } = useSituation();
 
-  // Track data freshness
-  useEffect(() => {
-    if (flights.length > 0) loadTimestamps.current.flights = Date.now();
-    if (traffic) loadTimestamps.current.traffic = Date.now();
-    if (earthquakes.length > 0) loadTimestamps.current.earthquakes = Date.now();
-    if (events.length > 0) loadTimestamps.current.events = Date.now();
-  }, [flights, traffic, earthquakes, events]);
+  // Track data freshness per source
+  useEffect(() => { if (flights.length > 0) loadTimestamps.current.flights = Date.now(); }, [flights]);
+  useEffect(() => { if (traffic) loadTimestamps.current.traffic = Date.now(); }, [traffic]);
+  useEffect(() => { if (earthquakes.length > 0) loadTimestamps.current.earthquakes = Date.now(); }, [earthquakes]);
+  useEffect(() => { if (events.length > 0) loadTimestamps.current.events = Date.now(); }, [events]);
 
   // Stable ref for mapFlyTo to avoid busting detections memo
   const mapFlyToRef = useRef(mapFlyTo);
