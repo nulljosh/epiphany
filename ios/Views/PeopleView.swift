@@ -323,6 +323,7 @@ struct PeopleView: View {
     // MARK: - Actions
 
     private func performSearch() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 

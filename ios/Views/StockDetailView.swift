@@ -239,7 +239,11 @@ struct StockDetailView: View {
                                 let x = value.location.x - geo[proxy.plotFrame!].origin.x
                                 guard let date: Date = proxy.value(atX: x) else { return }
                                 if let closest = points.min(by: { abs($0.0.timeIntervalSince(date)) < abs($1.0.timeIntervalSince(date)) }) {
+                                    let changed = scrubPrice?.date != closest.0
                                     scrubPrice = (date: closest.0, price: closest.1)
+                                    if changed {
+                                        UISelectionFeedbackGenerator().selectionChanged()
+                                    }
                                 }
                             }
                             .onEnded { _ in
