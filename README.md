@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica
-![version](https://img.shields.io/badge/version-v2.7.0-blue)
+![version](https://img.shields.io/badge/version-v2.8.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -12,7 +12,7 @@ Personal intelligence platform. Map, markets, and people -- Palantir for regular
 - **Map** -- MapLibre GL, geolocation, dark/light tiles, city hubs
 - **Data layers** -- Flights, traffic, earthquakes, weather, GDELT news, Polymarket
 - **Trading simulator** -- 167 assets, Kelly sizing, Fibonacci levels, PnL
-- **Portfolio** -- Holdings, budgets, debt payoff, spending analysis (PDF upload), income overlays
+- **Portfolio** -- Holdings, budgets, debt payoff, spending analysis (PDF upload), income overlays, GST/HST credit tracking
 - **Ticker bar** -- Live scrolling prices
 - **Auth + billing** -- bcrypt/KV sessions, Stripe (Free/$20/$50), Apple Pay
 - **PWA** -- Offline service worker
@@ -50,6 +50,12 @@ Third pillar of Monica alongside Map and Markets. Search anyone by name and get 
 - [ ] macOS companion feature parity
 
 ## Changelog
+
+### v2.8.0 (2026-03-26)
+- GST/HST credit tracking in portfolio
+- iOS visibility improvements (sparkline charts, haptic feedback, Twitter-style news cards)
+- PDF feedback: 1D chart fix, native reader, macro spacing, indicators
+- Debt payoff shows "now" for single-payment debts
 
 ### v2.6.0 (2026-03-21)
 - Tally integration: /api/tally endpoint with BC payment schedule fallback

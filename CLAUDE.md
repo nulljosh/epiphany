@@ -1,6 +1,6 @@
 # Monica
 
-v1.0.0 -- Personal intelligence platform. Palantir for regular people.
+v2.8.0 -- Personal intelligence platform. Palantir for regular people.
 
 ## Rules
 
