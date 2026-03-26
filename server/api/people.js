@@ -142,7 +142,8 @@ async function duckDuckGoSearch(query) {
 }
 
 export default async function handler(req, res) {
-  if (applyCors(req, res)) return;
+  applyCors(req, res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   const q = (req.query.q || '').trim();
   if (!q) {
