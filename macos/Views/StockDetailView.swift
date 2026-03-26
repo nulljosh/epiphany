@@ -312,8 +312,7 @@ struct StockDetailView: View {
                 relatedNews = stockNews
                 return
             }
-            let nameNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
-            relatedNews = nameNews
+            relatedNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
         } catch {
             do {
                 let allNews = try await MonicaAPI.shared.fetchNews()

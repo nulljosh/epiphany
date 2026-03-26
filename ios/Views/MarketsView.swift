@@ -111,19 +111,16 @@ struct MarketsView: View {
                                                     )
                                                 }
 
-                                                ForEach(debt.sorted { a, b in
-                                                    let aMonths = debtMonthsToPayoff(item: a, budget: budget)
-                                                    let bMonths = debtMonthsToPayoff(item: b, budget: budget)
-                                                    return aMonths < bMonths
-                                                }, id: \.name) { item in
-                                                    let months = debtMonthsToPayoff(item: item, budget: budget)
-                                                    let detail = debtPayoffLabel(months)
-                                                    let color = months < 0.1 ? Palette.successGreen : months <= 3 ? Palette.warningAmber : Palette.dangerRed
+                                                let debtWithPayoff = debt.map { item in
+                                                    (item: item, months: debtMonthsToPayoff(item: item))
+                                                }.sorted { $0.months < $1.months }
+
+                                                ForEach(debtWithPayoff, id: \.item.name) { entry in
                                                     portfolioTimelineChip(
-                                                        icon: debtIcon(for: item.name),
-                                                        label: item.name,
-                                                        detail: detail,
-                                                        color: color
+                                                        icon: debtIcon(for: entry.item.name),
+                                                        label: entry.item.name,
+                                                        detail: debtPayoffLabel(entry.months),
+                                                        color: entry.months < 0.1 ? Palette.successGreen : entry.months <= 3 ? Palette.warningAmber : Palette.dangerRed
                                                     )
                                                 }
 
@@ -380,27 +377,19 @@ private extension MarketsView {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
-    func debtMonthsToPayoff(item: FinanceData.DebtItem, budget: FinanceData.Budget?) -> Double {
+    func debtMonthsToPayoff(item: FinanceData.DebtItem) -> Double {
         guard item.balance > 0 else { return 0 }
         let payment = item.minPayment
         guard payment > 0 else { return Double.infinity }
 
-        // If one payment covers the balance, payable within the month
         if item.balance <= payment { return item.balance / payment }
 
         let monthlyRate = item.rate / 100.0 / 12.0
+        if monthlyRate <= 0 { return item.balance / payment }
 
-        // No interest: simple division
-        if monthlyRate <= 0 {
-            return item.balance / payment
-        }
-
-        // With interest: N = -ln(1 - balance * r / payment) / ln(1 + r)
+        // Amortization: N = -ln(1 - B*r/P) / ln(1+r)
         let ratio = item.balance * monthlyRate / payment
-        if ratio >= 1.0 {
-            // Payment doesn't cover interest -- infinite payoff
-            return Double.infinity
-        }
+        if ratio >= 1.0 { return Double.infinity }
         return -log(1.0 - ratio) / log(1.0 + monthlyRate)
     }
 

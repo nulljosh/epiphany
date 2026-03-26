@@ -291,17 +291,13 @@ struct StockDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            // Use stock-specific news endpoint
             let stockNews = try await MonicaAPI.shared.fetchStockNews(query: stock.symbol)
             if !stockNews.isEmpty {
                 relatedNews = stockNews
                 return
             }
-            // Fallback: search by company name
-            let nameNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
-            relatedNews = nameNews
+            relatedNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
         } catch {
-            // Final fallback: filter global news locally
             do {
                 let allNews = try await MonicaAPI.shared.fetchNews()
                 let terms = [stock.symbol.lowercased(), stock.name.lowercased()]

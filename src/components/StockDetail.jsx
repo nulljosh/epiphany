@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatCurrency } from '../utils/formatting';
+import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 
 const RANGES = [
   { key: '1d', label: '1D', interval: '5m' },
@@ -9,34 +9,6 @@ const RANGES = [
   { key: '3mo', label: '3MO', interval: '1d' },
   { key: '1y', label: '1Y', interval: '1d' },
 ];
-
-function formatVolume(v) {
-  if (!v && v !== 0) return '--';
-  if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;
-  if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
-  if (v >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
-  return v.toLocaleString();
-}
-
-function formatMarketCap(v) {
-  if (!v) return '--';
-  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
-  if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
-  if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
-  return `$${v.toLocaleString()}`;
-}
-
-function relativeTime(dateStr) {
-  if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
