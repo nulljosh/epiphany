@@ -26,7 +26,7 @@ function getRoutePath(url) {
 }
 
 async function proxyToVercel(request, env) {
-  const fallbackOrigin = env.VERCEL_FALLBACK_ORIGIN || 'https://opticon.heyitsmejosh.com';
+  const fallbackOrigin = env.VERCEL_FALLBACK_ORIGIN || 'https://monica.heyitsmejosh.com';
   const incomingUrl = new URL(request.url);
   const proxyUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, fallbackOrigin);
 

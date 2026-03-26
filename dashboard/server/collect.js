@@ -9,7 +9,7 @@ const CODE_DIR = join(homedir(), 'Documents', 'Code')
 const EXCLUDED_DIRS = new Set(['dashboard', '_external'])
 
 const LIVE_URLS = {
-  monica: 'https://opticon.heyitsmejosh.com',
+  monica: 'https://monica.heyitsmejosh.com',
   spark: 'https://spark.heyitsmejosh.com',
   tally: 'https://tally.heyitsmejosh.com',
   chi: 'https://chi.heyitsmejosh.com',

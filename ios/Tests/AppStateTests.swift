@@ -1,5 +1,5 @@
 import XCTest
-@testable import Opticon
+@testable import Monica
 
 @MainActor
 final class AppStateTests: XCTestCase {

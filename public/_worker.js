@@ -1,4 +1,4 @@
-const DEFAULT_API_WORKER_ORIGIN = 'https://opticon-api.trommatic.workers.dev';
+const DEFAULT_API_WORKER_ORIGIN = 'https://monica-api.trommatic.workers.dev';
 
 function buildProxyRequest(request, targetOrigin) {
   const incomingUrl = new URL(request.url);

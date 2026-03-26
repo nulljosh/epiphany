@@ -28,7 +28,7 @@ async function checkRateLimit(kv, ip) {
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 const VERIFY_TTL = 24 * 60 * 60; // 24 hours
 const RESET_TTL = 60 * 60; // 1 hour
-const DEFAULT_BASE_URL = 'https://opticon-production.vercel.app';
+const DEFAULT_BASE_URL = 'https://monica.heyitsmejosh.com';
 
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');

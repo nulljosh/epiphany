@@ -29,7 +29,7 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       PRODUCT_NAME: Monica
-      PRODUCT_MODULE_NAME: Opticon
+      PRODUCT_MODULE_NAME: Monica
       # CODE_SIGN_ENTITLEMENTS: Monica.entitlements  # Requires paid Apple Developer Program
   MonicaTests:
     type: bundle.unit-test

@@ -19,11 +19,11 @@ describe('cloudflare worker scaffold', () => {
 
     const response = await worker.fetch(
       new Request('https://worker.example.com/api/auth?action=me'),
-      { VERCEL_FALLBACK_ORIGIN: 'https://opticon.heyitsmejosh.com' }
+      { VERCEL_FALLBACK_ORIGIN: 'https://monica.heyitsmejosh.com' }
     );
 
     expect(global.fetch).toHaveBeenCalledOnce();
-    expect(global.fetch.mock.calls[0][0].toString()).toBe('https://opticon.heyitsmejosh.com/api/auth?action=me');
+    expect(global.fetch.mock.calls[0][0].toString()).toBe('https://monica.heyitsmejosh.com/api/auth?action=me');
     expect(await response.text()).toBe('proxied');
   });
 

@@ -1,4 +1,4 @@
--- Opticon tables (shared Supabase project with Spark)
+-- Monica tables (shared Supabase project with Spark)
 
 -- Watchlists
 create table if not exists watchlists (

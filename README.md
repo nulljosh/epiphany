@@ -5,7 +5,7 @@
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
-[Live](https://opticon.heyitsmejosh.com) -- [Architecture](architecture.svg)
+[Live](https://monica.heyitsmejosh.com) -- [Architecture](architecture.svg)
 
 ## Features
 

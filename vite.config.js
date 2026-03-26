@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import compression from 'vite-plugin-compression'
 import { getStatementsPayload } from './server/api/statements-data.js'
 
-const PROD_API = 'https://opticon.heyitsmejosh.com';
+const PROD_API = 'https://monica.heyitsmejosh.com';
 
 function localStatementsPlugin() {
   return {

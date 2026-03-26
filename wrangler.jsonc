@@ -1,11 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "opticon-api",
+  "name": "monica-api",
   "main": "cloudflare/worker.js",
   "compatibility_date": "2026-03-10",
   "workers_dev": true,
   "vars": {
-    "APP_URL": "https://opticon.heyitsmejosh.com",
-    "VERCEL_FALLBACK_ORIGIN": "https://opticon.heyitsmejosh.com"
+    "APP_URL": "https://monica.heyitsmejosh.com",
+    "VERCEL_FALLBACK_ORIGIN": "https://monica.heyitsmejosh.com"
   }
 }

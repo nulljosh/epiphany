@@ -16,4 +16,4 @@ echo "Deploying Monica to Vercel..."
 vercel --prod --yes
 
 echo "Done!"
-echo "Verify the top ticker on https://opticon.heyitsmejosh.com/"
+echo "Verify the top ticker on https://monica.heyitsmejosh.com/"

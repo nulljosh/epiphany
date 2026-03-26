@@ -1,5 +1,5 @@
 import XCTest
-@testable import Opticon
+@testable import Monica
 
 final class IndicatorTests: XCTestCase {
 

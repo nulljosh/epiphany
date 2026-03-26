@@ -108,7 +108,7 @@ struct SettingsView: View {
                     Button("Open Web Upgrade") {
                         // StoreKit 2 requires App Store Connect product setup;
                         // linking to web upgrade page for now.
-                        if let url = URL(string: "https://opticon.heyitsmejosh.com/settings") {
+                        if let url = URL(string: "https://monica.heyitsmejosh.com/settings") {
                             openURL(url)
                         }
                     }

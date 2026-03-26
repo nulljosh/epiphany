@@ -8,7 +8,7 @@ v2.9.0 -- Personal intelligence platform. Palantir for regular people.
 - No fake prices before real data arrives
 - Mobile-first layout
 - iOS app: three tabs (Map, Markets, Settings). Internal Swift code uses MonicaAPI
-- Web app: same domain (opticon.heyitsmejosh.com until DNS updated)
+- Web app: monica.heyitsmejosh.com
 
 ## Run
 

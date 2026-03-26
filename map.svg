@@ -173,5 +173,5 @@
   <!-- ===== BOTTOM: INFRA ===== -->
   <rect x="20" y="440" width="980" height="52" rx="8" class="box"/>
   <text x="510" y="460" text-anchor="middle" class="t label">INFRASTRUCTURE</text>
-  <text x="510" y="478" text-anchor="middle" class="t sub">Vercel (single function) + Vercel KV (Upstash Redis) + GitHub Actions CI (vitest) + CartoCDN tiles + FMP API + monica (opticon.heyitsmejosh.com)</text>
+  <text x="510" y="478" text-anchor="middle" class="t sub">Vercel (single function) + Vercel KV (Upstash Redis) + GitHub Actions CI (vitest) + CartoCDN tiles + FMP API + monica (monica.heyitsmejosh.com)</text>
 </svg>

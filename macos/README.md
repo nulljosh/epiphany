@@ -5,7 +5,7 @@
 ![version](https://img.shields.io/badge/version-v0.5.0-blue)
 
 Native macOS companion for Monica. MapKit map, markets table, predictions, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
-[Monica](https://opticon.heyitsmejosh.com) | ![Architecture](architecture.svg)
+[Monica](https://monica.heyitsmejosh.com) | ![Architecture](architecture.svg)
 
 ## Features
 - MapKit map with 7 data layers (earthquakes, flights, incidents, weather, crime, local events, traffic)

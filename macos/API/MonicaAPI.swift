@@ -27,7 +27,7 @@ enum APIError: LocalizedError {
 final class MonicaAPI {
     static let shared = MonicaAPI()
 
-    private let baseURL = "https://opticon.heyitsmejosh.com"
+    private let baseURL = "https://monica.heyitsmejosh.com"
     private let session: URLSession
     private let decoder: JSONDecoder
 
