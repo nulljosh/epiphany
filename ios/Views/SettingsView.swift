@@ -37,6 +37,11 @@ struct SettingsView: View {
             hasLoadedAvatar = true
             loadSavedAvatar()
         }
+        .onChange(of: appState.user?.avatarUrl) { _, newUrl in
+            if avatarImage == nil, newUrl != nil {
+                loadSavedAvatar()
+            }
+        }
         .onChange(of: avatarItem) { _, newItem in
             guard let newItem else { return }
             uploadAvatar(item: newItem)
