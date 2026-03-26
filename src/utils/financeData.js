@@ -24,6 +24,12 @@ export const DEMO_SPENDING = [
 export const DEMO_GIVING = [
 ];
 
+// Upcoming government benefit payments and credits.
+// Each entry: { name, amount, date (YYYY-MM-DD), recurring, icon }
+export const UPCOMING_PAYMENTS = [
+  { name: 'GST/HST Credit', amount: 87.25, date: '2026-04-02', recurring: 'quarterly', icon: 'dollarsign.circle' },
+];
+
 // User-specific income scenarios for debt projection and spending comparison.
 // Values are monthly amounts in CAD.
 export const INCOME_SCENARIOS = {

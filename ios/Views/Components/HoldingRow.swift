@@ -9,19 +9,21 @@ struct HoldingRow: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(holding.symbol)
-                    .font(.headline)
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Palette.text)
                 Text(String(format: "%.4f shares", holding.shares))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.textSecondary)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 3) {
                 Text(String(format: "$%.2f", holding.marketValue))
-                    .font(.body)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Palette.text)
                 Text(String(format: "%@$%.2f", holding.gainLoss >= 0 ? "+" : "", holding.gainLoss))
-                    .font(.caption)
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(gainColor)
             }
         }

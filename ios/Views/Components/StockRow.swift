@@ -76,10 +76,11 @@ struct StockRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(stock.symbol.uppercased())
-                    .font(.body.weight(.medium))
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Palette.text)
                 Text(stock.name)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.textSecondary)
                     .lineLimit(1)
             }
 
@@ -92,7 +93,8 @@ struct StockRow: View {
 
             VStack(alignment: .trailing, spacing: 4) {
                 Text(String(format: "$%.2f", stock.price))
-                    .font(.body.weight(.medium))
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Palette.text)
                 ChangePill(text: String(format: "%@%.2f%%", changeSign, stock.changePercent), color: changeColor)
             }
         }

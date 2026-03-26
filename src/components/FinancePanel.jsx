@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Card } from './ui';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
-import { normalizeSpendingMonths } from '../utils/financeData';
+import { normalizeSpendingMonths, UPCOMING_PAYMENTS } from '../utils/financeData';
 import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
@@ -971,6 +971,39 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 })}
               </div>
             </Card>
+
+            {UPCOMING_PAYMENTS.length > 0 && (
+              <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+                <div style={sectionStyle}>
+                  <div style={labelStyle}>Upcoming Payments</div>
+                  {UPCOMING_PAYMENTS.map((payment) => {
+                    const payDate = new Date(payment.date + 'T00:00:00');
+                    const now = new Date();
+                    const diffMs = payDate - now;
+                    const daysUntil = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+                    const dateLabel = payDate.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+                    return (
+                      <div key={payment.name} style={rowStyle}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>{payment.name}</div>
+                          <div style={{ fontSize: 11, color: t.textTertiary }}>
+                            {dateLabel}{payment.recurring ? ` (${payment.recurring})` : ''}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: t.green, fontVariantNumeric: 'tabular-nums' }}>
+                            +{formatCurrency(payment.amount)}
+                          </div>
+                          <div style={{ fontSize: 11, color: daysUntil <= 7 ? t.green : t.textTertiary }}>
+                            {daysUntil === 0 ? 'Today' : `${daysUntil}d`}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
           </>
         )}
 

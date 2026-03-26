@@ -11,12 +11,16 @@ enum Palette {
     }
 
     static let bg = adaptive(
-        dark: UIColor(red: 0x11/255, green: 0x11/255, blue: 0x11/255, alpha: 1),
+        dark: UIColor(red: 0x0A/255, green: 0x0A/255, blue: 0x0A/255, alpha: 1),
         light: .white
     )
     static let text = adaptive(
-        dark: UIColor(red: 0xDD/255, green: 0xDD/255, blue: 0xDD/255, alpha: 1),
-        light: UIColor(red: 0x11/255, green: 0x11/255, blue: 0x11/255, alpha: 1)
+        dark: UIColor(red: 0xF0/255, green: 0xF0/255, blue: 0xF0/255, alpha: 1),
+        light: UIColor(red: 0x0A/255, green: 0x0A/255, blue: 0x0A/255, alpha: 1)
+    )
+    static let textSecondary = adaptive(
+        dark: UIColor(red: 0x9A/255, green: 0x9A/255, blue: 0x9A/255, alpha: 1),
+        light: UIColor(red: 0x55/255, green: 0x55/255, blue: 0x55/255, alpha: 1)
     )
     static let overlay = adaptive(dark: .white, light: .black)
 

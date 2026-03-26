@@ -191,16 +191,18 @@ struct PortfolioView: View {
     private func holdingsContent(_ portfolio: Portfolio) -> some View {
         VStack(spacing: 24) {
             VStack(spacing: 8) {
-                Text("Total Value")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("TOTAL VALUE")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Palette.textSecondary)
+                    .tracking(0.8)
                 Text(String(format: "$%.2f", portfolio.totalValue))
-                    .font(.system(size: 44, weight: .bold))
+                    .font(.system(size: 44, weight: .heavy))
+                    .foregroundStyle(Palette.text)
                 HStack(spacing: 4) {
                     Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
                     Text(String(format: "(%.2f%%)", portfolio.dayChangePercent))
                 }
-                .font(.caption)
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(changeColor)
             }
             .padding(.top, 6)
@@ -281,9 +283,9 @@ struct PortfolioView: View {
         return VStack(spacing: 0) {
             HStack {
                 Text("CALENDAR")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.8)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Palette.textSecondary)
+                    .tracking(1.0)
                 Spacer()
                 HStack(spacing: 12) {
                     Button {
@@ -412,11 +414,13 @@ struct PortfolioView: View {
                         Divider().padding(.horizontal)
                         HStack {
                             Text("Total Debt")
-                                .font(.caption.weight(.semibold))
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Palette.text)
                             Spacer()
                             Text(CurrencyFormatter.formatPrice(debtItems.reduce(0) { $0 + $1.balance }))
                                 .font(.caption.weight(.bold))
                                 .monospacedDigit()
+                                .foregroundStyle(Palette.dangerRed)
                         }
                         .padding(.horizontal)
 
@@ -488,10 +492,30 @@ struct PortfolioView: View {
         let amount: Double?
     }
 
+    static let upcomingPaymentsData: [(name: String, amount: Double, date: String, recurring: String, icon: String)] = [
+        (name: "GST/HST Credit", amount: 87.25, date: "2026-04-02", recurring: "quarterly", icon: "dollarsign.circle"),
+    ]
+
     private func buildCalendarEvents(debt: [FinanceData.DebtItem], goals: [FinanceData.Goal], surplus: Double) -> [CalendarEvent] {
         var events: [CalendarEvent] = []
         let cal = Calendar.current
         let now = Date()
+
+        // Upcoming benefit payments
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        for payment in Self.upcomingPaymentsData {
+            if let payDate = df.date(from: payment.date), payDate >= cal.startOfDay(for: now) {
+                events.append(CalendarEvent(
+                    date: payDate,
+                    icon: payment.icon,
+                    label: payment.name,
+                    detail: payment.recurring,
+                    color: Palette.successGreen,
+                    amount: payment.amount
+                ))
+            }
+        }
 
         for item in debt {
             guard item.balance > 0 else { continue }
@@ -541,19 +565,21 @@ struct PortfolioView: View {
 
     private var compactHeader: some View {
         HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 if let portfolio = resolvedPortfolio {
                     Text(String(format: "$%.2f", portfolio.totalValue))
-                        .font(.title.weight(.bold))
+                        .font(.system(size: 32, weight: .heavy))
+                        .foregroundStyle(Palette.text)
                     HStack(spacing: 4) {
                         Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
                         Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
                     }
-                    .font(.caption.weight(.medium))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(changeColor)
                 } else {
                     Text("Portfolio")
-                        .font(.title.weight(.bold))
+                        .font(.system(size: 32, weight: .heavy))
+                        .foregroundStyle(Palette.text)
                 }
             }
             Spacer()
@@ -579,7 +605,7 @@ struct PortfolioView: View {
     private var hasDebtOrGoals: Bool {
         let debt = appState.financeData?.debt ?? []
         let goals = appState.financeData?.goals ?? []
-        return !debt.isEmpty || !goals.isEmpty
+        return !debt.isEmpty || !goals.isEmpty || !Self.upcomingPaymentsData.isEmpty
     }
 
     private var timelineStrip: some View {
@@ -587,9 +613,9 @@ struct PortfolioView: View {
         let goals = appState.financeData?.goals ?? []
         return VStack(alignment: .leading, spacing: 10) {
             Text("TIMELINE")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.8)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(Palette.textSecondary)
+                .tracking(1.0)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -600,6 +626,22 @@ struct PortfolioView: View {
                             detail: "\(days)d",
                             color: Palette.appleBlue
                         )
+                    }
+
+                    ForEach(Array(Self.upcomingPaymentsData.enumerated()), id: \.offset) { _, payment in
+                        let df = DateFormatter()
+                        let _ = df.dateFormat = "yyyy-MM-dd"
+                        if let payDate = df.date(from: payment.date) {
+                            let days = Calendar.current.dateComponents([.day], from: Date(), to: payDate).day ?? 0
+                            if days >= 0 {
+                                timelineChip(
+                                    icon: payment.icon,
+                                    label: payment.name,
+                                    detail: days == 0 ? "Today" : "\(days)d",
+                                    color: Palette.successGreen
+                                )
+                            }
+                        }
                     }
 
                     ForEach(sortedDebtByPayoff(debt: debt), id: \.name) { item in
@@ -629,17 +671,25 @@ struct PortfolioView: View {
     private func timelineChip(icon: String, label: String, detail: String, color: Color) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.body)
+                .font(.body.weight(.semibold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.caption2)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(Palette.text)
                 .lineLimit(1)
             Text(detail)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(color)
         }
-        .frame(width: 72, height: 72)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .frame(width: 76, height: 76)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(color.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 
     private func debtMonthsToPayoff(item: FinanceData.DebtItem) -> Double {
@@ -922,12 +972,13 @@ struct PortfolioView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Palette.text)
                 Spacer()
                 Text(String(format: "$%.2f", value))
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
-                    .foregroundStyle(value < 0 ? Palette.dangerRed : .primary)
+                    .foregroundStyle(value < 0 ? Palette.dangerRed : Palette.text)
             }
             ProgressView(value: max(min(progress, 1), 0))
                 .tint(color)
@@ -936,15 +987,25 @@ struct PortfolioView: View {
 
     private func sectionCard<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal)
-                .padding(.bottom, 8)
+            if !title.isEmpty {
+                Text(title.uppercased())
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Palette.textSecondary)
+                    .tracking(0.8)
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
+            }
             content()
         }
-        .padding(.vertical, 12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Palette.overlay.opacity(0.06), lineWidth: 1)
+                )
+        )
         .padding(.horizontal)
     }
 

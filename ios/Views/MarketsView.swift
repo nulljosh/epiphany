@@ -80,14 +80,15 @@ struct MarketsView: View {
                                     let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
                                     if !portfolio.holdings.isEmpty {
                                         HStack {
-                                            VStack(alignment: .leading, spacing: 2) {
+                                            VStack(alignment: .leading, spacing: 3) {
                                                 Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
-                                                    .font(.title2.weight(.bold))
+                                                    .font(.title2.weight(.heavy))
+                                                    .foregroundStyle(Palette.text)
                                                 HStack(spacing: 4) {
                                                     Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
                                                     Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
                                                 }
-                                                .font(.caption.weight(.medium))
+                                                .font(.caption.weight(.semibold))
                                                 .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
                                             }
                                             Spacer()
@@ -98,7 +99,7 @@ struct MarketsView: View {
                                     let debt = financeData.debt
                                     let goals = financeData.goals
 
-                                    if !debt.isEmpty || !goals.isEmpty || appState.tallyPayment != nil {
+                                    if !debt.isEmpty || !goals.isEmpty || appState.tallyPayment != nil || !PortfolioView.upcomingPaymentsData.isEmpty {
                                         ScrollView(.horizontal, showsIndicators: false) {
                                             HStack(spacing: 10) {
                                                 if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
@@ -108,6 +109,22 @@ struct MarketsView: View {
                                                         detail: "\(days)d",
                                                         color: Palette.appleBlue
                                                     )
+                                                }
+
+                                                ForEach(Array(PortfolioView.upcomingPaymentsData.enumerated()), id: \.offset) { _, payment in
+                                                    let df = DateFormatter()
+                                                    let _ = df.dateFormat = "yyyy-MM-dd"
+                                                    if let payDate = df.date(from: payment.date) {
+                                                        let days = Calendar.current.dateComponents([.day], from: Date(), to: payDate).day ?? 0
+                                                        if days >= 0 {
+                                                            portfolioTimelineChip(
+                                                                icon: payment.icon,
+                                                                label: payment.name,
+                                                                detail: days == 0 ? "Today" : "\(days)d",
+                                                                color: Palette.successGreen
+                                                            )
+                                                        }
+                                                    }
                                                 }
 
                                                 let debtWithPayoff = debt.map { item in
@@ -363,17 +380,25 @@ private extension MarketsView {
     func portfolioTimelineChip(icon: String, label: String, detail: String, color: Color) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.body)
+                .font(.body.weight(.semibold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.caption2)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(Palette.text)
                 .lineLimit(1)
             Text(detail)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(color)
         }
-        .frame(width: 72, height: 72)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .frame(width: 76, height: 76)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(color.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 
     func debtMonthsToPayoff(item: FinanceData.DebtItem) -> Double {
