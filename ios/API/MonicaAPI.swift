@@ -167,9 +167,16 @@ final class MonicaAPI: @unchecked Sendable {
     }
 
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
+        let interval: String
+        switch range {
+        case "1d": interval = "5m"
+        case "5d": interval = "15m"
+        default: interval = "1d"
+        }
         let url = try makeURL("/api/history", query: [
             "symbol": symbol,
-            "range": range
+            "range": range,
+            "interval": interval
         ])
         let request = URLRequest(url: url)
         let data = try await perform(request)
@@ -433,6 +440,24 @@ final class MonicaAPI: @unchecked Sendable {
         return try decode(PersonProfile.self, from: data)
     }
 
+    // MARK: - Article Extraction
+
+    struct ArticleContent: Decodable {
+        let title: String
+        let content: String
+        let htmlContent: String?
+        let author: String?
+        let siteName: String?
+        let excerpt: String?
+    }
+
+    func fetchArticle(url: String) async throws -> ArticleContent {
+        let apiUrl = try makeURL("/api/defuddle", query: ["url": url])
+        let request = URLRequest(url: apiUrl)
+        let data = try await perform(request)
+        return try decode(ArticleContent.self, from: data)
+    }
+
     // MARK: - Avatar
 
     @discardableResult
@@ -645,11 +670,26 @@ struct PriceHistory: Codable {
         private static let dateFormatter: DateFormatter = {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            return formatter
+        }()
+
+        private static nonisolated(unsafe) let isoFormatter: ISO8601DateFormatter = {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return formatter
+        }()
+
+        private static nonisolated(unsafe) let isoBasicFormatter: ISO8601DateFormatter = {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime]
             return formatter
         }()
 
         var parsedDate: Date? {
-            Self.dateFormatter.date(from: date)
+            Self.isoFormatter.date(from: date)
+                ?? Self.isoBasicFormatter.date(from: date)
+                ?? Self.dateFormatter.date(from: date)
         }
     }
 }

@@ -2,6 +2,7 @@
 import auth from '../server/api/auth.js';
 import commodities from '../server/api/commodities.js';
 import crime from '../server/api/crime.js';
+import defuddle from '../server/api/defuddle.js';
 import cron from '../server/api/cron.js';
 import earthquakes from '../server/api/earthquakes.js';
 import events from '../server/api/events.js';
@@ -41,6 +42,7 @@ const ROUTES = {
   commodities,
   crime,
   cron,
+  defuddle,
   earthquakes,
   events,
   flights,

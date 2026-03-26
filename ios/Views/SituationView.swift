@@ -303,7 +303,15 @@ struct SituationView: View {
                 .padding(.vertical, 8)
                 .background(.ultraThinMaterial, in: Capsule())
                 .padding(.bottom, 100)
-        } else if totalEventCount > 0 {
+        } else if totalEventCount > 0 && totalEventCount < 3 {
+            Text("Quiet area -- \(totalEventCount) events found")
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 100)
+        } else if totalEventCount >= 3 {
             Text("\(totalEventCount) events nearby")
                 .font(.caption2.weight(.medium))
                 .foregroundStyle(.secondary)

@@ -71,8 +71,7 @@ struct NewsView: View {
             }
             .navigationTitle("News")
             .sheet(item: $selectedNewsURL) { url in
-                SafariView(url: url)
-                    .ignoresSafeArea()
+                ArticleReaderView(url: url)
             }
         }
         .onAppear {

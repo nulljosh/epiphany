@@ -585,8 +585,6 @@ struct PortfolioView: View {
     private var timelineStrip: some View {
         let debt = appState.financeData?.debt ?? []
         let goals = appState.financeData?.goals ?? []
-        let budget = appState.financeData?.budget
-
         return VStack(alignment: .leading, spacing: 10) {
             Text("TIMELINE")
                 .font(.caption.weight(.semibold))

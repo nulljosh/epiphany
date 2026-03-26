@@ -13,6 +13,11 @@ struct StockDetailView: View {
     @State private var newsError = false
     @State private var scrubPrice: (date: Date, price: Double)?
     @State private var selectedNewsURL: URL?
+    @State private var showSMA = false
+    @State private var showEMA = false
+    @State private var smaPeriod = 20
+    @State private var emaPeriod = 50
+    @State private var showIndicatorConfig = false
 
     private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
 
@@ -148,8 +153,7 @@ struct StockDetailView: View {
             }
         }
         .sheet(item: $selectedNewsURL) { url in
-            SafariView(url: url)
-                .ignoresSafeArea()
+            ArticleReaderView(url: url)
         }
         .toolbar {
             if appState.isLoggedIn {
@@ -177,90 +181,195 @@ struct StockDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private var chartView: some View {
-        let points = priceHistory.compactMap { point -> (Date, Double)? in
+    private var chartPoints: [(Date, Double)] {
+        priceHistory.compactMap { point -> (Date, Double)? in
             guard let date = point.parsedDate else { return nil }
             return (date, point.close)
         }
+    }
+
+    private var smaPoints: [Indicators.DataPoint] {
+        guard showSMA else { return [] }
+        return Indicators.sma(prices: chartPoints, period: smaPeriod)
+    }
+
+    private var emaPoints: [Indicators.DataPoint] {
+        guard showEMA else { return [] }
+        return Indicators.ema(prices: chartPoints, period: emaPeriod)
+    }
+
+    private var stockAlerts: [PriceAlert] {
+        appState.activeAlerts.filter { $0.symbol == stock.symbol }
+    }
+
+    @ViewBuilder
+    private var chartView: some View {
+        let points = chartPoints
         let minPrice = points.map(\.1).min() ?? 0
         let maxPrice = points.map(\.1).max() ?? 0
         let padding = (maxPrice - minPrice) * 0.1
 
-        Chart {
-            ForEach(points, id: \.0) { date, close in
-                LineMark(
-                    x: .value("Date", date),
-                    y: .value("Price", close)
-                )
-                .foregroundStyle(Palette.appleBlue)
-
-                AreaMark(
-                    x: .value("Date", date),
-                    y: .value("Price", close)
-                )
-                .foregroundStyle(
-                    .linearGradient(
-                        colors: [Palette.appleBlue.opacity(0.3), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
+        VStack(spacing: 8) {
+            Chart {
+                ForEach(points, id: \.0) { date, close in
+                    LineMark(
+                        x: .value("Date", date),
+                        y: .value("Price", close)
                     )
-                )
-            }
-
-            if let scrubPrice {
-                RuleMark(x: .value("Date", scrubPrice.date))
-                    .foregroundStyle(.secondary.opacity(0.5))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                PointMark(x: .value("Date", scrubPrice.date), y: .value("Price", scrubPrice.price))
                     .foregroundStyle(Palette.appleBlue)
-                    .symbolSize(50)
+
+                    AreaMark(
+                        x: .value("Date", date),
+                        y: .value("Price", close)
+                    )
+                    .foregroundStyle(
+                        .linearGradient(
+                            colors: [Palette.appleBlue.opacity(0.3), .clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                }
+
+                ForEach(smaPoints, id: \.date) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("SMA", point.value)
+                    )
+                    .foregroundStyle(Palette.warningAmber)
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
+                }
+
+                ForEach(emaPoints, id: \.date) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("EMA", point.value)
+                    )
+                    .foregroundStyle(Palette.purple)
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
+                }
+
+                ForEach(stockAlerts) { alert in
+                    RuleMark(y: .value("Alert", alert.targetPrice))
+                        .foregroundStyle(alert.direction == .above ? Palette.successGreen : Palette.dangerRed)
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [6, 4]))
+                        .annotation(position: .top, alignment: .trailing) {
+                            Text(String(format: "$%.0f", alert.targetPrice))
+                                .font(.caption2)
+                                .foregroundStyle(alert.direction == .above ? Palette.successGreen : Palette.dangerRed)
+                        }
+                }
+
+                if let scrubPrice {
+                    RuleMark(x: .value("Date", scrubPrice.date))
+                        .foregroundStyle(.secondary.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    PointMark(x: .value("Date", scrubPrice.date), y: .value("Price", scrubPrice.price))
+                        .foregroundStyle(Palette.appleBlue)
+                        .symbolSize(50)
+                }
             }
-        }
-        .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
-        .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) {
-                AxisValueLabel(format: xAxisFormat)
-                    .foregroundStyle(.secondary)
+            .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 5)) {
+                    AxisValueLabel(format: xAxisFormat)
+                        .foregroundStyle(.secondary)
+                }
             }
-        }
-        .chartYAxis {
-            AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) {
-                AxisValueLabel()
-                    .foregroundStyle(.secondary)
+            .chartYAxis {
+                AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) {
+                    AxisValueLabel()
+                        .foregroundStyle(.secondary)
+                }
             }
-        }
-        .chartOverlay { proxy in
-            GeometryReader { geo in
-                Rectangle().fill(.clear).contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                let x = value.location.x - geo[proxy.plotFrame!].origin.x
-                                guard let date: Date = proxy.value(atX: x) else { return }
-                                if let closest = points.min(by: { abs($0.0.timeIntervalSince(date)) < abs($1.0.timeIntervalSince(date)) }) {
-                                    let changed = scrubPrice?.date != closest.0
-                                    scrubPrice = (date: closest.0, price: closest.1)
-                                    if changed {
-                                        UISelectionFeedbackGenerator().selectionChanged()
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    Rectangle().fill(.clear).contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    let x = value.location.x - geo[proxy.plotFrame!].origin.x
+                                    guard let date: Date = proxy.value(atX: x) else { return }
+                                    if let closest = points.min(by: { abs($0.0.timeIntervalSince(date)) < abs($1.0.timeIntervalSince(date)) }) {
+                                        let changed = scrubPrice?.date != closest.0
+                                        scrubPrice = (date: closest.0, price: closest.1)
+                                        if changed {
+                                            UISelectionFeedbackGenerator().selectionChanged()
+                                        }
                                     }
                                 }
-                            }
-                            .onEnded { _ in
-                                scrubPrice = nil
-                            }
-                    )
+                                .onEnded { _ in
+                                    scrubPrice = nil
+                                }
+                        )
+                }
+            }
+            .frame(height: 220)
+            .clipped()
+            .padding(.horizontal)
+
+            indicatorBar
+        }
+    }
+
+    private var indicatorBar: some View {
+        HStack(spacing: 8) {
+            indicatorToggle("SMA \(smaPeriod)", isOn: $showSMA, color: Palette.warningAmber)
+            indicatorToggle("EMA \(emaPeriod)", isOn: $showEMA, color: Palette.purple)
+            Spacer()
+            Button {
+                showIndicatorConfig = true
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
-        .frame(height: 220)
-        .clipped()
         .padding(.horizontal)
+        .sheet(isPresented: $showIndicatorConfig) {
+            indicatorConfigSheet
+                .presentationDetents([.medium])
+        }
+    }
+
+    private func indicatorToggle(_ label: String, isOn: Binding<Bool>, color: Color) -> some View {
+        Button {
+            isOn.wrappedValue.toggle()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        } label: {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(isOn.wrappedValue ? color.opacity(0.2) : .clear, in: Capsule())
+                .overlay(Capsule().stroke(isOn.wrappedValue ? color : .secondary.opacity(0.3), lineWidth: 1))
+                .foregroundStyle(isOn.wrappedValue ? color : .secondary)
+        }
+    }
+
+    private var indicatorConfigSheet: some View {
+        NavigationStack {
+            Form {
+                Section("SMA (Simple Moving Average)") {
+                    Toggle("Enabled", isOn: $showSMA)
+                    Stepper("Period: \(smaPeriod)", value: $smaPeriod, in: 5...200, step: 5)
+                }
+                Section("EMA (Exponential Moving Average)") {
+                    Toggle("Enabled", isOn: $showEMA)
+                    Stepper("Period: \(emaPeriod)", value: $emaPeriod, in: 5...200, step: 5)
+                }
+            }
+            .navigationTitle("Indicators")
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 
     private var xAxisFormat: Date.FormatStyle {
         switch selectedRange {
-        case "1d", "5d":
-            return .dateTime.month(.abbreviated).day()
+        case "1d":
+            return .dateTime.hour().minute()
+        case "5d":
+            return .dateTime.weekday(.abbreviated).hour()
         case "1mo":
             return .dateTime.month(.abbreviated).day()
         default:

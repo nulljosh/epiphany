@@ -39,13 +39,17 @@ struct MacroView: View {
 
                         ForEach(indicators) { indicator in
                             MacroIndicatorRow(indicator: indicator)
+                                .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
+                                .listRowSeparator(.hidden)
                                 .listRowBackground(
                                     RoundedRectangle(cornerRadius: 8)
                                         .fill(.ultraThinMaterial)
-                                        .padding(2)
+                                        .padding(.vertical, 1)
+                                        .padding(.horizontal, 4)
                                 )
                         }
                     }
+                    .listStyle(.plain)
                     .refreshable {
                         await loadMacro()
                     }
@@ -107,44 +111,26 @@ private struct MacroIndicatorRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(indicator.name)
-                        .font(.headline)
-                    Text(formattedDate)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(valueText)
-                        .font(.headline)
-                    Text(changeText)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(changeColor)
-                }
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(indicator.name)
+                    .font(.subheadline.weight(.semibold))
+                Text(formattedDate)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
 
-            if let series = indicator.series, !series.isEmpty {
-                Chart(series) { point in
-                    if let pointDate = parseDate(point.date) {
-                        LineMark(
-                            x: .value("Date", pointDate),
-                            y: .value("Value", point.value)
-                        )
-                        .interpolationMethod(.catmullRom)
-                        .foregroundStyle(Palette.appleBlue)
-                    }
-                }
-                .chartXAxis(.hidden)
-                .chartYAxis(.hidden)
-                .frame(height: 72)
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(valueText)
+                    .font(.subheadline.weight(.semibold))
+                Text(changeText)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(changeColor)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 6)
     }
 
     private func parseDate(_ text: String) -> Date? {
