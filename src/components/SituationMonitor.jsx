@@ -1,8 +1,61 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useSituation } from '../hooks/useSituation';
 import { Card, BlinkingDot } from './ui';
 
 const CONGESTION_LEVELS = { heavy: 85, moderate: 55, clear: 15 };
+const SEVERITY = { critical: { label: 'CRITICAL', color: '#ef4444' }, elevated: { label: 'ELEVATED', color: '#f59e0b' }, monitor: { label: 'MONITOR', color: '#3b82f6' }, info: { label: 'INFO', color: '#6b7280' } };
+
+function SeverityBadge({ level }) {
+  const s = SEVERITY[level] || SEVERITY.info;
+  return (
+    <span style={{
+      fontSize: 8, fontWeight: 700, letterSpacing: '0.08em',
+      padding: '1px 5px', borderRadius: 3,
+      background: `${s.color}20`, color: s.color,
+      textTransform: 'uppercase',
+    }}>{s.label}</span>
+  );
+}
+
+function DetectionCard({ type, title, detail, severity, time, color, t, font, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex', gap: 8, padding: '8px 10px',
+        borderLeft: `2px solid ${color || SEVERITY[severity]?.color || t.border}`,
+        background: t.surface, borderRadius: '0 6px 6px 0',
+        marginBottom: 4, cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+      onMouseEnter={e => onClick && (e.currentTarget.style.transform = 'translateX(2px)')}
+      onMouseLeave={e => onClick && (e.currentTarget.style.transform = 'translateX(0)')}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{type}</span>
+          <SeverityBadge level={severity} />
+        </div>
+        <div style={{ fontSize: 11, color: t.text, fontWeight: 500, lineHeight: 1.3 }}>{title}</div>
+        {detail && <div style={{ fontSize: 10, color: t.textTertiary, marginTop: 2, lineHeight: 1.3 }}>{detail}</div>}
+      </div>
+      {time && <span style={{ fontSize: 9, color: t.textTertiary, flexShrink: 0, whiteSpace: 'nowrap' }}>{time}</span>}
+    </div>
+  );
+}
+
+function SourceHealth({ label, lastUpdate, error, t }) {
+  const stale = lastUpdate ? (Date.now() - lastUpdate) > 300000 : true;
+  const color = error ? '#ef4444' : stale ? '#f59e0b' : '#30d158';
+  const age = lastUpdate ? `${Math.round((Date.now() - lastUpdate) / 60000)}m` : '--';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <div style={{ width: 5, height: 5, borderRadius: '50%', background: color }} />
+      <span style={{ fontSize: 9, color: t.textTertiary }}>{label}</span>
+      <span style={{ fontSize: 8, color: t.textTertiary }}>{age}</span>
+    </div>
+  );
+}
 
 function CongestionBar({ value, t, font }) {
   const pct = CONGESTION_LEVELS[value] ?? 0;
@@ -19,6 +72,21 @@ function CongestionBar({ value, t, font }) {
   );
 }
 
+function TimelineEntry({ icon, color, label, time, t }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, padding: '4px 0', position: 'relative' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 12 }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+        <div style={{ flex: 1, width: 1, background: t.border, minHeight: 8 }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
+        <div style={{ fontSize: 10, color: t.text, lineHeight: 1.3 }}>{label}</div>
+        {time && <div style={{ fontSize: 9, color: t.textTertiary, marginTop: 1 }}>{time}</div>}
+      </div>
+    </div>
+  );
+}
+
 export default function SituationMonitor({
   dark, t, font,
   sim = null,
@@ -28,10 +96,14 @@ export default function SituationMonitor({
   pmExits = 0,
   mapFlyTo,
   mapLayers,
+  alerts = [],
 }) {
   const [showPmEdges, setShowPmEdges] = useState(true);
   const [showTrades, setShowTrades] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [showDetections, setShowDetections] = useState(true);
   const initialFlyDone = useRef(false);
+  const loadTimestamps = useRef({ flights: null, traffic: null, earthquakes: null, events: null });
 
   const {
     activeCenter,
@@ -40,13 +112,133 @@ export default function SituationMonitor({
     incidents, earthquakes, events, weatherAlerts,
   } = useSituation();
 
+  // Track data freshness
+  useEffect(() => {
+    if (flights.length > 0) loadTimestamps.current.flights = Date.now();
+  }, [flights]);
+  useEffect(() => {
+    if (traffic) loadTimestamps.current.traffic = Date.now();
+  }, [traffic]);
+  useEffect(() => {
+    if (earthquakes.length > 0) loadTimestamps.current.earthquakes = Date.now();
+  }, [earthquakes]);
+  useEffect(() => {
+    if (events.length > 0) loadTimestamps.current.events = Date.now();
+  }, [events]);
+
   const nearbyFlights = flights.slice(0, 6);
   const congestion = traffic?.flow?.congestion ?? null;
   const tradeExits = trades.filter(tr => tr?.pnl).length;
   const significantQuakes = earthquakes.filter(e => e.mag >= 4);
-  const cityList = userLocation
-    ? [{ id: 'me', label: userLocation.city, lat: userLocation.lat, lon: userLocation.lon }, ...worldCities]
-    : worldCities;
+
+  // Build detection feed from all sources
+  const detections = useMemo(() => {
+    const items = [];
+
+    // Weather alerts -> critical
+    weatherAlerts.forEach((wa, i) => {
+      items.push({
+        id: `weather-${i}`,
+        type: 'weather',
+        severity: wa.severity === 'Extreme' || wa.severity === 'Severe' ? 'critical' : 'elevated',
+        title: wa.headline || wa.event || 'Weather Alert',
+        detail: wa.source,
+        color: '#f59e0b',
+        time: wa.effective ? new Date(wa.effective).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+        ts: wa.effective ? new Date(wa.effective).getTime() : Date.now(),
+      });
+    });
+
+    // Significant earthquakes -> critical/elevated
+    significantQuakes.forEach((eq, i) => {
+      items.push({
+        id: `quake-${i}`,
+        type: 'seismic',
+        severity: eq.mag >= 6 ? 'critical' : 'elevated',
+        title: `M${eq.mag.toFixed(1)} -- ${eq.place || 'Earthquake'}`,
+        detail: `Depth: ${eq.depth || '?'}km`,
+        color: '#ef4444',
+        time: eq.time ? new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+        ts: eq.time || Date.now(),
+        onClick: () => mapFlyTo?.({ center: [eq.lon, eq.lat], zoom: 8, duration: 1200 }),
+      });
+    });
+
+    // Triggered price alerts
+    (alerts || []).filter(a => a.triggered).forEach((a, i) => {
+      items.push({
+        id: `alert-${a.id || i}`,
+        type: 'detection',
+        severity: 'elevated',
+        title: `${a.symbol} hit $${a.triggeredPrice?.toFixed(2)} (${a.direction} $${a.targetPrice.toFixed(2)})`,
+        color: '#30d158',
+        ts: a.triggeredAt || Date.now(),
+      });
+    });
+
+    // Traffic incidents
+    (traffic?.incidents || []).slice(0, 3).forEach((inc, i) => {
+      items.push({
+        id: `traffic-${i}`,
+        type: 'traffic',
+        severity: 'monitor',
+        title: inc.description || inc.type || 'Traffic incident',
+        color: '#f97316',
+        ts: Date.now(),
+      });
+    });
+
+    // Sort by severity then time
+    const sevOrder = { critical: 0, elevated: 1, monitor: 2, info: 3 };
+    items.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9) || (b.ts || 0) - (a.ts || 0));
+
+    return items;
+  }, [weatherAlerts, significantQuakes, alerts, traffic, mapFlyTo]);
+
+  // Build unified timeline
+  const timelineEntries = useMemo(() => {
+    const entries = [];
+
+    earthquakes.slice(0, 6).forEach(eq => {
+      entries.push({
+        label: `M${eq.mag?.toFixed?.(1)} ${eq.place || 'Earthquake'}`,
+        color: '#ef4444',
+        ts: eq.time || Date.now(),
+        time: eq.time ? new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+      });
+    });
+
+    events.slice(0, 6).forEach(ev => {
+      entries.push({
+        label: `${ev.country ? `[${ev.country}] ` : ''}${ev.title}`,
+        color: '#22d3ee',
+        ts: ev.dateAdded ? new Date(ev.dateAdded).getTime() : Date.now(),
+        time: ev.dateAdded ? new Date(ev.dateAdded).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+      });
+    });
+
+    trades.slice(-8).filter(tr => tr?.pnl).forEach(tr => {
+      const pnl = parseFloat(tr.pnl);
+      entries.push({
+        label: `${tr.type} ${tr.sym} ${pnl >= 0 ? '+' : ''}${tr.pnl}`,
+        color: pnl >= 0 ? '#30d158' : '#ef4444',
+        ts: tr.ts || Date.now(),
+        time: tr.ts ? new Date(tr.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+      });
+    });
+
+    weatherAlerts.forEach(wa => {
+      entries.push({
+        label: wa.headline || wa.event || 'Weather alert',
+        color: '#f59e0b',
+        ts: wa.effective ? new Date(wa.effective).getTime() : Date.now(),
+        time: wa.effective ? new Date(wa.effective).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+      });
+    });
+
+    entries.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    return entries.slice(0, 15);
+  }, [earthquakes, events, trades, weatherAlerts]);
 
   useEffect(() => {
     if (!initialFlyDone.current && mapFlyTo && activeCenter) {
@@ -62,46 +254,69 @@ export default function SituationMonitor({
   return (
     <Card dark={dark} t={t} style={{ padding: '16px 20px' }}>
 
-      {/* Weather alert banner */}
-      {weatherAlerts.length > 0 && (
-        <div style={{
-          background: `${t.yellow}18`, border: `1px solid ${t.yellow}40`,
-          borderRadius: 8, padding: '6px 12px', marginBottom: 10,
-          fontSize: 10, color: t.yellow, fontFamily: font, lineHeight: 1.5,
-        }}>
-          {weatherAlerts[0].headline || `${weatherAlerts[0].event} — ${weatherAlerts[0].source}`}
-          {weatherAlerts.length > 1 && <span style={{ color: t.textTertiary }}> +{weatherAlerts.length - 1} more</span>}
-        </div>
-      )}
-
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <BlinkingDot color={t.cyan} speed={3} />
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.text, fontFamily: font }}>
             Situation Monitor
           </span>
         </div>
+        {detections.length > 0 && (
+          <span style={{
+            fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 100,
+            background: SEVERITY[detections[0].severity]?.color || t.border,
+            color: '#fff',
+          }}>
+            {detections.length}
+          </span>
+        )}
       </div>
 
-      {/* Macro rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: t.textSecondary, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: t.red }}>AI Bubble</span>
-          <span>Mag7 = 35% S&P 500</span>
+      {/* Source health strip */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+        <SourceHealth label="flights" lastUpdate={loadTimestamps.current.flights} error={flightsError} t={t} />
+        <SourceHealth label="traffic" lastUpdate={loadTimestamps.current.traffic} error={trafficError} t={t} />
+        <SourceHealth label="seismic" lastUpdate={loadTimestamps.current.earthquakes} t={t} />
+        <SourceHealth label="events" lastUpdate={loadTimestamps.current.events} t={t} />
+      </div>
+
+      {/* Detections feed */}
+      {detections.length > 0 && (
+        <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
+          <button
+            onClick={() => setShowDetections(!showDetections)}
+            style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
+          >
+            <span>detections ({detections.length})</span>
+            <span>{showDetections ? '\u2212' : '+'}</span>
+          </button>
+          {showDetections && (
+            <div style={{ padding: '0 8px 8px', maxHeight: 220, overflowY: 'auto' }}>
+              {detections.map(d => (
+                <DetectionCard key={d.id} {...d} t={t} font={font} />
+              ))}
+            </div>
+          )}
         </div>
-        <div style={{ fontSize: 11, color: t.textSecondary, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: t.yellow }}>US Debt</span>
-          <span>$36T / 120% GDP</span>
-        </div>
-        <div style={{ fontSize: 11, color: t.textSecondary, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: t.cyan }}>BTC ETF</span>
-          <span>+$40B inflow</span>
-        </div>
-        <div style={{ fontSize: 11, color: t.textSecondary, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: t.green }}>Gold CB</span>
-          <span>+1,037t reserves</span>
-        </div>
+      )}
+
+      {/* Macro pulse strip */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+        {[
+          { label: 'AI Bubble', value: 'Mag7 = 35% S&P', color: t.red },
+          { label: 'US Debt', value: '$36T / 120% GDP', color: t.yellow },
+          { label: 'BTC ETF', value: '+$40B inflow', color: t.cyan },
+          { label: 'Gold CB', value: '+1,037t reserves', color: t.green },
+        ].map(m => (
+          <span key={m.label} style={{
+            fontSize: 9, padding: '2px 6px', borderRadius: 4,
+            background: `${m.color}12`, color: m.color,
+            fontWeight: 600, whiteSpace: 'nowrap',
+          }}>
+            {m.label}: {m.value}
+          </span>
+        ))}
       </div>
 
       {sim && (
@@ -158,7 +373,7 @@ export default function SituationMonitor({
           style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
         >
           <span>polymarket edges ({pmEdges.length})</span>
-          <span>{showPmEdges ? '−' : '+'}</span>
+          <span>{showPmEdges ? '\u2212' : '+'}</span>
         </button>
         {showPmEdges && (
           <div style={{ padding: '0 12px 12px', maxHeight: 180, overflowY: 'auto' }}>
@@ -192,13 +407,13 @@ export default function SituationMonitor({
       </div>
 
       {/* Trade log */}
-      <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
+      <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
         <button
           onClick={() => setShowTrades(!showTrades)}
           style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
         >
           <span>trades ({tradeExits}) &middot; stocks: {tradeExits - pmExits} &middot; PM: {pmExits}</span>
-          <span>{showTrades ? '−' : '+'}</span>
+          <span>{showTrades ? '\u2212' : '+'}</span>
         </button>
         {showTrades && (
           <div style={{ padding: '0 12px 12px', maxHeight: 160, overflow: 'auto' }}>
@@ -221,6 +436,26 @@ export default function SituationMonitor({
         )}
       </div>
 
+      {/* Event Timeline */}
+      {timelineEntries.length > 0 && (
+        <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
+          <button
+            onClick={() => setShowTimeline(!showTimeline)}
+            style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
+          >
+            <span>timeline ({timelineEntries.length})</span>
+            <span>{showTimeline ? '\u2212' : '+'}</span>
+          </button>
+          {showTimeline && (
+            <div style={{ padding: '0 12px 8px', maxHeight: 200, overflowY: 'auto' }}>
+              {timelineEntries.map((entry, i) => (
+                <TimelineEntry key={i} {...entry} t={t} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Flights + Traffic */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
@@ -234,7 +469,7 @@ export default function SituationMonitor({
           {nearbyFlights.map((f, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: `1px solid ${t.border}`, fontSize: 10 }}>
               <span style={{ fontWeight: 700, color: t.cyan, fontFamily: font }}>{f.callsign || f.icao24}</span>
-              <span style={{ color: t.textTertiary, fontFamily: font }}>{f.altitude ? `FL${Math.round(f.altitude / 100)}` : '—'}</span>
+              <span style={{ color: t.textTertiary, fontFamily: font }}>{f.altitude ? `FL${Math.round(f.altitude / 100)}` : '\u2014'}</span>
             </div>
           ))}
         </div>
@@ -258,45 +493,8 @@ export default function SituationMonitor({
               }
             </div>
           )}
-          {(traffic?.incidents ?? []).slice(0, 3).map((inc, i) => (
-            <div key={i} style={{ fontSize: 9, color: t.textTertiary, fontFamily: font, padding: '2px 0' }}>
-              {inc.type}: {inc.description || 'No details'}
-            </div>
-          ))}
         </div>
       </div>
-
-      {/* Earthquakes (significant only, M4+) */}
-      {significantQuakes.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: t.red, fontFamily: font, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Seismic ({significantQuakes.length} M4+)
-          </div>
-          {significantQuakes.slice(0, 4).map((eq, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, fontSize: 10, padding: '2px 0', fontFamily: font }}>
-              <span style={{ color: eq.mag >= 6 ? t.red : t.yellow, fontWeight: 700, minWidth: 28 }}>M{eq.mag.toFixed(1)}</span>
-              <span style={{ color: t.textSecondary }}>{eq.place}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Global events panel */}
-      {events.length > 0 && (
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: t.textSecondary, fontFamily: font, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Global Events
-          </div>
-          <div style={{ maxHeight: 100, overflowY: 'auto' }}>
-            {events.slice(0, 6).map((ev, i) => (
-              <div key={i} style={{ fontSize: 9, color: t.textTertiary, fontFamily: font, padding: '2px 0', borderBottom: `1px solid ${t.border}`, lineHeight: 1.4 }}>
-                <span style={{ color: t.textSecondary }}>{ev.country ? `[${ev.country}] ` : ''}</span>
-                {ev.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
     </Card>
   );

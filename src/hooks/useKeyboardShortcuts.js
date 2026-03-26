@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 const SHORTCUTS = [
   { key: '?', description: 'Toggle this help overlay' },
   { key: 'Escape', description: 'Close overlays / panels' },
+  { key: '\u2318K', description: 'Command bar (search everything)' },
+  { key: '1-5', description: 'Switch tabs (Markets, Portfolio, Situation, People, Settings)' },
   { key: 'f', description: 'Open Finance Panel' },
   { key: 's', description: 'Open Situation Monitor' },
   { key: 'm', description: 'Toggle map controls' },

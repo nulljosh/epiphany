@@ -77,7 +77,18 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{formatCurrency(price)}</div>
-        <ChangePill value={changePercent} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ChangePill value={changePercent} />
+          {Math.abs(changePercent) >= 5 && (
+            <span title="Anomaly: >5% move" style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: '#f59e0b',
+              boxShadow: '0 0 4px rgba(245,158,11,0.6)',
+              display: 'inline-block',
+              animation: 'pulse-anomaly 1.8s infinite',
+            }} />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -165,6 +176,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
+      <style>{`@keyframes pulse-anomaly { 0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)} 70%{box-shadow:0 0 0 8px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }`}</style>
       {/* Market status + Search + Sort */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />

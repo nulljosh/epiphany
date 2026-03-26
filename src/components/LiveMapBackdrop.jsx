@@ -512,6 +512,73 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
   }, [center.lat, center.lon, payload, mapLoaded]);
 
+  // Heatmap layer -- density visualization of all events/incidents
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapLoaded) return;
+
+    const features = [];
+    const addPoint = (lat, lon, weight = 1) => {
+      if (lat == null || lon == null) return;
+      features.push({ type: 'Feature', properties: { weight }, geometry: { type: 'Point', coordinates: [lon, lat] } });
+    };
+
+    payload.incidents.forEach(i => addPoint(i.lat, i.lon, 0.6));
+    payload.trafficIncidents.forEach(i => addPoint(i.position?.lat, i.position?.lon, 0.5));
+    payload.earthquakes.forEach(e => addPoint(e.lat, e.lon, Math.min((e.mag || 1) / 5, 1)));
+    payload.events.forEach(ev => {
+      const kw = geoKeywordMatch(ev.title);
+      if (kw) addPoint(kw.lat, kw.lon, 0.4);
+    });
+    payload.newsArticles.forEach(a => {
+      if (a.lat != null) addPoint(a.lat, a.lon, 0.3);
+      else { const kw = geoKeywordMatch(a.title); if (kw) addPoint(kw.lat, kw.lon, 0.3); }
+    });
+
+    const geojson = { type: 'FeatureCollection', features };
+
+    try {
+      if (map.getSource('heatmap-source')) {
+        map.getSource('heatmap-source').setData(geojson);
+      } else {
+        map.addSource('heatmap-source', { type: 'geojson', data: geojson });
+        map.addLayer({
+          id: 'heatmap-layer',
+          type: 'heatmap',
+          source: 'heatmap-source',
+          paint: {
+            'heatmap-weight': ['get', 'weight'],
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 12, 3],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 8, 12, 30],
+            'heatmap-opacity': 0.6,
+            'heatmap-color': [
+              'interpolate', ['linear'], ['heatmap-density'],
+              0, 'rgba(0,0,0,0)',
+              0.2, 'rgba(34,211,238,0.3)',
+              0.4, 'rgba(59,130,246,0.5)',
+              0.6, 'rgba(245,158,11,0.6)',
+              0.8, 'rgba(239,68,68,0.7)',
+              1, 'rgba(239,68,68,0.9)',
+            ],
+          },
+        });
+      }
+    } catch {}
+
+    return undefined;
+  }, [payload, mapLoaded]);
+
+  // Toggle heatmap visibility
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    try {
+      if (map.getLayer('heatmap-layer')) {
+        map.setLayoutProperty('heatmap-layer', 'visibility', mapLayers?.heatmap ? 'visible' : 'none');
+      }
+    } catch {}
+  }, [mapLayers?.heatmap]);
+
   // Toggle marker visibility when layers change (no teardown/recreate)
   useEffect(() => {
     for (const marker of markersRef.current) {

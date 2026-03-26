@@ -26,6 +26,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import Settings from './components/Settings';
 import MarketsPanel from './components/MarketsPanel';
 import PeoplePanel from './components/PeoplePanel';
+import CommandBar from './components/CommandBar';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -170,7 +171,7 @@ export default function App() {
     return resolveAutoTheme() === 'dark';
   });
   const [activeTab, setActiveTab] = useState('situation');
-  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true });
+  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false });
   const mapInstanceRef = useRef(null);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
@@ -198,18 +199,38 @@ export default function App() {
     setActiveTab(nextTab);
     setDesktopPanelOpen(true);
   }, [activeTab]);
-  // Escape key dismisses mobile panel
+  // Global keyboard shortcuts
   useEffect(() => {
-    if (!mobilePanelOpen && !mobileTabsOpen && !desktopPanelOpen) return;
     const handler = (e) => {
-      if (e.key !== 'Escape') return;
-      setMobilePanelOpen(false);
-      setMobileTabsOpen(false);
-      setDesktopPanelOpen(false);
+      // Cmd+K / Ctrl+K -> command bar
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandBarOpen(prev => !prev);
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (commandBarOpen) { setCommandBarOpen(false); return; }
+        setMobilePanelOpen(false);
+        setMobileTabsOpen(false);
+        setDesktopPanelOpen(false);
+        return;
+      }
+      // Skip shortcuts when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      // Number keys 1-5 switch tabs
+      const numKey = parseInt(e.key);
+      if (numKey >= 1 && numKey <= 5) {
+        const tabs = ['markets', 'portfolio', 'situation', 'people', 'settings'];
+        const tab = tabs[numKey - 1];
+        setActiveTab(tab);
+        if (isMobileNav) setMobilePanelOpen(true);
+        else setDesktopPanelOpen(true);
+        return;
+      }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [desktopPanelOpen, mobilePanelOpen, mobileTabsOpen]);
+  }, [commandBarOpen, isMobileNav]);
   const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -285,6 +306,7 @@ export default function App() {
   const { watchlist, addSymbol, removeSymbol, toggleSymbol } = useWatchlist(user);
   const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts(user);
   const [showAlerts, setShowAlerts] = useState(false);
+  const [commandBarOpen, setCommandBarOpen] = useState(false);
   const weather = useWeather();
 
   // Fibonacci levels from $1 to $10T
@@ -1432,6 +1454,7 @@ const reset = useCallback(() => {
                 pmExits={pmExits}
                 mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
                 mapLayers={mapLayers}
+                alerts={alerts}
               />
             )}
             {activeTab === 'people' && (
@@ -1551,6 +1574,41 @@ const reset = useCallback(() => {
         <a href="https://github.com/nulljosh/monica" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
         <a href="https://github.com/nulljosh/monica/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
       </footer>
+
+      <CommandBar
+        open={commandBarOpen}
+        onClose={() => setCommandBarOpen(false)}
+        stocks={stocks}
+        markets={markets}
+        t={t}
+        font={font}
+        onSelectStock={(sym) => {
+          setActiveTab('markets');
+          if (isMobileNav) setMobilePanelOpen(true);
+          else setDesktopPanelOpen(true);
+        }}
+        onSelectCity={(city) => {
+          mapInstanceRef.current?.flyTo({ center: [city.lon, city.lat], zoom: 11, duration: 1200 });
+        }}
+        onSelectMarket={(market) => {
+          const slug = market.eventSlug || market.slug;
+          if (slug) window.open(`https://polymarket.com/event/${slug}`, '_blank');
+        }}
+        onSelectPeople={(query) => {
+          setActiveTab('people');
+          if (isMobileNav) setMobilePanelOpen(true);
+          else setDesktopPanelOpen(true);
+        }}
+        onCommand={(cmd) => {
+          if (cmd.action === 'toggleDark') setDark(d => !d);
+          if (cmd.action === 'toggleLayer') setMapLayers(l => ({ ...l, [cmd.layer]: !l[cmd.layer] }));
+          if (cmd.action === 'tab') {
+            setActiveTab(cmd.tab);
+            if (isMobileNav) setMobilePanelOpen(true);
+            else setDesktopPanelOpen(true);
+          }
+        }}
+      />
 
       {showHelp && (
         <div onClick={() => setShowHelp(false)} style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>

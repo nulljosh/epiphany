@@ -121,12 +121,23 @@ const Ticker = memo(({ items, theme }) => {
       <span style={{ fontWeight: 600 }}>{item.name}</span>
       <span>${formatPrice(item.price || 0)}</span>
       <span style={{ color: (item.change || 0) >= 0 ? theme.green : theme.red }}>
-        {(item.change || 0) >= 0 ? '▲' : '▼'}{Math.abs(item.change || 0).toFixed(2)}%
+        {(item.change || 0) >= 0 ? '\u25B2' : '\u25BC'}{Math.abs(item.change || 0).toFixed(2)}%
       </span>
+      {Math.abs(item.change || 0) >= 5 && (
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%',
+          background: '#f59e0b',
+          boxShadow: '0 0 0 0 rgba(245,158,11,0.5)',
+          animation: 'pulse-amber-tick 1.8s infinite',
+          display: 'inline-block', marginLeft: 2, verticalAlign: 'middle',
+        }} />
+      )}
     </a>
   );
 
   return (
+    <>
+    <style>{`@keyframes pulse-amber-tick { 0%{box-shadow:0 0 0 0 rgba(245,158,11,.5)} 70%{box-shadow:0 0 0 6px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }`}</style>
     <div
       className="ticker-container"
       onPointerDown={handlePointerDown}
@@ -180,6 +191,7 @@ const Ticker = memo(({ items, theme }) => {
         </div>
       </div>
     </div>
+    </>
   );
 }, (prevProps, nextProps) => {
   if (prevProps.items.length !== nextProps.items.length) return false;

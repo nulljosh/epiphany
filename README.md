@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
-# Monica
-![version](https://img.shields.io/badge/version-v2.8.0-blue)
+# Monica.
+![version](https://img.shields.io/badge/version-v2.9.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -9,11 +9,14 @@ Personal intelligence platform. Map, markets, and people -- Palantir for regular
 
 ## Features
 
-- **Map** -- MapLibre GL, geolocation, dark/light tiles, city hubs
+- **Map** -- MapLibre GL, geolocation, dark/light tiles, city hubs, heat map overlay
 - **Data layers** -- Flights, traffic, earthquakes, weather, GDELT news, Polymarket
+- **Command bar** -- Cmd+K universal search across stocks, cities, markets, people, commands
+- **Situation Monitor** -- Detection cards with severity levels, source health indicators, event timeline
 - **Trading simulator** -- 167 assets, Kelly sizing, Fibonacci levels, PnL
 - **Portfolio** -- Holdings, budgets, debt payoff, spending analysis (PDF upload), income overlays, GST/HST credit tracking
-- **Ticker bar** -- Live scrolling prices
+- **Anomaly detection** -- Auto-flags >5% movers, volume spikes, spending outliers
+- **Ticker bar** -- Live scrolling prices with anomaly badges
 - **Auth + billing** -- bcrypt/KV sessions, Stripe (Free/$20/$50), Apple Pay
 - **PWA** -- Offline service worker
 - **Companions** -- monica-ios, monica-macos
@@ -50,6 +53,16 @@ Third pillar of Monica alongside Map and Markets. Search anyone by name and get 
 - [ ] macOS companion feature parity
 
 ## Changelog
+
+### v2.9.0 (2026-03-26)
+- Command bar (Cmd+K) -- universal search across stocks, cities, prediction markets, people, commands
+- Situation Monitor upgraded to Maven-style detection feed with severity cards (CRITICAL/ELEVATED/MONITOR)
+- Source health indicators (flights, traffic, seismic, events freshness)
+- Event timeline -- chronological feed merged from all data sources
+- Heat map layer on map (toggleable density visualization of all events/incidents)
+- Anomaly badges on Ticker and Markets panel for >5% movers
+- Macro pulse strip (compact macro indicators)
+- Keyboard shortcuts: 1-5 tab switching, Cmd+K command bar
 
 ### v2.8.0 (2026-03-26)
 - GST/HST credit tracking in portfolio
