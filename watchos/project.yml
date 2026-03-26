@@ -1,0 +1,28 @@
+name: MonicaWatch
+options:
+  bundleIdPrefix: com.heyitsmejosh
+  deploymentTarget:
+    watchOS: "10.0"
+settings:
+  DEVELOPMENT_TEAM: QMM486NPYC
+  SWIFT_VERSION: "6.0"
+  MARKETING_VERSION: "1.0.0"
+  CURRENT_PROJECT_VERSION: "1"
+  CODE_SIGN_STYLE: Automatic
+targets:
+  MonicaWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: .
+        excludes:
+          - "*.xcodeproj"
+          - "*.yml"
+          - "*.md"
+          - "*.svg"
+    settings:
+      INFOPLIST_FILE: ""
+      GENERATE_INFOPLIST_FILE: YES
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.watchos
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      PRODUCT_NAME: Monica
