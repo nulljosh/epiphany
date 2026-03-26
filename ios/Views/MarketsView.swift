@@ -810,12 +810,17 @@ private struct MarketItemDetailView: View {
     }
 
     private func loadRelatedNews() async {
-        guard let allNews = try? await MonicaAPI.shared.fetchNews() else { return }
-        let nameLower = item.name.lowercased()
-        let symbolLower = item.symbol.lowercased()
-        relatedNews = allNews.filter { article in
-            let titleLower = article.title.lowercased()
-            return titleLower.contains(nameLower) || titleLower.contains(symbolLower)
+        do {
+            async let symbolNews = MonicaAPI.shared.fetchStockNews(query: item.symbol)
+            async let nameNews = MonicaAPI.shared.fetchStockNews(query: item.name)
+            let (bySymbol, byName) = try await (symbolNews, nameNews)
+            relatedNews = bySymbol.isEmpty ? byName : bySymbol
+        } catch {
+            guard let allNews = try? await MonicaAPI.shared.fetchNews() else { return }
+            let terms = [item.symbol.lowercased(), item.name.lowercased()]
+            relatedNews = allNews.filter { article in
+                terms.contains { article.title.lowercased().contains($0) }
+            }
         }
     }
 }

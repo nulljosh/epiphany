@@ -164,6 +164,14 @@ function getCacheEntry(query) {
   return entry;
 }
 
+const SUGGESTION_POOL = [
+  'Elon Musk', 'Taylor Swift', 'Justin Trudeau',
+  'Mark Zuckerberg', 'Beyonce', 'Sam Altman',
+  'Tim Cook', 'Rihanna', 'Jensen Huang',
+  'LeBron James', 'Drake', 'Satya Nadella',
+  'Oprah Winfrey', 'Jeff Bezos', 'Alexandria Ocasio-Cortez',
+];
+
 export default function PeoplePanel({ dark, t }) {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState(null);
@@ -172,9 +180,25 @@ export default function PeoplePanel({ dark, t }) {
   const [recentSearches, setRecentSearches] = useState(getRecent);
   const [savedProfiles, setSavedProfiles] = useState(getSaved);
   const [fromCache, setFromCache] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(0);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSuggestionIndex(prev => (prev + 1) % SUGGESTION_POOL.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentSuggestions = (0, () => {
+    const out = [];
+    for (let i = 0; i < 4; i++) {
+      out.push(SUGGESTION_POOL[(suggestionIndex + i) % SUGGESTION_POOL.length]);
+    }
+    return out;
+  })();
 
   const fetchPerson = useCallback(async (query, { background = false } = {}) => {
     if (!query.trim()) return;
@@ -616,8 +640,8 @@ export default function PeoplePanel({ dark, t }) {
               </div>
               <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Search for anyone</div>
               <div style={{ fontSize: 12, marginBottom: 14 }}>Find profiles, social links, and public info</div>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {['Elon Musk', 'Taylor Swift', 'Justin Trudeau'].map(name => (
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', transition: 'opacity 0.3s ease' }}>
+                {currentSuggestions.map(name => (
                   <button
                     key={name}
                     onClick={() => { setSearch(name); fetchPerson(name); }}

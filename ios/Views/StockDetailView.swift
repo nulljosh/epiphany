@@ -291,19 +291,16 @@ struct StockDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            let stockNews = try await MonicaAPI.shared.fetchStockNews(query: stock.symbol)
-            if !stockNews.isEmpty {
-                relatedNews = stockNews
-                return
-            }
-            relatedNews = try await MonicaAPI.shared.fetchStockNews(query: stock.name)
+            async let symbolNews = MonicaAPI.shared.fetchStockNews(query: stock.symbol)
+            async let nameNews = MonicaAPI.shared.fetchStockNews(query: stock.name)
+            let (bySymbol, byName) = try await (symbolNews, nameNews)
+            relatedNews = bySymbol.isEmpty ? byName : bySymbol
         } catch {
             do {
                 let allNews = try await MonicaAPI.shared.fetchNews()
                 let terms = [stock.symbol.lowercased(), stock.name.lowercased()]
                 relatedNews = allNews.filter { article in
-                    let text = article.title.lowercased()
-                    return terms.contains { text.contains($0) }
+                    terms.contains { article.title.lowercased().contains($0) }
                 }
             } catch {
                 newsError = true

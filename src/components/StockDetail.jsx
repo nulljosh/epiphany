@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 
@@ -108,8 +108,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
   const changeColor = positive ? '#30D158' : '#FF453A';
   const gradientId = `stock-gradient-${symbol}`;
 
-  // Stats grid data
-  const stats = [
+  const stats = useMemo(() => [
     { label: 'Open', value: d.open ? formatCurrency(d.open) : '--' },
     { label: 'Prev Close', value: d.prevClose ? formatCurrency(d.prevClose) : '--' },
     { label: 'Day Range', value: (d.low && d.high) ? `${formatCurrency(d.low)} - ${formatCurrency(d.high)}` : '--' },
@@ -120,7 +119,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
     { label: 'Market Cap', value: formatMarketCap(d.marketCap) },
     { label: 'P/E', value: d.peRatio != null ? d.peRatio.toFixed(2) : '--' },
     { label: 'EPS', value: d.eps != null ? `$${d.eps.toFixed(2)}` : '--' },
-  ];
+  ], [d, stock]);
 
   const glass = {
     background: t.glass,

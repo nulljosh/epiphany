@@ -200,3 +200,64 @@ describe('news API handler', () => {
     expect(call2.data().meta.status).toBe('cache');
   });
 });
+
+describe('stock news via ?q= param', () => {
+
+  it('returns articles array for GET with ?q=AAPL', async () => {
+    global.fetch = vi.fn(() => Promise.resolve(mockOk({
+      articles: [makeGdeltArticle({ title: 'Apple Stock Rises on Earnings Report' })],
+    })));
+
+    const { req, res, status, data } = makeReqRes({ q: 'AAPL', category: undefined });
+    await handler(req, res);
+
+    expect(status()).toBe(200);
+    expect(data()).toHaveProperty('articles');
+    expect(data().articles).toBeInstanceOf(Array);
+    expect(data().articles.length).toBeGreaterThan(0);
+    expect(data().meta.status).toBe('live');
+  });
+
+  it('falls through to normal category handling when q is absent', async () => {
+    global.fetch = vi.fn(() => Promise.resolve(mockOk({
+      articles: [makeGdeltArticle()],
+    })));
+
+    const { req, res, status, data } = makeReqRes({ category: uniqueCategory() });
+    await handler(req, res);
+
+    expect(status()).toBe(200);
+    expect(data()).toHaveProperty('articles');
+    // Verify the call used category-based flow (no stock: prefix in cache)
+    expect(data().meta.status).toBe('live');
+  });
+
+  it('returns empty articles array when both sources return nothing', async () => {
+    // Both GDELT and Google News return empty -- Promise.allSettled handles gracefully
+    global.fetch = vi.fn(() => Promise.resolve(mockOk({ articles: [] })));
+
+    const { req, res, status, data } = makeReqRes({ q: `EMPTY${++nextCat}`, category: undefined });
+    await handler(req, res);
+
+    expect(status()).toBe(200);
+    expect(data().articles).toEqual([]);
+  });
+
+  it('caches stock news results on repeated queries', async () => {
+    const ticker = `CACHE${++nextCat}`;
+    global.fetch = vi.fn(() => Promise.resolve(mockOk({
+      articles: [makeGdeltArticle({ title: 'Stock Cache Test Article Here' })],
+    })));
+
+    const call1 = makeReqRes({ q: ticker, category: undefined });
+    await handler(call1.req, call1.res);
+    expect(call1.status()).toBe(200);
+    const fetchCountAfterFirst = global.fetch.mock.calls.length;
+
+    const call2 = makeReqRes({ q: ticker, category: undefined });
+    await handler(call2.req, call2.res);
+    expect(call2.status()).toBe(200);
+    expect(global.fetch).toHaveBeenCalledTimes(fetchCountAfterFirst);
+    expect(call2.data().meta.status).toBe('cache');
+  });
+});

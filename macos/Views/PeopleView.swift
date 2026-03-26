@@ -6,8 +6,21 @@ struct PeopleView: View {
     @State private var recentSearches: [String] = []
     @State private var isSearching = false
     @State private var error: String?
+    @State private var suggestionIndex = 0
 
     private let recentsKey = "people.recentSearches"
+    private let suggestionPool = [
+        "Elon Musk", "Taylor Swift", "Justin Trudeau",
+        "Mark Zuckerberg", "Beyonce", "Sam Altman",
+        "Tim Cook", "Rihanna", "Jensen Huang",
+        "LeBron James", "Drake", "Satya Nadella",
+        "Oprah Winfrey", "Jeff Bezos", "Alexandria Ocasio-Cortez"
+    ]
+
+    private var currentSuggestions: [String] {
+        let count = suggestionPool.count
+        return (0..<4).map { suggestionPool[(suggestionIndex + $0) % count] }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -239,6 +252,29 @@ struct PeopleView: View {
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
+
+                        HStack(spacing: 8) {
+                            ForEach(currentSuggestions, id: \.self) { name in
+                                Button {
+                                    query = name
+                                    performSearch()
+                                } label: {
+                                    Text(name)
+                                        .font(.caption.weight(.medium))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(.ultraThinMaterial, in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .animation(.easeInOut, value: suggestionIndex)
+                        .onAppear {
+                            Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+                                suggestionIndex = (suggestionIndex + 1) % suggestionPool.count
+                            }
+                        }
+
                         Spacer()
                     }
                     .frame(maxHeight: .infinity)

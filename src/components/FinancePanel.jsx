@@ -4,6 +4,7 @@ import { usePortfolio } from '../hooks/usePortfolio';
 import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
 import { normalizeSpendingMonths } from '../utils/financeData';
 import { buildSpendingForecast } from '../utils/spendingForecast';
+import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 
 const TABS = ['portfolio', 'budget', 'spending', 'dashboard'];
@@ -247,26 +248,7 @@ function StackedBarChart({ spending, t }) {
   );
 }
 
-function debtMonthsToPayoff(balance, minPayment, rate) {
-  if (balance <= 0) return 0;
-  if (minPayment <= 0) return Infinity;
-  if (balance <= minPayment) return 0;
-  const monthlyRate = (rate || 0) / 100 / 12;
-  if (monthlyRate <= 0) return balance / minPayment;
-  const ratio = balance * monthlyRate / minPayment;
-  if (ratio >= 1) return Infinity;
-  return -Math.log(1 - ratio) / Math.log(1 + monthlyRate);
-}
-
-function debtPayoffLabel(months) {
-  if (!isFinite(months)) return 'n/a';
-  if (months < 0.1) return 'now';
-  const days = months * 30.44;
-  if (days < 30) return `${Math.round(days)}d`;
-  return `~${Math.round(months)}mo`;
-}
-
-function DebtPayoffProjection({ debt, surplus, t }) {
+function DebtPayoffProjection({ debt, t }) {
   if (!debt || debt.length === 0) return null;
 
   const sorted = [...debt].sort((a, b) => a.balance - b.balance);
@@ -1166,7 +1148,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             {debt.length > 0 && (
               <>
                 <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-                  <DebtPayoffProjection debt={debt} surplus={surplus} t={t} />
+                  <DebtPayoffProjection debt={debt} t={t} />
                 </Card>
               </>
             )}

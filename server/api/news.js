@@ -5,8 +5,17 @@ const GDELT_BASE = 'https://api.gdeltproject.org/api/v2/doc/doc';
 const CACHE_TTL = 5 * 60 * 1000;
 const DEDUP_THRESHOLD = 0.6;
 
-// Cache keyed by "query:lat:lon"
+// Cache keyed by "query:lat:lon", capped at 100 entries
+const MAX_CACHE = 100;
 const cache = new Map();
+
+function cacheSet(key, value) {
+  if (cache.size >= MAX_CACHE) {
+    const oldest = cache.keys().next().value;
+    cache.delete(oldest);
+  }
+  cache.set(key, value);
+}
 
 function buildMeta(status, extra = {}) {
   return {
@@ -296,20 +305,20 @@ async function handleStockNews(req, res, query) {
     const articles = dedup([...gdeltArticles, ...googleArticles]).filter(a => isEnglishTitle(a.title));
 
     const data = { articles, meta: buildMeta('live') };
-    cache.set(cacheKey, { ts: Date.now(), data });
+    cacheSet(cacheKey, { ts: Date.now(), data });
     res.setHeader('Cache-Control', 's-maxage=300');
     return res.status(200).json(data);
   } catch (err) {
-    // Fallback to Google News only
-    const googleArticles = await fetchGoogleNews([query, 'stock'], null, null);
-    const articles = dedup(googleArticles).filter(a => isEnglishTitle(a.title));
-
-    if (articles.length > 0) {
-      const data = { articles, meta: buildMeta('live', { degraded: true }) };
-      cache.set(cacheKey, { ts: Date.now(), data });
-      res.setHeader('Cache-Control', 's-maxage=300');
-      return res.status(200).json(data);
-    }
+    try {
+      const googleArticles = await fetchGoogleNews([query, 'stock'], null, null);
+      const articles = dedup(googleArticles).filter(a => isEnglishTitle(a.title));
+      if (articles.length > 0) {
+        const data = { articles, meta: buildMeta('live', { degraded: true }) };
+        cacheSet(cacheKey, { ts: Date.now(), data });
+        res.setHeader('Cache-Control', 's-maxage=300');
+        return res.status(200).json(data);
+      }
+    } catch { /* Google News also failed */ }
 
     return res.status(200).json({ articles: [], meta: buildMeta('empty') });
   }
@@ -384,7 +393,7 @@ export default async function handler(req, res) {
       articles,
       meta: buildMeta('live'),
     };
-    cache.set(cacheKey, { ts: Date.now(), data });
+    cacheSet(cacheKey, { ts: Date.now(), data });
     res.setHeader('Cache-Control', 's-maxage=300');
     return res.status(200).json(data);
   } catch (err) {
@@ -403,7 +412,7 @@ export default async function handler(req, res) {
           warning: 'GDELT unavailable; serving Google News results',
         }),
       };
-      cache.set(cacheKey, { ts: Date.now(), data });
+      cacheSet(cacheKey, { ts: Date.now(), data });
       res.setHeader('Cache-Control', 's-maxage=300');
       return res.status(200).json(data);
     }
