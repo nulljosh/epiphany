@@ -1,5 +1,4 @@
 import SwiftUI
-import Charts
 import Observation
 
 struct MacroView: View {
@@ -134,17 +133,6 @@ private struct MacroIndicatorRow: View {
     }
 
     private func parseDate(_ text: String) -> Date? {
-        let withFractions = ISO8601DateFormatter()
-        withFractions.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = withFractions.date(from: text) { return date }
-
-        let standard = ISO8601DateFormatter()
-        standard.formatOptions = [.withInternetDateTime]
-        if let date = standard.date(from: text) { return date }
-
-        let dateOnly = DateFormatter()
-        dateOnly.locale = Locale(identifier: "en_US_POSIX")
-        dateOnly.dateFormat = "yyyy-MM-dd"
-        return dateOnly.date(from: text)
+        DateParsing.parse(text)
     }
 }

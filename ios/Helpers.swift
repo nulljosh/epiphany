@@ -86,6 +86,35 @@ enum CurrencyFormatter {
 }
 
 
+// MARK: - Date Parsing
+
+enum DateParsing {
+    private static nonisolated(unsafe) let isoFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static nonisolated(unsafe) let isoStandard: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private static let dateOnly: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    static func parse(_ text: String) -> Date? {
+        isoFractional.date(from: text)
+            ?? isoStandard.date(from: text)
+            ?? dateOnly.date(from: text)
+    }
+}
+
 // MARK: - Haptics
 
 @MainActor

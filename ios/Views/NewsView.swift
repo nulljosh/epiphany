@@ -159,8 +159,6 @@ private struct NewsRow: View {
     }
 
     private func parseDate(_ text: String) -> Date? {
-        let standard = ISO8601DateFormatter()
-        standard.formatOptions = [.withInternetDateTime]
-        return standard.date(from: text)
+        DateParsing.parse(text)
     }
 }

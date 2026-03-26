@@ -7,12 +7,14 @@ enum Indicators {
     }
 
     static func sma(prices: [(Date, Double)], period: Int) -> [DataPoint] {
-        guard prices.count >= period else { return [] }
+        guard prices.count >= period, period > 0 else { return [] }
         var result: [DataPoint] = []
-        for i in (period - 1)..<prices.count {
-            let slice = prices[(i - period + 1)...i]
-            let avg = slice.map(\.1).reduce(0, +) / Double(period)
-            result.append(DataPoint(date: prices[i].0, value: avg))
+        result.reserveCapacity(prices.count - period + 1)
+        var sum = prices[0..<period].map(\.1).reduce(0, +)
+        result.append(DataPoint(date: prices[period - 1].0, value: sum / Double(period)))
+        for i in period..<prices.count {
+            sum += prices[i].1 - prices[i - period].1
+            result.append(DataPoint(date: prices[i].0, value: sum / Double(period)))
         }
         return result
     }
