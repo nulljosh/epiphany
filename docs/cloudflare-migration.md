@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Cloudflare can be a better daily workflow than Vercel for Opticon, but only if you stop treating every git push like a production deploy.
+Cloudflare can be a better daily workflow than Vercel for Monica, but only if you stop treating every git push like a production deploy.
 
 Important nuance:
 
@@ -158,4 +158,4 @@ If you want the fastest loop, use:
 
 ## Reusing this in other repos
 
-For the short version, read [docs/cloudflare-starter.md](/Users/joshua/Documents/Code/opticon/docs/cloudflare-starter.md).
+For the short version, read [docs/cloudflare-starter.md](/Users/joshua/Documents/Code/monica/docs/cloudflare-starter.md).

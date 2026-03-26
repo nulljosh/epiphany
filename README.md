@@ -16,7 +16,7 @@ Personal intelligence platform. Map, markets, and people -- Palantir for regular
 - **Ticker bar** -- Live scrolling prices
 - **Auth + billing** -- bcrypt/KV sessions, Stripe (Free/$20/$50), Apple Pay
 - **PWA** -- Offline service worker
-- **Companions** -- opticon-ios, opticon-macos
+- **Companions** -- monica-ios, monica-macos
 
 ## Run
 

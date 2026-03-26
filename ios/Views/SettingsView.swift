@@ -257,7 +257,7 @@ struct SettingsView: View {
 
     private var avatarFileURL: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        return docs.appendingPathComponent("opticon_avatar.jpg")
+        return docs.appendingPathComponent("monica_avatar.jpg")
     }
 
     private func saveAvatarData(_ data: Data) {

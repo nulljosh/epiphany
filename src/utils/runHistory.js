@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'opticon_run_history';
+const STORAGE_KEY = 'monica_run_history';
 const MAX_RUNS = 50;
 
 export function saveRun(runData) {

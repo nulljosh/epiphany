@@ -107,7 +107,7 @@ private struct MacroIndicatorRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(indicator.name)
@@ -144,7 +144,7 @@ private struct MacroIndicatorRow: View {
                 .frame(height: 72)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
     }
 
     private func parseDate(_ text: String) -> Date? {

@@ -1,4 +1,4 @@
-# Opticon macOS
+# Monica macOS
 
 v0.5.0
 
@@ -14,8 +14,8 @@ v0.5.0
 ## Run
 ```bash
 xcodegen generate
-xcodebuild -project Opticon.xcodeproj -scheme Opticon -destination 'platform=macOS' build
-xcodebuild test -project Opticon.xcodeproj -scheme OpticonTests -destination 'platform=macOS'
+xcodebuild -project Monica.xcodeproj -scheme Monica -destination 'platform=macOS' build
+xcodebuild test -project Monica.xcodeproj -scheme MonicaTests -destination 'platform=macOS'
 ```
 
 ## Key Files
@@ -24,7 +24,7 @@ xcodebuild test -project Opticon.xcodeproj -scheme OpticonTests -destination 'pl
 - `Views/MarketsView.swift` -- Sortable table with search
 - `Views/PortfolioView.swift` -- Spending forecast, income scenarios, debt projections
 - `Models/AppState.swift` -- @Observable shared state
-- `API/OpticonAPI.swift` -- Backend requests
+- `API/MonicaAPI.swift` -- Backend requests
 - `Views/StockDetailView.swift` -- Stock detail with chart scrub, stats grid, related news
 - `Services/TallyService.swift` -- Tally API client + keychain
 - `Models/SituationData.swift` -- Map data models (earthquakes, flights, crime, traffic, events)

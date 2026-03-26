@@ -1,4 +1,4 @@
-// Opticon API Gateway - single serverless function routing
+// Monica API Gateway - single serverless function routing
 import auth from '../server/api/auth.js';
 import commodities from '../server/api/commodities.js';
 import crime from '../server/api/crime.js';

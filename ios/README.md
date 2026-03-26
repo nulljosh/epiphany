@@ -35,7 +35,7 @@ Basically: Palantir for normal people.
 ## Changelog
 
 ### v1.0.0 "Monica" (2026-03-25)
-- Renamed from Opticon to Monica
+- Rebranded from Opticon to Monica
 - New white app icon (Wealthsimple-inspired M + chart mark)
 - Map events fix: local events now properly show on map (lng coordinate decode)
 - Added Ticketmaster as event source, improved OSM venue queries

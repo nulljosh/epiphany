@@ -14,7 +14,7 @@ Personal intelligence platform. Map + markets + local data. Becoming a public da
 - Stay logged in between launches
 - Portrait-only, UIRequiresFullScreen
 - No emojis
-- Internal class names still use "Opticon" (OpticonAPI, etc.) -- only branding is "Monica"
+- Internal class names use MonicaAPI, MonicaApp
 
 ## Run
 
@@ -26,7 +26,7 @@ xcodebuild -scheme Monica -destination 'platform=iOS Simulator,name=iPhone 17 Pr
 ## Key Files
 
 - `ContentView.swift` -- tabs
-- `API/OpticonAPI.swift` -- backend requests
+- `API/MonicaAPI.swift` -- backend requests
 - `Models/AppState.swift` -- shared state
 - `Views/SituationView.swift` -- map with 7+ data layers
 - `Models/SituationData.swift` -- map data models

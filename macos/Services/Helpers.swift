@@ -61,8 +61,8 @@ enum CurrencyFormatter {
 // MARK: - Keychain
 
 enum KeychainHelper {
-    private static let service = "com.heyitsmejosh.opticon"
-    static let savedEmailKey = "opticon_saved_email"
+    private static let service = "com.heyitsmejosh.monica"
+    static let savedEmailKey = "monica_saved_email"
 
     static func save(account: String, password: String) {
         let data = Data(password.utf8)

@@ -1,12 +1,12 @@
-// Opticon Kelly Criterion Momentum Strategy (Backtestable)
-// Ported from Opticon's trading simulator (simBenchmark.js + trading.js)
+// Monica Kelly Criterion Momentum Strategy (Backtestable)
+// Ported from Monica's trading simulator (simBenchmark.js + trading.js)
 // Pine Script v6
 //
 // This is the strategy version -- use TradingView's Strategy Tester tab
 // to backtest and see equity curve, drawdown, trade list, etc.
 
 //@version=6
-strategy("Opticon Kelly Strategy", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10, initial_capital=10000, commission_type=strategy.commission.percent, commission_value=0.1, slippage=1)
+strategy("Monica Kelly Strategy", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10, initial_capital=10000, commission_type=strategy.commission.percent, commission_value=0.1, slippage=1)
 
 // ---- Inputs ----------------------------------------------------------------
 
@@ -119,7 +119,7 @@ bgcolor(entrySignal ? color.new(color.green, 92) : na)
 if barstate.islast
     var table tbl = table.new(position.top_right, 2, 8, border_width=1)
 
-    table.cell(tbl, 0, 0, "Opticon Strategy", text_color=color.white, bgcolor=color.new(color.blue, 20), text_size=size.small)
+    table.cell(tbl, 0, 0, "Monica Strategy", text_color=color.white, bgcolor=color.new(color.blue, 20), text_size=size.small)
     table.cell(tbl, 1, 0, "", bgcolor=color.new(color.blue, 20))
 
     table.cell(tbl, 0, 1, "Total Trades", text_color=color.gray, text_size=size.tiny)

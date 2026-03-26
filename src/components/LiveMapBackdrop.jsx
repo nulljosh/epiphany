@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 const DEFAULT_CENTER = { lat: 40.7128, lon: -74.0060 };
-const LAST_GEO_KEY = 'opticon_last_geo';
+const LAST_GEO_KEY = 'monica_last_geo';
 const FRESH_GEO_MS = 30 * 60 * 1000;
 const FRESH_IP_MS = 5 * 60 * 1000;
 const GEO_DETAIL_ZOOM = 13.6;
@@ -157,7 +157,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   useEffect(() => { centerRef.current = center; }, [center]);
 
   useEffect(() => {
-    try { sawGeoGrantedRef.current = localStorage.getItem('opticon_geo_granted') === '1'; } catch { sawGeoGrantedRef.current = false; }
+    try { sawGeoGrantedRef.current = localStorage.getItem('monica_geo_granted') === '1'; } catch { sawGeoGrantedRef.current = false; }
   }, []);
 
   const persistGeo = useCallback((next, label) => {
@@ -207,7 +207,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         setLocLabel('Current location');
         setGeoState('granted');
         persistGeo(next, 'Current location');
-        try { localStorage.setItem('opticon_geo_granted', '1'); sawGeoGrantedRef.current = true; } catch {}
+        try { localStorage.setItem('monica_geo_granted', '1'); sawGeoGrantedRef.current = true; } catch {}
       },
       async (geoErr) => {
         resolved = true;
@@ -255,7 +255,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       setGeoState('granted');
       requestLocation();
       if (!sawGeoGrantedRef.current) {
-        try { localStorage.setItem('opticon_geo_granted', '1'); } catch {}
+        try { localStorage.setItem('monica_geo_granted', '1'); } catch {}
         sawGeoGrantedRef.current = true;
       }
     };

@@ -101,7 +101,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
         <div style={labelStyle}>About</div>
         <div style={{ fontSize: 13, color: t.textSecondary }}>
-          Opticon v2.3.1
+          Monica v2.3.1
         </div>
       </Card>
     </div>

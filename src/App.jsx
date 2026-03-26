@@ -163,7 +163,7 @@ export default function App() {
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
   const [dark, setDark] = useState(() => {
-    const bootTheme = typeof window !== 'undefined' ? window.__OPTICON_THEME__ : null;
+    const bootTheme = typeof window !== 'undefined' ? window.__MONICA_THEME__ : null;
     if (bootTheme === 'light' || bootTheme === 'dark') {
       return bootTheme === 'dark';
     }
@@ -325,13 +325,13 @@ export default function App() {
   // Broker state
   const DEFAULT_BROKER_CONFIG = { broker: 'ctrader', clientId: '', clientSecret: '', refreshToken: '', accountId: '', webhookUrl: '', accessToken: '' };
   const [brokerConfig, setBrokerConfig] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('opticon_broker_config')) || DEFAULT_BROKER_CONFIG; }
+    try { return JSON.parse(localStorage.getItem('monica_broker_config')) || DEFAULT_BROKER_CONFIG; }
     catch { return DEFAULT_BROKER_CONFIG; }
   });
   const [brokerConnected, setBrokerConnected] = useState(false);
   const [signalLog, setSignalLog] = useState([]);
   const [autoSend, setAutoSend] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('opticon_broker_autosend')) || false; }
+    try { return JSON.parse(localStorage.getItem('monica_broker_autosend')) || false; }
     catch { return false; }
   });
   const brokerRef = useRef(null);
@@ -1152,7 +1152,7 @@ const reset = useCallback(() => {
   };
 
   return (
-    <div className="opticon-root" style={{
+    <div className="monica-root" style={{
       height: '100dvh',
       display: 'grid',
       gridTemplateRows: 'auto auto 1fr auto',
@@ -1166,15 +1166,15 @@ const reset = useCallback(() => {
       transition: running ? 'none' : 'background-color 220ms ease, background-image 220ms ease',
     }}>
       <style>{`
-        .opticon-ticker { display: block; }
-        .opticon-header, .opticon-footer, .opticon-panel { display: none; }
-        .opticon-mobile-nav { display: flex; }
-        .opticon-root {
+        .monica-ticker { display: block; }
+        .monica-header, .monica-footer, .monica-panel { display: none; }
+        .monica-mobile-nav { display: flex; }
+        .monica-root {
           grid-template-rows: auto 1fr !important;
           grid-template-columns: 1fr !important;
         }
-        .opticon-map { grid-row: 2; grid-column: 1; }
-        .opticon-mobile-panel {
+        .monica-map { grid-row: 2; grid-column: 1; }
+        .monica-mobile-panel {
           display: none;
           position: fixed;
           bottom: 0;
@@ -1189,32 +1189,32 @@ const reset = useCallback(() => {
           transform: translateY(100%);
           transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .opticon-mobile-panel.open {
+        .monica-mobile-panel.open {
           display: block;
           transform: translateY(0);
         }
         @media (min-width: 768px) {
-          .opticon-ticker, .opticon-header, .opticon-footer { display: flex; }
-          .opticon-mobile-nav { display: none; }
-          .opticon-mobile-panel { display: none !important; }
-          .opticon-root {
+          .monica-ticker, .monica-header, .monica-footer { display: flex; }
+          .monica-mobile-nav { display: none; }
+          .monica-mobile-panel { display: none !important; }
+          .monica-root {
             grid-template-rows: auto auto 1fr auto !important;
             grid-template-columns: 1fr var(--desktop-panel-width) !important;
           }
-          .opticon-map { grid-row: 3; grid-column: 1; height: auto !important; }
-          .opticon-panel { display: block; grid-row: 3; grid-column: 2; }
+          .monica-map { grid-row: 3; grid-column: 1; height: auto !important; }
+          .monica-panel { display: block; grid-row: 3; grid-column: 2; }
         }
       `}</style>
 
       {/* Ticker */}
-      <div className="opticon-ticker" style={{ gridColumn: '1 / -1' }}>
+      <div className="monica-ticker" style={{ gridColumn: '1 / -1' }}>
         <Ticker items={tickerItems} theme={t} />
       </div>
 
       {/* Header */}
-      <header className="opticon-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>
+      <header className="monica-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>opticon</span>
+          <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>monica</span>
           <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
           <StatusBar t={t} reliability={stocksReliability} />
           <span style={{ width: 1, height: 14, background: t.border }} />
@@ -1320,14 +1320,14 @@ const reset = useCallback(() => {
       </header>
 
       {/* Map cell */}
-      <div className="opticon-map" style={{ gridColumn: isMobileNav ? '1 / -1' : '1', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+      <div className="monica-map" style={{ gridColumn: isMobileNav ? '1 / -1' : '1', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
         <LiveMapBackdrop
           dark={dark}
           mapLayers={mapLayers}
           onMapReady={handleMapReady}
         />
         {/* Floating mobile nav */}
-        <div className="opticon-mobile-nav" style={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 5, justifyContent: 'space-between', alignItems: 'flex-start', pointerEvents: 'none' }}>
+        <div className="monica-mobile-nav" style={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 5, justifyContent: 'space-between', alignItems: 'flex-start', pointerEvents: 'none' }}>
           {/* Left: tab pills (toggled) */}
           <div style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <button
@@ -1409,7 +1409,7 @@ const reset = useCallback(() => {
       </div>
 
       {/* Panel cell */}
-      <div ref={desktopPanelRef} className="opticon-panel" style={{ gridColumn: isMobileNav ? '1 / -1' : '2', overflow: 'auto', minHeight: 0 }}>
+      <div ref={desktopPanelRef} className="monica-panel" style={{ gridColumn: isMobileNav ? '1 / -1' : '2', overflow: 'auto', minHeight: 0 }}>
         {desktopPanelOpen && (
           <>
             {activeTab === 'simulator' && simulatorPanel}
@@ -1474,7 +1474,7 @@ const reset = useCallback(() => {
       {/* Mobile bottom sheet */}
       {isMobileNav && (
         <div
-          className={`opticon-mobile-panel ${mobilePanelOpen ? 'open' : ''}`}
+          className={`monica-mobile-panel ${mobilePanelOpen ? 'open' : ''}`}
           style={{
             background: t.bg,
             borderTop: `1px solid ${t.border}`,
@@ -1545,11 +1545,11 @@ const reset = useCallback(() => {
       )}
 
       {/* Footer */}
-      <footer className="opticon-footer" style={{ gridColumn: '1 / -1', padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
-        <span>&copy; 2026 Opticon</span>
-        <a href="https://github.com/nulljosh/opticon/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
-        <a href="https://github.com/nulljosh/opticon" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
-        <a href="https://github.com/nulljosh/opticon/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
+      <footer className="monica-footer" style={{ gridColumn: '1 / -1', padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
+        <span>&copy; 2026 Monica</span>
+        <a href="https://github.com/nulljosh/monica/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
+        <a href="https://github.com/nulljosh/monica" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
+        <a href="https://github.com/nulljosh/monica/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
       </footer>
 
       {showHelp && (

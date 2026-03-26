@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="/icon-192.svg">
     <!-- System fonts only -->
     <link rel="stylesheet" href="/src/design-tokens.css" />
-    <title>Opticon</title>
+    <title>Monica</title>
     <script>
       (function () {
         var hour = new Date().getHours();
@@ -22,7 +22,7 @@
           prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
         } catch (_) {}
         var theme = prefersLight ? 'light' : 'dark';
-        window.__OPTICON_THEME__ = theme;
+        window.__MONICA_THEME__ = theme;
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
         document.documentElement.style.backgroundColor = theme === 'dark' ? '#111111' : '#fafafa';

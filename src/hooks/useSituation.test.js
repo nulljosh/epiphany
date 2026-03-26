@@ -89,7 +89,7 @@ describe('useSituation', () => {
   });
 
   it('uses a fresh stored location before falling back to IP lookup', () => {
-    localStorage.setItem('opticon_last_geo', JSON.stringify({
+    localStorage.setItem('monica_last_geo', JSON.stringify({
       lat: 49.2827,
       lon: -123.1207,
       label: 'Current location',

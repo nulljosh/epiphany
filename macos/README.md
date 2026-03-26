@@ -1,11 +1,11 @@
-![Opticon macOS](icon.svg)
+![Monica macOS](icon.svg)
 
-# Opticon macOS
+# Monica macOS
 
 ![version](https://img.shields.io/badge/version-v0.5.0-blue)
 
-Native macOS companion for Opticon. MapKit map, markets table, predictions, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
-[Opticon](https://opticon.heyitsmejosh.com) | ![Architecture](architecture.svg)
+Native macOS companion for Monica. MapKit map, markets table, predictions, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
+[Monica](https://opticon.heyitsmejosh.com) | ![Architecture](architecture.svg)
 
 ## Features
 - MapKit map with 7 data layers (earthquakes, flights, incidents, weather, crime, local events, traffic)
@@ -23,7 +23,7 @@ Native macOS companion for Opticon. MapKit map, markets table, predictions, port
 ## Run
 ```bash
 xcodegen generate
-xcodebuild -project Opticon.xcodeproj -scheme Opticon -destination 'platform=macOS' build
+xcodebuild -project Monica.xcodeproj -scheme Monica -destination 'platform=macOS' build
 ```
 
 ## Roadmap

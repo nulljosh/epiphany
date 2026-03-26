@@ -57,7 +57,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error, theme: t
           color: '#fff',
           marginBottom: 8,
           marginTop: 0,
-        }}>Opticon</h1>
+        }}>Monica</h1>
         <p style={{
           fontSize: 14,
           color: '#888',

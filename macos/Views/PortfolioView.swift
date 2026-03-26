@@ -1043,7 +1043,7 @@ struct PortfolioView: View {
         guard item.balance > 0 else { return 0 }
         let payment = item.minPayment
         guard payment > 0 else { return Double.infinity }
-        if item.balance <= payment { return item.balance / payment }
+        if item.balance <= payment { return 0 }
         let monthlyRate = item.rate / 100.0 / 12.0
         if monthlyRate <= 0 { return item.balance / payment }
         let ratio = item.balance * monthlyRate / payment

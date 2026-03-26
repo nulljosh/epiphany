@@ -46,7 +46,7 @@ What can wait:
 
 ### Frontend plus heavier API and timed jobs
 
-Use this for apps like `opticon` and `tally`.
+Use this for apps like `monica` and `tally`.
 
 What to copy:
 
@@ -67,7 +67,7 @@ What to move later:
 
 ## Files to copy
 
-From `opticon`, copy only these ideas and files:
+From `monica`, copy only these ideas and files:
 
 - `wrangler.jsonc`
 - `cloudflare/worker.js`
@@ -81,7 +81,7 @@ Then change:
 - the local route list
 - the frontend API base URL
 
-Do not copy Opticon's route list or storage assumptions line for line.
+Do not copy Monica's route list or storage assumptions line for line.
 
 ## Default workflow
 

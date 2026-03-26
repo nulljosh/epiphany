@@ -7,12 +7,12 @@
 }
 
 html, body, #root {
-  --opticon-bg: #000;
-  --opticon-text: #fff;
+  --monica-bg: #000;
+  --monica-text: #fff;
   height: 100%;
   width: 100%;
   overflow-x: auto;
-  background: var(--opticon-bg);
+  background: var(--monica-bg);
 }
 
 body {
@@ -20,12 +20,12 @@ body {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: var(--opticon-text, #fff);
+  color: var(--monica-text, #fff);
 }
 
 html[data-theme='light'], html[data-theme='light'] body, html[data-theme='light'] #root {
-  --opticon-bg: #ffffff;
-  --opticon-text: #111111;
+  --monica-bg: #ffffff;
+  --monica-text: #111111;
   background: #ffffff;
   color: #111111;
 }
@@ -46,15 +46,15 @@ html[data-theme='light'], html[data-theme='light'] body, html[data-theme='light'
 
 /* Mobile: ensure horizontal scrollbar is visible on scrollable containers */
 @media (max-width: 767px) {
-  .opticon-mobile-panel {
+  .monica-mobile-panel {
     scrollbar-width: thin;
     scrollbar-color: rgba(120, 120, 128, 0.5) transparent;
   }
-  .opticon-mobile-panel::-webkit-scrollbar {
+  .monica-mobile-panel::-webkit-scrollbar {
     height: 4px;
     display: block !important;
   }
-  .opticon-mobile-panel::-webkit-scrollbar-thumb {
+  .monica-mobile-panel::-webkit-scrollbar-thumb {
     background: rgba(120, 120, 128, 0.5);
     border-radius: 2px;
   }

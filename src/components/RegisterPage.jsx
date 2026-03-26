@@ -66,7 +66,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
           color: '#fff',
           marginBottom: 8,
           textAlign: 'center',
-        }}>Opticon</h1>
+        }}>Monica</h1>
         <p style={{
           fontSize: 14,
           color: '#888',

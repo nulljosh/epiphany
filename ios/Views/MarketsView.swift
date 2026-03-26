@@ -97,7 +97,6 @@ struct MarketsView: View {
 
                                     let debt = financeData.debt
                                     let goals = financeData.goals
-                                    let budget = financeData.budget
 
                                     if !debt.isEmpty || !goals.isEmpty || appState.tallyPayment != nil {
                                         ScrollView(.horizontal, showsIndicators: false) {
@@ -382,7 +381,8 @@ private extension MarketsView {
         let payment = item.minPayment
         guard payment > 0 else { return Double.infinity }
 
-        if item.balance <= payment { return item.balance / payment }
+        // Payable in one payment = essentially done
+        if item.balance <= payment { return 0 }
 
         let monthlyRate = item.rate / 100.0 / 12.0
         if monthlyRate <= 0 { return item.balance / payment }

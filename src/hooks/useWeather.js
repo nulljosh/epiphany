@@ -16,7 +16,7 @@ const ICONS = {
 
 function getStoredGeo() {
   try {
-    const raw = localStorage.getItem('opticon_last_geo');
+    const raw = localStorage.getItem('monica_last_geo');
     if (!raw) return null;
     const p = JSON.parse(raw);
     if (typeof p?.lat === 'number' && typeof p?.lon === 'number') return p;

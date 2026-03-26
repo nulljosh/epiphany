@@ -2,16 +2,16 @@
 
 ## Current State
 
-Opticon is currently deployed on Vercel using:
+Monica is currently deployed on Vercel using:
 
 - `vercel.json` rewrites for `/api/:path*`
 - a Vercel serverless gateway at `api/gateway.js`
 - Vercel cron jobs for market refresh and broker runs
 - Vercel KV / Blob integrations in server routes
 
-The Vercel project has been renamed to `opticon`.
+The Vercel project has been renamed to `monica`.
 
-Vercel Hobby also rejects the intraday `*/5 13-20 * * 1-5` cron schedule. On the free plan, Opticon can only keep the once-per-day cron jobs on Vercel. Restore the intraday refresh schedule after moving to Cloudflare Workers cron or upgrading Vercel.
+Vercel Hobby also rejects the intraday `*/5 13-20 * * 1-5` cron schedule. On the free plan, Monica can only keep the once-per-day cron jobs on Vercel. Restore the intraday refresh schedule after moving to Cloudflare Workers cron or upgrading Vercel.
 
 ## Production Deploy Policy
 
@@ -30,8 +30,8 @@ Vercel Hobby also rejects the intraday `*/5 13-20 * * 1-5` cron schedule. On the
 
 Primary migration target: Cloudflare Pages + Workers.
 
-There is now a starter Cloudflare worker scaffold in this repo. See [docs/cloudflare-migration.md](/Users/joshua/Documents/Code/opticon/docs/cloudflare-migration.md) for the step-by-step move.
-For the copyable version to use in other repos, see [docs/cloudflare-starter.md](/Users/joshua/Documents/Code/opticon/docs/cloudflare-starter.md).
+There is now a starter Cloudflare worker scaffold in this repo. See [docs/cloudflare-migration.md](/Users/joshua/Documents/Code/monica/docs/cloudflare-migration.md) for the step-by-step move.
+For the copyable version to use in other repos, see [docs/cloudflare-starter.md](/Users/joshua/Documents/Code/monica/docs/cloudflare-starter.md).
 
 Required migration work:
 

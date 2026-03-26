@@ -36,7 +36,7 @@ class CTraderAdapter extends BrokerAdapter {
     this.accessToken = config.accessToken || null;
     this.accountId = config.accountId || null;
 
-    // Opticon symbol -> cTrader symbol name mapping
+    // Monica symbol -> cTrader symbol name mapping
     this.symbolMap = {
       AAPL: 'AAPL', MSFT: 'MSFT', GOOGL: 'GOOGL', AMZN: 'AMZN',
       NVDA: 'NVDA', META: 'META', TSLA: 'TSLA', NFLX: 'NFLX',
@@ -122,7 +122,7 @@ class CTraderAdapter extends BrokerAdapter {
       ...(orderType === 'LIMIT' && { limitPrice: signal.entry }),
       ...(signal.stop && { stopLoss: signal.stop }),
       ...(signal.target && { takeProfit: signal.target }),
-      comment: signal.comment || 'opticon',
+      comment: signal.comment || 'monica',
     };
 
     console.log('[BROKER] cTrader: placing order', JSON.stringify(body));
@@ -166,7 +166,7 @@ class CTraderAdapter extends BrokerAdapter {
 }
 
 // ─── TradingView Adapter ──────────────────────────────────────────────────────
-// Formats Opticon signals as TradingView Pine Script-compatible alert JSON.
+// Formats Monica signals as TradingView Pine Script-compatible alert JSON.
 // Optional: POST to a custom webhook bridge URL.
 
 class TradingViewAdapter extends BrokerAdapter {
@@ -182,7 +182,7 @@ class TradingViewAdapter extends BrokerAdapter {
     return true;
   }
 
-  // Format Opticon signal as TradingView-compatible alert payload
+  // Format Monica signal as TradingView-compatible alert payload
   formatAlert(signal) {
     return {
       ticker: signal.sym,
@@ -191,9 +191,9 @@ class TradingViewAdapter extends BrokerAdapter {
       qty: signal.size,
       stop: signal.stop,
       target: signal.target,
-      strategy: 'Opticon',
+      strategy: 'Monica',
       timeframe: '1m',
-      comment: signal.comment || `Opticon signal: ${signal.action.toUpperCase()} ${signal.sym}`,
+      comment: signal.comment || `Monica signal: ${signal.action.toUpperCase()} ${signal.sym}`,
       timestamp: new Date().toISOString(),
     };
   }

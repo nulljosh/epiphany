@@ -250,7 +250,7 @@ function StackedBarChart({ spending, t }) {
 function debtMonthsToPayoff(balance, minPayment, rate) {
   if (balance <= 0) return 0;
   if (minPayment <= 0) return Infinity;
-  if (balance <= minPayment) return balance / minPayment;
+  if (balance <= minPayment) return 0;
   const monthlyRate = (rate || 0) / 100 / 12;
   if (monthlyRate <= 0) return balance / minPayment;
   const ratio = balance * monthlyRate / minPayment;
@@ -700,7 +700,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'opticon-portfolio.json';
+    anchor.download = 'monica-portfolio.json';
     anchor.click();
     URL.revokeObjectURL(url);
   }, [exportData]);
@@ -1184,7 +1184,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                 <div style={labelStyle}>Saved Statements</div>
                 <div style={{ fontSize: 12, color: t.textSecondary, marginBottom: 12 }}>
-                  Upload PDF statements once. Opticon keeps the spending months in sync on this account.
+                  Upload PDF statements once. Monica keeps the spending months in sync on this account.
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                   <button onClick={() => statementInputRef.current?.click()} disabled={statementUploading} style={pillButtonStyle}>

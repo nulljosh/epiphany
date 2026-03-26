@@ -1,12 +1,12 @@
-// Opticon Kelly Criterion Momentum Indicator
-// Ported from Opticon's trading simulator (simBenchmark.js + trading.js)
+// Monica Kelly Criterion Momentum Indicator
+// Ported from Monica's trading simulator (simBenchmark.js + trading.js)
 // Pine Script v6
 //
 // Displays Kelly-optimal position sizing, momentum entry signals,
 // and stop/target exit signals directly on the chart.
 
 //@version=6
-indicator("Opticon Kelly Momentum", overlay=true, max_labels_count=500)
+indicator("Monica Kelly Momentum", overlay=true, max_labels_count=500)
 
 // ---- Inputs ----------------------------------------------------------------
 
@@ -135,7 +135,7 @@ bgcolor(i_showBg and entrySignal ? color.new(color.green, 92) : na)
 if i_showTable and barstate.islast
     var table tbl = table.new(position.top_right, 2, 7, border_width=1)
 
-    table.cell(tbl, 0, 0, "Opticon Kelly", text_color=color.white, bgcolor=color.new(color.blue, 20), text_size=size.small)
+    table.cell(tbl, 0, 0, "Monica Kelly", text_color=color.white, bgcolor=color.new(color.blue, 20), text_size=size.small)
     table.cell(tbl, 1, 0, "", bgcolor=color.new(color.blue, 20))
 
     table.cell(tbl, 0, 1, "Win Rate", text_color=color.gray, text_size=size.tiny)

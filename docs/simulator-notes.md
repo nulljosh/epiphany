@@ -1,4 +1,4 @@
-# Opticon Trading Simulator - Implementation Notes
+# Monica Trading Simulator - Implementation Notes
 
 **Date:** 2026-02-16
 **Task:** Extend simulator from $1B to $1T with Fibonacci checkpoints
@@ -108,7 +108,7 @@ if (strength > minStrength) { /* enter trade */ }
 ## Bugs Found
 
 **H1 Title Bug:**
-- Project showed "bread" (old name) in h1 -- fixed to "opticon"
+- Project showed "bread" (old name) in h1 -- fixed to "monica"
 - Need to find and fix in App.jsx or index.html
 
 ## Implementation Plan Status
@@ -139,4 +139,4 @@ if (strength > minStrength) { /* enter trade */ }
 4. Extend FIB_LEVELS array to include 2T, 5T, 10T
 5. Update tests in App.test.jsx
 6. Test on localhost
-7. Fix "bread" → "opticon" h1 bug (done)
+7. Fix "bread" → "monica" h1 bug (done)

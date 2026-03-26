@@ -144,7 +144,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             fontWeight: 700,
             color: t.text,
             margin: 0,
-          }}>Opticon Pro</h1>
+          }}>Monica Pro</h1>
           <button
             onClick={onClose}
             style={{
