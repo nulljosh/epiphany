@@ -18,7 +18,9 @@ struct PeopleView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 12)
 
-                if isSearching {
+                if let error {
+                    errorView(error)
+                } else if isSearching {
                     loadingView
                 } else if let profile {
                     resultsView(profile)
@@ -70,6 +72,28 @@ struct PeopleView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.appleBlue)
             }
+        }
+    }
+
+    // MARK: - Error
+
+    private func errorView(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("Search failed")
+                .font(.headline)
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            Button("Try Again") { performSearch() }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Palette.appleBlue)
+            Spacer()
         }
     }
 
