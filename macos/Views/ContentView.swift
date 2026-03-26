@@ -10,6 +10,7 @@ struct ContentView: View {
         case markets = "Markets"
         case portfolio = "Portfolio"
         case settings = "Settings"
+        case people = "People"
 
         var id: String { rawValue }
 
@@ -19,6 +20,7 @@ struct ContentView: View {
             case .markets: return "chart.line.uptrend.xyaxis"
             case .portfolio: return "briefcase"
             case .settings: return "gearshape"
+            case .people: return "person.2"
             }
         }
     }
@@ -82,6 +84,8 @@ struct ContentView: View {
             PortfolioView()
         case .settings:
             SettingsView()
+        case .people:
+            PeopleView()
         }
     }
 }
@@ -182,6 +186,7 @@ private extension ContentView.AppSection {
         case .markets: return "2"
         case .portfolio: return "3"
         case .settings: return "4"
+        case .people: return "5"
         }
     }
 }

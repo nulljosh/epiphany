@@ -406,6 +406,15 @@ final class OpticonAPI {
             throw APIError.decodingError(error.localizedDescription)
         }
     }
+
+    // MARK: - People
+
+    func fetchPeople(query: String) async throws -> PersonProfile {
+        let url = try makeURL("/api/people", query: ["q": query])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(PersonProfile.self, from: data)
+    }
 }
 
 private struct AuthResponse: Decodable {
