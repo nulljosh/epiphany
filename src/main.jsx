@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { ErrorBoundary } from './ErrorBoundary.jsx'
 
-const MONICA_BUILD = '2026-03-27';
+window.__MONICA_BUILD__ = '2026-03-27T21:30';
 
 if (import.meta.env.DEV && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')) {
   navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));

@@ -1,1 +1,17 @@
 api/**/*.test.js
+node_modules
+.playwright-cli
+ios/
+macos/
+watchos/
+widgets-ios/
+widgets-macos/
+tradingview/
+finn/
+dashboard/
+bank/
+usage-ledger/
+dist/
+tests/
+*.test.js
+*.test.jsx
