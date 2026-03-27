@@ -36,8 +36,6 @@ function localStatementsPlugin() {
 export default defineConfig({
   base: '/',
   build: {
-    minify: 'terser',
-    terserOptions: { compress: { passes: 2 } },
     rollupOptions: {
       output: {
         manualChunks: {
