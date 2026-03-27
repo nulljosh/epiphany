@@ -33,7 +33,7 @@ const DEFAULT_SYMBOLS = [
   'SPY', 'SJIM', 'LJIM',
 ];
 const STALE_AFTER_MS = 2 * 60 * 1000;
-const MAX_SYMBOLS_PER_REQUEST = 100;
+const MAX_SYMBOLS_PER_REQUEST = 50;
 
 function chunkSymbols(symbolList, size = MAX_SYMBOLS_PER_REQUEST) {
   const chunks = [];

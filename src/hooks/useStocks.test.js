@@ -132,10 +132,15 @@ describe('useStocks', () => {
   it('should split oversized symbol lists into multiple requests and merge the results', async () => {
     const symbols = Array.from({ length: 101 }, (_, index) => `SYM${index}`);
 
+    // 101 symbols / 50 per chunk = 3 chunks
     global.fetch
       .mockResolvedValueOnce({
         ok: true,
         json: async () => [{ symbol: 'SYM0', price: 100, change: 1, changePercent: 1 }]
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ symbol: 'SYM50', price: 150, change: 0, changePercent: 0 }]
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -148,9 +153,8 @@ describe('useStocks', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(2);
-    expect(global.fetch.mock.calls[0][0]).toContain('/api/stocks-free?symbols=');
-    expect(global.fetch.mock.calls[1][0]).toContain('/api/stocks-free?symbols=');
+    const stockCalls = global.fetch.mock.calls.filter(c => c[0].includes('/api/stocks-free'));
+    expect(stockCalls.length).toBe(3);
     expect(result.current.stocks.SYM0.price).toBe(100);
     expect(result.current.stocks.SYM100.price).toBe(200);
   });

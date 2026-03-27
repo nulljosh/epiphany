@@ -158,7 +158,7 @@ const categoryKeywords = {
 
 
 export default function App() {
-  const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout } = useAuth();
+  const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout, changeName, changeEmail, changePassword } = useAuth();
   const resetToken = useMemo(() => new URLSearchParams(window.location.search).get('token'), []);
   const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
 
@@ -928,7 +928,7 @@ const reset = useCallback(() => {
 
   // Memoize ticker items - use live stock data
   const tickerItems = useMemo(() => {
-    const tickerCanRender = ['live', 'stale'].includes(stocksReliability?.status) || stocksReliability?.source === 'cache';
+    const tickerCanRender = ['live', 'stale', 'fallback'].includes(stocksReliability?.status) || stocksReliability?.source === 'cache';
     if (!tickerCanRender || !stocks || Object.keys(stocks).length === 0) {
       return [];
     }
@@ -1464,7 +1464,7 @@ const reset = useCallback(() => {
               <PeoplePanel dark={dark} t={t} />
             )}
             {activeTab === 'settings' && (
-              <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} />
+              <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} />
             )}
           </>
         )}
@@ -1551,7 +1551,7 @@ const reset = useCallback(() => {
             <PeoplePanel dark={dark} t={t} />
           )}
           {activeTab === 'settings' && (
-            <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} />
+            <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} />
           )}
         </div>
       )}

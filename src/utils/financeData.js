@@ -7,8 +7,8 @@ export const DEMO_HOLDINGS = [
 ];
 
 export const DEMO_ACCOUNTS = [
-  { name: 'Vacation', type: 'chequing', balance: 17.00, institution: 'Wealthsimple' },
-  { name: 'TFSA', type: 'tfsa', balance: 118.94, institution: 'Wealthsimple' },
+  { name: 'Vacation', type: 'chequing', balance: 3.67, institution: 'Wealthsimple' },
+  { name: 'TFSA', type: 'tfsa', balance: 103.00, institution: 'Wealthsimple' },
 ];
 
 export const DEMO_BUDGET = {

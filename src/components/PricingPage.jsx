@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Card } from './ui';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 const PRICE_IDS = {
   starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
   pro: import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
 };
+
+const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+const Check = () => <span style={{ color: '#34c759', marginRight: 8, fontWeight: 700 }}>&#10003;</span>;
+const Cross = () => <span style={{ color: '#86868b', marginRight: 8, fontWeight: 700 }}>&#10005;</span>;
 
 export default function PricingPage({ dark, t, onClose, subscription }) {
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -71,17 +75,27 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
   const tierRank = { free: 0, starter: 1, pro: 2 };
   const isCurrentOrLower = (plan) => tierRank[plan] <= tierRank[currentTier];
 
+  const glassCard = {
+    background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.65)',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    borderRadius: 20,
+    border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+    padding: 32,
+    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+  };
+
   const CurrentBadge = () => (
     <div style={{
-      padding: '6px 16px',
-      background: t.backgroundSecondary,
+      padding: '8px 20px',
+      background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
       borderRadius: 100,
       textAlign: 'center',
       color: t.textTertiary,
       fontSize: 12,
-      fontWeight: 500,
-      width: 'fit-content',
-      margin: '0 auto',
+      fontWeight: 600,
+      fontFamily: font,
+      letterSpacing: '0.02em',
     }}>
       Current Plan
     </div>
@@ -97,29 +111,41 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         disabled={loadingPlan !== null}
         style={{
           width: '100%',
-          padding: 16,
+          padding: '14px 24px',
           background: bgColor,
           color: '#fff',
           border: 'none',
-          borderRadius: 12,
-          fontSize: 16,
-          fontWeight: 700,
+          borderRadius: 100,
+          fontSize: 14,
+          fontWeight: 600,
+          fontFamily: font,
           cursor: loadingPlan ? 'not-allowed' : 'pointer',
           opacity: loadingPlan ? 0.6 : 1,
+          letterSpacing: '0.01em',
           transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
         }}
+        onMouseEnter={(e) => { if (!loadingPlan) e.target.style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; }}
       >
         {loadingPlan === plan ? 'Loading...' : label}
       </button>
     );
   };
 
+  const FeatureItem = ({ included, children }) => (
+    <li style={{ marginBottom: 10, color: included ? t.text : t.textTertiary, fontSize: 13, fontFamily: font, display: 'flex', alignItems: 'center' }}>
+      {included ? <Check /> : <Cross />}
+      {children}
+    </li>
+  );
+
   return (
     <div onClick={onClose} style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(10px)',
+      background: dark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.4)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -127,7 +153,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
       padding: 20,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        maxWidth: 900,
+        maxWidth: 940,
         width: '100%',
         overflowX: 'hidden',
         overflowY: 'auto',
@@ -137,162 +163,127 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 24,
+          marginBottom: 32,
         }}>
-          <h1 style={{
-            fontSize: 32,
-            fontWeight: 700,
-            color: t.text,
-            margin: 0,
-          }}>Monica Pro</h1>
+          <div>
+            <h1 style={{
+              fontSize: 36,
+              fontWeight: 700,
+              color: t.text,
+              margin: 0,
+              fontFamily: font,
+              letterSpacing: '-0.02em',
+            }}>Monica Pro</h1>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: t.textSecondary, fontFamily: font }}>
+              Unlock the full intelligence platform.
+            </p>
+          </div>
           <button
             onClick={onClose}
             style={{
-              background: 'transparent',
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
               border: 'none',
               color: t.textSecondary,
-              fontSize: 24,
+              fontSize: 18,
               cursor: 'pointer',
-              padding: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
+            onMouseEnter={(e) => { e.target.style.transform = 'scale(1.1)'; }}
+            onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; }}
           >{'\u00d7'}</button>
         </div>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
-          gap: 20,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+          gap: 16,
         }}>
-          {/* Free Tier */}
-          <Card t={t} dark={dark} style={{ padding: 32 }}>
-            <div style={{ marginBottom: 24 }}>
-              <h3 style={{
-                fontSize: 24,
-                fontWeight: 600,
-                color: t.text,
-                margin: 0,
-                marginBottom: 8,
-              }}>Free</h3>
-              <div style={{
-                fontSize: 48,
-                fontWeight: 700,
-                color: t.text,
-                fontFamily: 'tabular-nums',
-              }}>$0</div>
-              <div style={{
-                fontSize: 14,
-                color: t.textSecondary,
-              }}>Forever free</div>
-            </div>
-
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              marginBottom: 24,
-            }}>
-              <li style={{ marginBottom: 12, color: t.text }}>+ Prediction markets (Polymarket)</li>
-              <li style={{ marginBottom: 12, color: t.text }}>+ Live stock data (US50)</li>
-              <li style={{ marginBottom: 12, color: t.text }}>+ Monte Carlo simulations</li>
-              <li style={{ marginBottom: 12, color: t.text }}>+ Trading simulator</li>
-              <li style={{ marginBottom: 12, color: t.textTertiary }}>- Real-time cTrader signals</li>
-              <li style={{ marginBottom: 12, color: t.textTertiary }}>- TradingView webhooks</li>
-              <li style={{ marginBottom: 12, color: t.textTertiary }}>- Advanced analytics</li>
+          {/* Free */}
+          <div style={glassCard}>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Free</h3>
+            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$0</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>Forever free</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
+              <FeatureItem included>Prediction markets</FeatureItem>
+              <FeatureItem included>Live stock data (US100)</FeatureItem>
+              <FeatureItem included>Monte Carlo simulations</FeatureItem>
+              <FeatureItem included>Trading simulator</FeatureItem>
+              <FeatureItem included={false}>Real-time broker signals</FeatureItem>
+              <FeatureItem included={false}>TradingView webhooks</FeatureItem>
+              <FeatureItem included={false}>Advanced analytics</FeatureItem>
             </ul>
-
             {currentTier === 'free' && <CurrentBadge />}
-          </Card>
+          </div>
 
-          {/* Starter Tier */}
-          <Card t={t} dark={dark} style={{
-            padding: 32,
-            border: currentTier === 'starter' ? `2px solid ${t.accent}` : `1px solid ${t.border}`,
+          {/* Starter */}
+          <div style={{
+            ...glassCard,
+            border: currentTier === 'starter'
+              ? `2px solid ${t.accent}`
+              : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
           }}>
-            <div style={{ marginBottom: 24 }}>
-              <h3 style={{
-                fontSize: 24,
-                fontWeight: 600,
-                color: t.text,
-                margin: 0,
-                marginBottom: 8,
-              }}>Starter</h3>
-              <div style={{
-                fontSize: 48,
-                fontWeight: 700,
-                color: t.text,
-                fontFamily: 'tabular-nums',
-              }}>$20</div>
-              <div style={{
-                fontSize: 14,
-                color: t.textSecondary,
-              }}>per month</div>
-            </div>
-
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              marginBottom: 24,
-            }}>
-              <li style={{ marginBottom: 12, color: t.text }}>+ Everything in Free</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Broker panel unlock</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ cTrader + TradingView signal forwarding</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Priority queue for API jobs</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Basic auto-send controls</li>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Starter</h3>
+            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$20</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per month</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
+              <FeatureItem included>Everything in Free</FeatureItem>
+              <FeatureItem included>Broker panel unlock</FeatureItem>
+              <FeatureItem included>cTrader + TradingView signals</FeatureItem>
+              <FeatureItem included>Priority API queue</FeatureItem>
+              <FeatureItem included>Basic auto-send controls</FeatureItem>
             </ul>
+            <UpgradeButton plan="starter" label="Get Starter" bgColor={t.accent || '#0071e3'} />
+          </div>
 
-            <UpgradeButton plan="starter" label="Upgrade to Starter" bgColor={t.accent} />
-          </Card>
-
-          {/* Pro Tier */}
-          <Card t={t} dark={dark} style={{
-            padding: 32,
-            border: currentTier === 'pro' ? `2px solid ${t.blue}` : `1px solid ${t.border}`,
-            boxShadow: `0 0 12px ${t.blue}20`,
+          {/* Pro */}
+          <div style={{
+            ...glassCard,
+            border: currentTier === 'pro'
+              ? `2px solid #0071e3`
+              : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+            boxShadow: `0 0 24px ${dark ? 'rgba(0,113,227,0.15)' : 'rgba(0,113,227,0.08)'}`,
           }}>
-            <div style={{ marginBottom: 24 }}>
-              <h3 style={{
-                fontSize: 24,
-                fontWeight: 600,
-                color: t.text,
-                margin: 0,
-                marginBottom: 8,
-              }}>Pro</h3>
-              <div style={{
-                fontSize: 48,
-                fontWeight: 700,
-                color: t.text,
-                fontFamily: 'tabular-nums',
-              }}>$50</div>
-              <div style={{
-                fontSize: 14,
-                color: t.textSecondary,
-              }}>per month</div>
-            </div>
-
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              marginBottom: 24,
-            }}>
-              <li style={{ marginBottom: 12, color: t.text }}>+ Everything in Starter</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Full broker automation controls</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Higher signal throughput</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Expanded risk + execution settings</li>
-              <li style={{ marginBottom: 12, color: t.blue, fontWeight: 600 }}>+ Priority support and onboarding</li>
+            <div style={{
+              display: 'inline-block',
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: '#0071e3',
+              background: 'rgba(0,113,227,0.1)',
+              padding: '3px 10px',
+              borderRadius: 999,
+              marginBottom: 12,
+              fontFamily: font,
+            }}>Recommended</div>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Pro</h3>
+            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$50</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per month</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
+              <FeatureItem included>Everything in Starter</FeatureItem>
+              <FeatureItem included>Full broker automation</FeatureItem>
+              <FeatureItem included>Higher signal throughput</FeatureItem>
+              <FeatureItem included>Advanced risk controls</FeatureItem>
+              <FeatureItem included>Priority support</FeatureItem>
             </ul>
-
-            <UpgradeButton plan="pro" label="Upgrade to Pro" bgColor={t.blue} />
-          </Card>
+            <UpgradeButton plan="pro" label="Get Pro" bgColor="#0071e3" />
+          </div>
         </div>
 
         <div style={{
-          marginTop: 24,
-          padding: 24,
-          background: t.backgroundSecondary,
+          marginTop: 20,
+          padding: '16px 24px',
+          background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.5)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           borderRadius: 16,
-          border: `1px solid ${t.border}`,
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -302,27 +293,33 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
           <p style={{
             margin: 0,
             color: t.textSecondary,
-            fontSize: 14,
+            fontSize: 13,
             lineHeight: 1.6,
+            fontFamily: font,
           }}>
-            Cancel anytime. No contracts. Secure payments powered by Stripe.
+            Cancel anytime. No contracts. Secure payments via Stripe.
             <br />
-            Apple Pay appears automatically on compatible Apple devices/browsers after Stripe domain verification.
+            Apple Pay available on compatible devices.
           </p>
           {currentTier !== 'free' && (
             <button
               onClick={handleManageSubscription}
               style={{
                 padding: '8px 20px',
-                background: 'transparent',
+                background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
                 color: t.textSecondary,
-                border: `1px solid ${t.border}`,
+                border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
                 borderRadius: 100,
                 fontSize: 13,
+                fontFamily: font,
+                fontWeight: 500,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                backdropFilter: 'blur(8px)',
                 transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
+              onMouseEnter={(e) => { e.target.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; }}
             >
               Manage Subscription
             </button>

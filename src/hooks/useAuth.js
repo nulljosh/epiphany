@@ -82,6 +82,44 @@ export function useAuth() {
     setUser(null);
   }, []);
 
+  const changeName = useCallback(async (name) => {
+    const res = await fetch('/api/auth?action=change-name', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error || 'Failed' };
+    await checkSession();
+    return { ok: true };
+  }, [checkSession]);
+
+  const changeEmail = useCallback(async (newEmail, password) => {
+    const res = await fetch('/api/auth?action=change-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ newEmail, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error || 'Failed' };
+    await checkSession();
+    return { ok: true };
+  }, [checkSession]);
+
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    const res = await fetch('/api/auth?action=change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error || 'Failed' };
+    return { ok: true };
+  }, []);
+
   return {
     user,
     loading,
@@ -91,5 +129,8 @@ export function useAuth() {
     register,
     logout,
     refresh: checkSession,
+    changeName,
+    changeEmail,
+    changePassword,
   };
 }

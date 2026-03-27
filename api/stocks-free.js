@@ -1,5 +1,5 @@
 // 100% FREE stock API using Yahoo Finance (no key needed)
-// Uses yfinance scraping approach via serverless function
+// Uses batch quote endpoint to minimize requests and avoid rate limiting
 
 export default async function handler(req, res) {
   const symbols = req.query.symbols || 'AAPL,MSFT,GOOGL,AMZN,META,TSLA,NVDA';
@@ -10,50 +10,88 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Use Yahoo Finance Chart API (public, no auth needed)
-    const promises = symbolList.map(async (symbol) => {
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
-      
-      const response = await fetch(url, {
+    // First try: Yahoo v8 chart API with batched Promise.allSettled
+    // Individual requests but tolerant of partial failures
+    const batchUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbolList[0]}?interval=1d&range=1d`;
+
+    // Try batch via v6 quote endpoint first (single request for all symbols)
+    const quoteBatchUrl = `https://query2.finance.yahoo.com/v6/finance/quote?symbols=${symbolList.join(',')}`;
+    let stocks = [];
+
+    try {
+      const batchRes = await fetch(quoteBatchUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
         },
+        signal: AbortSignal.timeout(8000),
       });
 
-      if (!response.ok) {
-        console.warn(`Yahoo chart API error for ${symbol}: ${response.status}`);
-        return null;
+      if (batchRes.ok) {
+        const batchData = await batchRes.json();
+        const results = batchData?.quoteResponse?.result || [];
+        stocks = results.map(q => ({
+          symbol: q.symbol,
+          price: q.regularMarketPrice,
+          change: q.regularMarketChange || 0,
+          changePercent: q.regularMarketChangePercent || 0,
+          volume: q.regularMarketVolume || 0,
+          high: q.regularMarketDayHigh || q.regularMarketPrice,
+          low: q.regularMarketDayLow || q.regularMarketPrice,
+          open: q.regularMarketOpen || q.regularMarketPreviousClose,
+          prevClose: q.regularMarketPreviousClose || 0,
+          marketCap: q.marketCap || null,
+          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh || null,
+          fiftyTwoWeekLow: q.fiftyTwoWeekLow || null,
+        })).filter(s => s.price);
       }
+    } catch {
+      // v6 batch failed, fall through to v8 individual
+    }
 
-      const data = await response.json();
-      const result = data.chart?.result?.[0];
-      
-      if (!result) return null;
+    // Fallback: individual v8 chart requests with allSettled
+    if (stocks.length === 0) {
+      const promises = symbolList.map(async (symbol) => {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
 
-      const meta = result.meta;
-      const price = meta.regularMarketPrice;
-      const prevClose = meta.chartPreviousClose || meta.previousClose;
-      const change = price - prevClose;
-      const changePercent = (change / prevClose) * 100;
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          },
+          signal: AbortSignal.timeout(6000),
+        });
 
-      return {
-        symbol: symbol,
-        price: price,
-        change: change,
-        changePercent: changePercent,
-        volume: meta.regularMarketVolume || 0,
-        high: meta.regularMarketDayHigh || price,
-        low: meta.regularMarketDayLow || price,
-        open: meta.regularMarketOpen || prevClose,
-        prevClose: prevClose,
-        marketCap: null,
-        fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh || null,
-        fiftyTwoWeekLow: meta.fiftyTwoWeekLow || null,
-      };
-    });
+        if (!response.ok) return null;
 
-    const results = await Promise.all(promises);
-    const stocks = results.filter(r => r !== null);
+        const data = await response.json();
+        const meta = data.chart?.result?.[0]?.meta;
+        if (!meta?.regularMarketPrice) return null;
+
+        const price = meta.regularMarketPrice;
+        const prevClose = meta.chartPreviousClose || meta.previousClose;
+        const change = price - prevClose;
+        const changePercent = (change / prevClose) * 100;
+
+        return {
+          symbol,
+          price,
+          change,
+          changePercent,
+          volume: meta.regularMarketVolume || 0,
+          high: meta.regularMarketDayHigh || price,
+          low: meta.regularMarketDayLow || price,
+          open: meta.regularMarketOpen || prevClose,
+          prevClose,
+          marketCap: null,
+          fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh || null,
+          fiftyTwoWeekLow: meta.fiftyTwoWeekLow || null,
+        };
+      });
+
+      const results = await Promise.allSettled(promises);
+      stocks = results
+        .filter(r => r.status === 'fulfilled' && r.value)
+        .map(r => r.value);
+    }
 
     if (stocks.length === 0) {
       throw new Error('No valid stock data received');
@@ -63,7 +101,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json(stocks);
   } catch (error) {
-    console.error('Yahoo Chart API error:', error);
+    console.error('Yahoo API error:', error);
     res.status(500).json({
       error: 'Failed to fetch stock data',
       details: error.message
