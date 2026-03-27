@@ -35,9 +35,12 @@ export function useOntology(isAuthenticated) {
       });
       if (!res.ok) return [];
       const data = await res.json();
-      // Cache locally
-      for (const obj of data.objects) {
-        setObjects(prev => ({ ...prev, [obj.id]: obj }));
+      if (data.objects.length > 0) {
+        setObjects(prev => {
+          const next = { ...prev };
+          for (const obj of data.objects) next[obj.id] = obj;
+          return next;
+        });
       }
       return data.objects;
     } catch {
@@ -48,8 +51,6 @@ export function useOntology(isAuthenticated) {
   }, []);
 
   const getObject = useCallback(async (id) => {
-    // Check local cache first
-    if (objects[id]) return objects[id];
     try {
       const res = await fetch(`${API_BASE}/api/ontology?action=get&id=${encodeURIComponent(id)}`, {
         credentials: 'include',
@@ -62,7 +63,7 @@ export function useOntology(isAuthenticated) {
     } catch {
       return null;
     }
-  }, [objects]);
+  }, []);
 
   const upsert = useCallback(async (obj) => {
     try {
@@ -90,9 +91,11 @@ export function useOntology(isAuthenticated) {
       });
       if (!res.ok) return 0;
       const data = await res.json();
-      for (const obj of objectList) {
-        setObjects(prev => ({ ...prev, [obj.id]: obj }));
-      }
+      setObjects(prev => {
+        const next = { ...prev };
+        for (const obj of objectList) next[obj.id] = obj;
+        return next;
+      });
       return data.upserted;
     } catch {
       return 0;

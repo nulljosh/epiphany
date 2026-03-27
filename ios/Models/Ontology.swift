@@ -88,6 +88,7 @@ struct AnyCodable: Codable, Hashable {
         else if let i = try? container.decode(Int.self) { value = i }
         else if let b = try? container.decode(Bool.self) { value = b }
         else if container.decodeNil() { value = NSNull() }
+        else if let arr = try? container.decode([AnyCodable].self) { value = arr }
         else { value = try container.decode([String: AnyCodable].self) }
     }
 
@@ -98,6 +99,7 @@ struct AnyCodable: Codable, Hashable {
         else if let i = value as? Int { try container.encode(i) }
         else if let b = value as? Bool { try container.encode(b) }
         else if value is NSNull { try container.encodeNil() }
+        else if let arr = value as? [AnyCodable] { try container.encode(arr) }
         else if let dict = value as? [String: AnyCodable] { try container.encode(dict) }
         else { try container.encodeNil() }
     }

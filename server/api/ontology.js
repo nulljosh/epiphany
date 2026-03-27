@@ -102,20 +102,43 @@ export default async function handler(req, res) {
     if (!Array.isArray(objects)) return errorResponse(res, 400, 'objects array required');
 
     const upserted = [];
+    const typeIndexUpdates = new Map();
+    const allNew = [];
+
     for (const obj of objects.slice(0, 100)) {
       if (!obj?.id || !obj?.type || !obj?.name || !OBJECT_TYPES.includes(obj.type)) continue;
       obj.updatedAt = new Date().toISOString();
       if (!obj.createdAt) obj.createdAt = obj.updatedAt;
       await kv.set(`${prefix}:obj:${obj.id}`, obj);
 
-      const typeKey = `${prefix}:type:${obj.type}`;
-      const typeIds = await kv.get(typeKey) || [];
+      // Collect type index updates
+      if (!typeIndexUpdates.has(obj.type)) {
+        typeIndexUpdates.set(obj.type, await kv.get(`${prefix}:type:${obj.type}`) || []);
+      }
+      const typeIds = typeIndexUpdates.get(obj.type);
       if (!typeIds.includes(obj.id)) {
         typeIds.unshift(obj.id);
         if (typeIds.length > MAX_OBJECTS_PER_TYPE) typeIds.length = MAX_OBJECTS_PER_TYPE;
-        await kv.set(typeKey, typeIds);
       }
+      allNew.push(obj.id);
       upserted.push(obj.id);
+    }
+
+    // Flush type indexes
+    for (const [type, ids] of typeIndexUpdates) {
+      await kv.set(`${prefix}:type:${type}`, ids);
+    }
+
+    // Update global index
+    if (allNew.length > 0) {
+      const allKey = `${prefix}:all`;
+      const allIds = await kv.get(allKey) || [];
+      for (const id of allNew) {
+        if (!allIds.includes(id)) allIds.unshift(id);
+      }
+      const maxAll = MAX_OBJECTS_PER_TYPE * OBJECT_TYPES.length;
+      if (allIds.length > maxAll) allIds.length = maxAll;
+      await kv.set(allKey, allIds);
     }
 
     return res.status(200).json({ ok: true, upserted: upserted.length });
@@ -218,11 +241,13 @@ export default async function handler(req, res) {
 
   // GET: stats/summary
   if (req.method === 'GET' && action === 'stats') {
-    const counts = {};
-    for (const type of OBJECT_TYPES) {
-      const ids = await kv.get(`${prefix}:type:${type}`) || [];
-      counts[type] = ids.length;
-    }
+    const entries = await Promise.all(
+      OBJECT_TYPES.map(async type => {
+        const ids = await kv.get(`${prefix}:type:${type}`) || [];
+        return [type, ids.length];
+      })
+    );
+    const counts = Object.fromEntries(entries);
     return res.status(200).json({ counts, total: Object.values(counts).reduce((s, c) => s + c, 0) });
   }
 
