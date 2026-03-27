@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { SYSTEM_FONT as font } from '../utils/formatting';
 
 const PRICE_IDS = {
   starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
   pro: import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
 };
-
-const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
 const Check = () => <span style={{ color: '#34c759', marginRight: 8, fontWeight: 700 }}>&#10003;</span>;
 const Cross = () => <span style={{ color: '#86868b', marginRight: 8, fontWeight: 700 }}>&#10005;</span>;

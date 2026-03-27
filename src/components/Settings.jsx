@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card } from './ui';
+import { SYSTEM_FONT as font } from '../utils/formatting';
 
 export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword }) {
-  const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
 
   const [name, setName] = useState(user?.name || '');
