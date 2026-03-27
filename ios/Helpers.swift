@@ -190,12 +190,12 @@ enum DebtCalc {
 // MARK: - Upcoming Payments
 
 enum UpcomingPayments {
-    struct Payment {
+    struct Payment: Sendable {
         let name: String
         let amount: Double
         let recurring: String
         let icon: String
-        let dateResolver: () -> Date?
+        let dateResolver: @Sendable () -> Date?
     }
 
     // CRA GST/HST credit: paid ~5th of Jan, Apr, Jul, Oct

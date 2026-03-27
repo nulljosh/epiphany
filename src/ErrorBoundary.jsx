@@ -26,9 +26,9 @@ export class ErrorBoundary extends Component {
           minHeight: '100vh'
         }}>
           <h1 style={{ color: '#ff6b6b', marginBottom: 20 }}>Something went wrong</h1>
-          <details style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>
+          <details open style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>
             <summary style={{ cursor: 'pointer', marginBottom: 10, color: '#ffa500' }}>
-              Click for error details
+              Error details
             </summary>
             <div style={{
               background: '#2a2a2a',

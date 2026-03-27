@@ -179,6 +179,9 @@ export default function App() {
   const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(false);
+  const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  const [commandBarOpen, setCommandBarOpen] = useState(false);
+  const [commandBarStock, setCommandBarStock] = useState(null);
   const desktopPanelRef = useRef(null);
   const desktopNavRef = useRef(null);
   const handleMobileTabSelect = useCallback((nextTab) => {
@@ -231,7 +234,6 @@ export default function App() {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [commandBarOpen, isMobileNav]);
-  const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
     const handler = (e) => {
@@ -306,8 +308,6 @@ export default function App() {
   const { watchlist, addSymbol, removeSymbol, toggleSymbol } = useWatchlist(user);
   const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts(user);
   const [showAlerts, setShowAlerts] = useState(false);
-  const [commandBarOpen, setCommandBarOpen] = useState(false);
-  const [commandBarStock, setCommandBarStock] = useState(null);
   const weather = useWeather();
 
   // Fibonacci levels from $1 to $10T

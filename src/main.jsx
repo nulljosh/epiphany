@@ -6,14 +6,12 @@ import { ErrorBoundary } from './ErrorBoundary.jsx'
 
 window.__MONICA_BUILD__ = __MONICA_BUILD__;
 
-if (import.meta.env.DEV && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')) {
-  navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-}
+// Force-clear stale service workers from pre-rename (opticon -> monica)
+// Keep this until all users have rotated through at least once
+navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 
 if (new URLSearchParams(window.location.search).has('clear-sw')) {
-  navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   window.location.replace('/');
 }
 

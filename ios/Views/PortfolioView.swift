@@ -614,7 +614,7 @@ struct PortfolioView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
-                        timelineChip(
+                        TimelineChip(
                             icon: "calendar.badge.clock",
                             label: "Payday",
                             detail: "\(days)d",
