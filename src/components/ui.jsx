@@ -1,3 +1,5 @@
+import { useState, useEffect, useCallback } from 'react';
+
 // Inject keyframes for animations
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
@@ -69,7 +71,6 @@ export const StatusBar = ({ t, reliability }) => {
 };
 
 // Mobile hamburger menu - glass dropdown overlay
-import { useState, useEffect, useCallback } from 'react';
 
 export const MobileMenu = ({ t, font, children, buttonStyle }) => {
   const [open, setOpen] = useState(false);
