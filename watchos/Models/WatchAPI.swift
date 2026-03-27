@@ -69,19 +69,6 @@ final class WatchAPI {
             .sorted { $0.symbol < $1.symbol }
     }
 
-    // MARK: - Ontology
-
-    func fetchOntologyStats() async throws -> OntologyStatsResponse {
-        let data = try await fetch("/api/ontology?action=stats")
-        return try decoder.decode(OntologyStatsResponse.self, from: data)
-    }
-
-    func listOntologyObjects(type: OntologyObjectType, limit: Int = 20) async throws -> [OntologyObject] {
-        let data = try await fetch("/api/ontology?action=list&type=\(type.rawValue)&limit=\(limit)")
-        let response = try decoder.decode(OntologyListResponse.self, from: data)
-        return response.objects
-    }
-
     // MARK: - Internal
 
     private func fetch(_ path: String) async throws -> Data {

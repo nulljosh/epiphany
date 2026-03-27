@@ -25,7 +25,6 @@ export default async function handler(req, res) {
   const { action } = req.query;
   const prefix = kvPrefix(session.userId);
 
-  // GET: fetch a single object by ID
   if (req.method === 'GET' && action === 'get') {
     const { id } = req.query;
     if (!id) return errorResponse(res, 400, 'id required');
@@ -34,7 +33,6 @@ export default async function handler(req, res) {
     return res.status(200).json(obj);
   }
 
-  // GET: list objects by type
   if (req.method === 'GET' && action === 'list') {
     const { type, limit = '50', offset = '0' } = req.query;
     if (type && !OBJECT_TYPES.includes(type)) return errorResponse(res, 400, `Invalid type: ${type}`);
@@ -54,7 +52,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ objects, total: ids.length, offset: start, limit: parseInt(limit) });
   }
 
-  // POST: upsert an object
   if (req.method === 'POST' && action === 'upsert') {
     if (!(await checkRateLimit(req, { prefix: 'rl:ont' }))) {
       return errorResponse(res, 429, 'Too many requests');
@@ -92,7 +89,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, id: obj.id });
   }
 
-  // POST: batch upsert (for auto-population from hooks)
   if (req.method === 'POST' && action === 'batch') {
     if (!(await checkRateLimit(req, { prefix: 'rl:ont-batch' }))) {
       return errorResponse(res, 429, 'Too many requests');
@@ -144,7 +140,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, upserted: upserted.length });
   }
 
-  // DELETE: remove an object
   if (req.method === 'DELETE' && action === 'delete') {
     const { id } = req.query;
     if (!id) return errorResponse(res, 400, 'id required');
@@ -172,7 +167,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
-  // POST: link two objects
   if (req.method === 'POST' && action === 'link') {
     const { type, sourceId, targetId, properties } = req.body;
     if (!RELATIONSHIP_TYPES.includes(type)) return errorResponse(res, 400, `Invalid relationship type: ${type}`);
@@ -199,7 +193,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
-  // GET: get relationships for an object
   if (req.method === 'GET' && action === 'relationships') {
     const { id, direction = 'both' } = req.query;
     if (!id) return errorResponse(res, 400, 'id required');
@@ -215,7 +208,6 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   }
 
-  // GET: query objects by property filter
   if (req.method === 'GET' && action === 'query') {
     const { type, key, value, limit = '20' } = req.query;
     if (!type || !OBJECT_TYPES.includes(type)) return errorResponse(res, 400, 'Valid type required');
@@ -239,7 +231,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ objects: matches });
   }
 
-  // GET: stats/summary
   if (req.method === 'GET' && action === 'stats') {
     const entries = await Promise.all(
       OBJECT_TYPES.map(async type => {

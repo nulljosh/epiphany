@@ -68,7 +68,6 @@ export function stockToAsset(symbol, stockData) {
       marketCap: stockData?.marketCap,
     },
     source: 'stocks',
-    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -123,7 +122,6 @@ export function accountToOntology(account) {
       currency: account.currency || 'CAD',
     },
     source: 'portfolio',
-    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -139,7 +137,6 @@ export function personToOntology(person) {
       bio: person.bio,
     },
     source: 'people',
-    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -168,7 +165,6 @@ export function placeFromCoords(lat, lon, name) {
     name: name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
     properties: { lat, lon },
     source: 'geo',
-    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 }
