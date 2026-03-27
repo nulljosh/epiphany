@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { FETCH_TIMEOUT } from '../utils/helpers';
 
 // Yahoo Finance symbols for commodities & indices
 const YAHOO_SYMBOLS = {
@@ -27,7 +28,7 @@ export function useLivePrices(initialAssets) {
 
   const fetchCryptoPrices = useCallback(async () => {
     try {
-      const response = await fetch('/api/prices');
+      const response = await fetch('/api/prices', { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
       if (!response.ok) throw new Error('CoinGecko API error');
       const data = await response.json();
 
@@ -50,7 +51,7 @@ export function useLivePrices(initialAssets) {
   const fetchCommodityPrices = useCallback(async () => {
     try {
       // Use new multi-source commodities API
-      const response = await fetch('/api/commodities');
+      const response = await fetch('/api/commodities', { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
       if (!response.ok) throw new Error('Commodities API error');
       const data = await response.json();
 
@@ -84,31 +85,29 @@ export function useLivePrices(initialAssets) {
 
       setPrices(prev => {
         const updated = { ...prev };
+        let changed = false;
 
         // Update crypto
         if (cryptoPrices) {
-          if (cryptoPrices.btc.spot) {
-            updated.btc = {
-              ...prev.btc,
-              spot: cryptoPrices.btc.spot,
-              chgPct: cryptoPrices.btc.chgPct,
-              chg: cryptoPrices.btc.spot * (cryptoPrices.btc.chgPct / 100),
-            };
-          }
-          if (cryptoPrices.eth.spot) {
-            updated.eth = {
-              ...prev.eth,
-              spot: cryptoPrices.eth.spot,
-              chgPct: cryptoPrices.eth.chgPct,
-              chg: cryptoPrices.eth.spot * (cryptoPrices.eth.chgPct / 100),
-            };
+          for (const key of ['btc', 'eth']) {
+            const src = cryptoPrices[key];
+            if (src?.spot && src.spot !== prev[key]?.spot) {
+              changed = true;
+              updated[key] = {
+                ...prev[key],
+                spot: src.spot,
+                chgPct: src.chgPct,
+                chg: src.spot * (src.chgPct / 100),
+              };
+            }
           }
         }
 
         // Update commodities & indices
         if (commodityPrices) {
-          Object.entries(commodityPrices).forEach(([key, data]) => {
-            if (prev[key]) {
+          for (const [key, data] of Object.entries(commodityPrices)) {
+            if (prev[key] && data.spot !== prev[key].spot) {
+              changed = true;
               updated[key] = {
                 ...prev[key],
                 spot: data.spot,
@@ -118,10 +117,10 @@ export function useLivePrices(initialAssets) {
                 lo52: data.lo52 || prev[key].lo52,
               };
             }
-          });
+          }
         }
 
-        return updated;
+        return changed ? updated : prev;
       });
 
       setLastUpdated(new Date());

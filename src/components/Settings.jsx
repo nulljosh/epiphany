@@ -262,7 +262,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
         <div style={labelStyle}>About</div>
         <div style={{ fontSize: 13, color: t.textSecondary }}>
-          Monica v3.0.2
+          Monica v3.0.3
         </div>
       </Card>
     </div>

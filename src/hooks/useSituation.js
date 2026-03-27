@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { fetchWithTimeout, fetchJsonGraceful } from '../utils/helpers';
 
 export const WORLD_CITIES = [
   { id: 'nyc',    label: 'NYC',    lat: 40.7128,  lon: -74.0060,  name: 'New York' },
@@ -41,36 +42,6 @@ function bboxFromCenter(lat, lon, deg = 2) {
   return { lamin: lat - deg, lomin: lon - deg, lamax: lat + deg, lomax: lon + deg };
 }
 
-async function fetchWithTimeout(url, ms = 8000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
-}
-
-async function fetchJsonGraceful(url, ms = 8000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    try {
-      return await res.json();
-    } catch {
-      return null;
-    }
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
-}
 
 export function useSituation() {
   const [userLocation, setUserLocation] = useState(() => getStoredGeo());

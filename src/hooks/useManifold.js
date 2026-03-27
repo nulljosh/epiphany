@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { FETCH_TIMEOUT } from '../utils/helpers';
 
 const MANIFOLD_API = 'https://api.manifold.markets/v0';
 
@@ -11,7 +12,7 @@ export function useManifold() {
     try {
       setLoading(true);
       // Fetch trending markets sorted by liquidity
-      const response = await fetch(`${MANIFOLD_API}/markets?limit=50&sort=liquidity`);
+      const response = await fetch(`${MANIFOLD_API}/markets?limit=50&sort=liquidity`, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
 
       if (!response.ok) throw new Error('Failed to fetch Manifold markets');
 
