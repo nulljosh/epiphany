@@ -83,14 +83,14 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             aria-pressed={!dark}
-            onClick={() => setDark(false)}
+            onClick={() => { localStorage.setItem('monica_theme', 'light'); setDark(false); }}
             style={toggleStyle(!dark)}
           >
             Light
           </button>
           <button
             aria-pressed={dark}
-            onClick={() => setDark(true)}
+            onClick={() => { localStorage.setItem('monica_theme', 'dark'); setDark(true); }}
             style={toggleStyle(dark)}
           >
             Dark

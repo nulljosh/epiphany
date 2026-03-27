@@ -164,6 +164,9 @@ export default function App() {
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
   const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('monica_theme');
+    if (saved === 'light') return false;
+    if (saved === 'dark') return true;
     const bootTheme = typeof window !== 'undefined' ? window.__MONICA_THEME__ : null;
     if (bootTheme === 'light' || bootTheme === 'dark') {
       return bootTheme === 'dark';
@@ -173,6 +176,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('situation');
   const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false });
   const mapInstanceRef = useRef(null);
+  useEffect(() => { applyResolvedTheme(dark ? 'dark' : 'light'); }, [dark]);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const [showPricing, setShowPricing] = useState(false);
@@ -246,7 +250,9 @@ export default function App() {
     return () => mq.removeEventListener('change', handler);
   }, []);
   useEffect(() => {
+    // Only auto-sync theme when user hasn't manually chosen one
     const syncTheme = () => {
+      if (localStorage.getItem('monica_theme')) return;
       const nextDark = resolveAutoTheme() === 'dark';
       setDark(nextDark);
       applyResolvedTheme(nextDark ? 'dark' : 'light');
@@ -257,14 +263,10 @@ export default function App() {
     const lightMq = window.matchMedia('(prefers-color-scheme: light)');
     darkMq.addEventListener('change', syncTheme);
     lightMq.addEventListener('change', syncTheme);
-    window.addEventListener('focus', syncTheme);
-    document.addEventListener('visibilitychange', syncTheme);
 
     return () => {
       darkMq.removeEventListener('change', syncTheme);
       lightMq.removeEventListener('change', syncTheme);
-      window.removeEventListener('focus', syncTheme);
-      document.removeEventListener('visibilitychange', syncTheme);
     };
   }, []);
   useEffect(() => {
