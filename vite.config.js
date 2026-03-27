@@ -35,6 +35,9 @@ function localStatementsPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
+  define: {
+    '__MONICA_BUILD__': JSON.stringify(new Date().toISOString()),
+  },
   build: {},
   plugins: [
     react(),
