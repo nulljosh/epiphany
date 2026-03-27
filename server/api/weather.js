@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
   try {
     const url = `${OPEN_METEO}?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relative_humidity_2m&forecast_days=1&timezone=auto`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
     const json = await response.json();
 
     if (!response.ok || !json.current_weather) {

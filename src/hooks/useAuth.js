@@ -94,7 +94,8 @@ export function useAuth() {
       if (!res.ok) return { ok: false, error: data.error || 'Failed' };
       if (updateUser && data.user) setUser(data.user);
       return { ok: true };
-    } catch {
+    } catch (err) {
+      console.error(`[auth] ${action} failed:`, err);
       return { ok: false, error: 'Network error' };
     }
   }, []);
