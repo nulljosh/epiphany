@@ -6,12 +6,17 @@ import { ErrorBoundary } from './ErrorBoundary.jsx'
 
 window.__MONICA_BUILD__ = __MONICA_BUILD__;
 
-// Force-clear stale service workers from pre-rename (opticon -> monica)
-// Keep this until all users have rotated through at least once
-navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+// One-time cleanup of stale SWs/caches from opticon -> monica rename (2026-03-26)
+if (!localStorage.getItem('monica_sw_cleared')) {
+  navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  localStorage.setItem('monica_sw_cleared', '1');
+}
 
 if (new URLSearchParams(window.location.search).has('clear-sw')) {
+  localStorage.removeItem('monica_sw_cleared');
+  navigator.serviceWorker?.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   window.location.replace('/');
 }
 
