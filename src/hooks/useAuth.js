@@ -83,16 +83,20 @@ export function useAuth() {
   }, []);
 
   const authAction = useCallback(async (action, body, { updateUser = false } = {}) => {
-    const res = await fetch(`/api/auth?action=${action}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, error: data.error || 'Failed' };
-    if (updateUser && data.user) setUser(data.user);
-    return { ok: true };
+    try {
+      const res = await fetch(`/api/auth?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) return { ok: false, error: data.error || 'Failed' };
+      if (updateUser && data.user) setUser(data.user);
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Network error' };
+    }
   }, []);
 
   const changeName = useCallback((name) => authAction('change-name', { name }, { updateUser: true }), [authAction]);

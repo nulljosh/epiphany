@@ -20,9 +20,8 @@ export default async function handler(req, res) {
     const url = `${WEATHER_API_BASE}/weather?q=${encodeURIComponent(city)}&units=${units}&appid=${apiKey}`;
 
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Bread/1.0',
-      },
+      headers: { 'User-Agent': 'Bread/1.0' },
+      signal: AbortSignal.timeout(8000),
     });
 
     const data = await response.json();

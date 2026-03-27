@@ -34,7 +34,7 @@ export function useWeather() {
       const geo = getStoredGeo();
       if (!geo) return;
       try {
-        const res = await fetch(`${API_BASE}/api/weather?lat=${geo.lat}&lon=${geo.lon}`);
+        const res = await fetch(`${API_BASE}/api/weather?lat=${geo.lat}&lon=${geo.lon}`, { signal: AbortSignal.timeout(8000) });
         const data = await res.json();
         if (!cancelled && !data.fallback) {
           setWeather({

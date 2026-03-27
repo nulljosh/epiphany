@@ -127,6 +127,7 @@ export function usePolymarket() {
   const [error, setError] = useState(null);
   const retryCountRef = useRef(0);
   const seededFromCache = useRef(false);
+  const liveLoaded = useRef(false);
 
   const fetchMarkets = useCallback(async () => {
     try {
@@ -142,6 +143,7 @@ export function usePolymarket() {
       setMarkets(transformed);
       setError(null);
       retryCountRef.current = 0;
+      liveLoaded.current = true;
     } catch (err) {
       setError(err.message);
       console.error('Polymarket fetch error:', err);
@@ -159,7 +161,7 @@ export function usePolymarket() {
         const res = await fetch('/api/latest');
         if (!res.ok) return;
         const { cached, data } = await res.json();
-        if (cached && data?.markets?.length > 0 && !seededFromCache.current) {
+        if (cached && data?.markets?.length > 0 && !seededFromCache.current && !liveLoaded.current) {
           seededFromCache.current = true;
           const transformed = transformMarkets(data.markets);
           setMarkets(transformed);

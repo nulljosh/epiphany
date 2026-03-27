@@ -36,9 +36,8 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Stonks/1.0',
-      },
+      headers: { 'User-Agent': 'Stonks/1.0' },
+      signal: AbortSignal.timeout(8000),
     });
 
     const data = await response.json();
@@ -67,6 +66,6 @@ export default async function handler(req, res) {
       page: parseInt(page),
     });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Failed to fetch news' });
+    res.status(200).json({ articles: [], totalResults: 0, page: 1, error: error.message || 'News unavailable' });
   }
 }
