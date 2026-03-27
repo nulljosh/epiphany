@@ -82,43 +82,22 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  const changeName = useCallback(async (name) => {
-    const res = await fetch('/api/auth?action=change-name', {
+  const authAction = useCallback(async (action, body, { refresh = false } = {}) => {
+    const res = await fetch(`/api/auth?action=${action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok) return { ok: false, error: data.error || 'Failed' };
-    await checkSession();
+    if (refresh) await checkSession();
     return { ok: true };
   }, [checkSession]);
 
-  const changeEmail = useCallback(async (newEmail, password) => {
-    const res = await fetch('/api/auth?action=change-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ newEmail, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, error: data.error || 'Failed' };
-    await checkSession();
-    return { ok: true };
-  }, [checkSession]);
-
-  const changePassword = useCallback(async (currentPassword, newPassword) => {
-    const res = await fetch('/api/auth?action=change-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, error: data.error || 'Failed' };
-    return { ok: true };
-  }, []);
+  const changeName = useCallback((name) => authAction('change-name', { name }, { refresh: true }), [authAction]);
+  const changeEmail = useCallback((newEmail, password) => authAction('change-email', { newEmail, password }, { refresh: true }), [authAction]);
+  const changePassword = useCallback((currentPassword, newPassword) => authAction('change-password', { currentPassword, newPassword }), [authAction]);
 
   return {
     user,

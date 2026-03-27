@@ -10,10 +10,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // First try: Yahoo v8 chart API with batched Promise.allSettled
-    // Individual requests but tolerant of partial failures
-    const batchUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbolList[0]}?interval=1d&range=1d`;
-
     // Try batch via v6 quote endpoint first (single request for all symbols)
     const quoteBatchUrl = `https://query2.finance.yahoo.com/v6/finance/quote?symbols=${symbolList.join(',')}`;
     let stocks = [];
