@@ -82,7 +82,7 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  const authAction = useCallback(async (action, body, { refresh = false } = {}) => {
+  const authAction = useCallback(async (action, body, { updateUser = false } = {}) => {
     const res = await fetch(`/api/auth?action=${action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,12 +91,12 @@ export function useAuth() {
     });
     const data = await res.json();
     if (!res.ok) return { ok: false, error: data.error || 'Failed' };
-    if (refresh) await checkSession();
+    if (updateUser && data.user) setUser(data.user);
     return { ok: true };
-  }, [checkSession]);
+  }, []);
 
-  const changeName = useCallback((name) => authAction('change-name', { name }, { refresh: true }), [authAction]);
-  const changeEmail = useCallback((newEmail, password) => authAction('change-email', { newEmail, password }, { refresh: true }), [authAction]);
+  const changeName = useCallback((name) => authAction('change-name', { name }, { updateUser: true }), [authAction]);
+  const changeEmail = useCallback((newEmail, password) => authAction('change-email', { newEmail, password }, { updateUser: true }), [authAction]);
   const changePassword = useCallback((currentPassword, newPassword) => authAction('change-password', { currentPassword, newPassword }), [authAction]);
 
   return {

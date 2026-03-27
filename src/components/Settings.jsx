@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from './ui';
 
 export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword }) {
@@ -6,6 +6,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
 
   const [name, setName] = useState(user?.name || '');
+  useEffect(() => { setName(user?.name || ''); }, [user?.name]);
   const [nameSaving, setNameSaving] = useState(false);
   const [nameMsg, setNameMsg] = useState(null);
 
@@ -118,7 +119,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
           <div style={labelStyle}>Account</div>
 
-          {/* Tier badge */}
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>{user.email}</div>
@@ -139,7 +140,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             </div>
           </div>
 
-          {/* Name */}
+
           <div style={{ marginBottom: 12 }}>
             <div style={{ ...labelStyle, marginBottom: 6 }}>Full Name</div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -158,7 +159,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             {nameMsg && <div style={msgStyle(nameMsg.error)}>{nameMsg.text}</div>}
           </div>
 
-          {/* Change Email */}
+
           <div style={{ marginBottom: 12 }}>
             {!showEmailForm ? (
               <button onClick={() => setShowEmailForm(true)} style={{ ...toggleStyle(false), fontSize: 10, padding: '4px 10px' }}>
@@ -182,7 +183,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             )}
           </div>
 
-          {/* Change Password */}
+
           <div style={{ marginBottom: 12 }}>
             {!showPasswordForm ? (
               <button onClick={() => setShowPasswordForm(true)} style={{ ...toggleStyle(false), fontSize: 10, padding: '4px 10px' }}>

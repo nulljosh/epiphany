@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 const PRICE_IDS = {
   starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
   pro: import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
@@ -204,7 +202,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
           gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
           gap: 16,
         }}>
-          {/* Free */}
+
           <div style={glassCard}>
             <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Free</h3>
             <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$0</div>
@@ -221,7 +219,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             {currentTier === 'free' && <CurrentBadge />}
           </div>
 
-          {/* Starter */}
+
           <div style={{
             ...glassCard,
             border: currentTier === 'starter'
@@ -241,7 +239,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             <UpgradeButton plan="starter" label="Get Starter" bgColor={t.accent || '#0071e3'} />
           </div>
 
-          {/* Pro */}
+
           <div style={{
             ...glassCard,
             border: currentTier === 'pro'
