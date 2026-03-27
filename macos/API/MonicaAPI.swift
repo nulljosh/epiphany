@@ -367,6 +367,73 @@ final class MonicaAPI {
         return try decode([PredictionMarket].self, from: data)
     }
 
+    // MARK: - Ontology
+
+    func fetchOntologyStats() async throws -> OntologyStatsResponse {
+        let url = try makeURL("/api/ontology", query: ["action": "stats"])
+        let data = try await perform(URLRequest(url: url))
+        return try decode(OntologyStatsResponse.self, from: data)
+    }
+
+    func listOntologyObjects(type: OntologyObjectType, limit: Int = 50) async throws -> [OntologyObject] {
+        let url = try makeURL("/api/ontology", query: ["action": "list", "type": type.rawValue, "limit": String(limit)])
+        let data = try await perform(URLRequest(url: url))
+        let response = try decode(OntologyListResponse.self, from: data)
+        return response.objects
+    }
+
+    func getOntologyObject(id: String) async throws -> OntologyObject {
+        let url = try makeURL("/api/ontology", query: ["action": "get", "id": id])
+        let data = try await perform(URLRequest(url: url))
+        return try decode(OntologyObject.self, from: data)
+    }
+
+    func upsertOntologyObject(_ object: OntologyObject) async throws {
+        let url = try makeURL("/api/ontology", query: ["action": "upsert"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(object)
+        _ = try await perform(request)
+    }
+
+    func batchUpsertOntology(_ objects: [OntologyObject]) async throws -> Int {
+        let url = try makeURL("/api/ontology", query: ["action": "batch"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["objects": objects])
+        let data = try await perform(request)
+        let response = try decode(OntologyBatchResponse.self, from: data)
+        return response.upserted
+    }
+
+    func linkOntologyObjects(type: RelationshipType, sourceId: String, targetId: String) async throws {
+        let url = try makeURL("/api/ontology", query: ["action": "link"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: String] = ["type": type.rawValue, "sourceId": sourceId, "targetId": targetId]
+        request.httpBody = try JSONEncoder().encode(body)
+        _ = try await perform(request)
+    }
+
+    func getOntologyRelationships(id: String) async throws -> OntologyRelationshipsResponse {
+        let url = try makeURL("/api/ontology", query: ["action": "relationships", "id": id])
+        let data = try await perform(URLRequest(url: url))
+        return try decode(OntologyRelationshipsResponse.self, from: data)
+    }
+
+    func queryOntology(type: OntologyObjectType, key: String? = nil, value: String? = nil) async throws -> [OntologyObject] {
+        var params = ["action": "query", "type": type.rawValue]
+        if let key { params["key"] = key }
+        if let value { params["value"] = value }
+        let url = try makeURL("/api/ontology", query: params)
+        let data = try await perform(URLRequest(url: url))
+        let response = try decode(OntologyListResponse.self, from: data)
+        return response.objects
+    }
+
     // MARK: - Internals
 
     private func makeURL(_ path: String, query: [String: String] = [:]) throws -> URL {

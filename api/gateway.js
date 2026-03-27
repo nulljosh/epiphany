@@ -31,6 +31,7 @@ import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
 import avatar from '../server/api/avatar.js';
+import ontology from '../server/api/ontology.js';
 import portfolioHistory from '../server/api/portfolio-history.js';
 import brokerSignal from '../server/api/broker/signal.js';
 import brokerPositions from '../server/api/broker/positions.js';
@@ -70,6 +71,7 @@ const ROUTES = {
   watchlist,
   alerts,
   avatar,
+  ontology,
   'portfolio/history': portfolioHistory,
   'broker/signal': brokerSignal,
   'broker/positions': brokerPositions,
