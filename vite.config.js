@@ -35,15 +35,7 @@ function localStatementsPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-        },
-      },
-    },
-  },
+  build: {},
   plugins: [
     react(),
     compression({ algorithm: 'brotliCompress', ext: '.br' }),
