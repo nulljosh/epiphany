@@ -87,6 +87,10 @@ struct PortfolioView: View {
         SpendingForecastBuilder.build(from: spendingMonths)
     }
 
+    private var savingsForecast: SavingsForecast? {
+        SavingsForecastBuilder.build(from: appState.statements)
+    }
+
     private var selectedActualSpendingMonth: FinanceData.SpendingMonth? {
         guard let selectedSpendingMonth else { return nil }
         return spendingMonths.first { $0.month == selectedSpendingMonth }
@@ -961,7 +965,7 @@ struct PortfolioView: View {
         let axisMonths = xAxisMonthLabels(months: months, forecast: forecast)
 
         return VStack(alignment: HorizontalAlignment.leading, spacing: 12) {
-            Text("Spending Forecast")
+            Text("Spending & Savings Forecast")
                 .font(.headline)
 
             if let forecast {
@@ -976,6 +980,17 @@ struct PortfolioView: View {
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                    if let savings = savingsForecast {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Palette.warningAmber)
+                                .frame(width: 6, height: 6)
+                            Text("Avg savings: \(savings.avgMonthlySavings, format: .currency(code: currencyCode))/mo")
+                                .font(.caption)
+                                .foregroundStyle(Palette.warningAmber)
+                        }
+                    }
                 }
             } else {
                 Text("Add at least 3 months of reports to generate a forecast.")
@@ -986,6 +1001,7 @@ struct PortfolioView: View {
             Chart {
                 spendingActualMarks(months: months)
                 spendingForecastMarks(forecast: forecast)
+                savingsForecastMarks()
                 spendingSelectionMark()
             }
             .frame(height: 220)
@@ -1072,6 +1088,28 @@ struct PortfolioView: View {
                     y: .value("Median Forecast", point.median)
                 )
                 .foregroundStyle(Palette.successGreen)
+                .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                .interpolationMethod(.linear)
+            }
+        }
+    }
+
+    @ChartContentBuilder
+    private func savingsForecastMarks() -> some ChartContent {
+        if let forecast = savingsForecast {
+            ForEach(forecast.points) { point in
+                AreaMark(
+                    x: .value("Month", point.month),
+                    yStart: .value("Savings Low", max(0, point.low)),
+                    yEnd: .value("Savings High", max(0, point.high))
+                )
+                .foregroundStyle(Palette.warningAmber.opacity(0.15))
+
+                LineMark(
+                    x: .value("Month", point.month),
+                    y: .value("Savings Forecast", max(0, point.median))
+                )
+                .foregroundStyle(Palette.warningAmber)
                 .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
                 .interpolationMethod(.linear)
             }

@@ -45,8 +45,10 @@ Deploy: Vercel. Repo: github.com/nulljosh/monica
 ## Changelog
 
 ### v3.3.0 (2026-03-27)
+- Savings forecast: Monte Carlo + Holt-Winters projections from bank statements, rendered as amber overlay on spending chart
 - Daily market brief (top gainers/losers + headlines, 1h cache)
 - Wildfire map layer (NASA FIRMS VIIRS satellite data)
+- Incident radius doubled (0.15 -> 0.3 degrees, fallback 0.5 -> 1.0), added railway=construction for SkyTrain
 - 5 new macro indicators: unemployment, jobless claims, consumer confidence, PCE inflation, retail sales
 - English language filter for news (stop-word heuristic)
 - iOS: camera option for profile photo, fix 1D chart cancellation error

@@ -80,6 +80,10 @@ struct PortfolioView: View {
         SpendingForecastBuilder.build(from: spendingMonths)
     }
 
+    private var savingsForecast: SavingsForecast? {
+        SavingsForecastBuilder.build(from: appState.statements)
+    }
+
     private var selectedActualSpendingMonth: FinanceData.SpendingMonth? {
         guard let selectedSpendingMonth else { return nil }
         return spendingMonths.first { $0.month == selectedSpendingMonth }
@@ -647,7 +651,7 @@ struct PortfolioView: View {
 
         return VStack(alignment: HorizontalAlignment.leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Spending Forecast")
+                Text("Spending & Savings Forecast")
                     .font(.headline)
 
                 if let forecast {
@@ -676,6 +680,16 @@ struct PortfolioView: View {
                         Text(topSpendingDriverText)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+                    if let savings = savingsForecast {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Palette.warningAmberAlt)
+                                .frame(width: 6, height: 6)
+                            Text("Avg savings: \(savings.avgMonthlySavings, format: .currency(code: currencyCode))/mo")
+                                .font(.caption)
+                                .foregroundStyle(Palette.warningAmberAlt)
+                        }
                     }
                 } else {
                     Text("Add at least 3 months of reports to generate a forecast.")
@@ -722,6 +736,25 @@ struct PortfolioView: View {
                             y: .value("Median Forecast", point.median)
                         )
                         .foregroundStyle(Palette.successGreen)
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                        .interpolationMethod(.catmullRom)
+                    }
+                }
+
+                if let savings = savingsForecast {
+                    ForEach(savings.points) { point in
+                        AreaMark(
+                            x: .value("Month", point.month),
+                            yStart: .value("Savings Low", max(0, point.low)),
+                            yEnd: .value("Savings High", max(0, point.high))
+                        )
+                        .foregroundStyle(Palette.warningAmberAlt.opacity(0.15))
+
+                        LineMark(
+                            x: .value("Month", point.month),
+                            y: .value("Savings Forecast", max(0, point.median))
+                        )
+                        .foregroundStyle(Palette.warningAmberAlt)
                         .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
                         .interpolationMethod(.catmullRom)
                     }

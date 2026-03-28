@@ -20,7 +20,7 @@ async function fetchIncidents(bbox) {
   }
 
   const { lamin, lomin, lamax, lomax } = bbox;
-  const query = `[out:json][timeout:10];(way["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="road_works"](${lamin},${lomin},${lamax},${lomax});node["emergency"~"^(ambulance_station|fire_station|ses_station)$"](${lamin},${lomin},${lamax},${lomax});node["amenity"="police"](${lamin},${lomin},${lamax},${lomax}););out center 20;`;
+  const query = `[out:json][timeout:10];(way["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="road_works"](${lamin},${lomin},${lamax},${lomax});way["railway"="construction"](${lamin},${lomin},${lamax},${lomax});node["railway"="construction"](${lamin},${lomin},${lamax},${lomax});node["emergency"~"^(ambulance_station|fire_station|ses_station)$"](${lamin},${lomin},${lamax},${lomax});node["amenity"="police"](${lamin},${lomin},${lamax},${lomax}););out center 40;`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
@@ -70,14 +70,14 @@ export default async function handler(req, res) {
   if (lamin !== undefined) {
     bbox = { lamin: +lamin, lomin: +lomin, lamax: +lamax, lomax: +lomax };
   } else if (lat && lon) {
-    const d = 0.15;
+    const d = 0.3;
     bbox = { lamin: +lat - d, lomin: +lon - d, lamax: +lat + d, lomax: +lon + d };
   } else {
     return res.status(400).json({ error: 'Provide lat/lon or bbox params' });
   }
   let result = await fetchIncidents(bbox);
   if (result.incidents.length === 0 && lat && lon) {
-    const dWide = 0.5;
+    const dWide = 1.0;
     const wideBbox = { lamin: +lat - dWide, lomin: +lon - dWide, lamax: +lat + dWide, lomax: +lon + dWide };
     result = await fetchIncidents(wideBbox);
   }
