@@ -103,7 +103,6 @@ async function googleSearch(query) {
 
 async function duckDuckGoSearch(query) {
   try {
-    // Try DDG instant answer API first
     const params = new URLSearchParams({ q: query, format: 'json', no_redirect: '1' });
     const res = await fetch(`https://api.duckduckgo.com/?${params}`);
     if (!res.ok) return wikiSearch(query);
@@ -111,29 +110,19 @@ async function duckDuckGoSearch(query) {
 
     const results = [];
 
-    if (data.Abstract) {
+    // Only use DDG if it has a real abstract with a real URL
+    if (data.Abstract && data.AbstractURL) {
       results.push({
         title: data.Heading || query,
         snippet: data.Abstract,
-        link: data.AbstractURL || '',
+        link: data.AbstractURL,
         displayLink: data.AbstractSource || '',
-        pagemap: data.Image ? { cse_image: [{ src: data.Image }] } : {},
+        pagemap: data.Image ? { cse_image: [{ src: data.Image.startsWith('http') ? data.Image : `https://duckduckgo.com${data.Image}` }] } : {},
       });
     }
 
-    for (const topic of (data.RelatedTopics || []).slice(0, 9)) {
-      if (topic.FirstURL) {
-        results.push({
-          title: topic.Text?.split(' - ')[0] || '',
-          snippet: topic.Text || '',
-          link: topic.FirstURL,
-          displayLink: new URL(topic.FirstURL).hostname,
-          pagemap: topic.Icon?.URL ? { cse_image: [{ src: topic.Icon.URL }] } : {},
-        });
-      }
-    }
-
-    // If DDG gave no results, try Wikipedia
+    // RelatedTopics have duckduckgo.com internal URLs -- skip them,
+    // fall through to Wikipedia which has real content
     if (results.length === 0) return wikiSearch(query);
     return results;
   } catch (err) {

@@ -1,6 +1,6 @@
 # Monica iOS
 
-v1.2.0
+v1.3.0
 
 ## What is Monica
 

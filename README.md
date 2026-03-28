@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v3.4.0-blue)
+![version](https://img.shields.io/badge/version-v3.5.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -43,6 +43,22 @@ Deploy: Vercel. Repo: github.com/nulljosh/monica
 - [ ] Phase 6: Semantic Search
 
 ## Changelog
+
+### v3.5.0 (2026-03-27)
+- Web map: all 8 data sources now fetched (crime, local events, weather, wildfires were missing from LiveMapBackdrop)
+- Viewport-aware search radius: endpoints receive actual map bbox instead of tiny fixed radius
+- Environment Canada weather alerts for Canadian locations (RSS feed, runs parallel with NOAA + Open-Meteo)
+- Broader Overpass queries (hospitals, fire stations, speed cameras, toll booths)
+- Wildfires: NASA EONET fallback when FIRMS key unavailable (free, no key)
+- Bot blocking + Vercel edge caching on gateway (saves serverless invocations)
+- Polling intervals reduced: flights 15s->120s, prices 5s->60s, polymarket 30s->120s
+- iOS: savings forecast loads on launch (loadStatements in preload)
+- iOS: stock chart SMA/EMA indicators now distinct colors (amber/purple) instead of all blue
+- iOS: portfolio includes account balances in net worth (TFSA, Vacation, Chequing)
+- iOS: pie chart colors updated to vibrant dark-mode-friendly palette
+- iOS: timeline chips moved from Markets tab into Portfolio detail view
+- iOS: fix "modifying state during view update" SwiftUI warnings in PortfolioView
+- iOS: auto-widen search when <5 events found in small viewport
 
 ### v3.3.0 (2026-03-27)
 - Savings forecast: Monte Carlo + Holt-Winters projections from bank statements, rendered as amber overlay on spending chart
