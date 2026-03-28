@@ -15,6 +15,7 @@ const COMMANDS = [
   { id: 'show-situation', label: 'Show Situation Monitor', category: 'command', action: 'tab', tab: 'situation' },
   { id: 'show-people', label: 'Show People', category: 'command', action: 'tab', tab: 'people' },
   { id: 'show-settings', label: 'Show Settings', category: 'command', action: 'tab', tab: 'settings' },
+  { id: 'ask-monica', label: 'Ask Monica AI', category: 'command', action: 'openAi' },
 ];
 
 const CITIES = [

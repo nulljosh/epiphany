@@ -209,9 +209,12 @@ struct SettingsView: View {
 
 
     private var avatarPickerButton: some View {
-        PhotosPicker(selection: $avatarItem, matching: .images) {
+        let avatarData = appState.avatarImageData
+        let initial = avatarInitial
+        let uploading = isUploadingAvatar
+        return PhotosPicker(selection: $avatarItem, matching: .images) {
             ZStack {
-                if let data = appState.avatarImageData,
+                if let data = avatarData,
                    let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -222,11 +225,11 @@ struct SettingsView: View {
                     Circle()
                         .fill(Palette.appleBlue.opacity(0.2))
                         .frame(width: 56, height: 56)
-                    Text(avatarInitial)
+                    Text(initial)
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(Palette.appleBlue)
                 }
-                if isUploadingAvatar {
+                if uploading {
                     Circle()
                         .fill(.black.opacity(0.5))
                         .frame(width: 56, height: 56)

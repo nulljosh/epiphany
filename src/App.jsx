@@ -27,6 +27,7 @@ import Settings from './components/Settings';
 import MarketsPanel from './components/MarketsPanel';
 import PeoplePanel from './components/PeoplePanel';
 import CommandBar from './components/CommandBar';
+import AiPanel from './components/AiPanel';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -185,6 +186,7 @@ export default function App() {
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(false);
   const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [commandBarStock, setCommandBarStock] = useState(null);
   const desktopPanelRef = useRef(null);
   const desktopNavRef = useRef(null);
@@ -1606,6 +1608,7 @@ const reset = useCallback(() => {
         onCommand={(cmd) => {
           if (cmd.action === 'toggleDark') setDark(d => !d);
           if (cmd.action === 'toggleLayer') setMapLayers(l => ({ ...l, [cmd.layer]: !l[cmd.layer] }));
+          if (cmd.action === 'openAi') { setAiPanelOpen(true); return; }
           if (cmd.action === 'tab') {
             setActiveTab(cmd.tab);
             if (isMobileNav) setMobilePanelOpen(true);
@@ -1613,6 +1616,8 @@ const reset = useCallback(() => {
           }
         }}
       />
+
+      <AiPanel open={aiPanelOpen} onClose={() => setAiPanelOpen(false)} />
 
       {showHelp && (
         <div onClick={() => setShowHelp(false)} style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>

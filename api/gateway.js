@@ -31,6 +31,7 @@ import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
 import avatar from '../server/api/avatar.js';
+import ai from '../server/api/ai.js';
 import ontology from '../server/api/ontology.js';
 import portfolioHistory from '../server/api/portfolio-history.js';
 import brokerSignal from '../server/api/broker/signal.js';
@@ -39,6 +40,7 @@ import brokerWebhook from '../server/api/broker/webhook.js';
 import brokerMorningRun from '../server/api/broker/morning-run.js';
 
 const ROUTES = {
+  ai,
   auth,
   commodities,
   crime,
