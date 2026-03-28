@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v2.9.0-blue)
+![version](https://img.shields.io/badge/version-v3.2.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -10,8 +10,10 @@ Personal intelligence platform. Map, markets, and people -- Palantir for regular
 ## Features
 
 - **Map** -- MapLibre GL, geolocation, dark/light tiles, city hubs, heat map overlay
-- **Data layers** -- Flights, traffic, earthquakes, weather, GDELT news, Polymarket
-- **Command bar** -- Cmd+K universal search across stocks, cities, markets, people, commands
+- **Data layers** -- Flights, traffic, earthquakes, weather, crime, GDELT news, Polymarket
+- **AI analyst** -- Claude-powered intelligence chat with 10 tool functions (stock lookup, portfolio, news, macro, ontology, alerts, watchlist, create alerts, add notes)
+- **Personal ontology** -- Knowledge graph with 9 object types, 6 relationship types, batch upsert, query engine
+- **Command bar** -- Cmd+K universal search across stocks, cities, markets, people, AI
 - **Situation Monitor** -- Detection cards with severity levels, source health indicators, event timeline
 - **Trading simulator** -- 167 assets, Kelly sizing, Fibonacci levels, PnL
 - **Portfolio** -- Holdings, budgets, debt payoff, spending analysis (PDF upload), income overlays, GST/HST credit tracking
@@ -19,7 +21,7 @@ Personal intelligence platform. Map, markets, and people -- Palantir for regular
 - **Ticker bar** -- Live scrolling prices with anomaly badges
 - **Auth + billing** -- bcrypt/KV sessions, Stripe (Free/$20/$50), Apple Pay
 - **PWA** -- Offline service worker
-- **Companions** -- monica-ios, monica-macos
+- **Companions** -- iOS (SwiftUI), macOS (SwiftUI), watchOS (SwiftUI)
 
 ## Run
 
@@ -30,29 +32,29 @@ npm test -- --run
 npm run build
 ```
 
-Deploy: Vercel (Cloudflare migration planned for API).
+Deploy: Vercel. Repo: github.com/nulljosh/monica
 
 ## Roadmap
 
-### v1.1.0 -- Person Indexer
-Third pillar of Monica alongside Map and Markets. Search anyone by name and get an aggregated profile from public sources.
-
-- [ ] Person search tab (Map / Markets / People)
-- [ ] Google search aggregation -- scrape and structure results for a given name
-- [ ] Social profile discovery -- LinkedIn, Facebook, Twitter/X, Instagram, GitHub
-- [ ] Public records integration -- property ownership, court records, business registrations
-- [ ] Profile card builder -- photo, bio, links, news mentions, social accounts
-- [ ] Local profile cache -- store indexed profiles for instant recall
-- [ ] Relationship mapping -- visualize connections between indexed people
-
 ### Ongoing
-- [ ] Cloudflare API migration
-- [ ] Watchlist with alerts
-- [ ] Multi-account portfolio aggregation
-- [ ] Historical spending trends
-- [ ] macOS companion feature parity
+- [ ] Phase 3: Data Fusion Engine (cross-source correlation)
+- [ ] Phase 4: Automated Workflows + Decision Support
+- [ ] Phase 5: Timeline + Graph Visualization
+- [ ] Phase 6: Semantic Search
 
 ## Changelog
+
+### v3.2.0 (2026-03-27)
+- AI intelligence analyst (Claude-powered streaming chat with tool calling)
+- 12 iOS bug fixes: fire hydrants on map, laggy tabs, stuck portfolio spinner, profile photo persistence, people search (Wikipedia fallback), map sources page, TradingView-style rows, market filter segments, Tally visibility, parallel data preloading
+- Propagated fixes to macOS
+- Review cleanup: parallelized AI tool execution and KV reads, fixed broken stock lookup, structured history persistence
+
+### v3.1.0 (2026-03-27)
+- Personal Ontology Layer: 9 object types, 6 relationship types, CRUD API, batch upsert, query engine
+- Auto-population from existing data sources (stocks -> Assets, earthquakes -> Events)
+- Client hooks with optimistic updates
+- iOS/macOS/watchOS ontology models with AnyCodable array support
 
 ### v2.9.0 (2026-03-26)
 - Command bar (Cmd+K) -- universal search across stocks, cities, prediction markets, people, commands
