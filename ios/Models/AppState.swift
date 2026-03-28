@@ -351,11 +351,7 @@ final class AppState {
     }
 
     func loadDailyBrief() async {
-        do {
-            dailyBrief = try await MonicaAPI.shared.fetchDailyBrief()
-        } catch {
-            // Non-critical, silently fail
-        }
+        dailyBrief = try? await MonicaAPI.shared.fetchDailyBrief()
     }
 
     func loadStatements() async {

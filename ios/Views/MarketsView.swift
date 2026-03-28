@@ -107,30 +107,61 @@ struct MarketsView: View {
                             Section(isExpanded: $portfolioExpanded) {
                                 if let financeData = appState.financeData {
                                     let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
-                                    if !portfolio.holdings.isEmpty {
-                                        NavigationLink {
-                                            PortfolioView()
-                                                .environment(appState)
-                                        } label: {
-                                            HStack {
-                                                VStack(alignment: .leading, spacing: 3) {
-                                                    Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
-                                                        .font(.title2.weight(.heavy))
-                                                        .foregroundStyle(Palette.text)
+                                    let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
+                                    let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
+                                    let netWorth = (portfolio.holdings.isEmpty ? 0 : portfolio.totalValue) + totalBalance - totalDebt
+
+                                    NavigationLink {
+                                        PortfolioView()
+                                            .environment(appState)
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(CurrencyFormatter.formatPrice(netWorth))
+                                                    .font(.title2.weight(.heavy))
+                                                    .foregroundStyle(Palette.text)
+                                                if !portfolio.holdings.isEmpty {
                                                     HStack(spacing: 4) {
                                                         Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
                                                         Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
                                                     }
                                                     .font(.caption.weight(.semibold))
                                                     .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
+                                                } else {
+                                                    Text("Net Worth")
+                                                        .font(.caption)
+                                                        .foregroundStyle(.secondary)
                                                 }
-                                                Spacer()
-                                                Image(systemName: "chevron.right")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.tertiary)
+                                            }
+                                            Spacer()
+                                            if !financeData.accounts.isEmpty {
+                                                VStack(alignment: .trailing, spacing: 3) {
+                                                    Text(CurrencyFormatter.formatPrice(totalBalance))
+                                                        .font(.subheadline.weight(.semibold))
+                                                        .foregroundStyle(Palette.successGreen)
+                                                    Text("\(financeData.accounts.count) accounts")
+                                                        .font(.caption2)
+                                                        .foregroundStyle(.secondary)
+                                                }
                                             }
                                         }
-                                        .padding(.vertical, 4)
+                                    }
+                                    .padding(.vertical, 4)
+
+                                    if !financeData.accounts.isEmpty {
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 10) {
+                                                ForEach(financeData.accounts) { account in
+                                                    TimelineChip(
+                                                        icon: account.type == "investment" ? "chart.line.uptrend.xyaxis" : account.type == "gift" ? "giftcard" : "banknote",
+                                                        label: account.name,
+                                                        detail: CurrencyFormatter.formatAbbreviated(account.balance),
+                                                        color: Palette.appleBlue
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                                     }
 
                                     let debt = financeData.debt
@@ -185,37 +216,7 @@ struct MarketsView: View {
                                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                                     }
                                 } else if appState.financeDataLoaded {
-                                    if let financeData = appState.financeData, !financeData.accounts.isEmpty {
-                                        let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
-                                        let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
-                                        let netWorth = totalBalance - totalDebt
-
-                                        NavigationLink {
-                                            PortfolioView()
-                                                .environment(appState)
-                                        } label: {
-                                            HStack {
-                                                VStack(alignment: .leading, spacing: 3) {
-                                                    Text(CurrencyFormatter.formatPrice(netWorth))
-                                                        .font(.title2.weight(.heavy))
-                                                        .foregroundStyle(Palette.text)
-                                                    Text("Net Worth")
-                                                        .font(.caption)
-                                                        .foregroundStyle(.secondary)
-                                                }
-                                                Spacer()
-                                                VStack(alignment: .trailing, spacing: 3) {
-                                                    Text(CurrencyFormatter.formatPrice(totalBalance))
-                                                        .font(.subheadline.weight(.semibold))
-                                                        .foregroundStyle(Palette.successGreen)
-                                                    Text("\(financeData.accounts.count) accounts")
-                                                        .font(.caption2)
-                                                        .foregroundStyle(.secondary)
-                                                }
-                                            }
-                                        }
-                                        .padding(.vertical, 4)
-                                    } else if appState.tallyConnected, let tally = appState.tallyPayment {
+                                    if appState.tallyConnected, let tally = appState.tallyPayment {
                                         HStack {
                                             Image(systemName: "calendar.badge.clock")
                                                 .foregroundStyle(Palette.appleBlue)

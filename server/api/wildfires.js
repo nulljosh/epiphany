@@ -1,9 +1,6 @@
 import { applyCors } from './_cors.js';
 
-// NASA FIRMS (Fire Information for Resource Management System)
-// Free, no API key needed for CSV endpoint. Global active fire data.
-const FIRMS_URL = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
-const MAP_KEY = 'DEMO'; // Public demo key works for low-volume requests
+const MAP_KEY = 'DEMO';
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
 
 let cache = { ts: 0, data: null, key: '' };
@@ -41,18 +38,7 @@ export default async function handler(req, res) {
     const r = await fetch(url, { signal: controller.signal });
     clearTimeout(timer);
 
-    if (!r.ok) {
-      // Fallback: try the open data CSV
-      const fallbackUrl = `https://firms.modaps.eosdis.nasa.gov/active_fire/c6/text/MODIS_C6_Global_24h.csv`;
-      const fr = await fetch(fallbackUrl, { signal: AbortSignal.timeout(8000) });
-      if (!fr.ok) throw new Error(`FIRMS ${r.status}`);
-      const text = await fr.text();
-      const fires = parseCSV(text, lat, lon, delta);
-      const data = { fires, source: 'MODIS_fallback', count: fires.length };
-      cache = { ts: Date.now(), data, key: cacheKey };
-      res.setHeader('Cache-Control', 's-maxage=1800');
-      return res.status(200).json(data);
-    }
+    if (!r.ok) throw new Error(`FIRMS ${r.status}`);
 
     const text = await r.text();
     const fires = parseCSV(text, lat, lon, delta);
