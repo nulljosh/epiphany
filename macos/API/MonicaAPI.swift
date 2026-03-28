@@ -608,14 +608,29 @@ struct PriceHistory: Codable {
 
         var id: String { date }
 
-        private static let dateFormatter: DateFormatter = {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            return formatter
+        private static nonisolated(unsafe) let isoFractional: ISO8601DateFormatter = {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f
+        }()
+
+        private static nonisolated(unsafe) let isoStandard: ISO8601DateFormatter = {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime]
+            return f
+        }()
+
+        private static nonisolated(unsafe) let dateOnly: DateFormatter = {
+            let f = DateFormatter()
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.dateFormat = "yyyy-MM-dd"
+            return f
         }()
 
         var parsedDate: Date? {
-            Self.dateFormatter.date(from: date)
+            Self.isoFractional.date(from: date)
+                ?? Self.isoStandard.date(from: date)
+                ?? Self.dateOnly.date(from: date)
         }
     }
 }

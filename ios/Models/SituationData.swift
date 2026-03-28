@@ -228,12 +228,12 @@ struct Incident: Codable, Identifiable {
     }
 
     private static let lowSignalTypes: Set<String> = [
-        "gate", "bollard", "barrier", "cattle_grid", "cycle_barrier",
-        "debris", "jersey_barrier", "log", "spikes", "stile",
-        "swing_gate", "toll_booth", "turnstile", "block",
-        "fire_hydrant", "fire_extinguisher", "defibrillator",
-        "phone", "siren", "assembly_point", "drinking_water",
-        "construction", "road_works", "road work", "roadwork",
+        "gate", "bollard", "barrier", "cattle grid", "cycle barrier",
+        "debris", "jersey barrier", "log", "spikes", "stile",
+        "swing gate", "toll booth", "turnstile", "block",
+        "fire hydrant", "fire extinguisher", "defibrillator",
+        "phone", "siren", "assembly point", "drinking water",
+        "construction", "road works", "road work", "roadwork",
     ]
 
     private static func normalizeTitle(_ raw: String) -> String {
