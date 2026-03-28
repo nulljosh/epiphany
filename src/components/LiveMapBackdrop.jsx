@@ -341,7 +341,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           fetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
           fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
           fetch(apiPath('/api/earthquakes')).then(r => r.json()).catch(() => ({ earthquakes: [] })),
-          fetch(apiPath('/api/events')).then(r => r.json()).catch(() => ({ events: [] })),
+          fetch(apiPath(`/api/events?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ events: [] })),
           fetch(apiPath('/api/markets')).then(r => r.json()).catch(() => []),
           fetch(apiPath(`/api/news?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ articles: [] })),
           fetch(apiPath(`/api/crime?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
