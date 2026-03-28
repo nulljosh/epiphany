@@ -394,8 +394,8 @@ function SpendingChart({ spending, t, totalIncome, totalExpenses, activeScenario
             <stop offset="100%" stopColor={t.green} stopOpacity="0.03" />
           </linearGradient>
           <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={t.cyan} stopOpacity="0.18" />
-            <stop offset="100%" stopColor={t.cyan} stopOpacity="0.04" />
+            <stop offset="0%" stopColor={t.cyan} stopOpacity="0.32" />
+            <stop offset="100%" stopColor={t.cyan} stopOpacity="0.06" />
           </linearGradient>
           <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={t.green} stopOpacity="0.12" />
@@ -421,12 +421,23 @@ function SpendingChart({ spending, t, totalIncome, totalExpenses, activeScenario
             d={savingsPath}
             fill="none"
             stroke={t.cyan}
-            strokeWidth="1.5"
-            strokeOpacity="0.6"
+            strokeWidth="2"
+            strokeOpacity="0.9"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         )}
+        {showSavings && savingsPoints.map((point, i) => {
+          const savingsValue = totalIncome - (actual[i]?.total || 0);
+          return (
+            <g key={`savings-${i}`}>
+              <circle cx={point.x} cy={point.y} r={3.5} fill={t.cyan} fillOpacity="0.9" />
+              <text x={point.x} y={point.y - 8} textAnchor="middle" fill={t.cyan} fontSize="9" fontWeight="600" fontFamily="-apple-system, system-ui, sans-serif" opacity="0.85">
+                {compactCurrency(Math.max(0, savingsValue))}
+              </text>
+            </g>
+          );
+        })}
         {activeScenarios.map((scenario) => {
           const scenarioIncome = scenario.multiplier
             ? (totalIncome || 0) * scenario.multiplier

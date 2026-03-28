@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { usePeopleIndex } from '../hooks/usePeopleIndex';
+import { personToOntology } from '../lib/ontology';
+import { useOntology } from '../hooks/useOntology';
 
 export const PEOPLE_RECENT_KEY = 'monica-people-recent';
 const SAVED_KEY = 'monica-people-saved';
@@ -148,7 +151,6 @@ function getCache() {
 function setCacheEntry(query, data) {
   const cache = getCache();
   cache[query.toLowerCase().trim()] = { data, ts: Date.now() };
-  // keep cache from growing unbounded -- 50 entries max
   const keys = Object.keys(cache);
   if (keys.length > 50) {
     const sorted = keys.sort((a, b) => cache[a].ts - cache[b].ts);
@@ -172,7 +174,429 @@ const SUGGESTION_POOL = [
   'Oprah Winfrey', 'Jeff Bezos', 'Alexandria Ocasio-Cortez',
 ];
 
-export default function PeoplePanel({ dark, t }) {
+// --- Index Sub-Components ---
+
+function TagInput({ tags, onChange, dark, t }) {
+  const [input, setInput] = useState('');
+  const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+  const addTag = () => {
+    const tag = input.trim();
+    if (tag && !tags.includes(tag)) {
+      onChange([...tags, tag]);
+    }
+    setInput('');
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: tags.length > 0 ? 6 : 0 }}>
+        {tags.map(tag => (
+          <span
+            key={tag}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '2px 8px', borderRadius: 100,
+              background: dark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.1)',
+              color: t.accent || '#0a84ff', fontSize: 11, fontWeight: 500,
+            }}
+          >
+            {tag}
+            <button
+              onClick={() => onChange(tags.filter(x => x !== tag))}
+              style={{
+                background: 'none', border: 'none', color: 'inherit',
+                cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1,
+              }}
+            >
+              {'\u00d7'}
+            </button>
+          </span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <input
+          type="text"
+          placeholder="Add tag..."
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { e.preventDefault(); addTag(); }
+          }}
+          style={{
+            flex: 1, padding: '4px 8px', borderRadius: 6,
+            border: `1px solid ${t.border}`,
+            background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+            color: t.text, fontSize: 12, fontFamily: font, outline: 'none',
+          }}
+        />
+        <button
+          onClick={addTag}
+          disabled={!input.trim()}
+          style={{
+            padding: '4px 10px', borderRadius: 6,
+            border: `1px solid ${t.border}`,
+            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+            color: t.textSecondary, fontSize: 12, cursor: 'pointer',
+            fontFamily: font, opacity: input.trim() ? 1 : 0.4,
+          }}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
+  const [notes, setNotes] = useState(person.notes || '');
+  const [saving, setSaving] = useState(false);
+  const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+  const notesTimer = useRef(null);
+
+  const glass = {
+    background: t.glass,
+    backdropFilter: 'blur(20px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+    border: `1px solid ${t.cardBorder || t.border}`,
+    borderRadius: 12,
+  };
+
+  const handleNotesChange = (val) => {
+    setNotes(val);
+    if (notesTimer.current) clearTimeout(notesTimer.current);
+    notesTimer.current = setTimeout(() => {
+      onUpdate({ ...person, notes: val });
+    }, 800);
+  };
+
+  const handleTagsChange = (tags) => {
+    onUpdate({ ...person, tags });
+  };
+
+  return (
+    <div style={{ padding: 0 }}>
+      <button
+        onClick={onClose}
+        style={{
+          background: 'none', border: 'none', color: t.accent || '#0a84ff',
+          cursor: 'pointer', fontSize: 13, fontFamily: font, padding: '0 0 12px',
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back
+      </button>
+
+      <div style={{ ...glass, padding: 20, marginBottom: 12, textAlign: 'center' }}>
+        {person.image ? (
+          <img
+            src={person.image}
+            alt={person.name}
+            style={{
+              width: 80, height: 80, borderRadius: '50%', objectFit: 'cover',
+              margin: '0 auto 12px', display: 'block',
+              border: `2px solid ${t.border}`,
+            }}
+            onError={e => { e.target.style.display = 'none'; }}
+          />
+        ) : (
+          <PersonPlaceholder size={80} bgColor={dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'} borderColor={t.border} />
+        )}
+        <div style={{ fontSize: 20, fontWeight: 700, color: t.text, marginBottom: 4 }}>
+          {person.name}
+        </div>
+        {person.bio && (
+          <div style={{ fontSize: 13, color: t.textSecondary, lineHeight: 1.5, maxWidth: 400, margin: '0 auto' }}>
+            {person.bio}
+          </div>
+        )}
+      </div>
+
+      {/* Social Links */}
+      {person.socials?.length > 0 && (
+        <div style={{
+          ...glass, padding: '10px 14px', marginBottom: 12,
+          display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center',
+        }}>
+          {person.socials.map((link, i) => (
+            <a
+              key={link.platform || i}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={link.username ? `@${link.username}` : link.platform}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 10px', borderRadius: 8,
+                background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                color: t.textSecondary, textDecoration: 'none',
+                fontSize: 12, fontWeight: 500,
+                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              {SOCIAL_ICONS[link.platform] || null}
+              <span>{link.username || link.platform}</span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Tags */}
+      <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 600, color: t.textSecondary,
+          textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+        }}>
+          Tags
+        </div>
+        <TagInput tags={person.tags || []} onChange={handleTagsChange} dark={dark} t={t} />
+      </div>
+
+      {/* Notes */}
+      <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 600, color: t.textSecondary,
+          textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+        }}>
+          Notes
+        </div>
+        <textarea
+          value={notes}
+          onChange={e => handleNotesChange(e.target.value)}
+          placeholder="Add notes about this person..."
+          rows={4}
+          style={{
+            width: '100%', padding: '8px 10px', borderRadius: 8,
+            border: `1px solid ${t.border}`,
+            background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+            color: t.text, fontSize: 13, fontFamily: font, outline: 'none',
+            resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.5,
+          }}
+        />
+      </div>
+
+      {/* Relationships */}
+      {person.relationships?.length > 0 && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 600, color: t.textSecondary,
+            textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+          }}>
+            Relationships
+          </div>
+          {person.relationships.map((rel, i) => (
+            <div key={i} style={{
+              fontSize: 13, color: t.text, padding: '4px 0',
+              borderBottom: i < person.relationships.length - 1 ? `1px solid ${t.border}` : 'none',
+            }}>
+              <span style={{ color: t.textSecondary }}>{rel.type}:</span> {rel.name}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Search Data */}
+      {person.searchData?.results?.length > 0 && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 600, color: t.textSecondary,
+            textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+          }}>
+            Search Results ({person.searchData.resultCount})
+          </div>
+          {person.searchData.results.map((r, i) => (
+            <a
+              key={i}
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'block', padding: '8px 0',
+                borderBottom: i < person.searchData.results.length - 1 ? `1px solid ${t.border}` : 'none',
+                textDecoration: 'none',
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.accent || '#0a84ff', marginBottom: 2 }}>
+                {r.title}
+              </div>
+              <div style={{ fontSize: 11, color: t.textTertiary || t.textSecondary }}>
+                {r.displayUrl}
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Delete */}
+      <button
+        onClick={() => { onDelete(person.id); onClose(); }}
+        style={{
+          width: '100%', padding: '10px 14px', borderRadius: 10,
+          border: `1px solid rgba(255,69,58,0.3)`,
+          background: 'rgba(255,69,58,0.08)',
+          color: '#FF453A', fontSize: 13, fontWeight: 500,
+          fontFamily: font, cursor: 'pointer',
+          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        Remove from Index
+      </button>
+    </div>
+  );
+}
+
+function IndexView({ dark, t, peopleIndex, glass, font }) {
+  const { people, loading, upsert, remove } = peopleIndex;
+  const [filter, setFilter] = useState('');
+  const [selected, setSelected] = useState(null);
+
+  const filtered = filter
+    ? people.filter(p =>
+        p.name.toLowerCase().includes(filter.toLowerCase()) ||
+        (p.tags || []).some(tag => tag.toLowerCase().includes(filter.toLowerCase()))
+      )
+    : people;
+
+  if (selected) {
+    const person = people.find(p => p.id === selected);
+    if (person) {
+      return (
+        <PersonDetail
+          person={person}
+          onUpdate={upsert}
+          onDelete={remove}
+          onClose={() => setSelected(null)}
+          dark={dark}
+          t={t}
+        />
+      );
+    }
+  }
+
+  return (
+    <>
+      {people.length > 3 && (
+        <input
+          type="text"
+          placeholder="Filter by name or tag..."
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          style={{
+            width: '100%', padding: '8px 12px', borderRadius: 8,
+            border: `1px solid ${t.border}`,
+            background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+            color: t.text, fontSize: 13, fontFamily: font, outline: 'none',
+            boxSizing: 'border-box', marginBottom: 12,
+          }}
+        />
+      )}
+
+      {loading && people.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '32px 0', color: t.textSecondary, fontSize: 13 }}>
+          <div style={{
+            width: 20, height: 20, border: `2px solid ${t.border}`,
+            borderTopColor: t.accent || '#0a84ff', borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+            margin: '0 auto 8px',
+          }} />
+          Loading index...
+        </div>
+      )}
+
+      {!loading && people.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: t.textTertiary || t.textSecondary }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4, marginBottom: 8 }}>
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+            <path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>No indexed people</div>
+          <div style={{ fontSize: 12 }}>Search for someone and tap "Index" to save them here</div>
+        </div>
+      )}
+
+      {filtered.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+          gap: 8,
+        }}>
+          {filtered.map(person => (
+            <button
+              key={person.id}
+              onClick={() => setSelected(person.id)}
+              style={{
+                ...glass, padding: 14, textAlign: 'center',
+                cursor: 'pointer', border: `1px solid ${t.cardBorder || t.border}`,
+                background: t.glass, fontFamily: font,
+                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              {person.image ? (
+                <img
+                  src={person.image}
+                  alt={person.name}
+                  style={{
+                    width: 48, height: 48, borderRadius: '50%', objectFit: 'cover',
+                    margin: '0 auto 8px', display: 'block',
+                    border: `1px solid ${t.border}`,
+                  }}
+                  onError={e => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <PersonPlaceholder size={48} bgColor={dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'} borderColor={t.border} />
+              )}
+              <div style={{
+                fontSize: 13, fontWeight: 600, color: t.text,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {person.name}
+              </div>
+              {person.tags?.length > 0 && (
+                <div style={{
+                  marginTop: 4, display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap',
+                }}>
+                  {person.tags.slice(0, 2).map(tag => (
+                    <span key={tag} style={{
+                      fontSize: 9, padding: '1px 5px', borderRadius: 100,
+                      background: dark ? 'rgba(10,132,255,0.12)' : 'rgba(10,132,255,0.08)',
+                      color: t.accent || '#0a84ff',
+                    }}>
+                      {tag}
+                    </span>
+                  ))}
+                  {person.tags.length > 2 && (
+                    <span style={{ fontSize: 9, color: t.textTertiary }}>+{person.tags.length - 2}</span>
+                  )}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {filter && filtered.length === 0 && people.length > 0 && (
+        <div style={{ textAlign: 'center', padding: '20px 0', color: t.textTertiary || t.textSecondary, fontSize: 13 }}>
+          No matches for "{filter}"
+        </div>
+      )}
+    </>
+  );
+}
+
+
+export default function PeoplePanel({ dark, t, isAuthenticated }) {
+  const [tab, setTab] = useState('search');
   const [search, setSearch] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -181,9 +605,13 @@ export default function PeoplePanel({ dark, t }) {
   const [savedProfiles, setSavedProfiles] = useState(getSaved);
   const [fromCache, setFromCache] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
+  const [indexing, setIndexing] = useState(false);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+  const peopleIndex = usePeopleIndex(isAuthenticated);
+  const ontology = useOntology(isAuthenticated);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -206,7 +634,6 @@ export default function PeoplePanel({ dark, t }) {
       setLoading(true);
       setError(null);
 
-      // Check cache -- show instantly if available
       const cached = getCacheEntry(query);
       if (cached) {
         setResults(cached.data);
@@ -226,7 +653,6 @@ export default function PeoplePanel({ dark, t }) {
         setRecentSearches(getRecent());
       }
     } catch (err) {
-      // If we showed cached data, keep it and just clear loading
       if (!fromCache) {
         setError(err.message);
         setResults(null);
@@ -277,6 +703,42 @@ export default function PeoplePanel({ dark, t }) {
     setSavedProfiles(getSaved());
   }, [results]);
 
+  const handleIndex = useCallback(async () => {
+    if (!results || !isAuthenticated) return;
+    setIndexing(true);
+    const profileName = extractProfileName(results, results.query);
+    const person = {
+      name: profileName,
+      image: results.primaryImage || null,
+      bio: results.results[0]?.snippet || null,
+      tags: [],
+      notes: '',
+      socials: results.socialLinks || [],
+      relationships: [],
+      searchData: {
+        query: results.query,
+        results: results.results,
+        resultCount: results.resultCount,
+      },
+    };
+    const saved = await peopleIndex.upsert(person);
+    if (saved) {
+      // Also push to ontology
+      try {
+        const ontObj = personToOntology({ ...person, id: saved.id });
+        await ontology.upsert(ontObj);
+      } catch { /* non-critical */ }
+    }
+    setIndexing(false);
+  }, [results, isAuthenticated, peopleIndex, ontology]);
+
+  const isIndexed = results
+    ? peopleIndex.people.some(p => {
+        const name = extractProfileName(results, results.query).toLowerCase();
+        return p.name.toLowerCase() === name;
+      })
+    : false;
+
   const profileName = results ? extractProfileName(results, results.query) : '';
   const isSaved = results ? isPersonSaved(results.query) : false;
 
@@ -290,387 +752,441 @@ export default function PeoplePanel({ dark, t }) {
 
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
-      {/* Search */}
-      <input
-        ref={inputRef}
-        type="text"
-        aria-label="Search people"
-        placeholder="Search people..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        onKeyDown={handleKeyDown}
-        style={{
-          width: '100%', padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${t.border}`,
-          background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-          color: t.text, fontSize: 14, fontFamily: font, outline: 'none',
-          boxSizing: 'border-box',
-          transition: 'border-color 0.2s ease',
-        }}
-        onFocus={e => e.target.style.borderColor = t.accent || '#0071e3'}
-        onBlur={e => e.target.style.borderColor = t.border}
-      />
+      {/* Tab Switcher */}
+      <div style={{
+        display: 'flex', gap: 0, marginBottom: 12,
+        borderRadius: 8, overflow: 'hidden',
+        border: `1px solid ${t.border}`,
+        background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+      }}>
+        {['search', 'index'].map(tabName => (
+          <button
+            key={tabName}
+            onClick={() => setTab(tabName)}
+            style={{
+              flex: 1, padding: '8px 0', border: 'none',
+              background: tab === tabName
+                ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)')
+                : 'transparent',
+              color: tab === tabName ? t.text : t.textSecondary,
+              fontSize: 13, fontWeight: tab === tabName ? 600 : 400,
+              fontFamily: font, cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              textTransform: 'capitalize',
+            }}
+          >
+            {tabName}
+          </button>
+        ))}
+      </div>
 
-      {/* Loading */}
-      {loading && !results && (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: t.textSecondary, fontSize: 13 }}>
-          <div style={{
-            width: 20, height: 20, border: `2px solid ${t.border}`,
-            borderTopColor: t.accent || '#0071e3', borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-            margin: '0 auto 8px',
-          }} />
-          Searching...
-        </div>
-      )}
+      {/* --- SEARCH TAB --- */}
+      {tab === 'search' && (
+        <>
+          <input
+            ref={inputRef}
+            type="text"
+            aria-label="Search people"
+            placeholder="Search people..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 10,
+              border: `1px solid ${t.border}`,
+              background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+              color: t.text, fontSize: 14, fontFamily: font, outline: 'none',
+              boxSizing: 'border-box',
+              transition: 'border-color 0.2s ease',
+            }}
+            onFocus={e => e.target.style.borderColor = t.accent || '#0071e3'}
+            onBlur={e => e.target.style.borderColor = t.border}
+          />
 
-      {/* Error */}
-      {error && (
-        <div style={{
-          ...glass, padding: '12px 14px', marginTop: 12,
-          borderColor: 'rgba(255,69,58,0.3)',
-          color: '#FF453A', fontSize: 13,
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Results */}
-      {results && (
-        <div style={{ marginTop: 12 }}>
-          {/* Profile Card */}
-          <div style={{ ...glass, padding: 20, marginBottom: 12, textAlign: 'center', position: 'relative' }}>
-            {/* Bookmark button */}
-            <button
-              onClick={handleBookmark}
-              aria-label={isSaved ? 'Remove bookmark' : 'Bookmark profile'}
-              style={{
-                position: 'absolute', top: 12, right: 12,
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: isSaved ? (t.accent || '#0071e3') : (t.textTertiary || t.textSecondary),
-                padding: 4,
-                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-              </svg>
-            </button>
-
-            {/* Cached indicator */}
-            {fromCache && (
+          {loading && !results && (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: t.textSecondary, fontSize: 13 }}>
               <div style={{
-                position: 'absolute', top: 14, left: 14,
-                fontSize: 10, color: t.textTertiary || t.textSecondary,
-                background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                padding: '2px 6px', borderRadius: 4,
-                opacity: 0.7,
-              }}>
-                cached
-              </div>
-            )}
-
-            {results.primaryImage ? (
-              <img
-                src={results.primaryImage}
-                alt={profileName}
-                style={{
-                  width: 72, height: 72, borderRadius: '50%',
-                  objectFit: 'cover', margin: '0 auto 12px',
-                  display: 'block',
-                  border: `2px solid ${t.border}`,
-                }}
-                onError={e => {
-                  // Replace with placeholder on error
-                  e.target.style.display = 'none';
-                  e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
-                }}
-              />
-            ) : null}
-            {!results.primaryImage && (
-              <PersonPlaceholder size={72} bgColor={dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'} borderColor={t.border} />
-            )}
-            <div style={{ fontSize: 18, fontWeight: 700, color: t.text, marginBottom: 6 }}>
-              {profileName}
+                width: 20, height: 20, border: `2px solid ${t.border}`,
+                borderTopColor: t.accent || '#0071e3', borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+                margin: '0 auto 8px',
+              }} />
+              Searching...
             </div>
-            {results.results[0]?.snippet && (
-              <div style={{
-                fontSize: 13, color: t.textSecondary, lineHeight: 1.5,
-                maxWidth: 400, margin: '0 auto',
-              }}>
-                {results.results[0].snippet}
-              </div>
-            )}
-          </div>
+          )}
 
-          {/* Social Links */}
-          {results.socialLinks.length > 0 && (
+          {error && (
             <div style={{
-              ...glass, padding: '10px 14px', marginBottom: 12,
-              display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center',
+              ...glass, padding: '12px 14px', marginTop: 12,
+              borderColor: 'rgba(255,69,58,0.3)',
+              color: '#FF453A', fontSize: 13,
             }}>
-              {results.socialLinks.map(link => (
-                <a
-                  key={link.platform}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={link.username ? `@${link.username}` : link.platform}
+              {error}
+            </div>
+          )}
+
+          {results && (
+            <div style={{ marginTop: 12 }}>
+              {/* Profile Card */}
+              <div style={{ ...glass, padding: 20, marginBottom: 12, textAlign: 'center', position: 'relative' }}>
+                {/* Bookmark button */}
+                <button
+                  onClick={handleBookmark}
+                  aria-label={isSaved ? 'Remove bookmark' : 'Bookmark profile'}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '6px 10px', borderRadius: 8,
+                    position: 'absolute', top: 12, right: 12,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: isSaved ? (t.accent || '#0071e3') : (t.textTertiary || t.textSecondary),
+                    padding: 4,
+                    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                  </svg>
+                </button>
+
+                {fromCache && (
+                  <div style={{
+                    position: 'absolute', top: 14, left: 14,
+                    fontSize: 10, color: t.textTertiary || t.textSecondary,
                     background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                    color: t.textSecondary, textDecoration: 'none',
-                    fontSize: 12, fontWeight: 500,
-                    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-                  }}
-                >
-                  {SOCIAL_ICONS[link.platform] || null}
-                  <span>{link.username || link.platform}</span>
-                </a>
-              ))}
-            </div>
-          )}
+                    padding: '2px 6px', borderRadius: 4,
+                    opacity: 0.7,
+                  }}>
+                    cached
+                  </div>
+                )}
 
-          {/* Results List */}
-          {results.results.length > 0 && (
-            <div style={{ ...glass, padding: 14 }}>
-              <div style={{
-                fontSize: 11, fontWeight: 600, color: t.textSecondary,
-                textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
-              }}>
-                Results ({results.resultCount})
+                {results.primaryImage ? (
+                  <img
+                    src={results.primaryImage}
+                    alt={profileName}
+                    style={{
+                      width: 72, height: 72, borderRadius: '50%',
+                      objectFit: 'cover', margin: '0 auto 12px',
+                      display: 'block',
+                      border: `2px solid ${t.border}`,
+                    }}
+                    onError={e => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                    }}
+                  />
+                ) : null}
+                {!results.primaryImage && (
+                  <PersonPlaceholder size={72} bgColor={dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'} borderColor={t.border} />
+                )}
+                <div style={{ fontSize: 18, fontWeight: 700, color: t.text, marginBottom: 6 }}>
+                  {profileName}
+                </div>
+                {results.results[0]?.snippet && (
+                  <div style={{
+                    fontSize: 13, color: t.textSecondary, lineHeight: 1.5,
+                    maxWidth: 400, margin: '0 auto',
+                  }}>
+                    {results.results[0].snippet}
+                  </div>
+                )}
+
+                {/* Index This Person button */}
+                {isAuthenticated && (
+                  <button
+                    onClick={handleIndex}
+                    disabled={indexing || isIndexed}
+                    style={{
+                      marginTop: 12, padding: '7px 18px', borderRadius: 100,
+                      border: `1px solid ${isIndexed ? t.green || '#30D158' : t.accent || '#0a84ff'}`,
+                      background: isIndexed
+                        ? `${t.green || '#30D158'}15`
+                        : `${t.accent || '#0a84ff'}15`,
+                      color: isIndexed ? (t.green || '#30D158') : (t.accent || '#0a84ff'),
+                      fontSize: 12, fontWeight: 600, fontFamily: font,
+                      cursor: isIndexed ? 'default' : 'pointer',
+                      opacity: indexing ? 0.6 : 1,
+                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    }}
+                    onMouseEnter={e => { if (!isIndexed) e.currentTarget.style.transform = 'scale(1.05)'; }}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    {isIndexed ? 'Indexed' : indexing ? 'Indexing...' : 'Index This Person'}
+                  </button>
+                )}
               </div>
-              {results.results.map((r, i) => (
-                <a
-                  key={i}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'block', padding: '10px 0',
-                    borderBottom: i < results.results.length - 1 ? `1px solid ${t.border}` : 'none',
-                    textDecoration: 'none',
-                    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 600, color: t.accent || '#0071e3', marginBottom: 2 }}>
-                    {r.title}
+
+              {/* Social Links */}
+              {results.socialLinks.length > 0 && (
+                <div style={{
+                  ...glass, padding: '10px 14px', marginBottom: 12,
+                  display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center',
+                }}>
+                  {results.socialLinks.map(link => (
+                    <a
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={link.username ? `@${link.username}` : link.platform}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '6px 10px', borderRadius: 8,
+                        background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                        color: t.textSecondary, textDecoration: 'none',
+                        fontSize: 12, fontWeight: 500,
+                        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+                      }}
+                    >
+                      {SOCIAL_ICONS[link.platform] || null}
+                      <span>{link.username || link.platform}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {/* Results List */}
+              {results.results.length > 0 && (
+                <div style={{ ...glass, padding: 14 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600, color: t.textSecondary,
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+                  }}>
+                    Results ({results.resultCount})
                   </div>
-                  <div style={{ fontSize: 11, color: t.textTertiary || t.textSecondary, marginBottom: 4 }}>
-                    {r.displayUrl}
-                  </div>
-                  <div style={{ fontSize: 13, color: t.textSecondary, lineHeight: 1.4 }}>
-                    {r.snippet}
-                  </div>
-                </a>
-              ))}
+                  {results.results.map((r, i) => (
+                    <a
+                      key={i}
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'block', padding: '10px 0',
+                        borderBottom: i < results.results.length - 1 ? `1px solid ${t.border}` : 'none',
+                        textDecoration: 'none',
+                        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: 600, color: t.accent || '#0071e3', marginBottom: 2 }}>
+                        {r.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: t.textTertiary || t.textSecondary, marginBottom: 4 }}>
+                        {r.displayUrl}
+                      </div>
+                      <div style={{ fontSize: 13, color: t.textSecondary, lineHeight: 1.4 }}>
+                        {r.snippet}
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {results.results.length === 0 && !loading && (
+                <div style={{ ...glass, padding: '20px 14px', textAlign: 'center', color: t.textTertiary || t.textSecondary, fontSize: 13 }}>
+                  No results found
+                </div>
+              )}
             </div>
           )}
 
-          {results.results.length === 0 && !loading && (
-            <div style={{ ...glass, padding: '20px 14px', textAlign: 'center', color: t.textTertiary || t.textSecondary, fontSize: 13 }}>
-              No results found
+          {/* Recent Searches + Saved Profiles / Empty State */}
+          {!loading && !results && !error && (
+            <div style={{ marginTop: 16 }}>
+              {savedProfiles.length > 0 && (
+                <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600, color: t.textSecondary,
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+                  }}>
+                    Saved Profiles
+                  </div>
+                  {savedProfiles.map((p, i) => (
+                    <div
+                      key={p.query}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '8px 0',
+                        borderBottom: i < savedProfiles.length - 1 ? `1px solid ${t.border}` : 'none',
+                      }}
+                    >
+                      {p.primaryImage ? (
+                        <img
+                          src={p.primaryImage}
+                          alt={p.query}
+                          style={{
+                            width: 32, height: 32, borderRadius: '50%',
+                            objectFit: 'cover', flexShrink: 0,
+                            border: `1px solid ${t.border}`,
+                          }}
+                          onError={e => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 32, height: 32, borderRadius: '50%',
+                          background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                          border: `1px solid ${t.border}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0,
+                        }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M4 21v-1a6 6 0 0112 0v1" />
+                          </svg>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => { setSearch(p.query); fetchPerson(p.query); }}
+                        style={{
+                          flex: 1, background: 'none', border: 'none',
+                          color: t.text, fontSize: 13, fontFamily: font,
+                          cursor: 'pointer', textAlign: 'left', padding: 0,
+                          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
+                      >
+                        <div style={{ fontWeight: 500 }}>{p.query}</div>
+                        {p.topSnippet && (
+                          <div style={{
+                            fontSize: 11, color: t.textTertiary || t.textSecondary,
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            maxWidth: 220, marginTop: 2,
+                          }}>
+                            {p.topSnippet}
+                          </div>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          removeSaved(p.query);
+                          setSavedProfiles(getSaved());
+                        }}
+                        aria-label={`Remove saved ${p.query}`}
+                        style={{
+                          background: 'none', border: 'none',
+                          color: t.textTertiary || t.textSecondary,
+                          cursor: 'pointer', fontSize: 14, padding: '0 4px',
+                          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                      >
+                        {'\u00d7'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {recentSearches.length > 0 ? (
+                <div style={{ ...glass, padding: 14 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600, color: t.textSecondary,
+                    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+                  }}>
+                    Recent Searches
+                  </div>
+                  {recentSearches.map((q, i) => (
+                    <div
+                      key={q}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '8px 0',
+                        borderBottom: i < recentSearches.length - 1 ? `1px solid ${t.border}` : 'none',
+                      }}
+                    >
+                      <button
+                        onClick={() => { setSearch(q); fetchPerson(q); }}
+                        style={{
+                          flex: 1, background: 'none', border: 'none',
+                          color: t.text, fontSize: 13, fontFamily: font,
+                          cursor: 'pointer', textAlign: 'left', padding: 0,
+                          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
+                      >
+                        {q}
+                      </button>
+                      <button
+                        onClick={() => {
+                          removeRecent(q);
+                          setRecentSearches(getRecent());
+                        }}
+                        aria-label={`Remove ${q}`}
+                        style={{
+                          background: 'none', border: 'none',
+                          color: t.textTertiary || t.textSecondary,
+                          cursor: 'pointer', fontSize: 14, padding: '0 4px',
+                          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                      >
+                        {'\u00d7'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : savedProfiles.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: t.textTertiary || t.textSecondary }}>
+                  <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.4 }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      <path d="M11 8a3 3 0 00-3 3"/>
+                    </svg>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Search for anyone</div>
+                  <div style={{ fontSize: 12, marginBottom: 14 }}>Find profiles, social links, and public info</div>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', transition: 'opacity 0.3s ease' }}>
+                    {currentSuggestions.map(name => (
+                      <button
+                        key={name}
+                        onClick={() => { setSearch(name); fetchPerson(name); }}
+                        style={{
+                          padding: '6px 14px', borderRadius: 100,
+                          border: `1px solid ${t.cardBorder || t.border}`,
+                          background: t.glass,
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          color: t.text, fontSize: 12, fontWeight: 500,
+                          fontFamily: font, cursor: 'pointer',
+                          transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.background = t.glass;
+                        }}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
 
-      {/* Recent Searches + Saved Profiles / Empty State */}
-      {!loading && !results && !error && (
-        <div style={{ marginTop: 16 }}>
-          {/* Saved Profiles */}
-          {savedProfiles.length > 0 && (
-            <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
-              <div style={{
-                fontSize: 11, fontWeight: 600, color: t.textSecondary,
-                textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
-              }}>
-                Saved Profiles
-              </div>
-              {savedProfiles.map((p, i) => (
-                <div
-                  key={p.query}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '8px 0',
-                    borderBottom: i < savedProfiles.length - 1 ? `1px solid ${t.border}` : 'none',
-                  }}
-                >
-                  {p.primaryImage ? (
-                    <img
-                      src={p.primaryImage}
-                      alt={p.query}
-                      style={{
-                        width: 32, height: 32, borderRadius: '50%',
-                        objectFit: 'cover', flexShrink: 0,
-                        border: `1px solid ${t.border}`,
-                      }}
-                      onError={e => { e.target.style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                      border: `1px solid ${t.border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M4 21v-1a6 6 0 0112 0v1" />
-                      </svg>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => { setSearch(p.query); fetchPerson(p.query); }}
-                    style={{
-                      flex: 1, background: 'none', border: 'none',
-                      color: t.text, fontSize: 13, fontFamily: font,
-                      cursor: 'pointer', textAlign: 'left', padding: 0,
-                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
-                  >
-                    <div style={{ fontWeight: 500 }}>{p.query}</div>
-                    {p.topSnippet && (
-                      <div style={{
-                        fontSize: 11, color: t.textTertiary || t.textSecondary,
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        maxWidth: 220, marginTop: 2,
-                      }}>
-                        {p.topSnippet}
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      removeSaved(p.query);
-                      setSavedProfiles(getSaved());
-                    }}
-                    aria-label={`Remove saved ${p.query}`}
-                    style={{
-                      background: 'none', border: 'none',
-                      color: t.textTertiary || t.textSecondary,
-                      cursor: 'pointer', fontSize: 14, padding: '0 4px',
-                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    {'\u00d7'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Recent Searches */}
-          {recentSearches.length > 0 ? (
-            <div style={{ ...glass, padding: 14 }}>
-              <div style={{
-                fontSize: 11, fontWeight: 600, color: t.textSecondary,
-                textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
-              }}>
-                Recent Searches
-              </div>
-              {recentSearches.map((q, i) => (
-                <div
-                  key={q}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '8px 0',
-                    borderBottom: i < recentSearches.length - 1 ? `1px solid ${t.border}` : 'none',
-                  }}
-                >
-                  <button
-                    onClick={() => { setSearch(q); fetchPerson(q); }}
-                    style={{
-                      flex: 1, background: 'none', border: 'none',
-                      color: t.text, fontSize: 13, fontFamily: font,
-                      cursor: 'pointer', textAlign: 'left', padding: 0,
-                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateX(0)'}
-                  >
-                    {q}
-                  </button>
-                  <button
-                    onClick={() => {
-                      removeRecent(q);
-                      setRecentSearches(getRecent());
-                    }}
-                    aria-label={`Remove ${q}`}
-                    style={{
-                      background: 'none', border: 'none',
-                      color: t.textTertiary || t.textSecondary,
-                      cursor: 'pointer', fontSize: 14, padding: '0 4px',
-                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    {'\u00d7'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : savedProfiles.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: t.textTertiary || t.textSecondary }}>
-              <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.4 }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                  <path d="M11 8a3 3 0 00-3 3"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Search for anyone</div>
-              <div style={{ fontSize: 12, marginBottom: 14 }}>Find profiles, social links, and public info</div>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', transition: 'opacity 0.3s ease' }}>
-                {currentSuggestions.map(name => (
-                  <button
-                    key={name}
-                    onClick={() => { setSearch(name); fetchPerson(name); }}
-                    style={{
-                      padding: '6px 14px', borderRadius: 100,
-                      border: `1px solid ${t.cardBorder || t.border}`,
-                      background: t.glass,
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      color: t.text, fontSize: 12, fontWeight: 500,
-                      fontFamily: font, cursor: 'pointer',
-                      transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                      e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.background = t.glass;
-                    }}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+      {/* --- INDEX TAB --- */}
+      {tab === 'index' && (
+        <IndexView dark={dark} t={t} peopleIndex={peopleIndex} glass={glass} font={font} />
       )}
     </div>
   );

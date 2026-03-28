@@ -28,6 +28,7 @@ import weather from '../server/api/weather.js';
 import webhook from '../server/api/webhook.js';
 import wildfires from '../server/api/wildfires.js';
 import people from '../server/api/people.js';
+import peopleIndex from '../server/api/people-index.js';
 import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
@@ -60,6 +61,7 @@ const ROUTES = {
   markets,
   news,
   people,
+  'people-index': peopleIndex,
   prices,
   signals,
   statements,

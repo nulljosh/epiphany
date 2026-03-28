@@ -930,8 +930,7 @@ const reset = useCallback(() => {
 
   // Memoize ticker items - use live stock data
   const tickerItems = useMemo(() => {
-    const tickerCanRender = ['live', 'stale', 'fallback'].includes(stocksReliability?.status) || stocksReliability?.source === 'cache';
-    if (!tickerCanRender || !stocks || Object.keys(stocks).length === 0) {
+    if (!stocks || Object.keys(stocks).length === 0) {
       return [];
     }
 
@@ -951,7 +950,7 @@ const reset = useCallback(() => {
         change: stock.changePercent || 0,
       };
     });
-  }, [stocks, stocksReliability, watchlist]);
+  }, [stocks, watchlist]);
 
   const filteredMarkets = useMemo(() => {
     let filtered = markets;
@@ -1463,7 +1462,7 @@ const reset = useCallback(() => {
               />
             )}
             {activeTab === 'people' && (
-              <PeoplePanel dark={dark} t={t} />
+              <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
             )}
             {activeTab === 'settings' && (
               <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} />
@@ -1550,7 +1549,7 @@ const reset = useCallback(() => {
             />
           )}
           {activeTab === 'people' && (
-            <PeoplePanel dark={dark} t={t} />
+            <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
           )}
           {activeTab === 'settings' && (
             <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} />
