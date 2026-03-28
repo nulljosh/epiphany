@@ -20,8 +20,35 @@ final class AppState {
     var isLoading = false
     var isAuthenticating = false
     var error: String?
+    var financeDataLoaded = false
     var tallyPayment: TallyPaymentInfo?
     var tallyConnected: Bool = TallyService.loadCredentials() != nil
+    var avatarImageData: Data?
+
+    private static let avatarFileURL: URL = {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("monica_avatar.jpg")
+    }()
+
+    func loadAvatar() {
+        if let data = try? Data(contentsOf: Self.avatarFileURL) {
+            avatarImageData = data
+            return
+        }
+        guard let urlString = user?.avatarUrl,
+              let url = URL(string: urlString) else { return }
+        Task { @MainActor in
+            if let (data, _) = try? await URLSession.shared.data(from: url) {
+                avatarImageData = data
+                try? data.write(to: Self.avatarFileURL)
+            }
+        }
+    }
+
+    func saveAvatarData(_ data: Data) {
+        avatarImageData = data
+        try? data.write(to: Self.avatarFileURL)
+    }
 
     var watchlistSymbols: Set<String> {
         Set(watchlist.map(\.symbol))
@@ -294,15 +321,16 @@ final class AppState {
     // MARK: - Portfolio
 
     func loadFinanceData() async {
-        guard isLoggedIn else { return }
+        guard isLoggedIn else { financeDataLoaded = true; return }
         do {
             financeData = try await MonicaAPI.shared.fetchFinanceData()
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
         } catch {
-            handleError(error)
+            // Don't show error for portfolio -- just mark as loaded
         }
+        financeDataLoaded = true
     }
 
     func saveFinanceData() async {

@@ -102,12 +102,11 @@ async function googleSearch(query) {
 }
 
 async function duckDuckGoSearch(query) {
-  // DuckDuckGo HTML search as fallback (no API key needed)
-  // Returns basic results parsed from the instant answer API
   try {
+    // Try DDG instant answer API first
     const params = new URLSearchParams({ q: query, format: 'json', no_redirect: '1' });
     const res = await fetch(`https://api.duckduckgo.com/?${params}`);
-    if (!res.ok) return [];
+    if (!res.ok) return wikiSearch(query);
     const data = await res.json();
 
     const results = [];
@@ -134,9 +133,58 @@ async function duckDuckGoSearch(query) {
       }
     }
 
+    // If DDG gave no results, try Wikipedia
+    if (results.length === 0) return wikiSearch(query);
     return results;
   } catch (err) {
     console.warn('[people] DuckDuckGo fallback failed:', err.message);
+    return wikiSearch(query);
+  }
+}
+
+async function wikiSearch(query) {
+  try {
+    const params = new URLSearchParams({
+      action: 'query',
+      list: 'search',
+      srsearch: query,
+      format: 'json',
+      utf8: '1',
+      srlimit: '10',
+    });
+    const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const search = data.query?.search || [];
+
+    // Also fetch image for the first result
+    let image = null;
+    if (search.length > 0) {
+      try {
+        const imgParams = new URLSearchParams({
+          action: 'query',
+          titles: search[0].title,
+          prop: 'pageimages',
+          format: 'json',
+          pithumbsize: '200',
+        });
+        const imgRes = await fetch(`https://en.wikipedia.org/w/api.php?${imgParams}`);
+        const imgData = await imgRes.json();
+        const pages = imgData.query?.pages || {};
+        const firstPage = Object.values(pages)[0];
+        image = firstPage?.thumbnail?.source || null;
+      } catch {}
+    }
+
+    return search.map((item, i) => ({
+      title: item.title,
+      snippet: item.snippet.replace(/<[^>]+>/g, ''),
+      link: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}`,
+      displayLink: 'en.wikipedia.org',
+      pagemap: i === 0 && image ? { cse_image: [{ src: image }] } : {},
+    }));
+  } catch (err) {
+    console.warn('[people] Wikipedia fallback failed:', err.message);
     return [];
   }
 }

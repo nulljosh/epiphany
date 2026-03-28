@@ -11,19 +11,10 @@ struct SettingsView: View {
     @State private var showChangePassword = false
     @State private var showDeleteAccount = false
     @State private var avatarItem: PhotosPickerItem?
-    @State private var avatarImage: Image?
-    @State private var hasLoadedAvatar = false
     @State private var isUploadingAvatar = false
     @State private var showConnectTally = false
     @State private var showChangeName = false
 
-    @AppStorage("showEarthquakes") private var showEarthquakes = true
-    @AppStorage("showFlights") private var showFlights = true
-    @AppStorage("showIncidents") private var showIncidents = true
-    @AppStorage("showWeatherAlerts") private var showWeatherAlerts = true
-    @AppStorage("showCrime") private var showCrime = true
-    @AppStorage("showLocalEvents") private var showLocalEvents = true
-    @AppStorage("showTraffic") private var showTraffic = true
 
     var body: some View {
         NavigationStack {
@@ -33,13 +24,8 @@ struct SettingsView: View {
             .navigationTitle("Settings")
         }
         .onAppear {
-            guard !hasLoadedAvatar else { return }
-            hasLoadedAvatar = true
-            loadSavedAvatar()
-        }
-        .onChange(of: appState.user?.avatarUrl) { _, newUrl in
-            if avatarImage == nil, newUrl != nil {
-                loadSavedAvatar()
+            if appState.avatarImageData == nil {
+                appState.loadAvatar()
             }
         }
         .onChange(of: avatarItem) { _, newItem in
@@ -157,7 +143,13 @@ struct SettingsView: View {
                     }
                 }
 
-                mapSourcesSection
+                Section {
+                    NavigationLink {
+                        MapSourcesSettingsView()
+                    } label: {
+                        Label("Map Sources", systemImage: "map")
+                    }
+                }
 
                 Section {
                     Button(role: .destructive) {
@@ -184,7 +176,13 @@ struct SettingsView: View {
                     .tint(Palette.appleBlue)
                 }
 
-                mapSourcesSection
+                Section {
+                    NavigationLink {
+                        MapSourcesSettingsView()
+                    } label: {
+                        Label("Map Sources", systemImage: "map")
+                    }
+                }
             }
         }
         .sheet(isPresented: $showChangeName) {
@@ -209,26 +207,13 @@ struct SettingsView: View {
         }
     }
 
-    private var mapSourcesSection: some View {
-        Section("Map Sources") {
-            Toggle("Earthquakes", isOn: $showEarthquakes)
-            Toggle("Flights", isOn: $showFlights)
-            Toggle("Incidents", isOn: $showIncidents)
-            Toggle("Weather Alerts", isOn: $showWeatherAlerts)
-            Toggle("Crime", isOn: $showCrime)
-            Toggle("Local Events", isOn: $showLocalEvents)
-            Toggle("Traffic", isOn: $showTraffic)
-        }
-    }
 
     private var avatarPickerButton: some View {
-        let currentImage = avatarImage
-        let initial = avatarInitial
-        let uploading = isUploadingAvatar
-        return PhotosPicker(selection: $avatarItem, matching: .images) {
+        PhotosPicker(selection: $avatarItem, matching: .images) {
             ZStack {
-                if let currentImage {
-                    currentImage
+                if let data = appState.avatarImageData,
+                   let uiImage = UIImage(data: data) {
+                    Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
                         .frame(width: 56, height: 56)
@@ -237,11 +222,11 @@ struct SettingsView: View {
                     Circle()
                         .fill(Palette.appleBlue.opacity(0.2))
                         .frame(width: 56, height: 56)
-                    Text(initial)
+                    Text(avatarInitial)
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(Palette.appleBlue)
                 }
-                if uploading {
+                if isUploadingAvatar {
                     Circle()
                         .fill(.black.opacity(0.5))
                         .frame(width: 56, height: 56)
@@ -260,43 +245,16 @@ struct SettingsView: View {
         return String(first).uppercased()
     }
 
-    private var avatarFileURL: URL {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        return docs.appendingPathComponent("monica_avatar.jpg")
-    }
-
-    private func saveAvatarData(_ data: Data) {
-        try? data.write(to: avatarFileURL)
-    }
-
     private func uploadAvatar(item: PhotosPickerItem) {
         Task { @MainActor in
             if let data = try? await item.loadTransferable(type: Data.self),
                let uiImage = UIImage(data: data) {
-                avatarImage = Image(uiImage: uiImage)
                 if let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
-                    saveAvatarData(jpegData)
+                    appState.saveAvatarData(jpegData)
                     isUploadingAvatar = true
                     _ = try? await MonicaAPI.shared.uploadAvatar(imageData: jpegData)
                     isUploadingAvatar = false
                 }
-            }
-        }
-    }
-
-    private func loadSavedAvatar() {
-        if let data = try? Data(contentsOf: avatarFileURL),
-           let uiImage = UIImage(data: data) {
-            avatarImage = Image(uiImage: uiImage)
-            return
-        }
-        guard let urlString = appState.user?.avatarUrl,
-              let url = URL(string: urlString) else { return }
-        Task { @MainActor in
-            if let (data, _) = try? await URLSession.shared.data(from: url),
-               let uiImage = UIImage(data: data) {
-                avatarImage = Image(uiImage: uiImage)
-                saveAvatarData(data)
             }
         }
     }
@@ -656,5 +614,31 @@ private struct ChangeNameSheet: View {
         } else {
             localError = appState.error
         }
+    }
+}
+
+struct MapSourcesSettingsView: View {
+    @AppStorage("showEarthquakes") private var showEarthquakes = true
+    @AppStorage("showFlights") private var showFlights = true
+    @AppStorage("showIncidents") private var showIncidents = true
+    @AppStorage("showWeatherAlerts") private var showWeatherAlerts = true
+    @AppStorage("showCrime") private var showCrime = true
+    @AppStorage("showLocalEvents") private var showLocalEvents = true
+    @AppStorage("showTraffic") private var showTraffic = true
+
+    var body: some View {
+        List {
+            Section {
+                Toggle("Earthquakes", isOn: $showEarthquakes)
+                Toggle("Flights", isOn: $showFlights)
+                Toggle("Incidents", isOn: $showIncidents)
+                Toggle("Weather Alerts", isOn: $showWeatherAlerts)
+                Toggle("Crime", isOn: $showCrime)
+                Toggle("Local Events", isOn: $showLocalEvents)
+                Toggle("Traffic", isOn: $showTraffic)
+            }
+        }
+        .navigationTitle("Map Sources")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

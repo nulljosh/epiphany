@@ -10,6 +10,7 @@ struct MarketsView: View {
     @State private var selectedStock: Stock?
     @State private var sortField: MarketSortField = .changePercent
     @State private var sortAscending = false
+    @State private var marketFilter: MarketFilter = .all
     @State private var selectedMarketItem: MarketItem?
     @State private var selectedNewsURL: URL?
     @State private var portfolioExpanded = true
@@ -53,8 +54,15 @@ struct MarketsView: View {
     }
 
     private var filteredItems: [MarketItem] {
-        if searchText.isEmpty { return cachedItems }
-        return cachedItems.filter {
+        var items = cachedItems
+        switch marketFilter {
+        case .all: break
+        case .stocks: items = items.filter { if case .stock = $0.kind { return true }; return false }
+        case .commodities: items = items.filter { if case .commodity = $0.kind { return true }; return false }
+        case .crypto: items = items.filter { if case .crypto = $0.kind { return true }; return false }
+        }
+        if searchText.isEmpty { return items }
+        return items.filter {
             $0.name.localizedCaseInsensitiveContains(searchText) ||
             $0.symbol.localizedCaseInsensitiveContains(searchText)
         }
@@ -147,6 +155,34 @@ struct MarketsView: View {
                                         }
                                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                                     }
+                                } else if appState.financeDataLoaded {
+                                    if appState.tallyConnected, let tally = appState.tallyPayment {
+                                        HStack {
+                                            Image(systemName: "calendar.badge.clock")
+                                                .foregroundStyle(Palette.appleBlue)
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Next Payday")
+                                                    .font(.caption.weight(.semibold))
+                                                if let days = tally.daysUntilPayday {
+                                                    Text(days == 0 ? "Today" : "\(days) days")
+                                                        .font(.caption2)
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                            }
+                                            Spacer()
+                                            if let amount = tally.paymentAmount {
+                                                Text(amount)
+                                                    .font(.subheadline.weight(.semibold))
+                                            }
+                                        }
+                                        .padding(.vertical, 4)
+                                    } else {
+                                        Text("No portfolio data")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 8)
+                                    }
                                 } else {
                                     ProgressView()
                                         .frame(maxWidth: .infinity)
@@ -214,6 +250,15 @@ struct MarketsView: View {
                             } label: {
                                 Label("Alerts", systemImage: "bell.badge")
                             }
+                        }
+
+                        Section {
+                            Picker("Filter", selection: $marketFilter) {
+                                ForEach(MarketFilter.allCases) { filter in
+                                    Text(filter.label).tag(filter)
+                                }
+                            }
+                            .pickerStyle(.segmented)
                         }
 
                         Section {
@@ -331,19 +376,9 @@ struct MarketsView: View {
             isVisible = true
             guard !hasLoaded else { return }
             hasLoaded = true
-            Task {
-                if appState.stocks.isEmpty {
-                    async let stocks: Void = appState.loadStocks()
-                    async let watchlist: Void = appState.loadWatchlist()
-                    async let commodities: Void = appState.loadCommodities()
-                    async let crypto: Void = appState.loadCrypto()
-                    _ = await (stocks, watchlist, commodities, crypto)
-                }
-                rebuildItems()
-                async let finance: Void = appState.loadFinanceData()
-                async let statements: Void = appState.loadStatements()
-                async let tally: Void = appState.loadTallyData()
-                _ = await (finance, statements, tally)
+            rebuildItems()
+            if appState.statements.isEmpty {
+                Task { await appState.loadStatements() }
             }
         }
         .onDisappear { isVisible = false }
@@ -399,6 +434,23 @@ private extension MarketsView {
             return ("After Hours", Palette.warningAmber)
         }
         return ("Market Closed", .secondary)
+    }
+}
+
+// MARK: - Filter
+
+private enum MarketFilter: String, CaseIterable, Identifiable {
+    case all, stocks, commodities, crypto
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .all: return "All"
+        case .stocks: return "Stocks"
+        case .commodities: return "Commodities"
+        case .crypto: return "Crypto"
+        }
     }
 }
 
@@ -488,40 +540,37 @@ private struct MarketRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             if let onToggle = onToggleFavorite {
                 Button {
                     onToggle()
                 } label: {
                     Image(systemName: isFavorited ? "star.fill" : "star")
                         .foregroundStyle(isFavorited ? Palette.warningAmber : .secondary)
-                        .font(.caption)
-                        .frame(width: 18, height: 18)
+                        .font(.caption2)
+                        .frame(width: 16, height: 16)
                 }
                 .buttonStyle(BounceButtonStyle())
-            } else {
-                Color.clear
-                    .frame(width: 18, height: 18)
             }
 
             marketIcon
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(symbolOrName)
-                    .font(.body.weight(.medium))
+                    .font(.subheadline.weight(.medium))
                 Text(name)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 2) {
                 Text(priceText)
-                    .font(.body.weight(.medium))
+                    .font(.subheadline.weight(.medium))
                 ChangePill(text: signedPercent, color: changeColorValue)
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 3)
         .contentShape(Rectangle())
     }
 
@@ -556,9 +605,9 @@ private struct MarketRow: View {
             return ("chart.bar.fill", .secondary)
         }()
         return Image(systemName: icon)
-            .font(.title3)
+            .font(.subheadline)
             .foregroundStyle(color)
-            .frame(width: 32, height: 32)
+            .frame(width: 24, height: 24)
     }
 
     private var symbolOrName: String {

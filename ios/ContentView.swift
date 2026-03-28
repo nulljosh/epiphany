@@ -10,25 +10,19 @@ struct ContentView: View {
         @Bindable var appState = appState
 
         TabView(selection: $selectedTab) {
-            DeferredTab(isActive: selectedTab == 0) {
-                SituationView()
-            }
+            SituationView()
                 .tabItem {
                     Label("Map", systemImage: "map")
                 }
                 .tag(0)
 
-            DeferredTab(isActive: selectedTab == 1) {
-                MarketsView()
-            }
+            MarketsView()
                 .tabItem {
                     Label("Markets", systemImage: "chart.line.uptrend.xyaxis")
                 }
                 .tag(1)
 
-            DeferredTab(isActive: selectedTab == 2) {
-                PeopleView()
-            }
+            PeopleView()
                 .tabItem {
                     Label("People", systemImage: "person.crop.rectangle.stack")
                 }
@@ -86,40 +80,16 @@ struct ContentView: View {
         async let s: Void = appState.loadStocks()
         async let c: Void = appState.loadCommodities()
         async let k: Void = appState.loadCrypto()
-        _ = await (s, c, k)
+        async let w: Void = appState.loadWatchlist()
+        async let f: Void = appState.loadFinanceData()
+        async let t: Void = appState.loadTallyData()
+        _ = await (s, c, k, w, f, t)
     }
 }
 
 #Preview {
     ContentView()
         .environment(AppState())
-}
-
-private struct DeferredTab<Content: View>: View {
-    let isActive: Bool
-    @ViewBuilder let content: () -> Content
-    @State private var hasActivated = false
-
-    var body: some View {
-        Group {
-            if hasActivated || isActive {
-                content()
-            } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .onAppear {
-            if isActive {
-                hasActivated = true
-            }
-        }
-        .onChange(of: isActive) { _, active in
-            if active {
-                hasActivated = true
-            }
-        }
-    }
 }
 
 
