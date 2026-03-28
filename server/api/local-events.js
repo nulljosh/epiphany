@@ -100,6 +100,7 @@ async function fetchWikipediaPlaces(lat, lon) {
   const events = [];
   try {
     const url = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=50&format=json`;
+    // Note: Wikipedia caps gsradius at 10000m regardless of what we pass
     const data = await fetchWithTimeout(url, {}, 8000);
     for (const place of (data.query?.geosearch || [])) {
       events.push({
@@ -196,7 +197,7 @@ async function reverseGeocode(lat, lon) {
 export default async function handler(req, res) {
   const lat = parseFloat(req.query.lat);
   const lon = parseFloat(req.query.lon);
-  const radius = req.query.radius || '25km';
+  const radius = req.query.radius || '50km';
 
   if (isNaN(lat) || isNaN(lon)) {
     return res.status(400).json({ error: 'lat and lon query params required' });

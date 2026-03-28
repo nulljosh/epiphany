@@ -389,11 +389,15 @@ final class MonicaAPI: @unchecked Sendable {
         return try decode(FlightResponse.self, from: data).states
     }
 
-    func fetchIncidents(lat: Double, lon: Double) async throws -> [Incident] {
-        let url = try makeURL("/api/incidents", query: [
-            "lat": String(lat),
-            "lon": String(lon),
-        ])
+    func fetchIncidents(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> [Incident] {
+        var params: [String: String] = ["lat": String(lat), "lon": String(lon)]
+        if let lamin, let lomin, let lamax, let lomax {
+            params["lamin"] = String(lamin)
+            params["lomin"] = String(lomin)
+            params["lamax"] = String(lamax)
+            params["lomax"] = String(lomax)
+        }
+        let url = try makeURL("/api/incidents", query: params)
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(IncidentResponse.self, from: data).incidents
@@ -431,11 +435,15 @@ final class MonicaAPI: @unchecked Sendable {
         return try decode(LocalEventResponse.self, from: data).events
     }
 
-    func fetchTraffic(lat: Double, lon: Double) async throws -> TrafficData {
-        let url = try makeURL("/api/traffic", query: [
-            "lat": String(lat),
-            "lon": String(lon),
-        ])
+    func fetchTraffic(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> TrafficData {
+        var params: [String: String] = ["lat": String(lat), "lon": String(lon)]
+        if let lamin, let lomin, let lamax, let lomax {
+            params["lamin"] = String(lamin)
+            params["lomin"] = String(lomin)
+            params["lamax"] = String(lamax)
+            params["lomax"] = String(lomax)
+        }
+        let url = try makeURL("/api/traffic", query: params)
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(TrafficData.self, from: data)

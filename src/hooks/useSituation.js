@@ -108,9 +108,10 @@ export function useSituation() {
   const fetchTraffic = useCallback(async () => {
     setTrafficLoading(true);
     setTrafficError(null);
+    const bbox = bboxFromCenter(activeCenter.lat, activeCenter.lon, 1);
     try {
       const data = await fetchJsonGraceful(
-        apiPath(`/api/traffic?lat=${activeCenter.lat}&lon=${activeCenter.lon}`)
+        apiPath(`/api/traffic?lat=${activeCenter.lat}&lon=${activeCenter.lon}&lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`)
       );
       setTraffic(data);
       if (!data || data.meta?.degraded) {
@@ -124,8 +125,9 @@ export function useSituation() {
   }, [activeCenter.lat, activeCenter.lon]);
 
   const fetchIncidents = useCallback(async () => {
+    const bbox = bboxFromCenter(activeCenter.lat, activeCenter.lon, 1);
     try {
-      const data = await fetchWithTimeout(apiPath(`/api/incidents?lat=${activeCenter.lat}&lon=${activeCenter.lon}`));
+      const data = await fetchWithTimeout(apiPath(`/api/incidents?lat=${activeCenter.lat}&lon=${activeCenter.lon}&lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`));
       setIncidents(data.incidents ?? []);
     } catch { /* non-critical */ }
   }, [activeCenter.lat, activeCenter.lon]);

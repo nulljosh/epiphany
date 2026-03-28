@@ -150,7 +150,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [userPosition, setUserPosition] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : null);
   const [locLabel, setLocLabel] = useState('Locating…');
   const [geoState, setGeoState] = useState('checking');
-  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [] });
+  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [] });
   const [selected, setSelected] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -335,13 +335,19 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     let cancelled = false;
     const fetchSituation = async () => {
       try {
-        const [inc, traffic, eq, ev, mk, news] = await Promise.all([
-          fetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
-          fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
+        const bbox = { lamin: center.lat - 1, lomin: center.lon - 1, lamax: center.lat + 1, lomax: center.lon + 1 };
+        const bboxQ = `lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`;
+        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires] = await Promise.all([
+          fetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
+          fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
           fetch(apiPath('/api/earthquakes')).then(r => r.json()).catch(() => ({ earthquakes: [] })),
           fetch(apiPath('/api/events')).then(r => r.json()).catch(() => ({ events: [] })),
           fetch(apiPath('/api/markets')).then(r => r.json()).catch(() => []),
           fetch(apiPath(`/api/news?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ articles: [] })),
+          fetch(apiPath(`/api/crime?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
+          fetch(apiPath(`/api/local-events?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ events: [] })),
+          fetch(apiPath(`/api/weather-alerts?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ alerts: [] })),
+          fetch(apiPath(`/api/wildfires?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ fires: [] })),
         ]);
         if (!cancelled) {
           const fb = fallbackPayload(center);
@@ -352,6 +358,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             events: ev.events?.length ? ev.events : fb.events,
             markets: Array.isArray(mk) ? mk.slice(0, 20) : [],
             newsArticles: Array.isArray(news?.articles) ? news.articles : [],
+            crimeIncidents: crime.incidents || [],
+            localEvents: localEv.events || [],
+            weatherAlerts: weather.alerts || [],
+            wildfires: fires.fires || [],
           });
         }
       } catch {
@@ -413,6 +423,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       ev: payload.events.length,
       m: payload.markets.length,
       n: payload.newsArticles.length,
+      cr: payload.crimeIncidents.length,
+      le: payload.localEvents.length,
+      wa: payload.weatherAlerts.length,
+      wf: payload.wildfires.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
     });
 
@@ -497,6 +511,56 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    // Crime incidents
+    payload.crimeIncidents.slice(0, 25).forEach((crime, i) => {
+      const lat = crime.lat || crime.latitude;
+      const lon = crime.lng || crime.lon || crime.longitude;
+      if (lat == null || lon == null) return;
+      addMarker(
+        'width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0.45);animation:pulse-red 2s infinite;',
+        crime.title || 'Crime',
+        { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon) },
+        lon, lat, 'crime'
+      );
+    });
+
+    // Local events
+    payload.localEvents.slice(0, 25).forEach((ev, i) => {
+      const lat = ev.lat || ev.latitude;
+      const lon = ev.lng || ev.lon || ev.longitude;
+      if (lat == null || lon == null) return;
+      addMarker(
+        'width:9px;height:9px;border-radius:50%;background:#a855f7;box-shadow:0 0 0 0 rgba(168,85,247,0.45);animation:pulse-cyan 2.2s infinite;',
+        ev.title || 'Event',
+        { type: 'local-event', title: ev.title || 'Local Event', detail: ev.venue || ev.source || 'Nearby event', level: 'local', source: ev.source || 'Event data', link: ev.url || mapsLink(lat, lon) },
+        lon, lat, 'localEvents'
+      );
+    });
+
+    // Weather alerts
+    payload.weatherAlerts.slice(0, 10).forEach((wa, i) => {
+      const lat = wa.lat;
+      const lon = wa.lon;
+      if (lat == null || lon == null) return;
+      addMarker(
+        'width:12px;height:12px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 0 rgba(245,158,11,0.5);animation:pulse-amber 1.8s infinite;',
+        wa.event || 'Weather Alert',
+        { type: 'weather', title: wa.event || 'Weather Alert', detail: wa.headline || wa.event, level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon) },
+        lon, lat, 'weather'
+      );
+    });
+
+    // Wildfires
+    payload.wildfires.slice(0, 30).forEach((fire, i) => {
+      if (fire.lat == null || fire.lon == null) return;
+      addMarker(
+        'width:10px;height:10px;border-radius:50%;background:#f97316;box-shadow:0 0 0 0 rgba(249,115,22,0.5);animation:pulse-amber 1.6s infinite;',
+        'Wildfire',
+        { type: 'wildfire', title: 'Active Fire', detail: `Confidence: ${fire.confidence || 'Unknown'} -- ${fire.date || 'Recent'}`, level: 'elevated', source: 'NASA FIRMS', link: mapsLink(fire.lat, fire.lon) },
+        fire.lon, fire.lat, 'wildfires'
+      );
+    });
+
     payload.markets.forEach((m) => {
       const p = geoKeywordMatch(m.question);
       if (!p) return;
@@ -534,6 +598,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (a.lat != null) addPoint(a.lat, a.lon, 0.3);
       else { const kw = geoKeywordMatch(a.title); if (kw) addPoint(kw.lat, kw.lon, 0.3); }
     });
+    payload.crimeIncidents.forEach(c => addPoint(c.lat || c.latitude, c.lng || c.lon || c.longitude, 0.7));
+    payload.localEvents.forEach(e => addPoint(e.lat || e.latitude, e.lng || e.lon || e.longitude, 0.4));
+    payload.weatherAlerts.forEach(w => addPoint(w.lat, w.lon, 0.8));
+    payload.wildfires.forEach(f => addPoint(f.lat, f.lon, 0.9));
 
     const geojson = { type: 'FeatureCollection', features };
 

@@ -439,7 +439,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showIncidents else { incidents = []; return }
-            let r = await loadSection(label: "Incidents") { try await MonicaAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Incidents") { try await MonicaAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude, lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { incidents = r.value.filter { !Incident.isLowSignal($0.title) } }
             if let e = r.error { await completion.addError(e) }
@@ -475,7 +475,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showTraffic else { trafficData = nil; return }
-            let result = try? await MonicaAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude)
+            let result = try? await MonicaAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude, lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
             guard loadRegionId == regionId else { return }
             trafficData = result
         }
@@ -491,6 +491,48 @@ struct SituationView: View {
 
         // Wait for all sources, then finalize
         await completion.waitForAll()
+
+        // Auto-widen: if results are sparse, expand search area and re-fetch sparse sources
+        let currentTotal = totalEventCount
+        let currentSpan = span.latitudeDelta
+        if currentTotal < 5 && currentSpan < 0.5 {
+            let wideFactor = 3.0
+            let wideLamin = center.latitude - (span.latitudeDelta * wideFactor / 2)
+            let wideLamax = center.latitude + (span.latitudeDelta * wideFactor / 2)
+            let wideLomin = center.longitude - (span.longitudeDelta * wideFactor / 2)
+            let wideLomax = center.longitude + (span.longitudeDelta * wideFactor / 2)
+            let centerLat = center.latitude
+            let centerLon = center.longitude
+
+            let needIncidents = showIncidents && incidents.count < 3
+            let needCrime = showCrime && crimeIncidents.isEmpty
+            let needEvents = showLocalEvents && localEvents.count < 3
+            let currentIncidents = incidents
+            let currentCrime = crimeIncidents
+            let currentLocal = localEvents
+
+            if needIncidents {
+                let r = await loadSection(label: "Incidents") {
+                    try await MonicaAPI.shared.fetchIncidents(lat: centerLat, lon: centerLon, lamin: wideLamin, lomin: wideLomin, lamax: wideLamax, lomax: wideLomax)
+                }
+                guard loadRegionId == regionId else { isLoadingData = false; return }
+                if r.value.count > currentIncidents.count { incidents = r.value.filter { !Incident.isLowSignal($0.title) } }
+            }
+            if needCrime {
+                let r = await loadSection(label: "Crime") {
+                    try await MonicaAPI.shared.fetchCrime(lat: centerLat, lon: centerLon)
+                }
+                guard loadRegionId == regionId else { isLoadingData = false; return }
+                if r.value.count > currentCrime.count { crimeIncidents = r.value }
+            }
+            if needEvents {
+                let r = await loadSection(label: "Local Events") {
+                    try await MonicaAPI.shared.fetchLocalEvents(lat: centerLat, lon: centerLon)
+                }
+                guard loadRegionId == regionId else { isLoadingData = false; return }
+                if r.value.count > currentLocal.count { localEvents = r.value }
+            }
+        }
 
         isLoadingData = false
 

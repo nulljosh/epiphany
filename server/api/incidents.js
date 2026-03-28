@@ -20,7 +20,23 @@ async function fetchIncidents(bbox) {
   }
 
   const { lamin, lomin, lamax, lomax } = bbox;
-  const query = `[out:json][timeout:10];(way["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="construction"](${lamin},${lomin},${lamax},${lomax});node["highway"="road_works"](${lamin},${lomin},${lamax},${lomax});way["railway"="construction"](${lamin},${lomin},${lamax},${lomax});node["railway"="construction"](${lamin},${lomin},${lamax},${lomax});node["emergency"~"^(ambulance_station|fire_station|ses_station)$"](${lamin},${lomin},${lamax},${lomax});node["amenity"="police"](${lamin},${lomin},${lamax},${lomax}););out center 40;`;
+  const bb = `${lamin},${lomin},${lamax},${lomax}`;
+  const query = `[out:json][timeout:10];(` +
+    `way["highway"="construction"](${bb});` +
+    `node["highway"="construction"](${bb});` +
+    `node["highway"="road_works"](${bb});` +
+    `way["railway"="construction"](${bb});` +
+    `node["railway"="construction"](${bb});` +
+    `node["emergency"~"^(ambulance_station|fire_station|ses_station)$"](${bb});` +
+    `node["amenity"="police"](${bb});` +
+    `node["amenity"="fire_station"](${bb});` +
+    `way["amenity"="fire_station"](${bb});` +
+    `node["amenity"="hospital"](${bb});` +
+    `way["amenity"="hospital"](${bb});` +
+    `node["highway"="speed_camera"](${bb});` +
+    `node["traffic_calming"](${bb});` +
+    `node["barrier"~"^(toll_booth|border_control)$"](${bb});` +
+    `);out center 60;`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
