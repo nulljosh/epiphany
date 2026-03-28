@@ -83,7 +83,8 @@ struct ContentView: View {
         async let w: Void = appState.loadWatchlist()
         async let f: Void = appState.loadFinanceData()
         async let t: Void = appState.loadTallyData()
-        _ = await (s, c, k, w, f, t)
+        async let st: Void = appState.loadStatements()
+        _ = await (s, c, k, w, f, t, st)
     }
 }
 

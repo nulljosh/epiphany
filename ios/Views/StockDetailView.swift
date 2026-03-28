@@ -214,9 +214,9 @@ struct StockDetailView: View {
                 ForEach(points, id: \.0) { date, close in
                     LineMark(
                         x: .value("Date", date),
-                        y: .value("Price", close)
+                        y: .value("Price", close),
+                        series: .value("Series", "Price")
                     )
-                    .foregroundStyle(Palette.appleBlue)
 
                     AreaMark(
                         x: .value("Date", date),
@@ -234,18 +234,18 @@ struct StockDetailView: View {
                 ForEach(smaPoints, id: \.date) { point in
                     LineMark(
                         x: .value("Date", point.date),
-                        y: .value("SMA", point.value)
+                        y: .value("SMA", point.value),
+                        series: .value("Series", "SMA")
                     )
-                    .foregroundStyle(Palette.warningAmber)
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
 
                 ForEach(emaPoints, id: \.date) { point in
                     LineMark(
                         x: .value("Date", point.date),
-                        y: .value("EMA", point.value)
+                        y: .value("EMA", point.value),
+                        series: .value("Series", "EMA")
                     )
-                    .foregroundStyle(Palette.purple)
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
 
@@ -269,6 +269,8 @@ struct StockDetailView: View {
                         .symbolSize(50)
                 }
             }
+            .chartForegroundStyleScale(["Price": Palette.appleBlue, "SMA": Palette.warningAmber, "EMA": Palette.purple])
+            .chartLegend(.hidden)
             .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) {
