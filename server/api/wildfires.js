@@ -1,6 +1,6 @@
 import { applyCors } from './_cors.js';
 
-const MAP_KEY = 'DEMO';
+const FIRMS_KEY = process.env.FIRMS_MAP_KEY || '';
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
 
 let cache = { ts: 0, data: null, key: '' };
@@ -16,14 +16,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'lat and lon required' });
   }
 
-  // Bounding box: ~500km radius
-  const delta = 5;
-  const west = lon - delta;
-  const east = lon + delta;
-  const south = lat - delta;
-  const north = lat + delta;
   const cacheKey = `${Math.round(lat)}:${Math.round(lon)}`;
-
   if (cache.data && cache.key === cacheKey && (Date.now() - cache.ts) < CACHE_TTL) {
     res.setHeader('Cache-Control', 's-maxage=1800');
     return res.status(200).json(cache.data);
@@ -33,16 +26,15 @@ export default async function handler(req, res) {
   const timer = setTimeout(() => controller.abort(), 10000);
 
   try {
-    // Use VIIRS_SNPP_NRT source, last 24 hours
-    const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${MAP_KEY}/VIIRS_SNPP_NRT/${west},${south},${east},${north}/1`;
-    const r = await fetch(url, { signal: controller.signal });
+    let fires;
+    if (FIRMS_KEY) {
+      fires = await fetchFIRMS(lat, lon, controller.signal);
+    } else {
+      fires = await fetchEONET(lat, lon, controller.signal);
+    }
     clearTimeout(timer);
 
-    if (!r.ok) throw new Error(`FIRMS ${r.status}`);
-
-    const text = await r.text();
-    const fires = parseCSV(text, lat, lon, delta);
-    const data = { fires, source: 'VIIRS_SNPP_NRT', count: fires.length };
+    const data = { fires, source: FIRMS_KEY ? 'VIIRS_SNPP_NRT' : 'NASA_EONET', count: fires.length };
     cache = { ts: Date.now(), data, key: cacheKey };
     res.setHeader('Cache-Control', 's-maxage=1800');
     return res.status(200).json(data);
@@ -50,11 +42,46 @@ export default async function handler(req, res) {
     clearTimeout(timer);
     console.error('Wildfires API error:', err.message);
     if (cache.data) return res.status(200).json(cache.data);
-    return res.status(502).json({ error: 'Failed to fetch wildfire data' });
+    return res.status(502).json({ error: 'Failed to fetch wildfire data', fires: [] });
   }
 }
 
-function parseCSV(text, centerLat, centerLon, delta) {
+// FIRMS API (requires FIRMS_MAP_KEY env var -- free at https://firms.modaps.eosdis.nasa.gov/api/area/)
+async function fetchFIRMS(lat, lon, signal) {
+  const delta = 5;
+  const west = lon - delta, east = lon + delta;
+  const south = lat - delta, north = lat + delta;
+  const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${FIRMS_KEY}/VIIRS_SNPP_NRT/${west},${south},${east},${north}/1`;
+  const r = await fetch(url, { signal });
+  if (!r.ok) throw new Error(`FIRMS ${r.status}`);
+  return parseFIRMSCSV(await r.text(), lat, lon, delta);
+}
+
+// NASA EONET (free, no key required)
+async function fetchEONET(lat, lon, signal) {
+  const url = 'https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&days=7&limit=200';
+  const r = await fetch(url, { signal });
+  if (!r.ok) throw new Error(`EONET ${r.status}`);
+  const data = await r.json();
+  const delta = 5;
+  return (data.events || []).flatMap(event => {
+    const geom = event.geometry || [];
+    return geom
+      .filter(g => g.type === 'Point' && Array.isArray(g.coordinates))
+      .filter(g => Math.abs(g.coordinates[1] - lat) <= delta && Math.abs(g.coordinates[0] - lon) <= delta)
+      .map(g => ({
+        lat: g.coordinates[1],
+        lon: g.coordinates[0],
+        confidence: null,
+        brightness: null,
+        date: g.date ? g.date.split('T')[0] : null,
+        time: g.date ? g.date.split('T')[1]?.replace('Z', '') : null,
+        title: event.title,
+      }));
+  }).slice(0, 200);
+}
+
+function parseFIRMSCSV(text, centerLat, centerLon, delta) {
   const lines = text.split('\n');
   if (lines.length < 2) return [];
 

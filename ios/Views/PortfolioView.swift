@@ -732,8 +732,12 @@ struct PortfolioView: View {
                 }
             }
             predictions = newPredictions
-            cachedPredictions = newPredictions
-            lastPredictionKey = predictionKey
+            // Defer state mutation to avoid "modifying state during view update"
+            let key = predictionKey
+            DispatchQueue.main.async {
+                cachedPredictions = newPredictions
+                lastPredictionKey = key
+            }
         }
         let allData: [(month: String, total: Double, transactions: [Transaction], predicted: Bool)] =
             actuals + predictions.map { (month: $0.month, total: $0.total, transactions: [], predicted: true) }
