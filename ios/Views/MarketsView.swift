@@ -87,19 +87,27 @@ struct MarketsView: View {
                                 if let financeData = appState.financeData {
                                     let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
                                     if !portfolio.holdings.isEmpty {
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 3) {
-                                                Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
-                                                    .font(.title2.weight(.heavy))
-                                                    .foregroundStyle(Palette.text)
-                                                HStack(spacing: 4) {
-                                                    Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
-                                                    Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                                        NavigationLink {
+                                            PortfolioView()
+                                                .environment(appState)
+                                        } label: {
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 3) {
+                                                    Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
+                                                        .font(.title2.weight(.heavy))
+                                                        .foregroundStyle(Palette.text)
+                                                    HStack(spacing: 4) {
+                                                        Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
+                                                        Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                                                    }
+                                                    .font(.caption.weight(.semibold))
+                                                    .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
                                                 }
-                                                .font(.caption.weight(.semibold))
-                                                .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .font(.caption)
+                                                    .foregroundStyle(.tertiary)
                                             }
-                                            Spacer()
                                         }
                                         .padding(.vertical, 4)
                                     }
