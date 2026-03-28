@@ -80,8 +80,7 @@ async function googleSearch(query) {
   const cx = process.env.GOOGLE_CSE_ID;
 
   if (!key || !cx) {
-    // Fallback: use DuckDuckGo instant answer API (no key needed)
-    return duckDuckGoSearch(query);
+    return wikiSearch(query);
   }
 
   const params = new URLSearchParams({

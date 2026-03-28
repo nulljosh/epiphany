@@ -758,9 +758,19 @@ struct PortfolioView: View {
             categorySource = actuals.last
         }
         let categoryTransactions = categorySource?.transactions ?? []
-        let categories = Dictionary(grouping: categoryTransactions) { $0.category ?? "Other" }
+        let baseCategories = Dictionary(grouping: categoryTransactions) { $0.category ?? "Other" }
             .map { (name: $0.key, total: $0.value.reduce(0) { $0 + abs($1.amount) }) }
             .sorted { $0.total > $1.total }
+
+        // Scale category distribution to forecast total when a forecast month is selected
+        let categories: [(name: String, total: Double)]
+        if let selected = selectedData, selected.predicted, !baseCategories.isEmpty {
+            let baseTotal = baseCategories.reduce(0) { $0 + $1.total }
+            let scale = baseTotal > 0 ? selected.total / baseTotal : 1.0
+            categories = baseCategories.map { (name: $0.name, total: $0.total * scale) }
+        } else {
+            categories = baseCategories
+        }
 
         let monthNames = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
