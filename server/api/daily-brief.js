@@ -27,6 +27,8 @@ async function fetchTopMovers(apiKey) {
   }
 }
 
+const ENGLISH_STOPS = new Set(['the', 'is', 'are', 'was', 'has', 'for', 'and', 'but', 'not', 'this', 'that', 'with', 'from', 'will', 'said', 'new', 'after']);
+
 async function fetchHeadlines() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
@@ -40,8 +42,7 @@ async function fetchHeadlines() {
       .filter(a => {
         if (!a.title || a.title.length < 10) return false;
         const words = a.title.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
-        const stops = new Set(['the', 'is', 'are', 'was', 'has', 'for', 'and', 'but', 'not', 'this', 'that', 'with', 'from', 'will', 'said', 'new', 'after']);
-        return words.filter(w => stops.has(w)).length >= 2;
+        return words.filter(w => ENGLISH_STOPS.has(w)).length >= 2;
       })
       .slice(0, 3)
       .map(a => a.title.trim());

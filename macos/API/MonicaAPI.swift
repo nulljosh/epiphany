@@ -362,13 +362,10 @@ final class MonicaAPI {
     }
 
     func fetchDailyBrief() async throws -> DailyBrief {
-        if let cached: DailyBrief = cached("daily-brief") { return cached }
         let url = try makeURL("/api/daily-brief")
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        let brief = try decode(DailyBrief.self, from: data)
-        setCache("daily-brief", brief)
-        return brief
+        return try decode(DailyBrief.self, from: data)
     }
 
     // MARK: - Prediction Markets

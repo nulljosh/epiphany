@@ -242,7 +242,9 @@ struct SettingsView: View {
         }
         .confirmationDialog("Change Profile Photo", isPresented: $showAvatarOptions) {
             Button("Photo Library") { showPhotoPicker = true }
-            Button("Take Photo") { showCamera = true }
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Take Photo") { showCamera = true }
+            }
             Button("Cancel", role: .cancel) {}
         }
         .photosPicker(isPresented: $showPhotoPicker, selection: $avatarItem, matching: .images)

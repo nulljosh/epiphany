@@ -49,5 +49,7 @@
     <string>Monica uses your location to show nearby earthquakes, flights, incidents, and weather alerts.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Choose a profile photo for your Monica account.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Take a profile photo for your Monica account.</string>
 </dict>
 </plist>

@@ -22,6 +22,7 @@ struct SituationView: View {
     @State private var crimeIncidents: [CrimeIncident] = []
     @State private var localEvents: [LocalEvent] = []
     @State private var trafficData: TrafficData?
+    @State private var wildfires: [Wildfire] = []
 
     @State private var error: String?
     @State private var flightStatusMessage: String?
@@ -91,6 +92,9 @@ struct SituationView: View {
         .onChange(of: appState.situationTrafficEnabled) { _, _ in
             Task { await loadData(for: visibleRegion) }
         }
+        .onChange(of: appState.situationWildfiresEnabled) { _, _ in
+            Task { await loadData(for: visibleRegion) }
+        }
     }
 
     private var mapView: some View {
@@ -139,9 +143,7 @@ struct SituationView: View {
                 }
             }
 
-            ForEach(appState.situationWeatherEnabled ? weatherAlerts : []) { alert in
-                // Weather alerts don't have coordinates, show as overlay text if needed
-            }
+            // Weather alerts have no coordinates -- displayed as overlay text, not map pins
 
             ForEach(appState.situationCrimeEnabled ? crimeIncidents : []) { crime in
                 Annotation(crime.title, coordinate: crime.coordinate) {
@@ -176,6 +178,17 @@ struct SituationView: View {
                             mapPin(color: Palette.warningAmber, emoji: "\u{1F6A6}", size: 15)
                         }
                         .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            if appState.situationWildfiresEnabled {
+                ForEach(wildfires) { fire in
+                    Annotation("Wildfire", coordinate: CLLocationCoordinate2D(latitude: fire.lat, longitude: fire.lon)) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Palette.dangerRed)
+                            .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
                     }
                 }
             }
@@ -224,6 +237,7 @@ struct SituationView: View {
         async let crimeLoad = loadCrimeIfEnabled(lat: center.latitude, lon: center.longitude)
         async let localEventsLoad = loadLocalEventsIfEnabled(lat: center.latitude, lon: center.longitude)
         async let trafficLoad = loadTrafficIfEnabled(lat: center.latitude, lon: center.longitude)
+        async let wildfireLoad = loadWildfiresIfEnabled(lat: center.latitude, lon: center.longitude)
 
         let earthquakeResult = await earthquakeLoad
         let flightResult = await flightLoad
@@ -232,6 +246,7 @@ struct SituationView: View {
         let crimeResult = await crimeLoad
         let localEventsResult = await localEventsLoad
         let trafficResult = await trafficLoad
+        let wildfireResult = await wildfireLoad
 
         if earthquakeResult.error == nil || !earthquakeResult.value.isEmpty {
             earthquakes = earthquakeResult.value
@@ -255,6 +270,9 @@ struct SituationView: View {
             trafficData = td
         } else if trafficResult.error == nil {
             trafficData = nil
+        }
+        if wildfireResult.error == nil || !wildfireResult.value.isEmpty {
+            wildfires = wildfireResult.value
         }
         flightStatusMessage = flightResult.error
 
@@ -361,6 +379,16 @@ struct SituationView: View {
             return (data, nil)
         } catch {
             return (nil, "Traffic unavailable")
+        }
+    }
+
+    private func loadWildfiresIfEnabled(
+        lat: Double,
+        lon: Double
+    ) async -> (value: [Wildfire], error: String?) {
+        guard appState.situationWildfiresEnabled else { wildfires = []; return ([], nil) }
+        return await loadSection(label: "Wildfires") {
+            try await MonicaAPI.shared.fetchWildfires(lat: lat, lon: lon)
         }
     }
 

@@ -22,6 +22,7 @@ final class AppState {
     var isAuthenticating = false
     var error: String?
     var financeDataLoaded = false
+    var dailyBrief: DailyBrief?
     var avatarImageData: Data?
 
     private static let avatarFileURL: URL = {
@@ -83,7 +84,12 @@ final class AppState {
         get { boolPreference(for: "settings.situation.traffic", default: true) }
         set { defaults.set(newValue, forKey: "settings.situation.traffic") }
     }
-    
+
+    var situationWildfiresEnabled: Bool {
+        get { boolPreference(for: "settings.situation.wildfires", default: true) }
+        set { defaults.set(newValue, forKey: "settings.situation.wildfires") }
+    }
+
     var savedCredentials: (email: String, password: String)? {
         biometricAuth.loadSavedCredentials()
     }
@@ -309,6 +315,10 @@ final class AppState {
         } catch {
             print("[AppState] Failed to save finance data: \(error)")
         }
+    }
+
+    func loadDailyBrief() async {
+        dailyBrief = try? await MonicaAPI.shared.fetchDailyBrief()
     }
 
     func loadStatements() async {

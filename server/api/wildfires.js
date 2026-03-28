@@ -62,7 +62,8 @@ function parseCSV(text, centerLat, centerLon, delta) {
   const latIdx = header.indexOf('latitude');
   const lonIdx = header.indexOf('longitude');
   const confIdx = header.indexOf('confidence');
-  const brightIdx = header.indexOf('bright_ti4') !== -1 ? header.indexOf('bright_ti4') : header.indexOf('brightness');
+  const bi4 = header.indexOf('bright_ti4');
+  const brightIdx = bi4 !== -1 ? bi4 : header.indexOf('brightness');
   const dateIdx = header.indexOf('acq_date');
   const timeIdx = header.indexOf('acq_time');
 

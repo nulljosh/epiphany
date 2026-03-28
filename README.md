@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v3.2.0-blue)
+![version](https://img.shields.io/badge/version-v3.3.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -43,6 +43,15 @@ Deploy: Vercel. Repo: github.com/nulljosh/monica
 - [ ] Phase 6: Semantic Search
 
 ## Changelog
+
+### v3.3.0 (2026-03-27)
+- Daily market brief (top gainers/losers + headlines, 1h cache)
+- Wildfire map layer (NASA FIRMS VIIRS satellite data)
+- 5 new macro indicators: unemployment, jobless claims, consumer confidence, PCE inflation, retail sales
+- English language filter for news (stop-word heuristic)
+- iOS: camera option for profile photo, fix 1D chart cancellation error
+- macOS: portfolio summary with net worth + account chips, daily brief, market filter segments, wildfire map layer
+- Fix portfolio showing account balances (TFSA, vacation) in unreachable branch
 
 ### v3.2.0 (2026-03-27)
 - AI intelligence analyst (Claude-powered streaming chat with tool calling)

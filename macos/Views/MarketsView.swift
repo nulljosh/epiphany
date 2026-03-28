@@ -8,6 +8,7 @@ struct MarketsView: View {
     @State private var selectedStock: Stock?
     @State private var sortField: MarketSortField = .change
     @State private var sortAscending = false
+    @State private var marketFilter: MarketFilter = .all
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -39,18 +40,21 @@ struct MarketsView: View {
     }
 
     private var filteredItems: [MarketItem] {
-        let baseItems = if searchText.isEmpty {
-            allItems
-        } else {
-            allItems.filter {
+        var items = allItems
+        switch marketFilter {
+        case .all: break
+        case .stocks: items = items.filter { if case .stock = $0.kind { return true }; return false }
+        case .commodities: items = items.filter { if case .commodity = $0.kind { return true }; return false }
+        case .crypto: items = items.filter { if case .crypto = $0.kind { return true }; return false }
+        }
+        if !searchText.isEmpty {
+            items = items.filter {
                 $0.name.localizedCaseInsensitiveContains(searchText) ||
                 $0.symbol.localizedCaseInsensitiveContains(searchText)
             }
         }
-
-        return baseItems.sorted { lhs, rhs in
+        return items.sorted { lhs, rhs in
             let order = comparisonResult(lhs, rhs)
-
             if order == .orderedSame { return lhs.id < rhs.id }
             return sortAscending ? order == .orderedAscending : order == .orderedDescending
         }
@@ -177,10 +181,132 @@ struct MarketsView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
 
-                    TextField("Search markets", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
+                    if let brief = appState.dailyBrief, !brief.points.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Daily Brief")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            ForEach(brief.points, id: \.self) { point in
+                                HStack(alignment: .top, spacing: 6) {
+                                    Circle()
+                                        .fill(Palette.appleBlue)
+                                        .frame(width: 4, height: 4)
+                                        .padding(.top, 5)
+                                    Text(point)
+                                        .font(.caption)
+                                        .lineLimit(2)
+                                }
+                            }
+                        }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
+                    }
+
+                    if appState.isLoggedIn, let financeData = appState.financeData {
+                        let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
+                        let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
+                        let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
+                        let netWorth = (portfolio.holdings.isEmpty ? 0 : portfolio.totalValue) + totalBalance - totalDebt
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(CurrencyFormatter.formatPrice(netWorth))
+                                    .font(.title3.weight(.heavy))
+                                if !portfolio.holdings.isEmpty {
+                                    HStack(spacing: 4) {
+                                        Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
+                                        Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                                    }
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
+                                } else {
+                                    Text("Net Worth")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            if !financeData.accounts.isEmpty {
+                                VStack(alignment: .trailing, spacing: 3) {
+                                    Text(CurrencyFormatter.formatPrice(totalBalance))
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(Palette.successGreen)
+                                    Text("\(financeData.accounts.count) accounts")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 4)
+
+                        if !financeData.accounts.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 10) {
+                                    ForEach(financeData.accounts) { account in
+                                        TimelineChip(
+                                            icon: account.type == "investment" ? "chart.line.uptrend.xyaxis" : account.type == "gift" ? "giftcard" : "banknote",
+                                            label: account.name,
+                                            detail: CurrencyFormatter.formatAbbreviated(account.balance),
+                                            color: Palette.appleBlue
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                            .padding(.bottom, 4)
+                        }
+
+                        if !financeData.debt.isEmpty || !UpcomingPayments.all.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 10) {
+                                    ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
+                                        if let days = UpcomingPayments.daysUntil(payment), days >= 0 {
+                                            TimelineChip(
+                                                icon: payment.icon,
+                                                label: payment.name,
+                                                detail: days == 0 ? "Today" : "\(days)d",
+                                                color: Palette.successGreen
+                                            )
+                                        }
+                                    }
+
+                                    let debtWithPayoff = financeData.debt.map { item in
+                                        (item: item, months: DebtCalc.monthsToPayoff(item: item))
+                                    }.sorted { $0.months < $1.months }
+
+                                    ForEach(debtWithPayoff, id: \.item.name) { entry in
+                                        TimelineChip(
+                                            icon: DebtCalc.icon(for: entry.item.name),
+                                            label: entry.item.name,
+                                            detail: DebtCalc.payoffLabel(entry.months),
+                                            color: entry.months < 0.1 ? Palette.successGreen : entry.months <= 3 ? Palette.warningAmber : Palette.dangerRed
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                            .padding(.bottom, 8)
+                        }
+                    }
+
+                    HStack {
+                        Picker("Filter", selection: $marketFilter) {
+                            ForEach(MarketFilter.allCases) { filter in
+                                Text(filter.rawValue).tag(filter)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(maxWidth: 300)
+
+                        Spacer()
+
+                        TextField("Search markets", text: $searchText)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 200)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
 
                     marketList
                 }
@@ -202,7 +328,9 @@ struct MarketsView: View {
                 async let watchlist: Void = appState.loadWatchlist()
                 async let commodities: Void = appState.loadCommodities()
                 async let crypto: Void = appState.loadCrypto()
-                _ = await (stocks, watchlist, commodities, crypto)
+                async let finance: Void = appState.loadFinanceData()
+                async let brief: Void = appState.loadDailyBrief()
+                _ = await (stocks, watchlist, commodities, crypto, finance, brief)
             }
         }
         .onDisappear { isVisible = false }
@@ -465,4 +593,13 @@ private struct MarketItem: Identifiable {
         guard let peRatio, peRatio > 0 else { return "N/A" }
         return String(format: "%.1f", peRatio)
     }
+}
+
+private enum MarketFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case stocks = "Stocks"
+    case commodities = "Commodities"
+    case crypto = "Crypto"
+
+    var id: String { rawValue }
 }

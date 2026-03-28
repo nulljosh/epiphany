@@ -227,6 +227,12 @@ struct SettingsView: View {
                     systemImage: "car.fill",
                     isOn: sourceBinding(\.situationTrafficEnabled)
                 )
+                sourceToggleRow(
+                    title: "Wildfires",
+                    subtitle: "Active wildfire hotspots from NASA",
+                    systemImage: "flame",
+                    isOn: sourceBinding(\.situationWildfiresEnabled)
+                )
             }
         }
     }
