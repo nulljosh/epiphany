@@ -25,7 +25,8 @@ struct Portfolio: Codable {
             )
         }
 
-        let totalValue = mappedHoldings.reduce(0) { $0 + $1.marketValue }
+        let accountTotal = financeData.accounts.reduce(0.0) { $0 + $1.balance }
+        let totalValue = mappedHoldings.reduce(0) { $0 + $1.marketValue } + accountTotal
         let dayChange = mappedHoldings.reduce(0) { partial, holding in
             let changePercent = (stockMap[holding.symbol]?.changePercent ?? 0) / 100
             let previousPrice = changePercent > -1 ? holding.currentPrice / (1 + changePercent) : holding.currentPrice
