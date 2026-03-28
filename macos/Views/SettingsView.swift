@@ -8,8 +8,6 @@ struct SettingsView: View {
     @State private var showChangeEmail = false
     @State private var showChangePassword = false
     @State private var showDeleteAccount = false
-    @State private var avatarImage: NSImage?
-    @State private var hasLoadedAvatar = false
 
     var body: some View {
         NavigationStack {
@@ -17,9 +15,9 @@ struct SettingsView: View {
                 .navigationTitle("Settings")
         }
         .onAppear {
-            guard !hasLoadedAvatar else { return }
-            hasLoadedAvatar = true
-            loadAvatar()
+            if appState.avatarImageData == nil {
+                appState.loadAvatar()
+            }
         }
     }
 
@@ -73,8 +71,9 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 14) {
                     ZStack {
-                        if let avatarImage {
-                            Image(nsImage: avatarImage)
+                        if let data = appState.avatarImageData,
+                           let nsImage = NSImage(data: data) {
+                            Image(nsImage: nsImage)
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 62, height: 62)
@@ -285,16 +284,6 @@ struct SettingsView: View {
         return String(first).uppercased()
     }
 
-    private func loadAvatar() {
-        guard let urlString = appState.user?.avatarUrl,
-              let url = URL(string: urlString) else { return }
-        Task { @MainActor in
-            if let (data, _) = try? await URLSession.shared.data(from: url),
-               let image = NSImage(data: data) {
-                avatarImage = image
-            }
-        }
-    }
 
     private func sourceBinding(_ keyPath: ReferenceWritableKeyPath<AppState, Bool>) -> Binding<Bool> {
         Binding(
