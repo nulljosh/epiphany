@@ -35,25 +35,25 @@ struct FinanceData: Codable {
         let symbol: String
         let shares: Double
         let costBasis: Double
-        let currency: String
+        let currency: String?
 
         var id: String { symbol }
     }
 
     struct Account: Codable, Identifiable {
         let name: String
-        let type: String
+        let type: String?
         let balance: Double
-        let currency: String
+        let currency: String?
 
         var id: String { name }
 
         var typeLabel: String {
-            switch type {
+            switch type ?? "" {
             case "chequing": return "Chequing"
             case "investment": return "Investment"
             case "gift": return "Gift Card"
-            default: return type.capitalized
+            default: return (type ?? "Account").capitalized
             }
         }
     }
