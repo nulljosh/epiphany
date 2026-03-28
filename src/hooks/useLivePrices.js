@@ -131,10 +131,10 @@ export function useLivePrices(initialAssets) {
     }
   }, [fetchCryptoPrices, fetchCommodityPrices]);
 
-  // Fetch on mount and every 5 seconds
+  // Fetch on mount and every 60 seconds (was 5s -- burned ~17K invocations/user/day)
   useEffect(() => {
     fetchAllPrices();
-    const interval = setInterval(fetchAllPrices, 5000);
+    const interval = setInterval(fetchAllPrices, 60000);
     return () => clearInterval(interval);
   }, [fetchAllPrices]);
 

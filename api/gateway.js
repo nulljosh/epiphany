@@ -94,12 +94,49 @@ function getRoutePath(req) {
   return raw.replace(/^\/api\/?/, '').replace(/^\/+|\/+$/g, '');
 }
 
+// Bot user-agent patterns that burn invocations for no reason
+const BOT_PATTERNS = /bot|crawl|spider|slurp|facebookexternalhit|bingpreview|yandex|baidu|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|claudebot|ccbot/i;
+
+// GET-only routes safe to cache at the Vercel edge (seconds)
+const CACHE_TTL = {
+  commodities: 300,
+  crime: 3600,
+  earthquakes: 300,
+  events: 600,
+  flights: 120,
+  history: 3600,
+  incidents: 600,
+  latest: 60,
+  'local-events': 600,
+  macro: 3600,
+  markets: 60,
+  news: 300,
+  prices: 60,
+  'stocks-free': 60,
+  traffic: 300,
+  weather: 300,
+  'weather-alerts': 300,
+  wildfires: 600,
+  ontology: 3600,
+};
+
 export default async function handler(req, res) {
+  const ua = req.headers['user-agent'] || '';
+  if (BOT_PATTERNS.test(ua)) {
+    return res.status(403).json({ error: 'Blocked' });
+  }
+
   const routePath = getRoutePath(req);
   const route = ROUTES[routePath];
 
   if (!route) {
     return res.status(404).json({ error: `Unknown API route: ${routePath || '(empty)'}` });
+  }
+
+  // Set Vercel edge cache for safe GET routes -- repeat requests skip function invocation
+  if (req.method === 'GET' && CACHE_TTL[routePath]) {
+    const ttl = CACHE_TTL[routePath];
+    res.setHeader('Cache-Control', `s-maxage=${ttl}, stale-while-revalidate=${ttl * 2}`);
   }
 
   return route(req, res);

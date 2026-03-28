@@ -174,7 +174,7 @@ export function usePolymarket() {
 
     seedFromCache();
     fetchMarkets();
-    const interval = setInterval(fetchMarkets, 30000);
+    const interval = setInterval(fetchMarkets, 120000);  // was 30s
     return () => clearInterval(interval);
   }, [fetchMarkets]);
 

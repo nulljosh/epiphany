@@ -10,7 +10,7 @@ export const WORLD_CITIES = [
   { id: 'sydney', label: 'Sydney', lat: -33.8688, lon: 151.2093,  name: 'Sydney'   },
 ];
 
-const FLIGHT_REFRESH    = 15_000;
+const FLIGHT_REFRESH    = 120_000;  // was 15s -- burned ~5.7K invocations/user/day
 const TRAFFIC_REFRESH   = 60_000;
 const SITUATION_REFRESH = 5 * 60_000;
 const LAST_GEO_KEY = 'monica_last_geo';
