@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v3.3.0-blue)
+![version](https://img.shields.io/badge/version-v3.4.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -10,7 +10,7 @@ Personal intelligence platform. Map, markets, and people -- Palantir for regular
 ## Features
 
 - **Map** -- MapLibre GL, geolocation, dark/light tiles, city hubs, heat map overlay
-- **Data layers** -- Flights, traffic, earthquakes, weather, crime, GDELT news, Polymarket
+- **Data layers** -- Flights, traffic, earthquakes, weather alerts (NOAA + Environment Canada), crime, local events, wildfires (NASA FIRMS), GDELT news, Polymarket
 - **AI analyst** -- Claude-powered intelligence chat with 10 tool functions (stock lookup, portfolio, news, macro, ontology, alerts, watchlist, create alerts, add notes)
 - **Personal ontology** -- Knowledge graph with 9 object types, 6 relationship types, batch upsert, query engine
 - **Command bar** -- Cmd+K universal search across stocks, cities, markets, people, AI
