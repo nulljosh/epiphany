@@ -26,12 +26,14 @@ import validateLink from '../server/api/validate-link.js';
 import weatherAlerts from '../server/api/weather-alerts.js';
 import weather from '../server/api/weather.js';
 import webhook from '../server/api/webhook.js';
+import wildfires from '../server/api/wildfires.js';
 import people from '../server/api/people.js';
 import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
 import avatar from '../server/api/avatar.js';
 import ai from '../server/api/ai.js';
+import dailyBrief from '../server/api/daily-brief.js';
 import ontology from '../server/api/ontology.js';
 import portfolioHistory from '../server/api/portfolio-history.js';
 import brokerSignal from '../server/api/broker/signal.js';
@@ -42,6 +44,7 @@ import brokerMorningRun from '../server/api/broker/morning-run.js';
 const ROUTES = {
   ai,
   auth,
+  'daily-brief': dailyBrief,
   commodities,
   crime,
   cron,
@@ -69,6 +72,7 @@ const ROUTES = {
   'weather-alerts': weatherAlerts,
   weather,
   webhook,
+  wildfires,
   portfolio,
   watchlist,
   alerts,

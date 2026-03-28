@@ -544,3 +544,26 @@ struct TrafficData: Codable {
         }
     }
 }
+
+// MARK: - Wildfire
+
+struct WildfireResponse: Codable {
+    let fires: [Wildfire]
+    let source: String?
+    let count: Int
+}
+
+struct Wildfire: Codable, Identifiable {
+    let lat: Double
+    let lon: Double
+    let confidence: String?
+    let brightness: Double?
+    let date: String?
+    let time: String?
+
+    var id: String { "\(lat)-\(lon)-\(date ?? "")" }
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+}

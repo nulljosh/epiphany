@@ -21,6 +21,7 @@ final class AppState {
     var isAuthenticating = false
     var error: String?
     var financeDataLoaded = false
+    var dailyBrief: DailyBrief?
     var tallyPayment: TallyPaymentInfo?
     var tallyConnected: Bool = TallyService.loadCredentials() != nil
     var avatarImageData: Data?
@@ -347,6 +348,14 @@ final class AppState {
         data.spending.removeAll { $0.month == month }
         financeData = data
         await saveFinanceData()
+    }
+
+    func loadDailyBrief() async {
+        do {
+            dailyBrief = try await MonicaAPI.shared.fetchDailyBrief()
+        } catch {
+            // Non-critical, silently fail
+        }
     }
 
     func loadStatements() async {

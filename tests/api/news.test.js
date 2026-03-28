@@ -10,7 +10,7 @@ const mockOk = (body) => ({ ok: true, json: async () => body });
 
 function makeGdeltArticle(overrides = {}) {
   return {
-    title: 'Test Article About Markets',
+    title: 'Test Article About the Markets in New York',
     url: 'https://example.com/test-article',
     domain: 'example.com',
     seendate: '20260228T120000Z',
@@ -107,9 +107,9 @@ describe('news API handler', () => {
     const { req, res, data } = makeReqRes();
     global.fetch = vi.fn(() => Promise.resolve(mockOk({
       articles: [
-        makeGdeltArticle({ title: 'Stock Market Rallies on Fed News', url: 'https://a.com/1' }),
-        makeGdeltArticle({ title: 'Stock Market Rallies on Fed News Today', url: 'https://b.com/2' }),
-        makeGdeltArticle({ title: 'Completely Different Article About Sports', url: 'https://c.com/3' }),
+        makeGdeltArticle({ title: 'Stock Market Rallies on the Fed News', url: 'https://a.com/1' }),
+        makeGdeltArticle({ title: 'Stock Market Rallies on the Fed News Today', url: 'https://b.com/2' }),
+        makeGdeltArticle({ title: 'This is a Completely Different Article About Sports', url: 'https://c.com/3' }),
       ],
     })));
 
@@ -123,11 +123,11 @@ describe('news API handler', () => {
     global.fetch = vi.fn(() => Promise.resolve(mockOk({
       articles: [
         makeGdeltArticle({
-          title: 'First Article',
+          title: 'The First Article on the Market Today',
           url: 'https://www.example.com/article?utm_source=twitter&utm_medium=social&id=123',
         }),
         makeGdeltArticle({
-          title: 'Second Unique Article',
+          title: 'The Second Unique Article About Markets',
           url: 'https://example.com/article?id=123',
         }),
       ],
@@ -158,7 +158,7 @@ describe('news API handler', () => {
     const { req, res, data } = makeReqRes();
     global.fetch = vi.fn(() => Promise.resolve(mockOk({
       articles: [makeGdeltArticle({
-        title: 'Major Event Happening in Tokyo Today',
+        title: 'The Major Event is Happening in Tokyo Today',
         sourcelat: '',
         sourcelon: '',
       })],
@@ -205,7 +205,7 @@ describe('stock news via ?q= param', () => {
 
   it('returns articles array for GET with ?q=AAPL', async () => {
     global.fetch = vi.fn(() => Promise.resolve(mockOk({
-      articles: [makeGdeltArticle({ title: 'Apple Stock Rises on Earnings Report' })],
+      articles: [makeGdeltArticle({ title: 'Apple Stock Rises on the Earnings Report' })],
     })));
 
     const { req, res, status, data } = makeReqRes({ q: 'AAPL', category: undefined });
@@ -246,7 +246,7 @@ describe('stock news via ?q= param', () => {
   it('caches stock news results on repeated queries', async () => {
     const ticker = `CACHE${++nextCat}`;
     global.fetch = vi.fn(() => Promise.resolve(mockOk({
-      articles: [makeGdeltArticle({ title: 'Stock Cache Test Article Here' })],
+      articles: [makeGdeltArticle({ title: 'Stock Cache Test Article is in the News Here' })],
     })));
 
     const call1 = makeReqRes({ q: ticker, category: undefined });

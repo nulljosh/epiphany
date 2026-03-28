@@ -8,16 +8,26 @@ struct NewsView: View {
     @State private var hasLoaded = false
     @Environment(\.openURL) private var openURL
 
+    private static let englishStops: Set<String> = [
+        "the", "is", "are", "was", "has", "for", "and", "but", "not", "this",
+        "that", "with", "from", "will", "been", "have", "its", "says", "said",
+        "new", "after", "how", "why", "what", "who", "could", "would", "about",
+        "into", "over", "more", "than", "also", "their", "which",
+        "on", "at", "by", "to", "in", "of", "as", "an", "or", "no", "up"
+    ]
+
     private var cleanArticles: [NewsArticle] {
         articles.filter { article in
             let title = article.title
-            // Filter non-Latin script articles (non-English)
-            let latinRange = title.rangeOfCharacter(from: .init(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-            guard latinRange != nil else { return false }
-            // At least 60% Latin characters
+            guard title.count > 10 else { return false }
             let latinCount = title.unicodeScalars.filter { $0.value < 128 }.count
             let ratio = Double(latinCount) / Double(max(title.count, 1))
-            return ratio > 0.6 && title.count > 10
+            guard ratio > 0.6 else { return false }
+            let words = title.lowercased()
+                .components(separatedBy: .alphanumerics.inverted)
+                .filter { !$0.isEmpty }
+            let matches = words.filter { Self.englishStops.contains($0) }.count
+            return matches >= 2
         }
     }
 

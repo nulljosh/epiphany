@@ -382,8 +382,12 @@ struct StockDetailView: View {
         error = nil
         do {
             let result = try await MonicaAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
+            guard !Task.isCancelled else { return }
             priceHistory = result.history
+        } catch is CancellationError {
+            return
         } catch {
+            guard !Task.isCancelled else { return }
             self.error = error.localizedDescription
         }
         isLoading = false

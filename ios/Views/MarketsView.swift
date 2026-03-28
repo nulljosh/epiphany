@@ -82,6 +82,27 @@ struct MarketsView: View {
                     )
                 } else {
                     List {
+                        if let brief = appState.dailyBrief, !brief.points.isEmpty {
+                            Section("Daily Brief") {
+                                ForEach(brief.points, id: \.self) { point in
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Circle()
+                                            .fill(Palette.appleBlue)
+                                            .frame(width: 5, height: 5)
+                                            .padding(.top, 6)
+                                        Text(point)
+                                            .font(.caption)
+                                            .lineLimit(2)
+                                    }
+                                }
+                            }
+                            .listRowBackground(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.ultraThinMaterial)
+                                    .padding(2)
+                            )
+                        }
+
                         if appState.isLoggedIn {
                             Section(isExpanded: $portfolioExpanded) {
                                 if let financeData = appState.financeData {
@@ -164,7 +185,37 @@ struct MarketsView: View {
                                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                                     }
                                 } else if appState.financeDataLoaded {
-                                    if appState.tallyConnected, let tally = appState.tallyPayment {
+                                    if let financeData = appState.financeData, !financeData.accounts.isEmpty {
+                                        let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
+                                        let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
+                                        let netWorth = totalBalance - totalDebt
+
+                                        NavigationLink {
+                                            PortfolioView()
+                                                .environment(appState)
+                                        } label: {
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 3) {
+                                                    Text(CurrencyFormatter.formatPrice(netWorth))
+                                                        .font(.title2.weight(.heavy))
+                                                        .foregroundStyle(Palette.text)
+                                                    Text("Net Worth")
+                                                        .font(.caption)
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                                Spacer()
+                                                VStack(alignment: .trailing, spacing: 3) {
+                                                    Text(CurrencyFormatter.formatPrice(totalBalance))
+                                                        .font(.subheadline.weight(.semibold))
+                                                        .foregroundStyle(Palette.successGreen)
+                                                    Text("\(financeData.accounts.count) accounts")
+                                                        .font(.caption2)
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                            }
+                                        }
+                                        .padding(.vertical, 4)
+                                    } else if appState.tallyConnected, let tally = appState.tallyPayment {
                                         HStack {
                                             Image(systemName: "calendar.badge.clock")
                                                 .foregroundStyle(Palette.appleBlue)
@@ -385,6 +436,9 @@ struct MarketsView: View {
             guard !hasLoaded else { return }
             hasLoaded = true
             rebuildItems()
+            if appState.dailyBrief == nil {
+                Task { await appState.loadDailyBrief() }
+            }
             if appState.statements.isEmpty {
                 Task { await appState.loadStatements() }
             }

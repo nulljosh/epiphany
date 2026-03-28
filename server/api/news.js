@@ -125,10 +125,15 @@ function normalizeUrl(rawUrl) {
   }
 }
 
+const ENGLISH_STOPS = new Set(['the', 'is', 'are', 'was', 'has', 'for', 'and', 'but', 'not', 'this', 'that', 'with', 'from', 'will', 'been', 'have', 'its', 'says', 'said', 'new', 'after', 'how', 'why', 'what', 'who', 'could', 'would', 'should', 'about', 'into', 'over', 'more', 'than', 'also', 'being', 'their', 'which', 'on', 'at', 'by', 'to', 'in', 'of', 'as', 'an', 'or', 'no', 'up']);
+
 function isEnglishTitle(title) {
   if (!title || title.length < 10) return false;
   const latinCount = [...title].filter(c => c.charCodeAt(0) < 128).length;
-  return (latinCount / Math.max(title.length, 1)) > 0.6;
+  if ((latinCount / Math.max(title.length, 1)) <= 0.6) return false;
+  const words = title.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+  const matches = words.filter(w => ENGLISH_STOPS.has(w)).length;
+  return matches >= 2;
 }
 
 function dedup(articles) {

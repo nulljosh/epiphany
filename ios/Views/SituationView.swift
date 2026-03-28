@@ -15,6 +15,7 @@ struct SituationView: View {
     @State private var crimeIncidents: [CrimeIncident] = []
     @State private var localEvents: [LocalEvent] = []
     @State private var trafficData: TrafficData?
+    @State private var wildfires: [Wildfire] = []
 
     @State private var error: String?
     @State private var flightStatusMessage: String?
@@ -35,6 +36,7 @@ struct SituationView: View {
     @AppStorage("showCrime") private var showCrime = true
     @AppStorage("showLocalEvents") private var showLocalEvents = true
     @AppStorage("showTraffic") private var showTraffic = true
+    @AppStorage("showWildfires") private var showWildfires = true
 
     private var currentRegion: MKCoordinateRegion {
         locationManager.region ?? LocationManager.fallbackRegion
@@ -224,6 +226,21 @@ struct SituationView: View {
         }
     }
 
+    @MapContentBuilder
+    private var wildfireAnnotations: some MapContent {
+        if showWildfires {
+            ForEach(wildfires) { fire in
+                Annotation("Wildfire", coordinate: fire.coordinate) {
+                    Image(systemName: "flame.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .padding(4)
+                        .background(.black.opacity(0.6), in: Circle())
+                }
+            }
+        }
+    }
+
     // MARK: - Computed helpers
 
     private var locatableLocalEvents: [LocalEvent] {
@@ -233,12 +250,12 @@ struct SituationView: View {
     private var totalEventCount: Int {
         earthquakes.count + flights.count + incidents.count + weatherAlerts.count
         + crimeIncidents.count + locatableLocalEvents.count
-        + (trafficData?.incidents?.count ?? 0)
+        + (trafficData?.incidents?.count ?? 0) + wildfires.count
     }
 
     private var allSourcesDisabled: Bool {
         !showEarthquakes && !showFlights && !showIncidents && !showWeatherAlerts
-        && !showCrime && !showLocalEvents && !showTraffic
+        && !showCrime && !showLocalEvents && !showTraffic && !showWildfires
     }
 
     // MARK: - Overlays
@@ -333,6 +350,7 @@ struct SituationView: View {
             crimeAnnotations
             localEventAnnotations
             trafficAnnotations
+            wildfireAnnotations
             UserAnnotation()
         }
         .mapStyle(.standard(elevation: .realistic))
@@ -395,7 +413,7 @@ struct SituationView: View {
         let lomin = center.longitude - span.longitudeDelta / 2
         let lomax = center.longitude + span.longitudeDelta / 2
 
-        let completion = LoadCompletion(total: 7)
+        let completion = LoadCompletion(total: 8)
 
         // Each source loads independently and applies state as soon as it arrives.
         // No source blocks another.
@@ -460,6 +478,15 @@ struct SituationView: View {
             let result = try? await MonicaAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude)
             guard loadRegionId == regionId else { return }
             trafficData = result
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showWildfires else { wildfires = []; return }
+            let r = await loadSection(label: "Wildfires") { try await MonicaAPI.shared.fetchWildfires(lat: center.latitude, lon: center.longitude) }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { wildfires = r.value }
+            if let e = r.error { await completion.addError(e) }
         }
 
         // Wait for all sources, then finalize

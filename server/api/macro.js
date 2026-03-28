@@ -8,6 +8,11 @@ const SERIES = [
   { id: 'fedFunds',    seriesId: 'FEDFUNDS',        name: 'Fed Funds Rate',    unit: '%' },
   { id: 'cpi',         seriesId: 'CPIAUCSL',        name: 'CPI',              unit: 'index' },
   { id: 'gdp',         seriesId: 'A191RL1Q225SBEA', name: 'GDP Growth',        unit: '%' },
+  { id: 'unemployment', seriesId: 'UNRATE',          name: 'Unemployment',      unit: '%' },
+  { id: 'joblessClaims', seriesId: 'ICSA',           name: 'Jobless Claims',    unit: 'K' },
+  { id: 'consumerConf', seriesId: 'UMCSENT',         name: 'Consumer Confidence', unit: 'index' },
+  { id: 'pce',         seriesId: 'PCEPI',            name: 'PCE Inflation',     unit: 'index' },
+  { id: 'retailSales', seriesId: 'RSAFS',            name: 'Retail Sales',      unit: 'B USD' },
   { id: 'treasury2y',  seriesId: 'DGS2',            name: '2Y Treasury',       unit: '%' },
   { id: 'treasury10y', seriesId: 'DGS10',           name: '10Y Treasury',      unit: '%' },
   { id: 'treasury30y', seriesId: 'DGS30',           name: '30Y Treasury',      unit: '%' },
@@ -85,6 +90,26 @@ const FALLBACK_DATA = {
   gdp: [
     { date: '2025-12-01', value: 2.8 },
     { date: '2025-09-01', value: 2.6 },
+  ],
+  unemployment: [
+    { date: '2026-02-01', value: 4.1 },
+    { date: '2026-01-01', value: 4.0 },
+  ],
+  joblessClaims: [
+    { date: '2026-03-15', value: 223 },
+    { date: '2026-03-08', value: 220 },
+  ],
+  consumerConf: [
+    { date: '2026-02-01', value: 64.7 },
+    { date: '2026-01-01', value: 65.2 },
+  ],
+  pce: [
+    { date: '2026-01-01', value: 128.5 },
+    { date: '2025-12-01', value: 128.1 },
+  ],
+  retailSales: [
+    { date: '2026-01-01', value: 724.5 },
+    { date: '2025-12-01', value: 718.3 },
   ],
   treasury2y: [
     { date: '2026-03-20', value: 4.25 },

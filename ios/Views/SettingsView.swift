@@ -14,6 +14,9 @@ struct SettingsView: View {
     @State private var isUploadingAvatar = false
     @State private var showConnectTally = false
     @State private var showChangeName = false
+    @State private var showAvatarOptions = false
+    @State private var showPhotoPicker = false
+    @State private var showCamera = false
 
 
     var body: some View {
@@ -209,12 +212,11 @@ struct SettingsView: View {
 
 
     private var avatarPickerButton: some View {
-        let avatarData = appState.avatarImageData
-        let initial = avatarInitial
-        let uploading = isUploadingAvatar
-        return PhotosPicker(selection: $avatarItem, matching: .images) {
+        Button {
+            showAvatarOptions = true
+        } label: {
             ZStack {
-                if let data = avatarData,
+                if let data = appState.avatarImageData,
                    let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -225,11 +227,11 @@ struct SettingsView: View {
                     Circle()
                         .fill(Palette.appleBlue.opacity(0.2))
                         .frame(width: 56, height: 56)
-                    Text(initial)
+                    Text(avatarInitial)
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(Palette.appleBlue)
                 }
-                if uploading {
+                if isUploadingAvatar {
                     Circle()
                         .fill(.black.opacity(0.5))
                         .frame(width: 56, height: 56)
@@ -237,6 +239,25 @@ struct SettingsView: View {
                         .tint(Palette.text)
                 }
             }
+        }
+        .confirmationDialog("Change Profile Photo", isPresented: $showAvatarOptions) {
+            Button("Photo Library") { showPhotoPicker = true }
+            Button("Take Photo") { showCamera = true }
+            Button("Cancel", role: .cancel) {}
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $avatarItem, matching: .images)
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPickerView { image in
+                if let jpegData = image.jpegData(compressionQuality: 0.8) {
+                    appState.saveAvatarData(jpegData)
+                    isUploadingAvatar = true
+                    Task {
+                        _ = try? await MonicaAPI.shared.uploadAvatar(imageData: jpegData)
+                        isUploadingAvatar = false
+                    }
+                }
+            }
+            .ignoresSafeArea()
         }
     }
 
@@ -628,6 +649,7 @@ struct MapSourcesSettingsView: View {
     @AppStorage("showCrime") private var showCrime = true
     @AppStorage("showLocalEvents") private var showLocalEvents = true
     @AppStorage("showTraffic") private var showTraffic = true
+    @AppStorage("showWildfires") private var showWildfires = true
 
     var body: some View {
         List {
@@ -639,9 +661,43 @@ struct MapSourcesSettingsView: View {
                 Toggle("Crime", isOn: $showCrime)
                 Toggle("Local Events", isOn: $showLocalEvents)
                 Toggle("Traffic", isOn: $showTraffic)
+                Toggle("Wildfires", isOn: $showWildfires)
             }
         }
         .navigationTitle("Map Sources")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct CameraPickerView: UIViewControllerRepresentable {
+    let onCapture: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.cameraCaptureMode = .photo
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: CameraPickerView
+        init(_ parent: CameraPickerView) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onCapture(image)
+            }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
     }
 }

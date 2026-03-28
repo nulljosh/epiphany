@@ -353,6 +353,24 @@ final class MonicaAPI {
         return try decode(TrafficData.self, from: data)
     }
 
+    func fetchWildfires(lat: Double, lon: Double) async throws -> [Wildfire] {
+        let url = try makeURL("/api/wildfires", query: ["lat": String(lat), "lon": String(lon)])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let response = try decode(WildfireResponse.self, from: data)
+        return response.fires
+    }
+
+    func fetchDailyBrief() async throws -> DailyBrief {
+        if let cached: DailyBrief = cached("daily-brief") { return cached }
+        let url = try makeURL("/api/daily-brief")
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let brief = try decode(DailyBrief.self, from: data)
+        setCache("daily-brief", brief)
+        return brief
+    }
+
     // MARK: - Prediction Markets
 
     func fetchMarkets(limit: Int = 50, order: String = "volume24hr") async throws -> [PredictionMarket] {
