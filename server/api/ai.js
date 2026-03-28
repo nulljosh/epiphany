@@ -2,10 +2,10 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
+import { getFmpApiKey, FMP_BASE } from './stocks-shared.js';
 
 const MODEL = 'claude-sonnet-4-5-20241022';
 const MAX_HISTORY = 20;
-const MAX_CONVS = 5;
 
 const TOOLS = [
   {
@@ -32,7 +32,7 @@ const TOOLS = [
   },
   {
     name: 'get_macro',
-    description: 'Get current macroeconomic indicators (GDP, CPI, unemployment, rates)',
+    description: 'Get current 10-year Treasury yield',
     input_schema: { type: 'object', properties: {} },
   },
   {
@@ -82,49 +82,94 @@ const TOOLS = [
   },
 ];
 
+async function fetchStockQuote(symbol) {
+  const apiKey = getFmpApiKey();
+  if (!apiKey) return { error: 'Stock data not configured' };
+  const fmpSymbol = symbol.replace('-', '.');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`${FMP_BASE}/quote/${fmpSymbol}?apikey=${apiKey}`, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return { error: `FMP error ${res.status}` };
+    const data = await res.json();
+    if (!Array.isArray(data) || !data[0]) return { error: `No data for ${symbol}` };
+    const q = data[0];
+    return { symbol, price: q.price, change: q.change, changePercent: q.changesPercentage, marketCap: q.marketCap, pe: q.pe, name: q.name };
+  } catch {
+    clearTimeout(timer);
+    return { error: 'Stock lookup failed' };
+  }
+}
+
+async function fetchNewsInternal(query) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query || 'world')}&mode=ArtList&maxrecords=10&format=json`;
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.articles || []).map(a => ({ title: a.title, url: a.url, source: a.domain, seendate: a.seendate }));
+  } catch {
+    clearTimeout(timer);
+    return [];
+  }
+}
+
+async function fetchMacroInternal() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch('https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=DEMO_KEY&file_type=json&limit=1&sort_order=desc', { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return { note: 'Macro data temporarily unavailable' };
+    const data = await res.json();
+    return { tenYearYield: data.observations?.[0]?.value || 'N/A' };
+  } catch {
+    clearTimeout(timer);
+    return { note: 'Macro data temporarily unavailable' };
+  }
+}
+
+const EVENT_TTL_DAYS = 30;
+function isExpired(obj) {
+  if (obj.type !== 'event') return false;
+  return Date.now() - new Date(obj.createdAt).getTime() > EVENT_TTL_DAYS * 86400000;
+}
+
 async function executeTool(name, input, userId, kv) {
   const prefix = `ont:${userId}`;
   switch (name) {
-    case 'lookup_stock': {
-      const { fetchStockQuote } = await import('./stocks-shared.js');
-      const data = await fetchStockQuote(input.symbol);
-      return data || { error: `No data for ${input.symbol}` };
-    }
+    case 'lookup_stock':
+      return fetchStockQuote(input.symbol);
     case 'get_portfolio': {
       const data = await kv.get(`portfolio:${userId}`);
       if (!data) return { error: 'No portfolio configured' };
       const { holdings = [], accounts = [], debt = [], goals = [] } = data;
       return { holdings: holdings.slice(0, 20), accounts: accounts.slice(0, 10), debt, goals };
     }
-    case 'get_news': {
-      const mod = await import('./news.js');
-      const articles = await fetchNewsInternal(input.query);
-      return { articles: articles.slice(0, 10) };
-    }
-    case 'get_macro': {
-      const mod = await import('./macro.js');
-      return await fetchMacroInternal();
-    }
+    case 'get_news':
+      return { articles: (await fetchNewsInternal(input.query)).slice(0, 10) };
+    case 'get_macro':
+      return fetchMacroInternal();
     case 'query_ontology': {
       const typeKey = `${prefix}:type:${input.type}`;
       const ids = (await kv.get(typeKey)) || [];
-      const results = [];
-      for (const id of ids.slice(0, 20)) {
-        const obj = await kv.get(`${prefix}:obj:${id}`);
-        if (!obj) continue;
-        if (input.key && input.value && String(obj.properties?.[input.key]) !== String(input.value)) continue;
-        results.push({ id: obj.id, name: obj.name, type: obj.type, properties: obj.properties });
-      }
+      const sliced = ids.slice(0, 20);
+      if (!sliced.length) return { objects: [] };
+      const objects = await Promise.all(sliced.map(id => kv.get(`${prefix}:obj:${id}`)));
+      const results = objects
+        .filter(obj => obj && !isExpired(obj))
+        .filter(obj => !(input.key && input.value && String(obj.properties?.[input.key]) !== String(input.value)))
+        .map(obj => ({ id: obj.id, name: obj.name, type: obj.type, properties: obj.properties }));
       return { objects: results };
     }
-    case 'get_alerts': {
-      const alerts = (await kv.get(`alerts:${userId}`)) || [];
-      return { alerts };
-    }
-    case 'get_watchlist': {
-      const watchlist = (await kv.get(`watchlist:${userId}`)) || [];
-      return { watchlist };
-    }
+    case 'get_alerts':
+      return { alerts: (await kv.get(`alerts:${userId}`)) || [] };
+    case 'get_watchlist':
+      return { watchlist: (await kv.get(`watchlist:${userId}`)) || [] };
     case 'create_alert': {
       const alerts = (await kv.get(`alerts:${userId}`)) || [];
       const newAlert = {
@@ -142,19 +187,24 @@ async function executeTool(name, input, userId, kv) {
     case 'add_note': {
       const noteId = `note:${Date.now().toString(36)}`;
       const note = {
-        id: noteId,
-        type: 'note',
-        name: input.text.slice(0, 60),
-        properties: { text: input.text },
-        source: 'ai',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        id: noteId, type: 'note', name: input.text.slice(0, 60),
+        properties: { text: input.text }, source: 'ai',
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       };
       await kv.set(`${prefix}:obj:${noteId}`, note);
-      const typeIds = (await kv.get(`${prefix}:type:note`)) || [];
+      // Update type + global indexes
+      const [typeIds, allIds] = await Promise.all([
+        kv.get(`${prefix}:type:note`).then(r => r || []),
+        kv.get(`${prefix}:all`).then(r => r || []),
+      ]);
       typeIds.unshift(noteId);
       if (typeIds.length > 100) typeIds.length = 100;
-      await kv.set(`${prefix}:type:note`, typeIds);
+      allIds.unshift(noteId);
+      if (allIds.length > 4500) allIds.length = 4500;
+      await Promise.all([
+        kv.set(`${prefix}:type:note`, typeIds),
+        kv.set(`${prefix}:all`, allIds),
+      ]);
       return { ok: true, noteId };
     }
     default:
@@ -162,66 +212,27 @@ async function executeTool(name, input, userId, kv) {
   }
 }
 
-async function fetchNewsInternal(query) {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
-    const params = query ? `?q=${encodeURIComponent(query)}` : '';
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query || 'world')}&mode=ArtList&maxrecords=10&format=json`;
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.articles || []).map(a => ({
-      title: a.title,
-      url: a.url,
-      source: a.domain,
-      seendate: a.seendate,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-async function fetchMacroInternal() {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch('https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=DEMO_KEY&file_type=json&limit=1&sort_order=desc', { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return { note: 'Macro data temporarily unavailable' };
-    const data = await res.json();
-    return { tenYearYield: data.observations?.[0]?.value || 'N/A' };
-  } catch {
-    return { note: 'Macro data temporarily unavailable' };
-  }
-}
-
 async function buildSystemPrompt(userId, kv) {
   const parts = ['You are Monica, a personal intelligence analyst. You help the user understand their financial situation, market conditions, and local events. Be concise and direct. Use data from tools when answering factual questions.'];
 
-  const portfolio = await kv.get(`portfolio:${userId}`);
-  if (portfolio?.holdings?.length) {
-    const symbols = portfolio.holdings.map(h => h.symbol).join(', ');
-    parts.push(`User holds: ${symbols}`);
-  }
+  const [portfolio, watchlist, alerts] = await Promise.all([
+    kv.get(`portfolio:${userId}`),
+    kv.get(`watchlist:${userId}`),
+    kv.get(`alerts:${userId}`),
+  ]);
 
-  const watchlist = await kv.get(`watchlist:${userId}`);
+  if (portfolio?.holdings?.length) {
+    parts.push(`User holds: ${portfolio.holdings.map(h => h.symbol).join(', ')}`);
+  }
   if (watchlist?.length) {
     parts.push(`Watchlist: ${watchlist.map(w => w.symbol).join(', ')}`);
   }
-
-  const alerts = await kv.get(`alerts:${userId}`);
   if (alerts?.length) {
     const active = alerts.filter(a => !a.triggered);
     if (active.length) parts.push(`${active.length} active price alerts`);
   }
 
   return parts.join('\n\n');
-}
-
-function convKey(userId, convId) {
-  return `ai:${userId}:conv:${convId}`;
 }
 
 export default async function handler(req, res) {
@@ -242,7 +253,7 @@ export default async function handler(req, res) {
   if (!message || typeof message !== 'string') return errorResponse(res, 400, 'message required');
 
   const convId = conversationId || Date.now().toString(36);
-  const historyKey = convKey(session.userId, convId);
+  const historyKey = `ai:${session.userId}:conv:${convId}`;
   let history = (await kv.get(historyKey)) || [];
 
   history.push({ role: 'user', content: message });
@@ -255,12 +266,11 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  let fullResponse = '';
-
   try {
     let messages = [...history];
     let toolLoop = 0;
     const maxToolLoops = 5;
+    let lastAssistantContent = null;
 
     while (toolLoop < maxToolLoops) {
       const stream = client.messages.stream({
@@ -271,55 +281,42 @@ export default async function handler(req, res) {
         tools: TOOLS,
       });
 
-      let hasToolUse = false;
       let currentText = '';
-      const toolUses = [];
 
       for await (const event of stream) {
-        if (event.type === 'content_block_delta') {
-          if (event.delta.type === 'text_delta') {
-            currentText += event.delta.text;
-            res.write(`data: ${JSON.stringify({ type: 'text', text: event.delta.text })}\n\n`);
-          }
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          currentText += event.delta.text;
+          res.write(`data: ${JSON.stringify({ type: 'text', text: event.delta.text })}\n\n`);
         }
         if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
-          hasToolUse = true;
           res.write(`data: ${JSON.stringify({ type: 'tool_start', name: event.content_block.name })}\n\n`);
         }
         if (event.type === 'message_stop') break;
       }
 
       const finalMessage = await stream.finalMessage();
+      lastAssistantContent = finalMessage.content;
 
-      for (const block of finalMessage.content) {
-        if (block.type === 'tool_use') {
-          toolUses.push(block);
-        }
-      }
-
-      if (toolUses.length === 0) {
-        fullResponse = currentText;
-        break;
-      }
+      const toolUses = finalMessage.content.filter(b => b.type === 'tool_use');
+      if (toolUses.length === 0) break;
 
       messages.push({ role: 'assistant', content: finalMessage.content });
 
-      const toolResults = [];
-      for (const tool of toolUses) {
+      // Execute tools in parallel
+      const toolResults = await Promise.all(toolUses.map(async (tool) => {
         const result = await executeTool(tool.name, tool.input, session.userId, kv);
         res.write(`data: ${JSON.stringify({ type: 'tool_result', name: tool.name })}\n\n`);
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: tool.id,
-          content: JSON.stringify(result),
-        });
-      }
+        return { type: 'tool_result', tool_use_id: tool.id, content: JSON.stringify(result) };
+      }));
 
       messages.push({ role: 'user', content: toolResults });
       toolLoop++;
     }
 
-    history.push({ role: 'assistant', content: fullResponse });
+    // Save structured content to preserve tool context across turns
+    if (lastAssistantContent) {
+      history.push({ role: 'assistant', content: lastAssistantContent });
+    }
     if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
     await kv.set(historyKey, history);
 
