@@ -233,6 +233,7 @@ struct Incident: Codable, Identifiable {
         "swing_gate", "toll_booth", "turnstile", "block",
         "fire_hydrant", "fire_extinguisher", "defibrillator",
         "phone", "siren", "assembly_point", "drinking_water",
+        "construction", "road_works", "road work", "roadwork",
     ]
 
     private static func normalizeTitle(_ raw: String) -> String {

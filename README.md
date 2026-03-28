@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v3.5.0-blue)
+![version](https://img.shields.io/badge/version-v3.5.1-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
@@ -43,6 +43,15 @@ Deploy: Vercel. Repo: github.com/nulljosh/monica
 - [ ] Phase 6: Semantic Search
 
 ## Changelog
+
+### v3.5.1 (2026-03-28)
+- iOS/macOS: resilient Account/Holding decoders -- portfolio no longer shows $0 when server data has optional fields
+- macOS: Portfolio.totalValue now includes account balances (TFSA, Vacation)
+- iOS: stock chart SMA/EMA indicators use distinct colors via foregroundStyle(by:) binding
+- iOS/macOS: 1D chart shows full trading day x-axis instead of collapsing to a vertical line
+- iOS/macOS: construction/road_works filtered from map incidents
+- macOS: 1D/5D x-axis labels show hour:minute instead of month/day
+- macOS: 12 untracked model files committed (FinanceData, Portfolio, Stock, etc.)
 
 ### v3.5.0 (2026-03-27)
 - Web map: all 8 data sources now fetched (crime, local events, weather, wildfires were missing from LiveMapBackdrop)

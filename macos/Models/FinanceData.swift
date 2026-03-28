@@ -8,29 +8,6 @@ struct FinanceData: Codable {
     var goals: [Goal]
     var spending: [SpendingMonth]
 
-    private enum CodingKeys: String, CodingKey {
-        case holdings, accounts, budget, debt, goals, spending
-    }
-
-    init(holdings: [Holding] = [], accounts: [Account] = [], budget: Budget? = nil, debt: [DebtItem] = [], goals: [Goal] = [], spending: [SpendingMonth] = []) {
-        self.holdings = holdings
-        self.accounts = accounts
-        self.budget = budget
-        self.debt = debt
-        self.goals = goals
-        self.spending = spending
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        holdings = (try? container.decode([Holding].self, forKey: .holdings)) ?? []
-        accounts = (try? container.decode([Account].self, forKey: .accounts)) ?? []
-        budget = try? container.decode(Budget.self, forKey: .budget)
-        debt = (try? container.decode([DebtItem].self, forKey: .debt)) ?? []
-        goals = (try? container.decode([Goal].self, forKey: .goals)) ?? []
-        spending = (try? container.decode([SpendingMonth].self, forKey: .spending)) ?? []
-    }
-
     struct Holding: Codable, Identifiable {
         let symbol: String
         let shares: Double

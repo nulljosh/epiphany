@@ -217,6 +217,7 @@ struct StockDetailView: View {
                         y: .value("Price", close),
                         series: .value("Series", "Price")
                     )
+                    .foregroundStyle(by: .value("Series", "Price"))
 
                     AreaMark(
                         x: .value("Date", date),
@@ -237,6 +238,7 @@ struct StockDetailView: View {
                         y: .value("SMA", point.value),
                         series: .value("Series", "SMA")
                     )
+                    .foregroundStyle(by: .value("Series", "SMA"))
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
 
@@ -246,6 +248,7 @@ struct StockDetailView: View {
                         y: .value("EMA", point.value),
                         series: .value("Series", "EMA")
                     )
+                    .foregroundStyle(by: .value("Series", "EMA"))
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
 
@@ -272,6 +275,7 @@ struct StockDetailView: View {
             .chartForegroundStyleScale(["Price": Palette.appleBlue, "SMA": Palette.warningAmber, "EMA": Palette.purple])
             .chartLegend(.hidden)
             .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
+            .modifier(IntradayXScaleModifier(selectedRange: selectedRange, points: points))
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) {
                     AxisValueLabel(format: xAxisFormat)
@@ -449,5 +453,22 @@ struct StockDetailPageView: View {
         .tabViewStyle(.page(indexDisplayMode: .never))
         .navigationTitle(stocks.indices.contains(currentIndex) ? stocks[currentIndex].symbol : "")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// Expands 1D x-axis to full trading day so early-session charts aren't a vertical line
+private struct IntradayXScaleModifier: ViewModifier {
+    let selectedRange: String
+    let points: [(Date, Double)]
+
+    func body(content: Content) -> some View {
+        if selectedRange == "1d", let first = points.first?.0 {
+            let cal = Calendar.current
+            let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
+            let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first
+            content.chartXScale(domain: marketOpen...marketClose)
+        } else {
+            content
+        }
     }
 }

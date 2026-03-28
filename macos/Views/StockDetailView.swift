@@ -212,6 +212,7 @@ struct StockDetailView: View {
             }
         }
         .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
+        .modifier(IntradayXScaleModifier(selectedRange: selectedRange, points: points))
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 5)) {
                 AxisValueLabel(format: xAxisFormat)
@@ -249,8 +250,10 @@ struct StockDetailView: View {
 
     private var xAxisFormat: Date.FormatStyle {
         switch selectedRange {
-        case "1d", "5d":
-            return .dateTime.month(.abbreviated).day()
+        case "1d":
+            return .dateTime.hour().minute()
+        case "5d":
+            return .dateTime.weekday(.abbreviated).hour()
         case "1mo":
             return .dateTime.month(.abbreviated).day()
         default:
@@ -325,6 +328,22 @@ struct StockDetailView: View {
             } catch {
                 newsError = true
             }
+        }
+    }
+}
+
+private struct IntradayXScaleModifier: ViewModifier {
+    let selectedRange: String
+    let points: [(Date, Double)]
+
+    func body(content: Content) -> some View {
+        if selectedRange == "1d", let first = points.first?.0 {
+            let cal = Calendar.current
+            let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
+            let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first
+            content.chartXScale(domain: marketOpen...marketClose)
+        } else {
+            content
         }
     }
 }
