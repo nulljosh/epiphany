@@ -55,16 +55,18 @@ export default async function handler(req, res) {
     const now = new Date().toISOString();
 
     const existing = people.findIndex(p => p.id === id);
+    const prev = existing >= 0 ? people[existing] : {};
     const record = {
       id,
       name: body.name.trim(),
-      image: body.image || null,
-      bio: body.bio || null,
-      tags: (body.tags || []).map(t => t.trim()).filter(Boolean),
-      notes: body.notes || '',
-      socials: body.socials || [],
-      relationships: body.relationships || [],
-      searchData: body.searchData || null,
+      image: body.image || prev.image || null,
+      bio: body.bio || prev.bio || null,
+      tags: (body.tags || prev.tags || []).map(t => t.trim()).filter(Boolean),
+      notes: body.notes !== undefined ? body.notes : (prev.notes || ''),
+      socials: body.socials || prev.socials || [],
+      relationships: body.relationships || prev.relationships || [],
+      searchData: body.searchData || prev.searchData || null,
+      enrichment: body.enrichment || prev.enrichment || null,
       createdAt: existing >= 0 ? people[existing].createdAt : now,
       updatedAt: now,
     };

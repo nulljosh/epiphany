@@ -29,6 +29,8 @@ import webhook from '../server/api/webhook.js';
 import wildfires from '../server/api/wildfires.js';
 import people from '../server/api/people.js';
 import peopleIndex from '../server/api/people-index.js';
+import peopleEnrich from '../server/api/people-enrich.js';
+import peopleCrossref from '../server/api/people-crossref.js';
 import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
@@ -62,6 +64,8 @@ const ROUTES = {
   news,
   people,
   'people-index': peopleIndex,
+  'people-enrich': peopleEnrich,
+  'people-crossref': peopleCrossref,
   prices,
   signals,
   statements,

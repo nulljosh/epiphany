@@ -174,6 +174,17 @@ const SUGGESTION_POOL = [
   'Oprah Winfrey', 'Jeff Bezos', 'Alexandria Ocasio-Cortez',
 ];
 
+function formatTimestamp(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
 // --- Index Sub-Components ---
 
 function TagInput({ tags, onChange, dark, t }) {
@@ -248,9 +259,587 @@ function TagInput({ tags, onChange, dark, t }) {
   );
 }
 
-function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
+// --- Timeline Component ---
+
+function PersonTimeline({ person, mentions, dark, t }) {
+  const glass = {
+    background: t.glass,
+    backdropFilter: 'blur(20px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+    border: `1px solid ${t.cardBorder || t.border}`,
+    borderRadius: 12,
+  };
+
+  const events = [];
+
+  // Indexed event
+  if (person.createdAt) {
+    events.push({ type: 'indexed', date: person.createdAt, label: 'Indexed' });
+  }
+
+  // Enrichment event
+  if (person.enrichment?.enrichedAt) {
+    events.push({ type: 'enriched', date: person.enrichment.enrichedAt, label: 'AI Enrichment completed' });
+  }
+
+  // Last updated (if different from created)
+  if (person.updatedAt && person.updatedAt !== person.createdAt) {
+    events.push({ type: 'updated', date: person.updatedAt, label: 'Record updated' });
+  }
+
+  // News mentions
+  if (mentions?.length) {
+    for (const m of mentions.slice(0, 5)) {
+      if (m.publishedAt) {
+        events.push({ type: 'mention', date: m.publishedAt, label: m.title, url: m.url, source: m.source });
+      }
+    }
+  }
+
+  events.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (events.length === 0) return null;
+
+  const typeColors = {
+    indexed: t.green || '#30D158',
+    enriched: t.accent || '#0a84ff',
+    updated: t.textSecondary,
+    mention: '#FF9500',
+  };
+
+  return (
+    <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: t.textSecondary,
+        textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10,
+      }}>
+        Timeline
+      </div>
+      <div style={{ position: 'relative', paddingLeft: 20 }}>
+        {/* Vertical line */}
+        <div style={{
+          position: 'absolute', left: 5, top: 4, bottom: 4, width: 1,
+          background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+        }} />
+        {events.map((ev, i) => (
+          <div key={i} style={{ position: 'relative', paddingBottom: i < events.length - 1 ? 12 : 0 }}>
+            {/* Dot */}
+            <div style={{
+              position: 'absolute', left: -18, top: 4,
+              width: 8, height: 8, borderRadius: '50%',
+              background: typeColors[ev.type] || t.textSecondary,
+              border: `2px solid ${dark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'}`,
+            }} />
+            <div style={{ fontSize: 10, color: t.textTertiary || t.textSecondary, marginBottom: 2 }}>
+              {formatTimestamp(ev.date)}
+            </div>
+            {ev.url ? (
+              <a href={ev.url} target="_blank" rel="noopener noreferrer" style={{
+                fontSize: 12, color: t.accent || '#0a84ff', textDecoration: 'none',
+                lineHeight: 1.4, display: 'block',
+              }}>
+                {ev.label}
+                {ev.source && <span style={{ color: t.textTertiary, fontSize: 10 }}> - {ev.source}</span>}
+              </a>
+            ) : (
+              <div style={{ fontSize: 12, color: t.text, lineHeight: 1.4 }}>
+                {ev.label}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Mentions Component ---
+
+function PersonMentions({ mentions, loading, dark, t }) {
+  const glass = {
+    background: t.glass,
+    backdropFilter: 'blur(20px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+    border: `1px solid ${t.cardBorder || t.border}`,
+    borderRadius: 12,
+  };
+
+  if (loading) {
+    return (
+      <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 600, color: t.textSecondary,
+          textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+        }}>
+          Recent Mentions
+        </div>
+        <div style={{ textAlign: 'center', padding: '8px 0', color: t.textSecondary, fontSize: 12 }}>
+          Scanning news...
+        </div>
+      </div>
+    );
+  }
+
+  if (!mentions || mentions.length === 0) return null;
+
+  return (
+    <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: t.textSecondary,
+        textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+      }}>
+        Recent Mentions ({mentions.length})
+      </div>
+      {mentions.slice(0, 8).map((m, i) => (
+        <a
+          key={i}
+          href={m.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', gap: 10, padding: '8px 0', textDecoration: 'none',
+            borderBottom: i < Math.min(mentions.length, 8) - 1 ? `1px solid ${t.border}` : 'none',
+            alignItems: 'flex-start',
+          }}
+        >
+          {m.image && (
+            <img src={m.image} alt="" style={{
+              width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0,
+              border: `1px solid ${t.border}`,
+            }} onError={e => { e.target.style.display = 'none'; }} />
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 13, fontWeight: 500, color: t.accent || '#0a84ff',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {m.title}
+            </div>
+            <div style={{ fontSize: 11, color: t.textTertiary || t.textSecondary, marginTop: 2 }}>
+              {m.source}{m.publishedAt ? ` - ${formatTimestamp(m.publishedAt)}` : ''}
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// --- Enrichment Display ---
+
+function EnrichmentCard({ enrichment, dark, t }) {
+  if (!enrichment) return null;
+
+  const glass = {
+    background: t.glass,
+    backdropFilter: 'blur(20px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+    border: `1px solid ${t.cardBorder || t.border}`,
+    borderRadius: 12,
+  };
+
+  const labelStyle = {
+    fontSize: 11, fontWeight: 600, color: t.textSecondary,
+    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8,
+  };
+
+  return (
+    <>
+      {/* Intel Summary */}
+      <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+        <div style={labelStyle}>Intelligence</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {enrichment.role && (
+            <div style={{ fontSize: 13, color: t.text }}>
+              <span style={{ color: t.textSecondary }}>Role:</span> {enrichment.role}
+            </div>
+          )}
+          {enrichment.company && (
+            <div style={{ fontSize: 13, color: t.text }}>
+              <span style={{ color: t.textSecondary }}>Org:</span> {enrichment.company}
+            </div>
+          )}
+          {enrichment.location && (
+            <div style={{ fontSize: 13, color: t.text }}>
+              <span style={{ color: t.textSecondary }}>Location:</span> {enrichment.location}
+            </div>
+          )}
+          {enrichment.sentiment && (
+            <div style={{ fontSize: 12, color: t.textSecondary, fontStyle: 'italic', marginTop: 4 }}>
+              "{enrichment.sentiment}"
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Key Facts */}
+      {enrichment.keyFacts?.length > 0 && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={labelStyle}>Key Facts</div>
+          {enrichment.keyFacts.map((fact, i) => (
+            <div key={i} style={{
+              fontSize: 13, color: t.text, padding: '4px 0 4px 12px',
+              borderLeft: `2px solid ${t.accent || '#0a84ff'}`,
+              marginBottom: i < enrichment.keyFacts.length - 1 ? 6 : 0,
+              lineHeight: 1.4,
+            }}>
+              {fact}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Associates */}
+      {enrichment.associates?.length > 0 && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={labelStyle}>Known Associates</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {enrichment.associates.map((name, i) => (
+              <span key={i} style={{
+                fontSize: 12, padding: '3px 10px', borderRadius: 100,
+                background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                color: t.text, border: `1px solid ${t.border}`,
+              }}>
+                {name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Industry Tags */}
+      {enrichment.industryTags?.length > 0 && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={labelStyle}>Industry / Domain</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {enrichment.industryTags.map((tag, i) => (
+              <span key={i} style={{
+                fontSize: 11, padding: '2px 8px', borderRadius: 100,
+                background: dark ? 'rgba(48,209,88,0.12)' : 'rgba(48,209,88,0.08)',
+                color: t.green || '#30D158', fontWeight: 500,
+              }}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// --- Force-Directed Graph ---
+
+function RelationshipGraph({ people, ontology, dark, t, onSelectPerson }) {
+  const canvasRef = useRef(null);
+  const nodesRef = useRef([]);
+  const edgesRef = useRef([]);
+  const animRef = useRef(null);
+  const dragRef = useRef(null);
+  const imagesRef = useRef({});
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (people.length === 0) return;
+
+    const nodes = people.map((p, i) => {
+      const angle = (2 * Math.PI * i) / people.length;
+      const radius = Math.min(150, people.length * 20);
+      return {
+        id: p.id,
+        name: p.name,
+        image: p.image,
+        x: 200 + radius * Math.cos(angle) + (Math.random() - 0.5) * 40,
+        y: 200 + radius * Math.sin(angle) + (Math.random() - 0.5) * 40,
+        vx: 0, vy: 0,
+        enrichment: p.enrichment,
+      };
+    });
+    nodesRef.current = nodes;
+
+    // Load person images
+    for (const node of nodes) {
+      if (node.image && !imagesRef.current[node.id]) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => { imagesRef.current[node.id] = img; };
+        img.src = node.image;
+      }
+    }
+
+    // Build edges from enrichment associates
+    const edges = [];
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    const nameMap = new Map(nodes.map(n => [n.name.toLowerCase(), n]));
+
+    for (const node of nodes) {
+      if (!node.enrichment?.associates) continue;
+      for (const assocName of node.enrichment.associates) {
+        const match = nameMap.get(assocName.toLowerCase());
+        if (match && match.id !== node.id) {
+          const edgeKey = [node.id, match.id].sort().join(':');
+          if (!edges.some(e => [e.source, e.target].sort().join(':') === edgeKey)) {
+            edges.push({ source: node.id, target: match.id });
+          }
+        }
+      }
+    }
+
+    // Also fetch ontology relationships
+    (async () => {
+      for (const node of nodes) {
+        const ontId = `person:${node.name.toLowerCase()}`;
+        const rels = await ontology.getRelationships(ontId);
+        const allRels = [...(rels.outbound || []), ...(rels.inbound || [])];
+        for (const rel of allRels) {
+          const otherId = rel.sourceId === ontId ? rel.targetId : rel.sourceId;
+          // Find matching node
+          const otherNode = nodes.find(n => `person:${n.name.toLowerCase()}` === otherId);
+          if (otherNode) {
+            const edgeKey = [node.id, otherNode.id].sort().join(':');
+            if (!edges.some(e => [e.source, e.target].sort().join(':') === edgeKey)) {
+              edges.push({ source: node.id, target: otherNode.id });
+            }
+          }
+        }
+      }
+      edgesRef.current = edges;
+      setLoaded(true);
+    })();
+
+    edgesRef.current = edges;
+    setLoaded(true);
+  }, [people, ontology]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !loaded) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    const centerX = W / 2;
+    const centerY = H / 2;
+
+    // Reposition nodes to center
+    const nodes = nodesRef.current;
+    for (const node of nodes) {
+      node.x = centerX + (node.x - 200) * (W / 400);
+      node.y = centerY + (node.y - 200) * (H / 400);
+    }
+
+    function simulate() {
+      const edges = edgesRef.current;
+      const DAMPING = 0.85;
+      const REPULSION = 2000;
+      const ATTRACTION = 0.005;
+      const SPRING_LENGTH = 120;
+      const GRAVITY = 0.02;
+
+      // Repulsion between all nodes
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[j].x - nodes[i].x;
+          const dy = nodes[j].y - nodes[i].y;
+          const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+          const force = REPULSION / (dist * dist);
+          const fx = (dx / dist) * force;
+          const fy = (dy / dist) * force;
+          nodes[i].vx -= fx;
+          nodes[i].vy -= fy;
+          nodes[j].vx += fx;
+          nodes[j].vy += fy;
+        }
+      }
+
+      // Attraction along edges
+      for (const edge of edges) {
+        const src = nodes.find(n => n.id === edge.source);
+        const tgt = nodes.find(n => n.id === edge.target);
+        if (!src || !tgt) continue;
+        const dx = tgt.x - src.x;
+        const dy = tgt.y - src.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const force = (dist - SPRING_LENGTH) * ATTRACTION;
+        const fx = (dx / Math.max(dist, 1)) * force;
+        const fy = (dy / Math.max(dist, 1)) * force;
+        src.vx += fx;
+        src.vy += fy;
+        tgt.vx -= fx;
+        tgt.vy -= fy;
+      }
+
+      // Gravity toward center
+      for (const node of nodes) {
+        node.vx += (centerX - node.x) * GRAVITY;
+        node.vy += (centerY - node.y) * GRAVITY;
+      }
+
+      // Update positions
+      for (const node of nodes) {
+        if (dragRef.current?.id === node.id) continue;
+        node.vx *= DAMPING;
+        node.vy *= DAMPING;
+        node.x += node.vx;
+        node.y += node.vy;
+        node.x = Math.max(30, Math.min(W - 30, node.x));
+        node.y = Math.max(30, Math.min(H - 30, node.y));
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      const edges = edgesRef.current;
+
+      // Draw edges
+      ctx.strokeStyle = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+      ctx.lineWidth = 1;
+      for (const edge of edges) {
+        const src = nodes.find(n => n.id === edge.source);
+        const tgt = nodes.find(n => n.id === edge.target);
+        if (!src || !tgt) continue;
+        ctx.beginPath();
+        ctx.moveTo(src.x, src.y);
+        ctx.lineTo(tgt.x, tgt.y);
+        ctx.stroke();
+      }
+
+      // Draw nodes
+      const nodeRadius = 22;
+      for (const node of nodes) {
+        // Glow
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius + 3, 0, Math.PI * 2);
+        ctx.fillStyle = dark ? 'rgba(10,132,255,0.08)' : 'rgba(10,132,255,0.05)';
+        ctx.fill();
+
+        // Circle clip for image
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+        ctx.clip();
+
+        const img = imagesRef.current[node.id];
+        if (img) {
+          ctx.drawImage(img, node.x - nodeRadius, node.y - nodeRadius, nodeRadius * 2, nodeRadius * 2);
+        } else {
+          ctx.fillStyle = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+          ctx.fillRect(node.x - nodeRadius, node.y - nodeRadius, nodeRadius * 2, nodeRadius * 2);
+          // Person icon placeholder
+          ctx.fillStyle = dark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)';
+          ctx.beginPath();
+          ctx.arc(node.x, node.y - 4, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(node.x, node.y + 14, 12, 8, 0, Math.PI, 0);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Border
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Name label
+        ctx.fillStyle = t.text;
+        ctx.font = '500 11px -apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.name.split(' ')[0], node.x, node.y + nodeRadius + 14);
+      }
+    }
+
+    function tick() {
+      simulate();
+      draw();
+      animRef.current = requestAnimationFrame(tick);
+    }
+
+    tick();
+
+    // Interaction handlers
+    function getNodeAt(x, y) {
+      for (const node of nodes) {
+        const dx = x - node.x;
+        const dy = y - node.y;
+        if (dx * dx + dy * dy < 26 * 26) return node;
+      }
+      return null;
+    }
+
+    function onPointerDown(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const node = getNodeAt(x, y);
+      if (node) {
+        dragRef.current = { id: node.id, offsetX: x - node.x, offsetY: y - node.y, moved: false };
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!dragRef.current) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const node = nodes.find(n => n.id === dragRef.current.id);
+      if (node) {
+        node.x = x - dragRef.current.offsetX;
+        node.y = y - dragRef.current.offsetY;
+        node.vx = 0;
+        node.vy = 0;
+        dragRef.current.moved = true;
+      }
+    }
+
+    function onPointerUp(e) {
+      if (dragRef.current && !dragRef.current.moved) {
+        onSelectPerson(dragRef.current.id);
+      }
+      dragRef.current = null;
+    }
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [loaded, dark, t, onSelectPerson]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        width: '100%', height: 360, borderRadius: 12,
+        background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+        border: `1px solid ${t.cardBorder || t.border}`,
+        cursor: 'grab', touchAction: 'none',
+      }}
+    />
+  );
+}
+
+// --- Person Detail ---
+
+function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t, peopleIndex }) {
   const [notes, setNotes] = useState(person.notes || '');
-  const [saving, setSaving] = useState(false);
+  const [enriching, setEnriching] = useState(false);
+  const [enrichError, setEnrichError] = useState(null);
+  const [mentions, setMentions] = useState(null);
+  const [mentionsLoading, setMentionsLoading] = useState(false);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const notesTimer = useRef(null);
 
@@ -262,6 +851,14 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
     borderRadius: 12,
   };
 
+  // Fetch mentions on mount
+  useEffect(() => {
+    setMentionsLoading(true);
+    peopleIndex.crossref(person.id).then(data => {
+      setMentions(data?.mentions || []);
+    }).finally(() => setMentionsLoading(false));
+  }, [person.id, peopleIndex]);
+
   const handleNotesChange = (val) => {
     setNotes(val);
     if (notesTimer.current) clearTimeout(notesTimer.current);
@@ -272,6 +869,16 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
 
   const handleTagsChange = (tags) => {
     onUpdate({ ...person, tags });
+  };
+
+  const handleEnrich = async () => {
+    setEnriching(true);
+    setEnrichError(null);
+    const result = await peopleIndex.enrich(person.id);
+    if (!result.ok) {
+      setEnrichError(result.error);
+    }
+    setEnriching(false);
   };
 
   return (
@@ -308,10 +915,45 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
         <div style={{ fontSize: 20, fontWeight: 700, color: t.text, marginBottom: 4 }}>
           {person.name}
         </div>
-        {person.bio && (
+        {person.enrichment?.role && (
+          <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 2 }}>
+            {person.enrichment.role}{person.enrichment.company ? ` at ${person.enrichment.company}` : ''}
+          </div>
+        )}
+        {person.enrichment?.location && (
+          <div style={{ fontSize: 12, color: t.textTertiary || t.textSecondary }}>
+            {person.enrichment.location}
+          </div>
+        )}
+        {!person.enrichment?.role && person.bio && (
           <div style={{ fontSize: 13, color: t.textSecondary, lineHeight: 1.5, maxWidth: 400, margin: '0 auto' }}>
             {person.bio}
           </div>
+        )}
+
+        {/* Enrich button */}
+        {!person.enrichment && person.searchData?.results?.length > 0 && (
+          <button
+            onClick={handleEnrich}
+            disabled={enriching}
+            style={{
+              marginTop: 10, padding: '6px 16px', borderRadius: 100,
+              border: `1px solid ${t.accent || '#0a84ff'}`,
+              background: `${t.accent || '#0a84ff'}15`,
+              color: t.accent || '#0a84ff',
+              fontSize: 12, fontWeight: 600, fontFamily: font,
+              cursor: enriching ? 'default' : 'pointer',
+              opacity: enriching ? 0.6 : 1,
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+            onMouseEnter={e => { if (!enriching) e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            {enriching ? 'Enriching...' : 'AI Enrich'}
+          </button>
+        )}
+        {enrichError && (
+          <div style={{ fontSize: 11, color: '#FF453A', marginTop: 6 }}>{enrichError}</div>
         )}
       </div>
 
@@ -346,6 +988,9 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
         </div>
       )}
 
+      {/* Enrichment Data */}
+      <EnrichmentCard enrichment={person.enrichment} dark={dark} t={t} />
+
       {/* Tags */}
       <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
         <div style={{
@@ -379,6 +1024,12 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
           }}
         />
       </div>
+
+      {/* Mentions */}
+      <PersonMentions mentions={mentions} loading={mentionsLoading} dark={dark} t={t} />
+
+      {/* Timeline */}
+      <PersonTimeline person={person} mentions={mentions} dark={dark} t={t} />
 
       {/* Relationships */}
       {person.relationships?.length > 0 && (
@@ -452,10 +1103,11 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t }) {
   );
 }
 
-function IndexView({ dark, t, peopleIndex, glass, font }) {
+function IndexView({ dark, t, peopleIndex, ontology, glass, font }) {
   const { people, loading, upsert, remove } = peopleIndex;
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'graph'
 
   const filtered = filter
     ? people.filter(p =>
@@ -475,6 +1127,7 @@ function IndexView({ dark, t, peopleIndex, glass, font }) {
           onClose={() => setSelected(null)}
           dark={dark}
           t={t}
+          peopleIndex={peopleIndex}
         />
       );
     }
@@ -482,21 +1135,60 @@ function IndexView({ dark, t, peopleIndex, glass, font }) {
 
   return (
     <>
-      {people.length > 3 && (
-        <input
-          type="text"
-          placeholder="Filter by name or tag..."
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          style={{
-            width: '100%', padding: '8px 12px', borderRadius: 8,
+      {/* View toggle + filter */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        {people.length > 3 && (
+          <input
+            type="text"
+            placeholder="Filter by name or tag..."
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            style={{
+              flex: 1, padding: '8px 12px', borderRadius: 8,
+              border: `1px solid ${t.border}`,
+              background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+              color: t.text, fontSize: 13, fontFamily: font, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        )}
+        {people.length > 1 && (
+          <div style={{
+            display: 'flex', borderRadius: 8, overflow: 'hidden',
             border: `1px solid ${t.border}`,
-            background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
-            color: t.text, fontSize: 13, fontFamily: font, outline: 'none',
-            boxSizing: 'border-box', marginBottom: 12,
-          }}
-        />
-      )}
+          }}>
+            <button
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+              style={{
+                padding: '6px 10px', border: 'none', cursor: 'pointer',
+                background: viewMode === 'grid' ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                color: viewMode === 'grid' ? t.text : t.textSecondary,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode('graph')}
+              title="Graph view"
+              style={{
+                padding: '6px 10px', border: 'none', cursor: 'pointer',
+                background: viewMode === 'graph' ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                color: viewMode === 'graph' ? t.text : t.textSecondary,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/>
+                <circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/>
+                <line x1="8.5" y1="7.5" x2="15.5" y2="16.5"/><line x1="15.5" y1="7.5" x2="8.5" y2="16.5"/>
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
 
       {loading && people.length === 0 && (
         <div style={{ textAlign: 'center', padding: '32px 0', color: t.textSecondary, fontSize: 13 }}>
@@ -523,7 +1215,19 @@ function IndexView({ dark, t, peopleIndex, glass, font }) {
         </div>
       )}
 
-      {filtered.length > 0 && (
+      {/* Graph View */}
+      {viewMode === 'graph' && people.length > 0 && (
+        <RelationshipGraph
+          people={people}
+          ontology={ontology}
+          dark={dark}
+          t={t}
+          onSelectPerson={setSelected}
+        />
+      )}
+
+      {/* Grid View */}
+      {viewMode === 'grid' && filtered.length > 0 && (
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
@@ -562,6 +1266,14 @@ function IndexView({ dark, t, peopleIndex, glass, font }) {
               }}>
                 {person.name}
               </div>
+              {person.enrichment?.role && (
+                <div style={{
+                  fontSize: 10, color: t.textTertiary || t.textSecondary, marginTop: 2,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {person.enrichment.role}
+                </div>
+              )}
               {person.tags?.length > 0 && (
                 <div style={{
                   marginTop: 4, display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap',
@@ -578,6 +1290,15 @@ function IndexView({ dark, t, peopleIndex, glass, font }) {
                   {person.tags.length > 2 && (
                     <span style={{ fontSize: 9, color: t.textTertiary }}>+{person.tags.length - 2}</span>
                   )}
+                </div>
+              )}
+              {person.enrichment && (
+                <div style={{
+                  marginTop: 4, fontSize: 9, color: t.green || '#30D158',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
+                }}>
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="12"/></svg>
+                  enriched
                 </div>
               )}
             </button>
@@ -728,6 +1449,13 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
         const ontObj = personToOntology({ ...person, id: saved.id });
         await ontology.upsert(ontObj);
       } catch { /* non-critical */ }
+
+      // Fire enrichment in the background
+      peopleIndex.enrich(saved.id).then(result => {
+        if (result.ok) {
+          // Enrichment data is already updated in the hook state
+        }
+      });
     }
     setIndexing(false);
   }, [results, isAuthenticated, peopleIndex, ontology]);
@@ -1186,7 +1914,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
 
       {/* --- INDEX TAB --- */}
       {tab === 'index' && (
-        <IndexView dark={dark} t={t} peopleIndex={peopleIndex} glass={glass} font={font} />
+        <IndexView dark={dark} t={t} peopleIndex={peopleIndex} ontology={ontology} glass={glass} font={font} />
       )}
     </div>
   );
