@@ -41,20 +41,12 @@ struct PeopleView: View {
                 Picker("Tab", selection: $selectedTab) {
                     Text("Search").tag(0)
                     Text("Index").tag(1)
+                    Text("Graph").tag(2)
                 }
                 .pickerStyle(.segmented)
-                .frame(maxWidth: 200)
+                .frame(maxWidth: 280)
 
                 Spacer()
-
-                if selectedTab == 1 && !indexedPeople.isEmpty {
-                    Button {
-                        showGraph = true
-                    } label: {
-                        Image(systemName: "point.3.connected.trianglepath.dotted")
-                    }
-                    .buttonStyle(.plain)
-                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)
@@ -62,8 +54,10 @@ struct PeopleView: View {
 
             if selectedTab == 0 {
                 searchTabContent
-            } else {
+            } else if selectedTab == 1 {
                 indexTabContent
+            } else {
+                graphTabContent
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -81,15 +75,6 @@ struct PeopleView: View {
                 indexedPeople.removeAll { $0.id == person.id }
             })
             .frame(minWidth: 500, minHeight: 600)
-        }
-        .sheet(isPresented: $showGraph) {
-            PersonGraphView(people: indexedPeople) { person in
-                showGraph = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    selectedPerson = person
-                }
-            }
-            .frame(minWidth: 600, minHeight: 500)
         }
     }
 
@@ -502,6 +487,33 @@ struct PeopleView: View {
                     .font(size > 40 ? .title2 : .caption)
                     .foregroundStyle(.secondary)
             }
+    }
+
+    // MARK: - Graph Tab
+
+    private var graphTabContent: some View {
+        Group {
+            if indexedPeople.isEmpty {
+                VStack(spacing: 12) {
+                    Spacer()
+                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.tertiary)
+                    Text("No people to graph")
+                        .font(.headline)
+                    Text("Index some people first to see the relationship graph.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    Spacer()
+                }
+            } else {
+                PersonGraphView(people: indexedPeople) { person in
+                    selectedPerson = person
+                }
+            }
+        }
     }
 
     // MARK: - Actions
