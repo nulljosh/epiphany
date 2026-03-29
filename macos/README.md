@@ -2,7 +2,7 @@
 
 # Monica macOS
 
-![version](https://img.shields.io/badge/version-v0.5.0-blue)
+![version](https://img.shields.io/badge/version-v0.6.1-blue)
 
 Native macOS companion for Monica. MapKit map, markets table, predictions, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
 [Monica](https://monica.heyitsmejosh.com) | ![Architecture](architecture.svg)
@@ -32,6 +32,18 @@ xcodebuild -project Monica.xcodeproj -scheme Monica -destination 'platform=macOS
 - [ ] Menu bar quick-glance ticker
 
 ## Changelog
+
+### v0.6.1 (2026-03-28)
+- Financial dashboard with debt breakdown bars and income timeline
+- Debt projections, income phase timeline with status coloring
+- Cross-platform sync with iOS financial features
+
+### v0.6.0 (2026-03-26)
+- Personal ontology layer
+- People tab
+- Timezone and filter mismatch fixes
+- macOS intraday date parsing fix
+
 ### v0.5.0 (2026-03-24)
 - Chart scrub with crosshair, dashed rule mark, and point mark on stock detail
 - Company name below symbol in stock detail header
