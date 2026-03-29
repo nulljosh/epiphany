@@ -44,9 +44,6 @@ Basically: Palantir for normal people.
 - Dark app icon
 - Wildfires via NASA EONET
 - People search fixes
-- Stock detail: market cap, P/E, EPS via FMP profile fallback
-- Related news: smarter matching with company name aliases
-- Markets performance: deferred heavy loads, market data renders first
 - Timezone bug fixes, filter mismatch fixes
 
 ### v1.2.0 (2026-03-26)
@@ -68,7 +65,10 @@ Basically: Palantir for normal people.
 - Map events fix: local events now properly show on map (lng coordinate decode)
 - Added Ticketmaster as event source, improved OSM venue queries
 - Better incident data: construction, emergency services, police stations instead of random bollards
+- Stock detail: market cap, P/E, EPS now show via FMP profile fallback
+- Related news: smarter matching with company name aliases (Apple for AAPL, etc.)
 - Profile name: set and change your display name in settings
+- Markets performance: deferred heavy loads, market data renders first
 - Error handling: map errors auto-dismiss after 5 seconds
 
 ### Pre-rebrand (Opticon)

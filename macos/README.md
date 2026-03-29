@@ -58,7 +58,7 @@ xcodebuild -project Monica.xcodeproj -scheme Monica -destination 'platform=macOS
 - Map zoom fix (2.2 -> 0.08)
 - Map stays steady on load or state changes
 
-### v0.2.0
+### v0.2.0 (2026-03-20)
 - Initial release with map, markets, predictions, portfolio, alerts
 
 ## License
