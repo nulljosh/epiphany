@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PeopleView: View {
+    @State private var selectedTab = 0
     @State private var query = ""
     @State private var profile: PersonProfile?
     @State private var recentSearches: [String] = []
@@ -8,6 +9,11 @@ struct PeopleView: View {
     @State private var error: String?
     @State private var selectedResult: PersonSearchResult?
     @State private var suggestionIndex = 0
+
+    @State private var indexedPeople: [IndexedPerson] = []
+    @State private var isLoadingIndex = false
+    @State private var selectedPerson: IndexedPerson?
+    @State private var showGraph = false
 
     private let recentsKey = "people.recentSearches"
     private let suggestionPool = [
@@ -23,37 +29,99 @@ struct PeopleView: View {
         return (0..<4).map { suggestionPool[(suggestionIndex + $0) % count] }
     }
 
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                searchBar
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 12)
+                Picker("Tab", selection: $selectedTab) {
+                    Text("Search").tag(0)
+                    Text("Index").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
 
-                if let error {
-                    errorView(error)
-                } else if isSearching {
-                    loadingView
-                } else if let profile {
-                    resultsView(profile)
+                if selectedTab == 0 {
+                    searchTabContent
                 } else {
-                    recentsView
+                    indexTabContent
                 }
             }
             .background(Palette.bg)
             .navigationTitle("People")
             .navigationBarTitleDisplayMode(.large)
-            .onAppear { loadRecents() }
+            .toolbar {
+                if selectedTab == 1 && !indexedPeople.isEmpty {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showGraph = true
+                        } label: {
+                            Image(systemName: "point.3.connected.trianglepath.dotted")
+                        }
+                    }
+                }
+            }
+            .onAppear {
+                loadRecents()
+                loadIndex()
+            }
             .sheet(item: $selectedResult) { result in
                 NavigationStack {
-                    PersonDetailView(result: result, profile: profile)
+                    PersonDetailView(result: result, profile: profile, onIndex: { person in
+                        indexFromSearch(person: person)
+                    })
+                }
+            }
+            .sheet(item: $selectedPerson) { person in
+                NavigationStack {
+                    PersonDetailView(indexedPerson: person, onUpdate: { updated in
+                        if let idx = indexedPeople.firstIndex(where: { $0.id == updated.id }) {
+                            indexedPeople[idx] = updated
+                        }
+                    }, onDelete: {
+                        indexedPeople.removeAll { $0.id == person.id }
+                    })
+                }
+            }
+            .sheet(isPresented: $showGraph) {
+                NavigationStack {
+                    PersonGraphView(people: indexedPeople) { person in
+                        showGraph = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            selectedPerson = person
+                        }
+                    }
                 }
             }
         }
     }
 
-    // MARK: - Search bar
+    // MARK: - Search Tab
+
+    private var searchTabContent: some View {
+        VStack(spacing: 0) {
+            searchBar
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+
+            if let error {
+                errorView(error)
+            } else if isSearching {
+                loadingView
+            } else if let profile {
+                resultsView(profile)
+            } else {
+                recentsView
+            }
+        }
+    }
 
     private var searchBar: some View {
         HStack(spacing: 10) {
@@ -88,8 +156,6 @@ struct PeopleView: View {
         }
     }
 
-    // MARK: - Error
-
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 16) {
             Spacer()
@@ -110,8 +176,6 @@ struct PeopleView: View {
         }
     }
 
-    // MARK: - Loading
-
     private var loadingView: some View {
         VStack(spacing: 16) {
             Spacer()
@@ -123,8 +187,6 @@ struct PeopleView: View {
             Spacer()
         }
     }
-
-    // MARK: - Results
 
     private func resultsView(_ profile: PersonProfile) -> some View {
         ScrollView {
@@ -231,8 +293,6 @@ struct PeopleView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Recents
-
     private var recentsView: some View {
         ScrollView {
             VStack(spacing: 0) {
@@ -320,6 +380,107 @@ struct PeopleView: View {
         }
     }
 
+    // MARK: - Index Tab
+
+    private var indexTabContent: some View {
+        Group {
+            if isLoadingIndex {
+                VStack(spacing: 16) {
+                    Spacer()
+                    ProgressView()
+                        .controlSize(.large)
+                    Text("Loading index...")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+            } else if indexedPeople.isEmpty {
+                VStack(spacing: 16) {
+                    Spacer()
+                    Image(systemName: "person.crop.rectangle.stack.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.tertiary)
+                    Text("No indexed people")
+                        .font(.headline)
+                    Text("Search for someone and tap Index to add them here.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    Spacer()
+                }
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(indexedPeople) { person in
+                            indexCard(person)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 80)
+                }
+            }
+        }
+    }
+
+    private func indexCard(_ person: IndexedPerson) -> some View {
+        Button {
+            selectedPerson = person
+        } label: {
+            VStack(spacing: 8) {
+                if let image = person.image, let url = URL(string: image) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let img):
+                            img.resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 56, height: 56)
+                                .clipShape(Circle())
+                        default:
+                            personPlaceholder(size: 56)
+                        }
+                    }
+                } else {
+                    personPlaceholder(size: 56)
+                }
+
+                Text(person.name)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .foregroundStyle(.primary)
+
+                if !person.tags.isEmpty {
+                    Text(person.tags.prefix(2).joined(separator: ", "))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                if person.enrichment != nil {
+                    Image(systemName: "sparkles")
+                        .font(.caption2)
+                        .foregroundStyle(Palette.warningAmber)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(12)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func personPlaceholder(size: CGFloat) -> some View {
+        Circle()
+            .fill(Palette.overlay.opacity(0.1))
+            .frame(width: size, height: size)
+            .overlay {
+                Image(systemName: "person.fill")
+                    .font(size > 40 ? .title2 : .caption)
+                    .foregroundStyle(.secondary)
+            }
+    }
+
     // MARK: - Actions
 
     private func performSearch() {
@@ -341,6 +502,29 @@ struct PeopleView: View {
                 self.error = error.localizedDescription
             }
             isSearching = false
+        }
+    }
+
+    private func loadIndex() {
+        isLoadingIndex = true
+        Task {
+            do {
+                indexedPeople = try await MonicaAPI.shared.fetchPeopleIndex()
+            } catch {
+                // Silently fail -- index is supplementary
+            }
+            isLoadingIndex = false
+        }
+    }
+
+    private func indexFromSearch(person: IndexedPerson) {
+        Task {
+            do {
+                let saved = try await MonicaAPI.shared.indexPerson(person)
+                indexedPeople.insert(saved, at: 0)
+            } catch {
+                // Handled in detail view
+            }
         }
     }
 
