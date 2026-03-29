@@ -1103,11 +1103,213 @@ function PersonDetail({ person, onUpdate, onDelete, onClose, dark, t, peopleInde
   );
 }
 
+function ImportModal({ dark, t, glass, font, onImport, onClose }) {
+  const [mode, setMode] = useState('json'); // 'json' | 'vcf'
+  const [jsonText, setJsonText] = useState('');
+  const [vcfText, setVcfText] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const fileRef = useRef(null);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setVcfText(reader.result);
+    reader.readAsText(file);
+  };
+
+  const handleImport = async () => {
+    setImporting(true);
+    setError(null);
+    setResult(null);
+
+    let payload;
+    if (mode === 'json') {
+      try {
+        const parsed = JSON.parse(jsonText);
+        payload = Array.isArray(parsed) ? parsed : { contacts: parsed.contacts || [parsed] };
+        if (Array.isArray(payload)) payload = payload;
+      } catch {
+        setError('Invalid JSON. Expected an array of contacts.');
+        setImporting(false);
+        return;
+      }
+    } else {
+      if (!vcfText.trim()) {
+        setError('No vCard data provided.');
+        setImporting(false);
+        return;
+      }
+      payload = { vcf: vcfText };
+    }
+
+    const res = await onImport(payload);
+    setImporting(false);
+    if (res.ok) {
+      setResult(res);
+    } else {
+      setError(res.error || 'Import failed');
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 9999, padding: 16,
+    }} onClick={onClose}>
+      <div style={{
+        ...glass, padding: 20, width: '100%', maxWidth: 440,
+        maxHeight: '80vh', overflow: 'auto',
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: t.text, fontFamily: font }}>Import Contacts</div>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', color: t.textSecondary,
+            cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Mode toggle */}
+        <div style={{
+          display: 'flex', gap: 0, marginBottom: 14, borderRadius: 8, overflow: 'hidden',
+          border: `1px solid ${t.border}`,
+          background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+        }}>
+          {[['json', 'Paste JSON'], ['vcf', 'Upload .vcf']].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setMode(key)}
+              style={{
+                flex: 1, padding: '7px 0', border: 'none',
+                background: mode === key ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                color: mode === key ? t.text : t.textSecondary,
+                fontSize: 12, fontWeight: mode === key ? 600 : 400,
+                fontFamily: font, cursor: 'pointer', transition: 'all 0.2s ease',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'json' && (
+          <>
+            <textarea
+              placeholder={'[\n  { "name": "Jane Doe", "email": "jane@example.com", "tags": ["work"] },\n  { "name": "John Smith", "phone": "+1234567890" }\n]'}
+              value={jsonText}
+              onChange={e => setJsonText(e.target.value)}
+              style={{
+                width: '100%', height: 160, padding: 12, borderRadius: 8,
+                border: `1px solid ${t.border}`,
+                background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+                color: t.text, fontSize: 12, fontFamily: 'SF Mono, Menlo, monospace',
+                outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+              }}
+            />
+          </>
+        )}
+
+        {mode === 'vcf' && (
+          <>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".vcf,text/vcard"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              style={{
+                width: '100%', padding: '14px 12px', borderRadius: 8,
+                border: `2px dashed ${t.border}`, background: 'transparent',
+                color: t.textSecondary, fontSize: 13, fontFamily: font,
+                cursor: 'pointer', marginBottom: 8,
+                transition: 'border-color 0.2s ease',
+              }}
+            >
+              {vcfText ? 'File loaded -- click to replace' : 'Choose .vcf file'}
+            </button>
+            {vcfText && (
+              <div style={{ fontSize: 11, color: t.textSecondary, marginBottom: 8 }}>
+                {vcfText.split('BEGIN:VCARD').length - 1} contact(s) detected
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: t.textSecondary, marginBottom: 8 }}>
+              Or paste vCard text:
+            </div>
+            <textarea
+              placeholder="BEGIN:VCARD&#10;VERSION:3.0&#10;FN:Jane Doe&#10;..."
+              value={vcfText}
+              onChange={e => setVcfText(e.target.value)}
+              style={{
+                width: '100%', height: 120, padding: 12, borderRadius: 8,
+                border: `1px solid ${t.border}`,
+                background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+                color: t.text, fontSize: 12, fontFamily: 'SF Mono, Menlo, monospace',
+                outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+              }}
+            />
+          </>
+        )}
+
+        {error && (
+          <div style={{
+            marginTop: 10, padding: '8px 12px', borderRadius: 8,
+            background: 'rgba(255,59,48,0.1)', color: '#ff3b30',
+            fontSize: 12, fontFamily: font,
+          }}>
+            {error}
+          </div>
+        )}
+
+        {result && (
+          <div style={{
+            marginTop: 10, padding: '10px 12px', borderRadius: 8,
+            background: 'rgba(48,209,88,0.1)', color: '#30d158',
+            fontSize: 12, fontFamily: font,
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Import complete</div>
+            <div>{result.imported} imported, {result.merged} merged, {result.skipped} skipped</div>
+          </div>
+        )}
+
+        <button
+          onClick={result ? onClose : handleImport}
+          disabled={importing || (!jsonText.trim() && !vcfText.trim())}
+          style={{
+            width: '100%', padding: '10px 0', borderRadius: 8, border: 'none',
+            background: importing ? (dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)')
+              : (t.accent || '#0a84ff'),
+            color: importing ? t.textSecondary : '#fff',
+            fontSize: 13, fontWeight: 600, fontFamily: font,
+            cursor: importing ? 'wait' : 'pointer',
+            marginTop: 14, opacity: (!jsonText.trim() && !vcfText.trim()) ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {importing ? 'Importing...' : result ? 'Done' : 'Import'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function IndexView({ dark, t, peopleIndex, ontology, glass, font }) {
-  const { people, loading, upsert, remove } = peopleIndex;
+  const { people, loading, upsert, remove, importContacts } = peopleIndex;
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'graph'
+  const [showImport, setShowImport] = useState(false);
 
   const filtered = filter
     ? people.filter(p =>
@@ -1135,8 +1337,34 @@ function IndexView({ dark, t, peopleIndex, ontology, glass, font }) {
 
   return (
     <>
-      {/* View toggle + filter */}
+      {showImport && (
+        <ImportModal
+          dark={dark} t={t} glass={glass} font={font}
+          onImport={importContacts}
+          onClose={() => setShowImport(false)}
+        />
+      )}
+
+      {/* View toggle + filter + import */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <button
+          onClick={() => setShowImport(true)}
+          title="Import Contacts"
+          style={{
+            padding: '6px 10px', border: `1px solid ${t.border}`, borderRadius: 8,
+            background: 'transparent', color: t.textSecondary, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 5, fontSize: 12,
+            fontFamily: font, fontWeight: 500, whiteSpace: 'nowrap',
+            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Import
+        </button>
         {people.length > 3 && (
           <input
             type="text"

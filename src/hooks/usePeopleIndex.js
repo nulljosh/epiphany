@@ -127,5 +127,26 @@ export function usePeopleIndex(isAuthenticated) {
     }
   }, []);
 
-  return { people, loading, fetchAll, search, upsert, remove, enrich, crossref };
+  const importContacts = useCallback(async (payload) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/people-import`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return { ok: false, error: err.error || `Import failed (${res.status})` };
+      }
+      const data = await res.json();
+      await fetchAll(); // refresh list
+      return { ok: true, ...data };
+    } catch {
+      return { ok: false, error: 'Network error' };
+    }
+  }, [fetchAll]);
+
+  return { people, loading, fetchAll, search, upsert, remove, enrich, crossref, importContacts };
 }

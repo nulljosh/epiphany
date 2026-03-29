@@ -31,6 +31,7 @@ import people from '../server/api/people.js';
 import peopleIndex from '../server/api/people-index.js';
 import peopleEnrich from '../server/api/people-enrich.js';
 import peopleCrossref from '../server/api/people-crossref.js';
+import peopleImport from '../server/api/people-import.js';
 import portfolio from '../server/api/portfolio.js';
 import watchlist from '../server/api/watchlist.js';
 import alerts from '../server/api/alerts.js';
@@ -66,6 +67,7 @@ const ROUTES = {
   'people-index': peopleIndex,
   'people-enrich': peopleEnrich,
   'people-crossref': peopleCrossref,
+  'people-import': peopleImport,
   prices,
   signals,
   statements,
