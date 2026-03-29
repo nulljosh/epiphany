@@ -505,6 +505,57 @@ final class MonicaAPI {
         let data = try await perform(request)
         return try decode(PersonProfile.self, from: data)
     }
+
+    // MARK: - People Index
+
+    func fetchPeopleIndex() async throws -> [IndexedPerson] {
+        let url = try makeURL("/api/people-index")
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let response = try decode(PeopleIndexResponse.self, from: data)
+        return response.people
+    }
+
+    func indexPerson(_ person: IndexedPerson) async throws -> IndexedPerson {
+        let url = try makeURL("/api/people-index")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(person)
+        let data = try await perform(request)
+        let response = try decode(IndexPersonResponse.self, from: data)
+        return response.person ?? person
+    }
+
+    func updatePerson(_ person: IndexedPerson) async throws -> IndexedPerson {
+        try await indexPerson(person)
+    }
+
+    func deletePerson(id: String) async throws {
+        let url = try makeURL("/api/people-index", query: ["id": id])
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        _ = try await perform(request)
+    }
+
+    func enrichPerson(personId: String) async throws -> PersonEnrichment? {
+        let url = try makeURL("/api/people-enrich")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["personId": personId])
+        let data = try await perform(request)
+        let response = try decode(EnrichResponse.self, from: data)
+        return response.enrichment
+    }
+
+    func fetchCrossref(personId: String) async throws -> [NewsMention] {
+        let url = try makeURL("/api/people-crossref", query: ["personId": personId])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let response = try decode(CrossrefResponse.self, from: data)
+        return response.mentions
+    }
 }
 
 private struct AuthResponse: Decodable {
