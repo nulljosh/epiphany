@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   Line, LineChart, ComposedChart, Area, PieChart, Pie, Cell,
 } from 'recharts';
-import { simulateStrategies, projectNetWorth, projectLive, computeSimulator } from '../utils/debtProjections';
+import { simulateDebtCuts, simulateStrategies, projectNetWorth, projectLive, computeSimulator } from '../utils/debtProjections';
 
 const axisTickStyle = (t) => ({ fill: t.textTertiary, fontSize: 9 });
 const yTickFormatter = (v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`;
@@ -29,6 +29,7 @@ function CustomTooltip({ active, payload, label, t }) {
 }
 
 const PHASE_COLORS = { current: '#0a84ff', soon: '#ffd60a', pending: '#bf5af2', future: '#ff9f0a', done: '#30d158' };
+const DONUT_COLORS = ['#0a84ff', '#5ac8fa', '#ff453a', '#30d158', '#bf5af2', '#ff9f0a', '#ffd60a', '#ff2d55'];
 const TIMELINE_EVENTS = [
   { label: 'Telus plan ends', date: 'Nov 2027', amount: '+$155/mo freed', status: 'future', description: '$700+/mo surplus' },
   { label: 'Debt-free', date: '~Early 2028', amount: '$0 debt', status: 'done', description: 'Savings begin' },
@@ -43,10 +44,11 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
     [debtItems]
   );
 
+  const variableCategories = new Set(['Food', 'Vape', 'Weed', 'Other']);
   const fixedExpenses = useMemo(() => {
     const expenses = budget?.expenses || [];
     return expenses
-      .filter(e => ['Cell', 'Claude'].includes(e.name))
+      .filter(e => !variableCategories.has(e.name))
       .reduce((s, e) => s + (e.amount || 0), 0);
   }, [budget]);
 
@@ -55,14 +57,12 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
     return Math.max(...incomePhases.map(p => p.monthly || 0));
   }, [incomePhases]);
 
-  // Debt-free ETA based on current surplus
   const debtFreeMonths = useMemo(() => {
     if (totalDebt <= 0) return 0;
     const s = surplus || 0;
     return s > 0 ? Math.ceil(totalDebt / s) : null;
   }, [totalDebt, surplus]);
 
-  // Spending donut data from budget expenses
   const spendingDonutData = useMemo(() => {
     const expenses = budget?.expenses || [];
     if (expenses.length === 0) return [];
@@ -71,9 +71,6 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
     return data;
   }, [budget, surplus]);
 
-  const DONUT_COLORS = ['#0a84ff', '#5ac8fa', '#ff453a', '#30d158', '#bf5af2', '#ff9f0a', '#ffd60a', '#ff2d55'];
-
-  // Income waterfall data
   const waterfallData = useMemo(() => {
     if (!incomePhases || incomePhases.length === 0) return [];
     const sorted = [...incomePhases].sort((a, b) => (a.monthly || 0) - (b.monthly || 0));
@@ -84,49 +81,43 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
     });
   }, [incomePhases]);
 
-  // Build phases for projection functions
   const projectionPhases = useMemo(() => {
-    return [
-      { startMonth: 0, payment: 100 },
-      { startMonth: 3, payment: 350 },
-      { startMonth: 10, payment: 550 },
-    ];
-  }, []);
+    if (!incomePhases || incomePhases.length === 0) {
+      return [{ startMonth: 0, payment: Math.max(0, surplus || 0) }];
+    }
+    const sorted = [...incomePhases].sort((a, b) => (a.monthly || 0) - (b.monthly || 0));
+    const expenses = totalExpenses || 0;
+    return sorted.map((phase, i) => ({
+      startMonth: i === 0 ? 0 : i * 3 + (i > 1 ? 4 : 0),
+      payment: Math.max(0, (phase.monthly || 0) - expenses),
+    }));
+  }, [incomePhases, totalExpenses, surplus]);
 
-  // Strategies
   const strategiesData = useMemo(() => {
     if (!debtItems || debtItems.length === 0) return null;
     return simulateStrategies(debtItems, 500, 36);
   }, [debtItems]);
 
-  // Net worth
   const netWorthData = useMemo(() => {
     return projectNetWorth(totalDebt, projectionPhases, 42);
   }, [totalDebt, projectionPhases]);
 
-  // Vape impact simulation
-  const vapeImpactData = useMemo(() => {
-    const labels = Array.from({ length: 30 }, (_, i) => `Mo ${i}`);
-    function sim(extra) {
-      let debt = totalDebt;
-      const arr = [];
-      for (let i = 0; i < 30; i++) {
-        arr.push(Math.max(0, Math.round(debt)));
-        debt -= (i < 3 ? 100 : i < 10 ? 350 : 550) + extra;
-      }
-      return arr;
-    }
-    return {
-      labels,
-      datasets: [
-        { label: 'Keep vaping', data: sim(0), color: '#ff453a' },
-        { label: 'Cut vape (+$150)', data: sim(150), color: '#ffd60a' },
-        { label: 'Cut both (+$225)', data: sim(225), color: '#30d158' },
-      ],
-    };
-  }, [totalDebt]);
+  const vapeExpense = useMemo(() => {
+    return budget?.expenses?.find(e => e.name === 'Vape')?.amount || 0;
+  }, [budget]);
 
-  // Simulator state
+  const weedExpense = useMemo(() => {
+    return budget?.expenses?.find(e => e.name === 'Weed')?.amount || 0;
+  }, [budget]);
+
+  const vapeImpactData = useMemo(() => {
+    return simulateDebtCuts(totalDebt, { months: 30, phases: projectionPhases }, [
+      { label: 'Current spending', extra: 0, color: '#ff453a' },
+      { label: `Cut vape (+$${vapeExpense})`, extra: vapeExpense, color: '#ffd60a' },
+      { label: `Cut vape+weed (+$${vapeExpense + weedExpense})`, extra: vapeExpense + weedExpense, color: '#30d158' },
+    ]);
+  }, [totalDebt, projectionPhases, vapeExpense, weedExpense]);
+
   const [simFood, setSimFood] = useState(300);
   const [simVape, setSimVape] = useState(150);
   const [simWeed, setSimWeed] = useState(75);
