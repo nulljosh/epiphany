@@ -3,6 +3,7 @@ import { Card } from './ui';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
 import { normalizeSpendingMonths, UPCOMING_PAYMENTS } from '../utils/financeData';
+import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
@@ -16,18 +17,6 @@ const INCOME_SCENARIOS = [
 ];
 
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      const [, base64 = ''] = result.split(',');
-      resolve(base64);
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
-}
 
 function parseNumberInput(value) {
   const parsed = Number.parseFloat(value);

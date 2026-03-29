@@ -16,6 +16,20 @@ export async function fetchWithTimeout(url, ms = FETCH_TIMEOUT) {
   return res.json();
 }
 
+// Read a File as base64 (strips data-URL prefix)
+export function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      const [, base64 = ''] = result.split(',');
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 // Fetch that returns null on JSON parse failure instead of throwing
 export async function fetchJsonGraceful(url, ms = FETCH_TIMEOUT) {
   const res = await fetch(url, { signal: AbortSignal.timeout(ms) });

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card } from './ui';
 import { SYSTEM_FONT as font } from '../utils/formatting';
+import { fileToBase64 } from '../utils/helpers';
 
 export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword }) {
   const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
@@ -39,30 +40,26 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
     }
     setAvatarUploading(true);
     setAvatarMsg(null);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const base64 = reader.result.split(',')[1];
-        const res = await fetch('/api/avatar', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 }),
-        });
-        const data = await res.json();
-        if (data.ok && data.avatarUrl) {
-          setAvatarUrl(data.avatarUrl);
-          setAvatarMsg({ text: 'Photo updated', error: false });
-        } else {
-          setAvatarMsg({ text: data.error || 'Upload failed', error: true });
-        }
-      } catch {
-        setAvatarMsg({ text: 'Upload failed', error: true });
-      } finally {
-        setAvatarUploading(false);
+    try {
+      const base64 = await fileToBase64(file);
+      const res = await fetch('/api/avatar', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
+      });
+      const data = await res.json();
+      if (data.ok && data.avatarUrl) {
+        setAvatarUrl(data.avatarUrl);
+        setAvatarMsg({ text: 'Photo updated', error: false });
+      } else {
+        setAvatarMsg({ text: data.error || 'Upload failed', error: true });
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setAvatarMsg({ text: 'Upload failed', error: true });
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   const toggleStyle = (enabled) => ({
