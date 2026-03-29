@@ -25,6 +25,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
 
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarMsg, setAvatarMsg] = useState(null);
   const avatarInputRef = useRef(null);
 
   useEffect(() => { setAvatarUrl(user?.avatarUrl || null); }, [user?.avatarUrl]);
@@ -32,10 +33,15 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarMsg({ text: 'Image must be under 5MB', error: true });
+      return;
+    }
     setAvatarUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async () => {
+    setAvatarMsg(null);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
         const base64 = reader.result.split(',')[1];
         const res = await fetch('/api/avatar', {
           method: 'POST',
@@ -44,13 +50,19 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
           body: JSON.stringify({ image: base64 }),
         });
         const data = await res.json();
-        if (data.ok && data.avatarUrl) setAvatarUrl(data.avatarUrl);
+        if (data.ok && data.avatarUrl) {
+          setAvatarUrl(data.avatarUrl);
+          setAvatarMsg({ text: 'Photo updated', error: false });
+        } else {
+          setAvatarMsg({ text: data.error || 'Upload failed', error: true });
+        }
+      } catch {
+        setAvatarMsg({ text: 'Upload failed', error: true });
+      } finally {
         setAvatarUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      setAvatarUploading(false);
-    }
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleStyle = (enabled) => ({
@@ -170,8 +182,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>{user.name || user.email}</div>
-              <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 2 }}>
-                {avatarUploading ? 'Uploading...' : 'Click photo to change'}
+              <div style={{ fontSize: 11, color: avatarMsg ? (avatarMsg.error ? '#ff4444' : t.green) : t.textTertiary, marginTop: 2 }}>
+                {avatarUploading ? 'Uploading...' : avatarMsg ? avatarMsg.text : 'Click photo to change'}
               </div>
             </div>
           </div>
