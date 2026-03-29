@@ -13,7 +13,6 @@ struct PeopleView: View {
     @State private var indexedPeople: [IndexedPerson] = []
     @State private var isLoadingIndex = false
     @State private var selectedPerson: IndexedPerson?
-    @State private var showGraph = false
 
     private let recentsKey = "people.recentSearches"
     private let suggestionPool = [
@@ -31,7 +30,6 @@ struct PeopleView: View {
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
 
@@ -41,6 +39,7 @@ struct PeopleView: View {
                 Picker("Tab", selection: $selectedTab) {
                     Text("Search").tag(0)
                     Text("Index").tag(1)
+                    Text("Graph").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
@@ -49,24 +48,16 @@ struct PeopleView: View {
 
                 if selectedTab == 0 {
                     searchTabContent
-                } else {
+                } else if selectedTab == 1 {
                     indexTabContent
+                } else {
+                    graphTabContent
                 }
             }
             .background(Palette.bg)
             .navigationTitle("People")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                if selectedTab == 1 && !indexedPeople.isEmpty {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            showGraph = true
-                        } label: {
-                            Image(systemName: "point.3.connected.trianglepath.dotted")
-                        }
-                    }
-                }
-            }
+            .toolbar {}
             .onAppear {
                 loadRecents()
                 loadIndex()
@@ -87,16 +78,6 @@ struct PeopleView: View {
                     }, onDelete: {
                         indexedPeople.removeAll { $0.id == person.id }
                     })
-                }
-            }
-            .sheet(isPresented: $showGraph) {
-                NavigationStack {
-                    PersonGraphView(people: indexedPeople) { person in
-                        showGraph = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            selectedPerson = person
-                        }
-                    }
                 }
             }
         }
@@ -397,10 +378,10 @@ struct PeopleView: View {
             } else if indexedPeople.isEmpty {
                 VStack(spacing: 16) {
                     Spacer()
-                    Image(systemName: "person.crop.rectangle.stack.fill")
+                    Image(systemName: "person.2")
                         .font(.system(size: 48))
                         .foregroundStyle(.tertiary)
-                    Text("No indexed people")
+                    Text("No indexed people yet")
                         .font(.headline)
                     Text("Search for someone and tap Index to add them here.")
                         .font(.subheadline)
@@ -420,6 +401,7 @@ struct PeopleView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 80)
                 }
+                .refreshable { await refreshIndex() }
             }
         }
     }
@@ -435,10 +417,10 @@ struct PeopleView: View {
                         case .success(let img):
                             img.resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(width: 56, height: 56)
+                                .frame(width: 48, height: 48)
                                 .clipShape(Circle())
                         default:
-                            personPlaceholder(size: 56)
+                            personPlaceholder(size: 48)
                         }
                     }
                 } else {
@@ -481,6 +463,33 @@ struct PeopleView: View {
             }
     }
 
+    // MARK: - Graph Tab
+
+    private var graphTabContent: some View {
+        Group {
+            if indexedPeople.isEmpty {
+                VStack(spacing: 16) {
+                    Spacer()
+                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.tertiary)
+                    Text("No connections yet")
+                        .font(.headline)
+                    Text("Index people to see their relationship graph.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    Spacer()
+                }
+            } else {
+                PersonGraphView(people: indexedPeople) { person in
+                    selectedPerson = person
+                }
+            }
+        }
+    }
+
     // MARK: - Actions
 
     private func performSearch() {
@@ -514,6 +523,14 @@ struct PeopleView: View {
                 // Silently fail -- index is supplementary
             }
             isLoadingIndex = false
+        }
+    }
+
+    private func refreshIndex() async {
+        do {
+            indexedPeople = try await MonicaAPI.shared.fetchPeopleIndex()
+        } catch {
+            // Silently fail
         }
     }
 

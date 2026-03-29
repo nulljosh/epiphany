@@ -56,9 +56,6 @@ struct PersonDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
-                if let snippet = displaySnippet, !snippet.isEmpty {
-                    snippetSection(snippet)
-                }
                 if isIndexedMode {
                     actionButtons
                     if let enrichment = enrichment ?? indexedPerson?.enrichment {
@@ -68,6 +65,7 @@ struct PersonDetailView: View {
                     notesSection
                     mentionsSection
                     timelineSection
+                    relationshipsSection
                 } else {
                     indexButton
                     if let profile, !profile.socialLinks.isEmpty {
@@ -117,15 +115,15 @@ struct PersonDetailView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 14) {
+        VStack(spacing: 8) {
             if let imageUrl = displayImage, let url = URL(string: imageUrl) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let img):
                         img.resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 56, height: 56)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
                     default:
                         placeholderIcon
                     }
@@ -134,31 +132,48 @@ struct PersonDetailView: View {
                 placeholderIcon
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(displayName)
-                    .font(.headline)
-                if let enrichment = enrichment ?? indexedPerson?.enrichment {
-                    if let role = enrichment.role {
-                        Text(role)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                } else if let url = result?.displayUrl {
-                    Text(url)
-                        .font(.caption)
-                        .foregroundStyle(Palette.appleBlue)
+            Text(displayName)
+                .font(.title2.weight(.bold))
+
+            if let enrichment = enrichment ?? indexedPerson?.enrichment {
+                if let role = enrichment.role, let company = enrichment.company {
+                    Text("\(role) @ \(company)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else if let role = enrichment.role {
+                    Text(role)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
+                if let location = enrichment.location {
+                    Text(location)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            } else if let url = result?.displayUrl {
+                Text(url)
+                    .font(.caption)
+                    .foregroundStyle(Palette.appleBlue)
+            }
+
+            if let bio = displaySnippet, !bio.isEmpty {
+                Text(bio)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var placeholderIcon: some View {
-        RoundedRectangle(cornerRadius: 12)
+        Circle()
             .fill(Palette.overlay.opacity(0.1))
-            .frame(width: 56, height: 56)
+            .frame(width: 80, height: 80)
             .overlay {
                 Image(systemName: "person.fill")
-                    .font(.title2)
+                    .font(.title)
                     .foregroundStyle(.secondary)
             }
     }
@@ -572,6 +587,32 @@ struct PersonDetailView: View {
         }
 
         return events
+    }
+
+    // MARK: - Relationships
+
+    private var relationshipsSection: some View {
+        Group {
+            if let person = indexedPerson, !person.relationships.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    sectionLabel("Relationships")
+                    ForEach(person.relationships, id: \.self) { rel in
+                        HStack(spacing: 8) {
+                            Text(rel.type)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .textCase(.uppercase)
+                            Text(rel.name)
+                                .font(.caption)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                        .padding(10)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - Social Section (search mode)
