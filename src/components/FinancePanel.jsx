@@ -1267,7 +1267,21 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                   );
                 })}
               </div>
-              <div style={labelStyle}>Spending Trends</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={labelStyle}>Spending Trends</div>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 8, height: 3, borderRadius: 2, background: t.green }} />
+                    <span style={{ fontSize: 9, color: t.textTertiary }}>Spending</span>
+                  </div>
+                  {totalIncome > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 8, height: 3, borderRadius: 2, background: t.cyan }} />
+                      <span style={{ fontSize: 9, color: t.textTertiary }}>Savings</span>
+                    </div>
+                  )}
+                </div>
+              </div>
               <SpendingChart spending={spendingChronological} t={t} totalIncome={totalIncome} totalExpenses={totalExpenses} activeScenarios={activeScenarios} />
             </Card>
 

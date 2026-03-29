@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from './ui';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 
@@ -22,6 +22,36 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [confirmPw, setConfirmPw] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
+
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef(null);
+
+  useEffect(() => { setAvatarUrl(user?.avatarUrl || null); }, [user?.avatarUrl]);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1];
+        const res = await fetch('/api/avatar', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        });
+        const data = await res.json();
+        if (data.ok && data.avatarUrl) setAvatarUrl(data.avatarUrl);
+        setAvatarUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setAvatarUploading(false);
+    }
+  };
 
   const toggleStyle = (enabled) => ({
     borderRadius: 999,
@@ -119,6 +149,32 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
           <div style={labelStyle}>Account</div>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+            <div
+              onClick={() => avatarInputRef.current?.click()}
+              style={{
+                width: 56, height: 56, borderRadius: '50%', overflow: 'hidden',
+                background: t.glass, border: `2px solid ${t.border}`,
+                cursor: 'pointer', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
+              title="Click to upload photo"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: 22, color: t.textTertiary }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span>
+              )}
+            </div>
+            <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>{user.name || user.email}</div>
+              <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 2 }}>
+                {avatarUploading ? 'Uploading...' : 'Click photo to change'}
+              </div>
+            </div>
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
