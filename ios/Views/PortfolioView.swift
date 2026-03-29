@@ -141,6 +141,10 @@ struct PortfolioView: View {
 
                             planningCard
 
+                            incomeTimelineSection
+
+                            debtBreakdownSection
+
                             Spacer(minLength: 24)
                         }
                     }
@@ -1720,6 +1724,96 @@ private struct TappablePieChart: View {
                             }
                         }
                     }
+            }
+        }
+    }
+
+    // MARK: - Income Timeline
+
+    private var incomeTimelineSection: some View {
+        let phases = appState.financeData?.incomePhases ?? []
+        return Group {
+            if !phases.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("INCOME TIMELINE")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Palette.textSecondary)
+                        .tracking(1.0)
+
+                    ForEach(Array(phases.enumerated()), id: \.element.id) { _, phase in
+                        HStack(spacing: 12) {
+                            Circle()
+                                .fill(Color(hex: phase.statusColor))
+                                .frame(width: 10, height: 10)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                if let date = phase.date {
+                                    Text(date)
+                                        .font(.caption2.weight(.semibold))
+                                        .foregroundStyle(Palette.textSecondary)
+                                        .textCase(.uppercase)
+                                }
+                                Text("$\(Int(phase.monthly))/mo")
+                                    .font(.title3.weight(.bold).monospacedDigit())
+                                    .foregroundStyle(Color(hex: phase.statusColor))
+                                Text(phase.label)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(Palette.textSecondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(12)
+                        .background(Palette.glass)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    // MARK: - Debt Breakdown
+
+    private var debtBreakdownSection: some View {
+        let debt = appState.financeData?.debt ?? []
+        let totalDebt = debt.reduce(0.0) { $0 + $1.balance }
+        let colors: [Color] = [Palette.dangerRed, Palette.warningAmber, Palette.yellow, Palette.purple, Palette.appleBlue]
+
+        return Group {
+            if !debt.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("DEBT BREAKDOWN")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Palette.textSecondary)
+                        .tracking(1.0)
+
+                    ForEach(Array(debt.enumerated()), id: \.element.name) { i, item in
+                        let pct = totalDebt > 0 ? item.balance / totalDebt : 0
+                        let color = colors[i % colors.count]
+                        HStack(spacing: 12) {
+                            Text(item.name)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Palette.textSecondary)
+                                .frame(width: 48, alignment: .leading)
+
+                            GeometryReader { geo in
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(color)
+                                    .frame(width: geo.size.width * pct)
+                            }
+                            .frame(height: 8)
+                            .background(Palette.glass)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                            Text("$\(Int(item.balance))")
+                                .font(.caption.weight(.bold).monospacedDigit())
+                                .foregroundStyle(color)
+                                .frame(width: 55, alignment: .trailing)
+                        }
+                    }
+                }
+                .padding(.horizontal)
             }
         }
     }

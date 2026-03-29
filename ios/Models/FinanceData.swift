@@ -7,18 +7,20 @@ struct FinanceData: Codable {
     var debt: [DebtItem]
     var goals: [Goal]
     var spending: [SpendingMonth]
+    var incomePhases: [IncomePhase]
 
     private enum CodingKeys: String, CodingKey {
-        case holdings, accounts, budget, debt, goals, spending
+        case holdings, accounts, budget, debt, goals, spending, incomePhases
     }
 
-    init(holdings: [Holding] = [], accounts: [Account] = [], budget: Budget? = nil, debt: [DebtItem] = [], goals: [Goal] = [], spending: [SpendingMonth] = []) {
+    init(holdings: [Holding] = [], accounts: [Account] = [], budget: Budget? = nil, debt: [DebtItem] = [], goals: [Goal] = [], spending: [SpendingMonth] = [], incomePhases: [IncomePhase] = []) {
         self.holdings = holdings
         self.accounts = accounts
         self.budget = budget
         self.debt = debt
         self.goals = goals
         self.spending = spending
+        self.incomePhases = incomePhases
     }
 
     init(from decoder: Decoder) throws {
@@ -29,6 +31,7 @@ struct FinanceData: Codable {
         debt = (try? container.decode([DebtItem].self, forKey: .debt)) ?? []
         goals = (try? container.decode([Goal].self, forKey: .goals)) ?? []
         spending = (try? container.decode([SpendingMonth].self, forKey: .spending)) ?? []
+        incomePhases = (try? container.decode([IncomePhase].self, forKey: .incomePhases)) ?? []
     }
 
     struct Holding: Codable, Identifiable {
@@ -262,5 +265,25 @@ struct FinanceData: Codable {
             formatter.dateFormat = "yyyy-MM"
             return formatter
         }()
+    }
+
+    struct IncomePhase: Codable, Identifiable {
+        var label: String
+        var monthly: Double
+        var status: String
+        var date: String?
+
+        var id: String { label }
+
+        var statusColor: String {
+            switch status {
+            case "current": return "0a84ff"
+            case "soon": return "ffd60a"
+            case "pending": return "bf5af2"
+            case "future": return "ff9f0a"
+            case "done": return "30d158"
+            default: return "0a84ff"
+            }
+        }
     }
 }

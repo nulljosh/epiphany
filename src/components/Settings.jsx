@@ -24,17 +24,17 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
 
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || null);
+  const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
   const avatarInputRef = useRef(null);
-
-  useEffect(() => { setAvatarUrl(user?.avatarUrl || null); }, [user?.avatarUrl]);
+  const avatarUrl = uploadedAvatarUrl || user?.avatarUrl || null;
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_AVATAR_SIZE) {
       setAvatarMsg({ text: 'Image must be under 5MB', error: true });
       return;
     }
@@ -50,12 +50,13 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       });
       const data = await res.json();
       if (data.ok && data.avatarUrl) {
-        setAvatarUrl(data.avatarUrl);
+        setUploadedAvatarUrl(data.avatarUrl);
         setAvatarMsg({ text: 'Photo updated', error: false });
       } else {
         setAvatarMsg({ text: data.error || 'Upload failed', error: true });
       }
-    } catch {
+    } catch (err) {
+      console.error('Avatar upload error:', err);
       setAvatarMsg({ text: 'Upload failed', error: true });
     } finally {
       setAvatarUploading(false);

@@ -2,7 +2,7 @@ import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
 
-const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving'];
+const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving', 'incomePhases'];
 
 function validatePortfolioPayload(data) {
   if (!data || typeof data !== 'object') return { valid: false, error: 'Invalid data format' };
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET' && action === 'get') {
     const data = await kv.get(kvKey);
     console.log(`[portfolio] GET ${kvKey}:`, data ? `${JSON.stringify(data).length} bytes` : 'null');
-    return res.status(200).json(data || { holdings: [], accounts: [], debt: [], goals: [], spending: [], giving: [] });
+    return res.status(200).json(data || { holdings: [], accounts: [], debt: [], goals: [], spending: [], giving: [], incomePhases: [] });
   }
 
   // GET: compact summary for CLI
@@ -116,6 +116,7 @@ export default async function handler(req, res) {
       goals: mergeField('goals'),
       spending: mergeField('spending'),
       giving: mergeField('giving'),
+      incomePhases: mergeField('incomePhases'),
       updatedAt: new Date().toISOString(),
     };
 

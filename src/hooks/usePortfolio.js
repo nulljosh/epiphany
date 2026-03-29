@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   DEMO_HOLDINGS, DEMO_ACCOUNTS, DEMO_BUDGET, DEMO_DEBT,
-  DEMO_GOALS, DEMO_SPENDING, DEMO_GIVING, normalizePortfolioData,
+  DEMO_GOALS, DEMO_SPENDING, DEMO_GIVING, DEMO_INCOME_PHASES,
+  normalizePortfolioData,
   normalizeSpendingMonth, normalizeSpendingMonths, validatePortfolioData,
 } from '../utils/financeData';
 
@@ -14,6 +15,7 @@ const EMPTY_PORTFOLIO = {
   goals: DEMO_GOALS,
   spending: DEMO_SPENDING,
   giving: DEMO_GIVING,
+  incomePhases: DEMO_INCOME_PHASES,
 };
 
 function loadFromStorage() {
@@ -96,6 +98,7 @@ export function usePortfolio(stocks, isAuthenticated) {
   const goals = customData?.goals ?? DEMO_GOALS;
   const spending = customData?.spending ?? DEMO_SPENDING;
   const giving = customData?.giving ?? DEMO_GIVING;
+  const incomePhases = customData?.incomePhases ?? DEMO_INCOME_PHASES;
 
   // Merge live stock prices with holdings for real-time valuation
   const valuedHoldings = useMemo(() => {
@@ -201,6 +204,7 @@ export function usePortfolio(stocks, isAuthenticated) {
     goals,
     spending,
     giving,
+    incomePhases,
     stocksValue,
     cashValue,
     totalDebt,

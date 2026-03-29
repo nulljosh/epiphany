@@ -7,6 +7,7 @@ struct FinanceData: Codable {
     var debt: [DebtItem]
     var goals: [Goal]
     var spending: [SpendingMonth]
+    var incomePhases: [IncomePhase] = []
 
     struct Holding: Codable, Identifiable {
         let symbol: String
@@ -239,5 +240,25 @@ struct FinanceData: Codable {
             formatter.dateFormat = "yyyy-MM"
             return formatter
         }()
+    }
+
+    struct IncomePhase: Codable, Identifiable {
+        var label: String
+        var monthly: Double
+        var status: String
+        var date: String?
+
+        var id: String { label }
+
+        var statusColor: String {
+            switch status {
+            case "current": return "0a84ff"
+            case "soon": return "ffd60a"
+            case "pending": return "bf5af2"
+            case "future": return "ff9f0a"
+            case "done": return "30d158"
+            default: return "0a84ff"
+            }
+        }
     }
 }

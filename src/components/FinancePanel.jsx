@@ -618,7 +618,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const statementInputRef = useRef(null);
 
   const {
-    holdings, accounts, budget, debt, goals, spending, giving,
+    holdings, accounts, budget, debt, goals, spending, giving, incomePhases,
     stocksValue, cashValue, totalDebt, totalIncome, totalExpenses,
     surplus, netWorth, isDemo, importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
@@ -1327,7 +1327,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             t={t}
             spending={spendingChronological}
             totalIncome={totalIncome}
+            totalExpenses={totalExpenses}
+            surplus={surplus}
             debt={debt}
+            budget={budget}
+            incomePhases={incomePhases}
           />
         )}
       </div>

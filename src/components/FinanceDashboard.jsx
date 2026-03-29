@@ -1,51 +1,21 @@
 import { useState, useMemo } from 'react';
 import { Card } from './ui';
 import { formatCurrency, compactCurrency, capitalize, CAT_COLORS, SYSTEM_FONT } from '../utils/formatting';
-import { INCOME_SCENARIOS } from '../utils/financeData';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  Line, ComposedChart, Area,
+  Line, LineChart, ComposedChart, Area, PieChart, Pie, Cell,
 } from 'recharts';
-
-function getCatColor(cat) {
-  return CAT_COLORS[cat] || '#888';
-}
+import { simulateStrategies, projectNetWorth, projectLive, computeSimulator } from '../utils/debtProjections';
 
 const axisTickStyle = (t) => ({ fill: t.textTertiary, fontSize: 9 });
 const yTickFormatter = (v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`;
-
-function buildDebtProjection(spending, totalDebt, totalIncome) {
-  const avgSpend = spending.length > 0
-    ? spending.reduce((s, m) => s + m.total, 0) / spending.length
-    : 0;
-
-  return Object.entries(INCOME_SCENARIOS).map(([key, scenario]) => {
-    const income = key === 'actual'
-      ? (totalIncome || avgSpend * 1.1)
-      : scenario.monthly;
-    const surplus = Math.max(0, income - avgSpend);
-    const months = surplus > 0 ? Math.ceil(totalDebt / surplus) : Infinity;
-    return {
-      key,
-      label: scenario.label,
-      color: scenario.color,
-      income,
-      surplus,
-      months: months === Infinity ? null : months,
-    };
-  });
-}
 
 function CustomTooltip({ active, payload, label, t }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: t.bg,
-      border: `1px solid ${t.border}`,
-      borderRadius: 10,
-      padding: '8px 12px',
-      fontSize: 11,
-      fontFamily: SYSTEM_FONT,
+      background: t.bg, border: `1px solid ${t.border}`, borderRadius: 10,
+      padding: '8px 12px', fontSize: 11, fontFamily: SYSTEM_FONT,
     }}>
       <div style={{ fontWeight: 700, marginBottom: 4, color: t.text }}>{label}</div>
       {payload.map((entry) => (
@@ -58,184 +28,438 @@ function CustomTooltip({ active, payload, label, t }) {
   );
 }
 
-export default function FinanceDashboard({ dark, t, spending, totalIncome, debt: debtItems }) {
-  const [selectedMonth, setSelectedMonth] = useState(null);
+const PHASE_COLORS = { current: '#0a84ff', soon: '#ffd60a', pending: '#bf5af2', future: '#ff9f0a', done: '#30d158' };
+const TIMELINE_EVENTS = [
+  { label: 'Telus plan ends', date: 'Nov 2027', amount: '+$155/mo freed', status: 'future', description: '$700+/mo surplus' },
+  { label: 'Debt-free', date: '~Early 2028', amount: '$0 debt', status: 'done', description: 'Savings begin' },
+];
+
+export default function FinanceDashboard({ dark, t, spending, totalIncome, debt: debtItems, budget, incomePhases, totalExpenses, surplus }) {
   const font = SYSTEM_FONT;
+  const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
 
   const totalDebt = useMemo(
     () => Array.isArray(debtItems) ? debtItems.reduce((s, d) => s + (d.balance || 0), 0) : 0,
     [debtItems]
   );
 
-  const allCategories = useMemo(() => {
-    const cats = new Set();
-    for (const entry of spending) {
-      for (const cat of Object.keys(entry.categories || {})) {
-        cats.add(cat);
-      }
-    }
-    return [...cats].sort();
-  }, [spending]);
+  const fixedExpenses = useMemo(() => {
+    const expenses = budget?.expenses || [];
+    return expenses
+      .filter(e => ['Cell', 'Claude'].includes(e.name))
+      .reduce((s, e) => s + (e.amount || 0), 0);
+  }, [budget]);
 
-  const chartData = useMemo(() => {
-    return spending.map((entry) => {
-      const row = { month: entry.month, total: entry.total };
-      for (const cat of allCategories) {
-        row[cat] = entry.categories?.[cat] || 0;
-      }
-      for (const [key, scenario] of Object.entries(INCOME_SCENARIOS)) {
-        row[key] = key === 'actual' ? (totalIncome || 0) : scenario.monthly;
-      }
-      return row;
+  const incomeGoal = useMemo(() => {
+    if (!incomePhases || incomePhases.length === 0) return 0;
+    return Math.max(...incomePhases.map(p => p.monthly || 0));
+  }, [incomePhases]);
+
+  // Debt-free ETA based on current surplus
+  const debtFreeMonths = useMemo(() => {
+    if (totalDebt <= 0) return 0;
+    const s = surplus || 0;
+    return s > 0 ? Math.ceil(totalDebt / s) : null;
+  }, [totalDebt, surplus]);
+
+  // Spending donut data from budget expenses
+  const spendingDonutData = useMemo(() => {
+    const expenses = budget?.expenses || [];
+    if (expenses.length === 0) return [];
+    const data = expenses.map(e => ({ name: e.name, value: e.amount || 0 }));
+    if (surplus > 0) data.push({ name: 'Savings', value: surplus });
+    return data;
+  }, [budget, surplus]);
+
+  const DONUT_COLORS = ['#0a84ff', '#5ac8fa', '#ff453a', '#30d158', '#bf5af2', '#ff9f0a', '#ffd60a', '#ff2d55'];
+
+  // Income waterfall data
+  const waterfallData = useMemo(() => {
+    if (!incomePhases || incomePhases.length === 0) return [];
+    const sorted = [...incomePhases].sort((a, b) => (a.monthly || 0) - (b.monthly || 0));
+    return sorted.map((phase, i) => {
+      const prev = i > 0 ? sorted[i - 1].monthly : 0;
+      const delta = (phase.monthly || 0) - prev;
+      return { name: phase.label, base: prev, delta, total: phase.monthly };
     });
-  }, [spending, allCategories, totalIncome]);
+  }, [incomePhases]);
 
-  const selectedData = useMemo(() => {
-    if (!selectedMonth) return null;
-    const entry = spending.find((e) => e.month === selectedMonth);
-    if (!entry?.categories) return null;
-    return Object.entries(entry.categories)
-      .filter(([, v]) => v > 0)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, value]) => ({ name, value, color: getCatColor(name) }));
-  }, [selectedMonth, spending]);
+  // Build phases for projection functions
+  const projectionPhases = useMemo(() => {
+    return [
+      { startMonth: 0, payment: 100 },
+      { startMonth: 3, payment: 350 },
+      { startMonth: 10, payment: 550 },
+    ];
+  }, []);
 
-  const debtProjections = useMemo(
-    () => buildDebtProjection(spending, totalDebt, totalIncome),
-    [spending, totalDebt, totalIncome]
-  );
+  // Strategies
+  const strategiesData = useMemo(() => {
+    if (!debtItems || debtItems.length === 0) return null;
+    return simulateStrategies(debtItems, 500, 36);
+  }, [debtItems]);
 
-  const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
+  // Net worth
+  const netWorthData = useMemo(() => {
+    return projectNetWorth(totalDebt, projectionPhases, 42);
+  }, [totalDebt, projectionPhases]);
 
-  if (!spending || spending.length === 0) {
+  // Vape impact simulation
+  const vapeImpactData = useMemo(() => {
+    const labels = Array.from({ length: 30 }, (_, i) => `Mo ${i}`);
+    function sim(extra) {
+      let debt = totalDebt;
+      const arr = [];
+      for (let i = 0; i < 30; i++) {
+        arr.push(Math.max(0, Math.round(debt)));
+        debt -= (i < 3 ? 100 : i < 10 ? 350 : 550) + extra;
+      }
+      return arr;
+    }
+    return {
+      labels,
+      datasets: [
+        { label: 'Keep vaping', data: sim(0), color: '#ff453a' },
+        { label: 'Cut vape (+$150)', data: sim(150), color: '#ffd60a' },
+        { label: 'Cut both (+$225)', data: sim(225), color: '#30d158' },
+      ],
+    };
+  }, [totalDebt]);
+
+  // Simulator state
+  const [simFood, setSimFood] = useState(300);
+  const [simVape, setSimVape] = useState(150);
+  const [simWeed, setSimWeed] = useState(75);
+  const [simOther, setSimOther] = useState(140);
+
+  const simResult = useMemo(() => {
+    const phase2Income = incomePhases?.find(p => p.status === 'soon')?.monthly || 1500;
+    return computeSimulator(phase2Income, fixedExpenses, { food: simFood, vape: simVape, weed: simWeed, other: simOther }, totalDebt);
+  }, [simFood, simVape, simWeed, simOther, totalDebt, fixedExpenses, incomePhases]);
+
+  const liveProjection = useMemo(() => {
+    const proj = projectLive(totalDebt, Math.max(0, simResult.surplus), 42);
+    return proj.labels.map((label, i) => ({
+      name: label,
+      debt: proj.debt[i],
+      savings: proj.savings[i],
+    }));
+  }, [totalDebt, simResult.surplus]);
+
+  if (totalDebt <= 0 && (!spending || spending.length === 0) && (!budget?.expenses || budget.expenses.length === 0)) {
     return (
       <Card dark t={t} style={{ padding: 20, textAlign: 'center' }}>
         <div style={{ color: t.textSecondary, fontSize: 13 }}>
-          Upload bank statements in the Spending tab to populate the dashboard.
+          Add debt, budget, or spending data in the Budget tab to populate the dashboard.
         </div>
       </Card>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: font }}>
-      <Card dark t={t} style={{ padding: 20 }}>
-        <div style={labelStyle}>Monthly Spending by Category</div>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={chartData} onClick={(e) => {
-            if (e?.activeLabel) setSelectedMonth(e.activeLabel);
-          }}>
-            <XAxis dataKey="month" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
-            <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
-            <Tooltip content={<CustomTooltip t={t} />} />
-            {allCategories.map((cat) => (
-              <Bar key={cat} dataKey={cat} stackId="spend" fill={getCatColor(cat)} radius={0} name={capitalize(cat)} />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {allCategories.map((cat) => (
-            <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: getCatColor(cat) }} />
-              <span style={{ color: t.textSecondary }}>{capitalize(cat)}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: font }}>
 
-      <Card dark t={t} style={{ padding: 20 }}>
-        <div style={labelStyle}>Spending vs Income Scenarios</div>
-        <ResponsiveContainer width="100%" height={220}>
-          <ComposedChart data={chartData}>
-            <XAxis dataKey="month" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
-            <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
-            <Tooltip content={<CustomTooltip t={t} />} />
-            <Area type="monotone" dataKey="total" fill={t.green} fillOpacity={0.12} stroke={t.green} strokeWidth={2} name="Spending" />
-            {Object.entries(INCOME_SCENARIOS).map(([key, scenario]) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={scenario.color}
-                strokeWidth={1.5}
-                strokeDasharray={key === 'actual' ? '0' : '6 4'}
-                dot={false}
-                name={scenario.label}
-              />
-            ))}
-          </ComposedChart>
-        </ResponsiveContainer>
-      </Card>
+      {/* Key Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+        {[
+          { value: formatCurrency(totalDebt), label: 'Total Debt', color: t.red },
+          { value: formatCurrency(totalIncome || 0), label: 'Income Now', color: t.accent || '#0a84ff' },
+          { value: formatCurrency(incomeGoal), label: 'Income Goal', color: '#bf5af2' },
+          { value: debtFreeMonths ? `~${debtFreeMonths}mo` : 'N/A', label: 'Debt-Free ETA', color: t.green },
+        ].map((stat) => (
+          <Card key={stat.label} dark t={t} style={{ padding: 12, textAlign: 'center', marginBottom: 0 }}>
+            <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: stat.color, fontVariantNumeric: 'tabular-nums' }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 3 }}>{stat.label}</div>
+          </Card>
+        ))}
+      </div>
 
-      {selectedData && (
-        <Card dark t={t} style={{ padding: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={labelStyle}>{selectedMonth} Breakdown</div>
-            <button
-              onClick={() => setSelectedMonth(null)}
-              style={{
-                border: `1px solid ${t.border}`,
-                background: t.glass,
-                color: t.textSecondary,
-                borderRadius: 999,
-                padding: '4px 10px',
-                fontSize: 10,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: font,
-                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              Close
-            </button>
-          </div>
-          {selectedData.map((item) => {
-            const maxVal = selectedData[0]?.value || 1;
-            const pct = (item.value / maxVal) * 100;
-            return (
-              <div key={item.name} style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 2 }}>
-                  <span style={{ color: t.text, fontWeight: 600 }}>{capitalize(item.name)}</span>
-                  <span style={{ color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(item.value)}</span>
-                </div>
-                <div style={{ height: 6, background: t.glass, borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, height: '100%', background: item.color, borderRadius: 3, transition: 'width 0.3s' }} />
-                </div>
-              </div>
-            );
-          })}
-        </Card>
-      )}
-
-      {totalDebt > 0 && (
-        <Card dark t={t} style={{ padding: 20 }}>
-          <div style={labelStyle}>Debt Payoff Projection ({formatCurrency(totalDebt)})</div>
-          {debtProjections.map((proj) => (
-            <div key={proj.key} style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
-                <span style={{ color: proj.color }}>{proj.label}</span>
-                <span style={{ color: t.text, fontVariantNumeric: 'tabular-nums' }}>
-                  {proj.months ? `${proj.months} months` : 'N/A'}
-                </span>
-              </div>
-              <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 2 }}>
-                Income: {formatCurrency(proj.income)}/mo | Surplus: {formatCurrency(proj.surplus)}/mo
-              </div>
-              {proj.months && (
-                <div style={{ height: 6, background: t.glass, borderRadius: 3, overflow: 'hidden', marginTop: 4 }}>
+      {/* Income Timeline */}
+      {incomePhases && incomePhases.length > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Timeline</div>
+          <div style={{ position: 'relative', paddingLeft: 24 }}>
+            <div style={{ position: 'absolute', left: 5, top: 10, bottom: 10, width: 2, background: t.border, borderRadius: 1 }} />
+            {[...incomePhases, ...TIMELINE_EVENTS].map((phase, i) => {
+              const status = phase.status || 'current';
+              const color = PHASE_COLORS[status] || '#0a84ff';
+              return (
+                <div key={phase.label + i} style={{ position: 'relative', marginBottom: i < incomePhases.length + TIMELINE_EVENTS.length - 1 ? 18 : 0 }}>
                   <div style={{
-                    width: `${Math.min(100, (12 / proj.months) * 100)}%`,
-                    height: '100%',
-                    background: proj.color,
-                    borderRadius: 3,
-                    transition: 'width 0.3s',
+                    position: 'absolute', left: -21, top: 10, width: 10, height: 10,
+                    borderRadius: '50%', background: color, border: `2px solid ${t.bg}`,
+                    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }} />
+                  <div style={{
+                    background: t.glass, border: `1px solid ${t.border}`, borderRadius: 12,
+                    padding: '10px 14px', transition: 'background 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: t.textTertiary }}>
+                      {phase.date || ''}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', color, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+                      {phase.amount || `$${(phase.monthly || 0).toLocaleString()}/mo`}
+                    </div>
+                    <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }}>
+                      {phase.description || phase.label}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </Card>
       )}
+
+      {/* Debt Breakdown Bars */}
+      {debtItems && debtItems.length > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Debt Breakdown</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {debtItems.map((d, i) => {
+              const pct = totalDebt > 0 ? (d.balance / totalDebt) * 100 : 0;
+              const colors = ['#ff453a', '#ff9f0a', '#ffd60a', '#bf5af2', '#0a84ff'];
+              const color = colors[i % colors.length];
+              return (
+                <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, minWidth: 48, color: t.textSecondary }}>{d.name}</span>
+                  <div style={{ flex: 1, height: 8, borderRadius: 4, background: t.border || 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 4, background: color,
+                      width: `${pct}%`, transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, minWidth: 55, textAlign: 'right', color, fontVariantNumeric: 'tabular-nums' }}>
+                    {formatCurrency(d.balance)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Spending Donut */}
+      {spendingDonutData.length > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Where ${formatCurrency(totalIncome || totalExpenses || 0).replace('$', '')} Goes</div>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={spendingDonutData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={95}
+                paddingAngle={2}
+                stroke="none"
+              >
+                {spendingDonutData.map((_, i) => (
+                  <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip t={t} />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
+            {spendingDonutData.map((item, i) => (
+              <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+                <span style={{ color: t.textSecondary }}>{item.name}</span>
+                <span style={{ fontWeight: 600, color: t.text, fontVariantNumeric: 'tabular-nums' }}>${item.value}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Income Waterfall */}
+      {waterfallData.length > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Income Stack by Phase</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={waterfallData}>
+              <XAxis dataKey="name" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+              <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+              <Tooltip content={<CustomTooltip t={t} />} />
+              <Bar dataKey="base" stackId="income" fill="transparent" name="Base" />
+              <Bar dataKey="delta" stackId="income" fill="#0a84ff" radius={[6, 6, 0, 0]} name="Added" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* Vape Impact */}
+      {totalDebt > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Vape Cut Impact</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={vapeImpactData.labels.map((label, i) => {
+              const row = { name: label };
+              vapeImpactData.datasets.forEach(ds => { row[ds.label] = ds.data[i]; });
+              return row;
+            })}>
+              <XAxis dataKey="name" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+              <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+              <Tooltip content={<CustomTooltip t={t} />} />
+              {vapeImpactData.datasets.map(ds => (
+                <Line key={ds.label} type="monotone" dataKey={ds.label} stroke={ds.color} strokeWidth={2} dot={false} name={ds.label} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* Strategies */}
+      {strategiesData && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Avalanche vs Snowball vs Doing Nothing</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={strategiesData.labels.map((label, i) => {
+              const row = { name: label };
+              strategiesData.datasets.forEach(ds => { row[ds.label] = ds.data[i]; });
+              return row;
+            })}>
+              <XAxis dataKey="name" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+              <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+              <Tooltip content={<CustomTooltip t={t} />} />
+              {strategiesData.datasets.map(ds => (
+                <Line key={ds.label} type="monotone" dataKey={ds.label} stroke={ds.color} strokeWidth={2} dot={false} name={ds.label} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* Net Worth */}
+      {totalDebt > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Net Worth Over Time</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <ComposedChart data={netWorthData.labels.map((label, i) => ({ name: label, value: netWorthData.data[i] }))}>
+              <XAxis dataKey="name" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+              <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+              <Tooltip content={<CustomTooltip t={t} />} />
+              <Area type="monotone" dataKey="value" fill={t.green} fillOpacity={0.08} stroke={t.green} strokeWidth={2.5} name="Net Worth" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* Live Projection */}
+      {totalDebt > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Live Projection</div>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={liveProjection}>
+              <XAxis dataKey="name" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+              <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+              <Tooltip content={<CustomTooltip t={t} />} />
+              <Line type="monotone" dataKey="debt" stroke="#ff453a" strokeWidth={2} dot={false} name="Debt" />
+              <Line type="monotone" dataKey="savings" stroke="#30d158" strokeWidth={2} dot={false} name="Savings" />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* Spending Simulator */}
+      {totalDebt > 0 && (
+        <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+          <div style={labelStyle}>Spending Simulator</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+            {[
+              { label: 'Food', value: simFood, set: setSimFood, min: 150, max: 500, step: 10 },
+              { label: 'Vape', value: simVape, set: setSimVape, min: 0, max: 200, step: 10 },
+              { label: 'Weed', value: simWeed, set: setSimWeed, min: 0, max: 150, step: 5 },
+              { label: 'Other', value: simOther, set: setSimOther, min: 0, max: 300, step: 10 },
+            ].map((slider) => (
+              <div key={slider.label} style={{
+                background: t.glass, border: `1px solid ${t.border}`, borderRadius: 12, padding: 12,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                  <span>{slider.label}</span>
+                  <span style={{ fontWeight: 700, color: t.text, fontSize: 11 }}>${slider.value}</span>
+                </div>
+                <input
+                  type="range"
+                  min={slider.min}
+                  max={slider.max}
+                  step={slider.step}
+                  value={slider.value}
+                  onChange={(e) => slider.set(Number(e.target.value))}
+                  style={{
+                    width: '100%', WebkitAppearance: 'none', height: 4, borderRadius: 2,
+                    background: t.border || 'rgba(255,255,255,0.08)', outline: 'none', cursor: 'pointer',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            {[
+              {
+                label: 'Surplus/mo',
+                value: `${simResult.surplus >= 0 ? '+' : ''}$${simResult.surplus}`,
+                color: simResult.surplus > 200 ? t.green : simResult.surplus > 0 ? '#ffd60a' : t.red,
+              },
+              {
+                label: 'Debt-Free',
+                value: isFinite(simResult.monthsToPayoff) ? `${simResult.monthsToPayoff} mo` : 'Never',
+                color: t.accent || '#0a84ff',
+              },
+              {
+                label: '2yr Savings',
+                value: `$${simResult.savingsAfter2yr.toLocaleString()}`,
+                color: t.green,
+              },
+            ].map((res) => (
+              <div key={res.label} style={{
+                background: t.glass, border: `1px solid ${t.border}`, borderRadius: 12,
+                padding: 12, textAlign: 'center',
+                transition: 'background 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}>
+                <div style={{ fontSize: 9, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{res.label}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: res.color, fontVariantNumeric: 'tabular-nums' }}>{res.value}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Existing: Monthly Spending by Category (if spending data exists) */}
+      {spending && spending.length > 0 && (() => {
+        const allCategories = [...new Set(spending.flatMap(e => Object.keys(e.categories || {})))].sort();
+        const chartData = spending.map((entry) => {
+          const row = { month: entry.month, total: entry.total };
+          for (const cat of allCategories) row[cat] = entry.categories?.[cat] || 0;
+          return row;
+        });
+        return (
+          <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+            <div style={labelStyle}>Monthly Spending by Category</div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="month" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+                <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+                <Tooltip content={<CustomTooltip t={t} />} />
+                {allCategories.map((cat) => (
+                  <Bar key={cat} dataKey={cat} stackId="spend" fill={CAT_COLORS[cat] || '#888'} radius={0} name={capitalize(cat)} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+              {allCategories.map((cat) => (
+                <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: CAT_COLORS[cat] || '#888' }} />
+                  <span style={{ color: t.textSecondary }}>{capitalize(cat)}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

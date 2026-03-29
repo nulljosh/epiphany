@@ -190,6 +190,8 @@ struct PortfolioView: View {
             budgetContent
         case .debt:
             debtContent
+            debtBreakdownBars
+            incomeTimelineView
         case .goals:
             goalsContent
         case .statements:
@@ -383,6 +385,88 @@ struct PortfolioView: View {
             DebtEditorSheet(items: $editingDebtItems) {
                 appState.financeData?.debt = editingDebtItems
                 Task { await appState.saveFinanceData() }
+            }
+        }
+    }
+
+    // MARK: - Debt Breakdown Bars
+
+    private var debtBreakdownBars: some View {
+        let debt = appState.financeData?.debt ?? []
+        let totalDebt = debt.reduce(0.0) { $0 + $1.balance }
+        let colors: [Color] = [Palette.dangerRed, Palette.warningAmber, Palette.yellow, Palette.purple, Palette.appleBlue]
+
+        return Group {
+            if !debt.isEmpty {
+                sectionCard("Debt Breakdown") {
+                    VStack(spacing: 10) {
+                        ForEach(Array(debt.enumerated()), id: \.element.name) { i, item in
+                            let pct = totalDebt > 0 ? item.balance / totalDebt : 0
+                            let color = colors[i % colors.count]
+                            HStack(spacing: 12) {
+                                Text(item.name)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 48, alignment: .leading)
+
+                                GeometryReader { geo in
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(color)
+                                        .frame(width: geo.size.width * pct)
+                                }
+                                .frame(height: 8)
+                                .background(Color.white.opacity(0.05))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                                Text("$\(Int(item.balance))")
+                                    .font(.caption.weight(.bold).monospacedDigit())
+                                    .foregroundStyle(color)
+                                    .frame(width: 55, alignment: .trailing)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Income Timeline
+
+    private var incomeTimelineView: some View {
+        let phases = appState.financeData?.incomePhases ?? []
+        return Group {
+            if !phases.isEmpty {
+                sectionCard("Income Timeline") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(Array(phases.enumerated()), id: \.element.id) { _, phase in
+                            HStack(spacing: 12) {
+                                Circle()
+                                    .fill(Color(hex: phase.statusColor))
+                                    .frame(width: 10, height: 10)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    if let date = phase.date {
+                                        Text(date)
+                                            .font(.caption2.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+                                            .textCase(.uppercase)
+                                    }
+                                    Text("$\(Int(phase.monthly))/mo")
+                                        .font(.title3.weight(.bold).monospacedDigit())
+                                        .foregroundStyle(Color(hex: phase.statusColor))
+                                    Text(phase.label)
+                                        .font(.caption.weight(.medium))
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+                            }
+                            .padding(10)
+                            .background(Color.white.opacity(0.03))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                    }
+                }
             }
         }
     }

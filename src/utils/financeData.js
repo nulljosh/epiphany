@@ -12,13 +12,23 @@ export const DEMO_ACCOUNTS = [
 ];
 
 export const DEMO_BUDGET = {
-  income: [],
-  expenses: [],
+  income: [
+    { name: 'Welfare', amount: 1000, frequency: 'monthly' },
+  ],
+  expenses: [
+    { name: 'Food', amount: 300, frequency: 'monthly' },
+    { name: 'Cell', amount: 155, frequency: 'monthly' },
+    { name: 'Vape', amount: 150, frequency: 'monthly' },
+    { name: 'Weed', amount: 75, frequency: 'monthly' },
+    { name: 'Claude', amount: 80, frequency: 'monthly' },
+    { name: 'Other', amount: 140, frequency: 'monthly' },
+  ],
 };
 
 export const DEMO_DEBT = [
   { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
-  { name: 'Telus', balance: 375, rate: 0, minPayment: 50 },
+  { name: 'Telus', balance: 3500, rate: 0, minPayment: 155 },
+  { name: 'Bell', balance: 1000, rate: 0, minPayment: 0 },
 ];
 
 export const DEMO_GOALS = [
@@ -27,6 +37,12 @@ export const DEMO_GOALS = [
   { name: 'Car', target: 5000, saved: 0, deadline: '', priority: 'medium', note: 'Buy used, cash' },
   { name: 'MacBook', target: 4000, saved: 0, deadline: '', priority: 'medium', note: 'Dev tools investment' },
   { name: 'Chain', target: 2000, saved: 0, deadline: '', priority: 'low' },
+];
+
+export const DEMO_INCOME_PHASES = [
+  { label: 'Base welfare', monthly: 1000, status: 'current', date: 'March 2026' },
+  { label: 'Welfare bump', monthly: 1500, status: 'soon', date: '~Mid 2026' },
+  { label: 'PWD + DTC', monthly: 1700, status: 'pending', date: '~Mid-Late 2026' },
 ];
 
 export const DEMO_SPENDING = [
@@ -121,7 +137,7 @@ export function normalizePortfolioData(data) {
 }
 
 // Schema validation for user uploads
-const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving'];
+const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving', 'incomePhases'];
 
 export function validatePortfolioData(data) {
   if (!data || typeof data !== 'object') return { valid: false, error: 'Invalid data format' };
