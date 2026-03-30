@@ -6,7 +6,7 @@ import { checkRateLimit } from './_ratelimit.js';
 const MODEL = 'claude-haiku-4-5-20241022';
 const KV_PREFIX = 'people-index';
 
-function buildPrompt(name, searchData) {
+export function buildPrompt(name, searchData) {
   const snippets = (searchData?.results || [])
     .slice(0, 8)
     .map(r => `${r.title}\n${r.snippet}`)

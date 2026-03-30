@@ -110,8 +110,4 @@ html[data-theme='light'], html[data-theme='light'] body, html[data-theme='light'
     opacity: 0.7;
     transition: opacity 0.05s;
   }
-  .monica-mobile-nav button {
-    min-height: 44px;
-    min-width: 44px;
-  }
 }

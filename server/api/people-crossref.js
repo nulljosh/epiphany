@@ -6,7 +6,7 @@ const CROSSREF_PREFIX = 'people-crossref';
 const CACHE_TTL = 3600; // 1 hour in seconds
 const GDELT_BASE = 'https://api.gdeltproject.org/api/v2/doc/doc';
 
-async function fetchGdeltMentions(name) {
+export async function fetchGdeltMentions(name) {
   const params = new URLSearchParams({
     query: `"${name}"`,
     mode: 'artlist',

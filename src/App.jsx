@@ -1364,7 +1364,7 @@ const reset = useCallback(() => {
                 backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                 color: t.text, fontSize: 18, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'none', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                boxShadow: 'none',
               }}
             >
               {mobileTabsOpen ? '\u00d7' : '\u2630'}
@@ -1410,8 +1410,6 @@ const reset = useCallback(() => {
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
                 boxShadow: 'none',
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {weather && (
