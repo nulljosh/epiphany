@@ -30,8 +30,11 @@ export function fileToBase64(file) {
   });
 }
 
-// Fetch that returns null on JSON parse failure instead of throwing
+// Fetch that returns null on failure instead of throwing
 export async function fetchJsonGraceful(url, ms = FETCH_TIMEOUT) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(ms) });
-  try { return await res.json(); } catch { return null; }
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(ms) });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
 }
