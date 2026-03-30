@@ -169,7 +169,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', ...fadeStyle(mounted, 0.25) }}>v3.5.1</div>
+        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', ...fadeStyle(mounted, 0.25) }}>v3.5.2</div>
       </div>
     </div>
   );

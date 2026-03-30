@@ -1,6 +1,6 @@
 # Monica
 
-v3.5.1 -- Personal intelligence platform. Palantir for regular people.
+v3.5.2 -- Personal intelligence platform. Palantir for regular people.
 
 ## Rules
 
@@ -23,8 +23,9 @@ Deploy: Vercel. Repo: github.com/nulljosh/monica
 
 ## Key Systems
 
-- **Ontology**: `src/lib/ontology.js` (model), `server/api/ontology.js` (API), `src/hooks/useOntology.js` (client)
+- **Gateway**: `api/gateway.js` -- critical routes (auth, stocks-free, markets, latest) are static imports; everything else uses `lazy()` wrapper so one broken file can't kill all routes
+- **Auth**: `server/api/auth.js` (login/register/etc), `server/api/auth-helpers.js` (session from KV), `src/components/auth.css` (shared styles)
 - **AI**: `server/api/ai.js` (streaming endpoint + 10 tools), `src/hooks/useAi.js` (SSE client), `src/components/AiPanel.jsx` (chat UI)
-- **Gateway**: `api/gateway.js` routes all `/api/*` to `server/api/*.js`
-- **Auth**: `server/api/auth-helpers.js` (session from KV), `server/api/auth.js` (login/register/etc)
+- **Ontology**: `src/lib/ontology.js` (model), `server/api/ontology.js` (API), `src/hooks/useOntology.js` (client)
 - **KV**: `server/api/_kv.js` (Upstash Redis wrapper)
+- **Roadmap**: `ROADMAP.md` -- prioritized backlog (map layers, Stripe $1/wk, avatar sync, data sources)
