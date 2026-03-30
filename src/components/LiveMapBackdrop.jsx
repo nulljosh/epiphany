@@ -401,12 +401,6 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         userPosition.lon, userPosition.lat
       );
 
-      addUserMarker(
-        'width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,0.45);animation:pulse-cyan 2s infinite;',
-        'local activity',
-        { type: 'local', title: 'LOCAL ACTIVITY', detail: `Live local pulse near ${locLabel}`, level: 'local', source: 'Local search', link: `https://www.google.com/search?q=${encodeURIComponent(`events near ${locLabel}`)}` },
-        userPosition.lon + 0.006, userPosition.lat + 0.004
-      );
     }
 
     return () => { userMarkersRef.current.forEach(m => m.remove()); userMarkersRef.current = []; };

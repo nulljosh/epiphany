@@ -1359,12 +1359,12 @@ const reset = useCallback(() => {
             <button
               onClick={() => setMobileTabsOpen(p => !p)}
               style={{
-                width: 36, height: 36, borderRadius: 10, border: 'none',
+                width: 44, height: 44, borderRadius: 10, border: 'none',
                 background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
                 backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                color: t.text, fontSize: 16, cursor: 'pointer',
+                color: t.text, fontSize: 18, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'none',
+                boxShadow: 'none', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
               }}
             >
               {mobileTabsOpen ? '\u00d7' : '\u2630'}
@@ -1382,7 +1382,7 @@ const reset = useCallback(() => {
                     key={pill.key}
                     onClick={() => handleMobileTabSelect(pill.key)}
                     style={{
-                      padding: '6px 14px', borderRadius: 8, fontSize: 10, fontWeight: 600,
+                      padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, minHeight: 44,
                       fontFamily: font, cursor: 'pointer', border: 'none', textAlign: 'left',
                       background: activeTab === pill.key ? t.text : 'transparent',
                       color: activeTab === pill.key ? t.bg : t.textSecondary,
@@ -1401,8 +1401,8 @@ const reset = useCallback(() => {
               t={t}
               font={font}
               buttonStyle={{
-                width: 36,
-                height: 36,
+                width: 44,
+                height: 44,
                 borderRadius: 10,
                 border: 'none',
                 padding: 0,
@@ -1410,6 +1410,8 @@ const reset = useCallback(() => {
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
                 boxShadow: 'none',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {weather && (
