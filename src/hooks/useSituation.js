@@ -62,6 +62,7 @@ export function useSituation() {
   const [weatherAlerts, setWeatherAlerts] = useState([]);
   const [crimeIncidents, setCrimeIncidents] = useState([]);
   const [localEvents, setLocalEvents] = useState([]);
+  const [macro, setMacro] = useState([]);
 
   const activeCenter = selectedCity
     ? { lat: selectedCity.lat, lon: selectedCity.lon, label: selectedCity.label }
@@ -167,6 +168,13 @@ export function useSituation() {
     } catch { /* non-critical */ }
   }, [activeCenter.lat, activeCenter.lon]);
 
+  const fetchMacro = useCallback(async () => {
+    try {
+      const data = await fetchWithTimeout(apiPath('/api/macro'));
+      if (Array.isArray(data)) setMacro(data);
+    } catch { /* non-critical */ }
+  }, []);
+
   useEffect(() => {
     fetchFlights();
     fetchTraffic();
@@ -183,6 +191,7 @@ export function useSituation() {
     fetchWeatherAlerts();
     fetchCrime();
     fetchLocalEvents();
+    fetchMacro();
     const si = setInterval(() => {
       fetchIncidents();
       fetchEarthquakes();
@@ -190,9 +199,10 @@ export function useSituation() {
       fetchWeatherAlerts();
       fetchCrime();
       fetchLocalEvents();
+      fetchMacro();
     }, SITUATION_REFRESH);
     return () => clearInterval(si);
-  }, [fetchIncidents, fetchEarthquakes, fetchEvents, fetchWeatherAlerts, fetchCrime, fetchLocalEvents]);
+  }, [fetchIncidents, fetchEarthquakes, fetchEvents, fetchWeatherAlerts, fetchCrime, fetchLocalEvents, fetchMacro]);
 
   return {
     userLocation, locationError,
@@ -201,7 +211,7 @@ export function useSituation() {
     worldCities: WORLD_CITIES,
     flights, flightsLoading, flightsError,
     traffic, trafficLoading, trafficError,
-    incidents, earthquakes, events, weatherAlerts, crimeIncidents, localEvents,
+    incidents, earthquakes, events, weatherAlerts, crimeIncidents, localEvents, macro,
     refetchFlights: fetchFlights,
     refetchTraffic: fetchTraffic,
   };

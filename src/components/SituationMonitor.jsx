@@ -109,7 +109,7 @@ export default function SituationMonitor({
     activeCenter,
     worldCities, userLocation,
     flights, traffic, flightsLoading, trafficLoading, flightsError, trafficError,
-    incidents, earthquakes, events, weatherAlerts,
+    incidents, earthquakes, events, weatherAlerts, macro,
   } = useSituation();
 
   // Track data freshness per source
@@ -298,22 +298,23 @@ export default function SituationMonitor({
       )}
 
       {/* Macro pulse strip */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-        {[
-          { label: 'AI Bubble', value: 'Mag7 = 35% S&P', color: t.red },
-          { label: 'US Debt', value: '$36T / 120% GDP', color: t.yellow },
-          { label: 'BTC ETF', value: '+$40B inflow', color: t.cyan },
-          { label: 'Gold CB', value: '+1,037t reserves', color: t.green },
-        ].map(m => (
-          <span key={m.label} style={{
-            fontSize: 9, padding: '2px 6px', borderRadius: 4,
-            background: `${m.color}12`, color: m.color,
-            fontWeight: 600, whiteSpace: 'nowrap',
-          }}>
-            {m.label}: {m.value}
-          </span>
-        ))}
-      </div>
+      {macro.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {macro.slice(0, 6).map(m => {
+            const color = m.change > 0 ? t.green : m.change < 0 ? t.red : t.textTertiary;
+            const sign = m.change > 0 ? '+' : '';
+            return (
+              <span key={m.id} style={{
+                fontSize: 9, padding: '2px 6px', borderRadius: 4,
+                background: `${color}12`, color,
+                fontWeight: 600, whiteSpace: 'nowrap',
+              }}>
+                {m.name}: {m.value}{m.unit === '%' ? '%' : ''} {sign}{m.changePercent}%
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {sim && (
         <>

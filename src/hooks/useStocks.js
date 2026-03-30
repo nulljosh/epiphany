@@ -32,7 +32,7 @@ const DEFAULT_SYMBOLS = [
   // Cramer tracker ETFs + benchmark
   'SPY', 'SJIM', 'LJIM',
 ];
-const STALE_AFTER_MS = 2 * 60 * 1000;
+const STALE_AFTER_MS = 10 * 60 * 1000;
 const MAX_SYMBOLS_PER_REQUEST = 50;
 
 function chunkSymbols(symbolList, size = MAX_SYMBOLS_PER_REQUEST) {
