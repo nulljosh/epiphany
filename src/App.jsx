@@ -175,7 +175,7 @@ export default function App() {
     return resolveAutoTheme() === 'dark';
   });
   const [activeTab, setActiveTab] = useState('situation');
-  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false });
+  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false, incidents: true, crime: true, localEvents: true, wildfires: true });
   const mapInstanceRef = useRef(null);
   useEffect(() => { applyResolvedTheme(dark ? 'dark' : 'light'); }, [dark]);
   const t = getTheme(dark);
@@ -1233,9 +1233,11 @@ const reset = useCallback(() => {
       `}</style>
 
       {/* Ticker */}
-      <div className="monica-ticker" style={{ gridColumn: '1 / -1' }}>
-        <Ticker items={tickerItems} theme={t} />
-      </div>
+      {tickerItems.length > 0 && (
+        <div className="monica-ticker" style={{ gridColumn: '1 / -1' }}>
+          <Ticker items={tickerItems} theme={t} />
+        </div>
+      )}
 
       {/* Header */}
       <header className="monica-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>
