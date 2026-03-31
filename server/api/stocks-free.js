@@ -146,6 +146,9 @@ async function fetchFmpBatch(symbolList) {
         marketCap: q.marketCap ?? null,
         peRatio: q.pe ?? null,
         eps: q.eps ?? null,
+        avgVolume: q.avgVolume ?? null,
+        beta: q.beta ?? null,
+        yield: (q.lastDiv && q.price) ? ((q.lastDiv / q.price) * 100) : null,
         source: 'fmp',
       }));
   } catch (err) {
@@ -197,6 +200,9 @@ async function fetchYahooSymbol(symbol) {
           marketCap: meta.marketCap ?? null,
           peRatio: null,
           eps: null,
+          avgVolume: null,
+          beta: null,
+          yield: null,
           source: 'yahoo',
         };
       } catch (err) {

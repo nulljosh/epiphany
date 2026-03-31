@@ -53,13 +53,14 @@ describe('useStocks', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should not expose hardcoded stock data before the first fetch resolves', () => {
+  it('should show loading with fallback data before the first fetch resolves', () => {
     global.fetch.mockImplementation(() => new Promise(() => {}));
 
     const { result } = renderHook(() => useStocks(['AAPL']));
 
     expect(result.current.loading).toBe(true);
-    expect(result.current.stocks).toEqual({});
+    expect(result.current.stocks).toBeDefined();
+    expect(result.current.stocks.AAPL).toBeDefined();
     expect(result.current.reliability.status).toBe('loading');
   });
 

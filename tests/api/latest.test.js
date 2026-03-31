@@ -7,8 +7,8 @@ vi.mock('@vercel/blob', () => ({
   list: vi.fn(async (opts) => ({
     blobs: [
       {
-        url: 'https://blob.vercel-storage.com/bread-cache/results.json',
-        pathname: '/bread-cache/results.json',
+        url: 'https://blob.vercel-storage.com/monica-cache/results.json',
+        pathname: '/monica-cache/results.json',
       },
     ],
   })),
@@ -25,13 +25,14 @@ describe('Latest API', () => {
   };
 
   beforeEach(() => {
+    process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
     req = { method: 'GET' };
-    
+
     res = {
       status: vi.fn(function() { return this; }),
-      json: vi.fn(function(data) { 
+      json: vi.fn(function(data) {
         this.data = data;
-        return this; 
+        return this;
       }),
       setHeader: vi.fn(),
       statusCode: null,
@@ -113,13 +114,14 @@ describe('Latest API - No Cache', () => {
   let req, res;
 
   beforeEach(() => {
+    process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
     req = { method: 'GET' };
-    
+
     res = {
       status: vi.fn(function() { return this; }),
-      json: vi.fn(function(data) { 
+      json: vi.fn(function(data) {
         this.data = data;
-        return this; 
+        return this;
       }),
       setHeader: vi.fn(),
       statusCode: null,
@@ -161,13 +163,14 @@ describe('Latest API - Error Handling', () => {
   let req, res;
 
   beforeEach(() => {
+    process.env.BLOB_READ_WRITE_TOKEN = 'test-token';
     req = { method: 'GET' };
-    
+
     res = {
       status: vi.fn(function() { return this; }),
-      json: vi.fn(function(data) { 
+      json: vi.fn(function(data) {
         this.data = data;
-        return this; 
+        return this;
       }),
       setHeader: vi.fn(),
       statusCode: null,

@@ -2,7 +2,7 @@ import { put } from '@vercel/blob';
 import { getKv } from './_kv.js';
 import { YAHOO_HEADERS, FMP_BASE, getFmpApiKey } from './stocks-shared.js';
 
-const BLOB_FILENAME = 'rise-cache/results.json';
+const BLOB_FILENAME = 'monica-cache/results.json';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 const MAX_RETRIES = 2;
 const RETRY_DELAY = 1000; // ms
