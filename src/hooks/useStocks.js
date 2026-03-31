@@ -225,7 +225,7 @@ const parseStockData = (raw) => {
 };
 
 export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true } = {}) {
-  const [stocks, setStocks] = useState({});
+  const [stocks, setStocks] = useState(FALLBACK_DATA);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reliability, setReliability] = useState({

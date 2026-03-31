@@ -11,6 +11,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return res.status(200).json({
+        cached: false,
+        data: null,
+        message: 'BLOB_READ_WRITE_TOKEN not configured'
+      });
+    }
+
     // Find the blob by prefix (most recent cache)
     const { blobs } = await list({ prefix: 'rise-cache/results.json' });
 
