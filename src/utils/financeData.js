@@ -28,7 +28,7 @@ export const DEMO_BUDGET = {
 export const DEMO_DEBT = [
   { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
   { name: 'Telus', balance: 3500, rate: 0, minPayment: 155 },
-  { name: 'Bell', balance: 1000, rate: 0, minPayment: 0 },
+  { name: 'Bell', balance: 942, rate: 0, minPayment: 0 },
 ];
 
 export const DEMO_GOALS = [
