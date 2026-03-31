@@ -1,8 +1,39 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createChart, ColorType, LineType, CrosshairMode } from 'lightweight-charts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 
 const EMPTY = {};
+const CHART_TYPES = [
+  { key: 'heikinAshi', label: 'Heikin Ashi' },
+  { key: 'candles', label: 'Candles' },
+  { key: 'hollowCandles', label: 'Hollow' },
+  { key: 'bars', label: 'Bars' },
+  { key: 'line', label: 'Line' },
+  { key: 'stepLine', label: 'Step' },
+  { key: 'area', label: 'Area' },
+  { key: 'baseline', label: 'Baseline' },
+  { key: 'columns', label: 'Columns' },
+];
+
+function computeHeikinAshi(data) {
+  const ha = [];
+  for (let i = 0; i < data.length; i++) {
+    const d = data[i];
+    const haClose = (d.open + d.high + d.low + d.close) / 4;
+    const haOpen = i === 0
+      ? (d.open + d.close) / 2
+      : (ha[i - 1].open + ha[i - 1].close) / 2;
+    ha.push({
+      time: d.time,
+      open: haOpen,
+      high: Math.max(d.high, haOpen, haClose),
+      low: Math.min(d.low, haOpen, haClose),
+      close: haClose,
+    });
+  }
+  return ha;
+}
+
 const RANGES = [
   { key: '1d',  label: '1D',  interval: '5m' },
   { key: '5d',  label: '1W',  interval: '15m' },
@@ -17,28 +48,13 @@ const RANGES = [
   { key: 'max', label: 'ALL', interval: '1mo' },
 ];
 
-function CustomTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{
-      background: 'rgba(30,30,30,0.9)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.1)',
-      borderRadius: 8,
-      padding: '8px 12px',
-      fontSize: 12,
-      color: '#fff',
-    }}>
-      <div style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>{label}</div>
-      <div style={{ fontWeight: 600 }}>{formatCurrency(payload[0].value)}</div>
-    </div>
-  );
-}
-
 export default function StockDetail({ stock, onClose, dark, t }) {
   const [range, setRange] = useState('1mo');
+  const [chartType, setChartType] = useState('heikinAshi');
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const chartContainerRef = useRef(null);
+  const chartRef = useRef(null);
   const [detail, setDetail] = useState(null);
   const [news, setNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
@@ -72,9 +88,10 @@ export default function StockDetail({ stock, onClose, dark, t }) {
       const data = await res.json();
       if (data.history && Array.isArray(data.history)) {
         setHistory(data.history.map(p => ({
-          date: rangeConfig.key === '1d' || rangeConfig.key === '5d'
-            ? new Date(p.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            : new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          time: p.time,
+          open: p.open,
+          high: p.high,
+          low: p.low,
           close: p.close,
         })));
       }
@@ -112,6 +129,129 @@ export default function StockDetail({ stock, onClose, dark, t }) {
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  // Render lightweight-charts
+  useEffect(() => {
+    if (!chartContainerRef.current || history.length === 0) return;
+
+    const container = chartContainerRef.current;
+    const isDark = dark !== false;
+
+    const chart = createChart(container, {
+      width: container.clientWidth,
+      height: 180,
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: isDark ? '#8e8e93' : '#6e6e73',
+        fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+        fontSize: 10,
+      },
+      grid: {
+        vertLines: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' },
+        horzLines: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' },
+      },
+      crosshair: { mode: CrosshairMode.Magnet },
+      rightPriceScale: {
+        borderVisible: false,
+        scaleMargins: { top: 0.05, bottom: 0.05 },
+      },
+      timeScale: {
+        borderVisible: false,
+        timeVisible: range === '1d' || range === '5d',
+        secondsVisible: false,
+      },
+      handleScroll: { vertTouchDrag: false },
+    });
+
+    chartRef.current = chart;
+
+    const upColor = '#30D158';
+    const downColor = '#FF453A';
+
+    if (chartType === 'heikinAshi' || chartType === 'candles' || chartType === 'hollowCandles') {
+      const seriesData = chartType === 'heikinAshi' ? computeHeikinAshi(history) : history;
+      const isHollow = chartType === 'hollowCandles';
+      const series = chart.addCandlestickSeries({
+        upColor: isHollow ? 'transparent' : upColor,
+        downColor: downColor,
+        borderUpColor: upColor,
+        borderDownColor: downColor,
+        wickUpColor: upColor,
+        wickDownColor: downColor,
+      });
+      series.setData(seriesData.map(d => ({
+        time: d.time,
+        open: d.open,
+        high: d.high,
+        low: d.low,
+        close: d.close,
+      })));
+    } else if (chartType === 'bars') {
+      const series = chart.addBarSeries({
+        upColor,
+        downColor,
+      });
+      series.setData(history.map(d => ({
+        time: d.time,
+        open: d.open,
+        high: d.high,
+        low: d.low,
+        close: d.close,
+      })));
+    } else if (chartType === 'line' || chartType === 'stepLine') {
+      const series = chart.addLineSeries({
+        color: upColor,
+        lineWidth: 2,
+        ...(chartType === 'stepLine' ? { lineType: LineType.WithSteps } : {}),
+      });
+      series.setData(history.map(d => ({ time: d.time, value: d.close })));
+    } else if (chartType === 'area') {
+      const series = chart.addAreaSeries({
+        lineColor: upColor,
+        topColor: 'rgba(48,209,88,0.3)',
+        bottomColor: 'rgba(48,209,88,0.02)',
+        lineWidth: 2,
+      });
+      series.setData(history.map(d => ({ time: d.time, value: d.close })));
+    } else if (chartType === 'baseline') {
+      const baseValue = history[0]?.close ?? 0;
+      const series = chart.addBaselineSeries({
+        baseValue: { type: 'price', price: baseValue },
+        topLineColor: upColor,
+        topFillColor1: 'rgba(48,209,88,0.2)',
+        topFillColor2: 'rgba(48,209,88,0.02)',
+        bottomLineColor: downColor,
+        bottomFillColor1: 'rgba(255,69,58,0.02)',
+        bottomFillColor2: 'rgba(255,69,58,0.2)',
+        lineWidth: 2,
+      });
+      series.setData(history.map(d => ({ time: d.time, value: d.close })));
+    } else if (chartType === 'columns') {
+      const series = chart.addHistogramSeries({
+        color: upColor,
+      });
+      series.setData(history.map((d, i) => ({
+        time: d.time,
+        value: d.close,
+        color: i > 0 && d.close < history[i - 1].close ? downColor : upColor,
+      })));
+    }
+
+    chart.timeScale().fitContent();
+
+    const ro = new ResizeObserver(() => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
+    });
+    ro.observe(container);
+
+    return () => {
+      ro.disconnect();
+      chart.remove();
+      chartRef.current = null;
+    };
+  }, [history, chartType, dark, range]);
+
   if (!stock) return null;
 
   const d = detail || EMPTY;
@@ -120,7 +260,6 @@ export default function StockDetail({ stock, onClose, dark, t }) {
   const changePercent = d.changePercent ?? stock.changePercent ?? 0;
   const positive = changePercent >= 0;
   const changeColor = positive ? '#30D158' : '#FF453A';
-  const gradientId = `stock-gradient-${symbol}`;
 
   const stats = useMemo(() => [
     { label: 'Open', value: d.open ? formatCurrency(d.open) : '--' },
@@ -214,7 +353,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
         </div>
 
         {/* Range Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', gap: 3, marginBottom: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {RANGES.map(r => (
             <button
               key={r.key}
@@ -237,6 +376,30 @@ export default function StockDetail({ stock, onClose, dark, t }) {
           ))}
         </div>
 
+        {/* Chart Type Picker */}
+        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          {CHART_TYPES.map(ct => (
+            <button
+              key={ct.key}
+              onClick={() => setChartType(ct.key)}
+              style={{
+                padding: '5px 8px', borderRadius: 8, border: 'none', whiteSpace: 'nowrap',
+                background: chartType === ct.key
+                  ? (dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)')
+                  : (dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                color: chartType === ct.key ? t.text : t.textTertiary,
+                fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: font,
+                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              {ct.label}
+            </button>
+          ))}
+        </div>
+
         {/* Chart */}
         <div style={{ ...glass, padding: '12px 8px 8px', marginBottom: 12, height: 200 }}>
           {historyLoading ? (
@@ -248,42 +411,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
               No chart data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={changeColor} stopOpacity={0.3} />
-                    <stop offset="100%" stopColor={changeColor} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fill: t.textTertiary || '#8e8e93' }}
-                  tickLine={false}
-                  axisLine={false}
-                  interval="preserveStartEnd"
-                  minTickGap={40}
-                />
-                <YAxis
-                  domain={['auto', 'auto']}
-                  tick={{ fontSize: 10, fill: t.textTertiary || '#8e8e93' }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={v => `$${v.toFixed(0)}`}
-                  width={45}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="close"
-                  stroke={changeColor}
-                  strokeWidth={1.5}
-                  fill={`url(#${gradientId})`}
-                  dot={false}
-                  animationDuration={400}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
           )}
         </div>
 

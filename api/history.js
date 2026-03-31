@@ -76,6 +76,7 @@ export default async function handler(req, res) {
     const history = timestamps
       .map((t, i) => ({
         date: new Date(t * 1000).toISOString().split('T')[0],
+        time: t,
         open: quotes.open?.[i] ?? null,
         high: quotes.high?.[i] ?? null,
         low: quotes.low?.[i] ?? null,
