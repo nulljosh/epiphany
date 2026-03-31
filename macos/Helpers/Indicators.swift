@@ -59,7 +59,6 @@ enum Indicators {
     static func ema(prices: [(Date, Double)], period: Int) -> [DataPoint] {
         guard prices.count >= period else { return [] }
         let k = 2.0 / Double(period + 1)
-        // Seed with SMA of first `period` values
         let seed = prices[0..<period].map(\.1).reduce(0, +) / Double(period)
         var result: [DataPoint] = [DataPoint(date: prices[period - 1].0, value: seed)]
         for i in period..<prices.count {
