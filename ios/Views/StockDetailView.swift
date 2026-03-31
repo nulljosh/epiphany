@@ -224,7 +224,7 @@ struct StockDetailView: View {
         }
     }
 
-    private struct OHLCPoint: Identifiable {
+    struct OHLCPoint: Identifiable {
         let id: Int
         let date: Date
         let open: Double
@@ -249,8 +249,7 @@ struct StockDetailView: View {
         }
     }
 
-    private var heikinAshiPoints: [OHLCPoint] {
-        let raw = ohlcPoints
+    static func computeHeikinAshi(_ raw: [OHLCPoint]) -> [OHLCPoint] {
         guard !raw.isEmpty else { return [] }
         var ha: [OHLCPoint] = []
         for (i, d) in raw.enumerated() {
@@ -261,6 +260,10 @@ struct StockDetailView: View {
             ha.append(OHLCPoint(id: i, date: d.date, open: haOpen, high: haHigh, low: haLow, close: haClose))
         }
         return ha
+    }
+
+    private var heikinAshiPoints: [OHLCPoint] {
+        Self.computeHeikinAshi(ohlcPoints)
     }
 
     private var smaPoints: [Indicators.DataPoint] {
