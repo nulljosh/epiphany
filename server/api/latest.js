@@ -1,6 +1,6 @@
 import { applyCors } from './_cors.js';
 import { list } from '@vercel/blob';
-import { isMarketHours } from './stocks-shared.js';
+import { isMarketHours, BLOB_PREFIX } from './stocks-shared.js';
 
 export default async function handler(req, res) {
   applyCors(req, res);
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Find the blob by prefix (most recent cache)
-    const { blobs } = await list({ prefix: 'monica-cache/results.json' });
+    const { blobs } = await list({ prefix: BLOB_PREFIX });
 
     if (!blobs || blobs.length === 0) {
       console.warn('[LATEST] No cache blob found');

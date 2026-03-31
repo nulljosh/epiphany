@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
     // Find the blob by prefix (most recent cache)
-    const { blobs } = await list({ prefix: 'bread-cache/results.json' });
+    const { blobs } = await list({ prefix: 'monica-cache/results.json' });
 
     if (!blobs || blobs.length === 0) {
       console.warn('[LATEST] No cache blob found');

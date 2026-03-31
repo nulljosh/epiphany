@@ -11,8 +11,8 @@ vi.mock('@vercel/blob', () => ({
   list: vi.fn(async (opts) => ({
     blobs: [
       {
-        url: 'https://blob.vercel-storage.com/bread-cache/results.json',
-        pathname: '/bread-cache/results.json',
+        url: 'https://blob.vercel-storage.com/monica-cache/results.json',
+        pathname: '/monica-cache/results.json',
       },
     ],
   })),

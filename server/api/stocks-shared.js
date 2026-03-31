@@ -1,4 +1,5 @@
 import { applyCors } from './_cors.js';
+export const BLOB_PREFIX = 'monica-cache/results.json';
 export const DEFAULT_SYMBOLS = [
   // Mag 7
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'NVDA',

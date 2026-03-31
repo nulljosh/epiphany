@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 
+const EMPTY = {};
 const RANGES = [
   { key: '1d',  label: '1D',  interval: '5m' },
   { key: '5d',  label: '1W',  interval: '15m' },
@@ -46,25 +47,26 @@ export default function StockDetail({ stock, onClose, dark, t }) {
   const symbol = stock?.symbol;
 
   // Fetch full stock detail (open, prevClose, marketCap, etc.)
-  const fetchDetail = useCallback(async () => {
+  const fetchDetail = useCallback(async (signal) => {
     if (!symbol) return;
     try {
-      const res = await fetch(`/api/stocks-free?symbols=${encodeURIComponent(symbol)}`);
+      const res = await fetch(`/api/stocks-free?symbols=${encodeURIComponent(symbol)}`, { signal });
       if (!res.ok) return;
       const data = await res.json();
       const arr = Array.isArray(data) ? data : (data?.quoteResponse?.result ?? []);
       if (arr.length > 0) setDetail(arr[0]);
-    } catch { /* silent */ }
+    } catch (err) { if (err.name !== 'AbortError') console.warn('fetchDetail:', err.message); }
   }, [symbol]);
 
   // Fetch price history
-  const fetchHistory = useCallback(async () => {
+  const fetchHistory = useCallback(async (signal) => {
     if (!symbol) return;
     setHistoryLoading(true);
     const rangeConfig = RANGES.find(r => r.key === range) || RANGES[2];
     try {
       const res = await fetch(
-        `/api/history?symbol=${encodeURIComponent(symbol)}&range=${rangeConfig.key}&interval=${rangeConfig.interval}`
+        `/api/history?symbol=${encodeURIComponent(symbol)}&range=${rangeConfig.key}&interval=${rangeConfig.interval}`,
+        { signal }
       );
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
@@ -76,28 +78,28 @@ export default function StockDetail({ stock, onClose, dark, t }) {
           close: p.close,
         })));
       }
-    } catch { setHistory([]); }
+    } catch (err) { if (err.name !== 'AbortError') setHistory([]); }
     finally { setHistoryLoading(false); }
   }, [symbol, range]);
 
   // Fetch news
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (signal) => {
     if (!symbol) return;
     setNewsLoading(true);
     try {
-      const res = await fetch(`/api/news?q=${encodeURIComponent(symbol)}`);
+      const res = await fetch(`/api/news?q=${encodeURIComponent(symbol)}`, { signal });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setNews(data.articles || []);
-    } catch { setNews([]); }
+    } catch (err) { if (err.name !== 'AbortError') setNews([]); }
     finally { setNewsLoading(false); }
   }, [symbol]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchDetail();
-    fetchHistory();
-    fetchNews();
+    fetchDetail(controller.signal);
+    fetchHistory(controller.signal);
+    fetchNews(controller.signal);
     return () => controller.abort();
   }, [symbol]);
 
@@ -112,7 +114,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
 
   if (!stock) return null;
 
-  const d = detail || {};
+  const d = detail || EMPTY;
   const price = d.price ?? stock.price;
   const change = d.change ?? (stock.changePercent != null ? (price * stock.changePercent / 100) : 0);
   const changePercent = d.changePercent ?? stock.changePercent ?? 0;
@@ -344,7 +346,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
                             position: 'absolute', inset: 0, width: '100%', height: '100%',
                             objectFit: 'cover',
                           }}
-                          onError={e => { e.target.parentElement.style.display = 'none'; }}
+                          onError={e => { e.target.style.display = 'none'; }}
                         />
                         {article.source && (
                           <div style={{
