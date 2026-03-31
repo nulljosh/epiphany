@@ -11,7 +11,7 @@ html, body, #root {
   --monica-text: #fff;
   height: 100%;
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   background: var(--monica-bg);
 }
 

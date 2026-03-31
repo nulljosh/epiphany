@@ -1229,6 +1229,7 @@ const reset = useCallback(() => {
           }
           .monica-map { grid-row: 3; grid-column: 1; height: auto !important; }
           .monica-panel { display: block; grid-row: 3; grid-column: 2; }
+          .monica-footer { grid-row: 4; }
         }
       `}</style>
 
@@ -1574,7 +1575,7 @@ const reset = useCallback(() => {
       )}
 
       {/* Footer */}
-      <footer className="monica-footer" style={{ gridColumn: '1 / -1', padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
+      <footer className="monica-footer" style={{ gridColumn: '1 / -1', gridRow: 4, padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
         <span>&copy; 2026 Monica</span>
         <a href="https://github.com/nulljosh/monica/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
         <a href="https://github.com/nulljosh/monica" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
