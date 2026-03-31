@@ -809,6 +809,9 @@ struct PriceHistory: Codable {
 
     struct DataPoint: Codable, Identifiable {
         let date: String
+        let open: Double?
+        let high: Double?
+        let low: Double?
         let close: Double
         let volume: Int?
 
