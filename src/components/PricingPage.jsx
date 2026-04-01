@@ -4,6 +4,7 @@ import { SYSTEM_FONT as font } from '../utils/formatting';
 const PRICE_IDS = {
   starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
   pro: import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
+  weekly: import.meta.env.VITE_STRIPE_PRICE_ID_WEEKLY,
 };
 
 const Check = () => <span style={{ color: '#34c759', marginRight: 8, fontWeight: 700 }}>&#10003;</span>;
@@ -69,7 +70,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
     }
   };
 
-  const tierRank = { free: 0, starter: 1, pro: 2 };
+  const tierRank = { free: 0, starter: 1, weekly: 1, pro: 2 };
   const isCurrentOrLower = (plan) => tierRank[plan] <= tierRank[currentTier];
 
   const glassCard = {
@@ -207,13 +208,13 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$0</div>
             <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>Forever free</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Prediction markets</FeatureItem>
-              <FeatureItem included>Live stock data (US100)</FeatureItem>
-              <FeatureItem included>Monte Carlo simulations</FeatureItem>
-              <FeatureItem included>Trading simulator</FeatureItem>
-              <FeatureItem included={false}>Real-time broker signals</FeatureItem>
-              <FeatureItem included={false}>TradingView webhooks</FeatureItem>
-              <FeatureItem included={false}>Advanced analytics</FeatureItem>
+              <FeatureItem included>Map + all data layers</FeatureItem>
+              <FeatureItem included>Situation monitor</FeatureItem>
+              <FeatureItem included>Live stock data + ticker</FeatureItem>
+              <FeatureItem included>Weather, quakes, traffic</FeatureItem>
+              <FeatureItem included={false}>AI Analyst (Claude)</FeatureItem>
+              <FeatureItem included={false}>Portfolio + watchlist</FeatureItem>
+              <FeatureItem included={false}>Ontology writes</FeatureItem>
             </ul>
             {currentTier === 'free' && <CurrentBadge />}
           </div>
@@ -223,26 +224,6 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             ...glassCard,
             border: currentTier === 'starter'
               ? `2px solid ${t.accent}`
-              : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-          }}>
-            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Starter</h3>
-            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$20</div>
-            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per month</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Everything in Free</FeatureItem>
-              <FeatureItem included>Broker panel unlock</FeatureItem>
-              <FeatureItem included>cTrader + TradingView signals</FeatureItem>
-              <FeatureItem included>Priority API queue</FeatureItem>
-              <FeatureItem included>Basic auto-send controls</FeatureItem>
-            </ul>
-            <UpgradeButton plan="starter" label="Get Starter" bgColor={t.accent || '#0071e3'} />
-          </div>
-
-
-          <div style={{
-            ...glassCard,
-            border: currentTier === 'pro'
-              ? `2px solid #0071e3`
               : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
           }}>
             <div style={{
@@ -257,14 +238,34 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
               borderRadius: 999,
               marginBottom: 12,
               fontFamily: font,
-            }}>Recommended</div>
+            }}>Most Popular</div>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Weekly</h3>
+            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$1</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per week</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
+              <FeatureItem included>Everything in Free</FeatureItem>
+              <FeatureItem included>AI Analyst (Claude)</FeatureItem>
+              <FeatureItem included>Portfolio + watchlist</FeatureItem>
+              <FeatureItem included>Ontology writes + batch</FeatureItem>
+              <FeatureItem included>Deep news + crime data</FeatureItem>
+            </ul>
+            <UpgradeButton plan="starter" label="Get Weekly -- $1/wk" bgColor={t.accent || '#0071e3'} />
+          </div>
+
+
+          <div style={{
+            ...glassCard,
+            border: currentTier === 'pro'
+              ? `2px solid #0071e3`
+              : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+          }}>
             <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Pro</h3>
             <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$50</div>
             <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per month</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Everything in Starter</FeatureItem>
+              <FeatureItem included>Everything in Weekly</FeatureItem>
               <FeatureItem included>Full broker automation</FeatureItem>
-              <FeatureItem included>Higher signal throughput</FeatureItem>
+              <FeatureItem included>cTrader + TradingView signals</FeatureItem>
               <FeatureItem included>Advanced risk controls</FeatureItem>
               <FeatureItem included>Priority support</FeatureItem>
             </ul>
