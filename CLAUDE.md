@@ -28,4 +28,5 @@ Deploy: Vercel. Repo: github.com/nulljosh/monica
 - **AI**: `server/api/ai.js` (streaming endpoint + 10 tools), `src/hooks/useAi.js` (SSE client), `src/components/AiPanel.jsx` (chat UI)
 - **Ontology**: `src/lib/ontology.js` (model), `server/api/ontology.js` (API), `src/hooks/useOntology.js` (client)
 - **KV**: `server/api/_kv.js` (Upstash Redis wrapper)
+- **Map**: `src/components/LiveMapBackdrop.jsx` (11 data layers, MapLibre GL). Utilities: `markerCss()` (CSS builder), `extractCoords()` (normalize lat/lon), `mapsLink()` (OSM URLs). Layers fetched in parallel every 120s. `createMarker()` validates coords before rendering.
 - **Roadmap**: `ROADMAP.md` -- prioritized backlog (map layers, Stripe $1/wk, avatar sync, data sources)
