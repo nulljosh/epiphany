@@ -8,10 +8,12 @@
 ### 2. Macro pulse strip -- DONE  
 - Already renders dynamically from `/api/macro` data (not hardcoded)
 
-### 3. Map layers -- DONE
+### 3. Map layers -- DONE (partial)
 - All 11 layers rendering: flights, earthquakes, traffic, weather, crime, local events, wildfires, news, incidents, predictions, heatmap
 - hasSource() gate removed, coord validation added, flights fetch connected
-- API keys added: Ticketmaster, TomTom (traffic flow + incidents)
+- Stale standalone API files removed (were shadowing gateway) -- 2026-04-01
+- Free sources working: USGS earthquakes, Overpass incidents, GDELT events/news, OpenSky flights, NASA EONET wildfires
+- Dead keys: TomTom (403), HERE (401) -- need replacement (see Tech Debt #11)
 
 ### 4. Ticker -- DONE
 - stocks-free endpoint returns live data, ticker populates on load
@@ -71,10 +73,13 @@ Add next:
 Added to Vercel:
 - `TOMTOM_API_KEY` -- real traffic flow data
 - `TICKETMASTER_API_KEY` -- local event listings
-Still missing:
+Still missing / dead keys:
 - `BLOB_READ_WRITE_TOKEN` - breaks `/api/latest`
-- `HERE_API_KEY` - supplemental traffic incidents (optional, TomTom covers flow)
-- `FIRMS_MAP_KEY` - higher-res wildfire data (NASA EONET fallback works)
+- `TOMTOM_API_KEY` - DEAD (403 Forbidden). Get new key: https://developer.tomtom.com/user/register
+- `HERE_API_KEY` - DEAD (401 Unauthorized). Get new key: https://platform.here.com/sign-up
+- `FIRMS_MAP_KEY` - higher-res wildfire data. Get key: https://firms.modaps.eosdis.nasa.gov/api/area/
+- `TICKETMASTER_API_KEY` - local events. Get key: https://developer.ticketmaster.com/products-and-docs/apis/getting-started/
+- `FMP_API_KEY` - stock data (primary). Get key: https://site.financialmodelingprep.com/developer/docs
 
 ### 12. Error resilience
 - `fetchJsonGraceful` doesn't check `res.ok` -- non-200 responses with non-JSON bodies cause cryptic "not valid JSON" errors
