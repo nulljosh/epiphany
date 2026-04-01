@@ -99,7 +99,7 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .earthquake(quake)
                     } label: {
-                        emojiPin("🌋")
+                        sfPin("mountain.2.fill")
                     }
                     .buttonStyle(.plain)
                 }
@@ -116,7 +116,7 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .flight(flight)
                     } label: {
-                        emojiPin("✈️")
+                        sfPin("airplane")
                     }
                     .buttonStyle(.plain)
                 }
@@ -133,7 +133,7 @@ struct SituationView: View {
                         Haptics.impact(.medium)
                         selectedEvent = .incident(incident)
                     } label: {
-                        emojiPin(incidentEmoji(incident.title))
+                        sfPin(incidentSymbol(incident.title))
                     }
                     .buttonStyle(.plain)
                 }
@@ -141,15 +141,15 @@ struct SituationView: View {
         }
     }
 
-    private func incidentEmoji(_ title: String) -> String {
+    private func incidentSymbol(_ title: String) -> String {
         let t = title.lowercased()
-        if t.contains("police") { return "👮" }
-        if t.contains("fire") || t.contains("hydrant") { return "🚒" }
-        if t.contains("hospital") || t.contains("emergency") { return "🏥" }
-        if t.contains("construction") || t.contains("road_works") { return "🚧" }
-        if t.contains("border") { return "🛂" }
-        if t.contains("accident") || t.contains("crash") { return "💥" }
-        return "🚧"
+        if t.contains("police") { return "shield.fill" }
+        if t.contains("fire") || t.contains("hydrant") { return "flame.fill" }
+        if t.contains("hospital") || t.contains("emergency") { return "cross.fill" }
+        if t.contains("construction") || t.contains("road_works") { return "wrench.fill" }
+        if t.contains("border") { return "person.fill.checkmark" }
+        if t.contains("accident") || t.contains("crash") { return "exclamationmark.triangle.fill" }
+        return "wrench.fill"
     }
 
     @MapContentBuilder
@@ -162,7 +162,7 @@ struct SituationView: View {
                             Haptics.impact(.medium)
                             selectedEvent = .weatherAlert(alert)
                         } label: {
-                            emojiPin("⚠️")
+                            sfPin("cloud.bolt.fill")
                         }
                         .buttonStyle(.plain)
                     }
@@ -180,7 +180,7 @@ struct SituationView: View {
                         Haptics.impact(.medium)
                         selectedEvent = .crime(crime)
                     } label: {
-                        emojiPin("🔴")
+                        sfPin("exclamationmark.circle.fill")
                     }
                     .buttonStyle(.plain)
                 }
@@ -198,7 +198,7 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .localEvent(event)
                         } label: {
-                            emojiPin("📍")
+                            sfPin("mappin")
                         }
                         .buttonStyle(.plain)
                     }
@@ -217,7 +217,7 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .trafficIncident(incident)
                         } label: {
-                            emojiPin("🚗")
+                            sfPin("car.fill")
                         }
                         .buttonStyle(.plain)
                     }
@@ -372,9 +372,10 @@ struct SituationView: View {
         Palette.bg
     }
 
-    private func emojiPin(_ emoji: String) -> some View {
-        Text(emoji)
+    private func sfPin(_ systemName: String) -> some View {
+        Image(systemName: systemName)
             .font(.title2)
+            .foregroundStyle(.white)
             .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
     }
 

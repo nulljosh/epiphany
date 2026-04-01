@@ -196,14 +196,14 @@ class TwitterScraper {
         });
 
         if (tweetData && tweetData.text) {
-          this.log('\n✓ Tweet fetched successfully!\n');
+          this.log('\n[OK] Tweet fetched successfully!\n');
           return tweetData;
         }
 
         this.log('No tweet content found, retrying...');
 
       } catch (err) {
-        this.error(`✗ Attempt ${attempt} failed:`, err.message);
+        this.error(`[ERR] Attempt ${attempt} failed:`, err.message);
 
         if (attempt < this.options.maxRetries) {
           const delay = attempt * 2000;

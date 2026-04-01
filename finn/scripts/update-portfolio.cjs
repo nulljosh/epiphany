@@ -31,7 +31,7 @@ async function get2FACodeFromMessages(timeoutMs = 180000) {
   const dbPath = path.join(os.homedir(), 'Library/Messages/chat.db');
 
   // Send request via OpenClaw
-  await sendOpenClawMessage('🔐 Need Wealthsimple 2FA code - please forward the SMS');
+  await sendOpenClawMessage('[2FA] Need Wealthsimple 2FA code - please forward the SMS');
   console.log('[*] Waiting for 2FA code forwarded to OpenClaw...');
 
   while (Date.now() - startTime < timeoutMs) {

@@ -26,15 +26,15 @@ export default function WeatherWidget({ t }) {
   if (loading) return null;
   if (!weather || weather.fallback) return null;
 
-  const weatherEmoji = (icon) => {
-    if (icon.startsWith('01')) return '☀️';
-    if (icon.startsWith('02')) return '⛅';
-    if (icon.startsWith('03') || icon.startsWith('04')) return '☁️';
-    if (icon.startsWith('09') || icon.startsWith('10')) return '🌧️';
-    if (icon.startsWith('11')) return '⛈️';
-    if (icon.startsWith('13')) return '❄️';
-    if (icon.startsWith('50')) return '🌫️';
-    return '🌤️';
+  const weatherLabel = (icon) => {
+    if (icon.startsWith('01')) return 'SUN';
+    if (icon.startsWith('02')) return 'PCLOUD';
+    if (icon.startsWith('03') || icon.startsWith('04')) return 'CLOUD';
+    if (icon.startsWith('09') || icon.startsWith('10')) return 'RAIN';
+    if (icon.startsWith('11')) return 'STORM';
+    if (icon.startsWith('13')) return 'SNOW';
+    if (icon.startsWith('50')) return 'FOG';
+    return 'FAIR';
   };
 
   return (
@@ -49,7 +49,7 @@ export default function WeatherWidget({ t }) {
       border: `0.5px solid ${t.border}`,
       borderRadius: 12,
     }}>
-      <span style={{ fontSize: 14 }}>{weatherEmoji(weather.icon)}</span>
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em' }}>{weatherLabel(weather.icon)}</span>
       <span style={{ fontWeight: 600 }}>{weather.temp}°C</span>
       <span style={{ opacity: 0.7 }}>{weather.city}</span>
     </div>

@@ -1,11 +1,11 @@
 const categoryIcons = {
-  grocery: '🛒',
-  dining: '🍽️',
-  transport: '🚇',
-  entertainment: '🎬',
-  utilities: '💡',
-  income: '💼',
-  transfer: '🔁'
+  grocery: 'GROC',
+  dining: 'DINE',
+  transport: 'TRNS',
+  entertainment: 'ENTR',
+  utilities: 'UTIL',
+  income: 'INC',
+  transfer: 'XFER'
 };
 
 const categories = [

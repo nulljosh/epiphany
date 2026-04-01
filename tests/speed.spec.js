@@ -21,7 +21,7 @@ test('$1 → $1B in under 60 seconds', async ({ page }) => {
   const elapsedTime = Date.now() - startTime;
   const elapsedSeconds = Math.floor(elapsedTime / 1000);
 
-  console.log(`🎯 Time to $1B: ${elapsedSeconds}s`);
+  console.log(`[INFO] Time to $1B: ${elapsedSeconds}s`);
 
   // Assert under 60 seconds
   expect(elapsedSeconds).toBeLessThan(60);

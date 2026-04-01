@@ -127,7 +127,7 @@ export default function SurvivalMode() {
       {/* Header */}
       <div style={{ borderBottom: '1px solid #0f0', paddingBottom: '10px', marginBottom: '20px' }}>
         <h1 style={{ margin: 0, fontSize: '20px' }}>
-          BREAD / SURVIVAL MODE {isRunning ? '🟢 ALIVE' : '⚪️ IDLE'}
+          BREAD / SURVIVAL MODE {isRunning ? '[ALIVE]' : '[IDLE]'}
         </h1>
         <div style={{ display: 'flex', gap: '20px', marginTop: '10px', fontSize: '14px' }}>
           <span>Uptime <strong>{uptimeStr}</strong></span>
@@ -241,7 +241,7 @@ export default function SurvivalMode() {
                 borderBottom: '1px solid #333',
                 color: trade.win ? '#0f0' : '#f00'
               }}>
-                {trade.win ? '✓' : '✗'} {trade.market.slice(0, 50)}... 
+                {trade.win ? 'W' : 'L'} {trade.market.slice(0, 50)}... 
                 <span style={{ float: 'right' }}>
                   {trade.win ? '+' : ''}${trade.payout.toFixed(2)}
                 </span>

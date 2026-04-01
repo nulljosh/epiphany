@@ -4,7 +4,7 @@
 CHECKCHECK_LATEST=$(find ~/Documents/Code/checkcheck/data -name "results-*.json" 2>/dev/null | sort | tail -1)
 
 if [ -z "$CHECKCHECK_LATEST" ]; then
-  echo "💰 Income"
+  echo "Income"
   echo "Current:"
   echo "  Finn: \$1050/mo"
   echo "  CheckCheck: data not found"
@@ -19,14 +19,14 @@ CHECKCHECK_INCOME=$(cat "$CHECKCHECK_LATEST" | jq -r '.sections["Payment Info"].
 
 FINN_INCOME=1050  # From finn data
 
-echo "💰 Income"
+echo "Income"
 echo "Current:"
 echo "  Finn: \$$FINN_INCOME/mo"
 echo "  CheckCheck: \$$CHECKCHECK_INCOME/mo"
 
 if [ "$FINN_INCOME" != "${CHECKCHECK_INCOME%.*}" ]; then
   DIFF=$(echo "$CHECKCHECK_INCOME - $FINN_INCOME" | bc)
-  echo "  ⚠️  mismatch detected (\$$DIFF difference)"
+  echo "  [WARN] mismatch detected (\$$DIFF difference)"
 fi
 
 echo ""

@@ -79,7 +79,7 @@ async function fetchTweet(url, options = {}) {
       await browser.close();
 
       if (tweetData && tweetData.text) {
-        log('\n✅ Tweet fetched successfully!\n');
+        log('\n[OK] Tweet fetched successfully!\n');
         log('━'.repeat(80));
         log(`Author: ${tweetData.author}`);
         log(`Date: ${tweetData.timestamp}`);
@@ -96,10 +96,10 @@ async function fetchTweet(url, options = {}) {
         return tweetData;
       }
 
-      log('⚠️  No tweet content found, retrying...');
+      log('[WARN] No tweet content found, retrying...');
 
     } catch (err) {
-      error(`❌ Attempt ${attempt} failed:`, err.message);
+      error(`[ERR] Attempt ${attempt} failed:`, err.message);
 
       if (browser) {
         await browser.close();
@@ -113,7 +113,7 @@ async function fetchTweet(url, options = {}) {
     }
   }
 
-  error('\n❌ Failed to fetch tweet after all retries');
+  error('\n[ERR] Failed to fetch tweet after all retries');
   return null;
 }
 

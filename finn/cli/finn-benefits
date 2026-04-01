@@ -1,7 +1,7 @@
 #!/bin/bash
 # finn benefits - DTC/PWD application status
 
-echo "📋 Benefits Status"
+echo "Benefits Status"
 echo ""
 echo "DTC (Disability Tax Credit):"
 echo "  Status: Waiting on CRA (8-12 weeks from submission)"

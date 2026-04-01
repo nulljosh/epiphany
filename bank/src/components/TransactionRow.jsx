@@ -8,7 +8,7 @@ const formatDate = (value) =>
 
 export default function TransactionRow({ transaction }) {
   const isCredit = transaction.type === 'credit';
-  const icon = categoryIcons[transaction.category] ?? '💳';
+  const icon = categoryIcons[transaction.category] ?? 'TXN';
 
   return (
     <div className="transaction-row">
