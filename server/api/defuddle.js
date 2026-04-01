@@ -52,6 +52,7 @@ export default async function handler(req, res) {
     if (error.name === 'AbortError') {
       return res.status(504).json({ error: 'Request timeout' });
     }
-    res.status(500).json({ error: error.message });
+    console.error('[DEFUDDLE] Error:', error.message);
+    res.status(500).json({ error: 'Failed to process URL' });
   }
 }

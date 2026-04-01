@@ -299,6 +299,6 @@ export default async function handler(req, res) {
       res.setHeader('X-Monica-Cache-Level', 'L2');
       return res.status(200).json(staleCached);
     }
-    return res.status(500).json({ error: 'Failed to fetch stock data', details: err.message });
+    return res.status(500).json({ error: 'Failed to fetch stock data' });
   }
 }

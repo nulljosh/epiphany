@@ -127,7 +127,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ customerId: stripeCustomerId });
     } catch (err) {
       console.error('[STRIPE/resolve-session] Error:', err.message);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: 'Failed to resolve session' });
     }
   }
 
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ url: session.url });
     } catch (err) {
       console.error('[STRIPE/portal] Error:', err.message);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: 'Failed to create portal session' });
     }
   }
 
