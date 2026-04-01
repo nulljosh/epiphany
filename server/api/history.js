@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     // Map and filter invalid data points
     const history = timestamps
       .map((t, i) => ({
-        date: ['1d', '5d'].includes(range) ? new Date(t * 1000).toISOString() : new Date(t * 1000).toISOString().split('T')[0],
+        time: ['1d', '5d'].includes(range) ? new Date(t * 1000).toISOString() : new Date(t * 1000).toISOString().split('T')[0],
         open: quotes.open?.[i] ?? null,
         high: quotes.high?.[i] ?? null,
         low: quotes.low?.[i] ?? null,

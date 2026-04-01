@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { createChart, ColorType, LineType, CrosshairMode } from 'lightweight-charts';
+import { createChart, ColorType, LineType, CrosshairMode, CandlestickSeries, BarSeries, LineSeries, AreaSeries, BaselineSeries, HistogramSeries } from 'lightweight-charts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 
 const EMPTY = {};
@@ -170,7 +170,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
     if (chartType === 'heikinAshi' || chartType === 'candles' || chartType === 'hollowCandles') {
       const seriesData = chartType === 'heikinAshi' ? computeHeikinAshi(history) : history;
       const isHollow = chartType === 'hollowCandles';
-      const series = chart.addCandlestickSeries({
+      const series = chart.addSeries(CandlestickSeries, {
         upColor: isHollow ? 'transparent' : upColor,
         downColor: downColor,
         borderUpColor: upColor,
@@ -186,7 +186,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
         close: d.close,
       })));
     } else if (chartType === 'bars') {
-      const series = chart.addBarSeries({
+      const series = chart.addSeries(BarSeries, {
         upColor,
         downColor,
       });
@@ -198,14 +198,14 @@ export default function StockDetail({ stock, onClose, dark, t }) {
         close: d.close,
       })));
     } else if (chartType === 'line' || chartType === 'stepLine') {
-      const series = chart.addLineSeries({
+      const series = chart.addSeries(LineSeries, {
         color: upColor,
         lineWidth: 2,
         ...(chartType === 'stepLine' ? { lineType: LineType.WithSteps } : {}),
       });
       series.setData(history.map(d => ({ time: d.time, value: d.close })));
     } else if (chartType === 'area') {
-      const series = chart.addAreaSeries({
+      const series = chart.addSeries(AreaSeries, {
         lineColor: upColor,
         topColor: 'rgba(48,209,88,0.3)',
         bottomColor: 'rgba(48,209,88,0.02)',
@@ -214,7 +214,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
       series.setData(history.map(d => ({ time: d.time, value: d.close })));
     } else if (chartType === 'baseline') {
       const baseValue = history[0]?.close ?? 0;
-      const series = chart.addBaselineSeries({
+      const series = chart.addSeries(BaselineSeries, {
         baseValue: { type: 'price', price: baseValue },
         topLineColor: upColor,
         topFillColor1: 'rgba(48,209,88,0.2)',
@@ -226,7 +226,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
       });
       series.setData(history.map(d => ({ time: d.time, value: d.close })));
     } else if (chartType === 'columns') {
-      const series = chart.addHistogramSeries({
+      const series = chart.addSeries(HistogramSeries, {
         color: upColor,
       });
       series.setData(history.map((d, i) => ({
