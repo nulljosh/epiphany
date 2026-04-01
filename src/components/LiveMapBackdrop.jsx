@@ -117,6 +117,7 @@ function mapsLink(lat, lon, zoom = 14) {
 }
 
 function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, onSelect, layerType) {
+  if (lon == null || lat == null || isNaN(lon) || isNaN(lat)) return;
   const el = document.createElement('div');
   el.style.cssText = css;
   if (title) el.title = title;

@@ -25,11 +25,10 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [pwMsg, setPwMsg] = useState(null);
 
   const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
-  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
   const avatarInputRef = useRef(null);
-  const avatarUrl = uploadedAvatarUrl || user?.avatarUrl || null;
+  const avatarUrl = user?.avatarUrl || null;
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -50,7 +49,6 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       });
       const data = await res.json();
       if (data.ok && data.avatarUrl) {
-        setUploadedAvatarUrl(data.avatarUrl);
         setAvatarMsg({ text: 'Photo updated', error: false });
         if (refreshUser) refreshUser();
       } else {
