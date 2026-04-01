@@ -58,8 +58,9 @@ describe('History API', () => {
 
     expect(statusCode).toBe(200);
     expect(jsonData.history.length).toBe(2);
-    // Daily range should have date-only format (no T)
-    expect(jsonData.history[0].date).not.toContain('T');
+    // Daily range should have date-only format (YYYY-MM-DD string)
+    expect(typeof jsonData.history[0].time).toBe('string');
+    expect(jsonData.history[0].time).not.toContain('T');
   });
 
   it('returns intraday history with full ISO format for 1d range', async () => {
@@ -75,8 +76,9 @@ describe('History API', () => {
 
     expect(statusCode).toBe(200);
     expect(jsonData.history.length).toBe(2);
-    // 1d range should have full ISO timestamps with T
-    expect(jsonData.history[0].date).toContain('T');
+    // 1d range should have unix timestamps (seconds)
+    expect(typeof jsonData.history[0].time).toBe('number');
+    expect(jsonData.history[0].time).toBe(1700000000);
   });
 
   it('returns intraday history with full ISO format for 5d range', async () => {
@@ -91,7 +93,9 @@ describe('History API', () => {
     await handler(mockReq, mockRes);
 
     expect(statusCode).toBe(200);
-    expect(jsonData.history[0].date).toContain('T');
+    // 5d range should have unix timestamps (seconds)
+    expect(typeof jsonData.history[0].time).toBe('number');
+    expect(jsonData.history[0].time).toBe(1700000000);
   });
 
   it('rejects invalid symbol format', async () => {
@@ -166,6 +170,23 @@ describe('History API', () => {
 
     expect(statusCode).toBe(200);
     expect(jsonData.history.length).toBe(2);
+  });
+
+  it('maps XAUUSD to GC=F for Yahoo Finance', async () => {
+    mockReq.query = { symbol: 'XAUUSD', range: '1mo', interval: '1d' };
+    const ts = [1700000000];
+    const closes = [2950.0];
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(makeYahooResponse(ts, closes))
+    });
+
+    await handler(mockReq, mockRes);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('GC%3DF'),
+      expect.any(Object)
+    );
   });
 
   it('defaults symbol to AAPL when missing', async () => {

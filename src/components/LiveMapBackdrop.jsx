@@ -488,7 +488,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         label: locLabel,
       };
       addMarker(
-        'width:9px;height:9px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
         `${target.label}: ${ev.title}`,
         { type: 'event', title: ev.country ? `[${ev.country}] ${target.label}` : target.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
         target.lon, target.lat, 'news'
@@ -510,7 +510,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const pubTime = article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
       const detail = [article.source, pubTime].filter(Boolean).join(' · ');
       addMarker(
-        'width:8px;height:8px;border-radius:50%;background:#60A5FA;box-shadow:0 0 0 0 rgba(96,165,250,0.5);animation:pulse-blue 2.1s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#60A5FA;box-shadow:0 0 0 0 rgba(96,165,250,0.5);animation:pulse-blue 2.1s infinite;',
         article.title,
         { type: 'news', title: article.title || 'News', detail: detail || 'News article', level: 'global', source: 'GDELT News', link: article.url || 'https://www.gdeltproject.org/' },
         target.lon, target.lat, 'news'
@@ -536,7 +536,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (!c) return;
       const { lat, lon } = c;
       addMarker(
-        'width:9px;height:9px;border-radius:50%;background:#a855f7;box-shadow:0 0 0 0 rgba(168,85,247,0.45);animation:pulse-cyan 2.2s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#a855f7;box-shadow:0 0 0 0 rgba(168,85,247,0.45);animation:pulse-cyan 2.2s infinite;',
         ev.title || 'Event',
         { type: 'local-event', title: ev.title || 'Local Event', detail: ev.venue || ev.source || 'Nearby event', level: 'local', source: ev.source || 'Event data', link: ev.url || mapsLink(lat, lon) },
         lon, lat, 'localEvents'
@@ -572,7 +572,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (fl.lat == null || fl.lon == null) return;
       const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
       addMarker(
-        `width:8px;height:8px;border-radius:2px;background:#818cf8;box-shadow:0 0 0 0 rgba(129,140,248,0.4);animation:pulse-blue 2.4s infinite;${heading}`,
+        `width:12px;height:12px;border-radius:2px;background:#818cf8;box-shadow:0 0 0 0 rgba(129,140,248,0.4);animation:pulse-blue 2.4s infinite;${heading}`,
         `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}`,
         { type: 'flight', title: fl.callsign || fl.icao24 || 'Aircraft', detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: 'OpenSky Network', link: `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
         fl.lon, fl.lat, 'flights'

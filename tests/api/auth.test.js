@@ -306,6 +306,7 @@ describe('Auth API', () => {
           stripeCustomerId: null,
           watchlist: null,
           avatarUrl: null,
+          avatarUpdatedAt: null,
         },
       });
     });

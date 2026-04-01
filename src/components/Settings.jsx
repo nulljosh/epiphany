@@ -28,7 +28,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
   const avatarInputRef = useRef(null);
-  const avatarUrl = user?.avatarUrl || null;
+  const avatarUrl = user?.avatarUrl ? `${user.avatarUrl}?v=${user.avatarUpdatedAt || '1'}` : null;
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -308,18 +308,25 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         <div style={labelStyle}>Appearance</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            aria-pressed={!dark}
+            aria-pressed={!dark && localStorage.getItem('monica_theme') === 'light'}
             onClick={() => { localStorage.setItem('monica_theme', 'light'); setDark(false); }}
-            style={toggleStyle(!dark)}
+            style={toggleStyle(!dark && localStorage.getItem('monica_theme') === 'light')}
           >
             Light
           </button>
           <button
-            aria-pressed={dark}
+            aria-pressed={dark && localStorage.getItem('monica_theme') === 'dark'}
             onClick={() => { localStorage.setItem('monica_theme', 'dark'); setDark(true); }}
-            style={toggleStyle(dark)}
+            style={toggleStyle(dark && localStorage.getItem('monica_theme') === 'dark')}
           >
             Dark
+          </button>
+          <button
+            aria-pressed={!localStorage.getItem('monica_theme')}
+            onClick={() => { localStorage.removeItem('monica_theme'); const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches; setDark(sysDark); }}
+            style={toggleStyle(!localStorage.getItem('monica_theme'))}
+          >
+            Auto
           </button>
         </div>
       </Card>

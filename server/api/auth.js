@@ -63,6 +63,7 @@ function publicUser(user) {
     stripeCustomerId: user?.stripeCustomerId || null,
     watchlist: user?.watchlist || null,
     avatarUrl: user?.avatarUrl || null,
+    avatarUpdatedAt: user?.avatarUpdatedAt || null,
   };
 }
 

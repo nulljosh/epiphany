@@ -1236,11 +1236,9 @@ const reset = useCallback(() => {
       `}</style>
 
       {/* Ticker */}
-      {tickerItems.length > 0 && (
-        <div className="monica-ticker" style={{ gridColumn: '1 / -1' }}>
-          <Ticker items={tickerItems} theme={t} />
-        </div>
-      )}
+      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28 }}>
+        {tickerItems.length > 0 && <Ticker items={tickerItems} theme={t} />}
+      </div>
 
       {/* Header */}
       <header className="monica-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>

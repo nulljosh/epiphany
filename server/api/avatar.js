@@ -41,8 +41,10 @@ export default async function handler(req, res) {
     });
 
     user.avatarUrl = blob.url;
+    user.avatarUpdatedAt = Date.now();
     await kv.set(`user:${session.email}`, user);
 
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     return res.status(200).json({ ok: true, avatarUrl: blob.url });
   }
 

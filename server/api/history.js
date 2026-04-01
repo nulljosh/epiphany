@@ -6,8 +6,16 @@ export default async function handler(req, res) {
   const range = req.query.range || '1y'; // 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, max
   const interval = req.query.interval || '1d'; // 1m, 5m, 15m, 1d, 1wk, 1mo
 
+  // Map display names to Yahoo Finance symbols
+  const SYMBOL_MAP = {
+    XAUUSD: 'GC=F', XAGUSD: 'SI=F', XPTUSD: 'PL=F', XPDUSD: 'PA=F',
+    XCUUSD: 'HG=F', USOIL: 'CL=F', NGAS: 'NG=F',
+    'BTC-USD': 'BTC-USD', 'ETH-USD': 'ETH-USD',
+  };
+  const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
+
   // Validate symbol format (alphanumeric, hyphens, dots, equals, carets only)
-  if (!/^[\w\-\.=\^]+$/.test(symbol)) {
+  if (!/^[\w\-\.=\^]+$/.test(yahooSymbol)) {
     return res.status(400).json({
       error: 'Invalid symbol format',
       details: 'Symbol must contain only letters, numbers, hyphens, dots, equals, and carets'
@@ -37,7 +45,7 @@ export default async function handler(req, res) {
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
     const response = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`,
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?range=${range}&interval=${interval}`,
       {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -77,7 +85,7 @@ export default async function handler(req, res) {
     // Map and filter invalid data points
     const history = timestamps
       .map((t, i) => ({
-        time: ['1d', '5d'].includes(range) ? new Date(t * 1000).toISOString() : new Date(t * 1000).toISOString().split('T')[0],
+        time: ['1d', '5d'].includes(range) ? Math.floor(t) : new Date(t * 1000).toISOString().split('T')[0],
         open: quotes.open?.[i] ?? null,
         high: quotes.high?.[i] ?? null,
         low: quotes.low?.[i] ?? null,

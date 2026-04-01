@@ -115,7 +115,7 @@ describe('useStocks', () => {
     expect(result.current.stocks).not.toHaveProperty('INVALID');
   });
 
-  it('should only expose symbols returned by the live response', async () => {
+  it('should merge live data on top of fallback (never lose symbols)', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => [{ symbol: 'AAPL', price: 150.25, change: 2.5, changePercent: 1.69 }]
@@ -127,7 +127,9 @@ describe('useStocks', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(Object.keys(result.current.stocks)).toEqual(['AAPL']);
+    // Live data merges on top of fallback -- AAPL updated, others preserved
+    expect(result.current.stocks['AAPL'].price).toBe(150.25);
+    expect(Object.keys(result.current.stocks).length).toBeGreaterThan(1);
   });
 
   it('should split oversized symbol lists into multiple requests and merge the results', async () => {

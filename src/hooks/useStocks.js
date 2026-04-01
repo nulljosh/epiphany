@@ -260,7 +260,7 @@ export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true } = {}) {
         throw new Error('No valid stock data received from any API');
       }
 
-      setStocks(stockMap);
+      setStocks(prev => ({ ...prev, ...stockMap }));
       setError(null);
       const now = Date.now();
       lastLiveSuccessRef.current = now;
@@ -321,7 +321,7 @@ export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true } = {}) {
             const cachedAt = data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now();
             const cacheAge = Date.now() - cachedAt;
             lastLiveSuccessRef.current = cachedAt;
-            setStocks(stockMap);
+            setStocks(prev => ({ ...prev, ...stockMap }));
             setReliability({
               status: cacheAge > STALE_AFTER_MS ? 'stale' : 'live',
               source: 'cache',
