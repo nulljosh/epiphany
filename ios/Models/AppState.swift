@@ -15,6 +15,8 @@ final class AppState {
 
     var commodities: [CommodityData] = []
     var crypto: [CryptoData] = []
+    var fearGreedScore: Int?
+    var fearGreedRating: String?
     var financeData: FinanceData?
     var statements: [Statement] = []
     var isLoading = false
@@ -275,6 +277,16 @@ final class AppState {
             crypto = try await MonicaAPI.shared.fetchCrypto()
         } catch {
             handleError(error)
+        }
+    }
+
+    func loadFearGreed() async {
+        do {
+            let fg = try await MonicaAPI.shared.fetchFearGreed()
+            fearGreedScore = fg.score
+            fearGreedRating = fg.rating
+        } catch {
+            // Non-critical, silently fail
         }
     }
 

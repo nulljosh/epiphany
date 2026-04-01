@@ -163,6 +163,23 @@ struct MarketsView: View {
                     .padding(.horizontal)
                     .padding(.vertical, 8)
 
+                    if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
+                        HStack(spacing: 10) {
+                            Text("\(fgScore)")
+                                .font(.title2.weight(.heavy).monospacedDigit())
+                                .foregroundStyle(fearGreedColor(fgScore))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Fear & Greed: \(fgRating)")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(fearGreedColor(fgScore))
+                                ProgressView(value: Double(fgScore), total: 100)
+                                    .tint(fearGreedColor(fgScore))
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 6)
+                    }
+
                     HStack(spacing: 12) {
                         topLink("News", systemImage: "newspaper") {
                             NewsView()
@@ -330,7 +347,8 @@ struct MarketsView: View {
                 async let crypto: Void = appState.loadCrypto()
                 async let finance: Void = appState.loadFinanceData()
                 async let brief: Void = appState.loadDailyBrief()
-                _ = await (stocks, watchlist, commodities, crypto, finance, brief)
+                async let fg: Void = appState.loadFearGreed()
+                _ = await (stocks, watchlist, commodities, crypto, finance, brief, fg)
             }
         }
         .onDisappear { isVisible = false }
@@ -483,6 +501,14 @@ struct MarketsView: View {
                 )
         }
         .buttonStyle(.plain)
+    }
+
+    private func fearGreedColor(_ score: Int) -> Color {
+        if score <= 24 { return .red }
+        if score <= 44 { return .orange }
+        if score <= 55 { return .secondary }
+        if score <= 75 { return .green }
+        return .green
     }
 }
 

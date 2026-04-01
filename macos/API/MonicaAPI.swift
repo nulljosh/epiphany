@@ -168,6 +168,18 @@ final class MonicaAPI {
             .sorted { $0.symbol < $1.symbol }
     }
 
+    struct FearGreedResponse: Codable {
+        let score: Int
+        let rating: String
+    }
+
+    func fetchFearGreed() async throws -> FearGreedResponse {
+        let url = try makeURL("/api/fear-greed")
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(FearGreedResponse.self, from: data)
+    }
+
     func fetchNews() async throws -> [NewsArticle] {
         let url = try makeURL("/api/news")
         let request = URLRequest(url: url)

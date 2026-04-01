@@ -103,6 +103,28 @@ struct MarketsView: View {
                             )
                         }
 
+                        if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
+                            Section("Fear & Greed") {
+                                HStack(spacing: 12) {
+                                    Text("\(fgScore)")
+                                        .font(.title.weight(.heavy).monospacedDigit())
+                                        .foregroundStyle(fearGreedColor(fgScore))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(fgRating)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(fearGreedColor(fgScore))
+                                        ProgressView(value: Double(fgScore), total: 100)
+                                            .tint(fearGreedColor(fgScore))
+                                    }
+                                }
+                            }
+                            .listRowBackground(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.ultraThinMaterial)
+                                    .padding(2)
+                            )
+                        }
+
                         if appState.isLoggedIn {
                             Section(isExpanded: $portfolioExpanded) {
                                 if let financeData = appState.financeData {
@@ -429,6 +451,14 @@ private extension MarketsView {
             return ("After Hours", Palette.warningAmber)
         }
         return ("Market Closed", .secondary)
+    }
+
+    private func fearGreedColor(_ score: Int) -> Color {
+        if score <= 24 { return Palette.dangerRed }
+        if score <= 44 { return Palette.warningAmber }
+        if score <= 55 { return .secondary }
+        if score <= 75 { return Palette.successGreen }
+        return Palette.successGreen
     }
 }
 

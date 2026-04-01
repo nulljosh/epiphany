@@ -32,6 +32,7 @@ const ROUTES = {
   ai:                   lazy(() => import('../server/api/ai.js')),
   'daily-brief':        lazy(() => import('../server/api/daily-brief.js')),
   commodities:          lazy(() => import('../server/api/commodities.js')),
+  'fear-greed':         lazy(() => import('../server/api/fear-greed.js')),
   crime:                lazy(() => import('../server/api/crime.js')),
   cron:                 lazy(() => import('../server/api/cron.js')),
   defuddle:             lazy(() => import('../server/api/defuddle.js')),
@@ -84,7 +85,7 @@ function getRoutePath(req) {
 const BOT_PATTERNS = /bot|crawl|spider|slurp|facebookexternalhit|bingpreview|yandex|baidu|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|claudebot|ccbot/i;
 
 const CACHE_TTL = {
-  commodities: 300, crime: 3600, earthquakes: 300, events: 600, flights: 120,
+  commodities: 300, crime: 3600, 'fear-greed': 300, earthquakes: 300, events: 600, flights: 120,
   history: 3600, incidents: 600, latest: 60, 'local-events': 600, macro: 3600,
   markets: 60, news: 300, prices: 60, 'stocks-free': 60, traffic: 300,
   weather: 300, 'weather-alerts': 300, wildfires: 600, ontology: 3600,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { formatCurrency } from '../utils/formatting';
 import StockDetail from './StockDetail';
+import useFearGreed from '../hooks/useFearGreed';
 
 const SORT_OPTIONS = [
   { key: 'symbol', label: 'Symbol' },
@@ -24,6 +25,45 @@ function getMarketStatus() {
   if (minutes >= 240 && minutes < 570) return { label: 'Pre-Market', color: '#FF9F0A' };
   if (minutes >= 960 && minutes < 1200) return { label: 'After Hours', color: '#FF9F0A' };
   return { label: 'Market Closed', color: '#8e8e93' };
+}
+
+function getFearGreedColor(score) {
+  if (score <= 24) return '#FF453A';
+  if (score <= 44) return '#FF9F0A';
+  if (score <= 55) return '#8e8e93';
+  if (score <= 75) return '#30D158';
+  return '#34C759';
+}
+
+function FearGreedGauge({ score, rating, t }) {
+  if (score === null) return null;
+  const color = getFearGreedColor(score);
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+      background: t.glass,
+      backdropFilter: 'blur(20px) saturate(150%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+      border: `1px solid ${t.cardBorder || t.border}`,
+      borderRadius: 12, marginBottom: 12,
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+          Fear & Greed
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{score}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color }}>{rating}</span>
+        </div>
+      </div>
+      <div style={{ width: 80, height: 6, borderRadius: 3, background: 'rgba(128,128,128,0.2)', overflow: 'hidden' }}>
+        <div style={{
+          width: `${score}%`, height: '100%', borderRadius: 3, background: color,
+          transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }} />
+      </div>
+    </div>
+  );
 }
 
 function ChangePill({ value }) {
@@ -99,6 +139,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   const [sortKey, setSortKey] = useState('changePercent');
   const [sortAsc, setSortAsc] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
+  const { score: fgScore, rating: fgRating } = useFearGreed();
 
   // Open stock detail when navigated via command bar
   useEffect(() => {
@@ -192,6 +233,8 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />
         <span style={{ fontSize: 11, color: t.textSecondary }}>{status.label}</span>
       </div>
+      <FearGreedGauge score={fgScore} rating={fgRating} t={t} />
+
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         <input
           type="text"

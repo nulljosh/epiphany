@@ -25,6 +25,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, order: data });
   } catch (err) {
     console.error('[BROKER/SIGNAL] Error:', err.message);
-    return res.status(500).json({ error: 'Failed to process signal' });
+    return res.status(500).json({ error: err.message });
   }
 }
