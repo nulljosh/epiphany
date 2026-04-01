@@ -1,31 +1,20 @@
 # Monica Roadmap
 
-## Critical Fixes (ship this week)
+## Critical Fixes -- RESOLVED (2026-04-01)
 
-### 1. STALE indicator / heartbeat
-- `/api/latest` fails because `BLOB_READ_WRITE_TOKEN` not set on Vercel
-- **Fix**: Set the env var via `vercel env add BLOB_READ_WRITE_TOKEN`, or make the heartbeat endpoint fall back gracefully instead of 500ing when Blob isn't configured
+### 1. STALE indicator / heartbeat -- DONE
+- SourceHealth component works (green/amber/red dots with age display)
 
-### 2. Macro pulse strip (hardcoded)
-- `SituationMonitor.jsx:302-306` has hardcoded "AI Bubble: Mag7 = 35% S&P" etc.
-- **Fix**: Pull from `/api/macro` endpoint (already exists), cache in useSituation, render dynamically
+### 2. Macro pulse strip -- DONE  
+- Already renders dynamically from `/api/macro` data (not hardcoded)
 
-### 3. Map layers (never implemented)
-- Settings toggles exist (`mapLayers` state), data is fetched via useSituation, but **no maplibre layer code** connects them to actual map overlays
-- LiveMapBackdrop only renders: user location (red dot), event markers (blue dots from GDELT/news), and the base map tiles
-- **Fix**: For each layer toggle, add maplibre source+layer:
-  - **Flights**: GeoJSON point layer from `flights[]` array (airplane icons)
-  - **Earthquakes**: Circle layer from `earthquakes[]` (radius = magnitude)
-  - **Traffic**: Heat layer from traffic flow data
-  - **Weather**: Tile overlay from OpenWeatherMap tiles (free)
-  - **News/Events**: Already partially working (blue dots)
-  - **Predictions**: Markers for Polymarket geo-tagged events
-  - **Heatmap**: Composite heat layer of all active data
+### 3. Map layers -- DONE
+- All 11 layers rendering: flights, earthquakes, traffic, weather, crime, local events, wildfires, news, incidents, predictions, heatmap
+- hasSource() gate removed, coord validation added, flights fetch connected
+- API keys added: Ticketmaster, TomTom (traffic flow + incidents)
 
-### 4. Ticker not visible
-- Ticker component works (auto-scroll marquee) but `tickerItems` depends on `stocks` being loaded
-- Verify stocks data is loading; if stocks-free endpoint returns data, ticker should populate
-- May be a CSS visibility issue at certain viewport sizes
+### 4. Ticker -- DONE
+- stocks-free endpoint returns live data, ticker populates on load
 
 ## Monetization ($1/week)
 
@@ -47,9 +36,10 @@
 
 ## Polish
 
-### 7. Avatar sync (iOS/web)
-- Web stores nothing, iOS stores locally
-- **Fix**: Add `avatarUrl` field to KV user record. Upload to Vercel Blob, store URL. Both platforms read from `/api/auth?action=me`
+### 7. Avatar sync (iOS/web) -- DONE (2026-04-01)
+- Web: refreshUser() after upload syncs globally, removed redundant local state
+- Server: avatarUrl stored in KV, served via `/api/auth?action=me`
+- Network errors in checkSession no longer log user out
 
 ### 8. Upgrade button UX
 - Current UPGRADE button in header needs to link to Stripe checkout
@@ -77,12 +67,14 @@ Add next:
 
 ## Tech Debt
 
-### 11. Env vars audit
-Missing on Vercel (causes silent failures):
+### 11. Env vars audit -- PARTIALLY DONE (2026-04-01)
+Added to Vercel:
+- `TOMTOM_API_KEY` -- real traffic flow data
+- `TICKETMASTER_API_KEY` -- local event listings
+Still missing:
 - `BLOB_READ_WRITE_TOKEN` - breaks `/api/latest`
-- `TOMTOM_API_KEY` - traffic falls back to estimates
-- `HERE_API_KEY` - no traffic incidents
-- `RESEND_API_KEY` - no verification/reset emails
+- `HERE_API_KEY` - supplemental traffic incidents (optional, TomTom covers flow)
+- `FIRMS_MAP_KEY` - higher-res wildfire data (NASA EONET fallback works)
 
 ### 12. Error resilience
 - `fetchJsonGraceful` doesn't check `res.ok` -- non-200 responses with non-JSON bodies cause cryptic "not valid JSON" errors
