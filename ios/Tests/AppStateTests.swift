@@ -10,7 +10,7 @@ final class AppStateTests: XCTestCase {
         let state = AppState()
         XCTAssertFalse(state.isLoggedIn)
 
-        state.user = User(id: nil, email: "test@example.com", tier: nil, verified: nil, stripeCustomerId: nil, avatarUrl: nil)
+        state.user = User(id: nil, email: "test@example.com", tier: nil, verified: nil, stripeCustomerId: nil, avatarUrl: nil, avatarUpdatedAt: nil)
         XCTAssertTrue(state.isLoggedIn)
     }
 
@@ -68,7 +68,7 @@ final class AppStateTests: XCTestCase {
 
     func testLogoutClearsAllData() async {
         let state = AppState()
-        state.user = User(id: nil, email: "test@example.com", tier: "pro", verified: nil, stripeCustomerId: nil, avatarUrl: nil)
+        state.user = User(id: nil, email: "test@example.com", tier: "pro", verified: nil, stripeCustomerId: nil, avatarUrl: nil, avatarUpdatedAt: nil)
         state.portfolio = Portfolio(totalValue: 10000, dayChange: 100, dayChangePercent: 1.0, holdings: [])
         state.watchlist = [WatchlistItem(id: "1", userEmail: nil, symbol: "AAPL", addedAt: nil)]
         state.alerts = [PriceAlert(id: "1", userEmail: nil, symbol: "AAPL", targetPrice: 250, direction: .above, triggered: false, createdAt: nil)]

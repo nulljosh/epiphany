@@ -37,8 +37,9 @@ final class AppState {
             avatarImageData = data
             return
         }
-        guard let urlString = user?.avatarUrl,
-              let url = URL(string: urlString) else { return }
+        guard let urlString = user?.avatarUrl else { return }
+        let cacheBusted = urlString + "?v=\(user?.avatarUpdatedAt ?? 1)"
+        guard let url = URL(string: cacheBusted) else { return }
         Task { @MainActor in
             if let (data, _) = try? await URLSession.shared.data(from: url) {
                 avatarImageData = data

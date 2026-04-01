@@ -9,6 +9,7 @@ struct User: Codable {
     let verified: Bool?
     let stripeCustomerId: String?
     let avatarUrl: String?
+    let avatarUpdatedAt: Int?
 }
 
 // MARK: - Market Data

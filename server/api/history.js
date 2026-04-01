@@ -83,15 +83,20 @@ export default async function handler(req, res) {
     const quotes = result.indicators?.quote?.[0] || {};
 
     // Map and filter invalid data points
+    const isIntraday = ['1d', '5d'].includes(range);
     const history = timestamps
-      .map((t, i) => ({
-        time: ['1d', '5d'].includes(range) ? Math.floor(t) : new Date(t * 1000).toISOString().split('T')[0],
-        open: quotes.open?.[i] ?? null,
-        high: quotes.high?.[i] ?? null,
-        low: quotes.low?.[i] ?? null,
-        close: quotes.close?.[i] ?? null,
-        volume: quotes.volume?.[i] ?? null,
-      }))
+      .map((t, i) => {
+        const dateStr = isIntraday ? new Date(t * 1000).toISOString() : new Date(t * 1000).toISOString().split('T')[0];
+        return {
+          time: isIntraday ? Math.floor(t) : dateStr,
+          date: dateStr, // backwards compat for iOS/macOS Swift clients
+          open: quotes.open?.[i] ?? null,
+          high: quotes.high?.[i] ?? null,
+          low: quotes.low?.[i] ?? null,
+          close: quotes.close?.[i] ?? null,
+          volume: quotes.volume?.[i] ?? null,
+        };
+      })
       .filter(h => h.close !== null && !isNaN(h.close));
 
     if (history.length === 0) {
