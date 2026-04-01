@@ -159,7 +159,7 @@ const categoryKeywords = {
 
 
 export default function App() {
-  const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout, changeName, changeEmail, changePassword } = useAuth();
+  const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout, refresh, changeName, changeEmail, changePassword } = useAuth();
   const resetToken = useMemo(() => new URLSearchParams(window.location.search).get('token'), []);
   const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
 
@@ -1468,7 +1468,7 @@ const reset = useCallback(() => {
               <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
             )}
             {activeTab === 'settings' && (
-              <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} />
+              <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} refreshUser={refresh} />
             )}
           </>
         )}
@@ -1555,7 +1555,7 @@ const reset = useCallback(() => {
             <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
           )}
           {activeTab === 'settings' && (
-            <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} />
+            <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} refreshUser={refresh} />
           )}
         </div>
       )}

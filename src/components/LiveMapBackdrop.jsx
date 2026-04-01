@@ -101,6 +101,7 @@ function fallbackPayload(baseCenter) {
       { title: 'Transit disruption advisory', country: 'LOCAL', url: null },
     ],
     markets: [],
+    flights: [],
   };
 }
 
@@ -115,12 +116,7 @@ function mapsLink(lat, lon, zoom = 14) {
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;
 }
 
-function hasSource(data) {
-  return Boolean(data?.source?.trim() && /^https?:\/\//.test(data?.link));
-}
-
 function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, onSelect, layerType) {
-  if (!hasSource(data)) return;
   const el = document.createElement('div');
   el.style.cssText = css;
   if (title) el.title = title;
@@ -150,7 +146,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [userPosition, setUserPosition] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : null);
   const [locLabel, setLocLabel] = useState('Locating…');
   const [geoState, setGeoState] = useState('checking');
-  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [] });
+  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [] });
   const [selected, setSelected] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -337,9 +333,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       try {
         const bbox = { lamin: center.lat - 1, lomin: center.lon - 1, lamax: center.lat + 1, lomax: center.lon + 1 };
         const bboxQ = `lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`;
-        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires] = await Promise.all([
+        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl] = await Promise.all([
           fetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
-          fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
+          fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [], flow: {} })),
           fetch(apiPath('/api/earthquakes')).then(r => r.json()).catch(() => ({ earthquakes: [] })),
           fetch(apiPath(`/api/events?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ events: [] })),
           fetch(apiPath('/api/markets')).then(r => r.json()).catch(() => []),
@@ -348,6 +344,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           fetch(apiPath(`/api/local-events?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ events: [] })),
           fetch(apiPath(`/api/weather-alerts?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ alerts: [] })),
           fetch(apiPath(`/api/wildfires?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ fires: [] })),
+          fetch(apiPath(`/api/flights?${bboxQ}`)).then(r => r.json()).catch(() => ({ states: [] })),
         ]);
         if (!cancelled) {
           const fb = fallbackPayload(center);
@@ -362,6 +359,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             localEvents: localEv.events || [],
             weatherAlerts: weather.alerts || [],
             wildfires: fires.fires || [],
+            flights: fl.states || [],
           });
         }
       } catch {
@@ -421,6 +419,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       le: payload.localEvents.length,
       wa: payload.weatherAlerts.length,
       wf: payload.wildfires.length,
+      fl: payload.flights.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
     });
 
@@ -555,6 +554,18 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    // Flights
+    payload.flights.slice(0, 40).forEach((fl) => {
+      if (fl.lat == null || fl.lon == null) return;
+      const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
+      addMarker(
+        `width:8px;height:8px;border-radius:2px;background:#818cf8;${heading}`,
+        `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}`,
+        { type: 'flight', title: fl.callsign || fl.icao24 || 'Aircraft', detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: 'OpenSky Network', link: `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
+        fl.lon, fl.lat, 'flights'
+      );
+    });
+
     payload.markets.forEach((m) => {
       const p = geoKeywordMatch(m.question);
       if (!p) return;
@@ -596,6 +607,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     payload.localEvents.forEach(e => addPoint(e.lat || e.latitude, e.lng || e.lon || e.longitude, 0.4));
     payload.weatherAlerts.forEach(w => addPoint(w.lat, w.lon, 0.8));
     payload.wildfires.forEach(f => addPoint(f.lat, f.lon, 0.9));
+    payload.flights.forEach(f => addPoint(f.lat, f.lon, 0.2));
 
     const geojson = { type: 'FeatureCollection', features };
 

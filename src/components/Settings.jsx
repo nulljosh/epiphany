@@ -3,7 +3,7 @@ import { Card } from './ui';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 import { fileToBase64 } from '../utils/helpers';
 
-export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword }) {
+export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser }) {
   const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
 
   const [name, setName] = useState(user?.name || '');
@@ -52,6 +52,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       if (data.ok && data.avatarUrl) {
         setUploadedAvatarUrl(data.avatarUrl);
         setAvatarMsg({ text: 'Photo updated', error: false });
+        if (refreshUser) refreshUser();
       } else {
         setAvatarMsg({ text: data.error || 'Upload failed', error: true });
       }

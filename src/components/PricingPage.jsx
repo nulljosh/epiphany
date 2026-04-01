@@ -244,7 +244,6 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             border: currentTier === 'pro'
               ? `2px solid #0071e3`
               : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-            boxShadow: `0 0 24px ${dark ? 'rgba(0,113,227,0.15)' : 'rgba(0,113,227,0.08)'}`,
           }}>
             <div style={{
               display: 'inline-block',
