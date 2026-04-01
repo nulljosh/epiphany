@@ -1177,6 +1177,8 @@ const reset = useCallback(() => {
     boxShadow: 'none',
   };
 
+  const settingsProps = { dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser: refresh };
+
   return (
     <div className="monica-root" style={{
       height: '100dvh',
@@ -1468,7 +1470,7 @@ const reset = useCallback(() => {
               <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
             )}
             {activeTab === 'settings' && (
-              <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} refreshUser={refresh} />
+              <Settings {...settingsProps} />
             )}
           </>
         )}
@@ -1555,7 +1557,7 @@ const reset = useCallback(() => {
             <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
           )}
           {activeTab === 'settings' && (
-            <Settings dark={dark} setDark={setDark} t={t} mapLayers={mapLayers} setMapLayers={setMapLayers} user={user} logout={logout} subscription={subscription} changeName={changeName} changeEmail={changeEmail} changePassword={changePassword} refreshUser={refresh} />
+            <Settings {...settingsProps} />
           )}
         </div>
       )}

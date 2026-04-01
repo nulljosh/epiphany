@@ -116,6 +116,18 @@ function mapsLink(lat, lon, zoom = 14) {
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;
 }
 
+function markerCss({ size = 10, color, pulse, shape = 'circle', extra = '' }) {
+  const radius = shape === 'circle' ? '50%' : shape === 'bar' ? '999px' : '2px';
+  const shadow = pulse ? `box-shadow:0 0 0 0 ${color.replace(')', ',0.45)').replace('rgb', 'rgba')};animation:${pulse};` : '';
+  return `width:${size}px;height:${size}px;border-radius:${radius};background:${color};${shadow}${extra}`;
+}
+
+function extractCoords(item) {
+  const lat = item.lat ?? item.latitude ?? null;
+  const lon = item.lng ?? item.lon ?? item.longitude ?? null;
+  return (lat != null && lon != null) ? { lat, lon } : null;
+}
+
 function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, onSelect, layerType) {
   if (lon == null || lat == null || isNaN(lon) || isNaN(lat)) return;
   const el = document.createElement('div');
@@ -507,9 +519,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Crime incidents
     payload.crimeIncidents.slice(0, 25).forEach((crime, i) => {
-      const lat = crime.lat || crime.latitude;
-      const lon = crime.lng || crime.lon || crime.longitude;
-      if (lat == null || lon == null) return;
+      const c = extractCoords(crime);
+      if (!c) return;
+      const { lat, lon } = c;
       addMarker(
         'width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0.45);animation:pulse-red 2s infinite;',
         crime.title || 'Crime',
@@ -520,9 +532,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Local events
     payload.localEvents.slice(0, 25).forEach((ev, i) => {
-      const lat = ev.lat || ev.latitude;
-      const lon = ev.lng || ev.lon || ev.longitude;
-      if (lat == null || lon == null) return;
+      const c = extractCoords(ev);
+      if (!c) return;
+      const { lat, lon } = c;
       addMarker(
         'width:9px;height:9px;border-radius:50%;background:#a855f7;box-shadow:0 0 0 0 rgba(168,85,247,0.45);animation:pulse-cyan 2.2s infinite;',
         ev.title || 'Event',
@@ -560,7 +572,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (fl.lat == null || fl.lon == null) return;
       const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
       addMarker(
-        `width:8px;height:8px;border-radius:2px;background:#818cf8;${heading}`,
+        `width:8px;height:8px;border-radius:2px;background:#818cf8;box-shadow:0 0 0 0 rgba(129,140,248,0.4);animation:pulse-blue 2.4s infinite;${heading}`,
         `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}`,
         { type: 'flight', title: fl.callsign || fl.icao24 || 'Aircraft', detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: 'OpenSky Network', link: `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
         fl.lon, fl.lat, 'flights'
@@ -604,8 +616,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (a.lat != null) addPoint(a.lat, a.lon, 0.3);
       else { const kw = geoKeywordMatch(a.title); if (kw) addPoint(kw.lat, kw.lon, 0.3); }
     });
-    payload.crimeIncidents.forEach(c => addPoint(c.lat || c.latitude, c.lng || c.lon || c.longitude, 0.7));
-    payload.localEvents.forEach(e => addPoint(e.lat || e.latitude, e.lng || e.lon || e.longitude, 0.4));
+    payload.crimeIncidents.forEach(c => { const p = extractCoords(c); if (p) addPoint(p.lat, p.lon, 0.7); });
+    payload.localEvents.forEach(e => { const p = extractCoords(e); if (p) addPoint(p.lat, p.lon, 0.4); });
     payload.weatherAlerts.forEach(w => addPoint(w.lat, w.lon, 0.8));
     payload.wildfires.forEach(f => addPoint(f.lat, f.lon, 0.9));
     payload.flights.forEach(f => addPoint(f.lat, f.lon, 0.2));
