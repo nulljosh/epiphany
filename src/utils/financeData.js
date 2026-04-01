@@ -2,13 +2,13 @@
 // Serves as placeholder until user uploads their own balance sheet
 
 export const DEMO_HOLDINGS = [
-  { symbol: 'GOOGL', shares: 0.0277, costBasis: 7.97, value: 7.56, account: 'TFSA' },
-  { symbol: 'PLTR', shares: 0.0381, costBasis: 5.99, value: 5.38, account: 'TFSA' },
+  { symbol: 'GOOGL', shares: 0.0387, costBasis: 10.97, value: 11.51, account: 'TFSA' },
+  { symbol: 'PLTR', shares: 0.0738, costBasis: 10.98, value: 10.81, account: 'TFSA' },
 ];
 
 export const DEMO_ACCOUNTS = [
-  { name: 'Vacation', type: 'chequing', balance: 1.90, institution: 'Wealthsimple' },
-  { name: 'TFSA', type: 'tfsa', balance: 80.33, institution: 'Wealthsimple' },
+  { name: 'Vacation', type: 'chequing', balance: 107.41, institution: 'Wealthsimple' },
+  { name: 'TFSA', type: 'tfsa', balance: 36.99, institution: 'Wealthsimple' },
 ];
 
 export const DEMO_BUDGET = {
