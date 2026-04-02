@@ -64,11 +64,20 @@ async function fetchTomTomFlow(lat, lon) {
   }
 }
 
+function estimateIncidents(bbox) {
+  const midLat = (bbox.lamin + bbox.lamax) / 2;
+  const midLon = (bbox.lomin + bbox.lomax) / 2;
+  const spread = 0.02;
+  return [
+    { type: 'ESTIMATED', description: 'Estimated congestion zone', severity: 'MINOR', position: { lat: midLat + spread, lon: midLon - spread }, startTime: null },
+    { type: 'ESTIMATED', description: 'Estimated slow traffic area', severity: 'MINOR', position: { lat: midLat - spread, lon: midLon + spread }, startTime: null },
+  ];
+}
+
 async function fetchHereIncidents(bbox) {
   const key = process.env.HERE_API_KEY;
   if (!key) {
-    console.warn('HERE_API_KEY not set — skipping incident data');
-    return [];
+    return estimateIncidents(bbox);
   }
 
   const controller = new AbortController();
@@ -83,14 +92,17 @@ async function fetchHereIncidents(bbox) {
     clearTimeout(timeout);
     if (!res.ok) throw new Error(`HERE ${res.status}`);
     const json = await res.json();
-    return (json.results ?? []).slice(0, 10).map(i => ({
-      type:        i.incidentDetails?.type ?? 'UNKNOWN',
-      description: i.incidentDetails?.description?.value ?? '',
-      severity:    i.incidentDetails?.criticality ?? 'MINOR',
-      lat:         i.location?.shape?.links?.[0]?.points?.[0]?.lat ?? null,
-      lon:         i.location?.shape?.links?.[0]?.points?.[0]?.lng ?? null,
-      startTime:   i.incidentDetails?.startTime ?? null,
-    }));
+    return (json.results ?? []).slice(0, 10).map(i => {
+      const lat = i.location?.shape?.links?.[0]?.points?.[0]?.lat ?? null;
+      const lon = i.location?.shape?.links?.[0]?.points?.[0]?.lng ?? null;
+      return {
+        type:        i.incidentDetails?.type ?? 'UNKNOWN',
+        description: i.incidentDetails?.description?.value ?? '',
+        severity:    i.incidentDetails?.criticality ?? 'MINOR',
+        position:    { lat, lon },
+        startTime:   i.incidentDetails?.startTime ?? null,
+      };
+    });
   } catch (err) {
     clearTimeout(timeout);
     console.warn('HERE incidents error:', err.message);

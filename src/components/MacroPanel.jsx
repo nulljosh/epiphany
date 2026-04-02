@@ -76,10 +76,9 @@ export default function MacroPanel() {
         position: 'relative',
         borderRadius: 16,
         border: '1px solid rgba(255,255,255,0.12)',
-        background: 'linear-gradient(145deg, rgba(14,18,26,0.88), rgba(7,11,18,0.84))',
+        background: 'rgba(10,14,22,0.88)',
         backdropFilter: 'blur(24px) saturate(160%)',
         WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-        boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
         padding: 14,
         color: '#e6ebf5',
         fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -122,7 +121,7 @@ export default function MacroPanel() {
                     style={{
                       height: '100%',
                       width: `${Math.max(8, ((y.value ?? 0) / maxYield) * 100)}%`,
-                      background: 'linear-gradient(90deg, #5eead4, #60a5fa)',
+                      background: '#5eead4',
                     }}
                   />
                 </div>

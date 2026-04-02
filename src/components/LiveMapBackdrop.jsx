@@ -128,24 +128,42 @@ function extractCoords(item) {
   return (lat != null && lon != null) ? { lat, lon } : null;
 }
 
-function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, onSelect, layerType) {
+function buildPopupHTML(data) {
+  const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+    <div style="font-weight:700;font-size:12px">${esc(data.title)}</div>
+    <div style="margin-top:4px;color:#cbd5e1;font-size:11px;line-height:1.45">${esc(data.detail)}</div>
+    <div style="margin-top:6px;font-size:10px;color:#67e8f9;text-transform:uppercase;letter-spacing:0.06em">${esc(data.level)}</div>
+    <div style="margin-top:6px;font-size:10px;color:#93c5fd">Source: ${esc(data.source || 'Unknown')}</div>
+    ${data.link ? `<a href="${esc(data.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;color:#60a5fa;font-size:11px;text-decoration:underline">Open source &#8594;</a>` : ''}
+  </div>`;
+}
+
+function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, layerType, activePopupRef) {
   if (lon == null || lat == null || isNaN(lon) || isNaN(lat)) return;
   const el = document.createElement('div');
   el.style.cssText = css;
   if (title) el.title = title;
   if (layerType) el._layerType = layerType;
-  el.addEventListener('mouseenter', () => onSelect(data));
-  el.addEventListener('click', (e) => { e.stopPropagation(); onSelect(data); });
+  const showPopup = () => {
+    if (activePopupRef?.current) activePopupRef.current.remove();
+    const popup = new maplibregl.Popup({ offset: 14, closeButton: true, maxWidth: '320px', className: 'monica-map-popup' })
+      .setLngLat([lon, lat])
+      .setHTML(buildPopupHTML(data))
+      .addTo(map);
+    activePopupRef.current = popup;
+  };
+  el.addEventListener('click', (e) => { e.stopPropagation(); showPopup(); });
   markersArray.push(
     new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map)
   );
 }
 
 function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
-  const storedGeo = loadStoredGeo();
-  const initPos = storedGeo || DEFAULT_CENTER;
-  const initZoom = storedGeo ? CACHE_DETAIL_ZOOM : 10.6;
-
+  const storedGeoRef = useRef(loadStoredGeo());
+  const storedGeo = storedGeoRef.current;
+  const initPos = useRef(storedGeo || DEFAULT_CENTER).current;
+  const initZoom = useRef(storedGeo ? CACHE_DETAIL_ZOOM : 10.6).current;
 
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -154,13 +172,15 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const centerRef = useRef(initPos);
   const sawGeoGrantedRef = useRef(false);
   const pendingFlyRef = useRef(null);
+  const darkRef = useRef(dark);
+  const activePopupRef = useRef(null);
+  const fetchCountRef = useRef(0);
 
   const [center, setCenter] = useState(initPos);
   const [userPosition, setUserPosition] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : null);
-  const [locLabel, setLocLabel] = useState('Locating…');
+  const [locLabel, setLocLabel] = useState('Locating\u2026');
   const [geoState, setGeoState] = useState('checking');
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [] });
-  const [selected, setSelected] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => { centerRef.current = center; }, [center]);
@@ -288,10 +308,11 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         const maplibregl = (await import('maplibre-gl')).default;
         await import('maplibre-gl/dist/maplibre-gl.css');
         if (!mapRef.current || mapInstanceRef.current) return;
+        maplibreRef.current = maplibregl;
         const initCenter = centerRef.current;
         map = new maplibregl.Map({
           container: mapRef.current,
-          style: dark
+          style: darkRef.current
             ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
             : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
           center: [initCenter.lon, initCenter.lat],
@@ -329,6 +350,23 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         setMapLoaded(false);
       }
     };
+  }, []);
+
+  // Swap basemap style on theme change without destroying the map
+  useEffect(() => {
+    darkRef.current = dark;
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const style = dark
+      ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+      : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+    map.setStyle(style);
+    // Re-add heatmap source/layer after style swap
+    map.once('style.load', () => {
+      fetchCountRef.current += 1;
+      setMapLoaded((v) => !v);
+      setMapLoaded(true);
+    });
   }, [dark]);
 
   useEffect(() => {
@@ -338,7 +376,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [dark]);
+  }, [mapLoaded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -360,6 +398,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           fetch(apiPath(`/api/flights?${bboxQ}`)).then(r => r.json()).catch(() => ({ states: [] })),
         ]);
         if (!cancelled) {
+          fetchCountRef.current += 1;
           const fb = fallbackPayload(center);
           setPayload({
             incidents: inc.incidents?.length ? inc.incidents : fb.incidents,
@@ -389,10 +428,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const prevPayloadRef = useRef('');
   const maplibreRef = useRef(null);
 
-  // Cache maplibre-gl at module level to avoid re-importing in every effect
-  useEffect(() => {
-    import('maplibre-gl').then(m => { maplibreRef.current = m.default; });
-  }, []);
+  // maplibreRef is set during map init effect above
 
   useEffect(() => {
     if (!mapInstanceRef.current || !maplibreRef.current) return;
@@ -402,7 +438,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     const maplibregl = maplibreRef.current;
     const addUserMarker = (css, title, data, lon, lat) =>
-      createMarker(maplibregl, mapInstanceRef.current, userMarkersRef.current, css, title, data, lon, lat, setSelected);
+      createMarker(maplibregl, mapInstanceRef.current, userMarkersRef.current, css, title, data, lon, lat, null, activePopupRef);
 
     if (userPosition) {
       addUserMarker(
@@ -434,6 +470,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       wf: payload.wildfires.length,
       fl: payload.flights.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
+      v: fetchCountRef.current,
     });
 
     if (prevPayloadRef.current === payloadKey) return;
@@ -444,7 +481,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     markersRef.current = [];
 
     const addMarker = (css, title, data, lon, lat, layerType) =>
-      createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, setSelected, layerType);
+      createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef);
 
     payload.incidents.slice(0, 25).forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
@@ -683,6 +720,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         @keyframes pulse-amber { 0%{box-shadow:0 0 0 0 rgba(245,158,11,.45)} 70%{box-shadow:0 0 0 12px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }
         @keyframes pulse-red { 0%{box-shadow:0 0 0 0 rgba(239,68,68,.45)} 70%{box-shadow:0 0 0 16px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
         @keyframes pulse-cyan { 0%{box-shadow:0 0 0 0 rgba(34,211,238,.45)} 70%{box-shadow:0 0 0 12px rgba(34,211,238,0)} 100%{box-shadow:0 0 0 0 rgba(34,211,238,0)} }
+        .monica-map-popup .maplibregl-popup-content { background:rgba(2,6,23,0.92); color:#fff; border:1px solid rgba(255,255,255,0.24); border-radius:12px; padding:10px 12px; }
+        .monica-map-popup .maplibregl-popup-tip { border-top-color:rgba(2,6,23,0.92); }
+        .monica-map-popup .maplibregl-popup-close-button { color:#94a3b8; font-size:16px; padding:2px 6px; }
       `}</style>
       <div
         ref={mapRef}
@@ -700,22 +740,6 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         ⌖
       </button>
 
-      {selected && (
-        <div style={{ position: 'absolute', right: 14, bottom: 96, zIndex: 3, width: 320, maxWidth: 'calc(100vw - 28px)', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 12, background: 'rgba(2,6,23,0.84)', color: '#fff', padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.28)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-            <div style={{ font: '700 12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace' }}>{selected.title}</div>
-            <button onClick={() => setSelected(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>x</button>
-          </div>
-          <div style={{ marginTop: 4, color: '#cbd5e1', fontSize: 11, lineHeight: 1.45 }}>{selected.detail}</div>
-          <div style={{ marginTop: 6, fontSize: 10, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{selected.level}</div>
-          <div style={{ marginTop: 6, fontSize: 10, color: '#93c5fd' }}>Source: {selected.source || 'Unknown'}</div>
-          {selected.link && (
-            <a href={selected.link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 8, color: '#60a5fa', fontSize: 11, textDecoration: 'underline' }}>
-              Open source →
-            </a>
-          )}
-        </div>
-      )}
     </div>
   );
 }

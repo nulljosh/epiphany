@@ -5,7 +5,7 @@
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 
 const cache = new Map(); // key: bbox string → { data, ts }
-const CACHE_TTL = 15_000; // 15 seconds
+const CACHE_TTL = 60_000; // 60 seconds (reduces OpenSky rate limit pressure)
 
 function buildMeta(status, bbox, extra = {}) {
   return {
@@ -36,9 +36,15 @@ async function fetchOpenSky(bbox) {
   const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
+    const headers = { 'Accept': 'application/json' };
+    const user = process.env.OPENSKY_USERNAME;
+    const pass = process.env.OPENSKY_PASSWORD;
+    if (user && pass) {
+      headers['Authorization'] = 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
+    }
     const res = await fetch(`${OPENSKY_BASE}/states/all?${params}`, {
       signal: controller.signal,
-      headers: { 'Accept': 'application/json' },
+      headers,
     });
     clearTimeout(timeout);
     if (!res.ok) throw new Error(`OpenSky ${res.status}`);
@@ -87,7 +93,7 @@ export default async function handler(req, res) {
 
   // Serve from 15s in-memory cache when possible
   if (hit && now - hit.ts < CACHE_TTL) {
-    res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     res.setHeader('X-Cache', 'HIT');
     return res.status(200).json({
       ...hit.data,
@@ -101,7 +107,7 @@ export default async function handler(req, res) {
   } catch (openSkyErr) {
     console.error('OpenSky failed:', openSkyErr.message);
     if (hit) {
-      res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
       res.setHeader('X-Cache', 'STALE');
       return res.status(200).json({
         ...hit.data,
@@ -125,7 +131,7 @@ export default async function handler(req, res) {
   }
 
   cache.set(cacheKey, { data: result, ts: now });
-  res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
   res.setHeader('X-Cache', 'MISS');
   return res.status(200).json(result);
 }

@@ -290,7 +290,6 @@ export default function CommandBar({
           border: `1px solid ${t.border}`,
           borderRadius: 14,
           overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
           animation: 'fadeUpSmall 0.15s ease-out',
           margin: '0 16px',
         }}

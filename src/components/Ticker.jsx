@@ -127,7 +127,7 @@ const Ticker = memo(({ items, theme }) => {
         <span style={{
           width: 5, height: 5, borderRadius: '50%',
           background: '#f59e0b',
-          boxShadow: '0 0 0 0 rgba(245,158,11,0.5)',
+          border: '1px solid rgba(245,158,11,0.3)',
           animation: 'pulse-amber-tick 1.8s infinite',
           display: 'inline-block', marginLeft: 2, verticalAlign: 'middle',
         }} />

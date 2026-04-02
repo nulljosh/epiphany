@@ -123,7 +123,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
             <span title="Anomaly: >5% move" style={{
               width: 6, height: 6, borderRadius: '50%',
               background: '#f59e0b',
-              boxShadow: '0 0 4px rgba(245,158,11,0.6)',
+              border: '1px solid rgba(245,158,11,0.4)',
               display: 'inline-block',
               animation: 'pulse-anomaly 1.8s infinite',
             }} />
@@ -335,6 +335,9 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           onClose={() => setSelectedStock(null)}
           dark={dark}
           t={t}
+          currentIndex={filtered.findIndex(s => s.symbol === selectedStock.symbol)}
+          totalCount={filtered.length}
+          onNavigate={(idx) => setSelectedStock(filtered[idx])}
         />
       )}
     </div>

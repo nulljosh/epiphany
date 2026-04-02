@@ -48,7 +48,7 @@ const RANGES = [
   { key: 'max', label: 'ALL', interval: '1mo' },
 ];
 
-export default function StockDetail({ stock, onClose, dark, t }) {
+export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount }) {
   const [range, setRange] = useState('1mo');
   const [chartType, setChartType] = useState('heikinAshi');
   const [history, setHistory] = useState([]);
@@ -122,12 +122,16 @@ export default function StockDetail({ stock, onClose, dark, t }) {
 
   useEffect(() => { fetchHistory(); }, [range]);
 
-  // Close on Escape
+  // Keyboard navigation: Escape to close, ArrowLeft/Right to cycle stocks
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && onNavigate && currentIndex > 0) onNavigate(currentIndex - 1);
+      if (e.key === 'ArrowRight' && onNavigate && currentIndex < totalCount - 1) onNavigate(currentIndex + 1);
+    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+  }, [onClose, onNavigate, currentIndex, totalCount]);
 
   // Render lightweight-charts
   useEffect(() => {
@@ -329,7 +333,22 @@ export default function StockDetail({ stock, onClose, dark, t }) {
           {'\u00d7'}
         </button>
 
-        {/* Header */}
+        {/* Navigation + Header */}
+        {onNavigate && totalCount > 1 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <button
+              onClick={() => currentIndex > 0 && onNavigate(currentIndex - 1)}
+              disabled={currentIndex <= 0}
+              style={{ background: 'none', border: 'none', color: currentIndex > 0 ? t.text : t.textSecondary, cursor: currentIndex > 0 ? 'pointer' : 'default', fontSize: 16, padding: '2px 6px', opacity: currentIndex > 0 ? 1 : 0.3 }}
+            >{'\u2190'}</button>
+            <span style={{ fontSize: 11, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{currentIndex + 1} / {totalCount}</span>
+            <button
+              onClick={() => currentIndex < totalCount - 1 && onNavigate(currentIndex + 1)}
+              disabled={currentIndex >= totalCount - 1}
+              style={{ background: 'none', border: 'none', color: currentIndex < totalCount - 1 ? t.text : t.textSecondary, cursor: currentIndex < totalCount - 1 ? 'pointer' : 'default', fontSize: 16, padding: '2px 6px', opacity: currentIndex < totalCount - 1 ? 1 : 0.3 }}
+            >{'\u2192'}</button>
+          </div>
+        )}
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {symbol}
@@ -353,7 +372,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
         </div>
 
         {/* Range Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', gap: 3, marginBottom: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
           {RANGES.map(r => (
             <button
               key={r.key}
@@ -377,7 +396,7 @@ export default function StockDetail({ stock, onClose, dark, t }) {
         </div>
 
         {/* Chart Type Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
           {CHART_TYPES.map(ct => (
             <button
               key={ct.key}

@@ -24,6 +24,9 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
 
+  // Refresh user data on mount to pick up avatar changes from other devices
+  useEffect(() => { if (refreshUser) refreshUser(); }, []);
+
   const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
@@ -171,10 +174,14 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
               title="Click to upload photo"
             >
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <span style={{ fontSize: 22, color: t.textTertiary }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span>
-              )}
+                <img
+                  src={avatarUrl}
+                  alt="Profile"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }}
+                />
+              ) : null}
+              <span style={{ fontSize: 22, color: t.textTertiary, display: avatarUrl ? 'none' : 'block' }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span>
             </div>
             <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
             <div style={{ flex: 1 }}>
@@ -309,21 +316,21 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             aria-pressed={!dark && localStorage.getItem('monica_theme') === 'light'}
-            onClick={() => { localStorage.setItem('monica_theme', 'light'); setDark(false); }}
+            onClick={() => { localStorage.setItem('monica_theme', 'light'); localStorage.setItem('monica_theme_manual', '1'); setDark(false); }}
             style={toggleStyle(!dark && localStorage.getItem('monica_theme') === 'light')}
           >
             Light
           </button>
           <button
             aria-pressed={dark && localStorage.getItem('monica_theme') === 'dark'}
-            onClick={() => { localStorage.setItem('monica_theme', 'dark'); setDark(true); }}
+            onClick={() => { localStorage.setItem('monica_theme', 'dark'); localStorage.setItem('monica_theme_manual', '1'); setDark(true); }}
             style={toggleStyle(dark && localStorage.getItem('monica_theme') === 'dark')}
           >
             Dark
           </button>
           <button
             aria-pressed={!localStorage.getItem('monica_theme')}
-            onClick={() => { localStorage.removeItem('monica_theme'); const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches; setDark(sysDark); }}
+            onClick={() => { localStorage.removeItem('monica_theme'); localStorage.removeItem('monica_theme_manual'); const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches; setDark(sysDark); }}
             style={toggleStyle(!localStorage.getItem('monica_theme'))}
           >
             Auto

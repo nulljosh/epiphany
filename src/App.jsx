@@ -166,12 +166,11 @@ export default function App() {
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem('monica_theme');
-    if (saved === 'light') return false;
-    if (saved === 'dark') return true;
-    const bootTheme = typeof window !== 'undefined' ? window.__MONICA_THEME__ : null;
-    if (bootTheme === 'light' || bootTheme === 'dark') {
-      return bootTheme === 'dark';
+    const isManual = localStorage.getItem('monica_theme_manual') === '1';
+    if (isManual && (saved === 'light' || saved === 'dark')) {
+      return saved === 'dark';
     }
+    // Always respect system preference when not manually overridden
     return resolveAutoTheme() === 'dark';
   });
   const [activeTab, setActiveTab] = useState('situation');

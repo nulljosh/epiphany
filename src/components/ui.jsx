@@ -48,7 +48,7 @@ export const BlinkingDot = ({ color, delay = 0, speed = 2 }) => (
     borderRadius: '50%',
     backgroundColor: color,
     animation: `blink ${speed}s ease-in-out ${delay}s infinite`,
-    boxShadow: `0 0 2px ${color}`,
+    border: `1px solid ${color}`,
   }} />
 );
 
@@ -133,7 +133,6 @@ export const MobileMenu = ({ t, font, children, buttonStyle }) => {
             borderRadius: 12,
             padding: '8px 0',
             zIndex: 999,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             fontFamily: font,
           }}>
             {/* Wrap children to auto-close on click */}

@@ -3,7 +3,7 @@ import './auth.css';
 
 const FONT = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
 const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
-const card = { background: 'rgba(255,255,255,0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(40px)', boxShadow: '0 4px 60px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.04) inset' };
+const card = { background: 'rgba(255,255,255,0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(40px)' };
 const errorBox = { color: '#ff5555', fontSize: 13, marginBottom: 20, padding: '10px 14px', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 10 };
 
 function fadeStyle(mounted, delay = 0) {
