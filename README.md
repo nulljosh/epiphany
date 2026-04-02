@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v3.0.0--beta.1-blue)
+![version](https://img.shields.io/badge/version-v3.6.0-blue)
 
 Personal intelligence platform. Map, markets, and people -- Palantir for regular people.
 
