@@ -95,7 +95,7 @@ struct StockDetailView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal, showsIndicators: true) {
                     HStack(spacing: 6) {
                         ForEach(ChartType.allCases, id: \.self) { type in
                             Button {

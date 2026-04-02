@@ -258,7 +258,7 @@ struct MarketsView: View {
                         .padding(.bottom, 4)
 
                         if !financeData.accounts.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
+                            ScrollView(.horizontal, showsIndicators: true) {
                                 HStack(spacing: 10) {
                                     ForEach(financeData.accounts) { account in
                                         TimelineChip(
@@ -275,7 +275,7 @@ struct MarketsView: View {
                         }
 
                         if !financeData.debt.isEmpty || !UpcomingPayments.all.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
+                            ScrollView(.horizontal, showsIndicators: true) {
                                 HStack(spacing: 10) {
                                     ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
                                         if let days = UpcomingPayments.daysUntil(payment), days >= 0 {

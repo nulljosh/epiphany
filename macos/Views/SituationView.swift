@@ -188,7 +188,6 @@ struct SituationView: View {
                         Image(systemName: "flame.fill")
                             .font(.system(size: 12))
                             .foregroundStyle(Palette.dangerRed)
-                            .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
                     }
                 }
             }
@@ -215,7 +214,6 @@ struct SituationView: View {
         Text(emoji)
             .font(.system(size: size))
             .padding(padding)
-            .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
     }
 
     private func loadData(for region: MKCoordinateRegion) async {

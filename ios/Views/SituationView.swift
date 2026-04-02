@@ -376,7 +376,6 @@ struct SituationView: View {
         Image(systemName: systemName)
             .font(.title2)
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
     }
 
     // MARK: - Network monitor

@@ -242,7 +242,7 @@ struct PeopleView: View {
     }
 
     private func socialLinksSection(_ links: [SocialLink]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal, showsIndicators: true) {
             HStack(spacing: 8) {
                 ForEach(links) { link in
                     Button {

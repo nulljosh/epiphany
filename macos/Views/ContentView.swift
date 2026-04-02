@@ -118,7 +118,6 @@ private struct BottomTabBar: View {
                         .allowsHitTesting(false)
                 )
         )
-        .shadow(color: .black.opacity(0.16), radius: 14, y: 4)
     }
 
     private func isSelected(_ section: ContentView.AppSection) -> Bool {
@@ -210,6 +209,5 @@ private struct SharedErrorBanner: View {
         .padding(.vertical, 10)
         .background(.ultraThinMaterial, in: Capsule())
         .padding(.horizontal)
-        .shadow(radius: 8, y: 2)
     }
 }

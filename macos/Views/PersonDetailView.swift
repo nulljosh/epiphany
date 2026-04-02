@@ -193,7 +193,7 @@ struct PersonDetailView: View {
                         Text("Associates")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
-                        ScrollView(.horizontal, showsIndicators: false) {
+                        ScrollView(.horizontal, showsIndicators: true) {
                             HStack(spacing: 6) {
                                 ForEach(data.associates, id: \.self) { name in
                                     Text(name)
@@ -208,7 +208,7 @@ struct PersonDetailView: View {
                 }
 
                 if !data.industryTags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal, showsIndicators: true) {
                         HStack(spacing: 6) {
                             ForEach(data.industryTags, id: \.self) { tag in
                                 Text(tag)
@@ -409,7 +409,7 @@ struct PersonDetailView: View {
             if !person.socials.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     sectionLabel("Social")
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal, showsIndicators: true) {
                         HStack(spacing: 8) {
                             ForEach(person.socials) { link in
                                 Button {
@@ -443,7 +443,7 @@ struct PersonDetailView: View {
             sectionLabel("Tags")
 
             if !person.tags.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal, showsIndicators: true) {
                     HStack(spacing: 6) {
                         ForEach(person.tags, id: \.self) { tag in
                             HStack(spacing: 4) {

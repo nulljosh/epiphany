@@ -216,7 +216,7 @@ struct PortfolioView: View {
     }
 
     private var tabSelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal, showsIndicators: true) {
             HStack(spacing: 8) {
                 ForEach(FinanceTab.allCases) { tab in
                     Button {
