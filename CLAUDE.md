@@ -10,6 +10,7 @@ v3.0.0-beta.1 -- Personal intelligence platform. Palantir for regular people.
 - iOS app: four tabs (Map, Markets, People, Settings). Internal Swift code uses MonicaAPI
 - Web app: monica.heyitsmejosh.com
 - AI endpoint requires ANTHROPIC_API_KEY env var on Vercel
+- Never use raw `setInterval` for API polling -- always use `useVisibilityPolling` from `src/hooks/useVisibilityPolling.js` (pauses when tab hidden, prevents Vercel invocation burn)
 
 ## Run
 
