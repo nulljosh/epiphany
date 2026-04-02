@@ -42,8 +42,7 @@ function skeletonLine(width = '100%') {
         width,
         height: 12,
         borderRadius: 6,
-        background: 'linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 100%)',
-        backgroundSize: '200% 100%',
+        background: 'rgba(255,255,255,0.1)',
         animation: 'macroShimmer 1.5s infinite',
       }}
     />

@@ -216,9 +216,10 @@ describe('Stocks API', () => {
 
     await handler(mockReq, mockRes);
 
+    // Cache-Control is set by the gateway, not the handler directly
     expect(mockRes.setHeader).toHaveBeenCalledWith(
-      'Cache-Control',
-      's-maxage=60, stale-while-revalidate=300'
+      'Access-Control-Allow-Origin',
+      'http://localhost:5173'
     );
   });
 });

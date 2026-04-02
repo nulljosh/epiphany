@@ -75,8 +75,6 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
 
   const glassCard = {
     background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.65)',
-    backdropFilter: 'blur(20px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
     borderRadius: 20,
     border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
     padding: 32,
@@ -197,79 +195,27 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
           >{'\u00d7'}</button>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
-          gap: 16,
-        }}>
-
-          <div style={glassCard}>
-            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Free</h3>
-            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$0</div>
-            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>Forever free</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Map + all data layers</FeatureItem>
-              <FeatureItem included>Situation monitor</FeatureItem>
-              <FeatureItem included>Live stock data + ticker</FeatureItem>
-              <FeatureItem included>Weather, quakes, traffic</FeatureItem>
-              <FeatureItem included={false}>AI Analyst (Claude)</FeatureItem>
-              <FeatureItem included={false}>Portfolio + watchlist</FeatureItem>
-              <FeatureItem included={false}>Ontology writes</FeatureItem>
-            </ul>
-            {currentTier === 'free' && <CurrentBadge />}
-          </div>
-
-
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
           <div style={{
             ...glassCard,
+            maxWidth: 360,
+            width: '100%',
             border: currentTier === 'starter'
               ? `2px solid ${t.accent}`
               : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
           }}>
-            <div style={{
-              display: 'inline-block',
-              fontSize: 10,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: '#0071e3',
-              background: 'rgba(0,113,227,0.1)',
-              padding: '3px 10px',
-              borderRadius: 999,
-              marginBottom: 12,
-              fontFamily: font,
-            }}>Most Popular</div>
             <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Weekly</h3>
             <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$1</div>
             <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per week</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Everything in Free</FeatureItem>
+              <FeatureItem included>Map + all data layers</FeatureItem>
               <FeatureItem included>AI Analyst (Claude)</FeatureItem>
               <FeatureItem included>Portfolio + watchlist</FeatureItem>
               <FeatureItem included>Ontology writes + batch</FeatureItem>
               <FeatureItem included>Deep news + crime data</FeatureItem>
+              <FeatureItem included>Situation monitor</FeatureItem>
             </ul>
             <UpgradeButton plan="starter" label="Get Weekly -- $1/wk" bgColor={t.accent || '#0071e3'} />
-          </div>
-
-
-          <div style={{
-            ...glassCard,
-            border: currentTier === 'pro'
-              ? `2px solid #0071e3`
-              : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-          }}>
-            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Pro</h3>
-            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$50</div>
-            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per month</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Everything in Weekly</FeatureItem>
-              <FeatureItem included>Full broker automation</FeatureItem>
-              <FeatureItem included>cTrader + TradingView signals</FeatureItem>
-              <FeatureItem included>Advanced risk controls</FeatureItem>
-              <FeatureItem included>Priority support</FeatureItem>
-            </ul>
-            <UpgradeButton plan="pro" label="Get Pro" bgColor="#0071e3" />
           </div>
         </div>
 

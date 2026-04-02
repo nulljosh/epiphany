@@ -25,7 +25,11 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [pwMsg, setPwMsg] = useState(null);
 
   // Refresh user data on mount to pick up avatar changes from other devices
-  useEffect(() => { if (refreshUser) refreshUser(); }, []);
+  useEffect(() => {
+    if (refreshUser) refreshUser().then(() => {
+      if (!user?.avatarUrl) console.warn('[settings] No avatarUrl in user data after refresh');
+    });
+  }, []);
 
   const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
   const [avatarUploading, setAvatarUploading] = useState(false);

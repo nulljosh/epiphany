@@ -39,12 +39,12 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#060a0f', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '30%', left: '50%', width: 800, height: 800, transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(0,228,106,0.03) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '30%', left: '50%', width: 800, height: 800, transform: 'translate(-50%, -50%)', background: 'rgba(0,228,106,0.02)', pointerEvents: 'none' }} />
 
       <div style={{ width: '100%', maxWidth: 900, position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32, ...fadeStyle(mounted, 0.05) }}>
-          <div style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12, background: 'linear-gradient(135deg, rgba(0,228,106,0.15), rgba(0,228,106,0.05))', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>M</span>
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Monica</h1>

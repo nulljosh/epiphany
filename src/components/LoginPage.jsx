@@ -114,12 +114,12 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
   return (
     <div style={{ minHeight: '100vh', background: '#060a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
       <NetworkCanvas />
-      <div style={{ position: 'absolute', top: '35%', left: '50%', width: 700, height: 700, transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(0,228,106,0.04) 0%, transparent 70%)', animation: 'authPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '35%', left: '50%', width: 700, height: 700, transform: 'translate(-50%, -50%)', background: 'rgba(0,228,106,0.02)', animation: 'authPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
 
       <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36, ...fadeStyle(mounted, 0.05) }}>
-          <div style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14, background: 'linear-gradient(135deg, rgba(0,228,106,0.15), rgba(0,228,106,0.05))', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 22, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>M</span>
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Monica</h1>

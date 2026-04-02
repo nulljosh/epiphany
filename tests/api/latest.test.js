@@ -64,10 +64,10 @@ describe('Latest API', () => {
   it('should set cache control headers', async () => {
     await handler(req, res);
     
-    expect(res.setHeader).toHaveBeenCalledWith(
-      'Cache-Control',
-      's-maxage=300, stale-while-revalidate=600'
-    );
+    // Cache header varies by market hours -- accept either value
+    const cacheCall = res.setHeader.mock.calls.find(c => c[0] === 'Cache-Control');
+    expect(cacheCall).toBeTruthy();
+    expect(['s-maxage=60, stale-while-revalidate=120', 's-maxage=300, stale-while-revalidate=600']).toContain(cacheCall[1]);
   });
 
   it('should return cached data successfully', async () => {

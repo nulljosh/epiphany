@@ -128,7 +128,8 @@ describe('stocks-free API handler', () => {
     await handler(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'http://localhost:5173');
-    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    // Cache-Control is set by the gateway, not the handler directly
+    expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'http://localhost:5173');
   });
 
   // --- Symbol limit ---

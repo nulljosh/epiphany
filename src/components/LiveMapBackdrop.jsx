@@ -508,14 +508,22 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
-    payload.earthquakes.slice(0, 12).forEach((eq) => {
+    payload.earthquakes.slice(0, 12).forEach((eq, i) => {
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
+      const dist = Math.abs(eq.lat - center.lat) + Math.abs(eq.lon - center.lon);
+      let mLat = eq.lat, mLon = eq.lon;
+      if (dist > 3) {
+        const angle = (i / 12) * 2 * Math.PI;
+        const r = 0.03 + (i % 3) * 0.015;
+        mLat = center.lat + Math.sin(angle) * r;
+        mLon = center.lon + Math.cos(angle) * r;
+      }
       addMarker(
         `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);box-shadow:0 0 0 0 rgba(239,68,68,0.5);animation:pulse-red 1.9s infinite;`,
         `M${eq.mag} ${eq.place || ''}`,
         { type: 'seismic', title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`, detail: eq.place || 'Earthquake', level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor', source: 'USGS Earthquake Catalog', link: eq.url || 'https://earthquake.usgs.gov/earthquakes/map/' },
-        eq.lon, eq.lat, 'earthquakes'
+        mLon, mLat, 'earthquakes'
       );
     });
 
@@ -537,16 +545,15 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     payload.newsArticles.slice(0, 12).forEach((article, i) => {
-      let target = null;
-      if (typeof article.lat === 'number' && typeof article.lon === 'number') {
-        target = { lat: article.lat, lon: article.lon, label: article.source || 'News' };
-      } else {
-        target = geoKeywordMatch(article.title);
+      let target = geoKeywordMatch(article.title);
+      if (!target && typeof article.lat === 'number' && typeof article.lon === 'number') {
+        const dist = Math.abs(article.lat - center.lat) + Math.abs(article.lon - center.lon);
+        if (dist < 3) target = { lat: article.lat, lon: article.lon, label: article.source || 'News' };
       }
       if (!target) {
         const angle = (i / 12) * 2 * Math.PI;
         const r = 0.026 + (i % 3) * 0.014;
-        target = { lat: center.lat + Math.sin(angle) * r, lon: center.lon + Math.cos(angle) * r, label: 'Global' };
+        target = { lat: center.lat + Math.sin(angle) * r, lon: center.lon + Math.cos(angle) * r, label: article.source || 'News' };
       }
       const pubTime = article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
       const detail = [article.source, pubTime].filter(Boolean).join(' · ');
