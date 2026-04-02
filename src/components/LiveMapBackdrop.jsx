@@ -384,18 +384,22 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       try {
         const bbox = { lamin: center.lat - 1, lomin: center.lon - 1, lamax: center.lat + 1, lomax: center.lon + 1 };
         const bboxQ = `lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`;
+        const safeFetch = (url, fallback) => fetch(url).then(r => {
+          if (!r.ok) { console.warn(`[map] ${url} returned ${r.status}`); return fallback; }
+          return r.json();
+        }).catch((err) => { console.warn(`[map] ${url} failed:`, err.message); return fallback; });
         const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl] = await Promise.all([
-          fetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
-          fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)).then(r => r.json()).catch(() => ({ incidents: [], flow: {} })),
-          fetch(apiPath('/api/earthquakes')).then(r => r.json()).catch(() => ({ earthquakes: [] })),
-          fetch(apiPath(`/api/events?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ events: [] })),
-          fetch(apiPath('/api/markets')).then(r => r.json()).catch(() => []),
-          fetch(apiPath(`/api/news?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ articles: [] })),
-          fetch(apiPath(`/api/crime?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
-          fetch(apiPath(`/api/local-events?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ events: [] })),
-          fetch(apiPath(`/api/weather-alerts?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ alerts: [] })),
-          fetch(apiPath(`/api/wildfires?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ fires: [] })),
-          fetch(apiPath(`/api/flights?${bboxQ}`)).then(r => r.json()).catch(() => ({ states: [] })),
+          safeFetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [] }),
+          safeFetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [], flow: {} }),
+          safeFetch(apiPath('/api/earthquakes'), { earthquakes: [] }),
+          safeFetch(apiPath(`/api/events?lat=${center.lat}&lon=${center.lon}`), { events: [] }),
+          safeFetch(apiPath('/api/markets'), []),
+          safeFetch(apiPath(`/api/news?lat=${center.lat}&lon=${center.lon}`), { articles: [] }),
+          safeFetch(apiPath(`/api/crime?lat=${center.lat}&lon=${center.lon}`), { incidents: [] }),
+          safeFetch(apiPath(`/api/local-events?lat=${center.lat}&lon=${center.lon}`), { events: [] }),
+          safeFetch(apiPath(`/api/weather-alerts?lat=${center.lat}&lon=${center.lon}`), { alerts: [] }),
+          safeFetch(apiPath(`/api/wildfires?lat=${center.lat}&lon=${center.lon}`), { fires: [] }),
+          safeFetch(apiPath(`/api/flights?${bboxQ}`), { states: [] }),
         ]);
         if (!cancelled) {
           fetchCountRef.current += 1;
@@ -616,17 +620,19 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
-    payload.markets.forEach((m) => {
+    payload.markets.slice(0, 20).forEach((m, i) => {
       const p = geoKeywordMatch(m.question);
-      if (!p) return;
       const prob = typeof m.probability === 'number' ? m.probability : 0.5;
       const conf = Math.max(prob, 1 - prob);
       const size = conf > 0.9 ? 12 : conf > 0.75 ? 10 : 8;
+      // Distribute non-geo-matched markets around center
+      const mLat = p ? p.lat : center.lat + Math.sin((i / 20) * 2 * Math.PI) * 0.035;
+      const mLon = p ? p.lon : center.lon + Math.cos((i / 20) * 2 * Math.PI) * 0.035;
       addMarker(
         `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};box-shadow:0 0 0 0 rgba(34,197,94,0.4);animation:pulse-cyan 2.4s infinite;`,
         `${Math.round(prob * 100)}% · ${m.question || 'market'}`,
-        { type: 'prediction', title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`, detail: m.question || 'Prediction market', level: p.label, source: 'Polymarket', link: `https://polymarket.com/event/${m.eventSlug || m.slug}` },
-        p.lon, p.lat, 'predictions'
+        { type: 'prediction', title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`, detail: m.question || 'Prediction market', level: p?.label || 'Global', source: 'Polymarket', link: `https://polymarket.com/event/${m.eventSlug || m.slug}` },
+        mLon, mLat, 'predictions'
       );
     });
   }, [center.lat, center.lon, payload, mapLoaded]);

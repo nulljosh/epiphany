@@ -1,5 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { FETCH_TIMEOUT } from '../utils/helpers';
+import { useVisibilityPolling } from './useVisibilityPolling';
+
+function isMarketHours() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return false;
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  return et.getHours() >= 9 && et.getHours() < 16;
+}
 
 // Yahoo Finance symbols for commodities & indices
 const YAHOO_SYMBOLS = {
@@ -131,12 +140,8 @@ export function useLivePrices(initialAssets) {
     }
   }, [fetchCryptoPrices, fetchCommodityPrices]);
 
-  // Fetch on mount and every 60 seconds (was 5s -- burned ~17K invocations/user/day)
-  useEffect(() => {
-    fetchAllPrices();
-    const interval = setInterval(fetchAllPrices, 60000);
-    return () => clearInterval(interval);
-  }, [fetchAllPrices]);
+  const pollInterval = isMarketHours() ? 120_000 : 600_000;
+  useVisibilityPolling(fetchAllPrices, pollInterval, [fetchAllPrices]);
 
   return {
     prices,

@@ -1,4 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useVisibilityPolling } from './useVisibilityPolling';
+
+function isMarketHours() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return false;
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  return et.getHours() >= 9 && et.getHours() < 16;
+}
 
 // All tradeable stock/ETF symbols across 100-asset universe
 // Excludes: indices (handled by commodities.js), meme coins (CoinGecko / not on Yahoo)
@@ -344,9 +353,10 @@ export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true } = {}) {
       await fetchStocks();
     };
     init();
-    const interval = setInterval(fetchStocks, 60000);
-    return () => clearInterval(interval);
   }, [fetchStocks, enabled]);
+
+  const pollInterval = isMarketHours() ? 120_000 : 600_000;
+  useVisibilityPolling(fetchStocks, pollInterval, [fetchStocks, enabled]);
 
   return {
     stocks,

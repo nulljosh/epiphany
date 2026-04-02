@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchWithTimeout, fetchJsonGraceful } from '../utils/helpers';
+import { useVisibilityPolling } from './useVisibilityPolling';
 
 export const WORLD_CITIES = [
   { id: 'nyc',    label: 'NYC',    lat: 40.7128,  lon: -74.0060,  name: 'New York' },
@@ -10,9 +11,9 @@ export const WORLD_CITIES = [
   { id: 'sydney', label: 'Sydney', lat: -33.8688, lon: 151.2093,  name: 'Sydney'   },
 ];
 
-const FLIGHT_REFRESH    = 120_000;  // was 15s -- burned ~5.7K invocations/user/day
-const TRAFFIC_REFRESH   = 60_000;
-const SITUATION_REFRESH = 5 * 60_000;
+const FLIGHT_REFRESH    = 120_000;
+const TRAFFIC_REFRESH   = 120_000;
+const SITUATION_REFRESH = 10 * 60_000;
 const LAST_GEO_KEY = 'monica_last_geo';
 const FRESH_GEO_MS = 30 * 60 * 1000;
 const FRESH_IP_MS = 5 * 60 * 1000;
@@ -175,15 +176,10 @@ export function useSituation() {
     } catch { /* non-critical */ }
   }, []);
 
-  useEffect(() => {
-    fetchFlights();
-    fetchTraffic();
-    const fi = setInterval(fetchFlights, FLIGHT_REFRESH);
-    const ti = setInterval(fetchTraffic, TRAFFIC_REFRESH);
-    return () => { clearInterval(fi); clearInterval(ti); };
-  }, [fetchFlights, fetchTraffic]);
+  useVisibilityPolling(fetchFlights, FLIGHT_REFRESH, [fetchFlights]);
+  useVisibilityPolling(fetchTraffic, TRAFFIC_REFRESH, [fetchTraffic]);
 
-  useEffect(() => {
+  const fetchAllSituation = useCallback(() => {
     if (process.env.NODE_ENV === 'test') return;
     fetchIncidents();
     fetchEarthquakes();
@@ -192,17 +188,9 @@ export function useSituation() {
     fetchCrime();
     fetchLocalEvents();
     fetchMacro();
-    const si = setInterval(() => {
-      fetchIncidents();
-      fetchEarthquakes();
-      fetchEvents();
-      fetchWeatherAlerts();
-      fetchCrime();
-      fetchLocalEvents();
-      fetchMacro();
-    }, SITUATION_REFRESH);
-    return () => clearInterval(si);
   }, [fetchIncidents, fetchEarthquakes, fetchEvents, fetchWeatherAlerts, fetchCrime, fetchLocalEvents, fetchMacro]);
+
+  useVisibilityPolling(fetchAllSituation, SITUATION_REFRESH, [fetchAllSituation]);
 
   return {
     userLocation, locationError,

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useVisibilityPolling } from './useVisibilityPolling';
 
 // Use relative paths - works on any domain (Vercel auto-serves from same origin)
 const POLYMARKET_API = '/api';
@@ -173,10 +174,9 @@ export function usePolymarket() {
     };
 
     seedFromCache();
-    fetchMarkets();
-    const interval = setInterval(fetchMarkets, 120000);  // was 30s
-    return () => clearInterval(interval);
   }, [fetchMarkets]);
+
+  useVisibilityPolling(fetchMarkets, 120_000, [fetchMarkets]);
 
   // Search markets by query
   const searchMarkets = useCallback(async (query) => {

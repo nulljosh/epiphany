@@ -1,27 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 
 export default function WeatherWidget({ t }) {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch('/api/weather?city=Vancouver');
-        const data = await res.json();
-        setWeather(data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Weather fetch error:', err);
-        setLoading(false);
-      }
-    };
+  const fetchWeather = async () => {
+    try {
+      const res = await fetch('/api/weather?city=Vancouver');
+      const data = await res.json();
+      setWeather(data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Weather fetch error:', err);
+      setLoading(false);
+    }
+  };
 
-    fetchWeather();
-    // Refresh every 10 minutes
-    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+  useVisibilityPolling(fetchWeather, 10 * 60 * 1000);
 
   if (loading) return null;
   if (!weather || weather.fallback) return null;
