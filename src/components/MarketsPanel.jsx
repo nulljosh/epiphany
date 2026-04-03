@@ -202,12 +202,13 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   }, [allItems, watchlist]);
 
   const filtered = useMemo(() => {
-    let list = search
-      ? allItems.filter(item => {
-          const q = search.toLowerCase();
-          return item.symbol.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
-        })
-      : [...allItems];
+    const wlSet = new Set(watchlist || []);
+    let list = allItems.filter(item => {
+      if (wlSet.has(item.symbol)) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return item.symbol.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
+    });
     list.sort((a, b) => {
       let cmp = 0;
       if (sortKey === 'symbol') cmp = a.symbol.localeCompare(b.symbol);
@@ -216,7 +217,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       return sortAsc ? cmp : -cmp;
     });
     return list;
-  }, [allItems, search, sortKey, sortAsc]);
+  }, [allItems, search, sortKey, sortAsc, watchlist]);
 
   const glass = {
     background: t.glass,

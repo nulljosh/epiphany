@@ -55,6 +55,14 @@ struct MarketsView: View {
 
     private var filteredItems: [MarketItem] {
         var items = cachedItems
+        // Exclude watchlisted stocks from main list -- they already appear in the Watchlist section
+        let watchlisted = appState.watchlistSymbols
+        if !watchlisted.isEmpty {
+            items = items.filter { item in
+                if case .stock = item.kind { return !watchlisted.contains(item.symbol) }
+                return true
+            }
+        }
         switch marketFilter {
         case .all: break
         case .stocks: items = items.filter { if case .stock = $0.kind { return true }; return false }
