@@ -107,12 +107,21 @@ export default function SituationMonitor({
   const initialFlyDone = useRef(false);
   const loadTimestamps = useRef({ flights: null, traffic: null, earthquakes: null, events: null });
 
+  const [tallyPayday, setTallyPayday] = useState(null);
+
   const {
     activeCenter,
     worldCities, userLocation,
     flights, traffic, flightsLoading, trafficLoading, flightsError, trafficError,
     incidents, earthquakes, events, weatherAlerts, macro,
   } = useSituation();
+
+  useEffect(() => {
+    fetch('/api/tally?action=next-payment')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.nextPayment) setTallyPayday(d.nextPayment); })
+      .catch(() => {});
+  }, []);
 
   // Track data freshness per source
   useEffect(() => { if (flights.length > 0) loadTimestamps.current.flights = Date.now(); }, [flights]);
@@ -363,6 +372,17 @@ export default function SituationMonitor({
             )}
           </div>
         </>
+      )}
+
+      {/* Tally payday */}
+      {tallyPayday && (
+        <div style={{ background: t.surface, borderRadius: 10, padding: '10px 12px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: t.textTertiary, fontFamily: font }}>next payday</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: tallyPayday.daysUntil <= 3 ? t.green : t.text, fontFamily: font }}>
+            {tallyPayday.daysUntil === 0 ? 'today' : tallyPayday.daysUntil === 1 ? 'tomorrow' : `${tallyPayday.daysUntil}d`}
+            <span style={{ fontSize: 9, color: t.textTertiary, marginLeft: 6 }}>{tallyPayday.date}</span>
+          </span>
+        </div>
       )}
 
       {/* PM edges */}
