@@ -139,6 +139,9 @@ describe('usePolymarket', () => {
       json: async () => []
     }).mockResolvedValueOnce({
       ok: true,
+      json: async () => ({ topTraders: [], recentMoves: [], totalWhaleTrades: 0 })
+    }).mockResolvedValueOnce({
+      ok: true,
       json: async () => mockSearchResults
     });
 
@@ -176,6 +179,9 @@ describe('usePolymarket', () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => []
+    }).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ topTraders: [], recentMoves: [], totalWhaleTrades: 0 })
     }).mockResolvedValueOnce({
       ok: true,
       json: async () => mockMarket
