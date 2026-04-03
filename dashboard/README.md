@@ -22,12 +22,12 @@ A local developer dashboard that auto-discovers every Git repo in `~/Documents/C
 
 - React + Vite
 - Vite plugin exposes `/data.json` at runtime via `server/collect.js`
-- No build-time data step — data refreshes on each request (60s cache)
+- No build-time data step  --  data refreshes on each request (60s cache)
 
 ## Usage
 
 ```bash
-# Dev server — data collected live
+# Dev server  --  data collected live
 npm run dev
 
 # Production build

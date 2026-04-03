@@ -27,9 +27,9 @@ newPrice = clamp(lastPrice × (1 + move), base × 0.7, base × 1.5)
 ```
 
 Parameters:
-- `drift = 0.0001` — persistent upward bias
-- `trend[sym]` — resets with p = 0.05 per tick: `(rand − 0.45) × 0.006`
-- `noise = 0.008` — peak-to-peak random component
+- `drift = 0.0001`  --  persistent upward bias
+- `trend[sym]`  --  resets with p = 0.05 per tick: `(rand − 0.45) × 0.006`
+- `noise = 0.008`  --  peak-to-peak random component
 - Price clamped to [70%, 150%] of base
 
 Three ticks are generated per simulation step to smooth the signal.
@@ -75,7 +75,7 @@ Size scales down as balance grows, preventing runaway compounding:
 shares = (balance × sizePercent) / entryPrice
 ```
 
-This is fractional Kelly at variable fractions — aggressive early, conservative at scale.
+This is fractional Kelly at variable fractions  --  aggressive early, conservative at scale.
 
 ### 1.4 Exit Rules
 
@@ -182,7 +182,7 @@ side   = argmax(yesProb, noProb)
 hasEdge = edge > 0.40     // implied probability > 90%
 ```
 
-Contracts flagged `hasEdge = true` represent near-certainty outcomes — candidates for Kelly-sized deployment.
+Contracts flagged `hasEdge = true` represent near-certainty outcomes  --  candidates for Kelly-sized deployment.
 
 ---
 
@@ -218,7 +218,7 @@ This reduces unnecessary renders by ~80% during low-volatility sessions.
 
 | Dimension | Complexity |
 |-----------|------------|
-| Memory | O(n) — one stored price per asset |
+| Memory | O(n)  --  one stored price per asset |
 | Check cost | O(1) per asset per tick |
 | Render cost | O(k) where k << n |
 
@@ -273,11 +273,11 @@ The free tier is complete by design. Pro is for users who want to act on signals
 
 ## 10. Roadmap
 
-- **Black-Scholes options pricer** — Full options chain with Greeks
-- **Historical backtesting** — Replay real OHLCV data through entry logic
-- **WebSocket feeds** — Replace polling with streaming tick data
-- **Kalshi integration** — US-regulated prediction markets alongside Polymarket
-- **C++ core via WASM** — 10x Monte Carlo speedup, sub-millisecond path generation
+- **Black-Scholes options pricer**  --  Full options chain with Greeks
+- **Historical backtesting**  --  Replay real OHLCV data through entry logic
+- **WebSocket feeds**  --  Replace polling with streaming tick data
+- **Kalshi integration**  --  US-regulated prediction markets alongside Polymarket
+- **C++ core via WASM**  --  10x Monte Carlo speedup, sub-millisecond path generation
 
 ---
 

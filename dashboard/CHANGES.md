@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — 2026-02-20
+## 0.1.0  --  2026-02-20
 
 ### feat: integrate mission statement and mission control into single view
 
@@ -12,7 +12,7 @@
 - Added `.header-left` + `.mission-statement-header` styles
 - Fixed `.header-top` `align-items: flex-start` so subtitle stacks under title correctly
 
-## 0.0.0 — 2026-02-19
+## 0.0.0  --  2026-02-19
 
 ### init: developer dashboard with tally design system
 

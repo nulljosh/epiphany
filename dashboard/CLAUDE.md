@@ -11,15 +11,15 @@ Developer dashboard for `~/Documents/Code/` projects.
 
 ## Key Files
 
-- `src/App.jsx` — main dashboard component
-- `src/App.css` — all styles (design tokens inline)
-- `server/collect.js` — data collection module (scans git repos, gh CLI, GitHub API)
-- `vite.config.js` — Vite plugin + OpenClaw API middleware for the dashboard UI
+- `src/App.jsx`  --  main dashboard component
+- `src/App.css`  --  all styles (design tokens inline)
+- `server/collect.js`  --  data collection module (scans git repos, gh CLI, GitHub API)
+- `vite.config.js`  --  Vite plugin + OpenClaw API middleware for the dashboard UI
 
 ## Commands
 
-- `npm run dev` — dev server (port 5173, data refreshes live)
-- `npm run build` — production build to dist/
+- `npm run dev`  --  dev server (port 5173, data refreshes live)
+- `npm run build`  --  production build to dist/
 
 ## Notes
 

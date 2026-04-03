@@ -1,4 +1,4 @@
-# bank — Claude Notes
+# bank  --  Claude Notes
 
 ## Overview
 TODO: Add project overview.
