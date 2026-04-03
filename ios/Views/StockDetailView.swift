@@ -24,6 +24,7 @@ struct StockDetailView: View {
     @State private var priceHistory: [PriceHistory.DataPoint] = []
     @State private var relatedNews: [NewsArticle] = []
     @State private var newsError = false
+    @State private var isLoadingNews = true
     @State private var scrubPrice: (date: Date, price: Double)?
     @State private var selectedNewsURL: URL?
     @State private var showSMA = false
@@ -166,7 +167,15 @@ struct StockDetailView: View {
                         .font(.headline)
                         .padding(.horizontal)
 
-                    if newsError {
+                    if isLoadingNews {
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text("Loading news...")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal)
+                    } else if newsError {
                         Text("News unavailable")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -579,6 +588,8 @@ struct StockDetailView: View {
     }
 
     private func loadRelatedNews() async {
+        isLoadingNews = true
+        defer { isLoadingNews = false }
         do {
             async let symbolNews = MonicaAPI.shared.fetchStockNews(query: stock.symbol)
             async let nameNews = MonicaAPI.shared.fetchStockNews(query: stock.name)

@@ -93,13 +93,13 @@ struct SituationView: View {
     @MapContentBuilder
     private var earthquakeAnnotations: some MapContent {
         if showEarthquakes {
-            ForEach(earthquakes) { quake in
+            ForEach(Array(earthquakes.prefix(maxAnnotationsPerCategory))) { quake in
                 Annotation(quake.place ?? quake.title, coordinate: quake.coordinate) {
                     Button {
                         Haptics.impact(.light)
                         selectedEvent = .earthquake(quake)
                     } label: {
-                        sfPin("mountain.2.fill")
+                        sfPin("mountain.2.fill", color: .orange)
                     }
                     .buttonStyle(.plain)
                 }
@@ -116,7 +116,7 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .flight(flight)
                     } label: {
-                        sfPin("airplane")
+                        sfPin("airplane", color: .cyan)
                     }
                     .buttonStyle(.plain)
                 }
@@ -124,16 +124,18 @@ struct SituationView: View {
         }
     }
 
+    private let maxAnnotationsPerCategory = 30
+
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
         if showIncidents {
-            ForEach(incidents) { incident in
+            ForEach(Array(incidents.prefix(maxAnnotationsPerCategory))) { incident in
                 Annotation(incident.title, coordinate: incident.coordinate) {
                     Button {
                         Haptics.impact(.medium)
                         selectedEvent = .incident(incident)
                     } label: {
-                        sfPin(incidentSymbol(incident.title))
+                        sfPin(incidentSymbol(incident.title), color: incidentColor(incident.title))
                     }
                     .buttonStyle(.plain)
                 }
@@ -146,10 +148,25 @@ struct SituationView: View {
         if t.contains("police") { return "shield.fill" }
         if t.contains("fire") || t.contains("hydrant") { return "flame.fill" }
         if t.contains("hospital") || t.contains("emergency") { return "cross.fill" }
-        if t.contains("construction") || t.contains("road_works") { return "wrench.fill" }
-        if t.contains("border") { return "person.fill.checkmark" }
+        if t.contains("construction") || t.contains("road_works") { return "cone.fill" }
+        if t.contains("border") || t.contains("crossing") { return "person.fill.checkmark" }
         if t.contains("accident") || t.contains("crash") { return "exclamationmark.triangle.fill" }
-        return "wrench.fill"
+        if t.contains("closure") || t.contains("blocked") { return "xmark.octagon.fill" }
+        if t.contains("hazard") { return "exclamationmark.triangle.fill" }
+        if t.contains("flood") || t.contains("water") { return "drop.fill" }
+        return "exclamationmark.triangle.fill"
+    }
+
+    private func incidentColor(_ title: String) -> Color {
+        let t = title.lowercased()
+        if t.contains("police") { return .blue }
+        if t.contains("fire") || t.contains("hydrant") { return .red }
+        if t.contains("hospital") || t.contains("emergency") { return .red }
+        if t.contains("accident") || t.contains("crash") { return .orange }
+        if t.contains("construction") || t.contains("road_works") { return .yellow }
+        if t.contains("closure") || t.contains("blocked") { return .red }
+        if t.contains("hazard") { return .orange }
+        return .orange
     }
 
     @MapContentBuilder
@@ -162,7 +179,7 @@ struct SituationView: View {
                             Haptics.impact(.medium)
                             selectedEvent = .weatherAlert(alert)
                         } label: {
-                            sfPin("cloud.bolt.fill")
+                            sfPin("cloud.bolt.fill", color: .yellow)
                         }
                         .buttonStyle(.plain)
                     }
@@ -174,13 +191,13 @@ struct SituationView: View {
     @MapContentBuilder
     private var crimeAnnotations: some MapContent {
         if showCrime {
-            ForEach(crimeIncidents) { crime in
+            ForEach(Array(crimeIncidents.prefix(maxAnnotationsPerCategory))) { crime in
                 Annotation(crime.title, coordinate: crime.coordinate) {
                     Button {
                         Haptics.impact(.medium)
                         selectedEvent = .crime(crime)
                     } label: {
-                        sfPin("exclamationmark.circle.fill")
+                        sfPin("exclamationmark.circle.fill", color: .red)
                     }
                     .buttonStyle(.plain)
                 }
@@ -198,7 +215,7 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .localEvent(event)
                         } label: {
-                            sfPin("mappin")
+                            sfPin("mappin", color: .green)
                         }
                         .buttonStyle(.plain)
                     }
@@ -217,7 +234,7 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .trafficIncident(incident)
                         } label: {
-                            sfPin("car.fill")
+                            sfPin("car.fill", color: .mint)
                         }
                         .buttonStyle(.plain)
                     }
@@ -366,16 +383,38 @@ struct SituationView: View {
         }
         .overlay(alignment: .top) { errorOverlay }
         .overlay(alignment: .bottom) { statusOverlay }
+        .overlay(alignment: .bottomTrailing) { currentLocationButton }
+    }
+
+    @ViewBuilder
+    private var currentLocationButton: some View {
+        Button {
+            Haptics.impact(.light)
+            if let region = locationManager.region {
+                withAnimation { mapPosition = .region(region) }
+            } else {
+                withAnimation { mapPosition = .userLocation(fallback: .automatic) }
+            }
+        } label: {
+            Image(systemName: "location.fill")
+                .font(.body.weight(.medium))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .padding(.trailing, 12)
+        .padding(.bottom, 120)
     }
 
     private var mapPlaceholder: some View {
         Palette.bg
     }
 
-    private func sfPin(_ systemName: String) -> some View {
+    private func sfPin(_ systemName: String, color: Color = .white) -> some View {
         Image(systemName: systemName)
             .font(.title2)
-            .foregroundStyle(.white)
+            .foregroundStyle(color)
+            .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
     }
 
     // MARK: - Network monitor
@@ -891,30 +930,32 @@ private struct SituationEventDetailView: View {
     private var rows: [(label: String, value: String)] {
         switch event {
         case .earthquake(let quake):
-            return [
+            var result: [(label: String, value: String)] = [
                 ("Magnitude", String(format: "%.1f", quake.magnitude)),
-                ("Depth", quake.depthKm.map { String(format: "%.1f km", $0) } ?? "Unknown"),
-                ("Latitude", String(format: "%.4f", quake.latitude)),
-                ("Longitude", String(format: "%.4f", quake.longitude)),
-                ("Time", quake.occurredAt ?? "Unknown"),
             ]
+            if let depth = quake.depthKm { result.append(("Depth", String(format: "%.1f km", depth))) }
+            result.append(("Latitude", String(format: "%.4f", quake.latitude)))
+            result.append(("Longitude", String(format: "%.4f", quake.longitude)))
+            if let time = quake.occurredAt { result.append(("Time", time)) }
+            return result
         case .flight(let flight):
-            return [
-                ("Origin", flight.origin ?? "Unknown"),
-                ("Destination", flight.destination ?? "Unknown"),
-                ("Altitude", flight.altitudeFeet.map { "\($0) ft" } ?? "Unknown"),
-                ("Latitude", String(format: "%.4f", flight.latitude)),
-                ("Longitude", String(format: "%.4f", flight.longitude)),
-                ("Status", flight.status ?? "Live"),
-            ]
+            var result: [(label: String, value: String)] = []
+            if let origin = flight.origin { result.append(("Origin", origin)) }
+            if let dest = flight.destination { result.append(("Destination", dest)) }
+            if let alt = flight.altitudeFeet { result.append(("Altitude", "\(alt) ft")) }
+            result.append(("Latitude", String(format: "%.4f", flight.latitude)))
+            result.append(("Longitude", String(format: "%.4f", flight.longitude)))
+            result.append(("Status", flight.status ?? "Live"))
+            return result
         case .incident(let incident):
-            return [
+            var result: [(label: String, value: String)] = [
                 ("Severity", incident.severity.capitalized),
                 ("Latitude", String(format: "%.4f", incident.latitude)),
                 ("Longitude", String(format: "%.4f", incident.longitude)),
-                ("Reported", incident.reportedAt ?? "Unknown"),
-                ("Summary", incident.summary ?? "No summary"),
             ]
+            if let reported = incident.reportedAt { result.append(("Reported", reported)) }
+            if let summary = incident.summary { result.append(("Summary", summary)) }
+            return result
         case .weatherAlert(let alert):
             var result: [(label: String, value: String)] = [
                 ("Severity", alert.severity.capitalized),

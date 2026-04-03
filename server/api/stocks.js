@@ -210,46 +210,42 @@ async function enrichWithFundamentals(stocks) {
   const fmpEnriched = await enrichWithFmpProfile(stocks);
   if (fmpEnriched.every(s => s.marketCap != null)) return fmpEnriched;
 
-  // Fallback to Yahoo v7 for remaining
+  // Fallback to Yahoo v10/quoteSummary for remaining (v7 requires auth now)
   const remaining = fmpEnriched.filter(s => s.marketCap == null).map(s => s.symbol);
   if (remaining.length === 0) return fmpEnriched;
 
   const provider = YAHOO_PROVIDERS[0];
-  const url = `${provider}/v7/finance/quote?symbols=${remaining.join(',')}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const summaryMap = {};
 
-  try {
-    const response = await fetch(url, {
-      headers: YAHOO_HEADERS,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return fmpEnriched;
-
-    const data = await response.json();
-    const quotes = data?.quoteResponse?.result || [];
-    const quoteMap = {};
-    for (const q of quotes) {
-      if (q.symbol) quoteMap[q.symbol] = q;
+  await Promise.all(remaining.slice(0, 5).map(async (symbol) => {
+    const url = `${provider}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=price,defaultKeyStatistics`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const response = await fetch(url, { headers: YAHOO_HEADERS, signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!response.ok) return;
+      const data = await response.json();
+      const price = data?.quoteSummary?.result?.[0]?.price;
+      const stats = data?.quoteSummary?.result?.[0]?.defaultKeyStatistics;
+      if (price || stats) summaryMap[symbol] = { price, stats };
+    } catch {
+      clearTimeout(timeoutId);
     }
+  }));
 
-    return fmpEnriched.map(s => {
-      const q = quoteMap[s.symbol];
-      if (!q) return s;
-      return {
-        ...s,
-        name: s.name || q.shortName || q.longName || s.symbol,
-        marketCap: s.marketCap ?? q.marketCap ?? null,
-        peRatio: s.peRatio ?? q.trailingPE ?? q.forwardPE ?? null,
-        eps: s.eps ?? q.epsTrailingTwelveMonths ?? null,
-      };
-    });
-  } catch {
-    clearTimeout(timeoutId);
-    return fmpEnriched;
-  }
+  return fmpEnriched.map(s => {
+    const info = summaryMap[s.symbol];
+    if (!info) return s;
+    const { price, stats } = info;
+    return {
+      ...s,
+      name: s.name || price?.shortName || price?.longName || s.symbol,
+      marketCap: s.marketCap ?? price?.marketCap?.raw ?? null,
+      peRatio: s.peRatio ?? stats?.trailingPE?.raw ?? stats?.forwardPE?.raw ?? null,
+      eps: s.eps ?? stats?.trailingEps?.raw ?? null,
+    };
+  });
 }
 
 export default async function handler(req, res) {

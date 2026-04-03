@@ -250,7 +250,7 @@ struct SettingsView: View {
         .photosPicker(isPresented: $showPhotoPicker, selection: $avatarItem, matching: .images)
         .fullScreenCover(isPresented: $showCamera) {
             CameraPickerView { image in
-                if let jpegData = image.jpegData(compressionQuality: 0.8) {
+                if let jpegData = image.downsizedForAvatar().jpegData(compressionQuality: 0.7) {
                     appState.saveAvatarData(jpegData)
                     isUploadingAvatar = true
                     Task {
@@ -275,7 +275,8 @@ struct SettingsView: View {
         Task { @MainActor in
             if let data = try? await item.loadTransferable(type: Data.self),
                let uiImage = UIImage(data: data) {
-                if let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+                let resized = uiImage.downsizedForAvatar()
+                if let jpegData = resized.jpegData(compressionQuality: 0.7) {
                     appState.saveAvatarData(jpegData)
                     isUploadingAvatar = true
                     _ = try? await MonicaAPI.shared.uploadAvatar(imageData: jpegData)
@@ -295,20 +296,19 @@ struct SettingsView: View {
     }
 
     private var tierColor: Color {
-        switch appState.user?.tier {
-        case "starter": return Palette.appleBlue
+        switch appState.user?.tier?.lowercased() {
+        case "starter", "weekly": return Palette.appleBlue
         case "pro": return Palette.warningAmber
-        case "ultra": return Palette.purple
         default: return .secondary
         }
     }
 
     private var normalizedTier: SubscriptionTier {
         switch appState.user?.tier?.lowercased() {
-        case "starter", "pro":
+        case "starter", "weekly":
+            return .starter
+        case "pro":
             return .pro
-        case "ultra":
-            return .ultra
         default:
             return .free
         }
@@ -499,8 +499,8 @@ private struct DeleteAccountSheet: View {
 
 private enum SubscriptionTier: String, CaseIterable, Identifiable {
     case free
+    case starter
     case pro
-    case ultra
 
     var id: String { rawValue }
 
@@ -508,10 +508,10 @@ private enum SubscriptionTier: String, CaseIterable, Identifiable {
         switch self {
         case .free:
             return "Free"
+        case .starter:
+            return "Weekly"
         case .pro:
             return "Pro"
-        case .ultra:
-            return "Ultra"
         }
     }
 
@@ -519,10 +519,10 @@ private enum SubscriptionTier: String, CaseIterable, Identifiable {
         switch self {
         case .free:
             return "Free"
+        case .starter:
+            return "$1/wk"
         case .pro:
-            return "$20/mo"
-        case .ultra:
-            return "$50/mo"
+            return "$4/wk"
         }
     }
 }
@@ -701,5 +701,16 @@ struct CameraPickerView: UIViewControllerRepresentable {
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             parent.dismiss()
         }
+    }
+}
+
+private extension UIImage {
+    func downsizedForAvatar(maxDimension: CGFloat = 512) -> UIImage {
+        let maxSide = max(size.width, size.height)
+        guard maxSide > maxDimension else { return self }
+        let scale = maxDimension / maxSide
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in draw(in: CGRect(origin: .zero, size: newSize)) }
     }
 }

@@ -98,11 +98,20 @@ final class AppState {
     // MARK: - Error Handling
 
     func handleError(_ error: Error) {
-        if let apiError = error as? APIError, case .unauthorized = apiError {
-            user = nil
-            showLogin = true
-            self.error = nil
-            return
+        if let apiError = error as? APIError {
+            switch apiError {
+            case .unauthorized:
+                user = nil
+                showLogin = true
+                self.error = nil
+                return
+            case .decodingError:
+                // Decode errors are non-actionable for users; log silently
+                print("[AppState] decode error: \(error.localizedDescription)")
+                return
+            default:
+                break
+            }
         }
         self.error = error.localizedDescription
     }
