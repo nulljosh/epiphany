@@ -81,10 +81,29 @@ Still missing / dead keys:
 - `TICKETMASTER_API_KEY` - local events. Get key: https://developer.ticketmaster.com/products-and-docs/apis/getting-started/
 - `FMP_API_KEY` - stock data (primary). Get key: https://site.financialmodelingprep.com/developer/docs
 
-### 12. Error resilience
-- `fetchJsonGraceful` doesn't check `res.ok` -- non-200 responses with non-JSON bodies cause cryptic "not valid JSON" errors
-- **Fix**: Check `res.ok` before parsing, return structured error on failure
+### 12. Error resilience -- DONE (2026-04-02)
+- `fetchJsonGraceful` already checks `res.ok` before parsing
+- iOS/macOS decode errors now log raw response body for debugging
 
 ### 13. Gateway stability
 - Single point of failure: one bad import kills ALL routes (people-auto-enrich incident)
 - **Fix**: Dynamic imports with try/catch per route, or split into separate serverless functions for critical paths (auth, stocks)
+
+## New Features (2026-04-02)
+
+### 14. Double star watchlist fix -- DONE
+- Watchlisted stocks appeared in both Watchlist section and All Markets list (iOS + web)
+- Fixed: filteredItems now excludes watchlisted symbols from main list
+
+### 15. Polymarket whale tracking -- DONE
+- `/api/polymarket-whales` fetches large trades from Gamma API
+- Aggregates by wallet, surfaces top traders and recent whale moves
+- Rendered in SituationMonitor as collapsible whale activity section
+
+### 16. Tally payday on web -- DONE
+- SituationMonitor fetches `/api/tally?action=next-payment` and shows inline countdown
+
+### 17. Remaining from integrate.md
+- Map event UX improvements (Republic SF-inspired filtering, event cards)
+- TradingView widget embedding (Pine Scripts exist, need chart widgets)
+- Service BC location markers on map (for Tally integration)
