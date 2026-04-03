@@ -505,7 +505,10 @@ final class MonicaAPI {
         do {
             return try decoder.decode(type, from: data)
         } catch {
-            throw APIError.decodingError(error.localizedDescription)
+            let preview = String(data: data.prefix(500), encoding: .utf8) ?? "<binary>"
+            print("[MonicaAPI] Decode \(T.self) failed: \(error)")
+            print("[MonicaAPI] Response body: \(preview)")
+            throw APIError.decodingError("Failed to decode \(T.self): \(error.localizedDescription)")
         }
     }
 
