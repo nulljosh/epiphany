@@ -384,7 +384,7 @@ export default function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const { prices: liveAssets, lastUpdated } = useLivePrices(defaultAssets);
-  const { markets, loading: pmLoading, error: pmError } = usePolymarket();
+  const { markets, whales, loading: pmLoading, error: pmError } = usePolymarket();
   const { stocks, reliability: stocksReliability } = useStocks();
 
   // Sync live stock prices into ref for simulator access
@@ -1455,6 +1455,7 @@ const reset = useCallback(() => {
                 sim={simData} pmEdges={pmEdges}
                 lastPmBetMap={lastPmBetRef.current}
                 trades={trades} pmExits={pmExits}
+                pmWhales={whales}
                 mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
                 mapLayers={mapLayers}
               />

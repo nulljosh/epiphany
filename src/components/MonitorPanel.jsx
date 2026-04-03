@@ -3,7 +3,7 @@ import MarketsPanel from './MarketsPanel';
 import SituationMonitor from './SituationMonitor';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 
-export default function MonitorPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol, onConsumeInitialSymbol, sim, pmEdges, lastPmBetMap, trades, pmExits, mapFlyTo, mapLayers }) {
+export default function MonitorPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol, onConsumeInitialSymbol, sim, pmEdges, lastPmBetMap, trades, pmExits, pmWhales, mapFlyTo, mapLayers }) {
   const [subTab, setSubTab] = useState('situation');
 
   const pillStyle = (active) => ({
@@ -35,6 +35,7 @@ export default function MonitorPanel({ dark, t, stocks, liveAssets, watchlist, t
             lastPmBetMap={lastPmBetMap}
             trades={trades}
             pmExits={pmExits}
+            pmWhales={pmWhales}
             mapFlyTo={mapFlyTo}
             mapLayers={mapLayers}
           />

@@ -94,11 +94,13 @@ export default function SituationMonitor({
   lastPmBetMap = {},
   trades = [],
   pmExits = 0,
+  pmWhales = null,
   mapFlyTo,
   mapLayers,
   alerts = [],
 }) {
   const [showPmEdges, setShowPmEdges] = useState(true);
+  const [showWhales, setShowWhales] = useState(false);
   const [showTrades, setShowTrades] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showDetections, setShowDetections] = useState(true);
@@ -402,6 +404,49 @@ export default function SituationMonitor({
           </div>
         )}
       </div>
+
+      {/* Whale activity */}
+      {pmWhales && pmWhales.recentMoves?.length > 0 && (
+        <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
+          <button
+            onClick={() => setShowWhales(!showWhales)}
+            style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
+          >
+            <span>whale activity ({pmWhales.totalWhaleTrades})</span>
+            <span>{showWhales ? '\u2212' : '+'}</span>
+          </button>
+          {showWhales && (
+            <div style={{ padding: '0 12px 12px', maxHeight: 200, overflowY: 'auto' }}>
+              {pmWhales.recentMoves.map((move, i) => (
+                <div key={move.id || i} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '5px 0', borderBottom: `1px solid ${t.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 9, color: t.textTertiary, fontFamily: 'monospace' }}>{move.makerShort}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: move.side === 'BUY' ? t.green : t.red }}>
+                      {move.side} ${move.usdValue.toLocaleString()}
+                    </span>
+                  </div>
+                  {move.marketQuestion && (
+                    <div style={{ fontSize: 10, color: t.text, lineHeight: 1.3 }}>
+                      {move.marketQuestion.length > 55 ? `${move.marketQuestion.slice(0, 55)}...` : move.marketQuestion}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {pmWhales.topTraders?.length > 0 && (
+                <div style={{ marginTop: 8, borderTop: `1px solid ${t.border}`, paddingTop: 8 }}>
+                  <div style={{ fontSize: 9, color: t.textTertiary, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>top wallets</div>
+                  {pmWhales.topTraders.slice(0, 5).map((trader, i) => (
+                    <div key={trader.address || i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 10 }}>
+                      <span style={{ color: t.text, fontFamily: 'monospace' }}>{trader.shortAddress}</span>
+                      <span style={{ color: t.textSecondary }}>{trader.tradeCount} trades &middot; ${(trader.totalVolume / 1000).toFixed(0)}K</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Trade log */}
       <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>

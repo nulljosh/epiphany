@@ -124,6 +124,7 @@ const transformMarkets = (data) => {
 
 export function usePolymarket() {
   const [markets, setMarkets] = useState([]);
+  const [whales, setWhales] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const retryCountRef = useRef(0);
@@ -134,7 +135,10 @@ export function usePolymarket() {
     try {
       setLoading(true);
 
-      const data = await fetchWithRetry(`${POLYMARKET_API}/markets`);
+      const [data, whaleData] = await Promise.all([
+        fetchWithRetry(`${POLYMARKET_API}/markets`),
+        fetchWithRetry(`${POLYMARKET_API}/polymarket-whales`).catch(() => null),
+      ]);
 
       if (!Array.isArray(data)) {
         throw new Error('Invalid response format: expected array');
@@ -142,6 +146,7 @@ export function usePolymarket() {
 
       const transformed = transformMarkets(data);
       setMarkets(transformed);
+      if (whaleData) setWhales(whaleData);
       setError(null);
       retryCountRef.current = 0;
       liveLoaded.current = true;
@@ -215,6 +220,7 @@ export function usePolymarket() {
 
   return {
     markets,
+    whales,
     loading,
     error,
     refetch: fetchMarkets,
