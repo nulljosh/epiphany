@@ -70,7 +70,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
     }
   };
 
-  const tierRank = { free: 0, starter: 1, weekly: 1, pro: 2 };
+  const tierRank = { free: 0, starter: 1, weekly: 1 };
   const isCurrentOrLower = (plan) => tierRank[plan] <= tierRank[currentTier];
 
   const glassCard = {
@@ -198,8 +198,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
           {[
             { key: 'free', name: 'Free', price: '$0', period: 'forever', plan: null, features: ['Map + all data layers', 'Situation monitor (read)', 'Stock data + ticker', 'Weather/quakes/traffic'] },
-            { key: 'starter', name: 'Weekly', price: '$1', period: 'per week', plan: 'starter', label: 'Get Weekly -- $1/wk', recommended: true, features: ['Everything in Free', 'AI Analyst (Claude)', 'Portfolio + watchlist', 'Deep news + crime data', 'Situation monitor'] },
-            { key: 'pro', name: 'Pro', price: '$20', period: 'per month', plan: 'pro', label: 'Get Pro -- $20/mo', features: ['Everything in Weekly', 'Ontology writes + batch', 'Priority data refresh', 'API access'] },
+            { key: 'starter', name: 'Premium', price: '$1', period: 'per week', plan: 'starter', label: 'Get Premium -- $1/wk', recommended: true, features: ['Everything in Free', 'AI Analyst (Claude)', 'Portfolio + watchlist', 'Ontology writes + batch', 'Deep news + crime data', 'Situation monitor'] },
           ].map(tier => (
             <div key={tier.key} style={{
               ...glassCard,

@@ -28,13 +28,13 @@
   - Webhook handler to upgrade `user.tier` on payment
   - Feature gate: check tier before serving AI endpoint, ontology writes, portfolio tools
 
-### 6. Free vs Paid feature matrix
-| Free (hook) | Paid $1/wk |
+### 6. Free vs Premium ($1/wk)
+| Free | Premium |
 |---|---|
 | Map + all data layers | AI Analyst (Claude) |
 | Situation monitor (read) | Portfolio + watchlist |
 | Stock data + ticker | Ontology writes + batch |
-| Weather/quakes/traffic | Polymarket, crime, GDELT deep |
+| Weather/quakes/traffic | Deep news + crime data |
 
 ## Polish
 

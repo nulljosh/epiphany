@@ -1,1 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#0a0a0a" rx="32"/><circle cx="100" cy="100" r="60" fill="none" stroke="#0071e3" stroke-width="2" opacity=".3"/><circle cx="100" cy="100" r="40" fill="none" stroke="#0071e3" stroke-width="1.5" opacity=".5"/><circle cx="100" cy="100" r="20" fill="none" stroke="#0071e3" opacity=".7"/><circle cx="100" cy="100" r="4" fill="#0071e3"/><path stroke="#34c759" stroke-linecap="round" stroke-width="2" d="M100 40V30m0 130v10m-60-70H30m130 0h10"/><circle cx="75" cy="80" r="3" fill="#ff3b30" opacity=".9"/><circle cx="130" cy="70" r="2.5" fill="#f5a623" opacity=".9"/><circle cx="115" cy="120" r="3" fill="#ff3b30" opacity=".9"/><circle cx="85" cy="130" r="2" fill="#f5a623" opacity=".9"/><path stroke="#fff" stroke-width=".5" d="m75 80 55-10m0 0-15 50" opacity=".15"/><text x="100" y="188" fill="#fff" font-family="-apple-system, SF Pro Display, sans-serif" font-size="11" font-weight="600" opacity=".6" text-anchor="middle">MONICA</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="background:#1a1a1a">
+  <rect width="200" height="200" fill="#1a1a1a" rx="32"/>
+  <g transform="translate(100,100)">
+    <!-- Outer hexagonal frame -->
+    <polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+    <!-- Inner facet lines radiating from center to vertices -->
+    <line x1="0" y1="0" x2="0" y2="-62" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <line x1="0" y1="0" x2="54" y2="-31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <line x1="0" y1="0" x2="54" y2="31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <line x1="0" y1="0" x2="0" y2="62" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <line x1="0" y1="0" x2="-54" y2="31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <line x1="0" y1="0" x2="-54" y2="-31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+    <!-- Mid-ring hexagon -->
+    <polygon points="0,-38 33,-19 33,19 0,38 -33,19 -33,-19" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+    <!-- Upper-left facet highlight -->
+    <polygon points="0,0 0,-62 -54,-31" fill="rgba(255,255,255,0.06)"/>
+    <polygon points="0,0 -54,-31 -54,31" fill="rgba(255,255,255,0.04)"/>
+    <!-- Upper-right facet highlight -->
+    <polygon points="0,0 0,-62 54,-31" fill="rgba(255,255,255,0.08)"/>
+    <polygon points="0,0 54,-31 54,31" fill="rgba(255,255,255,0.05)"/>
+    <!-- Bottom facets (darker) -->
+    <polygon points="0,0 54,31 0,62" fill="rgba(255,255,255,0.02)"/>
+    <polygon points="0,0 0,62 -54,31" fill="rgba(255,255,255,0.03)"/>
+    <!-- Center point -->
+    <circle cx="0" cy="0" r="3" fill="rgba(255,255,255,0.5)"/>
+    <!-- Vertex dots -->
+    <circle cx="0" cy="-62" r="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="54" cy="-31" r="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="54" cy="31" r="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="0" cy="62" r="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="-54" cy="31" r="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="-54" cy="-31" r="2" fill="rgba(255,255,255,0.3)"/>
+    <!-- Mid-ring dots -->
+    <circle cx="0" cy="-38" r="1.5" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="33" cy="-19" r="1.5" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="33" cy="19" r="1.5" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="0" cy="38" r="1.5" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="-33" cy="19" r="1.5" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="-33" cy="-19" r="1.5" fill="rgba(255,255,255,0.2)"/>
+    <!-- Diagonal cross-facet lines for depth -->
+    <line x1="-54" y1="-31" x2="54" y2="31" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+    <line x1="54" y1="-31" x2="-54" y2="31" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+    <line x1="0" y1="-62" x2="0" y2="62" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  </g>
+</svg>

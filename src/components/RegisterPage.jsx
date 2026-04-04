@@ -11,9 +11,8 @@ function fadeStyle(mounted, delay = 0) {
 }
 
 const TIERS = [
-  { name: 'Free', price: '$0', period: 'forever', features: ['Prediction markets', 'Live stock data (US50)', 'Monte Carlo simulations', 'Trading simulator'], highlight: false },
-  { name: 'Starter', price: '$20', period: '/mo', features: ['Everything in Free', 'Broker panel unlock', 'cTrader + TradingView signals', 'Basic auto-send'], highlight: false },
-  { name: 'Pro', price: '$50', period: '/mo', features: ['Everything in Starter', 'Full broker automation', 'Higher signal throughput', 'Priority support'], highlight: true },
+  { name: 'Free', price: '$0', period: 'forever', features: ['Map + all data layers', 'Live stock data + ticker', 'Situation monitor', 'Trading simulator'], highlight: false },
+  { name: 'Premium', price: '$1', period: '/wk', features: ['Everything in Free', 'AI Analyst (Claude)', 'Portfolio + watchlist', 'Ontology + deep data'], highlight: true },
 ];
 
 export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {

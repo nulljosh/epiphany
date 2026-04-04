@@ -79,8 +79,8 @@ Search cancels previous in-flight requests via AbortController. 12s hard timeout
 ## Auth and Billing
 
 - **Sessions**: bcrypt, tokens in Vercel KV (Upstash Redis)
-- **Billing**: Stripe Checkout -- Free / $1 week / $20 month
-- **Feature gates**: Free gets map + ticker + situation monitor. Paid unlocks AI, portfolio, deep data.
+- **Billing**: Stripe Checkout -- Free / $1 per week (Premium)
+- **Feature gates**: Free gets map + ticker + situation monitor. Premium unlocks AI, portfolio, ontology, deep data.
 
 ## Navigation
 
