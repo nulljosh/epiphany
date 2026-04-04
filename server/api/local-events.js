@@ -111,6 +111,7 @@ async function fetchWikipediaPlaces(lat, lon) {
         severity: 'low',
         timestamp: new Date().toISOString(),
         source: 'wikipedia',
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(place.title.replace(/ /g, '_'))}`,
       });
     }
   } catch { /* Wikipedia unavailable */ }

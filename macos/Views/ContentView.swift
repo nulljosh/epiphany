@@ -6,7 +6,7 @@ struct ContentView: View {
     @State private var tickerSelectedStock: Stock?
 
     enum AppSection: String, CaseIterable, Identifiable {
-        case situation = "Map"
+        case situation = "Situation"
         case markets = "Markets"
         case portfolio = "Portfolio"
         case settings = "Settings"

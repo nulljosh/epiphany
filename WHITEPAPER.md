@@ -1,290 +1,127 @@
-# Monica: Technical Whitepaper
+# Monica -- Technical Whitepaper
 
-**Version**: 2.0
-**Date**: February 2026
-**Author**: Joshua Trommel ([@nulljosh](https://github.com/nulljosh))
-**License**: MIT
+**v4.2.0** | April 2026
 
----
+## Overview
 
-## Abstract
+Monica is a personal intelligence platform. It aggregates live geospatial data, financial markets, prediction markets, people intelligence, and news into a single map-first interface. Palantir for regular people.
 
-Monica is a low-latency financial terminal combining quantitative simulation, prediction market analysis, and live market data in under 10MB of runtime memory. This paper documents the core algorithms - trading simulator, Monte Carlo engine, Kelly sizing, and edge detection - along with the system architecture that makes extreme efficiency possible.
+Live at [monica.heyitsmejosh.com](https://monica.heyitsmejosh.com). Companion apps for iOS, macOS, and watchOS.
 
----
-
-## 1. Trading Simulator
-
-The simulator models autonomous trading from $1 to $1T across 61 assets spanning indices, equities, crypto, and memecoins.
-
-### 1.1 Price Model
-
-Each tick, asset prices update using a bounded random walk with drift and trend components:
+## Architecture
 
 ```
-move     = drift + trend[sym] + (rand − 0.5) × noise
-newPrice = clamp(lastPrice × (1 + move), base × 0.7, base × 1.5)
+Browser / iOS / macOS / watchOS
+              |
+       Vercel Gateway (api/gateway.js)
+              |
+  +-----------+-----------+-----------+
+  |           |           |           |
+Auth      11 Data      AI Chat     Stripe
+(KV)      Sources     (Claude)   (billing)
 ```
 
-Parameters:
-- `drift = 0.0001`  --  persistent upward bias
-- `trend[sym]`  --  resets with p = 0.05 per tick: `(rand − 0.45) × 0.006`
-- `noise = 0.008`  --  peak-to-peak random component
-- Price clamped to [70%, 150%] of base
+**Gateway**: Single serverless entry point. Critical routes (auth, stocks, markets) are static imports. Everything else lazy-loads with try/catch isolation -- one broken route cannot crash others. Edge caching with per-route TTLs. Bot blocking.
 
-Three ticks are generated per simulation step to smooth the signal.
+## Data Sources
 
-### 1.2 Entry Signal
+| Layer | Source | Auth | Notes |
+|-------|--------|------|-------|
+| Earthquakes | USGS | None | Global, real-time |
+| Flights | OpenSky Network | Optional | Rate-limited unauthenticated |
+| Incidents | OpenStreetMap Overpass | None | Police, fire, hospitals, construction, cameras |
+| Traffic | TomTom / HERE | API key | Keys need renewal |
+| Weather | NWS + Environment Canada | None | Alerts only |
+| Crime | GDELT + local feeds | None | Geo-tagged crime events |
+| Local Events | Wikipedia GeoSearch, Ticketmaster, PredictHQ | Mixed | Wikipedia is the free universal fallback |
+| Wildfires | NASA EONET / FIRMS | Optional | Satellite fire detections |
+| News | GDELT | None | Global news with geo-extraction |
+| Predictions | Polymarket | None | Whale tracking, probability markets |
+| Heatmap | Derived | N/A | Client-side density from all sources |
 
-Each step, the algorithm scans all assets and selects the highest-quality entry via six sequential filters:
+All sources fetch in parallel every 120 seconds. Polling pauses when the tab is hidden (`useVisibilityPolling`). Each source has its own error boundary -- failures return empty arrays, never block other sources.
 
-| Filter | Condition |
-|--------|-----------|
-| Cooldown | Skip symbols traded within last 50 ticks |
-| Volatility | Reject if 10-bar realized stddev > 2.5% |
-| Momentum | Reject if price-to-MA deviation below minimum (scales with balance) |
-| Trend consistency | Require ≥ 5 rising bars in last 10 |
-| Dual MA | Current price must be above 20-bar MA |
-| Continuity | Previous bar must also show positive strength |
+**Geo-matching rule**: Markers only render with real geographic coordinates. No synthetic scatter, no estimated positions, no placeholder data.
 
-Momentum minimum thresholds by balance:
+## Map Engine
 
-| Balance | Min Strength |
-|---------|-------------|
-| < $2 | 0.80% |
-| < $10 | 0.90% |
-| < $100 | 1.00% |
-| $100+ | 1.20% |
+MapLibre GL JS with CARTO basemaps (dark/light). DOM-based markers with CSS pulse animations per layer type. Heatmap layer computed from all geo-tagged data points.
 
-The asset with the highest strength score that clears all filters is selected.
+Geolocation chain: browser GPS > cached position (30 min TTL) > IP fallback. No jump on load -- position resolved before first render when cached.
 
-### 1.3 Position Sizing
+Layer toggles in Settings control which marker types render. The `mapLayers` state is passed through and checked per layer section in the rendering effect.
 
-Size scales down as balance grows, preventing runaway compounding:
+## Financial Data
 
-| Balance | Size % |
-|---------|--------|
-| < $10 | 65% |
-| < $100 | 50% |
-| < $10,000 | 35% |
-| < $1M | 25% |
-| < $100M | 15% |
-| $100M+ | 10% |
+- **Stocks**: Yahoo Finance via `/api/stocks-free` (chunked 50/batch, 3 retries, exponential backoff, static fallback prices when all APIs fail)
+- **Commodities**: Gold, silver, crude oil
+- **Predictions**: Polymarket (top markets by volume, whale trade aggregation)
+- **Portfolio**: Holdings + debt + spending in Vercel KV, PDF statement upload for analysis
+- **Macro**: Unemployment, PCE, retail sales, consumer confidence, jobless claims
 
-```
-shares = (balance × sizePercent) / entryPrice
-```
+Ticker bar always shows data. If the watchlist filters to zero matches, falls back to full stock list. If live APIs fail entirely, static FALLBACK_DATA prices render.
 
-This is fractional Kelly at variable fractions  --  aggressive early, conservative at scale.
+## AI Analyst
 
-### 1.4 Exit Rules
+Claude streaming via SSE. 10 tool functions executing in parallel when independent: stock lookup, portfolio query, news search, macro data, ontology CRUD, alert management, watchlist ops, note creation.
 
-| Condition | Trigger |
-|-----------|---------|
-| Stop loss | `price ≤ entry × 0.983` (−1.7%), floor at $0.50 |
-| Take profit | `price ≥ entry × 1.05` (+5%) |
-| Trailing stop | If up >2%, ratchet stop to `max(stop, price × 0.97)` |
+## People Intelligence
 
-The trailing stop locks in a 3% minimum gain once in profit.
+Three-tier search with cascading timeouts:
+1. Google Custom Search (5s timeout)
+2. DuckDuckGo (3s timeout)
+3. Wikipedia (3s timeout, universal fallback)
 
-### 1.5 Expected Value Per Trade
+Social link detection across 10 platforms. AI enrichment: company, location, sentiment, key facts, associates, industry tags. Cross-referencing against GDELT for news mentions. Relationship graph rendered client-side.
 
-```
-EV = (winRate × reward) − (lossRate × risk)
-EV = (0.70 × 5%) − (0.30 × 1.7%)
-EV = 3.5% − 0.51% = +2.99% per trade
-```
+Search cancels previous in-flight requests via AbortController. 12s hard timeout with error display and retry button.
 
-Asymmetric R:R of ~3:1. Combined with a target win rate of 70%+, this produces positive EV per trade.
+## Auth and Billing
 
----
+- **Sessions**: bcrypt, tokens in Vercel KV (Upstash Redis)
+- **Billing**: Stripe Checkout -- Free / $1 week / $20 month
+- **Feature gates**: Free gets map + ticker + situation monitor. Paid unlocks AI, portfolio, deep data.
 
-## 2. Monte Carlo Engine
+## Navigation
 
-### 2.1 Geometric Brownian Motion
+Single-level top nav: **Situation | Markets | Portfolio | People | Settings**. No nested tabs. Map always visible as background. Panels slide from right (desktop) or bottom sheet (mobile). Keyboard shortcuts 1-5 for tabs, Cmd+K for command bar.
 
-Price paths follow the GBM SDE discretized over daily steps:
+## Companion Apps
 
-```
-S(t+dt) = S(t) × exp((μ − 0.5σ²) × dt + σ × √dt × Z)
-```
+| Platform | Framework | Notes |
+|----------|-----------|-------|
+| iOS | SwiftUI | 4 tabs, MapKit, parallel data preload, 2-retry networking |
+| macOS | SwiftUI | 5-section bottom nav, 4-column grids, MapKit |
+| watchOS | SwiftUI | Complications only |
+| Widgets | SwiftUI | iOS + macOS widget extensions |
 
-Where `Z ~ N(0,1)` drawn via Box-Muller transform, and `dt = 1/365`.
+All native apps share the API backend. URLSession with cookie persistence. People view unified: search at top, index grid below, relationship graph at bottom.
 
-### 2.2 Box-Muller Transform
-
-Standard normals are generated from a seeded pseudo-random source:
+## Repo Structure
 
 ```
-u = max(0.0001, sRand(s))
-Z = √(−2 × ln(u)) × cos(2π × sRand(s + 0.5))
+monica/
+  api/              Vercel serverless gateway
+  server/           API route handlers (auth, stocks, AI, map sources)
+  src/              React web app (Vite)
+  ios/              iPhone app (SwiftUI)
+  macos/            Mac app (SwiftUI)
+  watchos/          Watch app (SwiftUI)
+  widgets-ios/      iOS widget extension
+  widgets-macos/    macOS widget extension
+  tradingview/      Pine Script strategies
+  public/           Static assets
+  scripts/          Build scripts
+  tests/            Vitest + Playwright
 ```
 
-The seed is a function of `(simSeed, pathIndex, day)`, making results reproducible across sessions.
+## Performance
 
-### 2.3 Simulation Parameters
+- **Cold start**: ~2s (Vercel Fluid Compute)
+- **Data refresh**: 120s polling, paused when hidden
+- **Bundle**: ~1MB gzipped (MapLibre GL is majority)
+- **Tests**: 306 across 23 files
 
-- **Paths (N)**: 5,000
-- **Horizon**: User-configurable (default 30 days)
-- **Output**: 5th, 50th, 95th percentile bands
+## License
 
-### 2.4 Probability Estimates
-
-For each target price and horizon, two methods are computed and cross-validated:
-
-**Monte Carlo**:
-```
-P_mc = count(finalPrice ≥ target) / N
-```
-
-**Black-Scholes** (d2 term):
-```
-d2 = [ln(S/K) + (r − 0.5σ²)T] / (σ√T)
-P_bs = N(d2)     where r = 0.045
-```
-
-### 2.5 Normal CDF Approximation
-
-Abramowitz & Stegun rational approximation (max error < 7.5 × 10⁻⁸):
-
-```
-t = 1 / (1 + 0.3275911 × |x| / √2)
-erf ≈ 1 − poly(t) × exp(−x²/2)
-N(x) = 0.5 × (1 + sign(x) × erf)
-```
-
----
-
-## 3. Kelly Criterion
-
-Position sizing for prediction market bets uses fractional Kelly:
-
-```
-f* = (b × p − q) / b
-f_applied = min(f* × 0.25, 0.10)
-```
-
-Where:
-- `b = odds − 1` (net odds)
-- `p` = win probability, `q = 1 − p`
-- 0.25 factor = quarter-Kelly (reduces variance by ~75%, retains ~75% growth rate)
-- Hard cap of 10% of bankroll per bet
-
----
-
-## 4. Prediction Market Edge Detection
-
-For each Polymarket contract, edge is computed relative to a coin flip:
-
-```
-edge   = max(yesProb, noProb) − 0.50
-side   = argmax(yesProb, noProb)
-hasEdge = edge > 0.40     // implied probability > 90%
-```
-
-Contracts flagged `hasEdge = true` represent near-certainty outcomes  --  candidates for Kelly-sized deployment.
-
----
-
-## 5. Fibonacci Milestones
-
-The simulator uses Fibonacci ratios as balance checkpoints:
-
-```
-fib_N = spot + range × ratio
-```
-
-| Ratio | Milestone |
-|-------|-----------|
-| 0.236 | Fib 23.6% |
-| 0.382 | Fib 38.2% |
-| 0.618 | Golden Ratio |
-| 1.000 | 100% extension |
-| 1.618 | Golden Extension |
-
-Applied to balance progression: $1 → $1.618 → $2.618 → ... → $1B → $1T.
-
----
-
-## 6. Delta-Threshold Update Algorithm
-
-UI re-renders only when price moves beyond a threshold, minimizing bandwidth and render cost:
-
-```
-update = |P_curr − P_prev| / P_prev > δ     where δ = 0.5%
-```
-
-This reduces unnecessary renders by ~80% during low-volatility sessions.
-
-| Dimension | Complexity |
-|-----------|------------|
-| Memory | O(n)  --  one stored price per asset |
-| Check cost | O(1) per asset per tick |
-| Render cost | O(k) where k << n |
-
----
-
-## 7. Data Pipeline
-
-```
-Vercel Cron (08:00 UTC daily)
-    ├── Polymarket API    → 50 markets by 24h volume
-    ├── Yahoo Finance     → 24 stocks + 11 commodities
-    └── CoinGecko         → BTC + ETH spot
-
-          ↓
-    Vercel Blob Storage (~50KB JSON)
-          ↓
-    /api/latest  (<100ms p50 latency)
-          ↓
-    React client (5-min refresh + Delta-Threshold updates)
-```
-
-Fallback: If the Blob cache is stale (>24h), the client falls back to direct API calls with a staleness warning.
-
----
-
-## 8. Performance Targets
-
-| Metric | Target | Status |
-|--------|--------|--------|
-| Bundle size | <500KB | 233KB |
-| Runtime memory | <10MB | ~177KB |
-| API latency | <100ms | ~200ms |
-| Tick rate | 50ms | 50ms |
-| Monte Carlo (5K paths) | <500ms | <200ms |
-
----
-
-## 9. Monetization
-
-Monica is freemium.
-
-**Free**: All simulation, Monte Carlo, prediction market, and live data features. No account required.
-
-**Pro ($49/month)**:
-- cTrader auto-trading integration (CFD execution from sim signals)
-- TradingView webhook receiver (alert-to-order pipeline)
-- Priority API access
-
-The free tier is complete by design. Pro is for users who want to act on signals in real markets.
-
----
-
-## 10. Roadmap
-
-- **Black-Scholes options pricer**  --  Full options chain with Greeks
-- **Historical backtesting**  --  Replay real OHLCV data through entry logic
-- **WebSocket feeds**  --  Replace polling with streaming tick data
-- **Kalshi integration**  --  US-regulated prediction markets alongside Polymarket
-- **C++ core via WASM**  --  10x Monte Carlo speedup, sub-millisecond path generation
-
----
-
-## Disclaimer
-
-Monica is a simulation and research tool. Nothing in this document or the software constitutes financial advice. All simulations use synthetic price data. Past simulated performance does not predict real market outcomes.
-
----
-
-*MIT License | Built by Joshua Trommel | Not financial advice*
+MIT 2026, Joshua Trommel

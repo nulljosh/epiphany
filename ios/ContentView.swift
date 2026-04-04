@@ -12,7 +12,7 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             SituationView()
                 .tabItem {
-                    Label("Map", systemImage: "map")
+                    Label("Situation", systemImage: "map")
                 }
                 .tag(0)
 

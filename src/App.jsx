@@ -12,7 +12,8 @@ import Ticker from './components/Ticker';
 import PricingPage from './components/PricingPage';
 import FinancePanel from './components/FinancePanel';
 import LiveMapBackdrop from './components/LiveMapBackdrop';
-import MonitorPanel from './components/MonitorPanel';
+import SituationMonitor from './components/SituationMonitor';
+import MarketsPanel from './components/MarketsPanel';
 import { useSubscription } from './hooks/useSubscription';
 import { useAuth } from './hooks/useAuth';
 import { useWatchlist } from './hooks/useWatchlist';
@@ -24,7 +25,6 @@ import RegisterPage from './components/RegisterPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import Settings from './components/Settings';
-// MarketsPanel + SituationMonitor now wrapped by MonitorPanel
 import PeoplePanel from './components/PeoplePanel';
 import CommandBar from './components/CommandBar';
 import AiPanel from './components/AiPanel';
@@ -173,7 +173,7 @@ export default function App() {
     // Always respect system preference when not manually overridden
     return resolveAutoTheme() === 'dark';
   });
-  const [activeTab, setActiveTab] = useState('monitor');
+  const [activeTab, setActiveTab] = useState('situation');
   const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false, incidents: true, crime: true, localEvents: true, wildfires: true });
   const mapInstanceRef = useRef(null);
   useEffect(() => { applyResolvedTheme(dark ? 'dark' : 'light'); }, [dark]);
@@ -227,8 +227,8 @@ export default function App() {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       // Number keys 1-4 switch tabs
       const numKey = parseInt(e.key);
-      if (numKey >= 1 && numKey <= 4) {
-        const tabs = ['monitor', 'portfolio', 'people', 'settings'];
+      if (numKey >= 1 && numKey <= 5) {
+        const tabs = ['situation', 'markets', 'portfolio', 'people', 'settings'];
         const tab = tabs[numKey - 1];
         setActiveTab(tab);
         if (isMobileNav) setMobilePanelOpen(true);
@@ -1079,8 +1079,9 @@ const reset = useCallback(() => {
   } : null;
 
   const TAB_PILLS = [
-    { key: 'monitor', label: 'Map' },
-    { key: 'portfolio', label: 'Markets' },
+    { key: 'situation', label: 'Situation' },
+    { key: 'markets', label: 'Markets' },
+    { key: 'portfolio', label: 'Portfolio' },
     { key: 'people', label: 'People' },
     { key: 'settings', label: 'Settings' },
   ];
@@ -1455,19 +1456,25 @@ const reset = useCallback(() => {
           <>
             {activeTab === 'simulator' && simulatorPanel}
 
-            {activeTab === 'monitor' && (
-              <MonitorPanel
-                dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
-                watchlist={watchlist} toggleSymbol={toggleSymbol}
-                isAuthenticated={isAuthenticated}
-                initialSymbol={commandBarStock}
-                onConsumeInitialSymbol={() => setCommandBarStock(null)}
+            {activeTab === 'situation' && (
+              <SituationMonitor
+                dark={dark} t={t} font={font}
                 sim={simData} pmEdges={pmEdges}
                 lastPmBetMap={lastPmBetRef.current}
                 trades={trades} pmExits={pmExits}
                 pmWhales={whales}
                 mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
                 mapLayers={mapLayers}
+              />
+            )}
+
+            {activeTab === 'markets' && (
+              <MarketsPanel
+                dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
+                watchlist={watchlist} toggleSymbol={toggleSymbol}
+                isAuthenticated={isAuthenticated}
+                initialSymbol={commandBarStock}
+                onConsumeInitialSymbol={() => setCommandBarStock(null)}
               />
             )}
 
@@ -1543,18 +1550,23 @@ const reset = useCallback(() => {
             >{'\u00d7'}</button>
           </div>
           {activeTab === 'simulator' && simulatorPanel}
-          {activeTab === 'monitor' && (
-            <MonitorPanel
-              dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
-              watchlist={watchlist} toggleSymbol={toggleSymbol}
-              isAuthenticated={isAuthenticated}
-              initialSymbol={commandBarStock}
-              onConsumeInitialSymbol={() => setCommandBarStock(null)}
+          {activeTab === 'situation' && (
+            <SituationMonitor
+              dark={dark} t={t} font={font}
               sim={simData} pmEdges={pmEdges}
               lastPmBetMap={lastPmBetRef.current}
               trades={trades} pmExits={pmExits}
               mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
               mapLayers={mapLayers}
+            />
+          )}
+          {activeTab === 'markets' && (
+            <MarketsPanel
+              dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
+              watchlist={watchlist} toggleSymbol={toggleSymbol}
+              isAuthenticated={isAuthenticated}
+              initialSymbol={commandBarStock}
+              onConsumeInitialSymbol={() => setCommandBarStock(null)}
             />
           )}
           {activeTab === 'portfolio' && (
@@ -1600,7 +1612,7 @@ const reset = useCallback(() => {
         font={font}
         onSelectStock={(sym) => {
           setCommandBarStock(sym);
-          setActiveTab('monitor');
+          setActiveTab('markets');
           if (isMobileNav) setMobilePanelOpen(true);
           else setDesktopPanelOpen(true);
         }}
