@@ -1545,7 +1545,6 @@ function IndexView({ dark, t, peopleIndex, ontology, glass, font }) {
 
 
 export default function PeoplePanel({ dark, t, isAuthenticated }) {
-  const [tab, setTab] = useState('search');
   const [search, setSearch] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1591,7 +1590,9 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
       }
     }
     try {
-      const res = await fetch(`/api/people?q=${encodeURIComponent(query.trim())}`);
+      const res = await fetch(`/api/people?q=${encodeURIComponent(query.trim())}`, {
+        signal: AbortSignal.timeout(12000),
+      });
       if (!res.ok) throw new Error(`Search failed (${res.status})`);
       const data = await res.json();
       setCacheEntry(query, data);
@@ -1603,7 +1604,8 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
       }
     } catch (err) {
       if (!fromCache) {
-        setError(err.message);
+        const isTimeout = err.name === 'TimeoutError' || err.name === 'AbortError';
+        setError(isTimeout ? 'Search timed out. Try again.' : (err.message || 'Search failed. Try again.'));
         setResults(null);
       }
     } finally {
@@ -1708,37 +1710,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
 
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
-      {/* Tab Switcher */}
-      <div style={{
-        display: 'flex', gap: 0, marginBottom: 12,
-        borderRadius: 8, overflow: 'hidden',
-        border: `1px solid ${t.border}`,
-        background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
-      }}>
-        {['search', 'index'].map(tabName => (
-          <button
-            key={tabName}
-            onClick={() => setTab(tabName)}
-            style={{
-              flex: 1, padding: '8px 0', border: 'none',
-              background: tab === tabName
-                ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)')
-                : 'transparent',
-              color: tab === tabName ? t.text : t.textSecondary,
-              fontSize: 13, fontWeight: tab === tabName ? 600 : 400,
-              fontFamily: font, cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              textTransform: 'capitalize',
-            }}
-          >
-            {tabName}
-          </button>
-        ))}
-      </div>
-
-      {/* --- SEARCH TAB --- */}
-      {tab === 'search' && (
-        <>
+      {/* --- SEARCH --- */}
           <input
             ref={inputRef}
             type="text"
@@ -1776,8 +1748,23 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
               ...glass, padding: '12px 14px', marginTop: 12,
               borderColor: 'rgba(255,69,58,0.3)',
               color: '#FF453A', fontSize: 13,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
             }}>
-              {error}
+              <span>{error}</span>
+              <button
+                onClick={() => fetchPerson(search)}
+                style={{
+                  background: 'none', border: `1px solid rgba(255,69,58,0.4)`,
+                  color: '#FF453A', fontSize: 12, fontWeight: 600,
+                  fontFamily: font, cursor: 'pointer',
+                  padding: '4px 12px', borderRadius: 100, flexShrink: 0,
+                  transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                Retry
+              </button>
             </div>
           )}
 
@@ -2137,13 +2124,10 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
               )}
             </div>
           )}
-        </>
-      )}
-
-      {/* --- INDEX TAB --- */}
-      {tab === 'index' && (
+      {/* --- INDEX --- */}
+      <div style={{ marginTop: 16 }}>
         <IndexView dark={dark} t={t} peopleIndex={peopleIndex} ontology={ontology} glass={glass} font={font} />
-      )}
+      </div>
     </div>
   );
 }

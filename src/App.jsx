@@ -927,28 +927,35 @@ const reset = useCallback(() => {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [busted, won, reset]);
 
-  // Memoize ticker items - use live stock data
+  // Memoize ticker items - use live stock data, fallback to static ASSETS when market closed / API down
   const tickerItems = useMemo(() => {
-    if (!stocks || Object.keys(stocks).length === 0) {
-      return [];
+    const hasLive = stocks && Object.keys(stocks).length > 0;
+
+    if (hasLive) {
+      const symbols = watchlist && watchlist.length > 0
+        ? watchlist.filter(s => stocks[s])
+        : Object.keys(stocks);
+
+      return symbols
+        .sort((a, b) => ((stocks[b]?.changePercent || 0) - (stocks[a]?.changePercent || 0)))
+        .map(sym => {
+        const stock = stocks[sym];
+        return {
+          key: stock.symbol,
+          name: stock.symbol,
+          price: stock.price,
+          change: stock.changePercent || 0,
+        };
+      });
     }
 
-    // Filter by watchlist if set, otherwise show all
-    const symbols = watchlist && watchlist.length > 0
-      ? watchlist.filter(s => stocks[s])
-      : Object.keys(stocks);
-
-    return symbols
-      .sort((a, b) => ((stocks[b]?.changePercent || 0) - (stocks[a]?.changePercent || 0)))
-      .map(sym => {
-      const stock = stocks[sym];
-      return {
-        key: stock.symbol,
-        name: stock.symbol,
-        price: stock.price,
-        change: stock.changePercent || 0,
-      };
-    });
+    // Fallback: show static asset prices so ticker is never empty
+    return SYMS.slice(0, 30).map(sym => ({
+      key: sym,
+      name: sym,
+      price: ASSETS[sym].price,
+      change: 0,
+    }));
   }, [stocks, watchlist]);
 
   const filteredMarkets = useMemo(() => {
@@ -1169,8 +1176,8 @@ const reset = useCallback(() => {
   const glassButton = {
     background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.72)',
     border: `1px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)'}`,
-    backdropFilter: 'blur(18px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+    backdropFilter: 'blur(18px)',
+    WebkitBackdropFilter: 'blur(18px)',
     boxShadow: 'none',
   };
 
@@ -1274,8 +1281,8 @@ const reset = useCallback(() => {
                   background: activeTab === pill.key && desktopPanelOpen ? (dark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)') : glassButton.background,
                   color: activeTab === pill.key && desktopPanelOpen ? (dark ? '#020617' : '#ffffff') : t.textSecondary,
                   border: activeTab === pill.key && desktopPanelOpen ? '1px solid transparent' : glassButton.border,
-                  backdropFilter: 'blur(16px) saturate(150%)',
-                  WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
                   boxShadow: 'none',
                   transition: 'all 0.15s ease',
                 }}
@@ -1311,7 +1318,7 @@ const reset = useCallback(() => {
               {isFree && (
                 <button
                   onClick={() => setShowPricing(true)}
-                  style={{ background: 'rgba(0,113,227,0.82)', border: '1px solid rgba(125,211,252,0.24)', borderRadius: 9999, padding: '5px 12px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', backdropFilter: 'blur(16px) saturate(150%)', WebkitBackdropFilter: 'blur(16px) saturate(150%)', boxShadow: 'none' }}
+                  style={{ background: '#0071e3', border: 'none', borderRadius: 9999, padding: '5px 12px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: 'none' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
@@ -1320,7 +1327,7 @@ const reset = useCallback(() => {
               )}
               <button
                 onClick={logout}
-                style={{ background: 'rgba(127,29,29,0.28)', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 9999, padding: '5px 12px', color: '#f87171', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font, backdropFilter: 'blur(16px) saturate(150%)', WebkitBackdropFilter: 'blur(16px) saturate(150%)', boxShadow: 'none' }}
+                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 9999, padding: '5px 12px', color: '#f87171', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font, boxShadow: 'none' }}
               >
                 LOGOUT
               </button>

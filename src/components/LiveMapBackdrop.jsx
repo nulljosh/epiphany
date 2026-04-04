@@ -404,11 +404,11 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         if (!cancelled) {
           fetchCountRef.current += 1;
           const fb = fallbackPayload(center);
-          setPayload({
-            incidents: inc.incidents?.length ? inc.incidents : fb.incidents,
-            trafficIncidents: traffic.incidents?.length ? traffic.incidents : fb.trafficIncidents,
+          const merged = {
+            incidents: (inc.incidents && inc.incidents.length > 0) ? inc.incidents : fb.incidents,
+            trafficIncidents: (traffic.incidents && traffic.incidents.length > 0) ? traffic.incidents : fb.trafficIncidents,
             earthquakes: eq.earthquakes || [],
-            events: ev.events?.length ? ev.events : fb.events,
+            events: (ev.events && ev.events.length > 0) ? ev.events : fb.events,
             markets: Array.isArray(mk) ? mk.slice(0, 20) : [],
             newsArticles: Array.isArray(news?.articles) ? news.articles : [],
             crimeIncidents: crime.incidents || [],
@@ -416,7 +416,15 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             weatherAlerts: weather.alerts || [],
             wildfires: fires.fires || [],
             flights: fl.states || [],
-          });
+          };
+          const totalMarkers = Object.values(merged).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
+          if (totalMarkers === 0) {
+            console.warn('[map] All data sources returned empty -- using full fallback');
+            merged.incidents = fb.incidents;
+            merged.trafficIncidents = fb.trafficIncidents;
+            merged.events = fb.events;
+          }
+          setPayload(merged);
         }
       } catch {
         if (!cancelled) setPayload(fallbackPayload(center));
@@ -475,6 +483,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       fl: payload.flights.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
       v: fetchCountRef.current,
+      ml: JSON.stringify(mapLayers),
     });
 
     if (prevPayloadRef.current === payloadKey) return;
@@ -487,6 +496,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     const addMarker = (css, title, data, lon, lat, layerType) =>
       createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef);
 
+    if (mapLayers.incidents !== false)
     payload.incidents.slice(0, 25).forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
       const t = inc.type || 'incident';
@@ -518,6 +528,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    if (mapLayers.traffic !== false)
     payload.trafficIncidents.slice(0, 20).forEach((inc) => {
       const p = inc.position;
       if (!p || p.lon == null || p.lat == null) return;
@@ -529,6 +540,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    if (mapLayers.earthquakes !== false)
     payload.earthquakes.slice(0, 12).forEach((eq, i) => {
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
@@ -548,6 +560,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    if (mapLayers.news !== false)
     payload.events.slice(0, 16).forEach((ev, i) => {
       const kw = geoKeywordMatch(ev.title);
       const angle = (i / 16) * 2 * Math.PI;
@@ -565,6 +578,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    if (mapLayers.news !== false)
     payload.newsArticles.slice(0, 12).forEach((article, i) => {
       let target = geoKeywordMatch(article.title);
       if (!target && typeof article.lat === 'number' && typeof article.lon === 'number') {
@@ -587,6 +601,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     // Crime incidents
+    if (mapLayers.crime !== false)
     payload.crimeIncidents.slice(0, 25).forEach((crime, i) => {
       const c = extractCoords(crime);
       if (!c) return;
@@ -600,6 +615,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     // Local events
+    if (mapLayers.localEvents !== false)
     payload.localEvents.slice(0, 25).forEach((ev, i) => {
       const c = extractCoords(ev);
       if (!c) return;
@@ -613,6 +629,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     // Weather alerts
+    if (mapLayers.weather !== false)
     payload.weatherAlerts.slice(0, 10).forEach((wa, i) => {
       const lat = wa.lat;
       const lon = wa.lon;
@@ -626,6 +643,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     // Wildfires
+    if (mapLayers.wildfires !== false)
     payload.wildfires.slice(0, 30).forEach((fire, i) => {
       if (fire.lat == null || fire.lon == null) return;
       addMarker(
@@ -637,6 +655,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     // Flights
+    if (mapLayers.flights !== false)
     payload.flights.slice(0, 40).forEach((fl) => {
       if (fl.lat == null || fl.lon == null) return;
       const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
@@ -648,6 +667,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    if (mapLayers.predictions !== false)
     payload.markets.slice(0, 20).forEach((m, i) => {
       const p = geoKeywordMatch(m.question);
       const prob = typeof m.probability === 'number' ? m.probability : 0.5;
@@ -663,7 +683,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         mLon, mLat, 'predictions'
       );
     });
-  }, [center.lat, center.lon, payload, mapLoaded]);
+  }, [center.lat, center.lon, payload, mapLoaded, mapLayers]);
 
   // Heatmap layer -- density visualization of all events/incidents
   useEffect(() => {

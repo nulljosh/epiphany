@@ -195,27 +195,68 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
           >{'\u00d7'}</button>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+          {/* Free */}
           <div style={{
             ...glassCard,
-            maxWidth: 360,
             width: '100%',
-            border: currentTier === 'starter'
+            boxShadow: 'none',
+            border: currentTier === 'free'
               ? `2px solid ${t.accent}`
               : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
           }}>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Free</h3>
+            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$0</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>forever</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
+              <FeatureItem included>Map + all data layers</FeatureItem>
+              <FeatureItem included>Situation monitor (read)</FeatureItem>
+              <FeatureItem included>Stock data + ticker</FeatureItem>
+              <FeatureItem included>Weather/quakes/traffic</FeatureItem>
+            </ul>
+            {currentTier === 'free' && <CurrentBadge />}
+          </div>
+
+          {/* Weekly */}
+          <div style={{
+            ...glassCard,
+            width: '100%',
+            boxShadow: 'none',
+            border: `2px solid ${t.accent || '#0071e3'}`,
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: t.accent || '#0071e3', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8, fontFamily: font }}>Recommended</div>
             <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Weekly</h3>
             <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$1</div>
             <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per week</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
-              <FeatureItem included>Map + all data layers</FeatureItem>
+              <FeatureItem included>Everything in Free</FeatureItem>
               <FeatureItem included>AI Analyst (Claude)</FeatureItem>
               <FeatureItem included>Portfolio + watchlist</FeatureItem>
-              <FeatureItem included>Ontology writes + batch</FeatureItem>
               <FeatureItem included>Deep news + crime data</FeatureItem>
               <FeatureItem included>Situation monitor</FeatureItem>
             </ul>
             <UpgradeButton plan="starter" label="Get Weekly -- $1/wk" bgColor={t.accent || '#0071e3'} />
+          </div>
+
+          {/* Pro */}
+          <div style={{
+            ...glassCard,
+            width: '100%',
+            boxShadow: 'none',
+            border: currentTier === 'pro'
+              ? `2px solid ${t.accent}`
+              : `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+          }}>
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: t.text, margin: 0, marginBottom: 4, fontFamily: font }}>Pro</h3>
+            <div style={{ fontSize: 44, fontWeight: 700, color: t.text, fontFamily: font, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>$20</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 24, fontFamily: font }}>per month</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
+              <FeatureItem included>Everything in Weekly</FeatureItem>
+              <FeatureItem included>Ontology writes + batch</FeatureItem>
+              <FeatureItem included>Priority data refresh</FeatureItem>
+              <FeatureItem included>API access</FeatureItem>
+            </ul>
+            <UpgradeButton plan="pro" label="Get Pro -- $20/mo" bgColor={t.accent || '#0071e3'} />
           </div>
         </div>
 

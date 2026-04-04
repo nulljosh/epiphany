@@ -90,20 +90,28 @@ async function googleSearch(query) {
     num: '10',
   });
 
-  const res = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`);
-  if (!res.ok) {
-    console.warn(`[people] Google CSE error: ${res.status}`);
+  try {
+    const res = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      console.warn(`[people] Google CSE error: ${res.status}`);
+      return duckDuckGoSearch(query);
+    }
+    const data = await res.json();
+    return data.items || [];
+  } catch (err) {
+    console.warn(`[people] Google CSE failed: ${err.message}`);
     return duckDuckGoSearch(query);
   }
-
-  const data = await res.json();
-  return data.items || [];
 }
 
 async function duckDuckGoSearch(query) {
   try {
     const params = new URLSearchParams({ q: query, format: 'json', no_redirect: '1' });
-    const res = await fetch(`https://api.duckduckgo.com/?${params}`);
+    const res = await fetch(`https://api.duckduckgo.com/?${params}`, {
+      signal: AbortSignal.timeout(6000),
+    });
     if (!res.ok) return wikiSearch(query);
     const data = await res.json();
 
@@ -140,7 +148,9 @@ async function wikiSearch(query) {
       utf8: '1',
       srlimit: '10',
     });
-    const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+    const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, {
+      signal: AbortSignal.timeout(6000),
+    });
     if (!res.ok) return [];
     const data = await res.json();
     const search = data.query?.search || [];
@@ -207,6 +217,9 @@ export default async function handler(req, res) {
     return res.json(profile);
   } catch (err) {
     console.error('[people] Search error:', err);
-    return res.status(500).json({ error: 'Search failed' });
+    const isTimeout = err.name === 'TimeoutError' || err.name === 'AbortError';
+    return res.status(isTimeout ? 504 : 500).json({
+      error: isTimeout ? 'Search timed out. Try again.' : 'Search failed',
+    });
   }
 }
