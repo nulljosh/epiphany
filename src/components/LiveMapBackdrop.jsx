@@ -114,7 +114,7 @@ function extractCoords(item) {
 
 function buildPopupHTML(data) {
   const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  return `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif">
     <div style="font-weight:700;font-size:12px">${esc(data.title)}</div>
     <div style="margin-top:4px;color:#cbd5e1;font-size:11px;line-height:1.45">${esc(data.detail)}</div>
     <div style="margin-top:6px;font-size:10px;color:#67e8f9;text-transform:uppercase;letter-spacing:0.06em">${esc(data.level)}</div>

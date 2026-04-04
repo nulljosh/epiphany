@@ -1,6 +1,6 @@
 # Monica -- Technical Whitepaper
 
-**v5.0.0** | April 2026
+**v1.0.0-beta** | April 2026
 
 ## Overview
 

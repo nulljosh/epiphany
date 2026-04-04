@@ -87,13 +87,17 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       if (data.history && Array.isArray(data.history)) {
-        setHistory(data.history.map(p => ({
-          time: p.time,
-          open: p.open,
-          high: p.high,
-          low: p.low,
-          close: p.close,
-        })));
+        const seen = new Set();
+        setHistory(data.history
+          .filter(p => p.time != null && p.close != null)
+          .filter(p => { const k = String(p.time); if (seen.has(k)) return false; seen.add(k); return true; })
+          .map(p => ({
+            time: p.time,
+            open: p.open ?? p.close,
+            high: p.high ?? p.close,
+            low: p.low ?? p.close,
+            close: p.close,
+          })));
       }
     } catch (err) { if (err.name !== 'AbortError') setHistory([]); }
     finally { setHistoryLoading(false); }
@@ -140,7 +144,9 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     const container = chartContainerRef.current;
     const isDark = dark !== false;
 
-    const chart = createChart(container, {
+    let chart;
+    try {
+    chart = createChart(container, {
       width: container.clientWidth,
       height: 180,
       layout: {
@@ -254,6 +260,10 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       chart.remove();
       chartRef.current = null;
     };
+    } catch (err) {
+      console.warn('Chart render error:', err.message);
+      return undefined;
+    }
   }, [history, chartType, dark, range]);
 
   if (!stock) return null;

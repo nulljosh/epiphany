@@ -315,37 +315,11 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
         </div>
       </Card>
 
-      <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
-        <div style={labelStyle}>Appearance</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            aria-pressed={!dark && localStorage.getItem('monica_theme') === 'light'}
-            onClick={() => { localStorage.setItem('monica_theme', 'light'); localStorage.setItem('monica_theme_manual', '1'); setDark(false); }}
-            style={toggleStyle(!dark && localStorage.getItem('monica_theme') === 'light')}
-          >
-            Light
-          </button>
-          <button
-            aria-pressed={dark && localStorage.getItem('monica_theme') === 'dark'}
-            onClick={() => { localStorage.setItem('monica_theme', 'dark'); localStorage.setItem('monica_theme_manual', '1'); setDark(true); }}
-            style={toggleStyle(dark && localStorage.getItem('monica_theme') === 'dark')}
-          >
-            Dark
-          </button>
-          <button
-            aria-pressed={!localStorage.getItem('monica_theme')}
-            onClick={() => { localStorage.removeItem('monica_theme'); localStorage.removeItem('monica_theme_manual'); const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches; setDark(sysDark); }}
-            style={toggleStyle(!localStorage.getItem('monica_theme'))}
-          >
-            Auto
-          </button>
-        </div>
-      </Card>
 
       <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
         <div style={labelStyle}>About</div>
         <div style={{ fontSize: 13, color: t.textSecondary }}>
-          Monica v3.5.1
+          Monica v1.0.0-beta
         </div>
       </Card>
     </div>

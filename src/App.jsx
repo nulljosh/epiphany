@@ -164,15 +164,7 @@ export default function App() {
   const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('monica_theme');
-    const isManual = localStorage.getItem('monica_theme_manual') === '1';
-    if (isManual && (saved === 'light' || saved === 'dark')) {
-      return saved === 'dark';
-    }
-    // Always respect system preference when not manually overridden
-    return resolveAutoTheme() === 'dark';
-  });
+  const [dark, setDark] = useState(true);
   const [activeTab, setActiveTab] = useState('situation');
   const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false, incidents: true, crime: true, localEvents: true, wildfires: true });
   const mapInstanceRef = useRef(null);
@@ -249,26 +241,6 @@ export default function App() {
     };
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  }, []);
-  useEffect(() => {
-    // Only auto-sync theme when user hasn't manually chosen one
-    const syncTheme = () => {
-      if (localStorage.getItem('monica_theme')) return;
-      const nextDark = resolveAutoTheme() === 'dark';
-      setDark(nextDark);
-      applyResolvedTheme(nextDark ? 'dark' : 'light');
-    };
-    syncTheme();
-
-    const darkMq = window.matchMedia('(prefers-color-scheme: dark)');
-    const lightMq = window.matchMedia('(prefers-color-scheme: light)');
-    darkMq.addEventListener('change', syncTheme);
-    lightMq.addEventListener('change', syncTheme);
-
-    return () => {
-      darkMq.removeEventListener('change', syncTheme);
-      lightMq.removeEventListener('change', syncTheme);
-    };
   }, []);
   useEffect(() => {
     if (isMobileNav || !desktopPanelOpen) return;

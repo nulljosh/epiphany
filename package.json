@@ -1,7 +1,7 @@
 {
   "name": "monica",
   "private": true,
-  "version": "5.0.0",
+  "version": "1.0.0-beta",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -23,13 +23,6 @@ body {
   color: var(--monica-text, #fff);
 }
 
-html[data-theme='light'], html[data-theme='light'] body, html[data-theme='light'] #root {
-  --monica-bg: #ffffff;
-  --monica-text: #111111;
-  background: #ffffff;
-  color: #111111;
-}
-
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -40,8 +33,13 @@ html[data-theme='light'], html[data-theme='light'] body, html[data-theme='light'
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 120, 128, 0.35); /* visible in both dark and light mode */
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 /* Mobile: ensure horizontal scrollbar is visible on scrollable containers */

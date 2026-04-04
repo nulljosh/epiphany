@@ -1,12 +1,13 @@
 # Monica
 
-v5.0.0 -- Personal intelligence platform. Palantir for regular people.
+v1.0.0-beta -- Personal intelligence platform. Palantir for regular people.
 
 ## Rules
 
 - Map stays steady -- no jumps on load, no flashing on state changes
 - No fake prices before real data arrives
 - Mobile-first layout
+- Dark mode only, no light/auto theme
 - iOS app: four tabs (Map, Markets, People, Settings)
 - Web app: monica.heyitsmejosh.com
 - AI endpoint requires ANTHROPIC_API_KEY env var on Vercel
