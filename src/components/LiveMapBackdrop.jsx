@@ -75,14 +75,6 @@ const CITY_HUBS = [
   { label: 'Sydney', lat: -33.8688, lon: 151.2093 },
 ];
 
-function nearestHub(lat, lon) {
-  return CITY_HUBS.reduce((best, hub) => {
-    const d = (hub.lat - lat) ** 2 + (hub.lon - lon) ** 2;
-    const bd = (best.lat - lat) ** 2 + (best.lon - lon) ** 2;
-    return d < bd ? hub : best;
-  }, CITY_HUBS[0]);
-}
-
 function geoKeywordMatch(text) {
   for (const k of GEO_KEYWORDS) {
     if (k.re.test(text || '')) return { lat: k.lat, lon: k.lon, label: k.label };
@@ -90,18 +82,10 @@ function geoKeywordMatch(text) {
   return null;
 }
 
-function fallbackPayload(baseCenter) {
-  const hub = nearestHub(baseCenter.lat, baseCenter.lon);
+function emptyPayload() {
   return {
-    incidents: [{ type: 'estimated-construction', lat: hub.lat, lon: hub.lon, description: `Road works advisory near ${hub.label} (fallback)` }],
-    trafficIncidents: [{ type: 'ESTIMATED', description: `Traffic slowdown estimate near ${hub.label}`, position: { lat: hub.lat + 0.01, lon: hub.lon - 0.01 } }],
-    earthquakes: [],
-    events: [
-      { title: `Local event pulse near ${hub.label}`, country: 'LOCAL', url: null },
-      { title: 'Transit disruption advisory', country: 'LOCAL', url: null },
-    ],
-    markets: [],
-    flights: [],
+    incidents: [], trafficIncidents: [], earthquakes: [], events: [],
+    markets: [], flights: [],
   };
 }
 
@@ -403,12 +387,11 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         ]);
         if (!cancelled) {
           fetchCountRef.current += 1;
-          const fb = fallbackPayload(center);
-          const merged = {
-            incidents: (inc.incidents && inc.incidents.length > 0) ? inc.incidents : fb.incidents,
-            trafficIncidents: (traffic.incidents && traffic.incidents.length > 0) ? traffic.incidents : fb.trafficIncidents,
+          setPayload({
+            incidents: inc.incidents || [],
+            trafficIncidents: traffic.incidents || [],
             earthquakes: eq.earthquakes || [],
-            events: (ev.events && ev.events.length > 0) ? ev.events : fb.events,
+            events: ev.events || [],
             markets: Array.isArray(mk) ? mk.slice(0, 20) : [],
             newsArticles: Array.isArray(news?.articles) ? news.articles : [],
             crimeIncidents: crime.incidents || [],
@@ -416,18 +399,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             weatherAlerts: weather.alerts || [],
             wildfires: fires.fires || [],
             flights: fl.states || [],
-          };
-          const totalMarkers = Object.values(merged).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
-          if (totalMarkers === 0) {
-            console.warn('[map] All data sources returned empty -- using full fallback');
-            merged.incidents = fb.incidents;
-            merged.trafficIncidents = fb.trafficIncidents;
-            merged.events = fb.events;
-          }
-          setPayload(merged);
+          });
         }
       } catch {
-        if (!cancelled) setPayload(fallbackPayload(center));
+        if (!cancelled) setPayload(emptyPayload());
       }
     };
     fetchSituation();
@@ -561,35 +536,25 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     if (mapLayers.news !== false)
-    payload.events.slice(0, 16).forEach((ev, i) => {
+    payload.events.slice(0, 16).forEach((ev) => {
       const kw = geoKeywordMatch(ev.title);
-      const angle = (i / 16) * 2 * Math.PI;
-      const r = 0.018 + (i % 3) * 0.012;
-      const target = kw || {
-        lat: center.lat + Math.sin(angle) * r,
-        lon: center.lon + Math.cos(angle) * r,
-        label: locLabel,
-      };
+      if (!kw) return; // Only show events with a real geographic match
       addMarker(
         'width:14px;height:14px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
-        `${target.label}: ${ev.title}`,
-        { type: 'event', title: ev.country ? `[${ev.country}] ${target.label}` : target.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
-        target.lon, target.lat, 'news'
+        `${kw.label}: ${ev.title}`,
+        { type: 'event', title: ev.country ? `[${ev.country}] ${kw.label}` : kw.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
+        kw.lon, kw.lat, 'news'
       );
     });
 
     if (mapLayers.news !== false)
-    payload.newsArticles.slice(0, 12).forEach((article, i) => {
+    payload.newsArticles.slice(0, 12).forEach((article) => {
       let target = geoKeywordMatch(article.title);
       if (!target && typeof article.lat === 'number' && typeof article.lon === 'number') {
         const dist = Math.abs(article.lat - center.lat) + Math.abs(article.lon - center.lon);
         if (dist < 3) target = { lat: article.lat, lon: article.lon, label: article.source || 'News' };
       }
-      if (!target) {
-        const angle = (i / 12) * 2 * Math.PI;
-        const r = 0.026 + (i % 3) * 0.014;
-        target = { lat: center.lat + Math.sin(angle) * r, lon: center.lon + Math.cos(angle) * r, label: article.source || 'News' };
-      }
+      if (!target) return; // Only show news with real coordinates
       const pubTime = article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
       const detail = [article.source, pubTime].filter(Boolean).join(' · ');
       addMarker(
@@ -668,19 +633,17 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     if (mapLayers.predictions !== false)
-    payload.markets.slice(0, 20).forEach((m, i) => {
+    payload.markets.slice(0, 20).forEach((m) => {
       const p = geoKeywordMatch(m.question);
+      if (!p) return; // Only show predictions with a real geographic match
       const prob = typeof m.probability === 'number' ? m.probability : 0.5;
       const conf = Math.max(prob, 1 - prob);
       const size = conf > 0.9 ? 12 : conf > 0.75 ? 10 : 8;
-      // Distribute non-geo-matched markets around center
-      const mLat = p ? p.lat : center.lat + Math.sin((i / 20) * 2 * Math.PI) * 0.035;
-      const mLon = p ? p.lon : center.lon + Math.cos((i / 20) * 2 * Math.PI) * 0.035;
       addMarker(
         `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};box-shadow:0 0 0 0 rgba(34,197,94,0.4);animation:pulse-cyan 2.4s infinite;`,
         `${Math.round(prob * 100)}% · ${m.question || 'market'}`,
-        { type: 'prediction', title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`, detail: m.question || 'Prediction market', level: p?.label || 'Global', source: 'Polymarket', link: `https://polymarket.com/event/${m.eventSlug || m.slug}` },
-        mLon, mLat, 'predictions'
+        { type: 'prediction', title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`, detail: m.question || 'Prediction market', level: p.label, source: 'Polymarket', link: `https://polymarket.com/event/${m.eventSlug || m.slug}` },
+        p.lon, p.lat, 'predictions'
       );
     });
   }, [center.lat, center.lon, payload, mapLoaded, mapLayers]);

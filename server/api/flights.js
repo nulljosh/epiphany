@@ -147,15 +147,13 @@ export default async function handler(req, res) {
         }),
       });
     }
-    // Generate estimated flights along common corridors within the bbox
-    const estimated = generateEstimatedFlights(bbox);
     return res.status(200).json({
-      source: 'estimated',
-      states: estimated,
-      count: estimated.length,
-      meta: buildMeta('estimated', bbox, {
+      source: 'unavailable',
+      states: [],
+      count: 0,
+      meta: buildMeta('degraded', bbox, {
         degraded: true,
-        warning: 'OpenSky unavailable; showing estimated flight corridors',
+        warning: 'OpenSky unavailable and no cached flight data',
       }),
     });
   }

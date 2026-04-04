@@ -932,9 +932,12 @@ const reset = useCallback(() => {
     const hasLive = stocks && Object.keys(stocks).length > 0;
 
     if (hasLive) {
-      const symbols = watchlist && watchlist.length > 0
+      let symbols = watchlist && watchlist.length > 0
         ? watchlist.filter(s => stocks[s])
         : Object.keys(stocks);
+
+      // If watchlist filtered everything out, fall back to all stocks
+      if (symbols.length === 0) symbols = Object.keys(stocks);
 
       return symbols
         .sort((a, b) => ((stocks[b]?.changePercent || 0) - (stocks[a]?.changePercent || 0)))

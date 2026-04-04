@@ -149,15 +149,10 @@ export default async function handler(req, res) {
     fetchHereIncidents(bbox),
   ]);
 
-  // Always ensure we return some incident data -- use estimates if APIs returned nothing
-  const finalIncidents = incidents && incidents.length > 0
-    ? incidents
-    : estimateIncidents(bbox);
-
   res.setHeader('Cache-Control', 'public, max-age=60');
   return res.status(200).json({
-    flow: flow ?? estimateCongestion(center.lon),
-    incidents: finalIncidents,
+    flow: flow ?? { source: 'unavailable', congestion: 'unknown', currentSpeed: null, freeFlowSpeed: null, confidence: null },
+    incidents: incidents || [],
     center,
   });
 }
