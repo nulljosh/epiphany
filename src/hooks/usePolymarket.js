@@ -181,7 +181,7 @@ export function usePolymarket() {
     seedFromCache();
   }, [fetchMarkets]);
 
-  useVisibilityPolling(fetchMarkets, 120_000, [fetchMarkets]);
+  useVisibilityPolling(fetchMarkets, 5 * 60_000, [fetchMarkets]);
 
   // Search markets by query
   const searchMarkets = useCallback(async (query) => {

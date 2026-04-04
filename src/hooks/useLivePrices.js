@@ -140,7 +140,7 @@ export function useLivePrices(initialAssets) {
     }
   }, [fetchCryptoPrices, fetchCommodityPrices]);
 
-  const pollInterval = isMarketHours() ? 120_000 : 600_000;
+  const pollInterval = isMarketHours() ? 5 * 60_000 : 15 * 60_000;
   useVisibilityPolling(fetchAllPrices, pollInterval, [fetchAllPrices]);
 
   return {

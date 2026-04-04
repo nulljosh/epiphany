@@ -52,7 +52,7 @@ export function useManifold() {
 
   useEffect(() => {
     fetchMarkets();
-    const interval = setInterval(fetchMarkets, 60000); // Refresh every 60s
+    const interval = setInterval(fetchMarkets, 5 * 60000); // Refresh every 5min
     return () => clearInterval(interval);
   }, [fetchMarkets]);
 

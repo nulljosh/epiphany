@@ -11,8 +11,8 @@ export const WORLD_CITIES = [
   { id: 'sydney', label: 'Sydney', lat: -33.8688, lon: 151.2093,  name: 'Sydney'   },
 ];
 
-const FLIGHT_REFRESH    = 120_000;
-const TRAFFIC_REFRESH   = 120_000;
+const FLIGHT_REFRESH    = 5 * 60_000;
+const TRAFFIC_REFRESH   = 5 * 60_000;
 const SITUATION_REFRESH = 10 * 60_000;
 const LAST_GEO_KEY = 'monica_last_geo';
 const FRESH_GEO_MS = 30 * 60 * 1000;
