@@ -2,7 +2,7 @@
 
 # Monica iOS
 
-![version](https://img.shields.io/badge/version-v1.3.1-blue)
+![version](https://img.shields.io/badge/version-v1.4.0-blue)
 
 Your personal intelligence layer. Monica watches everything happening around you -- markets, events, weather, crime, traffic -- and puts it all on one map. Think of it as having a friend who always knows what's going on.
 
