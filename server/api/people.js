@@ -1,6 +1,8 @@
 import { applyCors } from './_cors.js';
 
 const CACHE_TTL = 10 * 60 * 1000;
+const GOOGLE_TIMEOUT = 5000;
+const FALLBACK_TIMEOUT = 3000;
 const cache = new Map();
 
 const SOCIAL_PLATFORMS = {
@@ -92,7 +94,7 @@ async function googleSearch(query) {
 
   try {
     const res = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`, {
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(GOOGLE_TIMEOUT),
     });
     if (!res.ok) {
       console.warn(`[people] Google CSE error: ${res.status}`);
@@ -110,7 +112,7 @@ async function duckDuckGoSearch(query) {
   try {
     const params = new URLSearchParams({ q: query, format: 'json', no_redirect: '1' });
     const res = await fetch(`https://api.duckduckgo.com/?${params}`, {
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(FALLBACK_TIMEOUT),
     });
     if (!res.ok) return wikiSearch(query);
     const data = await res.json();
@@ -149,7 +151,7 @@ async function wikiSearch(query) {
       srlimit: '10',
     });
     const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, {
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(FALLBACK_TIMEOUT),
     });
     if (!res.ok) return [];
     const data = await res.json();

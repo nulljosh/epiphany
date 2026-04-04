@@ -204,7 +204,7 @@ struct PeopleView: View {
     }
 
     private func resultsView(_ profile: PersonProfile) -> some View {
-        ScrollView {
+        VStack(spacing: 0) {
             LazyVStack(spacing: 0) {
                 if let image = profile.primaryImage, let imageURL = URL(string: image) {
                     AsyncImage(url: imageURL) { phase in
@@ -336,8 +336,7 @@ struct PeopleView: View {
     }
 
     private var recentsView: some View {
-        ScrollView {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 if recentSearches.isEmpty {
                     VStack(spacing: 12) {
                         Spacer()
@@ -422,10 +421,7 @@ struct PeopleView: View {
                 }
             }
             .padding(.bottom, 40)
-        }
     }
-
-    // indexTabContent removed -- merged into indexSection
 
     private func indexCard(_ person: IndexedPerson) -> some View {
         Button {
@@ -483,8 +479,6 @@ struct PeopleView: View {
                     .foregroundStyle(.secondary)
             }
     }
-
-    // graphTabContent removed -- merged into indexSection
 
     // MARK: - Actions
 

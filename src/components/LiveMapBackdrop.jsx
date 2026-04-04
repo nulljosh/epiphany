@@ -483,7 +483,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       fl: payload.flights.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
       v: fetchCountRef.current,
-      ml: JSON.stringify(mapLayers),
+      ml: Object.keys(mapLayers).filter(k => mapLayers[k] !== false).join(','),
     });
 
     if (prevPayloadRef.current === payloadKey) return;

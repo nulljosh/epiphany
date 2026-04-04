@@ -1555,6 +1555,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [indexing, setIndexing] = useState(false);
   const debounceRef = useRef(null);
+  const abortRef = useRef(null);
   const inputRef = useRef(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
@@ -1578,6 +1579,12 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
 
   const fetchPerson = useCallback(async (query, { background = false } = {}) => {
     if (!query.trim()) return;
+    // Cancel any in-flight request
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    // 12s hard timeout
+    const timeout = setTimeout(() => controller.abort(), 12000);
     if (!background) {
       setLoading(true);
       setError(null);
@@ -1591,7 +1598,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
     }
     try {
       const res = await fetch(`/api/people?q=${encodeURIComponent(query.trim())}`, {
-        signal: AbortSignal.timeout(12000),
+        signal: controller.signal,
       });
       if (!res.ok) throw new Error(`Search failed (${res.status})`);
       const data = await res.json();
@@ -1603,12 +1610,14 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
         setRecentSearches(getRecent());
       }
     } catch (err) {
+      if (err.name === 'AbortError' && abortRef.current !== controller) return;
       if (!fromCache) {
         const isTimeout = err.name === 'TimeoutError' || err.name === 'AbortError';
         setError(isTimeout ? 'Search timed out. Try again.' : (err.message || 'Search failed. Try again.'));
         setResults(null);
       }
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   }, [fromCache]);

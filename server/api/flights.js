@@ -32,9 +32,6 @@ async function fetchOpenSky(bbox) {
     lamax: bbox.lamax,
     lomax: bbox.lomax,
   });
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-
   try {
     const headers = { 'Accept': 'application/json' };
     const user = process.env.OPENSKY_USERNAME;
@@ -43,10 +40,9 @@ async function fetchOpenSky(bbox) {
       headers['Authorization'] = 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
     }
     const res = await fetch(`${OPENSKY_BASE}/states/all?${params}`, {
-      signal: controller.signal,
+      signal: AbortSignal.timeout(8000),
       headers,
     });
-    clearTimeout(timeout);
     if (!res.ok) throw new Error(`OpenSky ${res.status}`);
     const json = await res.json();
 
@@ -71,15 +67,12 @@ async function fetchOpenSky(bbox) {
       meta: buildMeta('live', bbox),
     };
   } catch (err) {
-    clearTimeout(timeout);
     throw err;
   }
 }
 
 
 function generateEstimatedFlights(bbox) {
-  const midLat = (bbox.lamin + bbox.lamax) / 2;
-  const midLon = (bbox.lomin + bbox.lomax) / 2;
   const latSpan = bbox.lamax - bbox.lamin;
   const lonSpan = bbox.lomax - bbox.lomin;
   const flights = [];
