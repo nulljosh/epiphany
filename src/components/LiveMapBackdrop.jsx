@@ -487,7 +487,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     const addMarker = (css, title, data, lon, lat, layerType) =>
       createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef);
 
-    payload.incidents.slice(0, 25).forEach((inc) => {
+    payload.incidents.slice(0, 8).forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
       addMarker(
         'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);box-shadow:0 0 0 0 rgba(245,158,11,0.35);animation:pulse-amber 1.8s infinite;',

@@ -27,16 +27,7 @@ async function fetchIncidents(bbox) {
     `node["highway"="road_works"](${bb});` +
     `way["railway"="construction"](${bb});` +
     `node["railway"="construction"](${bb});` +
-    `node["emergency"~"^(ambulance_station|fire_station|ses_station)$"](${bb});` +
-    `node["amenity"="police"](${bb});` +
-    `node["amenity"="fire_station"](${bb});` +
-    `way["amenity"="fire_station"](${bb});` +
-    `node["amenity"="hospital"](${bb});` +
-    `way["amenity"="hospital"](${bb});` +
-    `node["highway"="speed_camera"](${bb});` +
-    `node["traffic_calming"](${bb});` +
-    `node["barrier"~"^(toll_booth|border_control)$"](${bb});` +
-    `);out center 60;`;
+    `);out center 30;`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
