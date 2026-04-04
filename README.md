@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80">
 
 # Monica.
-![version](https://img.shields.io/badge/version-v4.2.0-blue)
+![version](https://img.shields.io/badge/version-v5.0.0-blue)
 
 Personal intelligence platform. Map, markets, and people. Palantir for regular people.
 
@@ -35,4 +35,4 @@ Deploy: Vercel
 
 ## License
 
-MIT 2026, Joshua Trommel
+Apache 2.0, 2026, Joshua Trommel

@@ -1,6 +1,6 @@
 # Monica -- Technical Whitepaper
 
-**v4.2.0** | April 2026
+**v5.0.0** | April 2026
 
 ## Overview
 
@@ -124,4 +124,4 @@ monica/
 
 ## License
 
-MIT 2026, Joshua Trommel
+Apache 2.0, 2026, Joshua Trommel

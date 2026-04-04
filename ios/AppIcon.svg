@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" style="background:#1a1a1a">
-  <rect width="200" height="200" fill="#1a1a1a" rx="32"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs><clipPath id="rc"><rect width="200" height="200" rx="32"/></clipPath></defs>
+  <g clip-path="url(#rc)">
+  <rect width="200" height="200" fill="#1a1a1a"/>
   <g transform="translate(100,100)">
     <!-- Outer hexagonal frame -->
     <polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
@@ -41,5 +43,6 @@
     <line x1="-54" y1="-31" x2="54" y2="31" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
     <line x1="54" y1="-31" x2="-54" y2="31" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
     <line x1="0" y1="-62" x2="0" y2="62" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  </g>
   </g>
 </svg>
