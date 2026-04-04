@@ -124,7 +124,7 @@ struct SituationView: View {
         }
     }
 
-    private let maxAnnotationsPerCategory = 30
+    private let maxAnnotationsPerCategory = 15
 
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
