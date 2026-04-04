@@ -72,6 +72,8 @@ const ROUTES = {
   'broker/positions':   lazy(() => import('../server/api/broker/positions.js')),
   'broker/webhook':     lazy(() => import('../server/api/broker/webhook.js')),
   'broker/morning-run': lazy(() => import('../server/api/broker/morning-run.js')),
+  crypto:               lazy(() => import('../server/api/crypto.js')),
+  reddit:               lazy(() => import('../server/api/reddit.js')),
 };
 
 function getRoutePath(req) {
@@ -88,7 +90,7 @@ const CACHE_TTL = {
   commodities: 300, crime: 3600, 'fear-greed': 300, earthquakes: 300, events: 600, flights: 120,
   history: 3600, incidents: 600, latest: 60, 'local-events': 600, macro: 3600,
   markets: 60, news: 300, prices: 60, 'stocks-free': 60, traffic: 300,
-  weather: 300, 'weather-alerts': 300, wildfires: 600, ontology: 3600,
+  weather: 300, 'weather-alerts': 300, wildfires: 600, ontology: 3600, crypto: 60, reddit: 300,
 };
 
 export default async function handler(req, res) {
