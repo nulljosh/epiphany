@@ -164,7 +164,16 @@ struct MarketsView: View {
                                                 }
                                             }
                                             Spacer()
-                                            if !financeData.accounts.isEmpty {
+                                            if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
+                                                VStack(alignment: .trailing, spacing: 2) {
+                                                    Image(systemName: "calendar.badge.clock")
+                                                        .font(.caption)
+                                                        .foregroundStyle(Palette.appleBlue)
+                                                    Text(days == 0 ? "Today" : "\(days)d")
+                                                        .font(.caption2.weight(.bold))
+                                                        .foregroundStyle(days <= 3 ? Palette.successGreen : .secondary)
+                                                }
+                                            } else if !financeData.accounts.isEmpty {
                                                 VStack(alignment: .trailing, spacing: 3) {
                                                     Text(CurrencyFormatter.formatPrice(totalBalance))
                                                         .font(.subheadline.weight(.semibold))
@@ -398,12 +407,12 @@ struct MarketsView: View {
             isVisible = true
             guard !hasLoaded else { return }
             hasLoaded = true
-            rebuildItems()
-            if appState.dailyBrief == nil {
-                Task { await appState.loadDailyBrief() }
+            Task { @MainActor in
+                rebuildItems()
             }
-            if appState.statements.isEmpty {
-                Task { await appState.loadStatements() }
+            Task {
+                if appState.dailyBrief == nil { await appState.loadDailyBrief() }
+                if appState.statements.isEmpty { await appState.loadStatements() }
             }
         }
         .onDisappear { isVisible = false }

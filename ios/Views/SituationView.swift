@@ -124,7 +124,7 @@ struct SituationView: View {
         }
     }
 
-    private let maxAnnotationsPerCategory = 15
+    private let maxAnnotationsPerCategory = 50
 
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
@@ -855,8 +855,19 @@ private struct SituationEventDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text(title)
-                    .font(.title3.weight(.bold))
+                HStack(spacing: 10) {
+                    Image(systemName: eventIcon)
+                        .font(.title2)
+                        .foregroundStyle(eventColor)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(eventType)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(eventColor)
+                            .textCase(.uppercase)
+                        Text(title)
+                            .font(.title3.weight(.bold))
+                    }
+                }
 
                 if let subtitle {
                     Text(subtitle)
@@ -864,15 +875,34 @@ private struct SituationEventDetailView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                ForEach(rows, id: \.label) { row in
-                    HStack(alignment: .top) {
-                        Text(row.label)
-                            .font(.subheadline.weight(.semibold))
-                            .frame(width: 92, alignment: .leading)
-                        Text(row.value)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Spacer(minLength: 0)
+                VStack(spacing: 0) {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                        HStack(alignment: .top) {
+                            Text(row.label)
+                                .font(.subheadline.weight(.semibold))
+                                .frame(width: 92, alignment: .leading)
+                            Text(row.value)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 10)
+                        Divider()
+                    }
+                }
+                .padding(14)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+
+                if let linkURL = eventURL {
+                    Link(destination: linkURL) {
+                        HStack {
+                            Image(systemName: "safari")
+                            Text("View More")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
             }
@@ -881,6 +911,52 @@ private struct SituationEventDetailView: View {
         }
         .navigationTitle("Details")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var eventType: String {
+        switch event {
+        case .earthquake: return "Earthquake"
+        case .flight: return "Flight"
+        case .incident: return "Incident"
+        case .weatherAlert: return "Weather Alert"
+        case .crime: return "Crime"
+        case .localEvent: return "Local Event"
+        case .trafficIncident: return "Traffic"
+        }
+    }
+
+    private var eventIcon: String {
+        switch event {
+        case .earthquake: return "waveform.path.ecg"
+        case .flight: return "airplane"
+        case .incident: return "exclamationmark.triangle.fill"
+        case .weatherAlert: return "cloud.bolt.fill"
+        case .crime: return "shield.lefthalf.filled"
+        case .localEvent: return "mappin.circle.fill"
+        case .trafficIncident: return "car.fill"
+        }
+    }
+
+    private var eventColor: Color {
+        switch event {
+        case .earthquake: return .orange
+        case .flight: return Palette.appleBlue
+        case .incident(let i): return i.severity == "critical" ? .red : .orange
+        case .weatherAlert(let a): return a.severity == "severe" ? .red : .yellow
+        case .crime: return .red
+        case .localEvent: return Palette.appleBlue
+        case .trafficIncident: return .orange
+        }
+    }
+
+    private var eventURL: URL? {
+        switch event {
+        case .localEvent(let e):
+            guard let urlStr = e.url else { return nil }
+            return URL(string: urlStr)
+        default:
+            return nil
+        }
     }
 
     private var title: String {

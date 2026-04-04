@@ -49,6 +49,19 @@ struct PersonProfile: Codable {
     let socialLinks: [SocialLink]
     let primaryImage: String?
     let resultCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case query, results, socialLinks, primaryImage, resultCount
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        query = (try? c.decode(String.self, forKey: .query)) ?? ""
+        results = (try? c.decode([PersonSearchResult].self, forKey: .results)) ?? []
+        socialLinks = (try? c.decode([SocialLink].self, forKey: .socialLinks)) ?? []
+        primaryImage = try? c.decodeIfPresent(String.self, forKey: .primaryImage)
+        resultCount = try? c.decodeIfPresent(Int.self, forKey: .resultCount)
+    }
 }
 
 // MARK: - People Index
