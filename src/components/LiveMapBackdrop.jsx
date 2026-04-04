@@ -487,12 +487,33 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     const addMarker = (css, title, data, lon, lat, layerType) =>
       createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef);
 
-    payload.incidents.slice(0, 8).forEach((inc) => {
+    payload.incidents.slice(0, 25).forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
+      const t = inc.type || 'incident';
+      const isConstruction = t === 'construction' || t === 'road_works';
+      const isPolice = t === 'police';
+      const isHospital = t === 'hospital';
+      const isFire = t === 'fire_station' || t === 'ambulance_station' || t === 'ses_station';
+      const isCamera = t === 'speed_camera';
+      const isBarrier = t === 'toll_booth' || t === 'border_control';
+      const css = isConstruction
+        ? 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);box-shadow:0 0 0 0 rgba(245,158,11,0.35);animation:pulse-amber 1.8s infinite;'
+        : isPolice
+        ? 'width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(59,130,246,0.5);'
+        : isHospital
+        ? 'width:14px;height:14px;border-radius:3px;background:#ef4444;border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(239,68,68,0.5);'
+        : isFire
+        ? 'width:12px;height:12px;border-radius:50%;background:#f97316;border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(249,115,22,0.5);'
+        : isCamera
+        ? 'width:10px;height:10px;border-radius:50%;background:#a855f7;border:2px solid rgba(255,255,255,0.5);'
+        : isBarrier
+        ? 'width:10px;height:10px;border-radius:2px;background:#6b7280;border:2px solid rgba(255,255,255,0.5);'
+        : 'width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid rgba(255,255,255,0.5);animation:pulse-amber 1.8s infinite;';
+      const label = isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isCamera ? 'SPEED CAMERA' : isBarrier ? 'CHECKPOINT' : t.toUpperCase();
       addMarker(
-        'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);box-shadow:0 0 0 0 rgba(245,158,11,0.35);animation:pulse-amber 1.8s infinite;',
-        inc.description || inc.type,
-        { type: 'construction', title: (inc.type || 'construction').toUpperCase(), detail: inc.description || 'Road/area incident', level: 'local', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon) },
+        css,
+        inc.description || t,
+        { type: t, title: label, detail: inc.description || label, level: 'local', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon) },
         inc.lon, inc.lat, 'incidents'
       );
     });
