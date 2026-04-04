@@ -2,9 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 
 const PRICE_IDS = {
-  starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
-  pro: import.meta.env.VITE_STRIPE_PRICE_ID_PRO,
-  weekly: import.meta.env.VITE_STRIPE_PRICE_ID_WEEKLY,
+  starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_WEEKLY,
 };
 
 const Check = () => <span style={{ color: '#34c759', marginRight: 8, fontWeight: 700 }}>&#10003;</span>;
