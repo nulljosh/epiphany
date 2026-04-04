@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct PeopleView: View {
-    @State private var selectedTab = 0
     @State private var query = ""
     @State private var profile: PersonProfile?
     @State private var recentSearches: [String] = []
@@ -12,7 +11,6 @@ struct PeopleView: View {
     @State private var indexedPeople: [IndexedPerson] = []
     @State private var isLoadingIndex = false
     @State private var selectedPerson: IndexedPerson?
-    @State private var showGraph = false
 
     private let recentsKey = "people.recentSearches"
     private let suggestionPool = [
@@ -36,29 +34,32 @@ struct PeopleView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Picker("Tab", selection: $selectedTab) {
-                    Text("Search").tag(0)
-                    Text("Index").tag(1)
-                    Text("Graph").tag(2)
+        ScrollView {
+            VStack(spacing: 0) {
+                // Search bar always at top
+                searchBar
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
+
+                // Search results (when active)
+                if let error {
+                    errorView(error)
+                } else if isSearching {
+                    loadingView
+                } else if let profile {
+                    resultsView(profile)
                 }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 280)
 
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
+                // Divider between search and index
+                if profile != nil || isSearching || error != nil {
+                    Divider().padding(.vertical, 12).padding(.horizontal, 20)
+                }
 
-            if selectedTab == 0 {
-                searchTabContent
-            } else if selectedTab == 1 {
-                indexTabContent
-            } else {
-                graphTabContent
+                // Index grid (always visible)
+                indexSection
             }
+            .padding(.bottom, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Palette.bgDark)
@@ -78,22 +79,58 @@ struct PeopleView: View {
         }
     }
 
-    // MARK: - Search Tab
+    // MARK: - Index Section (always visible below search)
 
-    private var searchTabContent: some View {
+    private var indexSection: some View {
         VStack(spacing: 0) {
-            searchBar
+            if isLoadingIndex && indexedPeople.isEmpty {
+                VStack(spacing: 12) {
+                    ProgressView().controlSize(.regular)
+                    Text("Loading index...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 24)
+            } else if !indexedPeople.isEmpty {
+                HStack {
+                    Text("Indexed")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                    Spacer()
+                    Text("\(indexedPeople.count)")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
                 .padding(.horizontal, 20)
-                .padding(.top, 4)
-                .padding(.bottom, 12)
+                .padding(.bottom, 8)
 
-            if let error {
-                errorView(error)
-            } else if isSearching {
-                loadingView
-            } else if let profile {
-                resultsView(profile)
-            } else {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(indexedPeople) { person in
+                        indexCard(person)
+                    }
+                }
+                .padding(.horizontal, 20)
+
+                if indexedPeople.count > 1 {
+                    Divider().padding(.vertical, 12).padding(.horizontal, 20)
+                    HStack {
+                        Text("Connections")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .textCase(.uppercase)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
+
+                    PersonGraphView(people: indexedPeople) { person in
+                        selectedPerson = person
+                    }
+                    .frame(height: 360)
+                    .padding(.horizontal, 20)
+                }
+            } else if profile == nil && !isSearching && error == nil {
                 recentsView
             }
         }
@@ -388,49 +425,7 @@ struct PeopleView: View {
         }
     }
 
-    // MARK: - Index Tab
-
-    private var indexTabContent: some View {
-        Group {
-            if isLoadingIndex {
-                VStack(spacing: 12) {
-                    Spacer()
-                    ProgressView()
-                        .controlSize(.regular)
-                    Text("Loading index...")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-            } else if indexedPeople.isEmpty {
-                VStack(spacing: 12) {
-                    Spacer()
-                    Image(systemName: "person.crop.rectangle.stack.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.tertiary)
-                    Text("No indexed people")
-                        .font(.headline)
-                    Text("Search for someone and add them to your index.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                    Spacer()
-                }
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(indexedPeople) { person in
-                            indexCard(person)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 40)
-                }
-            }
-        }
-    }
+    // indexTabContent removed -- merged into indexSection
 
     private func indexCard(_ person: IndexedPerson) -> some View {
         Button {
@@ -489,32 +484,7 @@ struct PeopleView: View {
             }
     }
 
-    // MARK: - Graph Tab
-
-    private var graphTabContent: some View {
-        Group {
-            if indexedPeople.isEmpty {
-                VStack(spacing: 12) {
-                    Spacer()
-                    Image(systemName: "point.3.connected.trianglepath.dotted")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.tertiary)
-                    Text("No people to graph")
-                        .font(.headline)
-                    Text("Index some people first to see the relationship graph.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                    Spacer()
-                }
-            } else {
-                PersonGraphView(people: indexedPeople) { person in
-                    selectedPerson = person
-                }
-            }
-        }
-    }
+    // graphTabContent removed -- merged into indexSection
 
     // MARK: - Actions
 
