@@ -1,30 +1,12 @@
 # Monica -- Technical Whitepaper
 
-**v1.0.0-beta** | April 2026
+**v4.2.0** | April 2026
 
 ## Overview
 
 Monica is a personal intelligence platform. It aggregates live geospatial data, financial markets, prediction markets, people intelligence, and news into a single map-first interface. Palantir for regular people.
 
 Live at [monica.heyitsmejosh.com](https://monica.heyitsmejosh.com). Companion apps for iOS, macOS, and watchOS.
-
-## History
-
-Monica started as a stock market simulator -- a paper trading engine that tracked virtual portfolios and executed automatic buy/sell orders based on configurable strategies. The simulator ran momentum, mean-reversion, and breakout strategies against live market data, logging every trade with entry/exit prices, P&L, and win rates.
-
-The simulator proved the core thesis: aggregating real-time data and acting on it programmatically. From there, Monica expanded beyond equities into geospatial intelligence (earthquakes, flights, traffic, crime, wildfires), prediction markets (Polymarket), people search, and macro-economic indicators. The trading simulator remains as a core module -- it still runs paper trades, tracks equity curves, and reports performance metrics on the Situation panel.
-
-## Automated Trading
-
-Monica includes a built-in trading simulator (`TradingSimulator` on iOS/macOS, `useTradingSimulator` on web) that executes automated paper trades:
-
-- **Strategy engine**: Configurable buy/sell rules based on price action, volume, and technical indicators
-- **Position management**: Automatic entry/exit with stop-loss and take-profit levels
-- **Performance tracking**: Equity curve, P&L, win rate, and trade history
-- **Risk controls**: Position sizing, maximum drawdown limits, and exposure caps
-- **Live data**: Trades execute against real-time Yahoo Finance prices
-
-The simulator is designed to graduate from paper trading to live execution once connected to a brokerage API. All trade logic is isolated in the simulator module for easy swapping of the execution layer.
 
 ## Architecture
 
@@ -142,4 +124,4 @@ monica/
 
 ## License
 
-Apache 2.0, 2026, Joshua Trommel
+MIT 2026, Joshua Trommel
