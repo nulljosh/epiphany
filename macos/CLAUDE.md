@@ -1,6 +1,6 @@
 # Monica macOS
 
-v0.6.1
+v0.7.0 -- Synced with web v1.0.0-beta. Bills section, updated Telus/Bell data.
 
 ## Rules
 
