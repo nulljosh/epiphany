@@ -34,6 +34,210 @@ function computeHeikinAshi(data) {
   return ha;
 }
 
+// --- Indicator Library ---
+const INDICATOR_LIBRARY = [
+  { key: 'sma', label: 'SMA', category: 'overlay', defaults: { period: 20, color: '#2196F3', source: 'close' } },
+  { key: 'ema', label: 'EMA', category: 'overlay', defaults: { period: 50, color: '#FF9800', source: 'close' } },
+  { key: 'wma', label: 'WMA', category: 'overlay', defaults: { period: 20, color: '#9C27B0', source: 'close' } },
+  { key: 'vwap', label: 'VWAP', category: 'overlay', defaults: { color: '#00BCD4' } },
+  { key: 'bb', label: 'Bollinger Bands', category: 'overlay', defaults: { period: 20, stdDev: 2, color: '#7E57C2' } },
+  { key: 'rsi', label: 'RSI', category: 'oscillator', defaults: { period: 14, color: '#E91E63', overbought: 70, oversold: 30 } },
+  { key: 'macd', label: 'MACD', category: 'oscillator', defaults: { fast: 12, slow: 26, signal: 9, color: '#2196F3' } },
+  { key: 'stoch', label: 'Stochastic', category: 'oscillator', defaults: { kPeriod: 14, dPeriod: 3, color: '#FF5722' } },
+  { key: 'atr', label: 'ATR', category: 'oscillator', defaults: { period: 14, color: '#795548' } },
+];
+
+function computeSMA(data, period, source = 'close') {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < period - 1) continue;
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += data[j][source];
+    result.push({ time: data[i].time, value: sum / period });
+  }
+  return result;
+}
+
+function computeEMA(data, period, source = 'close') {
+  const k = 2 / (period + 1);
+  const result = [];
+  let ema = null;
+  for (let i = 0; i < data.length; i++) {
+    const val = data[i][source];
+    if (ema === null) {
+      if (i < period - 1) continue;
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += data[j][source];
+      ema = sum / period;
+    } else {
+      ema = val * k + ema * (1 - k);
+    }
+    result.push({ time: data[i].time, value: ema });
+  }
+  return result;
+}
+
+function computeWMA(data, period, source = 'close') {
+  const result = [];
+  const denom = (period * (period + 1)) / 2;
+  for (let i = period - 1; i < data.length; i++) {
+    let sum = 0;
+    for (let j = 0; j < period; j++) sum += data[i - period + 1 + j][source] * (j + 1);
+    result.push({ time: data[i].time, value: sum / denom });
+  }
+  return result;
+}
+
+function computeVWAP(data) {
+  const result = [];
+  let cumVol = 0, cumTP = 0;
+  for (const d of data) {
+    const tp = (d.high + d.low + d.close) / 3;
+    const vol = d.volume || 1;
+    cumTP += tp * vol;
+    cumVol += vol;
+    result.push({ time: d.time, value: cumTP / cumVol });
+  }
+  return result;
+}
+
+function computeBB(data, period, stdDev, source = 'close') {
+  const upper = [], lower = [], middle = [];
+  for (let i = period - 1; i < data.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += data[j][source];
+    const mean = sum / period;
+    let sqSum = 0;
+    for (let j = i - period + 1; j <= i; j++) sqSum += (data[j][source] - mean) ** 2;
+    const std = Math.sqrt(sqSum / period);
+    middle.push({ time: data[i].time, value: mean });
+    upper.push({ time: data[i].time, value: mean + stdDev * std });
+    lower.push({ time: data[i].time, value: mean - stdDev * std });
+  }
+  return { upper, middle, lower };
+}
+
+function computeRSI(data, period, source = 'close') {
+  const result = [];
+  let avgGain = 0, avgLoss = 0;
+  for (let i = 1; i < data.length; i++) {
+    const diff = data[i][source] - data[i - 1][source];
+    const gain = diff > 0 ? diff : 0;
+    const loss = diff < 0 ? -diff : 0;
+    if (i <= period) {
+      avgGain += gain;
+      avgLoss += loss;
+      if (i === period) {
+        avgGain /= period;
+        avgLoss /= period;
+        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+        result.push({ time: data[i].time, value: 100 - 100 / (1 + rs) });
+      }
+    } else {
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+      result.push({ time: data[i].time, value: 100 - 100 / (1 + rs) });
+    }
+  }
+  return result;
+}
+
+function computeMACD(data, fast, slow, signal, source = 'close') {
+  const emaFast = computeEMA(data, fast, source);
+  const emaSlow = computeEMA(data, slow, source);
+  const macdLine = [];
+  const slowMap = new Map(emaSlow.map(d => [d.time, d.value]));
+  for (const d of emaFast) {
+    const s = slowMap.get(d.time);
+    if (s != null) macdLine.push({ time: d.time, value: d.value - s });
+  }
+  const signalLine = [];
+  const k = 2 / (signal + 1);
+  let ema = null;
+  for (let i = 0; i < macdLine.length; i++) {
+    if (ema === null) {
+      if (i < signal - 1) continue;
+      let sum = 0;
+      for (let j = i - signal + 1; j <= i; j++) sum += macdLine[j].value;
+      ema = sum / signal;
+    } else {
+      ema = macdLine[i].value * k + ema * (1 - k);
+    }
+    signalLine.push({ time: macdLine[i].time, value: ema });
+  }
+  const histogram = [];
+  const sigMap = new Map(signalLine.map(d => [d.time, d.value]));
+  for (const d of macdLine) {
+    const s = sigMap.get(d.time);
+    if (s != null) histogram.push({ time: d.time, value: d.value - s, color: d.value - s >= 0 ? 'rgba(48,209,88,0.5)' : 'rgba(255,69,58,0.5)' });
+  }
+  return { macdLine, signalLine, histogram };
+}
+
+function computeStochastic(data, kPeriod, dPeriod) {
+  const kLine = [];
+  for (let i = kPeriod - 1; i < data.length; i++) {
+    let high = -Infinity, low = Infinity;
+    for (let j = i - kPeriod + 1; j <= i; j++) {
+      high = Math.max(high, data[j].high);
+      low = Math.min(low, data[j].low);
+    }
+    const k = high === low ? 50 : ((data[i].close - low) / (high - low)) * 100;
+    kLine.push({ time: data[i].time, value: k });
+  }
+  const dLine = [];
+  for (let i = dPeriod - 1; i < kLine.length; i++) {
+    let sum = 0;
+    for (let j = i - dPeriod + 1; j <= i; j++) sum += kLine[j].value;
+    dLine.push({ time: kLine[i].time, value: sum / dPeriod });
+  }
+  return { kLine, dLine };
+}
+
+function computeATR(data, period) {
+  const trueRanges = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i === 0) {
+      trueRanges.push(data[i].high - data[i].low);
+    } else {
+      const tr = Math.max(
+        data[i].high - data[i].low,
+        Math.abs(data[i].high - data[i - 1].close),
+        Math.abs(data[i].low - data[i - 1].close)
+      );
+      trueRanges.push(tr);
+    }
+  }
+  const result = [];
+  let atr = null;
+  for (let i = 0; i < trueRanges.length; i++) {
+    if (i < period - 1) continue;
+    if (atr === null) {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += trueRanges[j];
+      atr = sum / period;
+    } else {
+      atr = (atr * (period - 1) + trueRanges[i]) / period;
+    }
+    result.push({ time: data[i].time, value: atr });
+  }
+  return result;
+}
+
+const STORAGE_KEY = 'monica-indicators';
+
+function loadIndicators() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+}
+
+function saveIndicators(indicators) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(indicators)); } catch {}
+}
+
 const RANGES = [
   { key: '1d',  label: '1D',  interval: '5m' },
   { key: '5d',  label: '1W',  interval: '15m' },
@@ -58,7 +262,31 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const [detail, setDetail] = useState(null);
   const [news, setNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
+  const [activeIndicators, setActiveIndicators] = useState(() => loadIndicators());
+  const [showIndicatorPanel, setShowIndicatorPanel] = useState(false);
+  const [editingIndicator, setEditingIndicator] = useState(null);
+  const oscillatorContainerRef = useRef(null);
+  const oscillatorChartRef = useRef(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+  // Persist indicators to localStorage
+  useEffect(() => { saveIndicators(activeIndicators); }, [activeIndicators]);
+
+  const addIndicator = useCallback((key) => {
+    const lib = INDICATOR_LIBRARY.find(i => i.key === key);
+    if (!lib) return;
+    const id = `${key}_${Date.now()}`;
+    setActiveIndicators(prev => [...prev, { id, key, params: { ...lib.defaults } }]);
+  }, []);
+
+  const removeIndicator = useCallback((id) => {
+    setActiveIndicators(prev => prev.filter(i => i.id !== id));
+  }, []);
+
+  const updateIndicatorParams = useCallback((id, params) => {
+    setActiveIndicators(prev => prev.map(i => i.id === id ? { ...i, params: { ...i.params, ...params } } : i));
+    setEditingIndicator(null);
+  }, []);
 
   const symbol = stock?.symbol;
 
@@ -103,17 +331,25 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     finally { setHistoryLoading(false); }
   }, [symbol, range]);
 
-  // Fetch news
+  // Fetch news with retry
   const fetchNews = useCallback(async (signal) => {
     if (!symbol) return;
     setNewsLoading(true);
-    try {
-      const res = await fetch(`/api/news?q=${encodeURIComponent(symbol)}`, { signal });
-      if (!res.ok) throw new Error('Failed');
-      const data = await res.json();
-      setNews(data.articles || []);
-    } catch (err) { if (err.name !== 'AbortError') setNews([]); }
-    finally { setNewsLoading(false); }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`/api/news?q=${encodeURIComponent(symbol)}`, { signal });
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        setNews(data.articles || []);
+        setNewsLoading(false);
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') { setNewsLoading(false); return; }
+        if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+    setNews([]);
+    setNewsLoading(false);
   }, [symbol]);
 
   useEffect(() => {
@@ -246,6 +482,43 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       })));
     }
 
+    // --- Overlay indicators ---
+    const overlays = activeIndicators.filter(ind => {
+      const lib = INDICATOR_LIBRARY.find(l => l.key === ind.key);
+      return lib && lib.category === 'overlay';
+    });
+
+    for (const ind of overlays) {
+      try {
+        const p = ind.params;
+        if (ind.key === 'sma') {
+          const d = computeSMA(history, p.period, p.source);
+          const s = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false });
+          s.setData(d);
+        } else if (ind.key === 'ema') {
+          const d = computeEMA(history, p.period, p.source);
+          const s = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false });
+          s.setData(d);
+        } else if (ind.key === 'wma') {
+          const d = computeWMA(history, p.period, p.source);
+          const s = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false });
+          s.setData(d);
+        } else if (ind.key === 'vwap') {
+          const d = computeVWAP(history);
+          const s = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+          s.setData(d);
+        } else if (ind.key === 'bb') {
+          const { upper, middle, lower } = computeBB(history, p.period, p.stdDev, p.source || 'close');
+          const sM = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+          sM.setData(middle);
+          const sU = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+          sU.setData(upper);
+          const sL = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+          sL.setData(lower);
+        }
+      } catch (err) { console.warn('Indicator error:', ind.key, err.message); }
+    }
+
     chart.timeScale().fitContent();
 
     const ro = new ResizeObserver(() => {
@@ -264,7 +537,91 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       console.warn('Chart render error:', err.message);
       return undefined;
     }
-  }, [history, chartType, dark, range]);
+  }, [history, chartType, dark, range, activeIndicators]);
+
+  // --- Oscillator sub-chart ---
+  const oscillators = activeIndicators.filter(ind => {
+    const lib = INDICATOR_LIBRARY.find(l => l.key === ind.key);
+    return lib && lib.category === 'oscillator';
+  });
+
+  useEffect(() => {
+    if (!oscillatorContainerRef.current || history.length === 0 || oscillators.length === 0) return;
+
+    const container = oscillatorContainerRef.current;
+    const isDark = dark !== false;
+
+    let chart;
+    try {
+      chart = createChart(container, {
+        width: container.clientWidth,
+        height: 80,
+        layout: {
+          background: { type: ColorType.Solid, color: 'transparent' },
+          textColor: isDark ? '#8e8e93' : '#6e6e73',
+          fontFamily: font,
+          fontSize: 9,
+        },
+        grid: {
+          vertLines: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+          horzLines: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+        },
+        rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.1, bottom: 0.1 } },
+        timeScale: { borderVisible: false, visible: false },
+        handleScroll: { vertTouchDrag: false },
+        crosshair: { mode: CrosshairMode.Magnet },
+      });
+
+      oscillatorChartRef.current = chart;
+
+      for (const ind of oscillators) {
+        const p = ind.params;
+        try {
+          if (ind.key === 'rsi') {
+            const d = computeRSI(history, p.period, p.source || 'close');
+            const s = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: true });
+            s.setData(d);
+          } else if (ind.key === 'macd') {
+            const { macdLine, signalLine, histogram } = computeMACD(history, p.fast, p.slow, p.signal);
+            const hSeries = chart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false });
+            hSeries.setData(histogram);
+            const mSeries = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false });
+            mSeries.setData(macdLine);
+            const sSeries = chart.addSeries(LineSeries, { color: '#FF9800', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+            sSeries.setData(signalLine);
+          } else if (ind.key === 'stoch') {
+            const { kLine, dLine } = computeStochastic(history, p.kPeriod, p.dPeriod);
+            const kS = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false });
+            kS.setData(kLine);
+            const dS = chart.addSeries(LineSeries, { color: '#9C27B0', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+            dS.setData(dLine);
+          } else if (ind.key === 'atr') {
+            const d = computeATR(history, p.period);
+            const s = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: true });
+            s.setData(d);
+          }
+        } catch (err) { console.warn('Oscillator error:', ind.key, err.message); }
+      }
+
+      chart.timeScale().fitContent();
+
+      const ro = new ResizeObserver(() => {
+        if (oscillatorContainerRef.current) {
+          chart.applyOptions({ width: oscillatorContainerRef.current.clientWidth });
+        }
+      });
+      ro.observe(container);
+
+      return () => {
+        ro.disconnect();
+        chart.remove();
+        oscillatorChartRef.current = null;
+      };
+    } catch (err) {
+      console.warn('Oscillator chart error:', err.message);
+      return undefined;
+    }
+  }, [history, dark, activeIndicators]);
 
   if (!stock) return null;
 
@@ -429,8 +786,157 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
           ))}
         </div>
 
+        {/* Indicators Button + Active Tags */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setShowIndicatorPanel(!showIndicatorPanel)}
+            style={{
+              padding: '5px 10px', borderRadius: 8, border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
+              background: showIndicatorPanel ? (t.accent || '#0071e3') : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+              color: showIndicatorPanel ? '#fff' : t.textSecondary,
+              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: font,
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            + Indicators
+          </button>
+          {activeIndicators.map(ind => {
+            const lib = INDICATOR_LIBRARY.find(l => l.key === ind.key);
+            const label = lib ? lib.label : ind.key;
+            const paramStr = ind.key === 'bb' ? `${ind.params.period}, ${ind.params.stdDev}`
+              : ind.key === 'macd' ? `${ind.params.fast},${ind.params.slow},${ind.params.signal}`
+              : ind.key === 'stoch' ? `${ind.params.kPeriod},${ind.params.dPeriod}`
+              : ind.key === 'vwap' ? ''
+              : ind.params.period ? String(ind.params.period) : '';
+            return (
+              <div
+                key={ind.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '3px 8px', borderRadius: 6,
+                  background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  fontSize: 10, fontWeight: 600, color: ind.params.color || t.text,
+                }}
+              >
+                <span
+                  onClick={() => setEditingIndicator(editingIndicator === ind.id ? null : ind.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {label}{paramStr ? ` (${paramStr})` : ''}
+                </span>
+                <span
+                  onClick={() => removeIndicator(ind.id)}
+                  style={{ cursor: 'pointer', color: t.textTertiary, marginLeft: 2, fontSize: 12, lineHeight: 1 }}
+                >
+                  {'\u00d7'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Indicator Library Panel */}
+        {showIndicatorPanel && (
+          <div style={{
+            ...glass, padding: 12, marginBottom: 10,
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6,
+          }}>
+            <div style={{ gridColumn: '1 / -1', fontSize: 10, fontWeight: 600, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+              Overlays
+            </div>
+            {INDICATOR_LIBRARY.filter(i => i.category === 'overlay').map(ind => (
+              <button
+                key={ind.key}
+                onClick={() => { addIndicator(ind.key); setShowIndicatorPanel(false); }}
+                style={{
+                  padding: '6px 8px', borderRadius: 8, border: 'none',
+                  background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  color: t.text, fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: font,
+                  transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+              >
+                {ind.label}
+              </button>
+            ))}
+            <div style={{ gridColumn: '1 / -1', fontSize: 10, fontWeight: 600, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 6, marginBottom: 2 }}>
+              Oscillators
+            </div>
+            {INDICATOR_LIBRARY.filter(i => i.category === 'oscillator').map(ind => (
+              <button
+                key={ind.key}
+                onClick={() => { addIndicator(ind.key); setShowIndicatorPanel(false); }}
+                style={{
+                  padding: '6px 8px', borderRadius: 8, border: 'none',
+                  background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  color: t.text, fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: font,
+                  transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+              >
+                {ind.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Indicator Settings Editor */}
+        {editingIndicator && (() => {
+          const ind = activeIndicators.find(i => i.id === editingIndicator);
+          if (!ind) return null;
+          const lib = INDICATOR_LIBRARY.find(l => l.key === ind.key);
+          if (!lib) return null;
+          const fields = [];
+          if ('period' in lib.defaults) fields.push({ key: 'period', label: 'Period', type: 'number' });
+          if ('fast' in lib.defaults) fields.push({ key: 'fast', label: 'Fast', type: 'number' });
+          if ('slow' in lib.defaults) fields.push({ key: 'slow', label: 'Slow', type: 'number' });
+          if ('signal' in lib.defaults) fields.push({ key: 'signal', label: 'Signal', type: 'number' });
+          if ('kPeriod' in lib.defaults) fields.push({ key: 'kPeriod', label: 'K Period', type: 'number' });
+          if ('dPeriod' in lib.defaults) fields.push({ key: 'dPeriod', label: 'D Period', type: 'number' });
+          if ('stdDev' in lib.defaults) fields.push({ key: 'stdDev', label: 'Std Dev', type: 'number' });
+          if ('overbought' in lib.defaults) fields.push({ key: 'overbought', label: 'Overbought', type: 'number' });
+          if ('oversold' in lib.defaults) fields.push({ key: 'oversold', label: 'Oversold', type: 'number' });
+          fields.push({ key: 'color', label: 'Color', type: 'color' });
+
+          return (
+            <div style={{ ...glass, padding: 12, marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: t.text, marginBottom: 8 }}>{lib.label} Settings</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                {fields.map(f => (
+                  <label key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: t.textSecondary }}>
+                    {f.label}:
+                    {f.type === 'color' ? (
+                      <input
+                        type="color"
+                        value={ind.params[f.key] || '#ffffff'}
+                        onChange={e => updateIndicatorParams(ind.id, { [f.key]: e.target.value })}
+                        style={{ width: 24, height: 20, border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
+                      />
+                    ) : (
+                      <input
+                        type="number"
+                        value={ind.params[f.key] || ''}
+                        onChange={e => updateIndicatorParams(ind.id, { [f.key]: parseFloat(e.target.value) || 0 })}
+                        style={{
+                          width: 48, padding: '3px 6px', borderRadius: 6, border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
+                          background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+                          color: t.text, fontSize: 11, fontFamily: font, textAlign: 'center',
+                        }}
+                      />
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Chart */}
-        <div style={{ ...glass, padding: '12px 8px 8px', marginBottom: 12, height: 200 }}>
+        <div style={{ ...glass, padding: '12px 8px 8px', marginBottom: oscillators.length > 0 ? 4 : 12, height: 200 }}>
           {historyLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: t.textTertiary, fontSize: 12 }}>
               Loading chart...
@@ -443,6 +949,29 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
           )}
         </div>
+
+        {/* Oscillator Sub-Chart */}
+        {oscillators.length > 0 && (
+          <div style={{ ...glass, padding: '8px 8px 4px', marginBottom: 12, height: 100 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 4 }}>
+              {oscillators.map(ind => {
+                const lib = INDICATOR_LIBRARY.find(l => l.key === ind.key);
+                return (
+                  <span key={ind.id} style={{ fontSize: 9, fontWeight: 600, color: ind.params.color || t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    {lib ? lib.label : ind.key}
+                  </span>
+                );
+              })}
+            </div>
+            {history.length > 0 ? (
+              <div ref={oscillatorContainerRef} style={{ width: '100%', height: 80 }} />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, color: t.textTertiary, fontSize: 11 }}>
+                No data
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div style={{

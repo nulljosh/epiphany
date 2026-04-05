@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       title: article.title,
       description: article.description,
       url: article.url,
-      urlToImage: article.urlToImage,
+      image: article.urlToImage,
       source: article.source?.name || 'Unknown',
       publishedAt: article.publishedAt,
       author: article.author,
