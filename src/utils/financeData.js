@@ -77,19 +77,35 @@ export const DEMO_GIVING = [
 ];
 
 // CRA GST/HST credit: paid ~5th of Jan, Apr, Jul, Oct
+// Auto-hides for 14 days after each payment date
 function nextCRAQuarterlyDate() {
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const quarterMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct (0-indexed)
   for (let offset = 0; offset <= 1; offset++) {
     for (const m of quarterMonths) {
       const d = new Date(now.getFullYear() + offset, m, 5);
-      if (d >= new Date(now.getFullYear(), now.getMonth(), now.getDate())) return d;
+      if (d >= today) return d;
     }
   }
   return null;
 }
 
-export const UPCOMING_PAYMENTS = [
+function isRecentlyPaid() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const quarterMonths = [0, 3, 6, 9];
+  for (let offset = -1; offset <= 0; offset++) {
+    for (const m of quarterMonths) {
+      const d = new Date(now.getFullYear() + offset, m, 5);
+      const diff = (today - d) / (1000 * 60 * 60 * 24);
+      if (diff >= 0 && diff <= 14) return true;
+    }
+  }
+  return false;
+}
+
+export const UPCOMING_PAYMENTS = isRecentlyPaid() ? [] : [
   { name: 'GST/HST Credit', amount: 87.25, get date() { const d = nextCRAQuarterlyDate(); return d ? d.toISOString().slice(0, 10) : null; }, recurring: 'quarterly', icon: 'dollarsign.circle' },
 ];
 

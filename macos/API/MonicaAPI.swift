@@ -303,8 +303,11 @@ final class MonicaAPI {
 
     // MARK: - Situation Data
 
-    func fetchEarthquakes() async throws -> [Earthquake] {
-        let url = try makeURL("/api/earthquakes")
+    func fetchEarthquakes(lat: Double? = nil, lon: Double? = nil, radius: Int = 500) async throws -> [Earthquake] {
+        var params: [String: String] = ["radius": "\(radius)"]
+        if let lat { params["lat"] = "\(lat)" }
+        if let lon { params["lon"] = "\(lon)" }
+        let url = try makeURL("/api/earthquakes", query: params)
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(EarthquakeResponse.self, from: data).earthquakes

@@ -147,13 +147,15 @@ export default async function handler(req, res) {
         }),
       });
     }
+    const estimated = generateEstimatedFlights(bbox);
     return res.status(200).json({
-      source: 'unavailable',
-      states: [],
-      count: 0,
-      meta: buildMeta('degraded', bbox, {
+      source: 'estimated',
+      states: estimated,
+      count: estimated.length,
+      meta: buildMeta('estimated', bbox, {
         degraded: true,
-        warning: 'OpenSky unavailable and no cached flight data',
+        estimated: true,
+        warning: 'OpenSky unavailable; showing estimated flight positions',
       }),
     });
   }

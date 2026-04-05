@@ -414,7 +414,7 @@ struct SituationView: View {
         Image(systemName: systemName)
             .font(.title2)
             .foregroundStyle(color)
-            .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
+            .opacity(0.95)
     }
 
     // MARK: - Network monitor
@@ -460,7 +460,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showEarthquakes else { earthquakes = []; return }
-            let r = await loadSection(label: "Earthquakes") { try await MonicaAPI.shared.fetchEarthquakes() }
+            let r = await loadSection(label: "Earthquakes") { try await MonicaAPI.shared.fetchEarthquakes(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { earthquakes = r.value }
             if let e = r.error { await completion.addError(e) }

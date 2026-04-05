@@ -308,24 +308,29 @@ export default function SituationMonitor({
         </div>
       )}
 
-      {/* Macro pulse strip */}
-      {macro.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {macro.slice(0, 6).map(m => {
-            const color = m.change > 0 ? t.green : m.change < 0 ? t.red : t.textTertiary;
-            const sign = m.change > 0 ? '+' : '';
-            return (
-              <span key={m.id} style={{
-                fontSize: 9, padding: '2px 6px', borderRadius: 4,
-                background: `${color}12`, color,
-                fontWeight: 600, whiteSpace: 'nowrap',
-              }}>
-                {m.name}: {m.value}{m.unit === '%' ? '%' : ''} {sign}{m.changePercent}%
-              </span>
-            );
-          })}
-        </div>
-      )}
+      {/* Macro summary */}
+      {macro.length > 0 && (() => {
+        const byId = Object.fromEntries(macro.map(m => [m.id, m]));
+        const fmt = (m) => m ? `${m.value}${m.unit === '%' ? '%' : ''}` : 'n/a';
+        const dir = (m) => m?.change > 0 ? 'up' : m?.change < 0 ? 'down' : 'flat';
+        const pct = (m) => m ? `${m.change > 0 ? '+' : ''}${m.changePercent}%` : '';
+        const fedFunds = byId.fedFunds || byId.fed_funds || macro.find(m => /fed/i.test(m.name));
+        const gdp = byId.gdp || macro.find(m => /gdp/i.test(m.name));
+        const unemployment = byId.unemployment || macro.find(m => /unemploy/i.test(m.name));
+        const cpi = byId.cpi || byId.inflation || macro.find(m => /cpi|inflation/i.test(m.name));
+        const lines = [];
+        if (fedFunds) lines.push(`Fed funds rate at ${fmt(fedFunds)} (${pct(fedFunds)}).`);
+        if (gdp) lines.push(`GDP growth ${dir(gdp)} at ${fmt(gdp)}.`);
+        if (cpi) lines.push(`CPI at ${fmt(cpi)} (${pct(cpi)}).`);
+        if (unemployment) lines.push(`Unemployment at ${fmt(unemployment)}.`);
+        const remaining = macro.filter(m => m !== fedFunds && m !== gdp && m !== cpi && m !== unemployment).slice(0, 2);
+        remaining.forEach(m => lines.push(`${m.name} at ${fmt(m)} (${pct(m)}).`));
+        return (
+          <p style={{ fontSize: 11, color: t.textSecondary, lineHeight: 1.5, margin: '0 0 10px 0' }}>
+            {lines.join(' ')}
+          </p>
+        );
+      })()}
 
       {sim && (
         <>

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { formatCurrency } from '../utils/formatting';
 import StockDetail from './StockDetail';
 import useFearGreed from '../hooks/useFearGreed';
+import { SECTOR_MAP, SECTOR_ORDER } from '../hooks/useStocks';
 
 const SORT_OPTIONS = [
   { key: 'symbol', label: 'Symbol' },
@@ -39,6 +40,7 @@ function FearGreedGauge({ score, rating, t }) {
   if (score === null) return null;
   const color = getFearGreedColor(score);
   return (
+    <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
       background: t.glass,
@@ -46,7 +48,11 @@ function FearGreedGauge({ score, rating, t }) {
       WebkitBackdropFilter: 'blur(20px) saturate(150%)',
       border: `1px solid ${t.cardBorder || t.border}`,
       borderRadius: 12, marginBottom: 12,
-    }}>
+      cursor: 'pointer', transition: 'opacity 0.15s',
+    }}
+    onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+    >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
           Fear & Greed
@@ -63,6 +69,7 @@ function FearGreedGauge({ score, rating, t }) {
         }} />
       </div>
     </div>
+    </a>
   );
 }
 
@@ -132,6 +139,56 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
       </div>
     </div>
   );
+}
+
+function SectorGroups({ filtered, watchlist, toggleSymbol, isAuthenticated, t, glass, search, onSelect }) {
+  const [expanded, setExpanded] = useState({});
+  const sectors = useMemo(() => {
+    const groups = {};
+    for (const item of filtered) {
+      const sector = SECTOR_MAP[item.symbol] || 'Other';
+      if (!groups[sector]) groups[sector] = [];
+      groups[sector].push(item);
+    }
+    // Sort each sector by changePercent desc
+    for (const s of Object.keys(groups)) {
+      groups[s].sort((a, b) => b.changePercent - a.changePercent);
+    }
+    return groups;
+  }, [filtered]);
+
+  const order = search ? Object.keys(sectors) : SECTOR_ORDER.filter(s => sectors[s]?.length > 0);
+  const PREVIEW_COUNT = 5;
+
+  return order.map(sector => {
+    const items = sectors[sector] || [];
+    if (items.length === 0) return null;
+    const isExpanded = expanded[sector] || search;
+    const shown = isExpanded ? items : items.slice(0, PREVIEW_COUNT);
+    return (
+      <div key={sector} style={{ ...glass, padding: 14, marginBottom: 8 }}>
+        <div
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: 6 }}
+          onClick={() => setExpanded(prev => ({ ...prev, [sector]: !prev[sector] }))}
+        >
+          <span style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {sector} ({items.length})
+          </span>
+          <span style={{ fontSize: 10, color: t.textTertiary }}>{isExpanded ? 'Collapse' : 'Show all'}</span>
+        </div>
+        {shown.map(item => (
+          <MarketRow
+            key={`${sector}-${item.symbol}`}
+            symbol={item.symbol} name={item.name} price={item.price}
+            changePercent={item.changePercent}
+            isWatchlisted={watchlist?.includes(item.symbol)}
+            onToggle={toggleSymbol} canToggle={isAuthenticated} t={t}
+            onClick={() => onSelect(item)}
+          />
+        ))}
+      </div>
+    );
+  });
 }
 
 export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol, onConsumeInitialSymbol }) {
@@ -303,32 +360,40 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         </div>
       )}
 
-      {/* All Markets */}
-      <div style={{ ...glass, padding: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-          All Markets ({filtered.length})
-        </div>
-        {filtered.length === 0 ? (
-          <div style={{ padding: '20px 0', textAlign: 'center', color: t.textTertiary, fontSize: 13 }}>
-            No results
+      {/* Top Movers */}
+      {filtered.length > 0 && !search && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            Top Movers
           </div>
-        ) : (
-          filtered.map(item => (
-            <MarketRow
-              key={`${item.kind}-${item.symbol}`}
-              symbol={item.symbol}
-              name={item.name}
-              price={item.price}
-              changePercent={item.changePercent}
-              isWatchlisted={watchlist?.includes(item.symbol)}
-              onToggle={toggleSymbol}
-              canToggle={isAuthenticated}
-              t={t}
-              onClick={() => setSelectedStock(item)}
-            />
-          ))
-        )}
-      </div>
+          {(() => {
+            const sorted = [...filtered].sort((a, b) => b.changePercent - a.changePercent);
+            const top = sorted.slice(0, 5);
+            const bottom = sorted.slice(-5).reverse();
+            return [...top, ...bottom].map(item => (
+              <MarketRow
+                key={`mover-${item.symbol}`}
+                symbol={item.symbol} name={item.name} price={item.price}
+                changePercent={item.changePercent}
+                isWatchlisted={watchlist?.includes(item.symbol)}
+                onToggle={toggleSymbol} canToggle={isAuthenticated} t={t}
+                onClick={() => setSelectedStock(item)}
+              />
+            ));
+          })()}
+        </div>
+      )}
+
+      {/* All Markets by Sector */}
+      {filtered.length === 0 ? (
+        <div style={{ ...glass, padding: 14 }}>
+          <div style={{ padding: '20px 0', textAlign: 'center', color: t.textTertiary, fontSize: 13 }}>No results</div>
+        </div>
+      ) : (
+        <SectorGroups filtered={filtered} watchlist={watchlist} toggleSymbol={toggleSymbol}
+          isAuthenticated={isAuthenticated} t={t} glass={glass} search={search}
+          onSelect={item => setSelectedStock(item)} />
+      )}
 
       {selectedStock && (
         <StockDetail

@@ -20,6 +20,10 @@ const Ticker = memo(({ items, theme }) => {
   const dragStartOffsetRef = useRef(0);
   const dragDistanceRef = useRef(0);
   const segmentWidthRef = useRef(0);
+  const velocityRef = useRef(0);
+  const lastPointerXRef = useRef(0);
+  const lastPointerTimeRef = useRef(0);
+  const momentumRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [segmentVersion, setSegmentVersion] = useState(0);
 
@@ -73,15 +77,32 @@ const Ticker = memo(({ items, theme }) => {
     };
   }, [applyOffset, isDragging, items, segmentVersion]);
 
-  const stopDragging = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  const startMomentum = useCallback(() => {
+    if (momentumRef.current) cancelAnimationFrame(momentumRef.current);
+    let vel = velocityRef.current;
+    const friction = 0.95;
+    const tick = () => {
+      vel *= friction;
+      if (Math.abs(vel) < 0.5) {
+        setIsDragging(false);
+        return;
+      }
+      offsetRef.current = normalizeOffset(offsetRef.current + vel, segmentWidthRef.current);
+      applyOffset();
+      momentumRef.current = requestAnimationFrame(tick);
+    };
+    momentumRef.current = requestAnimationFrame(tick);
+  }, [applyOffset]);
 
   const handlePointerDown = (e) => {
     if (!items.length) return;
+    if (momentumRef.current) cancelAnimationFrame(momentumRef.current);
     dragDistanceRef.current = 0;
     dragStartXRef.current = e.clientX;
     dragStartOffsetRef.current = offsetRef.current;
+    lastPointerXRef.current = e.clientX;
+    lastPointerTimeRef.current = performance.now();
+    velocityRef.current = 0;
     setIsDragging(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
@@ -92,11 +113,23 @@ const Ticker = memo(({ items, theme }) => {
     dragDistanceRef.current = Math.max(dragDistanceRef.current, Math.abs(delta));
     offsetRef.current = normalizeOffset(dragStartOffsetRef.current + delta, segmentWidthRef.current);
     applyOffset();
+    // Track velocity for momentum
+    const now = performance.now();
+    const dt = now - lastPointerTimeRef.current;
+    if (dt > 0) {
+      velocityRef.current = (e.clientX - lastPointerXRef.current) / Math.max(dt, 1) * 16; // px per frame
+    }
+    lastPointerXRef.current = e.clientX;
+    lastPointerTimeRef.current = now;
   };
 
   const handlePointerUp = (e) => {
     e.currentTarget.releasePointerCapture?.(e.pointerId);
-    stopDragging();
+    if (Math.abs(velocityRef.current) > 1) {
+      startMomentum();
+    } else {
+      setIsDragging(false);
+    }
   };
 
   const renderItem = (item, idx, clone = 0) => (

@@ -136,10 +136,10 @@ export function useSituation() {
 
   const fetchEarthquakes = useCallback(async () => {
     try {
-      const data = await fetchWithTimeout(apiPath('/api/earthquakes'));
+      const data = await fetchWithTimeout(apiPath(`/api/earthquakes?lat=${activeCenter.lat}&lon=${activeCenter.lon}&radius=500`));
       setEarthquakes(data.earthquakes ?? []);
     } catch { /* non-critical */ }
-  }, []);
+  }, [activeCenter.lat, activeCenter.lon]);
 
   const fetchEvents = useCallback(async () => {
     try {

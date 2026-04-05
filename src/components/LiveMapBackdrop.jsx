@@ -96,13 +96,13 @@ function trafficColor(incident) {
   return '#22c55e';
 }
 
-function mapsLink(lat, lon, zoom = 14) {
-  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;
+function mapsLink(lat, lon, zoom = 15) {
+  return `https://www.google.com/maps/@${lat},${lon},${zoom}z`;
 }
 
 function markerCss({ size = 10, color, pulse, shape = 'circle', extra = '' }) {
   const radius = shape === 'circle' ? '50%' : shape === 'bar' ? '999px' : '2px';
-  const shadow = pulse ? `box-shadow:0 0 0 0 ${color.replace(')', ',0.45)').replace('rgb', 'rgba')};animation:${pulse};` : '';
+  const shadow = pulse ? `animation:${pulse};` : '';
   return `width:${size}px;height:${size}px;border-radius:${radius};background:${color};${shadow}${extra}`;
 }
 
@@ -375,7 +375,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl] = await Promise.all([
           safeFetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [] }),
           safeFetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [], flow: {} }),
-          safeFetch(apiPath('/api/earthquakes'), { earthquakes: [] }),
+          safeFetch(apiPath(`/api/earthquakes?lat=${center.lat}&lon=${center.lon}&radius=500`), { earthquakes: [] }),
           safeFetch(apiPath(`/api/events?lat=${center.lat}&lon=${center.lon}`), { events: [] }),
           safeFetch(apiPath('/api/markets'), []),
           safeFetch(apiPath(`/api/news?lat=${center.lat}&lon=${center.lon}`), { articles: [] }),
@@ -431,7 +431,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addUserMarker(
         'width:14px;height:21px;background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 28 42\'><defs><radialGradient id=\'rg\' cx=\'40%25\' cy=\'35%25\' r=\'60%25\'><stop offset=\'0\' stop-color=\'%23ff6961\'/><stop offset=\'1\' stop-color=\'%23cc0000\'/></radialGradient><filter id=\'ds\'><feDropShadow dx=\'0\' dy=\'1.5\' stdDeviation=\'1.5\' flood-opacity=\'0.35\'/></filter></defs><ellipse cx=\'14\' cy=\'40\' rx=\'5\' ry=\'1.8\' fill=\'%23000\' opacity=\'.2\'/><line x1=\'14\' y1=\'22\' x2=\'14\' y2=\'39\' stroke=\'%23888\' stroke-width=\'2\' stroke-linecap=\'round\'/><circle cx=\'14\' cy=\'13\' r=\'12\' fill=\'url(%23rg)\' filter=\'url(%23ds)\'/><circle cx=\'11\' cy=\'10\' r=\'3.5\' fill=\'white\' opacity=\'.45\'/></svg>");background-size:contain;background-repeat:no-repeat;cursor:pointer;',
         'you',
-        { type: 'location', title: 'You', detail: locLabel, level: 'local', source: geoState === 'granted' ? 'Browser Geolocation' : 'IP Geolocation', link: `https://www.openstreetmap.org/?mlat=${userPosition.lat}&mlon=${userPosition.lon}#map=14/${userPosition.lat}/${userPosition.lon}` },
+        { type: 'location', title: 'You', detail: locLabel, level: 'local', source: geoState === 'granted' ? 'Browser Geolocation' : 'IP Geolocation', link: `https://www.google.com/maps/@${userPosition.lat},${userPosition.lon},15z` },
         userPosition.lon, userPosition.lat
       );
 
@@ -482,13 +482,13 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const isCamera = t === 'speed_camera';
       const isBarrier = t === 'toll_booth' || t === 'border_control';
       const css = isConstruction
-        ? 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);box-shadow:0 0 0 0 rgba(245,158,11,0.35);animation:pulse-amber 1.8s infinite;'
+        ? 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);animation:pulse-amber 1.8s infinite;'
         : isPolice
-        ? 'width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(59,130,246,0.5);'
+        ? 'width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.6);'
         : isHospital
-        ? 'width:14px;height:14px;border-radius:3px;background:#ef4444;border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(239,68,68,0.5);'
+        ? 'width:14px;height:14px;border-radius:3px;background:#ef4444;border:2px solid rgba(255,255,255,0.6);'
         : isFire
-        ? 'width:12px;height:12px;border-radius:50%;background:#f97316;border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(249,115,22,0.5);'
+        ? 'width:12px;height:12px;border-radius:50%;background:#f97316;border:2px solid rgba(255,255,255,0.6);'
         : isCamera
         ? 'width:10px;height:10px;border-radius:50%;background:#a855f7;border:2px solid rgba(255,255,255,0.5);'
         : isBarrier
@@ -508,7 +508,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const p = inc.position;
       if (!p || p.lon == null || p.lat == null) return;
       addMarker(
-        `width:48px;height:6px;border-radius:999px;background:${trafficColor(inc)};border:1px solid rgba(0,0,0,0.2);transform:rotate(18deg);box-shadow:0 0 0 0 rgba(249,115,22,0.35);animation:pulse-amber 1.6s infinite;`,
+        `width:48px;height:6px;border-radius:999px;background:${trafficColor(inc)};border:1px solid rgba(0,0,0,0.2);transform:rotate(18deg);animation:pulse-amber 1.6s infinite;`,
         inc.description || inc.type || 'traffic incident',
         { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local', source: 'Traffic feed / fallback model', link: mapsLink(p.lat, p.lon) },
         p.lon, p.lat, 'traffic'
@@ -516,22 +516,14 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     if (mapLayers.earthquakes !== false)
-    payload.earthquakes.slice(0, 12).forEach((eq, i) => {
+    payload.earthquakes.slice(0, 12).forEach((eq) => {
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
-      const dist = Math.abs(eq.lat - center.lat) + Math.abs(eq.lon - center.lon);
-      let mLat = eq.lat, mLon = eq.lon;
-      if (dist > 3) {
-        const angle = (i / 12) * 2 * Math.PI;
-        const r = 0.03 + (i % 3) * 0.015;
-        mLat = center.lat + Math.sin(angle) * r;
-        mLon = center.lon + Math.cos(angle) * r;
-      }
       addMarker(
-        `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);box-shadow:0 0 0 0 rgba(239,68,68,0.5);animation:pulse-red 1.9s infinite;`,
+        `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);animation:pulse-red 1.9s infinite;`,
         `M${eq.mag} ${eq.place || ''}`,
         { type: 'seismic', title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`, detail: eq.place || 'Earthquake', level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor', source: 'USGS Earthquake Catalog', link: eq.url || 'https://earthquake.usgs.gov/earthquakes/map/' },
-        mLon, mLat, 'earthquakes'
+        eq.lon, eq.lat, 'earthquakes'
       );
     });
 
@@ -540,7 +532,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const kw = geoKeywordMatch(ev.title);
       if (!kw) return; // Only show events with a real geographic match
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#22D3EE;animation:pulse-cyan 2.2s infinite;',
         `${kw.label}: ${ev.title}`,
         { type: 'event', title: ev.country ? `[${ev.country}] ${kw.label}` : kw.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
         kw.lon, kw.lat, 'news'
@@ -558,7 +550,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const pubTime = article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
       const detail = [article.source, pubTime].filter(Boolean).join(' · ');
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#60A5FA;box-shadow:0 0 0 0 rgba(96,165,250,0.5);animation:pulse-blue 2.1s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#60A5FA;animation:pulse-blue 2.1s infinite;',
         article.title,
         { type: 'news', title: article.title || 'News', detail: detail || 'News article', level: 'global', source: 'GDELT News', link: article.url || 'https://www.gdeltproject.org/' },
         target.lon, target.lat, 'news'
@@ -572,7 +564,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (!c) return;
       const { lat, lon } = c;
       addMarker(
-        'width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,0.45);animation:pulse-red 2s infinite;',
+        'width:10px;height:10px;border-radius:50%;background:#ef4444;animation:pulse-red 2s infinite;',
         crime.title || 'Crime',
         { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon) },
         lon, lat, 'crime'
@@ -586,7 +578,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (!c) return;
       const { lat, lon } = c;
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#a855f7;box-shadow:0 0 0 0 rgba(168,85,247,0.45);animation:pulse-cyan 2.2s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#a855f7;animation:pulse-cyan 2.2s infinite;',
         ev.title || 'Event',
         { type: 'local-event', title: ev.title || 'Local Event', detail: ev.venue || ev.source || 'Nearby event', level: 'local', source: ev.source || 'Event data', link: ev.url || mapsLink(lat, lon) },
         lon, lat, 'localEvents'
@@ -600,7 +592,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const lon = wa.lon;
       if (lat == null || lon == null) return;
       addMarker(
-        'width:12px;height:12px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 0 rgba(245,158,11,0.5);animation:pulse-amber 1.8s infinite;',
+        'width:12px;height:12px;border-radius:50%;background:#f59e0b;animation:pulse-amber 1.8s infinite;',
         wa.event || 'Weather Alert',
         { type: 'weather', title: wa.event || 'Weather Alert', detail: wa.headline || wa.event, level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon) },
         lon, lat, 'weather'
@@ -612,7 +604,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     payload.wildfires.slice(0, 30).forEach((fire, i) => {
       if (fire.lat == null || fire.lon == null) return;
       addMarker(
-        'width:10px;height:10px;border-radius:50%;background:#f97316;box-shadow:0 0 0 0 rgba(249,115,22,0.5);animation:pulse-amber 1.6s infinite;',
+        'width:10px;height:10px;border-radius:50%;background:#f97316;animation:pulse-amber 1.6s infinite;',
         'Wildfire',
         { type: 'wildfire', title: 'Active Fire', detail: `Confidence: ${fire.confidence || 'Unknown'} -- ${fire.date || 'Recent'}`, level: 'elevated', source: 'NASA FIRMS', link: mapsLink(fire.lat, fire.lon) },
         fire.lon, fire.lat, 'wildfires'
@@ -624,10 +616,11 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     payload.flights.slice(0, 40).forEach((fl) => {
       if (fl.lat == null || fl.lon == null) return;
       const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
+      const isEstimated = fl.estimated === true;
       addMarker(
-        `width:12px;height:12px;border-radius:2px;background:#818cf8;box-shadow:0 0 0 0 rgba(129,140,248,0.4);animation:pulse-blue 2.4s infinite;${heading}`,
-        `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}`,
-        { type: 'flight', title: fl.callsign || fl.icao24 || 'Aircraft', detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: 'OpenSky Network', link: `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
+        `width:12px;height:12px;border-radius:2px;background:${isEstimated ? 'transparent' : '#818cf8'};${isEstimated ? 'border:2px dashed #818cf8;' : ''}animation:pulse-blue 2.4s infinite;${heading}`,
+        `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}${isEstimated ? ' (est)' : ''}`,
+        { type: 'flight', title: `${fl.callsign || fl.icao24 || 'Aircraft'}${isEstimated ? ' (estimated)' : ''}`, detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: isEstimated ? 'Estimated positions' : 'OpenSky Network', link: isEstimated ? null : `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
         fl.lon, fl.lat, 'flights'
       );
     });
@@ -636,11 +629,14 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     payload.markets.slice(0, 20).forEach((m) => {
       const p = geoKeywordMatch(m.question);
       if (!p) return; // Only show predictions with a real geographic match
+      // Filter: only show if matched city is within ~2 degrees of map center (viewport)
+      const cityDist = Math.abs(p.lat - center.lat) + Math.abs(p.lon - center.lon);
+      if (cityDist > 4) return;
       const prob = typeof m.probability === 'number' ? m.probability : 0.5;
       const conf = Math.max(prob, 1 - prob);
       const size = conf > 0.9 ? 12 : conf > 0.75 ? 10 : 8;
       addMarker(
-        `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};box-shadow:0 0 0 0 rgba(34,197,94,0.4);animation:pulse-cyan 2.4s infinite;`,
+        `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};animation:pulse-cyan 2.4s infinite;`,
         `${Math.round(prob * 100)}% · ${m.question || 'market'}`,
         { type: 'prediction', title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`, detail: m.question || 'Prediction market', level: p.label, source: 'Polymarket', link: `https://polymarket.com/event/${m.eventSlug || m.slug}` },
         p.lon, p.lat, 'predictions'
@@ -733,10 +729,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
       <style>{`
-        @keyframes pulse-blue { 0%{box-shadow:0 0 0 0 rgba(59,130,246,.55)} 70%{box-shadow:0 0 0 16px rgba(59,130,246,0)} 100%{box-shadow:0 0 0 0 rgba(59,130,246,0)} }
-        @keyframes pulse-amber { 0%{box-shadow:0 0 0 0 rgba(245,158,11,.45)} 70%{box-shadow:0 0 0 12px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }
-        @keyframes pulse-red { 0%{box-shadow:0 0 0 0 rgba(239,68,68,.45)} 70%{box-shadow:0 0 0 16px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
-        @keyframes pulse-cyan { 0%{box-shadow:0 0 0 0 rgba(34,211,238,.45)} 70%{box-shadow:0 0 0 12px rgba(34,211,238,0)} 100%{box-shadow:0 0 0 0 rgba(34,211,238,0)} }
+        @keyframes pulse-blue { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
+        @keyframes pulse-amber { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
+        @keyframes pulse-red { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
+        @keyframes pulse-cyan { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
         .monica-map-popup .maplibregl-popup-content { background:rgba(2,6,23,0.92); color:#fff; border:1px solid rgba(255,255,255,0.24); border-radius:12px; padding:10px 12px; }
         .monica-map-popup .maplibregl-popup-tip { border-top-color:rgba(2,6,23,0.92); }
         .monica-map-popup .maplibregl-popup-close-button { color:#94a3b8; font-size:16px; padding:2px 6px; }

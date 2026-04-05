@@ -41,6 +41,46 @@ const DEFAULT_SYMBOLS = [
   // Cramer tracker ETFs + benchmark
   'SPY', 'SJIM', 'LJIM',
 ];
+// Sector metadata for categorization
+export const SECTOR_MAP = {
+  // MAG7
+  AAPL: 'Tech', MSFT: 'Tech', GOOGL: 'Tech', AMZN: 'Tech', NVDA: 'Tech', META: 'Tech', TSLA: 'Tech',
+  // Tech
+  AVGO: 'Tech', AMD: 'Tech', ADBE: 'Tech', CRM: 'Tech', NFLX: 'Tech', CSCO: 'Tech', ORCL: 'Tech',
+  ACN: 'Tech', INTC: 'Tech', TXN: 'Tech', QCOM: 'Tech', INTU: 'Tech', IBM: 'Tech', PLTR: 'Tech',
+  COIN: 'Tech', HOOD: 'Tech', HIMS: 'Tech', SHOP: 'Tech', RKLB: 'Tech', SOFI: 'Tech', XYZ: 'Tech',
+  // Financials
+  'BRK-B': 'Financials', V: 'Financials', JPM: 'Financials', MA: 'Financials', BAC: 'Financials',
+  GS: 'Financials', MS: 'Financials', C: 'Financials', WFC: 'Financials', BLK: 'Financials',
+  SCHW: 'Financials', AXP: 'Financials', SPGI: 'Financials', CME: 'Financials',
+  // Healthcare
+  LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare', MRK: 'Healthcare', ABBV: 'Healthcare',
+  TMO: 'Healthcare', DHR: 'Healthcare', PFE: 'Healthcare', AMGN: 'Healthcare', BMY: 'Healthcare',
+  MDT: 'Healthcare', BSX: 'Healthcare', ELV: 'Healthcare', CVS: 'Healthcare',
+  // Energy
+  XOM: 'Energy', CVX: 'Energy', 'CL=F': 'Commodities',
+  // Industrials
+  HD: 'Industrials', COST: 'Industrials', UNP: 'Industrials', RTX: 'Industrials', HON: 'Industrials',
+  UPS: 'Industrials', FDX: 'Industrials', BA: 'Industrials', CAT: 'Industrials', DE: 'Industrials',
+  LMT: 'Industrials', GE: 'Industrials', WM: 'Industrials',
+  // Consumer
+  WMT: 'Consumer', PG: 'Consumer', KO: 'Consumer', PEP: 'Consumer', NKE: 'Consumer', PM: 'Consumer',
+  DIS: 'Consumer', TGT: 'Consumer', LOW: 'Consumer', SBUX: 'Consumer', MCD: 'Consumer', YUM: 'Consumer',
+  F: 'Consumer', GM: 'Consumer',
+  // Telecom
+  CMCSA: 'Telecom', VZ: 'Telecom', T: 'Telecom', TMUS: 'Telecom',
+  // Utilities
+  NEE: 'Utilities', DUK: 'Utilities', SO: 'Utilities',
+  // REITs
+  AMT: 'REITs', PLD: 'REITs',
+  // Commodities
+  'GC=F': 'Commodities', 'SI=F': 'Commodities',
+  // ETFs
+  SPY: 'ETFs', SJIM: 'ETFs', LJIM: 'ETFs', IWM: 'ETFs',
+};
+
+export const SECTOR_ORDER = ['Tech', 'Financials', 'Healthcare', 'Energy', 'Industrials', 'Consumer', 'Telecom', 'Utilities', 'REITs', 'Commodities', 'ETFs'];
+
 const STALE_AFTER_MS = 10 * 60 * 1000;
 const MAX_SYMBOLS_PER_REQUEST = 50;
 

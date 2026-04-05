@@ -228,7 +228,7 @@ struct SituationView: View {
         let lomin = center.longitude - span.longitudeDelta / 2
         let lomax = center.longitude + span.longitudeDelta / 2
 
-        async let earthquakeLoad = loadEarthquakesIfEnabled()
+        async let earthquakeLoad = loadEarthquakesIfEnabled(lat: center.latitude, lon: center.longitude)
         async let flightLoad = loadFlightsIfEnabled(lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
         async let incidentLoad = loadIncidentsIfEnabled(lat: center.latitude, lon: center.longitude)
         async let weatherLoad = loadWeatherIfEnabled(lat: center.latitude, lon: center.longitude)
@@ -313,10 +313,10 @@ struct SituationView: View {
         }
     }
 
-    private func loadEarthquakesIfEnabled() async -> (value: [Earthquake], error: String?) {
+    private func loadEarthquakesIfEnabled(lat: Double, lon: Double) async -> (value: [Earthquake], error: String?) {
         guard appState.situationEarthquakesEnabled else { return ([], nil) }
         return await loadSection(label: "Earthquakes") {
-            try await MonicaAPI.shared.fetchEarthquakes()
+            try await MonicaAPI.shared.fetchEarthquakes(lat: lat, lon: lon)
         }
     }
 

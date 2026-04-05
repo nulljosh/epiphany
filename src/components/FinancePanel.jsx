@@ -111,6 +111,7 @@ function ActionMenu({ t, font, actions }) {
 }
 
 function PieChart({ data, size = 160, t }) {
+  const [hovered, setHovered] = useState(null);
   if (!data || data.length === 0) return null;
   const total = data.reduce((sum, entry) => sum + entry.value, 0);
   if (total <= 0) return null;
@@ -133,9 +134,17 @@ function PieChart({ data, size = 160, t }) {
     const y1 = cy + radius * Math.sin(startRad);
     const x2 = cx + radius * Math.cos(endRad);
     const y2 = cy + radius * Math.sin(endRad);
+    const isHovered = hovered === index;
+    // Offset slice outward along bisector when hovered
+    const midRad = ((startAngle + endAngle) / 2 - 90) * Math.PI / 180;
+    const tx = isHovered ? Math.cos(midRad) * 5 : 0;
+    const ty = isHovered ? Math.sin(midRad) * 5 : 0;
 
     if (pct >= 0.999) {
-      return <circle key={entry.label} cx={cx} cy={cy} r={radius} fill={colors[index % colors.length]} />;
+      return <circle key={entry.label} cx={cx} cy={cy} r={radius} fill={colors[index % colors.length]}
+        style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
+        opacity={isHovered ? 1 : 0.85}
+        onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)} />;
     }
 
     return (
@@ -143,26 +152,37 @@ function PieChart({ data, size = 160, t }) {
         key={entry.label}
         d={`M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
         fill={colors[index % colors.length]}
-        opacity={0.85}
+        opacity={isHovered ? 1 : 0.85}
+        style={{ cursor: 'pointer', transition: 'transform 0.15s ease, opacity 0.15s', transform: `translate(${tx}px, ${ty}px)` }}
+        onMouseEnter={() => setHovered(index)}
+        onMouseLeave={() => setHovered(null)}
       />
     );
   });
 
+  const hoveredEntry = hovered !== null ? data[hovered] : null;
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {slices}
-        <circle cx={size / 2} cy={size / 2} r={size / 2 - 30} fill={t.bg} />
-        <text x={size / 2} y={size / 2 - 6} textAnchor="middle" fill={t.text} fontSize="14" fontWeight="700" fontFamily="-apple-system, system-ui, sans-serif">
-          {formatCurrency(total)}
-        </text>
-        <text x={size / 2} y={size / 2 + 10} textAnchor="middle" fill={t.textTertiary} fontSize="9" fontFamily="-apple-system, system-ui, sans-serif">
-          TOTAL
-        </text>
-      </svg>
+      <div style={{ position: 'relative' }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {slices}
+          <circle cx={size / 2} cy={size / 2} r={size / 2 - 30} fill={t.bg} />
+          <text x={size / 2} y={size / 2 - 6} textAnchor="middle" fill={t.text} fontSize="14" fontWeight="700" fontFamily="-apple-system, system-ui, sans-serif">
+            {hoveredEntry ? formatCurrency(hoveredEntry.value) : formatCurrency(total)}
+          </text>
+          <text x={size / 2} y={size / 2 + 10} textAnchor="middle" fill={t.textTertiary} fontSize="9" fontFamily="-apple-system, system-ui, sans-serif">
+            {hoveredEntry ? `${hoveredEntry.label} (${(hoveredEntry.value / total * 100).toFixed(1)}%)` : 'TOTAL'}
+          </text>
+        </svg>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
         {data.map((entry, index) => (
-          <div key={entry.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+          <div key={entry.label}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', opacity: hovered !== null && hovered !== index ? 0.5 : 1, transition: 'opacity 0.15s' }}
+            onMouseEnter={() => setHovered(index)}
+            onMouseLeave={() => setHovered(null)}
+          >
             <div style={{ width: 8, height: 8, borderRadius: 2, background: colors[index % colors.length] }} />
             <span style={{ color: t.textSecondary }}>{entry.label}</span>
             <span style={{ color: t.text, fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(entry.value)}</span>

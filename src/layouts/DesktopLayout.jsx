@@ -46,71 +46,78 @@ export default function DesktopLayout({
             </>
           )}
         </div>
-        <div ref={desktopNavRef} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Tab pills */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            {TAB_PILLS.map(pill => (
-              <button
-                key={pill.key}
-                onClick={() => handleDesktopTabSelect(pill.key)}
-                style={{
-                  padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
-                  fontFamily: FONT, cursor: 'pointer',
-                  background: activeTab === pill.key && desktopPanelOpen ? (dark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)') : glassButton.background,
-                  color: activeTab === pill.key && desktopPanelOpen ? (dark ? '#020617' : '#ffffff') : t.textSecondary,
-                  border: activeTab === pill.key && desktopPanelOpen ? '1px solid transparent' : glassButton.border,
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {pill.label}
-              </button>
-            ))}
-          </div>
-          {/* Alerts bell */}
-          <button
-            onClick={() => setShowAlerts(true)}
-            style={{
-              position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
-              color: t.textSecondary, fontSize: 16, padding: '4px 6px', lineHeight: 1,
-              transition: 'color 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = t.text}
-            onMouseLeave={e => e.currentTarget.style.color = t.textSecondary}
-            title="Price Alerts"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            {activeCount > 0 && (
-              <span style={{
-                position: 'absolute', top: 0, right: 0, background: '#ef4444',
-                color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: '50%',
-                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>{activeCount}</span>
-            )}
-          </button>
-          {!isMobileNav && (
-            <>
-              <span style={{ width: 1, height: 14, background: t.border }} />
-              {isFree && (
+        <div ref={desktopNavRef} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Segmented control */}
+          <div style={{ display: 'flex', gap: 0, background: glassButton.background, borderRadius: 8, border: glassButton.border, overflow: 'hidden', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+            {TAB_PILLS.map((pill, i) => {
+              const isActive = activeTab === pill.key && desktopPanelOpen;
+              return (
                 <button
-                  onClick={() => setShowPricing(true)}
-                  style={{ background: '#0071e3', border: 'none', borderRadius: 9999, padding: '5px 12px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: 'none' }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  key={pill.key}
+                  onClick={() => handleDesktopTabSelect(pill.key)}
+                  style={{
+                    padding: '4px 10px', borderRadius: 0, fontSize: 10, fontWeight: 600,
+                    fontFamily: FONT, cursor: 'pointer',
+                    background: isActive ? (dark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)') : 'transparent',
+                    color: isActive ? (dark ? '#020617' : '#ffffff') : t.textSecondary,
+                    border: 'none',
+                    borderRight: i < TAB_PILLS.length - 1 ? `1px solid ${t.border}` : 'none',
+                    transition: 'all 0.15s ease',
+                  }}
                 >
-                  UPGRADE
+                  {pill.label}
                 </button>
+              );
+            })}
+            {/* Alerts bell inline */}
+            <button
+              onClick={() => setShowAlerts(true)}
+              style={{
+                position: 'relative', background: 'none', border: 'none', borderLeft: `1px solid ${t.border}`, cursor: 'pointer',
+                color: t.textSecondary, fontSize: 16, padding: '4px 8px', lineHeight: 1,
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = t.text}
+              onMouseLeave={e => e.currentTarget.style.color = t.textSecondary}
+              title="Price Alerts"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              {activeCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: 0, right: 0, background: '#ef4444',
+                  color: '#fff', fontSize: 8, fontWeight: 700, borderRadius: '50%',
+                  width: 12, height: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{activeCount}</span>
               )}
+            </button>
+            {!isMobileNav && isFree && (
+              <button
+                onClick={() => setShowPricing(true)}
+                style={{
+                  padding: '4px 10px', fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: FONT, background: '#0071e3', color: '#fff', border: 'none',
+                  borderLeft: `1px solid ${t.border}`,
+                  transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                UPGRADE
+              </button>
+            )}
+            {!isMobileNav && (
               <button
                 onClick={logout}
-                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 9999, padding: '5px 12px', color: '#f87171', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, boxShadow: 'none' }}
+                style={{
+                  padding: '4px 10px', fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: FONT, background: 'transparent', color: '#f87171', border: 'none',
+                  borderLeft: `1px solid ${t.border}`,
+                }}
               >
                 LOGOUT
               </button>
-            </>
-          )}
+            )}
+          </div>
           {isMobileNav && (
             <MobileMenu t={t} font={FONT}>
               {weather && (
