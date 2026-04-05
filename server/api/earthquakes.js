@@ -23,6 +23,11 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function filterByRadius(earthquakes, lat, lon, radiusKm) {
+  if (isNaN(lat) || isNaN(lon)) return earthquakes;
+  return earthquakes.filter(eq => haversineKm(lat, lon, eq.lat, eq.lon) <= radiusKm);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -32,12 +37,9 @@ export default async function handler(req, res) {
   const hasLocation = !isNaN(userLat) && !isNaN(userLon);
 
   if (cache && Date.now() - cache.ts < CACHE_TTL) {
-    const filtered = hasLocation
-      ? cache.data.earthquakes.filter(eq => haversineKm(userLat, userLon, eq.lat, eq.lon) <= radiusKm)
-      : cache.data.earthquakes;
     res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(200).json({
-      earthquakes: filtered,
+      earthquakes: filterByRadius(cache.data.earthquakes, userLat, userLon, radiusKm),
       meta: buildMeta('cache', { cached: true, cacheAgeMs: Date.now() - cache.ts, radiusKm: hasLocation ? radiusKm : null }),
     });
   }
@@ -58,24 +60,18 @@ export default async function handler(req, res) {
       depth: f.geometry.coordinates[2],
     }));
     cache = { ts: Date.now(), data: { earthquakes: allEarthquakes } };
-    const filtered = hasLocation
-      ? allEarthquakes.filter(eq => haversineKm(userLat, userLon, eq.lat, eq.lon) <= radiusKm)
-      : allEarthquakes;
     res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(200).json({
-      earthquakes: filtered,
+      earthquakes: filterByRadius(allEarthquakes, userLat, userLon, radiusKm),
       meta: buildMeta('live', { radiusKm: hasLocation ? radiusKm : null }),
     });
   } catch (err) {
     clearTimeout(timer);
     console.warn('USGS error:', err.message);
     if (cache) {
-      const filtered = hasLocation
-        ? cache.data.earthquakes.filter(eq => haversineKm(userLat, userLon, eq.lat, eq.lon) <= radiusKm)
-        : cache.data.earthquakes;
       res.setHeader('Cache-Control', 'public, max-age=60');
       return res.status(200).json({
-        earthquakes: filtered,
+        earthquakes: filterByRadius(cache.data.earthquakes, userLat, userLon, radiusKm),
         meta: buildMeta('stale', {
           cached: true,
           degraded: true,

@@ -174,8 +174,8 @@ const Ticker = memo(({ items, theme }) => {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={stopDragging}
-      onPointerLeave={stopDragging}
+      onPointerCancel={() => setIsDragging(false)}
+      onPointerLeave={() => setIsDragging(false)}
       style={{
         overflow: 'hidden',
         borderBottom: `0.5px solid ${theme.border}`,
