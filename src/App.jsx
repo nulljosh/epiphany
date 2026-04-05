@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { usePolymarket, MARKET_CATEGORIES } from './hooks/usePolymarket';
-import { useLivePrices, formatLastUpdated } from './hooks/useLivePrices';
+import { useLivePrices } from './hooks/useLivePrices';
 import { useStocks } from './hooks/useStocks';
 import { applyResolvedTheme, getTheme, resolveAutoTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
 import { saveRun, getStats } from './utils/runHistory';
 import { calculateKelly, detectEdge } from './utils/trading';
 import { tldr } from './utils/helpers';
-import { StatusBar, Card, MobileMenu, MobileMenuItem, MobileMenuDivider } from './components/ui';
-import Ticker from './components/Ticker';
 import PricingPage from './components/PricingPage';
 import FinancePanel from './components/FinancePanel';
 import LiveMapBackdrop from './components/LiveMapBackdrop';
@@ -20,14 +18,14 @@ import { useWatchlist } from './hooks/useWatchlist';
 import { useAlerts } from './hooks/useAlerts';
 import AlertsPanel from './components/AlertsPanel';
 import { useWeather } from './hooks/useWeather';
-import LoginPage from './components/LoginPage';
-import RegisterPage from './components/RegisterPage';
-import ResetPasswordPage from './components/ResetPasswordPage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import Settings from './components/Settings';
 import PeoplePanel from './components/PeoplePanel';
 import CommandBar from './components/CommandBar';
 import AiPanel from './components/AiPanel';
+import AuthPage from './pages/AuthPage';
+import DesktopLayout from './layouts/DesktopLayout';
+import MobileLayout from './layouts/MobileLayout';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -996,41 +994,8 @@ const reset = useCallback(() => {
   }, []);
 
   // Auth gate
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#888', fontSize: 14, fontFamily: font }}>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    if (authView === 'reset' && resetToken) {
-      return (
-        <ResetPasswordPage
-          token={resetToken}
-          onBack={() => { window.history.replaceState({}, '', '/'); setAuthView('login'); }}
-        />
-      );
-    }
-    if (authView === 'register') {
-      return (
-        <RegisterPage
-          onRegister={register}
-          onSwitchToLogin={() => setAuthView('login')}
-          error={authError}
-        />
-      );
-    }
-    return (
-      <LoginPage
-        onLogin={login}
-        onSwitchToRegister={() => setAuthView('register')}
-        error={authError}
-        theme={t}
-      />
-    );
-  }
+  const authGate = AuthPage({ authLoading, isAuthenticated, authView, setAuthView, authError, resetToken, login, register, t });
+  if (authGate) return authGate;
 
   const pmEdges = markets.filter(m => m.probability >= 0.85 || m.probability <= 0.15);
 
@@ -1149,6 +1114,9 @@ const reset = useCallback(() => {
     </div>
   );
 
+
+  const settingsProps = { dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser: refresh };
+
   const glassButton = {
     background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.72)',
     border: `1px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)'}`,
@@ -1157,7 +1125,41 @@ const reset = useCallback(() => {
     boxShadow: 'none',
   };
 
-  const settingsProps = { dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser: refresh };
+  // Shared panel content rendered in both desktop and mobile layouts
+  const renderPanelContent = () => (
+    <>
+      {activeTab === 'simulator' && simulatorPanel}
+      {activeTab === 'situation' && (
+        <SituationMonitor
+          dark={dark} t={t} font={font}
+          sim={simData} pmEdges={pmEdges}
+          lastPmBetMap={lastPmBetRef.current}
+          trades={trades} pmExits={pmExits}
+          pmWhales={whales}
+          mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
+          mapLayers={mapLayers}
+        />
+      )}
+      {activeTab === 'markets' && (
+        <MarketsPanel
+          dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
+          watchlist={watchlist} toggleSymbol={toggleSymbol}
+          isAuthenticated={isAuthenticated}
+          initialSymbol={commandBarStock}
+          onConsumeInitialSymbol={() => setCommandBarStock(null)}
+        />
+      )}
+      {activeTab === 'portfolio' && (
+        <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
+      )}
+      {activeTab === 'people' && (
+        <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
+      )}
+      {activeTab === 'settings' && (
+        <Settings {...settingsProps} />
+      )}
+    </>
+  );
 
   return (
     <div className="monica-root" style={{
@@ -1215,123 +1217,19 @@ const reset = useCallback(() => {
         }
       `}</style>
 
-      {/* Ticker */}
-      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28 }}>
-        {tickerItems.length > 0
-          ? <Ticker items={tickerItems} theme={t} />
-          : <div style={{ height: 28, background: t.glass, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 10, color: t.textTertiary, fontFamily: font }}>Loading ticker...</span>
-            </div>
-        }
-      </div>
-
-      {/* Header */}
-      <header className="monica-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>monica</span>
-          <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
-          <StatusBar t={t} reliability={stocksReliability} />
-          <span style={{ width: 1, height: 14, background: t.border }} />
-          <span style={{ fontSize: 10, color: t.textTertiary, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-            updated {formatLastUpdated(stocksReliability?.lastSuccessAt ? new Date(stocksReliability.lastSuccessAt) : lastUpdated)}
-          </span>
-          {weather && !isMobileNav && (
-            <>
-              <span style={{ width: 1, height: 14, background: t.border }} />
-              <span style={{ fontSize: 11, color: t.textSecondary, whiteSpace: 'nowrap' }}>
-                {weather.icon} {weather.temp}°C {weather.description}
-              </span>
-            </>
-          )}
-        </div>
-        <div ref={desktopNavRef} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Tab pills */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            {TAB_PILLS.map(pill => (
-              <button
-                key={pill.key}
-                onClick={() => handleDesktopTabSelect(pill.key)}
-                style={{
-                  padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
-                  fontFamily: font, cursor: 'pointer',
-                  background: activeTab === pill.key && desktopPanelOpen ? (dark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)') : glassButton.background,
-                  color: activeTab === pill.key && desktopPanelOpen ? (dark ? '#020617' : '#ffffff') : t.textSecondary,
-                  border: activeTab === pill.key && desktopPanelOpen ? '1px solid transparent' : glassButton.border,
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  boxShadow: 'none',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {pill.label}
-              </button>
-            ))}
-          </div>
-          {/* Alerts bell */}
-          <button
-            onClick={() => setShowAlerts(true)}
-            style={{
-              position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
-              color: t.textSecondary, fontSize: 16, padding: '4px 6px', lineHeight: 1,
-              transition: 'color 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = t.text}
-            onMouseLeave={e => e.currentTarget.style.color = t.textSecondary}
-            title="Price Alerts"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            {activeCount > 0 && (
-              <span style={{
-                position: 'absolute', top: 0, right: 0, background: '#ef4444',
-                color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: '50%',
-                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>{activeCount}</span>
-            )}
-          </button>
-          {!isMobileNav && (
-            <>
-              <span style={{ width: 1, height: 14, background: t.border }} />
-              {isFree && (
-                <button
-                  onClick={() => setShowPricing(true)}
-                  style={{ background: '#0071e3', border: 'none', borderRadius: 9999, padding: '5px 12px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: 'none' }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  UPGRADE
-                </button>
-              )}
-              <button
-                onClick={logout}
-                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 9999, padding: '5px 12px', color: '#f87171', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font, boxShadow: 'none' }}
-              >
-                LOGOUT
-              </button>
-            </>
-          )}
-          {isMobileNav && (
-            <MobileMenu t={t} font={font}>
-              {weather && (
-                <>
-                  <MobileMenuItem t={t} font={font} style={{ color: t.textTertiary, fontSize: 11, cursor: 'default' }}>
-                    {weather.icon} {weather.temp}°C {weather.description}
-                  </MobileMenuItem>
-                  <MobileMenuDivider t={t} />
-                </>
-              )}
-              {isFree && (
-                <MobileMenuItem t={t} font={font} onClick={() => setShowPricing(true)} style={{ color: '#0071e3' }}>
-                  UPGRADE
-                </MobileMenuItem>
-              )}
-              <MobileMenuDivider t={t} />
-              <MobileMenuItem t={t} font={font} onClick={logout} style={{ color: '#ef4444' }}>
-                LOGOUT
-              </MobileMenuItem>
-            </MobileMenu>
-          )}
-        </div>
-      </header>
+      <DesktopLayout
+        t={t} dark={dark} tickerItems={tickerItems} weather={weather}
+        isMobileNav={isMobileNav} stocksReliability={stocksReliability}
+        lastUpdated={lastUpdated}
+        activeTab={activeTab} desktopPanelOpen={desktopPanelOpen}
+        handleDesktopTabSelect={handleDesktopTabSelect}
+        desktopNavRef={desktopNavRef} desktopPanelRef={desktopPanelRef}
+        TAB_PILLS={TAB_PILLS} glassButton={glassButton}
+        showAlerts={showAlerts} setShowAlerts={setShowAlerts}
+        activeCount={activeCount}
+        isFree={isFree} setShowPricing={setShowPricing} logout={logout}
+        panelContent={renderPanelContent()}
+      />
 
       {/* Map cell */}
       <div className="monica-map" style={{ gridColumn: isMobileNav ? '1 / -1' : '1', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
@@ -1340,218 +1238,17 @@ const reset = useCallback(() => {
           mapLayers={mapLayers}
           onMapReady={handleMapReady}
         />
-        {/* Floating mobile nav */}
-        <div className="monica-mobile-nav" style={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 5, justifyContent: 'space-between', alignItems: 'flex-start', pointerEvents: 'none' }}>
-          {/* Left: tab pills (toggled) */}
-          <div style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <button
-              onClick={() => setMobileTabsOpen(p => !p)}
-              style={{
-                width: 44, height: 44, borderRadius: 10, border: 'none',
-                background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                color: t.text, fontSize: 18, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'none',
-              }}
-            >
-              {mobileTabsOpen ? '\u00d7' : '\u2630'}
-            </button>
-            {mobileTabsOpen && (
-              <div style={{
-                display: 'flex', flexDirection: 'column', gap: 4,
-                background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
-                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                borderRadius: 10, padding: 4,
-                boxShadow: 'none',
-              }}>
-                {TAB_PILLS.map(pill => (
-                  <button
-                    key={pill.key}
-                    onClick={() => handleMobileTabSelect(pill.key)}
-                    style={{
-                      padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, minHeight: 44,
-                      fontFamily: font, cursor: 'pointer', border: 'none', textAlign: 'left',
-                      background: activeTab === pill.key ? t.text : 'transparent',
-                      color: activeTab === pill.key ? t.bg : t.textSecondary,
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    {pill.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Right: hamburger menu */}
-          <div style={{ pointerEvents: 'auto' }}>
-            <MobileMenu
-              t={t}
-              font={font}
-              buttonStyle={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                border: 'none',
-                padding: 0,
-                background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.85)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                boxShadow: 'none',
-              }}
-            >
-              {weather && (
-                <>
-                  <MobileMenuItem t={t} font={font} style={{ color: t.textTertiary, fontSize: 11, cursor: 'default' }}>
-                    {weather.icon} {weather.temp}&deg;C {weather.description}
-                  </MobileMenuItem>
-                  <MobileMenuDivider t={t} />
-                </>
-              )}
-              {isFree && (
-                <MobileMenuItem t={t} font={font} onClick={() => setShowPricing(true)} style={{ color: '#0071e3' }}>
-                  UPGRADE
-                </MobileMenuItem>
-              )}
-              <MobileMenuDivider t={t} />
-              <MobileMenuItem t={t} font={font} onClick={logout} style={{ color: '#ef4444' }}>
-                LOGOUT
-              </MobileMenuItem>
-            </MobileMenu>
-          </div>
-        </div>
-      </div>
-
-      {/* Panel cell */}
-      <div ref={desktopPanelRef} className="monica-panel" style={{ gridColumn: isMobileNav ? '1 / -1' : '2', overflow: 'auto', minHeight: 0 }}>
-        {desktopPanelOpen && (
-          <>
-            {activeTab === 'simulator' && simulatorPanel}
-
-            {activeTab === 'situation' && (
-              <SituationMonitor
-                dark={dark} t={t} font={font}
-                sim={simData} pmEdges={pmEdges}
-                lastPmBetMap={lastPmBetRef.current}
-                trades={trades} pmExits={pmExits}
-                pmWhales={whales}
-                mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
-                mapLayers={mapLayers}
-              />
-            )}
-
-            {activeTab === 'markets' && (
-              <MarketsPanel
-                dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
-                watchlist={watchlist} toggleSymbol={toggleSymbol}
-                isAuthenticated={isAuthenticated}
-                initialSymbol={commandBarStock}
-                onConsumeInitialSymbol={() => setCommandBarStock(null)}
-              />
-            )}
-
-            {activeTab === 'portfolio' && (
-              <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
-            )}
-            {activeTab === 'people' && (
-              <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
-            )}
-            {activeTab === 'settings' && (
-              <Settings {...settingsProps} />
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Mobile tabs backdrop */}
-      {isMobileNav && mobileTabsOpen && (
-        <div
-          onClick={() => setMobileTabsOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'transparent',
-            zIndex: 4,
-          }}
+        <MobileLayout
+          t={t} dark={dark} isMobileNav={isMobileNav}
+          activeTab={activeTab}
+          mobileTabsOpen={mobileTabsOpen} setMobileTabsOpen={setMobileTabsOpen}
+          mobilePanelOpen={mobilePanelOpen} setMobilePanelOpen={setMobilePanelOpen}
+          handleMobileTabSelect={handleMobileTabSelect}
+          TAB_PILLS={TAB_PILLS}
+          weather={weather} isFree={isFree} setShowPricing={setShowPricing} logout={logout}
+          panelContent={renderPanelContent()}
         />
-      )}
-      {/* Mobile bottom sheet backdrop */}
-      {isMobileNav && mobilePanelOpen && (
-        <div
-          onClick={() => {
-            setMobilePanelOpen(false);
-            setMobileTabsOpen(false);
-          }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            zIndex: 9,
-          }}
-        />
-      )}
-      {/* Mobile bottom sheet */}
-      {isMobileNav && (
-        <div
-          className={`monica-mobile-panel ${mobilePanelOpen ? 'open' : ''}`}
-          style={{
-            background: t.bg,
-            borderTop: `1px solid ${t.border}`,
-            boxShadow: 'none',
-          }}
-        >
-          <div
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', position: 'relative', cursor: 'pointer' }}
-            onClick={() => setMobilePanelOpen(false)}
-          >
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: t.border }} />
-            <button
-              onClick={(e) => { e.stopPropagation(); setMobilePanelOpen(false); }}
-              style={{
-                position: 'absolute',
-                right: 12,
-                top: 4,
-                background: 'transparent',
-                border: 'none',
-                color: t.textSecondary,
-                fontSize: 22,
-                cursor: 'pointer',
-                padding: '4px 8px',
-                lineHeight: 1,
-              }}
-            >{'\u00d7'}</button>
-          </div>
-          {activeTab === 'simulator' && simulatorPanel}
-          {activeTab === 'situation' && (
-            <SituationMonitor
-              dark={dark} t={t} font={font}
-              sim={simData} pmEdges={pmEdges}
-              lastPmBetMap={lastPmBetRef.current}
-              trades={trades} pmExits={pmExits}
-              mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
-              mapLayers={mapLayers}
-            />
-          )}
-          {activeTab === 'markets' && (
-            <MarketsPanel
-              dark={dark} t={t} stocks={stocks} liveAssets={liveAssets}
-              watchlist={watchlist} toggleSymbol={toggleSymbol}
-              isAuthenticated={isAuthenticated}
-              initialSymbol={commandBarStock}
-              onConsumeInitialSymbol={() => setCommandBarStock(null)}
-            />
-          )}
-          {activeTab === 'portfolio' && (
-            <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
-          )}
-          {activeTab === 'people' && (
-            <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
-          )}
-          {activeTab === 'settings' && (
-            <Settings {...settingsProps} />
-          )}
-        </div>
-      )}
+      </div>
 
       {/* Pricing Modal */}
       {showPricing && <PricingPage dark={dark} t={t} onClose={() => setShowPricing(false)} subscription={subscription} />}
@@ -1566,14 +1263,6 @@ const reset = useCallback(() => {
           watchlist={watchlist}
         />
       )}
-
-      {/* Footer */}
-      <footer className="monica-footer" style={{ gridColumn: '1 / -1', gridRow: 4, padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
-        <span>&copy; 2026 Monica</span>
-        <a href="https://github.com/nulljosh/monica/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
-        <a href="https://github.com/nulljosh/monica" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
-        <a href="https://github.com/nulljosh/monica/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
-      </footer>
 
       <CommandBar
         open={commandBarOpen}

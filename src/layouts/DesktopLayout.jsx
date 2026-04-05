@@ -1,0 +1,152 @@
+import { StatusBar } from '../components/ui';
+import { MobileMenu, MobileMenuItem, MobileMenuDivider } from '../components/ui';
+import { formatLastUpdated } from '../hooks/useLivePrices';
+import Ticker from '../components/Ticker';
+
+const FONT = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+
+export default function DesktopLayout({
+  t, dark, tickerItems, weather, isMobileNav,
+  stocksReliability, lastUpdated,
+  activeTab, desktopPanelOpen, handleDesktopTabSelect,
+  desktopNavRef, desktopPanelRef,
+  TAB_PILLS, glassButton,
+  showAlerts, setShowAlerts, activeCount,
+  isFree, setShowPricing, logout,
+  panelContent,
+}) {
+  return (
+    <>
+      {/* Ticker */}
+      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28 }}>
+        {tickerItems.length > 0
+          ? <Ticker items={tickerItems} theme={t} />
+          : <div style={{ height: 28, background: t.glass, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 10, color: t.textTertiary, fontFamily: FONT }}>Loading ticker...</span>
+            </div>
+        }
+      </div>
+
+      {/* Header */}
+      <header className="monica-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>monica</span>
+          <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
+          <StatusBar t={t} reliability={stocksReliability} />
+          <span style={{ width: 1, height: 14, background: t.border }} />
+          <span style={{ fontSize: 10, color: t.textTertiary, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+            updated {formatLastUpdated(stocksReliability?.lastSuccessAt ? new Date(stocksReliability.lastSuccessAt) : lastUpdated)}
+          </span>
+          {weather && !isMobileNav && (
+            <>
+              <span style={{ width: 1, height: 14, background: t.border }} />
+              <span style={{ fontSize: 11, color: t.textSecondary, whiteSpace: 'nowrap' }}>
+                {weather.icon} {weather.temp}&deg;C {weather.description}
+              </span>
+            </>
+          )}
+        </div>
+        <div ref={desktopNavRef} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Tab pills */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TAB_PILLS.map(pill => (
+              <button
+                key={pill.key}
+                onClick={() => handleDesktopTabSelect(pill.key)}
+                style={{
+                  padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 600,
+                  fontFamily: FONT, cursor: 'pointer',
+                  background: activeTab === pill.key && desktopPanelOpen ? (dark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)') : glassButton.background,
+                  color: activeTab === pill.key && desktopPanelOpen ? (dark ? '#020617' : '#ffffff') : t.textSecondary,
+                  border: activeTab === pill.key && desktopPanelOpen ? '1px solid transparent' : glassButton.border,
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  boxShadow: 'none',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {pill.label}
+              </button>
+            ))}
+          </div>
+          {/* Alerts bell */}
+          <button
+            onClick={() => setShowAlerts(true)}
+            style={{
+              position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
+              color: t.textSecondary, fontSize: 16, padding: '4px 6px', lineHeight: 1,
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = t.text}
+            onMouseLeave={e => e.currentTarget.style.color = t.textSecondary}
+            title="Price Alerts"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            {activeCount > 0 && (
+              <span style={{
+                position: 'absolute', top: 0, right: 0, background: '#ef4444',
+                color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: '50%',
+                width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>{activeCount}</span>
+            )}
+          </button>
+          {!isMobileNav && (
+            <>
+              <span style={{ width: 1, height: 14, background: t.border }} />
+              {isFree && (
+                <button
+                  onClick={() => setShowPricing(true)}
+                  style={{ background: '#0071e3', border: 'none', borderRadius: 9999, padding: '5px 12px', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: 'none' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  UPGRADE
+                </button>
+              )}
+              <button
+                onClick={logout}
+                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 9999, padding: '5px 12px', color: '#f87171', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: FONT, boxShadow: 'none' }}
+              >
+                LOGOUT
+              </button>
+            </>
+          )}
+          {isMobileNav && (
+            <MobileMenu t={t} font={FONT}>
+              {weather && (
+                <>
+                  <MobileMenuItem t={t} font={FONT} style={{ color: t.textTertiary, fontSize: 11, cursor: 'default' }}>
+                    {weather.icon} {weather.temp}&deg;C {weather.description}
+                  </MobileMenuItem>
+                  <MobileMenuDivider t={t} />
+                </>
+              )}
+              {isFree && (
+                <MobileMenuItem t={t} font={FONT} onClick={() => setShowPricing(true)} style={{ color: '#0071e3' }}>
+                  UPGRADE
+                </MobileMenuItem>
+              )}
+              <MobileMenuDivider t={t} />
+              <MobileMenuItem t={t} font={FONT} onClick={logout} style={{ color: '#ef4444' }}>
+                LOGOUT
+              </MobileMenuItem>
+            </MobileMenu>
+          )}
+        </div>
+      </header>
+
+      {/* Panel cell */}
+      <div ref={desktopPanelRef} className="monica-panel" style={{ gridColumn: isMobileNav ? '1 / -1' : '2', overflow: 'auto', minHeight: 0 }}>
+        {desktopPanelOpen && panelContent}
+      </div>
+
+      {/* Footer */}
+      <footer className="monica-footer" style={{ gridColumn: '1 / -1', gridRow: 4, padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
+        <span>&copy; 2026 Monica</span>
+        <a href="https://github.com/nulljosh/monica/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
+        <a href="https://github.com/nulljosh/monica" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
+        <a href="https://github.com/nulljosh/monica/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
+      </footer>
+    </>
+  );
+}
