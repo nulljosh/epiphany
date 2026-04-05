@@ -132,12 +132,24 @@ struct SituationView: View {
                 }
             }
 
-            ForEach(appState.situationIncidentsEnabled ? incidents : []) { incident in
+            // Active incidents (construction, road works) -- prominent
+            ForEach(appState.situationIncidentsEnabled ? incidents.filter { !$0.isInfrastructure }.prefix(25).map { $0 } : []) { incident in
                 Annotation(incident.title, coordinate: incident.coordinate) {
                     Button {
                         selectedEvent = .incident(incident)
                     } label: {
                         mapPin(color: Palette.mapBlue, emoji: "\u{1F6A7}", size: 15)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            // Infrastructure (police, fire, hospital) -- smaller
+            ForEach(appState.situationIncidentsEnabled ? incidents.filter { $0.isInfrastructure }.prefix(15).map { $0 } : []) { incident in
+                Annotation(incident.title, coordinate: incident.coordinate) {
+                    Button {
+                        selectedEvent = .incident(incident)
+                    } label: {
+                        mapPin(color: Palette.mapBlue, emoji: "\u{1F6A7}", size: 10)
                     }
                     .buttonStyle(.plain)
                 }
@@ -507,9 +519,9 @@ private struct SituationEventDetailView: View {
         switch event {
         case .earthquake(let quake): return quake.place
         case .flight(let flight): return flight.origin ?? flight.destination
-        case .incident(let incident): return incident.summary
+        case .incident(let incident): return incident.summary ?? (incident.isInfrastructure ? incident.category.replacingOccurrences(of: "_", with: " ").capitalized : nil)
         case .crime(let crime): return crime.category
-        case .localEvent(let event): return event.venue
+        case .localEvent(let event): return event.eventDescription ?? event.venue
         case .trafficIncident(let incident): return incident.severity?.capitalized
         }
     }
@@ -534,13 +546,16 @@ private struct SituationEventDetailView: View {
                 ("Status", flight.status ?? "Live"),
             ]
         case .incident(let incident):
-            return [
+            var result: [(label: String, value: String)] = [
+                ("Type", incident.title),
+                ("Category", incident.category.replacingOccurrences(of: "_", with: " ").capitalized),
                 ("Severity", incident.severity.capitalized),
-                ("Latitude", String(format: "%.4f", incident.latitude)),
-                ("Longitude", String(format: "%.4f", incident.longitude)),
-                ("Reported", incident.reportedAt ?? "Unknown"),
-                ("Summary", incident.summary ?? "No summary"),
             ]
+            if let summary = incident.summary { result.append(("Summary", summary)) }
+            if let reported = incident.reportedAt { result.append(("Reported", reported)) }
+            result.append(("Latitude", String(format: "%.4f", incident.latitude)))
+            result.append(("Longitude", String(format: "%.4f", incident.longitude)))
+            return result
         case .crime(let crime):
             return [
                 ("Category", crime.category),
@@ -551,18 +566,16 @@ private struct SituationEventDetailView: View {
                 ("Source", crime.source ?? "Unknown"),
             ]
         case .localEvent(let event):
-            var result: [(label: String, value: String)] = [
-                ("Venue", event.venue ?? "Unknown"),
-                ("Date", event.date ?? "Unknown"),
-            ]
-            if let source = event.source {
-                result.append(("Source", source))
-            }
+            var result: [(label: String, value: String)] = []
+            if let venue = event.venue { result.append(("Venue", venue)) }
+            if let desc = event.eventDescription, !desc.isEmpty { result.append(("About", desc)) }
+            if let date = event.date { result.append(("Date", date)) }
+            if let source = event.source { result.append(("Source", source.capitalized)) }
             if let lat = event.latitude, let lon = event.longitude {
                 result.append(("Latitude", String(format: "%.4f", lat)))
                 result.append(("Longitude", String(format: "%.4f", lon)))
             }
-            return result
+            return result.isEmpty ? [("Info", "No details available")] : result
         case .trafficIncident(let incident):
             var result: [(label: String, value: String)] = []
             if let severity = incident.severity {

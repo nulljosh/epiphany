@@ -25,10 +25,22 @@ export default async function handler(req, res) {
   const timer = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const fires = await fetchEONET(lat, lon, controller.signal);
+    const [eonet, firms] = await Promise.all([
+      fetchEONET(lat, lon, controller.signal).catch(() => []),
+      fetchFIRMS(lat, lon, controller.signal).catch(() => []),
+    ]);
     clearTimeout(timer);
 
-    const data = { fires, source: 'NASA_EONET', count: fires.length };
+    // Deduplicate: if an EONET fire is within 0.1 deg of a FIRMS hotspot, keep EONET (has title)
+    const seen = new Set();
+    for (const f of eonet) {
+      seen.add(`${f.lat.toFixed(1)},${f.lon.toFixed(1)}`);
+    }
+    const uniqueFirms = firms.filter(f => !seen.has(`${f.lat.toFixed(1)},${f.lon.toFixed(1)}`));
+    const fires = [...eonet, ...uniqueFirms];
+
+    const sources = [...new Set(fires.map(f => f.source).filter(Boolean))];
+    const data = { fires, sources, count: fires.length };
     cache = { ts: Date.now(), data, key: cacheKey };
     res.setHeader('Cache-Control', 's-maxage=1800');
     return res.status(200).json(data);
@@ -40,7 +52,7 @@ export default async function handler(req, res) {
   }
 }
 
-// NASA EONET (free, no key required)
+// NASA EONET -- named wildfire events (free, no key required)
 async function fetchEONET(lat, lon, signal) {
   const url = 'https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&days=7&limit=200';
   const r = await fetch(url, { signal });
@@ -60,6 +72,51 @@ async function fetchEONET(lat, lon, signal) {
         date: g.date ? g.date.split('T')[0] : null,
         time: g.date ? g.date.split('T')[1]?.replace('Z', '') : null,
         title: event.title,
+        source: 'NASA_EONET',
       }));
   }).slice(0, 200);
+}
+
+// NASA FIRMS -- thermal hotspot detections (free, no key for CSV endpoint)
+async function fetchFIRMS(lat, lon, signal) {
+  const delta = 3;
+  const west = lon - delta;
+  const east = lon + delta;
+  const south = lat - delta;
+  const north = lat + delta;
+  const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/VIIRS_SNPP_NRT/${west},${south},${east},${north}/2`;
+
+  try {
+    const r = await fetch(url, { signal });
+    if (!r.ok) return [];
+    const text = await r.text();
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return [];
+
+    const header = lines[0].split(',');
+    const latIdx = header.indexOf('latitude');
+    const lonIdx = header.indexOf('longitude');
+    const confIdx = header.indexOf('confidence');
+    const brtIdx = header.indexOf('bright_ti4');
+    const dateIdx = header.indexOf('acq_date');
+    const timeIdx = header.indexOf('acq_time');
+
+    if (latIdx === -1 || lonIdx === -1) return [];
+
+    return lines.slice(1, 201).map(line => {
+      const cols = line.split(',');
+      return {
+        lat: parseFloat(cols[latIdx]),
+        lon: parseFloat(cols[lonIdx]),
+        confidence: cols[confIdx] || null,
+        brightness: cols[brtIdx] ? parseFloat(cols[brtIdx]) : null,
+        date: cols[dateIdx] || null,
+        time: cols[timeIdx] || null,
+        title: 'Thermal Hotspot',
+        source: 'NASA_FIRMS',
+      };
+    }).filter(f => !isNaN(f.lat) && !isNaN(f.lon));
+  } catch {
+    return [];
+  }
 }

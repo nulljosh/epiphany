@@ -42,62 +42,7 @@ private extension KeyedDecodingContainer {
     }
 }
 
-private extension String {
-    var isLowSignalIncidentType: Bool {
-        let normalized = trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "_", with: " ")
-            .replacingOccurrences(of: "-", with: " ")
-            .lowercased()
-        let lowSignalTypes: Set<String> = [
-            "gate",
-            "bollard",
-            "barrier",
-            "obstruction",
-            "hazard",
-            "incident",
-            "closure",
-            "construction",
-            "road works",
-            "road work",
-            "roadwork",
-            "event",
-            "fire hydrant",
-            "fire extinguisher",
-            "defibrillator",
-            "phone",
-            "siren",
-            "assembly point",
-            "drinking water",
-            "cattle grid",
-            "cycle barrier",
-            "debris",
-            "jersey barrier",
-            "log",
-            "spikes",
-            "stile",
-            "swing gate",
-            "toll booth",
-            "turnstile",
-            "block",
-        ]
-        return lowSignalTypes.contains(normalized)
-    }
-
-    var normalizedIncidentTitle: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "_", with: " ")
-            .replacingOccurrences(of: "-", with: " ")
-            .split(separator: " ")
-            .map { word in
-                let lowercased = word.lowercased()
-                guard !lowercased.isEmpty else { return "" }
-                return lowercased.prefix(1).uppercased() + lowercased.dropFirst()
-            }
-            .joined(separator: " ")
-    }
-}
-
-struct Earthquake: Decodable, Identifiable {
+struct Earthquake: Codable, Identifiable {
     let id: String
     let title: String
     let magnitude: Double
@@ -160,9 +105,21 @@ struct Earthquake: Decodable, Identifiable {
         id = container.lossyString(forKey: .id)
             ?? "\(title)-\(occurredAt ?? "unknown")-\(latitude)-\(longitude)"
     }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(magnitude, forKey: .magnitude)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+        try container.encodeIfPresent(depthKm, forKey: .depthKm)
+        try container.encodeIfPresent(place, forKey: .place)
+        try container.encodeIfPresent(occurredAt, forKey: .occurredAt)
+    }
 }
 
-struct Flight: Decodable, Identifiable {
+struct Flight: Codable, Identifiable {
     let id: String
     let callsign: String
     let origin: String?
@@ -219,24 +176,25 @@ struct Flight: Decodable, Identifiable {
             ?? container.lossyInt(forKey: .altitude)
         status = container.lossyString(forKey: .status)
     }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(callsign, forKey: .callsign)
+        try container.encodeIfPresent(origin, forKey: .origin)
+        try container.encodeIfPresent(destination, forKey: .destination)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+        try container.encodeIfPresent(altitudeFeet, forKey: .altitudeFeet)
+        try container.encodeIfPresent(status, forKey: .status)
+    }
 }
 
-struct FlightFeed: Decodable {
-    let states: [Flight]
-    let meta: FlightFeedMeta?
-}
-
-struct FlightFeedMeta: Decodable {
-    let status: String?
-    let warning: String?
-    let cached: Bool?
-    let degraded: Bool?
-}
-
-struct Incident: Decodable, Identifiable {
+struct Incident: Codable, Identifiable {
     let id: String
     let title: String
     let severity: String
+    let category: String
     let latitude: Double
     let longitude: Double
     let summary: String?
@@ -247,7 +205,7 @@ struct Incident: Decodable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, severity, latitude, longitude, summary
+        case id, title, severity, category, latitude, longitude, summary
         case type, lat, lon, description
         case reportedAt = "reported_at"
     }
@@ -256,6 +214,7 @@ struct Incident: Decodable, Identifiable {
         id: String,
         title: String,
         severity: String,
+        category: String = "infrastructure",
         latitude: Double,
         longitude: Double,
         summary: String?,
@@ -264,23 +223,44 @@ struct Incident: Decodable, Identifiable {
         self.id = id
         self.title = title
         self.severity = severity
+        self.category = category
         self.latitude = latitude
         self.longitude = longitude
         self.summary = summary
         self.reportedAt = reportedAt
     }
 
+    private static let lowSignalTypes: Set<String> = [
+        "gate", "bollard", "barrier", "cattle grid", "cycle barrier",
+        "debris", "jersey barrier", "log", "spikes", "stile",
+        "swing gate", "toll booth", "turnstile", "block",
+        "fire hydrant", "fire extinguisher", "defibrillator",
+        "phone", "siren", "assembly point", "drinking water",
+        "traffic calming", "speed camera", "speed bump",
+    ]
+
+    private static func normalizeTitle(_ raw: String) -> String {
+        let cleaned = raw
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.split(separator: " ")
+            .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+            .joined(separator: " ")
+    }
+
+    static func isLowSignal(_ raw: String) -> Bool {
+        lowSignalTypes.contains(raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let sourceTitle = container.lossyString(forKey: .title)
-        let sourceType = container.lossyString(forKey: .type)
-        let normalizedTitle = sourceTitle?.normalizedIncidentTitle
-        let normalizedType = sourceType?.normalizedIncidentTitle
-        let fallbackTitle = normalizedTitle
-            ?? (sourceType?.isLowSignalIncidentType == true ? nil : normalizedType)
+        let rawTitle = container.lossyString(forKey: .title)
+            ?? container.lossyString(forKey: .type)
             ?? "Incident"
-        title = fallbackTitle
+        title = Self.normalizeTitle(rawTitle)
         severity = container.lossyString(forKey: .severity) ?? "info"
+        category = container.lossyString(forKey: .category) ?? "infrastructure"
         latitude = container.lossyDouble(forKey: .latitude)
             ?? container.lossyDouble(forKey: .lat)
             ?? 0
@@ -291,20 +271,43 @@ struct Incident: Decodable, Identifiable {
             ?? container.lossyString(forKey: .description)
         reportedAt = container.lossyString(forKey: .reportedAt)
         id = container.lossyString(forKey: .id)
-            ?? "\(fallbackTitle)-\(latitude)-\(longitude)"
+            ?? "\(rawTitle)-\(latitude)-\(longitude)"
+    }
+
+    var isInfrastructure: Bool {
+        category != "construction"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(severity, forKey: .severity)
+        try container.encode(category, forKey: .category)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+        try container.encodeIfPresent(summary, forKey: .summary)
+        try container.encodeIfPresent(reportedAt, forKey: .reportedAt)
     }
 }
 
-struct WeatherAlert: Decodable, Identifiable {
+struct WeatherAlert: Codable, Identifiable {
     let id: String
     let title: String
     let severity: String
     let summary: String?
     let effectiveAt: String?
     let expiresAt: String?
+    let lat: Double?
+    let lon: Double?
+
+    var coordinate: CLLocationCoordinate2D? {
+        guard let lat, let lon else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, severity, summary
+        case id, title, severity, summary, lat, lon
         case event, headline, expires
         case effectiveAt = "effective_at"
         case expiresAt = "expires_at"
@@ -316,7 +319,9 @@ struct WeatherAlert: Decodable, Identifiable {
         severity: String,
         summary: String?,
         effectiveAt: String?,
-        expiresAt: String?
+        expiresAt: String?,
+        lat: Double? = nil,
+        lon: Double? = nil
     ) {
         self.id = id
         self.title = title
@@ -324,6 +329,8 @@ struct WeatherAlert: Decodable, Identifiable {
         self.summary = summary
         self.effectiveAt = effectiveAt
         self.expiresAt = expiresAt
+        self.lat = lat
+        self.lon = lon
     }
 
     init(from decoder: Decoder) throws {
@@ -340,6 +347,20 @@ struct WeatherAlert: Decodable, Identifiable {
             ?? container.lossyString(forKey: .expires)
         id = container.lossyString(forKey: .id)
             ?? "\(fallbackTitle)-\(expiresAt ?? "none")"
+        lat = container.lossyDouble(forKey: .lat)
+        lon = container.lossyDouble(forKey: .lon)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(severity, forKey: .severity)
+        try container.encodeIfPresent(summary, forKey: .summary)
+        try container.encodeIfPresent(effectiveAt, forKey: .effectiveAt)
+        try container.encodeIfPresent(expiresAt, forKey: .expiresAt)
+        try container.encodeIfPresent(lat, forKey: .lat)
+        try container.encodeIfPresent(lon, forKey: .lon)
     }
 }
 
@@ -411,8 +432,10 @@ struct LocalEvent: Codable, Identifiable {
     let date: String?
     let url: String?
     let venue: String?
+    let eventDescription: String?
+    private let _stableId: String
 
-    var id: String { "\(title)-\(venue ?? "")-\(date ?? "")-\(source ?? "")" }
+    var id: String { _stableId }
 
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude, latitude != 0, longitude != 0 else { return nil }
@@ -420,8 +443,12 @@ struct LocalEvent: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case title, source, date, url, venue
-        case latitude, longitude, lat, lon
+        case title, source, date, url, venue, description
+        case latitude, longitude, lat, lon, lng
+    }
+
+    enum StableIdCodingKey: String, CodingKey {
+        case _stableId
     }
 
     init(from decoder: Decoder) throws {
@@ -432,9 +459,20 @@ struct LocalEvent: Codable, Identifiable {
             ?? container.lossyDouble(forKey: .lat)
         longitude = container.lossyDouble(forKey: .longitude)
             ?? container.lossyDouble(forKey: .lon)
+            ?? container.lossyDouble(forKey: .lng)
         date = try? container.decodeIfPresent(String.self, forKey: .date)
         url = try? container.decodeIfPresent(String.self, forKey: .url)
         venue = try? container.decodeIfPresent(String.self, forKey: .venue)
+        eventDescription = try? container.decodeIfPresent(String.self, forKey: .description)
+
+        if let idContainer = try? decoder.container(keyedBy: StableIdCodingKey.self),
+           let persisted = try? idContainer.decode(String.self, forKey: ._stableId) {
+            _stableId = persisted
+        } else if venue != nil || date != nil || (latitude != nil && longitude != nil) {
+            _stableId = "\(title)-\(venue ?? "")-\(date ?? "")-\(latitude ?? 0)-\(longitude ?? 0)"
+        } else {
+            _stableId = UUID().uuidString
+        }
     }
 
     func encode(to encoder: Encoder) throws {
@@ -446,6 +484,9 @@ struct LocalEvent: Codable, Identifiable {
         try container.encodeIfPresent(date, forKey: .date)
         try container.encodeIfPresent(url, forKey: .url)
         try container.encodeIfPresent(venue, forKey: .venue)
+        try container.encodeIfPresent(eventDescription, forKey: .description)
+        var idContainer = encoder.container(keyedBy: StableIdCodingKey.self)
+        try idContainer.encode(_stableId, forKey: ._stableId)
     }
 }
 
@@ -467,11 +508,16 @@ struct TrafficData: Codable {
         let latitude: Double?
         let longitude: Double?
         let severity: String?
+        private let _stableId: String
 
-        var id: String { rawId ?? "\(title ?? "")-\(latitude ?? 0)-\(longitude ?? 0)" }
+        var id: String { _stableId }
 
         enum CodingKeys: String, CodingKey {
             case id, title, severity, latitude, longitude, lat, lon
+        }
+
+        private enum StableIdCodingKey: String, CodingKey {
+            case _stableId
         }
 
         init(from decoder: Decoder) throws {
@@ -483,6 +529,15 @@ struct TrafficData: Codable {
                 ?? container.lossyDouble(forKey: .lat)
             longitude = container.lossyDouble(forKey: .longitude)
                 ?? container.lossyDouble(forKey: .lon)
+
+            if let idContainer = try? decoder.container(keyedBy: StableIdCodingKey.self),
+               let persisted = try? idContainer.decode(String.self, forKey: ._stableId) {
+                _stableId = persisted
+            } else if let raw = rawId, !raw.isEmpty {
+                _stableId = raw
+            } else {
+                _stableId = "\(title ?? "traffic")-\(latitude ?? 0)-\(longitude ?? 0)-\(UUID().uuidString)"
+            }
         }
 
         func encode(to encoder: Encoder) throws {
@@ -492,6 +547,8 @@ struct TrafficData: Codable {
             try container.encodeIfPresent(severity, forKey: .severity)
             try container.encodeIfPresent(latitude, forKey: .latitude)
             try container.encodeIfPresent(longitude, forKey: .longitude)
+            var idContainer = encoder.container(keyedBy: StableIdCodingKey.self)
+            try idContainer.encode(_stableId, forKey: ._stableId)
         }
 
         var coordinate: CLLocationCoordinate2D? {

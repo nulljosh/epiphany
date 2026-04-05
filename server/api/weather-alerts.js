@@ -1,4 +1,4 @@
-// Weather alerts: NOAA active alerts (US) + Open-Meteo severe weather codes (global)
+// Weather alerts: NOAA active alerts (US) + Environment Canada (CA) + Open-Meteo severe weather (global)
 // No auth required. NOAA requires User-Agent header only.
 const NOAA_BASE = 'https://api.weather.gov/alerts/active';
 const OPEN_METEO_BASE = 'https://api.open-meteo.com/v1/forecast';
@@ -22,11 +22,25 @@ async function timedFetch(url, options = {}, ms = 8000) {
   }
 }
 
+async function timedFetchText(url, ms = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.text();
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
 async function fetchNoaa(lat, lon) {
   try {
     const json = await timedFetch(
       `${NOAA_BASE}?point=${lat},${lon}`,
-      { headers: { 'User-Agent': 'rise-financial-terminal/1.0 (contact@heyitsmejosh.com)' } }
+      { headers: { 'User-Agent': 'monica-intelligence/1.0 (contact@heyitsmejosh.com)' } }
     );
     return (json.features || []).slice(0, 5).map(f => ({
       source: 'noaa',
@@ -34,6 +48,7 @@ async function fetchNoaa(lat, lon) {
       severity: f.properties.severity,
       headline: f.properties.headline,
       expires: f.properties.expires,
+      description: f.properties.description?.slice(0, 300) || null,
       lat,
       lon,
     }));
@@ -42,87 +57,91 @@ async function fetchNoaa(lat, lon) {
   }
 }
 
-// Environment Canada alerts via CAP Atom feed (Canadian locations)
-async function fetchEnvironmentCanada(lat, lon) {
-  try {
-    // EC provides province-level CAP feeds; determine province from longitude
-    const province = getCanadianProvince(lat, lon);
-    if (!province) return [];
+// Environment Canada alerts via weather.gc.ca RSS feeds
+// EC organizes alerts by region code; we look up the nearest city code
+const EC_REGION_CODES = {
+  // BC major regions
+  'bc-vancouver': 'bc-74',
+  'bc-surrey': 'bc-74',
+  'bc-langley': 'bc-74',
+  'bc-burnaby': 'bc-74',
+  'bc-richmond': 'bc-74',
+  'bc-victoria': 'bc-85',
+  'bc-kelowna': 'bc-32',
+  'bc-kamloops': 'bc-30',
+  'bc-prince-george': 'bc-53',
+  'bc-nanaimo': 'bc-44',
+  // AB
+  'ab-calgary': 'ab-52',
+  'ab-edmonton': 'ab-50',
+  // ON
+  'on-toronto': 'on-143',
+  'on-ottawa': 'on-118',
+};
 
-    const url = `https://dd.weather.gc.ca/alerts/cap/${province}/index.json`;
-    const json = await timedFetch(url, {}, 6000).catch(() => null);
-
-    if (!json) {
-      // Fallback: use the ATOM battleboard feed
-      return await fetchECAtom(lat, lon);
-    }
-
-    // index.json returns list of CAP file paths -- too heavy to parse all.
-    // Use the ATOM RSS feed instead for a summary.
-    return await fetchECAtom(lat, lon);
-  } catch {
-    return [];
-  }
+function getECRegionCode(lat, lon) {
+  // Lower Mainland BC (Vancouver, Surrey, Langley, etc.)
+  if (lat > 49.0 && lat < 49.5 && lon > -123.3 && lon < -122.3) return 'bc-74';
+  // Victoria / Vancouver Island south
+  if (lat > 48.3 && lat < 48.9 && lon > -124.0 && lon < -123.0) return 'bc-85';
+  // Kelowna / Okanagan
+  if (lat > 49.7 && lat < 50.1 && lon > -119.8 && lon < -119.2) return 'bc-32';
+  // Kamloops
+  if (lat > 50.5 && lat < 51.0 && lon > -120.8 && lon < -120.0) return 'bc-30';
+  // Calgary
+  if (lat > 50.8 && lat < 51.3 && lon > -114.4 && lon < -113.8) return 'ab-52';
+  // Edmonton
+  if (lat > 53.3 && lat < 53.8 && lon > -113.8 && lon < -113.2) return 'ab-50';
+  // Toronto / GTA
+  if (lat > 43.4 && lat < 44.0 && lon > -79.8 && lon < -79.0) return 'on-143';
+  // Fallback: use province-level default
+  const prov = getCanadianProvince(lat, lon);
+  if (prov === 'bc') return 'bc-74';
+  if (prov === 'ab') return 'ab-52';
+  if (prov === 'on') return 'on-143';
+  return null;
 }
 
-async function fetchECAtom(lat, lon) {
+async function fetchEnvironmentCanada(lat, lon) {
+  const regionCode = getECRegionCode(lat, lon);
+  if (!regionCode) return [];
+
+  const alerts = [];
   try {
-    // Use the weather.gc.ca RSS warnings page -- returns XML
-    const cityUrl = `https://weather.gc.ca/warnings/index_e.html`;
-    // Better: use the Open-Meteo alerts endpoint which aggregates EC data
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code&timezone=auto&forecast_days=1`;
-    const json = await timedFetch(url, {}, 6000);
+    const rssUrl = `https://weather.gc.ca/rss/warning/${regionCode}_e.xml`;
+    const rssText = await timedFetchText(rssUrl, 6000);
+    if (!rssText) return [];
 
-    // Also try the EC alert RSS for the nearest city
-    const rssUrl = `https://weather.gc.ca/rss/warning/bc-74_e.xml`;
-    const rssText = await timedFetch(rssUrl, {}, 6000)
-      .then(r => { throw new Error('json endpoint'); })
-      .catch(async () => {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 6000);
-        try {
-          const res = await fetch(rssUrl, { signal: controller.signal });
-          clearTimeout(timer);
-          if (!res.ok) return '';
-          return res.text();
-        } catch {
-          clearTimeout(timer);
-          return '';
-        }
+    const entries = rssText.match(/<entry>[\s\S]*?<\/entry>/g) || [];
+    for (const entry of entries.slice(0, 10)) {
+      const titleMatch = entry.match(/<title[^>]*>(.*?)<\/title>/);
+      const summaryMatch = entry.match(/<summary[^>]*>([\s\S]*?)<\/summary>/);
+      const updatedMatch = entry.match(/<updated>(.*?)<\/updated>/);
+      const title = titleMatch?.[1]?.trim();
+      if (!title || title.includes('No watches or warnings')) continue;
+
+      const summary = summaryMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || null;
+
+      alerts.push({
+        source: 'environment_canada',
+        event: title,
+        severity: title.toLowerCase().includes('warning') ? 'Severe'
+          : title.toLowerCase().includes('watch') ? 'Moderate'
+          : 'Minor',
+        headline: summary || title,
+        description: summary?.slice(0, 300) || null,
+        expires: null,
+        updated: updatedMatch?.[1] || null,
+        lat,
+        lon,
       });
-
-    const alerts = [];
-    if (rssText) {
-      const entries = rssText.match(/<entry>[\s\S]*?<\/entry>/g) || [];
-      for (const entry of entries.slice(0, 10)) {
-        const titleMatch = entry.match(/<title[^>]*>(.*?)<\/title>/);
-        const summaryMatch = entry.match(/<summary[^>]*>(.*?)<\/summary>/s);
-        const updatedMatch = entry.match(/<updated>(.*?)<\/updated>/);
-        const title = titleMatch?.[1]?.trim();
-        if (!title || title.includes('No watches or warnings')) continue;
-
-        alerts.push({
-          source: 'environment_canada',
-          event: title,
-          severity: title.toLowerCase().includes('warning') ? 'Severe'
-            : title.toLowerCase().includes('watch') ? 'Moderate'
-            : 'Minor',
-          headline: summaryMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || title,
-          expires: null,
-          lat,
-          lon,
-        });
-      }
     }
-    return alerts;
-  } catch {
-    return [];
-  }
+  } catch { /* EC unavailable */ }
+  return alerts;
 }
 
 function getCanadianProvince(lat, lon) {
-  // Rough province detection from coordinates
-  if (lat < 41 || lat > 84) return null; // not Canada
+  if (lat < 41 || lat > 84) return null;
   if (lon > -53 && lon < -52) return 'nl';
   if (lon >= -68 && lon < -59) return 'ns';
   if (lon >= -70 && lon < -63 && lat < 48) return 'nb';

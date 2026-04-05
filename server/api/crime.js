@@ -119,28 +119,50 @@ async function fetchPortland(lat, lon) {
   return [];
 }
 
-// Canadian crime data via RCMP/municipal open data
+// Canadian crime data via RCMP/municipal open data + news
 async function fetchCanadianCrime(lat, lon) {
   const incidents = [];
 
-  // Vancouver Police open data (if near Vancouver)
-  if (distance(lat, lon, 49.2827, -123.1207) < 50) {
-    try {
-      const data = await fetchWithTimeout(
-        `https://geodash.vpd.ca/opendata/crimedata_download/AllNeighbourhoods_AllCrimeTypes_2024.csv`
-      ).catch(() => null);
-      // CSV parsing is heavy; use the JSON endpoint if available
-    } catch { /* VPD data unavailable */ }
+  // Reverse geocode to get city + nearby cities for broader search
+  const cityName = await reverseGeocode(lat, lon);
+
+  // Build list of search terms: primary city + nearby municipalities
+  const searchTerms = [];
+  if (cityName) searchTerms.push(cityName);
+
+  // Add nearby BC municipalities for broader coverage
+  const nearbyBC = [
+    { name: 'Langley', lat: 49.1044, lon: -122.6605 },
+    { name: 'Surrey', lat: 49.1913, lon: -122.8490 },
+    { name: 'Abbotsford', lat: 49.0504, lon: -122.3045 },
+    { name: 'Maple Ridge', lat: 49.2193, lon: -122.5984 },
+    { name: 'Coquitlam', lat: 49.2838, lon: -122.7932 },
+    { name: 'Burnaby', lat: 49.2488, lon: -122.9805 },
+    { name: 'Vancouver', lat: 49.2827, lon: -123.1207 },
+    { name: 'New Westminster', lat: 49.2057, lon: -122.9110 },
+    { name: 'Delta', lat: 49.0847, lon: -123.0587 },
+    { name: 'Chilliwack', lat: 49.1579, lon: -121.9514 },
+  ];
+  for (const city of nearbyBC) {
+    if (distance(lat, lon, city.lat, city.lon) < 30 && !searchTerms.includes(city.name)) {
+      searchTerms.push(city.name);
+    }
   }
 
-  // RCMP/Crime Stoppers -- use Google News RSS as proxy for any Canadian location
-  try {
-    const cityName = await reverseGeocode(lat, lon);
-    if (cityName) {
-      const newsIncidents = await fetchCrimeNews(lat, lon, cityName);
-      incidents.push(...newsIncidents);
-    }
-  } catch { /* news fallback failed */ }
+  // Fetch crime news for primary city and nearest neighbour
+  const termsToSearch = searchTerms.slice(0, 3);
+  const fetchers = termsToSearch.map(term => fetchCrimeNews(lat, lon, term).catch(() => []));
+  const results = await Promise.all(fetchers);
+  const allNews = results.flat();
+
+  // Deduplicate by title prefix
+  const seen = new Set();
+  for (const item of allNews) {
+    const key = item.title.toLowerCase().slice(0, 40);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    incidents.push(item);
+  }
 
   return incidents;
 }

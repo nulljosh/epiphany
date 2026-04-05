@@ -1,5 +1,5 @@
 // Local events endpoint: PredictHQ (primary) + free fallbacks for universal coverage
-// Fallbacks: Eventbrite public search, OpenStreetMap event venues, news RSS
+// Fallbacks: Wikipedia GeoSearch (multi-point), OSM venues, Eventbrite, news RSS
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const TIMEOUT_MS = 8000;
@@ -68,6 +68,7 @@ async function fetchPredictHQ(lat, lon, radius, apiKey) {
       severity: severityFromCategory(e.category),
       timestamp: e.start || new Date().toISOString(),
       attendees: e.phq_attendance || null, rank: e.rank || 0, source: 'predicthq',
+      description: e.description || null,
     }));
 }
 
@@ -89,20 +90,57 @@ async function fetchEventbrite(lat, lon) {
         severity: 'low',
         timestamp: e.start?.utc || new Date().toISOString(),
         source: 'eventbrite',
+        description: e.description?.text?.slice(0, 200) || null,
+        venue: venue.name || null,
       });
     }
   } catch { /* Eventbrite unavailable */ }
   return events;
 }
 
-// Wikipedia GeoSearch: find notable places nearby (fast, reliable, no auth)
+// Wikipedia GeoSearch with multi-point coverage for suburban areas
+// gsradius caps at 10000m, so query multiple offsets for wider coverage
 async function fetchWikipediaPlaces(lat, lon) {
+  const offsets = [
+    [0, 0],
+    [0.05, 0], [-0.05, 0],
+    [0, 0.05], [0, -0.05],
+  ];
+
+  const fetchers = offsets.map(([dLat, dLon]) => fetchWikipediaSingle(lat + dLat, lon + dLon));
+  const results = await Promise.all(fetchers.map(f => f.catch(() => [])));
+  const all = results.flat();
+
+  // Deduplicate by page title
+  const seen = new Set();
+  return all.filter(e => {
+    if (seen.has(e.title)) return false;
+    seen.add(e.title);
+    return true;
+  });
+}
+
+async function fetchWikipediaSingle(lat, lon) {
   const events = [];
   try {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=50&format=json`;
-    // Note: Wikipedia caps gsradius at 10000m regardless of what we pass
-    const data = await fetchWithTimeout(url, {}, 8000);
-    for (const place of (data.query?.geosearch || [])) {
+    // Get places with extracts for richer detail
+    const geoUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=50&format=json`;
+    const geoData = await fetchWithTimeout(geoUrl, {}, 6000);
+    const pages = geoData.query?.geosearch || [];
+
+    // Batch fetch extracts for all found pages
+    const pageIds = pages.map(p => p.pageid).slice(0, 20);
+    let extracts = {};
+    if (pageIds.length > 0) {
+      try {
+        const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&pageids=${pageIds.join('|')}&prop=extracts&exintro&explaintext&exsentences=2&format=json`;
+        const extractData = await fetchWithTimeout(extractUrl, {}, 6000);
+        extracts = extractData.query?.pages || {};
+      } catch { /* extracts optional */ }
+    }
+
+    for (const place of pages) {
+      const extract = extracts[place.pageid]?.extract || null;
       events.push({
         lat: place.lat, lng: place.lon, type: 'local-event',
         category: 'place',
@@ -111,10 +149,59 @@ async function fetchWikipediaPlaces(lat, lon) {
         severity: 'low',
         timestamp: new Date().toISOString(),
         source: 'wikipedia',
+        description: extract,
         url: `https://en.wikipedia.org/wiki/${encodeURIComponent(place.title.replace(/ /g, '_'))}`,
       });
     }
   } catch { /* Wikipedia unavailable */ }
+  return events;
+}
+
+// OSM venue query: find real places people visit (community centres, theatres, parks, libraries)
+async function fetchOSMVenues(lat, lon) {
+  const events = [];
+  const delta = 0.08;
+  const bb = `${lat - delta},${lon - delta},${lat + delta},${lon + delta}`;
+  const query = `[out:json][timeout:8];(` +
+    `node["amenity"~"^(community_centre|theatre|cinema|library|arts_centre|marketplace)$"](${bb});` +
+    `node["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|aquarium)$"](${bb});` +
+    `node["leisure"~"^(park|sports_centre|stadium|swimming_pool|ice_rink)$"](${bb});` +
+    `way["leisure"="park"](${bb});` +
+    `);out center 30;`;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `data=${encodeURIComponent(query)}`,
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`Overpass ${res.status}`);
+    const json = await res.json();
+
+    for (const el of (json.elements || [])) {
+      const elLat = el.center?.lat ?? el.lat;
+      const elLon = el.center?.lon ?? el.lon;
+      if (elLat == null || elLon == null) continue;
+      const name = el.tags?.name;
+      if (!name) continue;
+
+      const amenity = el.tags?.amenity || el.tags?.tourism || el.tags?.leisure || '';
+      events.push({
+        lat: elLat, lng: elLon, type: 'local-event',
+        category: el.tags?.tourism ? 'attraction' : el.tags?.leisure ? 'recreation' : 'venue',
+        title: name,
+        venue: name,
+        severity: 'low',
+        timestamp: new Date().toISOString(),
+        source: 'openstreetmap',
+        description: amenity.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      });
+    }
+  } catch { /* OSM venues unavailable */ }
   return events;
 }
 
@@ -199,9 +286,10 @@ export default async function handler(req, res) {
     }
 
     // Free fallbacks (always run)
-    attemptedSources.push('eventbrite', 'wikipedia');
+    attemptedSources.push('eventbrite', 'wikipedia', 'openstreetmap');
     fetchers.push(fetchEventbrite(lat, lon).catch(() => []));
     fetchers.push(fetchWikipediaPlaces(lat, lon).catch(() => []));
+    fetchers.push(fetchOSMVenues(lat, lon).catch(() => []));
 
     // News fallback with city name
     const cityName = await reverseGeocode(lat, lon);
@@ -250,7 +338,7 @@ export default async function handler(req, res) {
     }
     return res.status(200).json({
       events: [],
-      attemptedSources: apiKey ? ['predicthq', 'eventbrite', 'osm_venues', 'news_rss'] : ['eventbrite', 'osm_venues', 'news_rss'],
+      attemptedSources: apiKey ? ['predicthq', 'eventbrite', 'wikipedia', 'openstreetmap', 'news_rss'] : ['eventbrite', 'wikipedia', 'openstreetmap', 'news_rss'],
       meta: buildMeta('degraded', {
         degraded: true,
         warning: 'Local event providers failed and no cached data is available',

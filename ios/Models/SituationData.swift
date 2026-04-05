@@ -194,6 +194,7 @@ struct Incident: Codable, Identifiable {
     let id: String
     let title: String
     let severity: String
+    let category: String
     let latitude: Double
     let longitude: Double
     let summary: String?
@@ -204,7 +205,7 @@ struct Incident: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, severity, latitude, longitude, summary
+        case id, title, severity, category, latitude, longitude, summary
         case type, lat, lon, description
         case reportedAt = "reported_at"
     }
@@ -213,6 +214,7 @@ struct Incident: Codable, Identifiable {
         id: String,
         title: String,
         severity: String,
+        category: String = "infrastructure",
         latitude: Double,
         longitude: Double,
         summary: String?,
@@ -221,6 +223,7 @@ struct Incident: Codable, Identifiable {
         self.id = id
         self.title = title
         self.severity = severity
+        self.category = category
         self.latitude = latitude
         self.longitude = longitude
         self.summary = summary
@@ -257,6 +260,7 @@ struct Incident: Codable, Identifiable {
             ?? "Incident"
         title = Self.normalizeTitle(rawTitle)
         severity = container.lossyString(forKey: .severity) ?? "info"
+        category = container.lossyString(forKey: .category) ?? "infrastructure"
         latitude = container.lossyDouble(forKey: .latitude)
             ?? container.lossyDouble(forKey: .lat)
             ?? 0
@@ -270,11 +274,16 @@ struct Incident: Codable, Identifiable {
             ?? "\(rawTitle)-\(latitude)-\(longitude)"
     }
 
+    var isInfrastructure: Bool {
+        category != "construction"
+    }
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
         try container.encode(title, forKey: .title)
         try container.encode(severity, forKey: .severity)
+        try container.encode(category, forKey: .category)
         try container.encode(latitude, forKey: .latitude)
         try container.encode(longitude, forKey: .longitude)
         try container.encodeIfPresent(summary, forKey: .summary)
@@ -423,6 +432,7 @@ struct LocalEvent: Codable, Identifiable {
     let date: String?
     let url: String?
     let venue: String?
+    let eventDescription: String?
     private let _stableId: String
 
     var id: String { _stableId }
@@ -433,7 +443,7 @@ struct LocalEvent: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case title, source, date, url, venue
+        case title, source, date, url, venue, description
         case latitude, longitude, lat, lon, lng
     }
 
@@ -453,6 +463,7 @@ struct LocalEvent: Codable, Identifiable {
         date = try? container.decodeIfPresent(String.self, forKey: .date)
         url = try? container.decodeIfPresent(String.self, forKey: .url)
         venue = try? container.decodeIfPresent(String.self, forKey: .venue)
+        eventDescription = try? container.decodeIfPresent(String.self, forKey: .description)
 
         if let idContainer = try? decoder.container(keyedBy: StableIdCodingKey.self),
            let persisted = try? idContainer.decode(String.self, forKey: ._stableId) {
@@ -473,6 +484,7 @@ struct LocalEvent: Codable, Identifiable {
         try container.encodeIfPresent(date, forKey: .date)
         try container.encodeIfPresent(url, forKey: .url)
         try container.encodeIfPresent(venue, forKey: .venue)
+        try container.encodeIfPresent(eventDescription, forKey: .description)
         var idContainer = encoder.container(keyedBy: StableIdCodingKey.self)
         try idContainer.encode(_stableId, forKey: ._stableId)
     }

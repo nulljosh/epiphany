@@ -125,11 +125,13 @@ struct SituationView: View {
     }
 
     private let maxAnnotationsPerCategory = 50
+    private let maxIncidentAnnotations = 25
 
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
         if showIncidents {
-            ForEach(Array(incidents.prefix(maxAnnotationsPerCategory))) { incident in
+            // Active incidents (construction, road works) -- prominent orange/yellow
+            ForEach(Array(activeIncidents.prefix(maxIncidentAnnotations))) { incident in
                 Annotation(incident.title, coordinate: incident.coordinate) {
                     Button {
                         Haptics.impact(.medium)
@@ -140,7 +142,29 @@ struct SituationView: View {
                     .buttonStyle(.plain)
                 }
             }
+            // Infrastructure (police, fire, hospital) -- muted, smaller
+            ForEach(Array(infrastructureIncidents.prefix(15))) { incident in
+                Annotation(incident.title, coordinate: incident.coordinate) {
+                    Button {
+                        Haptics.impact(.light)
+                        selectedEvent = .incident(incident)
+                    } label: {
+                        Image(systemName: incidentSymbol(incident.title))
+                            .font(.caption2)
+                            .foregroundStyle(incidentColor(incident.title).opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
+    }
+
+    private var activeIncidents: [Incident] {
+        incidents.filter { !$0.isInfrastructure }
+    }
+
+    private var infrastructureIncidents: [Incident] {
+        incidents.filter { $0.isInfrastructure }
     }
 
     private func incidentSymbol(_ title: String) -> String {
@@ -905,6 +929,37 @@ private struct SituationEventDetailView: View {
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
+
+                // Mini map + Directions
+                if let coord = eventCoordinate {
+                    Map(initialPosition: .region(MKCoordinateRegion(
+                        center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))) {
+                        Marker(title, coordinate: coord)
+                            .tint(eventColor)
+                    }
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .disabled(true)
+
+                    Button {
+                        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coord))
+                        mapItem.name = title
+                        mapItem.openInMaps(launchOptions: [
+                            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDefault,
+                        ])
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                            Text("Directions")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
@@ -913,11 +968,23 @@ private struct SituationEventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    private var eventCoordinate: CLLocationCoordinate2D? {
+        switch event {
+        case .earthquake(let q): return q.coordinate
+        case .flight(let f): return f.coordinate
+        case .incident(let i): return i.coordinate
+        case .weatherAlert(let a): return a.coordinate
+        case .crime(let c): return c.coordinate
+        case .localEvent(let e): return e.coordinate
+        case .trafficIncident(let t): return t.coordinate
+        }
+    }
+
     private var eventType: String {
         switch event {
         case .earthquake: return "Earthquake"
         case .flight: return "Flight"
-        case .incident: return "Incident"
+        case .incident(let i): return i.isInfrastructure ? i.title : "Incident"
         case .weatherAlert: return "Weather Alert"
         case .crime: return "Crime"
         case .localEvent: return "Local Event"
@@ -991,13 +1058,13 @@ private struct SituationEventDetailView: View {
         case .flight(let flight):
             return flight.origin ?? flight.destination
         case .incident(let incident):
-            return incident.summary
+            return incident.summary ?? (incident.isInfrastructure ? incident.category.replacingOccurrences(of: "_", with: " ").capitalized : nil)
         case .weatherAlert(let alert):
             return alert.summary
         case .crime(let crime):
             return crime.category
         case .localEvent(let event):
-            return event.venue ?? event.source
+            return event.eventDescription ?? event.venue ?? event.source
         case .trafficIncident(let incident):
             return incident.severity?.capitalized
         }
@@ -1054,8 +1121,9 @@ private struct SituationEventDetailView: View {
         case .localEvent(let event):
             var result: [(label: String, value: String)] = []
             if let venue = event.venue { result.append(("Venue", venue)) }
+            if let desc = event.eventDescription, !desc.isEmpty { result.append(("About", desc)) }
             if let date = event.date { result.append(("Date", date)) }
-            if let source = event.source { result.append(("Source", source)) }
+            if let source = event.source { result.append(("Source", source.capitalized)) }
             if let lat = event.latitude { result.append(("Latitude", String(format: "%.4f", lat))) }
             if let lon = event.longitude { result.append(("Longitude", String(format: "%.4f", lon))) }
             return result.isEmpty ? [("Info", "No details available")] : result

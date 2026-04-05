@@ -472,33 +472,33 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef);
 
     if (mapLayers.incidents !== false)
-    payload.incidents.slice(0, 25).forEach((inc) => {
+    payload.incidents.slice(0, 15).forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
       const t = inc.type || 'incident';
-      const isConstruction = t === 'construction' || t === 'road_works';
+      const cat = inc.category || 'infrastructure';
+      const isConstruction = cat === 'construction';
       const isPolice = t === 'police';
       const isHospital = t === 'hospital';
       const isFire = t === 'fire_station' || t === 'ambulance_station' || t === 'ses_station';
-      const isCamera = t === 'speed_camera';
       const isBarrier = t === 'toll_booth' || t === 'border_control';
+      const isInfra = !isConstruction;
+      // Infrastructure gets smaller, muted markers
       const css = isConstruction
         ? 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);animation:pulse-amber 1.8s infinite;'
         : isPolice
-        ? 'width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.6);'
+        ? `width:${isInfra ? 8 : 12}px;height:${isInfra ? 8 : 12}px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,${isInfra ? 0.3 : 0.6});opacity:${isInfra ? 0.6 : 1};`
         : isHospital
-        ? 'width:14px;height:14px;border-radius:3px;background:#ef4444;border:2px solid rgba(255,255,255,0.6);'
+        ? `width:${isInfra ? 10 : 14}px;height:${isInfra ? 10 : 14}px;border-radius:3px;background:#ef4444;border:2px solid rgba(255,255,255,${isInfra ? 0.3 : 0.6});opacity:${isInfra ? 0.6 : 1};`
         : isFire
-        ? 'width:12px;height:12px;border-radius:50%;background:#f97316;border:2px solid rgba(255,255,255,0.6);'
-        : isCamera
-        ? 'width:10px;height:10px;border-radius:50%;background:#a855f7;border:2px solid rgba(255,255,255,0.5);'
+        ? `width:${isInfra ? 8 : 12}px;height:${isInfra ? 8 : 12}px;border-radius:50%;background:#f97316;border:2px solid rgba(255,255,255,${isInfra ? 0.3 : 0.6});opacity:${isInfra ? 0.6 : 1};`
         : isBarrier
         ? 'width:10px;height:10px;border-radius:2px;background:#6b7280;border:2px solid rgba(255,255,255,0.5);'
         : 'width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid rgba(255,255,255,0.5);animation:pulse-amber 1.8s infinite;';
-      const label = isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isCamera ? 'SPEED CAMERA' : isBarrier ? 'CHECKPOINT' : t.toUpperCase();
+      const label = inc.title || (isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isBarrier ? 'CHECKPOINT' : t.toUpperCase());
       addMarker(
         css,
-        inc.description || t,
-        { type: t, title: label, detail: inc.description || label, level: 'local', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon) },
+        inc.description || inc.title || t,
+        { type: t, title: label, detail: inc.description || label, level: cat === 'construction' ? 'active' : 'infrastructure', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon) },
         inc.lon, inc.lat, 'incidents'
       );
     });
@@ -566,7 +566,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         'width:10px;height:10px;border-radius:50%;background:#ef4444;animation:pulse-red 2s infinite;',
         crime.title || 'Crime',
-        { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon) },
+        { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}${crime.timestamp ? ` -- ${new Date(crime.timestamp).toLocaleDateString()}` : ''}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon) },
         lon, lat, 'crime'
       );
     });
@@ -580,7 +580,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         'width:14px;height:14px;border-radius:50%;background:#a855f7;animation:pulse-cyan 2.2s infinite;',
         ev.title || 'Event',
-        { type: 'local-event', title: ev.title || 'Local Event', detail: ev.venue || ev.source || 'Nearby event', level: 'local', source: ev.source || 'Event data', link: ev.url || mapsLink(lat, lon) },
+        { type: 'local-event', title: ev.title || 'Local Event', detail: ev.description || ev.venue || ev.source || 'Nearby event', level: 'local', source: ev.source || 'Event data', link: ev.url || mapsLink(lat, lon) },
         lon, lat, 'localEvents'
       );
     });
