@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Card } from './ui';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
-import { normalizeSpendingMonths, UPCOMING_PAYMENTS } from '../utils/financeData';
+import { normalizeSpendingMonths, UPCOMING_PAYMENTS, DEMO_BILLS, TELUS_DETAILS } from '../utils/financeData';
 import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
@@ -1185,6 +1185,72 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 </Card>
               </>
             )}
+            <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+              <div style={sectionStyle}>
+                <div style={labelStyle}>Monthly Bills</div>
+                {DEMO_BILLS.map((bill, i) => (
+                  <div key={bill.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < DEMO_BILLS.length - 1 ? `1px solid ${t.border}` : 'none' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{bill.name}</div>
+                      <div style={{ fontSize: 11, color: t.textTertiary }}>{bill.provider} -- due ~{bill.dueDay}th</div>
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+                      {formatCurrency(bill.amount)}/mo
+                    </div>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: `1px solid ${t.border}`, fontWeight: 700, fontSize: 14 }}>
+                  <span>Total Bills</span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(DEMO_BILLS.reduce((s, b) => s + b.amount, 0))}/mo</span>
+                </div>
+              </div>
+            </Card>
+            <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+              <div style={sectionStyle}>
+                <div style={labelStyle}>Telus Device Payments</div>
+                <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 12 }}>Account {TELUS_DETAILS.account}</div>
+                {TELUS_DETAILS.lines.map((line) => (
+                  <div key={line.number} style={{ marginBottom: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{line.label} ({line.number})</div>
+                        <div style={{ fontSize: 11, color: t.textTertiary }}>{line.plan}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(line.deviceBalance)}</div>
+                        <div style={{ fontSize: 10, color: t.textTertiary }}>ends {line.deviceEnd.slice(0, 7)}</div>
+                      </div>
+                    </div>
+                    <ProgressBar value={line.easyPayment} max={line.deviceBalance} color={t.blue} t={t} />
+                    <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 2 }}>
+                      Plan ${line.planCost}/mo + Device ${line.easyPayment}/mo = {formatCurrency(line.totalWithTax)}/mo w/ tax
+                    </div>
+                  </div>
+                ))}
+                <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 8 }}>
+                  Total device balance: {formatCurrency(TELUS_DETAILS.lines.reduce((s, l) => s + l.deviceBalance, 0))}
+                </div>
+              </div>
+            </Card>
+            <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+              <div style={sectionStyle}>
+                <div style={labelStyle}>Telus Billing History</div>
+                {TELUS_DETAILS.billingHistory.map((bill) => (
+                  <div key={bill.month} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${t.border}` }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{bill.month}</div>
+                      <div style={{ fontSize: 11, color: t.textTertiary }}>{bill.note}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(bill.total)}</span>
+                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: bill.paid ? 'rgba(52,199,89,0.15)' : 'rgba(255,69,58,0.15)', color: bill.paid ? t.green : t.red }}>
+                        {bill.paid ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </>
         )}
 
