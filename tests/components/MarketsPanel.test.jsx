@@ -33,8 +33,8 @@ describe('MarketsPanel', () => {
     expect(screen.getAllByText('AAPL').length).toBeGreaterThan(0);
     expect(screen.getAllByText('MSFT').length).toBeGreaterThan(0);
     expect(screen.getAllByText('TSLA').length).toBeGreaterThan(0);
-    expect(screen.getByText('Gold (XAU)')).toBeDefined();
-    expect(screen.getByText('Bitcoin')).toBeDefined();
+    expect(screen.getAllByText('Gold (XAU)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Bitcoin').length).toBeGreaterThan(0);
   });
 
   it('filters by search', () => {

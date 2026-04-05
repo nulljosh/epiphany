@@ -276,6 +276,14 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     return list;
   }, [allItems, search, sortKey, sortAsc, watchlist]);
 
+  const topMovers = useMemo(() => {
+    if (filtered.length === 0) return [];
+    const sorted = [...filtered].sort((a, b) => b.changePercent - a.changePercent);
+    const top = sorted.slice(0, 5);
+    const bottom = sorted.slice(-5).reverse();
+    return [...top, ...bottom];
+  }, [filtered]);
+
   const glass = {
     background: t.glass,
     backdropFilter: 'blur(20px) saturate(150%)',
@@ -366,21 +374,16 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
             Top Movers
           </div>
-          {(() => {
-            const sorted = [...filtered].sort((a, b) => b.changePercent - a.changePercent);
-            const top = sorted.slice(0, 5);
-            const bottom = sorted.slice(-5).reverse();
-            return [...top, ...bottom].map(item => (
-              <MarketRow
-                key={`mover-${item.symbol}`}
-                symbol={item.symbol} name={item.name} price={item.price}
-                changePercent={item.changePercent}
-                isWatchlisted={watchlist?.includes(item.symbol)}
-                onToggle={toggleSymbol} canToggle={isAuthenticated} t={t}
-                onClick={() => setSelectedStock(item)}
-              />
-            ));
-          })()}
+          {topMovers.map(item => (
+            <MarketRow
+              key={`mover-${item.symbol}`}
+              symbol={item.symbol} name={item.name} price={item.price}
+              changePercent={item.changePercent}
+              isWatchlisted={watchlist?.includes(item.symbol)}
+              onToggle={toggleSymbol} canToggle={isAuthenticated} t={t}
+              onClick={() => setSelectedStock(item)}
+            />
+          ))}
         </div>
       )}
 

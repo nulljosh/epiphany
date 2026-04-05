@@ -19,31 +19,32 @@ export const DEMO_GIVING = [
 
 // CRA GST/HST credit: paid ~5th of Jan, Apr, Jul, Oct
 // Auto-hides for 14 days after each payment date
-function nextCRAQuarterlyDate() {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const quarterMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct (0-indexed)
-  for (let offset = 0; offset <= 1; offset++) {
-    for (const m of quarterMonths) {
-      const d = new Date(now.getFullYear() + offset, m, 5);
-      if (d >= today) return d;
+const CRA_QUARTER_MONTHS = [0, 3, 6, 9];
+
+function craQuarterDates(yearOffsetStart, yearOffsetEnd) {
+  const year = new Date().getFullYear();
+  const dates = [];
+  for (let offset = yearOffsetStart; offset <= yearOffsetEnd; offset++) {
+    for (const m of CRA_QUARTER_MONTHS) {
+      dates.push(new Date(year + offset, m, 5));
     }
   }
-  return null;
+  return dates;
+}
+
+function nextCRAQuarterlyDate() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return craQuarterDates(0, 1).find(d => d >= today) || null;
 }
 
 function isRecentlyPaid() {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const quarterMonths = [0, 3, 6, 9];
-  for (let offset = -1; offset <= 0; offset++) {
-    for (const m of quarterMonths) {
-      const d = new Date(now.getFullYear() + offset, m, 5);
-      const diff = (today - d) / (1000 * 60 * 60 * 24);
-      if (diff >= 0 && diff <= 14) return true;
-    }
-  }
-  return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return craQuarterDates(-1, 0).some(d => {
+    const diff = (today - d) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff <= 14;
+  });
 }
 
 export const UPCOMING_PAYMENTS = isRecentlyPaid() ? [] : [
