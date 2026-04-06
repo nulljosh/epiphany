@@ -24,6 +24,7 @@ targets:
           - "CLAUDE.md"
           - "architecture.svg"
           - Tests
+          - UITests
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica
@@ -41,3 +42,14 @@ targets:
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.tests
       GENERATE_INFOPLIST_FILE: YES
+  MonicaUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - UITests
+    dependencies:
+      - target: Monica
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.uitests
+        GENERATE_INFOPLIST_FILE: YES
