@@ -4,6 +4,8 @@
 
 ![version](https://img.shields.io/badge/version-v1.4.0-blue)
 
+<p align="center"><img src="Resources/preview.png" width="300"></p>
+
 Your personal intelligence layer. Monica watches everything happening around you -- markets, events, weather, crime, traffic -- and puts it all on one map. Think of it as having a friend who always knows what's going on.
 
 ![Architecture](architecture.svg)
