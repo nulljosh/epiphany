@@ -368,10 +368,29 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       try {
         const bbox = { lamin: center.lat - 1, lomin: center.lon - 1, lamax: center.lat + 1, lomax: center.lon + 1 };
         const bboxQ = `lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`;
-        const safeFetch = (url, fallback) => fetch(url).then(r => {
-          if (!r.ok) { console.warn(`[map] ${url} returned ${r.status}`); return fallback; }
-          return r.json();
-        }).catch((err) => { console.warn(`[map] ${url} failed:`, err.message); return fallback; });
+        // Vercel functions cold-start; first hit can hang past short timeouts.
+        // Retry once with a longer timeout before falling back to empty data.
+        const safeFetch = async (url, fallback) => {
+          for (let attempt = 0; attempt < 2; attempt++) {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), attempt === 0 ? 6000 : 12000);
+            try {
+              const r = await fetch(url, { signal: ctrl.signal });
+              clearTimeout(timer);
+              if (!r.ok) { console.warn(`[map] ${url} returned ${r.status}`); return fallback; }
+              return await r.json();
+            } catch (err) {
+              clearTimeout(timer);
+              if (attempt === 1) {
+                console.warn(`[map] ${url} failed after retry:`, err.message);
+                return fallback;
+              }
+              // backoff before retry
+              await new Promise(r => setTimeout(r, 600));
+            }
+          }
+          return fallback;
+        };
         const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl] = await Promise.all([
           safeFetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [] }),
           safeFetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [], flow: {} }),

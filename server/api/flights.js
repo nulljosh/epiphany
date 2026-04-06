@@ -39,8 +39,12 @@ async function fetchOpenSky(bbox) {
     if (user && pass) {
       headers['Authorization'] = 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
     }
+    // 5s upstream timeout leaves headroom for the estimated-flights fallback
+    // to return within the client's request budget. OpenSky aggressively
+    // throttles anonymous traffic so most cold-start hits never get a real
+    // response anyway.
     const res = await fetch(`${OPENSKY_BASE}/states/all?${params}`, {
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(5000),
       headers,
     });
     if (!res.ok) throw new Error(`OpenSky ${res.status}`);
