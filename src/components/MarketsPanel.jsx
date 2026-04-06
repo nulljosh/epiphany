@@ -293,7 +293,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   };
 
   return (
-    <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
+    <div style={{ padding: 16, fontFamily: font }}>
       {/* Market status + Search + Sort */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />

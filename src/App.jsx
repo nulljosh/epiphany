@@ -1229,6 +1229,12 @@ const reset = useCallback(() => {
         activeCount={activeCount}
         isFree={isFree} setShowPricing={setShowPricing} logout={logout}
         panelContent={renderPanelContent()}
+        onTickerItemClick={(sym) => {
+          setCommandBarStock(sym);
+          setActiveTab('markets');
+          if (isMobileNav) setMobilePanelOpen(true);
+          else setDesktopPanelOpen(true);
+        }}
       />
 
       {/* Map cell */}

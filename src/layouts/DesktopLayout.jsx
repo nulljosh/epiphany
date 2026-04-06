@@ -13,14 +13,14 @@ export default function DesktopLayout({
   TAB_PILLS, glassButton,
   showAlerts, setShowAlerts, activeCount,
   isFree, setShowPricing, logout,
-  panelContent,
+  panelContent, onTickerItemClick,
 }) {
   return (
     <>
       {/* Ticker */}
       <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28 }}>
         {tickerItems.length > 0
-          ? <Ticker items={tickerItems} theme={t} />
+          ? <Ticker items={tickerItems} theme={t} onItemClick={onTickerItemClick} />
           : <div style={{ height: 28, background: t.glass, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 10, color: t.textTertiary, fontFamily: FONT }}>Loading ticker...</span>
             </div>

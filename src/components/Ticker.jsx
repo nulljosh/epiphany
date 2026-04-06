@@ -10,7 +10,7 @@ function normalizeOffset(offset, segmentWidth) {
   return next;
 }
 
-const Ticker = memo(({ items, theme }) => {
+const Ticker = memo(({ items, theme, onItemClick }) => {
   const trackRef = useRef(null);
   const segmentRef = useRef(null);
   const animationRef = useRef(null);
@@ -133,22 +133,25 @@ const Ticker = memo(({ items, theme }) => {
   };
 
   const renderItem = (item, idx, clone = 0) => (
-    <a
+    <button
+      type="button"
       key={`${item.key}-${clone}-${idx}`}
-      href={`https://finance.yahoo.com/quote/${item.name}/`}
-      target="_blank"
-      rel="noopener noreferrer"
       onClick={(e) => {
-        if (dragDistanceRef.current > 5) e.preventDefault();
+        if (dragDistanceRef.current > 5) { e.preventDefault(); return; }
+        if (onItemClick) onItemClick(item.name);
       }}
       style={{
         display: 'flex',
         gap: 6,
         fontSize: 12,
         opacity: 0.82,
-        textDecoration: 'none',
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
         color: 'inherit',
         flex: '0 0 auto',
+        font: 'inherit',
       }}
     >
       <span style={{ fontWeight: 600 }}>{item.name}</span>
@@ -165,7 +168,7 @@ const Ticker = memo(({ items, theme }) => {
           display: 'inline-block', marginLeft: 2, verticalAlign: 'middle',
         }} />
       )}
-    </a>
+    </button>
   );
 
   return (

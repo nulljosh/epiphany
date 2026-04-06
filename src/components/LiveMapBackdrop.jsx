@@ -739,7 +739,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       `}</style>
       <div
         ref={mapRef}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto', filter: dark ? 'saturate(1.12) brightness(0.9)' : 'saturate(1.1) brightness(0.95)' }}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto' }}
       />
       <button
         onClick={() => {
