@@ -73,9 +73,11 @@ export default async function handler(req, res) {
     const quotes = result.indicators?.quote?.[0] || {};
 
     // Map and filter invalid data points
+    // `time` must be the key (not `date`) because StockDetail.jsx and
+    // lightweight-charts both expect `time` (YYYY-MM-DD string or epoch).
     const history = timestamps
       .map((t, i) => ({
-        date: new Date(t * 1000).toISOString().split('T')[0],
+        time: new Date(t * 1000).toISOString().split('T')[0],
         open: quotes.open?.[i] ?? null,
         high: quotes.high?.[i] ?? null,
         low: quotes.low?.[i] ?? null,
