@@ -294,56 +294,69 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
   return (
     <div style={{ padding: 16, fontFamily: font }}>
-      {/* Market status + Search + Sort */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />
-        <span style={{ fontSize: 11, color: t.textSecondary }}>{status.label}</span>
+      {/* Sticky header: market status + search + sort stays visible while scrolling results */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 3,
+        margin: '-16px -16px 12px -16px', padding: '12px 16px 10px',
+        background: dark ? 'rgba(2,6,23,0.72)' : 'rgba(255,255,255,0.72)',
+        backdropFilter: 'blur(20px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+        borderBottom: `1px solid ${t.border}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />
+          <span style={{ fontSize: 11, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{status.label}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            aria-label="Search markets"
+            placeholder="Search markets..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              flex: 1, minWidth: 140, padding: '9px 14px', borderRadius: 10,
+              border: `1px solid ${t.border}`, background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+              color: t.text, fontSize: 13, fontFamily: font, outline: 'none',
+              transition: 'border-color 0.15s',
+            }}
+            onFocus={e => e.currentTarget.style.borderColor = '#0071e3'}
+            onBlur={e => e.currentTarget.style.borderColor = t.border}
+          />
+          <select
+            aria-label="Sort by"
+            value={sortKey}
+            onChange={e => setSortKey(e.target.value)}
+            style={{
+              padding: '9px 12px', borderRadius: 10, border: `1px solid ${t.border}`,
+              background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+              color: t.text, fontSize: 12, fontFamily: font, cursor: 'pointer',
+            }}
+          >
+            {SORT_OPTIONS.map(opt => (
+              <option key={opt.key} value={opt.key}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            aria-label={sortAsc ? 'Sort ascending' : 'Sort descending'}
+            onClick={() => setSortAsc(prev => !prev)}
+            style={{
+              padding: '9px 12px', borderRadius: 10, border: `1px solid ${t.border}`,
+              background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+              color: t.textSecondary, fontSize: 12, fontWeight: 600, fontFamily: font,
+              cursor: 'pointer',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              minWidth: 48,
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            {sortAsc ? 'ASC' : 'DESC'}
+          </button>
+        </div>
       </div>
-      <FearGreedGauge score={fgScore} rating={fgRating} t={t} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          aria-label="Search markets"
-          placeholder="Search markets..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{
-            flex: 1, minWidth: 140, padding: '8px 12px', borderRadius: 8,
-            border: `1px solid ${t.border}`, background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-            color: t.text, fontSize: 13, fontFamily: font, outline: 'none',
-          }}
-        />
-        <select
-          aria-label="Sort by"
-          value={sortKey}
-          onChange={e => setSortKey(e.target.value)}
-          style={{
-            padding: '8px 10px', borderRadius: 8, border: `1px solid ${t.border}`,
-            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-            color: t.text, fontSize: 12, fontFamily: font, cursor: 'pointer',
-          }}
-        >
-          {SORT_OPTIONS.map(opt => (
-            <option key={opt.key} value={opt.key}>{opt.label}</option>
-          ))}
-        </select>
-        <button
-          aria-label={sortAsc ? 'Sort ascending' : 'Sort descending'}
-          onClick={() => setSortAsc(prev => !prev)}
-          style={{
-            padding: '8px 10px', borderRadius: 8, border: `1px solid ${t.border}`,
-            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-            color: t.textSecondary, fontSize: 12, fontWeight: 600, fontFamily: font,
-            cursor: 'pointer',
-            transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          {sortAsc ? 'ASC' : 'DESC'}
-        </button>
-      </div>
+      <FearGreedGauge score={fgScore} rating={fgRating} t={t} />
 
       {/* Watchlist */}
       {watchlistItems.length > 0 && (
