@@ -6,8 +6,9 @@ final class PreviewScreenshot: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        // Wait for UI to settle (map tiles + indicators take ~5s on a cold sim)
-        sleep(5)
+        // Wait for UI to settle: location fix arrives, map re-centers on Langley,
+        // tiles fetch, indicators populate. ~8s on a cold sim.
+        sleep(8)
 
         let screenshot = app.windows.firstMatch.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
