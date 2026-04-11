@@ -2,6 +2,16 @@
 
 ## Active
 
+### Rename: Monica → Epiphany
+- Rename GitHub repo `nulljosh/monica` → `nulljosh/epiphany`
+- Update Vercel project name + domain → `epiphany.heyitsmejosh.com`
+- Update iOS bundle ID + display name
+- Update macOS bundle ID + display name
+- Update all READMEs, CLAUDE.md files, badge URLs
+- Update memory entry in `~/.claude/projects/`
+- Update `Code/CLAUDE.md` project list
+- Decision confirmed 2026-04-10. Execute next session.
+
 ### Stripe $1/week
 - Have: `server/api/stripe.js`, `server/api/stripe-webhook.js`, `user.tier` in KV
 - TODO: Create price in Stripe dashboard, wire webhook to upgrade tier, add feature gates
