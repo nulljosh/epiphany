@@ -1,10 +1,10 @@
 # Monica — Plan
 
 ## Quick Wins
-- [ ] Refresh portfolio data to $0 (Vacation $0–500, TFSA $500)
+- [x] Refresh portfolio data to $0 (Vacation $0–500, TFSA $500)
 - [ ] Fix AI Enrich — wire to Claude CLI, remove "AI not configured" error
-- [ ] Fix airlines section — add auto-refresh interval (same as other data sources)
-- [ ] TradingView icon in stock card → link to that specific stock on TV, not TV homepage
+- [x] Fix airlines section — add auto-refresh interval (same as other data sources)
+- [x] TradingView icon in stock card → link to that specific stock on TV, not TV homepage
 
 ## Medium
 - [ ] Fix map glitch on web/iOS — pixelated or blank on load (likely Leaflet DPR/tile issue)
