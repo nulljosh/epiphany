@@ -99,7 +99,12 @@ export default function SituationMonitor({
   mapLayers,
   alerts = [],
 }) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 600;
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
   const [showPmEdges, setShowPmEdges] = useState(true);
   const [showWhales, setShowWhales] = useState(false);
   const [showTrades, setShowTrades] = useState(false);

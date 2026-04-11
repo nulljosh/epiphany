@@ -16,7 +16,7 @@ async function runClaudeCLI(prompt) {
   return stdout.trim();
 }
 
-const MODEL = 'claude-haiku-4-5-20241022';
+const MODEL = 'claude-haiku-4-5-20251001';
 const KV_PREFIX = 'people-index';
 
 export function buildPrompt(name, searchData) {
