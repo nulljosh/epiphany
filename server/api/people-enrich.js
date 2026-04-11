@@ -1,7 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
+
+const execFileAsync = promisify(execFile);
+
+async function runClaudeCLI(prompt) {
+  const { stdout } = await execFileAsync('claude', ['--print', '-p', prompt], {
+    env: { ...process.env, CLAUDECODE: '' },
+    timeout: 30000,
+    maxBuffer: 1024 * 1024,
+  });
+  return stdout.trim();
+}
 
 const MODEL = 'claude-haiku-4-5-20241022';
 const KV_PREFIX = 'people-index';
@@ -33,7 +46,6 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'POST required');
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return errorResponse(res, 503, 'AI not configured');
 
   const session = await getSessionUser(req);
   if (!session) return errorResponse(res, 401, 'Authentication required');
@@ -61,20 +73,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const client = new Anthropic({ apiKey });
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: buildPrompt(person.name, person.searchData),
-      }],
-    });
-
-    const text = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('');
+    const prompt = buildPrompt(person.name, person.searchData);
+    let text;
+    if (apiKey) {
+      const client = new Anthropic({ apiKey });
+      const response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      text = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    } else {
+      text = await runClaudeCLI(prompt);
+    }
 
     let enrichment;
     try {

@@ -672,8 +672,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: '100%', maxWidth: 520,
-          maxHeight: '90vh', overflow: 'auto',
+          width: '100%', maxWidth: 'min(520px, 100vw)',
+          maxHeight: '92dvh', overflow: 'auto',
           background: dark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.95)',
           backdropFilter: 'blur(40px) saturate(180%)',
           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
@@ -721,7 +721,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             {symbol}
           </div>
           <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 4 }}>
-            {stock.name !== symbol ? stock.name : ''}
+            {stock.name || symbol}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: t.text }}>

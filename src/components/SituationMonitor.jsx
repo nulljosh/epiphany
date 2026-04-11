@@ -99,6 +99,7 @@ export default function SituationMonitor({
   mapLayers,
   alerts = [],
 }) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 600;
   const [showPmEdges, setShowPmEdges] = useState(true);
   const [showWhales, setShowWhales] = useState(false);
   const [showTrades, setShowTrades] = useState(false);
@@ -133,7 +134,7 @@ export default function SituationMonitor({
   const mapFlyToRef = useRef(mapFlyTo);
   useEffect(() => { mapFlyToRef.current = mapFlyTo; }, [mapFlyTo]);
 
-  const nearbyFlights = flights.slice(0, 6);
+  const nearbyFlights = flights.slice(0, isMobile ? 3 : 6);
   const congestion = traffic?.flow?.congestion ?? null;
   const tradeExits = trades.filter(tr => tr?.pnl).length;
   const significantQuakes = useMemo(() => earthquakes.filter(e => e.mag >= 4), [earthquakes]);
@@ -280,13 +281,15 @@ export default function SituationMonitor({
         )}
       </div>
 
-      {/* Source health strip */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-        <SourceHealth label="flights" lastUpdate={loadTimestamps.current.flights} error={flightsError} t={t} />
-        <SourceHealth label="traffic" lastUpdate={loadTimestamps.current.traffic} error={trafficError} t={t} />
-        <SourceHealth label="seismic" lastUpdate={loadTimestamps.current.earthquakes} t={t} />
-        <SourceHealth label="events" lastUpdate={loadTimestamps.current.events} t={t} />
-      </div>
+      {/* Source health strip — hidden on mobile */}
+      {!isMobile && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+          <SourceHealth label="flights" lastUpdate={loadTimestamps.current.flights} error={flightsError} t={t} />
+          <SourceHealth label="traffic" lastUpdate={loadTimestamps.current.traffic} error={trafficError} t={t} />
+          <SourceHealth label="seismic" lastUpdate={loadTimestamps.current.earthquakes} t={t} />
+          <SourceHealth label="events" lastUpdate={loadTimestamps.current.events} t={t} />
+        </div>
+      )}
 
       {/* Detections feed */}
       {detections.length > 0 && (

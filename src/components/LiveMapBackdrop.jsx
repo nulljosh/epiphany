@@ -303,6 +303,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           zoom: initZoom,
           interactive: true,
           attributionControl: false,
+          pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         });
         map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
         map.on('moveend', () => {
