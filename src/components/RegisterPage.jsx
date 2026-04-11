@@ -46,7 +46,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
           <div style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>M</span>
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Monica</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Create your account to get started</p>
         </div>
 

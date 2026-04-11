@@ -41,7 +41,7 @@ export default function AiPanel({ open, onClose }) {
         <div className="ai-panel-header">
           <div className="ai-panel-title">
             <span className="ai-panel-icon">M</span>
-            Monica AI
+            Epiphany AI
           </div>
           <div className="ai-panel-actions">
             {messages.length > 0 && (
@@ -58,7 +58,7 @@ export default function AiPanel({ open, onClose }) {
         <div className="ai-panel-messages" ref={scrollRef}>
           {messages.length === 0 ? (
             <div className="ai-empty-state">
-              <div className="ai-empty-title">Ask Monica anything</div>
+              <div className="ai-empty-title">Ask Epiphany anything</div>
               <div className="ai-empty-subtitle">
                 Portfolio analysis, market insights, news briefings, and more.
               </div>
@@ -96,7 +96,7 @@ export default function AiPanel({ open, onClose }) {
             ref={inputRef}
             type="text"
             className="ai-input"
-            placeholder="Ask Monica..."
+            placeholder="Ask Epiphany..."
             value={input}
             onChange={e => setInput(e.target.value)}
             disabled={isStreaming}

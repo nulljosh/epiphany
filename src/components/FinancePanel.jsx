@@ -1285,7 +1285,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                 <div style={labelStyle}>Saved Statements</div>
                 <div style={{ fontSize: 12, color: t.textSecondary, marginBottom: 12 }}>
-                  Upload PDF statements once. Monica keeps the spending months in sync on this account.
+                  Upload PDF statements once. Epiphany keeps the spending months in sync on this account.
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                   <button onClick={() => statementInputRef.current?.click()} disabled={statementUploading} style={pillButtonStyle}>

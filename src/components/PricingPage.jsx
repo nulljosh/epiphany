@@ -167,7 +167,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
               margin: 0,
               fontFamily: font,
               letterSpacing: '-0.02em',
-            }}>Monica Pro</h1>
+            }}>Epiphany Pro</h1>
             <p style={{ margin: '4px 0 0', fontSize: 14, color: t.textSecondary, fontFamily: font }}>
               Unlock the full intelligence platform.
             </p>

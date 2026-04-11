@@ -122,7 +122,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
           <div style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 22, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>M</span>
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Monica</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Personal intelligence platform</p>
         </div>
 
