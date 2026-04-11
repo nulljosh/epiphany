@@ -1,4 +1,4 @@
-# Monica
+# Epiphany
 
 v1.0.0-beta -- Personal intelligence platform. Palantir for regular people.
 
