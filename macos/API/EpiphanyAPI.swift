@@ -596,12 +596,12 @@ private struct StatementsWrapper: Decodable {
     let statements: [Statement]
 }
 
-private struct FlightFeed: Decodable {
+struct FlightFeed: Decodable {
     let states: [Flight]
     let meta: FlightMeta?
 }
 
-private struct FlightMeta: Decodable {
+struct FlightMeta: Decodable {
     let status: String?
     let degraded: Bool?
     let cached: Bool?
