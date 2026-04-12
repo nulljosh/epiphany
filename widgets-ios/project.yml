@@ -1,4 +1,4 @@
-name: MonicaWidgets
+name: EpiphanyWidgets
 options:
   bundleIdPrefix: com.heyitsmejosh
   deploymentTarget:
@@ -24,6 +24,6 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_CFBundleDisplayName: Monica Widgets
       INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright 2026 Joshua Trommel"
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.widgets
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.widgets
       ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
       PRODUCT_NAME: MonicaWidgets

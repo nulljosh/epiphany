@@ -1,4 +1,4 @@
-name: Monica
+name: Epiphany
 options:
   bundleIdPrefix: com.heyitsmejosh
   deploymentTarget:
@@ -10,7 +10,7 @@ settings:
   CURRENT_PROJECT_VERSION: "1"
   CODE_SIGN_STYLE: Automatic
 targets:
-  Monica:
+  Epiphany:
     type: application
     platform: iOS
     sources:
@@ -27,29 +27,29 @@ targets:
           - UITests
     settings:
       INFOPLIST_FILE: Info.plist
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       PRODUCT_NAME: Monica
       PRODUCT_MODULE_NAME: Monica
-      # CODE_SIGN_ENTITLEMENTS: Monica.entitlements  # Requires paid Apple Developer Program
-  MonicaTests:
+      # CODE_SIGN_ENTITLEMENTS: Epiphany.entitlements  # Requires paid Apple Developer Program
+  EpiphanyTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: Tests
     dependencies:
-      - target: Monica
+      - target: Epiphany
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.tests
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.tests
       GENERATE_INFOPLIST_FILE: YES
-  MonicaUITests:
+  EpiphanyUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
       - UITests
     dependencies:
-      - target: Monica
+      - target: Epiphany
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.monica.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.uitests
         GENERATE_INFOPLIST_FILE: YES

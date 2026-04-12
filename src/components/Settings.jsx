@@ -42,25 +42,49 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
     if (refreshUser) refreshUser();
   }, []);
 
-  const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
-  const avatarInputRef = useRef(null);
   const avatarUrl = user?.avatarUrl ? `${user.avatarUrl}?v=${user.avatarUpdatedAt || '1'}` : null;
 
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_AVATAR_SIZE) { setAvatarMsg({ text: 'Image must be under 5MB', error: true }); return; }
+  const generateBitmapAvatar = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const palettes = [
+      ['#e63946','#457b9d','#1d3557','#f1faee','#a8dadc'],
+      ['#7b2d8b','#c77dff','#e0aaff','#10002b','#240046'],
+      ['#0077b6','#00b4d8','#90e0ef','#caf0f8','#03045e'],
+      ['#d62828','#f77f00','#fcbf49','#eae2b7','#003049'],
+      ['#2d6a4f','#52b788','#b7e4c7','#d8f3dc','#1b4332'],
+    ];
+    const palette = palettes[Math.floor(Math.random() * palettes.length)];
+    // Fill background
+    ctx.fillStyle = palette[3];
+    ctx.fillRect(0, 0, 64, 64);
+    // Symmetric 4x4 tile pattern (mirrored left-right)
+    const tileSize = 8;
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 4; col++) {
+        if (Math.random() > 0.45) {
+          ctx.fillStyle = palette[Math.floor(Math.random() * 3)];
+          ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+          ctx.fillRect((7 - col) * tileSize, row * tileSize, tileSize, tileSize);
+        }
+      }
+    }
+    return canvas.toDataURL('image/jpeg', 0.9);
+  };
+
+  const handleGenerateAvatar = async () => {
     setAvatarUploading(true);
     setAvatarMsg(null);
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = generateBitmapAvatar();
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) });
       const data = await res.json();
-      if (data.ok && data.avatarUrl) { setAvatarMsg({ text: 'Photo updated', error: false }); if (refreshUser) refreshUser(); }
-      else setAvatarMsg({ text: data.error || 'Upload failed', error: true });
-    } catch { setAvatarMsg({ text: 'Upload failed', error: true }); }
+      if (data.ok && data.avatarUrl) { setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
+      else setAvatarMsg({ text: data.error || 'Failed', error: true });
+    } catch { setAvatarMsg({ text: 'Failed', error: true }); }
     finally { setAvatarUploading(false); }
   };
 
@@ -124,15 +148,14 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
           <>
             {/* Avatar + identity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div onClick={() => avatarInputRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: t.glass, border: `2px solid ${t.border}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Click to change photo">
+              <div onClick={handleGenerateAvatar} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: t.glass, border: `2px solid ${t.border}`, cursor: avatarUploading ? 'wait' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: avatarUploading ? 0.6 : 1 }} title="Click to generate new avatar">
                 {avatarUrl ? <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }} /> : null}
                 <span style={{ fontSize: 20, color: t.textTertiary, display: avatarUrl ? 'none' : 'block' }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span>
               </div>
-              <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>{user.name || user.email}</div>
                 <div style={{ fontSize: 11, color: avatarMsg ? (avatarMsg.error ? '#ef4444' : t.green) : t.textTertiary, marginTop: 2 }}>
-                  {avatarUploading ? 'Uploading...' : avatarMsg ? avatarMsg.text : 'Click to change photo'}
+                  {avatarUploading ? 'Generating...' : avatarMsg ? avatarMsg.text : 'Click to generate avatar'}
                 </div>
               </div>
               <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierColor, background: `${tierColor}18`, padding: '2px 8px', borderRadius: 999 }}>{tierLabel}</span>

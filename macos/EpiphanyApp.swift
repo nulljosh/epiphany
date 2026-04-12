@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct MonicaApp: App {
+struct EpiphanyApp: App {
     @State private var appState = AppState()
 
     var body: some Scene {

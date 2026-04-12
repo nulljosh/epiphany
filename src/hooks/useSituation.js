@@ -97,8 +97,12 @@ export function useSituation() {
         apiPath(`/api/flights?lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`)
       );
       setFlights(data?.states ?? []);
-      if (!data || data.meta?.degraded) {
+      if (!data) {
         setFlightsError('Flights temporarily unavailable');
+      } else if (data.meta?.estimated) {
+        setFlightsError('Estimated positions');
+      } else if (data.meta?.degraded && !data.states?.length) {
+        setFlightsError('No flights tracked');
       }
     } catch {
       setFlightsError('Flights unavailable');
@@ -116,8 +120,10 @@ export function useSituation() {
         apiPath(`/api/traffic?lat=${activeCenter.lat}&lon=${activeCenter.lon}&lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`)
       );
       setTraffic(data);
-      if (!data || data.meta?.degraded) {
-        setTrafficError('Traffic data temporarily unavailable');
+      if (!data) {
+        setTrafficError('Traffic unavailable');
+      } else if (data.source === 'estimated' || data.meta?.degraded) {
+        setTrafficError('Estimated');
       }
     } catch {
       setTrafficError('Traffic unavailable');
