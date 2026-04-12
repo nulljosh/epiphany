@@ -254,7 +254,7 @@ struct SettingsView: View {
                     appState.saveAvatarData(jpegData)
                     isUploadingAvatar = true
                     Task {
-                        _ = try? await MonicaAPI.shared.uploadAvatar(imageData: jpegData)
+                        _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
                         isUploadingAvatar = false
                     }
                 }
@@ -279,7 +279,7 @@ struct SettingsView: View {
                 if let jpegData = resized.jpegData(compressionQuality: 0.7) {
                     appState.saveAvatarData(jpegData)
                     isUploadingAvatar = true
-                    _ = try? await MonicaAPI.shared.uploadAvatar(imageData: jpegData)
+                    _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
                     isUploadingAvatar = false
                 }
             }

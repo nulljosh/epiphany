@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ArticleReaderView: View {
     let url: URL
-    @State private var article: MonicaAPI.ArticleContent?
+    @State private var article: EpiphanyAPI.ArticleContent?
     @State private var isLoading = true
     @State private var fallbackToSafari = false
     @Environment(\.dismiss) private var dismiss
@@ -44,7 +44,7 @@ struct ArticleReaderView: View {
         }
     }
 
-    private func articleContent(_ article: MonicaAPI.ArticleContent) -> some View {
+    private func articleContent(_ article: EpiphanyAPI.ArticleContent) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(article.title)
@@ -69,7 +69,7 @@ struct ArticleReaderView: View {
         }
     }
 
-    private func articleByline(_ article: MonicaAPI.ArticleContent) -> String? {
+    private func articleByline(_ article: EpiphanyAPI.ArticleContent) -> String? {
         let parts: [String] = [article.author, article.siteName].compactMap { value in
             guard let s = value, !s.isEmpty else { return nil }
             return s
@@ -79,7 +79,7 @@ struct ArticleReaderView: View {
 
     private func loadArticle() async {
         do {
-            article = try await MonicaAPI.shared.fetchArticle(url: url.absoluteString)
+            article = try await EpiphanyAPI.shared.fetchArticle(url: url.absoluteString)
             if article?.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
                 fallbackToSafari = true
             }

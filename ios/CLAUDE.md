@@ -1,43 +1,37 @@
-# Monica iOS
+# Epiphany iOS
 
-v1.4.0
-
-## What is Monica
-
-Personal intelligence platform. Map + markets + people + local data. Palantir for regular people.
+v1.4.0 — Native iPhone intelligence app. 4-tab SwiftUI app, portrait-only, dark mode only.
 
 ## Rules
 
-- App scope: iPhone app. Four tabs: Map, Markets, People, Settings
-- Map is the home screen (tab 0) -- no jumps on load
-- Markets tab includes inline portfolio section (net worth, debt timeline, payday)
-- Market filter segments: All / Stocks / Commodities / Crypto
-- Map Sources on its own settings page (not inline)
-- Avatar persisted in AppState (not local @State)
-- All data preloaded on launch in parallel
-- Stay logged in between launches
-- Portrait-only, UIRequiresFullScreen
+- iPhone only, portrait-only, UIRequiresFullScreen
+- Map is home screen (tab 0), no jumps on load
+- All data preloaded on launch in parallel (stocks, crypto, commodities, finance, Tally, fear/greed)
+- Stay logged in between launches (session cookie + keychain)
 - No emojis
-- Internal class names use MonicaAPI, MonicaApp
+
+## Tabs
+
+1. **Situation** — MapKit map with 8 toggleable live data layers. Default home screen.
+2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index.
+3. **People** — Person search with Google/DuckDuckGo/Wikipedia cascade, social links, indexed profiles.
+4. **Settings** — Profile (avatar + keychain), subscription tier, map layer toggles, Tally integration.
 
 ## Run
 
 ```bash
 xcodegen generate
-xcodebuild -scheme Monica -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ## Key Files
 
-- `ContentView.swift` -- tabs, parallel data preloading
-- `API/MonicaAPI.swift` -- backend requests
-- `Models/AppState.swift` -- shared state, avatar persistence, financeDataLoaded
-- `Models/Ontology.swift` -- ontology types + AnyCodable
-- `Views/SituationView.swift` -- map with 7+ data layers
-- `Models/SituationData.swift` -- map data models, isLowSignal filter
-- `Views/MarketsView.swift` -- markets + inline portfolio + filter segments
-- `Views/StockDetailView.swift` -- stock charts, fundamentals, related news
-- `Views/SettingsView.swift` -- profile, subscriptions, MapSourcesSettingsView
-- `Views/PeopleView.swift` -- people search with Wikipedia fallback
-- `Services/TallyService.swift` -- tally API client + keychain
-- Tests in `Tests/`
+- `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires)
+- `Views/MarketsView.swift` — Markets list + inline portfolio, stock detail sheets
+- `Views/PeopleView.swift` — Person search + index grid
+- `ContentView.swift` — Tab navigation, parallel data preloading on launch
+- `Models/AppState.swift` — @Observable shared state, avatar persistence
+- `API/EpiphanyAPI.swift` — All backend requests (base: monica.heyitsmejosh.com, 2min cache, cookie session)
+- `Services/TallyService.swift` — Tally API client + keychain credentials
+- `Models/SituationData.swift` — Map data models

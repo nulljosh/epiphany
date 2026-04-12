@@ -12,9 +12,7 @@ enum APIError: LocalizedError {
         case .invalidURL:
             return "Invalid URL"
         case .httpError(let code, let message):
-            if code == 503 { return "Server temporarily unavailable. Please try again." }
-            if code == 429 { return message }
-            return message
+            return "HTTP \(code): \(message)"
         case .decodingError(let detail):
             return "Decode error: \(detail)"
         case .unauthorized:
@@ -26,27 +24,12 @@ enum APIError: LocalizedError {
 }
 
 @MainActor
-final class MonicaAPI: @unchecked Sendable {
-    static let shared = MonicaAPI()
+final class EpiphanyAPI {
+    static let shared = EpiphanyAPI()
 
     private let baseURL = "https://monica.heyitsmejosh.com"
     private let session: URLSession
     private let decoder: JSONDecoder
-
-    // Simple time-based cache
-    private var cache: [String: (data: Any, time: Date)] = [:]
-    private let cacheTTL: TimeInterval = 120 // 2 minutes
-
-    private func cached<T>(_ key: String) -> T? {
-        guard let entry = cache[key],
-              Date().timeIntervalSince(entry.time) < cacheTTL,
-              let value = entry.data as? T else { return nil }
-        return value
-    }
-
-    private func setCache<T>(_ key: String, _ value: T) {
-        cache[key] = (data: value, time: Date())
-    }
 
     private init() {
         let config = URLSessionConfiguration.default
@@ -82,15 +65,6 @@ final class MonicaAPI: @unchecked Sendable {
             throw APIError.decodingError("No user in auth response")
         }
         return user
-    }
-
-    func forgotPassword(email: String) async throws {
-        let url = try makeURL("/api/auth", query: ["action": "forgot-password"])
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(["email": email])
-        _ = try await perform(request)
     }
 
     func logout() async throws {
@@ -129,17 +103,6 @@ final class MonicaAPI: @unchecked Sendable {
         )
     }
 
-    func changeName(name: String) async throws -> User {
-        let response: AuthActionResponse = try await postAuthAction(
-            "change-name",
-            body: ["name": name]
-        )
-        guard let user = response.user else {
-            throw APIError.decodingError("No user in change-name response")
-        }
-        return user
-    }
-
     func deleteAccount(password: String) async throws {
         let _: AuthActionResponse = try await postAuthAction(
             "delete-account",
@@ -167,16 +130,9 @@ final class MonicaAPI: @unchecked Sendable {
     }
 
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
-        let interval: String
-        switch range {
-        case "1d": interval = "5m"
-        case "5d": interval = "15m"
-        default: interval = "1d"
-        }
         let url = try makeURL("/api/history", query: [
             "symbol": symbol,
-            "range": range,
-            "interval": interval
+            "range": range
         ])
         let request = URLRequest(url: url)
         let data = try await perform(request)
@@ -225,23 +181,18 @@ final class MonicaAPI: @unchecked Sendable {
     }
 
     func fetchNews() async throws -> [NewsArticle] {
-        if let cached: [NewsArticle] = cached("news") { return cached }
         let url = try makeURL("/api/news")
         let request = URLRequest(url: url)
         let data = try await perform(request)
         let wrapper = try decode(NewsWrapper.self, from: data)
-        setCache("news", wrapper.articles)
         return wrapper.articles
     }
 
     func fetchStockNews(query: String) async throws -> [NewsArticle] {
-        let cacheKey = "news:\(query)"
-        if let cached: [NewsArticle] = cached(cacheKey) { return cached }
         let url = try makeURL("/api/news", query: ["q": query])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         let wrapper = try decode(NewsWrapper.self, from: data)
-        setCache(cacheKey, wrapper.articles)
         return wrapper.articles
     }
 
@@ -250,35 +201,6 @@ final class MonicaAPI: @unchecked Sendable {
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode([MacroIndicator].self, from: data)
-    }
-
-    func fetchDailyBrief() async throws -> DailyBrief {
-        if let cached: DailyBrief = cached("daily-brief") { return cached }
-        let url = try makeURL("/api/daily-brief")
-        let request = URLRequest(url: url)
-        let data = try await perform(request)
-        let brief = try decode(DailyBrief.self, from: data)
-        setCache("daily-brief", brief)
-        return brief
-    }
-
-    // MARK: - Tally
-
-    struct TallyResponse: Decodable {
-        struct NextPayment: Decodable {
-            let date: String
-            let daysUntil: Int
-            let amount: String?
-        }
-        let nextPayment: NextPayment
-    }
-
-    func fetchNextPayday() async throws -> TallyResponse.NextPayment {
-        let url = try makeURL("/api/tally", query: ["action": "next-payment"])
-        let request = URLRequest(url: url)
-        let data = try await perform(request)
-        let response = try decode(TallyResponse.self, from: data)
-        return response.nextPayment
     }
 
     // MARK: - Portfolio
@@ -303,7 +225,6 @@ final class MonicaAPI: @unchecked Sendable {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         var payload = try JSONEncoder().encode(financeData)
-        // Add _fullReplace flag so server does a full overwrite
         if var json = try? JSONSerialization.jsonObject(with: payload) as? [String: Any] {
             json["_fullReplace"] = true
             payload = try JSONSerialization.data(withJSONObject: json)
@@ -392,7 +313,7 @@ final class MonicaAPI: @unchecked Sendable {
         return try decode(EarthquakeResponse.self, from: data).earthquakes
     }
 
-    func fetchFlights(lamin: Double, lomin: Double, lamax: Double, lomax: Double) async throws -> [Flight] {
+    func fetchFlights(lamin: Double, lomin: Double, lamax: Double, lomax: Double) async throws -> FlightFeed {
         let url = try makeURL("/api/flights", query: [
             "lamin": String(lamin),
             "lomin": String(lomin),
@@ -401,18 +322,14 @@ final class MonicaAPI: @unchecked Sendable {
         ])
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        return try decode(FlightResponse.self, from: data).states
+        return try decode(FlightFeed.self, from: data)
     }
 
-    func fetchIncidents(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> [Incident] {
-        var params: [String: String] = ["lat": String(lat), "lon": String(lon)]
-        if let lamin, let lomin, let lamax, let lomax {
-            params["lamin"] = String(lamin)
-            params["lomin"] = String(lomin)
-            params["lamax"] = String(lamax)
-            params["lomax"] = String(lomax)
-        }
-        let url = try makeURL("/api/incidents", query: params)
+    func fetchIncidents(lat: Double, lon: Double) async throws -> [Incident] {
+        let url = try makeURL("/api/incidents", query: [
+            "lat": String(lat),
+            "lon": String(lon),
+        ])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(IncidentResponse.self, from: data).incidents
@@ -431,151 +348,53 @@ final class MonicaAPI: @unchecked Sendable {
     // MARK: - Additional Situation Data
 
     func fetchCrime(lat: Double, lon: Double) async throws -> [CrimeIncident] {
-        let url = try makeURL("/api/crime", query: [
-            "lat": String(lat),
-            "lon": String(lon),
-        ])
+        let url = try makeURL("/api/crime", query: ["lat": String(lat), "lon": String(lon)])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(CrimeResponse.self, from: data).incidents
     }
 
     func fetchLocalEvents(lat: Double, lon: Double) async throws -> [LocalEvent] {
-        let url = try makeURL("/api/local-events", query: [
-            "lat": String(lat),
-            "lon": String(lon),
-        ])
+        let url = try makeURL("/api/local-events", query: ["lat": String(lat), "lon": String(lon)])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(LocalEventResponse.self, from: data).events
     }
 
-    func fetchTraffic(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> TrafficData {
-        var params: [String: String] = ["lat": String(lat), "lon": String(lon)]
-        if let lamin, let lomin, let lamax, let lomax {
-            params["lamin"] = String(lamin)
-            params["lomin"] = String(lomin)
-            params["lamax"] = String(lamax)
-            params["lomax"] = String(lomax)
-        }
-        let url = try makeURL("/api/traffic", query: params)
+    func fetchTraffic(lat: Double, lon: Double) async throws -> TrafficData {
+        let url = try makeURL("/api/traffic", query: ["lat": String(lat), "lon": String(lon)])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(TrafficData.self, from: data)
     }
 
     func fetchWildfires(lat: Double, lon: Double) async throws -> [Wildfire] {
-        let url = try makeURL("/api/wildfires", query: [
-            "lat": String(lat),
-            "lon": String(lon),
-        ])
+        let url = try makeURL("/api/wildfires", query: ["lat": String(lat), "lon": String(lon)])
         let request = URLRequest(url: url)
         let data = try await perform(request)
         let response = try decode(WildfireResponse.self, from: data)
         return response.fires
     }
 
-    // MARK: - People Search
-
-    func fetchPeople(query: String) async throws -> PersonProfile {
-        let url = try makeURL("/api/people", query: ["q": query])
+    func fetchDailyBrief() async throws -> DailyBrief {
+        let url = try makeURL("/api/daily-brief")
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        return try decode(PersonProfile.self, from: data)
+        return try decode(DailyBrief.self, from: data)
     }
 
-    // MARK: - People Index
+    // MARK: - Prediction Markets
 
-    func fetchPeopleIndex() async throws -> [IndexedPerson] {
-        let url = try makeURL("/api/people-index")
+    func fetchMarkets(limit: Int = 50, order: String = "volume24hr") async throws -> [PredictionMarket] {
+        let url = try makeURL("/api/markets", query: [
+            "limit": String(limit),
+            "order": order,
+            "closed": "false",
+            "ascending": "false"
+        ])
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        let response = try decode(PeopleIndexResponse.self, from: data)
-        return response.people
-    }
-
-    func indexPerson(_ person: IndexedPerson) async throws -> IndexedPerson {
-        let url = try makeURL("/api/people-index")
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(person)
-        let data = try await perform(request)
-        let response = try decode(IndexPersonResponse.self, from: data)
-        return response.person ?? person
-    }
-
-    func updatePerson(_ person: IndexedPerson) async throws -> IndexedPerson {
-        try await indexPerson(person)
-    }
-
-    func deletePerson(id: String) async throws {
-        let url = try makeURL("/api/people-index", query: ["id": id])
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        _ = try await perform(request)
-    }
-
-    func enrichPerson(personId: String) async throws -> PersonEnrichment? {
-        let url = try makeURL("/api/people-enrich")
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(["personId": personId])
-        let data = try await perform(request)
-        let response = try decode(EnrichResponse.self, from: data)
-        return response.enrichment
-    }
-
-    func fetchCrossref(personId: String) async throws -> [NewsMention] {
-        let url = try makeURL("/api/people-crossref", query: ["personId": personId])
-        let request = URLRequest(url: url)
-        let data = try await perform(request)
-        let response = try decode(CrossrefResponse.self, from: data)
-        return response.mentions
-    }
-
-    // MARK: - Article Extraction
-
-    struct ArticleContent: Decodable {
-        let title: String
-        let content: String
-        let htmlContent: String?
-        let author: String?
-        let siteName: String?
-        let excerpt: String?
-    }
-
-    func fetchArticle(url: String) async throws -> ArticleContent {
-        let apiUrl = try makeURL("/api/defuddle", query: ["url": url])
-        let request = URLRequest(url: apiUrl)
-        let data = try await perform(request)
-        return try decode(ArticleContent.self, from: data)
-    }
-
-    // MARK: - Avatar
-
-    @discardableResult
-    func uploadAvatar(imageData: Data) async throws -> String {
-        let url = try makeURL("/api/avatar")
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["image": imageData.base64EncodedString()]
-        request.httpBody = try JSONEncoder().encode(body)
-        let data = try await perform(request)
-        let response = try decode(AvatarResponse.self, from: data)
-        guard let avatarUrl = response.avatarUrl else {
-            throw APIError.decodingError("No avatarUrl in response")
-        }
-        return avatarUrl
-    }
-
-    func deleteAvatar() async throws {
-        let url = try makeURL("/api/avatar")
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        _ = try await perform(request)
+        return try decode([PredictionMarket].self, from: data)
     }
 
     // MARK: - Ontology
@@ -657,57 +476,32 @@ final class MonicaAPI: @unchecked Sendable {
     }
 
     private func perform(_ request: URLRequest) async throws -> Data {
-        let maxRetries = 2
-        var lastError: Error?
-
-        for attempt in 0...maxRetries {
-            if attempt > 0 {
-                try? await Task.sleep(for: .seconds(1))
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch let urlError as URLError {
+            switch urlError.code {
+            case .timedOut:
+                throw APIError.networkError("Request timed out")
+            case .notConnectedToInternet:
+                throw APIError.networkError("No internet connection")
+            case .networkConnectionLost:
+                throw APIError.networkError("Connection lost")
+            default:
+                throw APIError.networkError(urlError.localizedDescription)
             }
-
-            let data: Data
-            let response: URLResponse
-            do {
-                (data, response) = try await session.data(for: request)
-            } catch let urlError as URLError {
-                switch urlError.code {
-                case .timedOut, .networkConnectionLost:
-                    lastError = APIError.networkError(urlError.localizedDescription)
-                    continue
-                case .notConnectedToInternet:
-                    throw APIError.networkError("No internet connection")
-                default:
-                    throw APIError.networkError(urlError.localizedDescription)
-                }
-            }
-
-            guard let http = response as? HTTPURLResponse else {
-                throw APIError.httpError(0, "No HTTP response")
-            }
-
-            if http.statusCode == 503 && attempt < maxRetries {
-                lastError = APIError.httpError(503, "Server temporarily unavailable")
-                continue
-            }
-
-            guard (200...299).contains(http.statusCode) else {
-                if http.statusCode == 401 { throw APIError.unauthorized }
-                let body = String(data: data, encoding: .utf8) ?? "unknown"
-                let message = Self.parseErrorMessage(body) ?? body
-                throw APIError.httpError(http.statusCode, message)
-            }
-            return data
         }
 
-        throw lastError ?? APIError.networkError("Request failed after retries")
-    }
-
-    private static func parseErrorMessage(_ body: String) -> String? {
-        guard let data = body.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let error = json["error"] as? String
-        else { return nil }
-        return error
+        guard let http = response as? HTTPURLResponse else {
+            throw APIError.httpError(0, "No HTTP response")
+        }
+        guard (200...299).contains(http.statusCode) else {
+            if http.statusCode == 401 { throw APIError.unauthorized }
+            let body = String(data: data, encoding: .utf8) ?? "unknown"
+            throw APIError.httpError(http.statusCode, body)
+        }
+        return data
     }
 
     private func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
@@ -715,10 +509,70 @@ final class MonicaAPI: @unchecked Sendable {
             return try decoder.decode(type, from: data)
         } catch {
             let preview = String(data: data.prefix(500), encoding: .utf8) ?? "<binary>"
-            print("[MonicaAPI] Decode \(T.self) failed: \(error)")
-            print("[MonicaAPI] Response body: \(preview)")
+            print("[EpiphanyAPI] Decode \(T.self) failed: \(error)")
+            print("[EpiphanyAPI] Response body: \(preview)")
             throw APIError.decodingError("Failed to decode \(T.self): \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - People
+
+    func fetchPeople(query: String) async throws -> PersonProfile {
+        let url = try makeURL("/api/people", query: ["q": query])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(PersonProfile.self, from: data)
+    }
+
+    // MARK: - People Index
+
+    func fetchPeopleIndex() async throws -> [IndexedPerson] {
+        let url = try makeURL("/api/people-index")
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let response = try decode(PeopleIndexResponse.self, from: data)
+        return response.people
+    }
+
+    func indexPerson(_ person: IndexedPerson) async throws -> IndexedPerson {
+        let url = try makeURL("/api/people-index")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(person)
+        let data = try await perform(request)
+        let response = try decode(IndexPersonResponse.self, from: data)
+        return response.person ?? person
+    }
+
+    func updatePerson(_ person: IndexedPerson) async throws -> IndexedPerson {
+        try await indexPerson(person)
+    }
+
+    func deletePerson(id: String) async throws {
+        let url = try makeURL("/api/people-index", query: ["id": id])
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        _ = try await perform(request)
+    }
+
+    func enrichPerson(personId: String) async throws -> PersonEnrichment? {
+        let url = try makeURL("/api/people-enrich")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["personId": personId])
+        let data = try await perform(request)
+        let response = try decode(EnrichResponse.self, from: data)
+        return response.enrichment
+    }
+
+    func fetchCrossref(personId: String) async throws -> [NewsMention] {
+        let url = try makeURL("/api/people-crossref", query: ["personId": personId])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let response = try decode(CrossrefResponse.self, from: data)
+        return response.mentions
     }
 }
 
@@ -742,12 +596,19 @@ private struct StatementsWrapper: Decodable {
     let statements: [Statement]
 }
 
-private struct EarthquakeResponse: Decodable {
-    let earthquakes: [Earthquake]
+private struct FlightFeed: Decodable {
+    let states: [Flight]
+    let meta: FlightMeta?
 }
 
-private struct FlightResponse: Decodable {
-    let states: [Flight]
+private struct FlightMeta: Decodable {
+    let status: String?
+    let degraded: Bool?
+    let cached: Bool?
+}
+
+private struct EarthquakeResponse: Decodable {
+    let earthquakes: [Earthquake]
 }
 
 private struct IncidentResponse: Decodable {
@@ -792,11 +653,6 @@ private struct CommodityResponse: Decodable {
     }
 }
 
-private struct AvatarResponse: Decodable {
-    let ok: Bool?
-    let avatarUrl: String?
-}
-
 private struct CryptoResponse: Decodable {
     let spot: Double
     let chgPct: Double
@@ -835,8 +691,29 @@ struct PriceHistory: Codable {
 
         var id: String { date }
 
+        private static nonisolated(unsafe) let isoFractional: ISO8601DateFormatter = {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f
+        }()
+
+        private static nonisolated(unsafe) let isoStandard: ISO8601DateFormatter = {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime]
+            return f
+        }()
+
+        private static nonisolated(unsafe) let dateOnly: DateFormatter = {
+            let f = DateFormatter()
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.dateFormat = "yyyy-MM-dd"
+            return f
+        }()
+
         var parsedDate: Date? {
-            DateParsing.parse(date)
+            Self.isoFractional.date(from: date)
+                ?? Self.isoStandard.date(from: date)
+                ?? Self.dateOnly.date(from: date)
         }
     }
 }

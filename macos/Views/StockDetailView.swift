@@ -428,7 +428,7 @@ struct StockDetailView: View {
         isLoading = true
         error = nil
         do {
-            let result = try await MonicaAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
+            let result = try await EpiphanyAPI.shared.fetchPriceHistory(symbol: stock.symbol, range: selectedRange)
             guard !Task.isCancelled else { return }
             priceHistory = result.history
         } catch is CancellationError {
@@ -477,13 +477,13 @@ struct StockDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            async let symbolNews = MonicaAPI.shared.fetchStockNews(query: stock.symbol)
-            async let nameNews = MonicaAPI.shared.fetchStockNews(query: stock.name)
+            async let symbolNews = EpiphanyAPI.shared.fetchStockNews(query: stock.symbol)
+            async let nameNews = EpiphanyAPI.shared.fetchStockNews(query: stock.name)
             let (bySymbol, byName) = try await (symbolNews, nameNews)
             relatedNews = bySymbol.isEmpty ? byName : bySymbol
         } catch {
             do {
-                let allNews = try await MonicaAPI.shared.fetchNews()
+                let allNews = try await EpiphanyAPI.shared.fetchNews()
                 let terms = [stock.symbol.lowercased(), stock.name.lowercased()]
                 relatedNews = allNews.filter { article in
                     terms.contains { article.title.lowercased().contains($0) }

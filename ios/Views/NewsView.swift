@@ -98,7 +98,7 @@ struct NewsView: View {
         defer { isLoading = false }
 
         do {
-            articles = try await MonicaAPI.shared.fetchNews()
+            articles = try await EpiphanyAPI.shared.fetchNews()
             error = nil
         } catch {
             self.error = error.localizedDescription

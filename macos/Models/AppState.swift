@@ -121,7 +121,7 @@ final class AppState {
 
     func checkSession() async {
         do {
-            user = try await MonicaAPI.shared.me()
+            user = try await EpiphanyAPI.shared.me()
         } catch {
             user = nil
         }
@@ -135,7 +135,7 @@ final class AppState {
         defer { isAuthenticating = false }
 
         do {
-            user = try await MonicaAPI.shared.login(email: creds.email, password: creds.password)
+            user = try await EpiphanyAPI.shared.login(email: creds.email, password: creds.password)
             error = nil
         } catch {
             user = nil
@@ -144,13 +144,13 @@ final class AppState {
 
     func login(email: String, password: String) async {
         await authenticate(email: email, password: password) {
-            try await MonicaAPI.shared.login(email: email, password: password)
+            try await EpiphanyAPI.shared.login(email: email, password: password)
         }
     }
 
     func register(email: String, password: String) async {
         await authenticate(email: email, password: password) {
-            try await MonicaAPI.shared.register(email: email, password: password)
+            try await EpiphanyAPI.shared.register(email: email, password: password)
         }
     }
 
@@ -198,7 +198,7 @@ final class AppState {
     }
 
     func logout() async {
-        try? await MonicaAPI.shared.logout()
+        try? await EpiphanyAPI.shared.logout()
         user = nil
         portfolio = nil
         watchlist = []
@@ -215,7 +215,7 @@ final class AppState {
     func changeEmail(to newEmail: String, password: String) async -> Bool {
         error = nil
         do {
-            user = try await MonicaAPI.shared.changeEmail(newEmail: newEmail, password: password)
+            user = try await EpiphanyAPI.shared.changeEmail(newEmail: newEmail, password: password)
             biometricAuth.saveCredentials(email: newEmail, password: password)
             return true
         } catch {
@@ -227,7 +227,7 @@ final class AppState {
     func changePassword(currentPassword: String, newPassword: String) async -> Bool {
         error = nil
         do {
-            try await MonicaAPI.shared.changePassword(currentPassword: currentPassword, newPassword: newPassword)
+            try await EpiphanyAPI.shared.changePassword(currentPassword: currentPassword, newPassword: newPassword)
             if let email = user?.email {
                 biometricAuth.saveCredentials(email: email, password: newPassword)
             }
@@ -241,7 +241,7 @@ final class AppState {
     func deleteAccount(password: String) async -> Bool {
         error = nil
         do {
-            try await MonicaAPI.shared.deleteAccount(password: password)
+            try await EpiphanyAPI.shared.deleteAccount(password: password)
             biometricAuth.clearCredentials()
             user = nil
             portfolio = nil
@@ -263,7 +263,7 @@ final class AppState {
         isLoading = true
         defer { isLoading = false }
         do {
-            stocks = try await MonicaAPI.shared.fetchStocks()
+            stocks = try await EpiphanyAPI.shared.fetchStocks()
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
@@ -275,7 +275,7 @@ final class AppState {
 
     func loadCommodities(force: Bool = false) async {
         do {
-            commodities = try await MonicaAPI.shared.fetchCommodities()
+            commodities = try await EpiphanyAPI.shared.fetchCommodities()
         } catch {
             self.error = error.localizedDescription
         }
@@ -283,7 +283,7 @@ final class AppState {
 
     func loadCrypto(force: Bool = false) async {
         do {
-            crypto = try await MonicaAPI.shared.fetchCrypto()
+            crypto = try await EpiphanyAPI.shared.fetchCrypto()
         } catch {
             self.error = error.localizedDescription
         }
@@ -291,7 +291,7 @@ final class AppState {
 
     func loadFearGreed() async {
         do {
-            let fg = try await MonicaAPI.shared.fetchFearGreed()
+            let fg = try await EpiphanyAPI.shared.fetchFearGreed()
             fearGreedScore = fg.score
             fearGreedRating = fg.rating
         } catch {
@@ -311,7 +311,7 @@ final class AppState {
     func loadFinanceData() async {
         guard isLoggedIn else { financeDataLoaded = true; return }
         do {
-            financeData = try await MonicaAPI.shared.fetchFinanceData()
+            financeData = try await EpiphanyAPI.shared.fetchFinanceData()
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
@@ -324,20 +324,20 @@ final class AppState {
     func saveFinanceData() async {
         guard let financeData else { return }
         do {
-            try await MonicaAPI.shared.updateFinanceData(financeData)
+            try await EpiphanyAPI.shared.updateFinanceData(financeData)
         } catch {
             print("[AppState] Failed to save finance data: \(error)")
         }
     }
 
     func loadDailyBrief() async {
-        dailyBrief = try? await MonicaAPI.shared.fetchDailyBrief()
+        dailyBrief = try? await EpiphanyAPI.shared.fetchDailyBrief()
     }
 
     func loadStatements() async {
         guard isLoggedIn else { return }
         do {
-            statements = try await MonicaAPI.shared.fetchStatements()
+            statements = try await EpiphanyAPI.shared.fetchStatements()
         } catch {
             self.error = error.localizedDescription
         }
@@ -348,7 +348,7 @@ final class AppState {
     func loadWatchlist() async {
         guard isLoggedIn else { return }
         do {
-            watchlist = try await MonicaAPI.shared.fetchWatchlist()
+            watchlist = try await EpiphanyAPI.shared.fetchWatchlist()
         } catch {
             self.error = error.localizedDescription
         }
@@ -357,7 +357,7 @@ final class AppState {
     func addWatchlistSymbol(_ symbol: String) async {
         guard isLoggedIn else { return }
         do {
-            let item = try await MonicaAPI.shared.addToWatchlist(symbol: symbol)
+            let item = try await EpiphanyAPI.shared.addToWatchlist(symbol: symbol)
             watchlist.append(item)
         } catch let apiError as APIError {
             if case .httpError(409, _) = apiError {
@@ -372,7 +372,7 @@ final class AppState {
     func removeWatchlistSymbol(_ symbol: String) async {
         guard isLoggedIn else { return }
         do {
-            try await MonicaAPI.shared.removeFromWatchlist(symbol: symbol)
+            try await EpiphanyAPI.shared.removeFromWatchlist(symbol: symbol)
             watchlist.removeAll { $0.symbol == symbol }
         } catch {
             self.error = error.localizedDescription
@@ -388,7 +388,7 @@ final class AppState {
     func loadAlerts() async {
         guard isLoggedIn else { return }
         do {
-            alerts = try await MonicaAPI.shared.fetchAlerts()
+            alerts = try await EpiphanyAPI.shared.fetchAlerts()
         } catch {
             self.error = error.localizedDescription
         }
@@ -397,7 +397,7 @@ final class AppState {
     func createAlert(symbol: String, targetPrice: Double, direction: PriceAlert.Direction) async {
         guard isLoggedIn else { return }
         do {
-            let alert = try await MonicaAPI.shared.createAlert(
+            let alert = try await EpiphanyAPI.shared.createAlert(
                 symbol: symbol,
                 targetPrice: targetPrice,
                 direction: direction
@@ -411,7 +411,7 @@ final class AppState {
     func deleteAlert(_ id: String) async {
         guard isLoggedIn else { return }
         do {
-            try await MonicaAPI.shared.deleteAlert(id: id)
+            try await EpiphanyAPI.shared.deleteAlert(id: id)
             alerts.removeAll { $0.id == id }
         } catch {
             self.error = error.localizedDescription
@@ -422,7 +422,7 @@ final class AppState {
 
     func loadMarkets() async {
         do {
-            markets = try await MonicaAPI.shared.fetchMarkets()
+            markets = try await EpiphanyAPI.shared.fetchMarkets()
         } catch {
             self.error = error.localizedDescription
         }

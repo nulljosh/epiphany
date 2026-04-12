@@ -70,7 +70,7 @@ struct MacroView: View {
         defer { isLoading = false }
 
         do {
-            indicators = try await MonicaAPI.shared.fetchMacro()
+            indicators = try await EpiphanyAPI.shared.fetchMacro()
             error = nil
         } catch {
             self.error = error.localizedDescription

@@ -484,7 +484,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showEarthquakes else { earthquakes = []; return }
-            let r = await loadSection(label: "Earthquakes") { try await MonicaAPI.shared.fetchEarthquakes(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Earthquakes") { try await EpiphanyAPI.shared.fetchEarthquakes(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { earthquakes = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -502,7 +502,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showIncidents else { incidents = []; return }
-            let r = await loadSection(label: "Incidents") { try await MonicaAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude, lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax) }
+            let r = await loadSection(label: "Incidents") { try await EpiphanyAPI.shared.fetchIncidents(lat: center.latitude, lon: center.longitude, lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { incidents = r.value.filter { !Incident.isLowSignal($0.title) } }
             if let e = r.error { await completion.addError(e) }
@@ -511,7 +511,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showWeatherAlerts else { weatherAlerts = []; return }
-            let r = await loadSection(label: "Weather") { try await MonicaAPI.shared.fetchWeatherAlerts(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Weather") { try await EpiphanyAPI.shared.fetchWeatherAlerts(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { weatherAlerts = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -520,7 +520,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showCrime else { crimeIncidents = []; return }
-            let r = await loadSection(label: "Crime") { try await MonicaAPI.shared.fetchCrime(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Crime") { try await EpiphanyAPI.shared.fetchCrime(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { crimeIncidents = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -529,7 +529,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showLocalEvents else { localEvents = []; return }
-            let r = await loadSection(label: "Local Events") { try await MonicaAPI.shared.fetchLocalEvents(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Local Events") { try await EpiphanyAPI.shared.fetchLocalEvents(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { localEvents = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -538,7 +538,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showTraffic else { trafficData = nil; return }
-            let result = try? await MonicaAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude, lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
+            let result = try? await EpiphanyAPI.shared.fetchTraffic(lat: center.latitude, lon: center.longitude, lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
             guard loadRegionId == regionId else { return }
             trafficData = result
         }
@@ -546,7 +546,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showWildfires else { wildfires = []; return }
-            let r = await loadSection(label: "Wildfires") { try await MonicaAPI.shared.fetchWildfires(lat: center.latitude, lon: center.longitude) }
+            let r = await loadSection(label: "Wildfires") { try await EpiphanyAPI.shared.fetchWildfires(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { wildfires = r.value }
             if let e = r.error { await completion.addError(e) }
@@ -576,21 +576,21 @@ struct SituationView: View {
 
             if needIncidents {
                 let r = await loadSection(label: "Incidents") {
-                    try await MonicaAPI.shared.fetchIncidents(lat: centerLat, lon: centerLon, lamin: wideLamin, lomin: wideLomin, lamax: wideLamax, lomax: wideLomax)
+                    try await EpiphanyAPI.shared.fetchIncidents(lat: centerLat, lon: centerLon, lamin: wideLamin, lomin: wideLomin, lamax: wideLamax, lomax: wideLomax)
                 }
                 guard loadRegionId == regionId else { isLoadingData = false; return }
                 if r.value.count > currentIncidents.count { incidents = r.value.filter { !Incident.isLowSignal($0.title) } }
             }
             if needCrime {
                 let r = await loadSection(label: "Crime") {
-                    try await MonicaAPI.shared.fetchCrime(lat: centerLat, lon: centerLon)
+                    try await EpiphanyAPI.shared.fetchCrime(lat: centerLat, lon: centerLon)
                 }
                 guard loadRegionId == regionId else { isLoadingData = false; return }
                 if r.value.count > currentCrime.count { crimeIncidents = r.value }
             }
             if needEvents {
                 let r = await loadSection(label: "Local Events") {
-                    try await MonicaAPI.shared.fetchLocalEvents(lat: centerLat, lon: centerLon)
+                    try await EpiphanyAPI.shared.fetchLocalEvents(lat: centerLat, lon: centerLon)
                 }
                 guard loadRegionId == regionId else { isLoadingData = false; return }
                 if r.value.count > currentLocal.count { localEvents = r.value }
@@ -622,7 +622,7 @@ struct SituationView: View {
         lomax: Double
     ) async -> (value: [Flight], error: String?) {
         do {
-            let flights = try await MonicaAPI.shared.fetchFlights(
+            let flights = try await EpiphanyAPI.shared.fetchFlights(
                 lamin: lamin,
                 lomin: lomin,
                 lamax: lamax,

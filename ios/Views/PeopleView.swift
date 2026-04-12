@@ -476,7 +476,7 @@ struct PeopleView: View {
 
         Task {
             do {
-                let result = try await MonicaAPI.shared.fetchPeople(query: trimmed)
+                let result = try await EpiphanyAPI.shared.fetchPeople(query: trimmed)
                 profile = result
             } catch {
                 self.error = error.localizedDescription
@@ -489,7 +489,7 @@ struct PeopleView: View {
         isLoadingIndex = true
         Task {
             do {
-                indexedPeople = try await MonicaAPI.shared.fetchPeopleIndex()
+                indexedPeople = try await EpiphanyAPI.shared.fetchPeopleIndex()
             } catch {
                 // Silently fail -- index is supplementary
             }
@@ -499,7 +499,7 @@ struct PeopleView: View {
 
     private func refreshIndex() async {
         do {
-            indexedPeople = try await MonicaAPI.shared.fetchPeopleIndex()
+            indexedPeople = try await EpiphanyAPI.shared.fetchPeopleIndex()
         } catch {
             // Silently fail
         }
@@ -508,7 +508,7 @@ struct PeopleView: View {
     private func indexFromSearch(person: IndexedPerson) {
         Task {
             do {
-                let saved = try await MonicaAPI.shared.indexPerson(person)
+                let saved = try await EpiphanyAPI.shared.indexPerson(person)
                 indexedPeople.insert(saved, at: 0)
             } catch {
                 // Handled in detail view

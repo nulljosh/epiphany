@@ -9,7 +9,7 @@ v1.0.0-beta -- Personal intelligence platform. Palantir for regular people.
 - Mobile-first layout
 - Dark mode only, no light/auto theme
 - iOS app: four tabs (Map, Markets, People, Settings)
-- Web app: monica.heyitsmejosh.com
+- Web app: epiphany.heyitsmejosh.com (currently: monica.heyitsmejosh.com)
 - AI endpoint requires ANTHROPIC_API_KEY env var on Vercel
 - Never use raw `setInterval` for API polling -- always use `useVisibilityPolling` from `src/hooks/useVisibilityPolling.js`
 

@@ -739,7 +739,7 @@ struct PersonDetailView: View {
         isEnriching = true
         Task {
             do {
-                if let result = try await MonicaAPI.shared.enrichPerson(personId: person.id) {
+                if let result = try await EpiphanyAPI.shared.enrichPerson(personId: person.id) {
                     enrichment = result
                     var updated = person
                     updated.enrichment = result
@@ -756,7 +756,7 @@ struct PersonDetailView: View {
         guard let person = indexedPerson else { return }
         Task {
             do {
-                try await MonicaAPI.shared.deletePerson(id: person.id)
+                try await EpiphanyAPI.shared.deletePerson(id: person.id)
                 onDelete?()
                 dismiss()
             } catch {
@@ -769,7 +769,7 @@ struct PersonDetailView: View {
         isLoadingMentions = true
         Task {
             do {
-                mentions = try await MonicaAPI.shared.fetchCrossref(personId: personId)
+                mentions = try await EpiphanyAPI.shared.fetchCrossref(personId: personId)
             } catch {
                 // No mentions is fine
             }
@@ -802,7 +802,7 @@ struct PersonDetailView: View {
     private func updatePerson(_ person: IndexedPerson) {
         Task {
             do {
-                let updated = try await MonicaAPI.shared.updatePerson(person)
+                let updated = try await EpiphanyAPI.shared.updatePerson(person)
                 onUpdate?(updated)
             } catch {
                 // Revert handled by caller

@@ -303,7 +303,7 @@ struct SituationView: View {
         lamin: Double, lomin: Double, lamax: Double, lomax: Double
     ) async -> (value: [Flight], error: String?) {
         do {
-            let feed = try await MonicaAPI.shared.fetchFlights(
+            let feed = try await EpiphanyAPI.shared.fetchFlights(
                 lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax
             )
             let status = (feed.meta?.status ?? "").lowercased()
@@ -328,7 +328,7 @@ struct SituationView: View {
     private func loadEarthquakesIfEnabled(lat: Double, lon: Double) async -> (value: [Earthquake], error: String?) {
         guard appState.situationEarthquakesEnabled else { return ([], nil) }
         return await loadSection(label: "Earthquakes") {
-            try await MonicaAPI.shared.fetchEarthquakes(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchEarthquakes(lat: lat, lon: lon)
         }
     }
 
@@ -345,7 +345,7 @@ struct SituationView: View {
     ) async -> (value: [Incident], error: String?) {
         guard appState.situationIncidentsEnabled else { return ([], nil) }
         return await loadSection(label: "Incidents") {
-            try await MonicaAPI.shared.fetchIncidents(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchIncidents(lat: lat, lon: lon)
         }
     }
 
@@ -355,7 +355,7 @@ struct SituationView: View {
     ) async -> (value: [WeatherAlert], error: String?) {
         guard appState.situationWeatherEnabled else { return ([], nil) }
         return await loadSection(label: "Weather") {
-            try await MonicaAPI.shared.fetchWeatherAlerts(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchWeatherAlerts(lat: lat, lon: lon)
         }
     }
 
@@ -365,7 +365,7 @@ struct SituationView: View {
     ) async -> (value: [CrimeIncident], error: String?) {
         guard appState.situationCrimeEnabled else { return ([], nil) }
         return await loadSection(label: "Crime") {
-            try await MonicaAPI.shared.fetchCrime(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchCrime(lat: lat, lon: lon)
         }
     }
 
@@ -375,7 +375,7 @@ struct SituationView: View {
     ) async -> (value: [LocalEvent], error: String?) {
         guard appState.situationLocalEventsEnabled else { return ([], nil) }
         return await loadSection(label: "Local Events") {
-            try await MonicaAPI.shared.fetchLocalEvents(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchLocalEvents(lat: lat, lon: lon)
         }
     }
 
@@ -385,7 +385,7 @@ struct SituationView: View {
     ) async -> (value: TrafficData?, error: String?) {
         guard appState.situationTrafficEnabled else { return (nil, nil) }
         do {
-            let data = try await MonicaAPI.shared.fetchTraffic(lat: lat, lon: lon)
+            let data = try await EpiphanyAPI.shared.fetchTraffic(lat: lat, lon: lon)
             return (data, nil)
         } catch {
             return (nil, "Traffic unavailable")
@@ -398,7 +398,7 @@ struct SituationView: View {
     ) async -> (value: [Wildfire], error: String?) {
         guard appState.situationWildfiresEnabled else { wildfires = []; return ([], nil) }
         return await loadSection(label: "Wildfires") {
-            try await MonicaAPI.shared.fetchWildfires(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchWildfires(lat: lat, lon: lon)
         }
     }
 

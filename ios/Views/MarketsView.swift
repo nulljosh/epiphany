@@ -830,7 +830,7 @@ private struct MarketItemDetailView: View {
         isLoading = true
         error = nil
         do {
-            let history = try await MonicaAPI.shared.fetchPriceHistory(symbol: yahooSym, range: selectedRange)
+            let history = try await EpiphanyAPI.shared.fetchPriceHistory(symbol: yahooSym, range: selectedRange)
             priceHistory = history.history
         } catch {
             self.error = "Chart unavailable"
@@ -852,12 +852,12 @@ private struct MarketItemDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            async let symbolNews = MonicaAPI.shared.fetchStockNews(query: item.symbol)
-            async let nameNews = MonicaAPI.shared.fetchStockNews(query: item.name)
+            async let symbolNews = EpiphanyAPI.shared.fetchStockNews(query: item.symbol)
+            async let nameNews = EpiphanyAPI.shared.fetchStockNews(query: item.name)
             let (bySymbol, byName) = try await (symbolNews, nameNews)
             relatedNews = bySymbol.isEmpty ? byName : bySymbol
         } catch {
-            guard let allNews = try? await MonicaAPI.shared.fetchNews() else { return }
+            guard let allNews = try? await EpiphanyAPI.shared.fetchNews() else { return }
             let terms = [item.symbol.lowercased(), item.name.lowercased()]
             relatedNews = allNews.filter { article in
                 terms.contains { article.title.lowercased().contains($0) }
