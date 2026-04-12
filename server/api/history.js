@@ -1,4 +1,38 @@
 import { applyCors } from './_cors.js';
+import { getKv } from './_kv.js';
+
+const CRUMB_KV_KEY = 'yahoo:crumb';
+const CRUMB_TTL_SEC = 3600; // 1 hour
+
+const YAHOO_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.5',
+  'Referer': 'https://finance.yahoo.com/',
+};
+
+async function getYahooCrumb() {
+  const kv = getKv();
+  const cached = await kv.get(CRUMB_KV_KEY);
+  if (cached) return cached;
+
+  // Fetch cookie from Yahoo consent page
+  const cookieRes = await fetch('https://fc.yahoo.com', { headers: YAHOO_HEADERS });
+  const rawCookies = cookieRes.headers.get('set-cookie') || '';
+  const cookie = rawCookies.split(',').map(c => c.split(';')[0].trim()).join('; ');
+
+  // Fetch crumb using that cookie
+  const crumbRes = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+    headers: { ...YAHOO_HEADERS, Cookie: cookie },
+  });
+  if (!crumbRes.ok) throw new Error(`Crumb fetch failed: ${crumbRes.status}`);
+  const crumb = await crumbRes.text();
+  if (!crumb || crumb.includes('<')) throw new Error('Invalid crumb response');
+
+  await kv.set(CRUMB_KV_KEY, crumb, { ex: CRUMB_TTL_SEC });
+  return crumb;
+}
+
 // Vercel serverless proxy for Yahoo Finance historical data
 export default async function handler(req, res) {
   applyCors(req, res);
@@ -41,18 +75,22 @@ export default async function handler(req, res) {
   }
 
   try {
+    const crumb = await getYahooCrumb().catch(() => null);
+    const crumbParam = crumb ? `&crumb=${encodeURIComponent(crumb)}` : '';
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-    const response = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?range=${range}&interval=${interval}`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        signal: controller.signal
-      }
-    );
+    const urls = [
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?range=${range}&interval=${interval}${crumbParam}`,
+      `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?range=${range}&interval=${interval}${crumbParam}`,
+    ];
+
+    let response;
+    for (const url of urls) {
+      response = await fetch(url, { headers: YAHOO_HEADERS, signal: controller.signal });
+      if (response.ok) break;
+    }
 
     clearTimeout(timeoutId);
 

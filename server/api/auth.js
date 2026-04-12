@@ -48,9 +48,8 @@ function clearSessionCookie(res) {
 }
 
 function getBaseUrl() {
-  return process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : DEFAULT_BASE_URL;
+  return process.env.SITE_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : DEFAULT_BASE_URL);
 }
 
 function publicUser(user) {
