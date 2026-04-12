@@ -126,10 +126,9 @@ enum TallyService {
         let body = ["username": username, "password": password]
         request.httpBody = try JSONEncoder().encode(body)
 
-        let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: request)
+            (_, response) = try await session.data(for: request)
         } catch let urlError as URLError where urlError.code == .timedOut {
             throw TallyError.timeout
         } catch {

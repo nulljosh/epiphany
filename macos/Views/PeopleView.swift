@@ -369,7 +369,9 @@ struct PeopleView: View {
                         .animation(.easeInOut, value: suggestionIndex)
                         .onAppear {
                             Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
-                                suggestionIndex = (suggestionIndex + 1) % suggestionPool.count
+                                Task { @MainActor in
+                                    suggestionIndex = (suggestionIndex + 1) % suggestionPool.count
+                                }
                             }
                         }
 
