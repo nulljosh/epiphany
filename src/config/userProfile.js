@@ -1,11 +1,13 @@
 // User-specific financial data. Swap this file per-user or pull from KV.
 // Eventually this will be loaded from the backend per authenticated user.
 
-export const USER_HOLDINGS = [];
+export const USER_HOLDINGS = [
+  // sold all positions 2026-04-13
+];
 
 export const USER_ACCOUNTS = [
-  { name: 'Vacation', type: 'chequing', balance: 0, institution: 'Wealthsimple' },
-  { name: 'TFSA', type: 'tfsa', balance: 500, institution: 'Wealthsimple' },
+  { name: 'Vacation', type: 'chequing', balance: 32.25, institution: 'Wealthsimple' },
+  { name: 'TFSA', type: 'tfsa', balance: 0, institution: 'Wealthsimple' },
 ];
 
 export const USER_BUDGET = {
