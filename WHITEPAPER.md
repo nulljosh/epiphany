@@ -1,12 +1,12 @@
-# Monica -- Technical Whitepaper
+# Epiphany -- Technical Whitepaper
 
-**v4.2.0** | April 2026
+**v1.0.0** | April 2026
 
 ## Overview
 
-Monica is a personal intelligence platform. It aggregates live geospatial data, financial markets, prediction markets, people intelligence, and news into a single map-first interface. Palantir for regular people.
+Epiphany is a personal intelligence platform. It aggregates live geospatial data, financial markets, prediction markets, people intelligence, and news into a single map-first interface. Palantir for regular people.
 
-Live at [monica.heyitsmejosh.com](https://monica.heyitsmejosh.com). Companion apps for iOS, macOS, and watchOS.
+Live at [epiphany.heyitsmejosh.com](https://epiphany.heyitsmejosh.com). Companion apps for iOS, macOS, and watchOS.
 
 ## Architecture
 
@@ -100,7 +100,7 @@ All native apps share the API backend. URLSession with cookie persistence. Peopl
 ## Repo Structure
 
 ```
-monica/
+epiphany/
   api/              Vercel serverless gateway
   server/           API route handlers (auth, stocks, AI, map sources)
   src/              React web app (Vite)
