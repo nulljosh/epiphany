@@ -27,7 +27,7 @@ enum APIError: LocalizedError {
 final class EpiphanyAPI {
     static let shared = EpiphanyAPI()
 
-    private let baseURL = "https://monica.heyitsmejosh.com"
+    private let baseURL = "https://epiphany.heyitsmejosh.com"
     private let session: URLSession
     private let decoder: JSONDecoder
 
