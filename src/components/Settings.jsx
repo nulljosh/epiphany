@@ -44,7 +44,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
 
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
-  const avatarUrl = user?.avatarUrl ? `${user.avatarUrl}?v=${user.avatarUpdatedAt || '1'}` : null;
+  const [avatarVersion, setAvatarVersion] = useState(null);
+  const avatarUrl = user?.avatarUrl ? `${user.avatarUrl}?v=${avatarVersion || user.avatarUpdatedAt || '1'}` : null;
 
   const generateBitmapAvatar = () => {
     const canvas = document.createElement('canvas');
@@ -82,7 +83,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       const base64 = generateBitmapAvatar();
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) });
       const data = await res.json();
-      if (data.ok && data.avatarUrl) { setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
+      if (data.ok && data.avatarUrl) { setAvatarVersion(Date.now()); setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
       else setAvatarMsg({ text: data.error || 'Failed', error: true });
     } catch { setAvatarMsg({ text: 'Failed', error: true }); }
     finally { setAvatarUploading(false); }

@@ -158,7 +158,49 @@ async function fetchFmpBatch(symbolList) {
   }
 }
 
-// Yahoo fallback: per-symbol chart endpoint
+// Yahoo fallback: v7 batch quote (fundamentals) + v8 chart (price history)
+async function fetchYahooBatch(symbolList) {
+  for (const base of YAHOO_URLS) {
+    const url = `${base}/v7/finance/quote?symbols=${symbolList.map(encodeURIComponent).join(',')}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketVolume,regularMarketDayHigh,regularMarketDayLow,regularMarketOpen,regularMarketPreviousClose,fiftyTwoWeekHigh,fiftyTwoWeekLow,marketCap,trailingPE,epsTrailingTwelveMonths,averageDailyVolume3Month,beta,trailingAnnualDividendYield`;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      const response = await fetch(url, { signal: controller.signal, headers: YAHOO_HEADERS });
+      clearTimeout(timeoutId);
+      if (!response.ok) continue;
+      const data = await response.json();
+      const quotes = data.quoteResponse?.result;
+      if (!Array.isArray(quotes) || quotes.length === 0) continue;
+      return quotes
+        .filter(q => typeof q.regularMarketPrice === 'number')
+        .map(q => ({
+          symbol: q.symbol,
+          price: q.regularMarketPrice,
+          change: q.regularMarketChange ?? 0,
+          changePercent: q.regularMarketChangePercent ?? 0,
+          volume: q.regularMarketVolume ?? 0,
+          high: q.regularMarketDayHigh ?? q.regularMarketPrice,
+          low: q.regularMarketDayLow ?? q.regularMarketPrice,
+          open: q.regularMarketOpen ?? q.regularMarketPreviousClose ?? q.regularMarketPrice,
+          prevClose: q.regularMarketPreviousClose ?? q.regularMarketPrice,
+          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? null,
+          fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
+          marketCap: q.marketCap ?? null,
+          peRatio: q.trailingPE ?? null,
+          eps: q.epsTrailingTwelveMonths ?? null,
+          avgVolume: q.averageDailyVolume3Month ?? null,
+          beta: q.beta ?? null,
+          yield: q.trailingAnnualDividendYield != null ? q.trailingAnnualDividendYield * 100 : null,
+          source: 'yahoo',
+        }));
+    } catch (err) {
+      // try next base URL
+    }
+  }
+  return null;
+}
+
+// Yahoo fallback: per-symbol chart endpoint (last resort)
 async function fetchYahooSymbol(symbol) {
   for (const base of YAHOO_URLS) {
     const url = `${base}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
@@ -203,7 +245,7 @@ async function fetchYahooSymbol(symbol) {
           avgVolume: null,
           beta: null,
           yield: null,
-          source: 'yahoo',
+          source: 'yahoo-chart',
         };
       } catch (err) {
         // retry
@@ -253,15 +295,25 @@ export default async function handler(req, res) {
     let stocks = await fetchFmpBatch(symbolList);
     let source = 'fmp';
 
-    // Fallback to Yahoo per-symbol if FMP fails or returns too few
+    // Fallback to Yahoo if FMP fails or returns too few
     if (!stocks || stocks.length < symbolList.length * 0.5) {
       console.warn(`FMP returned ${stocks?.length ?? 0}/${symbolList.length}, falling back to Yahoo`);
       const fmpMap = {};
       if (stocks) stocks.forEach(s => { fmpMap[s.symbol] = s; });
 
       const missing = symbolList.filter(s => !fmpMap[s]);
-      const yahooResults = await chunkedFetch(missing, fetchYahooSymbol, 10, 100);
-      const yahooStocks = yahooResults.filter(r => r !== null);
+
+      // Try Yahoo batch quote first (returns fundamentals)
+      const yahooBatch = await fetchYahooBatch(missing);
+      let yahooStocks = yahooBatch || [];
+
+      // For any still missing, fall back to per-symbol chart endpoint
+      if (yahooStocks.length < missing.length * 0.5) {
+        const batchSymbols = new Set(yahooStocks.map(s => s.symbol));
+        const stillMissing = missing.filter(s => !batchSymbols.has(s));
+        const chartResults = await chunkedFetch(stillMissing, fetchYahooSymbol, 10, 100);
+        yahooStocks = [...yahooStocks, ...chartResults.filter(r => r !== null)];
+      }
 
       stocks = [...Object.values(fmpMap), ...yahooStocks];
       source = stocks.length > 0 ? 'mixed' : 'none';

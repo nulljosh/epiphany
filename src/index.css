@@ -59,7 +59,7 @@ body {
 }
 
 /* Remove browser focus glow on buttons */
-button:focus-visible { outline: 2px solid rgba(0,113,227,0.5); outline-offset: 2px; box-shadow: none; }
+button:focus-visible { outline: none; box-shadow: none; }
 button:focus:not(:focus-visible) { outline: none; box-shadow: none; }
 
 /* Shared pulse animations for anomaly badges */

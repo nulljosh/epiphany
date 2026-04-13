@@ -18,7 +18,7 @@ export default function DesktopLayout({
   return (
     <>
       {/* Ticker */}
-      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28 }}>
+      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28, maxHeight: 36, overflow: 'hidden' }}>
         {tickerItems.length > 0
           ? <Ticker items={tickerItems} theme={t} onItemClick={onTickerItemClick} />
           : <div style={{ height: 28, background: t.glass, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -30,7 +30,7 @@ export default function DesktopLayout({
       {/* Header */}
       <header className="monica-header" style={{ gridColumn: '1 / -1', padding: '10px 16px', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${t.border}`, background: dark ? 'rgba(2,6,23,0.55)' : 'rgba(255,255,255,0.62)', backdropFilter: 'blur(24px) saturate(170%)', WebkitBackdropFilter: 'blur(24px) saturate(170%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>monica</span>
+          <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>epiphany</span>
           <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
           <StatusBar t={t} reliability={stocksReliability} />
           <span style={{ width: 1, height: 14, background: t.border }} />

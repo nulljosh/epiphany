@@ -23,6 +23,15 @@
 - **SEC filings** via EDGAR RSS
 - **StatCan** releases, Bank of Canada rate decisions
 
+### assetmarketcap.com integration
+- Integrate https://assetmarketcap.com/ into Markets view
+- Add serverless route `server/api/assetmarketcap.js` to proxy/cache data
+- Display in Markets tab alongside existing stock/crypto data
+
+### Claude usage + invoices sync workflow
+- Automate syncing Claude Max usage data + invoices into Epiphany
+- Cron job or webhook → store in KV → display in Portfolio or a new "Costs" panel
+
 ### Dead API keys (need renewal)
 - `TOMTOM_API_KEY` - 403 Forbidden. https://developer.tomtom.com/user/register
 - `HERE_API_KEY` - 401 Unauthorized. https://platform.here.com/sign-up

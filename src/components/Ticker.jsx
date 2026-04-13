@@ -137,7 +137,7 @@ const Ticker = memo(({ items, theme, onItemClick }) => {
       type="button"
       key={`${item.key}-${clone}-${idx}`}
       onClick={(e) => {
-        const threshold = e.pointerType === 'touch' ? 10 : 5;
+        const threshold = e.pointerType === 'touch' ? 12 : 10;
         if (dragDistanceRef.current > threshold) { e.preventDefault(); return; }
         if (onItemClick) onItemClick(item.name);
       }}

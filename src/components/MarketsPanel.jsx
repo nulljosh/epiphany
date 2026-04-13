@@ -233,10 +233,23 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         if (!s.symbol || typeof s.price !== 'number') return;
         items.push({
           symbol: s.symbol,
-          name: s.symbol,
+          name: s.name || s.symbol,
           price: s.price,
           changePercent: s.changePercent || 0,
           kind: 'stock',
+          avgVolume: s.avgVolume,
+          marketCap: s.marketCap,
+          peRatio: s.peRatio,
+          eps: s.eps,
+          beta: s.beta,
+          yield: s.yield,
+          open: s.open,
+          high: s.high,
+          low: s.low,
+          prevClose: s.prevClose,
+          volume: s.volume,
+          week52High: s.week52High,
+          week52Low: s.week52Low,
         });
       });
     }
