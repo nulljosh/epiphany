@@ -1,16 +1,6 @@
-# Monica Roadmap
+# Epiphany Roadmap
 
 ## Active
-
-### Rename: Monica → Epiphany
-- Rename GitHub repo `nulljosh/monica` → `nulljosh/epiphany`
-- Update Vercel project name + domain → `epiphany.heyitsmejosh.com`
-- Update iOS bundle ID + display name
-- Update macOS bundle ID + display name
-- Update all READMEs, CLAUDE.md files, badge URLs
-- Update memory entry in `~/.claude/projects/`
-- Update `Code/CLAUDE.md` project list
-- Decision confirmed 2026-04-10. Execute next session.
 
 ### Stripe $1/week
 - Have: `server/api/stripe.js`, `server/api/stripe-webhook.js`, `user.tier` in KV
@@ -56,6 +46,7 @@
 
 ## Done
 
+- Rename: Monica → Epiphany (GitHub repo, Vercel, iOS/macOS bundle IDs, READMEs, CLAUDE.md, memory)
 - STALE indicator / heartbeat
 - Macro pulse strip (dynamic from `/api/macro`)
 - Map layers (11 layers, coord validation, mapLayers filtering)
