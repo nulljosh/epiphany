@@ -22,13 +22,13 @@
 - Automate syncing Claude Max usage data + invoices into Epiphany
 - Cron job or webhook → store in KV → display in Portfolio or a new "Costs" panel
 
-### Dead API keys (need renewal)
-- `TOMTOM_API_KEY` - 403 Forbidden. https://developer.tomtom.com/user/register
-- `HERE_API_KEY` - 401 Unauthorized. https://platform.here.com/sign-up
-- `FIRMS_MAP_KEY` - higher-res wildfire data. https://firms.modaps.eosdis.nasa.gov/api/area/
-- `TICKETMASTER_API_KEY` - local events. https://developer.ticketmaster.com/
-- `FMP_API_KEY` - stock data. https://site.financialmodelingprep.com/developer/docs
-- `BLOB_READ_WRITE_TOKEN` - breaks `/api/latest`
+### Dormant features (re-enable when keys available)
+- Traffic layer (TOMTOM) -- https://developer.tomtom.com/user/register
+- Geocoding / places (HERE) -- https://platform.here.com/sign-up
+- High-res wildfire (FIRMS_MAP) -- https://firms.modaps.eosdis.nasa.gov/api/area/
+- Local events (TICKETMASTER) -- https://developer.ticketmaster.com/
+- FMP stock data -- https://site.financialmodelingprep.com/developer/docs
+- Blob-cached latest snapshot (`/api/latest`) -- restore handler body when ready
 
 ### UI polish
 - Map event UX (Republic SF-inspired filtering, event cards)
@@ -67,3 +67,4 @@
 - Palantir-style icon across all platforms
 - Reddit + CoinGecko data sources added
 - Whitepaper written
+- Dead API key cleanup (5 expired Vercel env vars removed; dead fetches stripped in fd4d5b2)
