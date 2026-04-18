@@ -68,3 +68,17 @@
 - Reddit + CoinGecko data sources added
 - Whitepaper written
 - Dead API key cleanup (5 expired Vercel env vars removed; dead fetches stripped in fd4d5b2)
+
+## From 2026-04-18 PDF (pending)
+
+In most-to-least relevance order:
+
+1. **Password reset verification** -- flow is wired (`server/api/auth.js:340-385`, Resend in `_email.js`) but email FROM still says `Monica <noreply@monica.heyitsmejosh.com>` (`server/api/_email.js:11`). Fix display name to Epiphany. Then end-to-end test: forgot-password for jatrommel@gmail.com, confirm email arrives, click link, set password, run `balance update`.
+2. **Mobile stocks view overflow** -- `src/components/StockDetail.jsx:741-787` timeframe (1D/1W/1M/...) and chart-type (Heikin Ashi/Candles/...) rows scroll horizontally but users don't see cue on iOS. Add `@media (max-width: 520px)` with `flex-wrap: wrap`, `padding: 4px 8px`, `font-size: 11px`. Also: top ticker bar overlays price -- give detail modal `paddingTop: 44px` on mobile.
+3. **Map events geocoding** -- `src/components/LiveMapBackdrop.jsx:550-560` drops GLOBAL events; when a keyword like "Langley" happens to match, a global event gets pinned to Langley City. Fix in `server/api/events.js`: add country-centroid JSON lookup, attach `lat`/`lon`. Client: use server coords first, keyword as fallback, drop silently if both absent.
+4. **Avatar regen on profile icon click** -- Settings.jsx:50-90 already regenerates on click. Wire same handler to the profile photo icon in header/nav so every click cycles the avatar (matches Claude behavior). Keep unseeded random.
+5. **AI Enrich button fails** -- `server/api/people-enrich.js:48,78-88`. Vercel has no `claude` CLI so fallback fails. Set `ANTHROPIC_API_KEY` in Vercel prod env, remove `runClaudeCLI` fallback (dead code on Vercel), include `err.message` in `:168` catch so frontend shows specifics instead of "Enrichment failed".
+6. **Whitepaper bump + slim + README link** -- `WHITEPAPER.md` v1.0.0 -> v1.1.0, trim 127 lines to ~80 (collapse data-sources table to link to `docs/data-sources.md`, drop Architecture/Repo Structure redundancy). `README.md:8` link `[Whitepaper](whitepaper.md)` -> `(WHITEPAPER.md)` (case-correct for Linux/Vercel). Badge `v1.0.0--beta` -> `v1.1.0`.
+7. **Roadmap tab wiring** -- `src/components/RoadmapProjection.jsx` and `src/utils/roadmapSim.js` are committed but FinancePanel.jsx wasn't patched this session (git pack corruption required a reclone). Add a 5th "roadmap" tab: push `'roadmap'` into the tabs array and render `{tab === 'roadmap' && <RoadmapProjection t={t} />}` near line 1425.
+8. **`/cleanup` skill** -- reusable across all projects. Behavior: merge plan.md into ROADMAP.md, strip items marked done/completed/fixed, verify README version badge + whitepaper link casing. Install at `~/.claude/skills/cleanup/SKILL.md`.
+
