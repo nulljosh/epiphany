@@ -86,7 +86,7 @@ In most-to-least relevance order:
 ## Brain dump 2026-04-23
 - [x] Stocks ticker font size reduced (12 -> 10)
 - [ ] Make ticker items clickable to open stock view (currently pauses cycle)
-- [ ] People tab: add clear search (X) button
+- [x] People tab: add clear search (X) button
 - [ ] Avatar generation: "new avatar" toast fires but image doesn't change
 - [ ] Integrate goals better, update debts to realistic values
 - [ ] Reset API keys (Vercel breach)
