@@ -1720,6 +1720,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>
       {/* --- SEARCH --- */}
+          <div style={{ position: 'relative' }}>
           <input
             ref={inputRef}
             type="text"
@@ -1729,7 +1730,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
             onChange={e => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             style={{
-              width: '100%', padding: '10px 14px', borderRadius: 10,
+              width: '100%', padding: '10px 36px 10px 14px', borderRadius: 10,
               border: `1px solid ${t.border}`,
               background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
               color: t.text, fontSize: 14, fontFamily: font, outline: 'none',
@@ -1739,6 +1740,21 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
             onFocus={e => e.target.style.borderColor = t.accent || '#0071e3'}
             onBlur={e => e.target.style.borderColor = t.border}
           />
+          {search && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => { setSearch(''); inputRef.current?.focus(); }}
+              style={{
+                position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                width: 22, height: 22, borderRadius: '50%',
+                border: 'none', background: 'transparent', color: t.textSecondary || t.text,
+                cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >×</button>
+          )}
+          </div>
 
           {loading && !results && (
             <div style={{ textAlign: 'center', padding: '32px 0', color: t.textSecondary, fontSize: 13 }}>
