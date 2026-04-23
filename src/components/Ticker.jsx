@@ -144,7 +144,7 @@ const Ticker = memo(({ items, theme, onItemClick }) => {
       style={{
         display: 'flex',
         gap: 6,
-        fontSize: 12,
+        fontSize: 10,
         opacity: 0.82,
         background: 'none',
         border: 'none',

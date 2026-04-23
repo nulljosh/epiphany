@@ -82,3 +82,13 @@ In most-to-least relevance order:
 7. **Roadmap tab wiring** -- `src/components/RoadmapProjection.jsx` and `src/utils/roadmapSim.js` are committed but FinancePanel.jsx wasn't patched this session (git pack corruption required a reclone). Add a 5th "roadmap" tab: push `'roadmap'` into the tabs array and render `{tab === 'roadmap' && <RoadmapProjection t={t} />}` near line 1425.
 8. **`/cleanup` skill** -- reusable across all projects. Behavior: merge plan.md into ROADMAP.md, strip items marked done/completed/fixed, verify README version badge + whitepaper link casing. Install at `~/.claude/skills/cleanup/SKILL.md`.
 
+
+## Brain dump 2026-04-23
+- [x] Stocks ticker font size reduced (12 -> 10)
+- [ ] Make ticker items clickable to open stock view (currently pauses cycle)
+- [ ] People tab: add clear search (X) button
+- [ ] Avatar generation: "new avatar" toast fires but image doesn't change
+- [ ] Integrate goals better, update debts to realistic values
+- [ ] Reset API keys (Vercel breach)
+- [ ] Per-service API audit: keep/drop, data populated in area?, reliable?, safe?
+- [ ] Tighten overall security + vulnerabilities
