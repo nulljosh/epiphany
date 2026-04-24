@@ -155,6 +155,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
 
 function SectorGroups({ filtered, watchlist, toggleSymbol, isAuthenticated, t, glass, search, onSelect }) {
   const [expanded, setExpanded] = useState({});
+  const watchlistSet = useMemo(() => new Set(watchlist || []), [watchlist]);
   const sectors = useMemo(() => {
     const groups = {};
     for (const item of filtered) {
@@ -193,7 +194,7 @@ function SectorGroups({ filtered, watchlist, toggleSymbol, isAuthenticated, t, g
             key={`${sector}-${item.symbol}`}
             symbol={item.symbol} name={item.name} price={item.price}
             changePercent={item.changePercent}
-            isWatchlisted={watchlist?.includes(item.symbol)}
+            isWatchlisted={watchlistSet.has(item.symbol)}
             onToggle={toggleSymbol} canToggle={isAuthenticated} t={t}
             onClick={() => onSelect(item)}
           />
@@ -278,15 +279,16 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     return items;
   }, [stocks, liveAssets]);
 
+  const watchlistSet = useMemo(() => new Set(watchlist || []), [watchlist]);
+
   const watchlistItems = useMemo(() => {
     if (!watchlist || watchlist.length === 0) return [];
-    return allItems.filter(item => watchlist.includes(item.symbol));
-  }, [allItems, watchlist]);
+    return allItems.filter(item => watchlistSet.has(item.symbol));
+  }, [allItems, watchlistSet]);
 
   const filtered = useMemo(() => {
-    const wlSet = new Set(watchlist || []);
     let list = allItems.filter(item => {
-      if (wlSet.has(item.symbol)) return false;
+      if (watchlistSet.has(item.symbol)) return false;
       if (!search) return true;
       const q = search.toLowerCase();
       return item.symbol.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
@@ -299,7 +301,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       return sortAsc ? cmp : -cmp;
     });
     return list;
-  }, [allItems, search, sortKey, sortAsc, watchlist]);
+  }, [allItems, search, sortKey, sortAsc, watchlistSet]);
 
   const topMovers = useMemo(() => {
     if (filtered.length === 0) return [];
@@ -417,7 +419,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               key={`mover-${item.symbol}`}
               symbol={item.symbol} name={item.name} price={item.price}
               changePercent={item.changePercent}
-              isWatchlisted={watchlist?.includes(item.symbol)}
+              isWatchlisted={watchlistSet.has(item.symbol)}
               onToggle={toggleSymbol} canToggle={isAuthenticated} t={t}
               onClick={() => setSelectedStock(item)}
             />

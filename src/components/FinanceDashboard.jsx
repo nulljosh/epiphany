@@ -35,6 +35,8 @@ const TIMELINE_EVENTS = [
   { label: 'Debt-free', date: '~Early 2028', amount: '$0 debt', status: 'done', description: 'Savings begin' },
 ];
 
+const VARIABLE_CATEGORIES = new Set(['Food', 'Vape', 'Weed', 'Other']);
+
 export default function FinanceDashboard({ dark, t, spending, totalIncome, debt: debtItems, budget, incomePhases, totalExpenses, surplus }) {
   const font = SYSTEM_FONT;
   const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
@@ -44,11 +46,10 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
     [debtItems]
   );
 
-  const variableCategories = new Set(['Food', 'Vape', 'Weed', 'Other']);
   const fixedExpenses = useMemo(() => {
     const expenses = budget?.expenses || [];
     return expenses
-      .filter(e => !variableCategories.has(e.name))
+      .filter(e => !VARIABLE_CATEGORIES.has(e.name))
       .reduce((s, e) => s + (e.amount || 0), 0);
   }, [budget]);
 
@@ -102,12 +103,14 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
     return projectNetWorth(totalDebt, projectionPhases, 42);
   }, [totalDebt, projectionPhases]);
 
-  const vapeExpense = useMemo(() => {
-    return budget?.expenses?.find(e => e.name === 'Vape')?.amount || 0;
-  }, [budget]);
-
-  const weedExpense = useMemo(() => {
-    return budget?.expenses?.find(e => e.name === 'Weed')?.amount || 0;
+  const { vapeExpense, weedExpense } = useMemo(() => {
+    const expenses = budget?.expenses || [];
+    let vape = 0, weed = 0;
+    for (const e of expenses) {
+      if (e.name === 'Vape') vape = e.amount || 0;
+      else if (e.name === 'Weed') weed = e.amount || 0;
+    }
+    return { vapeExpense: vape, weedExpense: weed };
   }, [budget]);
 
   const vapeImpactData = useMemo(() => {
