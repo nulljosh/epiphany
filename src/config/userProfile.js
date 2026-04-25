@@ -28,8 +28,7 @@ export const USER_BUDGET = {
 export const USER_DEBT = [
   { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
   { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
-  { name: 'Mom', balance: 270, rate: 0, minPayment: 0 },
-  { name: 'Ben', balance: 110, rate: 0, minPayment: 0 },
+  { name: 'Mom', balance: 135, rate: 0, minPayment: 0 },
 ];
 
 export const USER_TELECOM = {
