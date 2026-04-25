@@ -71,8 +71,8 @@ function getSymbolHash(symbolList) {
 function getKvKeys(symbolList) {
   const hash = getSymbolHash(symbolList);
   return {
-    fresh: `stocks:free:v1:${hash}`,
-    stale: `stocks:free:v1:stale:${hash}`,
+    fresh: `stocks:free:v2:${hash}`,
+    stale: `stocks:free:v2:stale:${hash}`,
   };
 }
 

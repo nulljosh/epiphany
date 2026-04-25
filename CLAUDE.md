@@ -1,6 +1,6 @@
 # Epiphany
 
-v1.0.0-beta -- Personal intelligence platform. Palantir for regular people.
+v1.0.1-beta -- Personal intelligence platform. Palantir for regular people.
 
 ## Rules
 
@@ -30,4 +30,6 @@ Deploy: Vercel. Repo: github.com/nulljosh/epiphany
 - **AI**: `server/api/ai.js` (streaming + 10 tools), `src/hooks/useAi.js`, `src/components/AiPanel.jsx`
 - **Map**: `src/components/LiveMapBackdrop.jsx` (11 data layers, MapLibre GL)
 - **KV**: `server/api/_kv.js` (Upstash Redis)
+- **Stocks**: `server/api/stocks-free.js` -- FMP batch (price/volume), Yahoo v7 supplement (P/E, mkt cap, EPS, beta, yield when FMP omits them). Cache key `stocks:free:v2:*`. Web + watchOS use this; iOS/macOS use `server/api/stocks.js`.
+- **Avatar**: `server/api/avatar.js` -- accepts JPEG or SVG (`format: 'svg'`), stores to Vercel Blob. Web generates 8-bit pixel art SVG; iOS/macOS use photo picker JPEG.
 - **Roadmap**: `ROADMAP.md`
