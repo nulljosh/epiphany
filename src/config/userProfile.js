@@ -3,6 +3,7 @@
 
 export const USER_HOLDINGS = [
   // sold all positions 2026-04-13
+  { symbol: 'GOOGL', shares: 0.0153, costBasis: 196 },
 ];
 
 export const USER_ACCOUNTS = [
@@ -28,7 +29,8 @@ export const USER_BUDGET = {
 export const USER_DEBT = [
   { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
   { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
-  { name: 'Mom', balance: 135, rate: 0, minPayment: 0 },
+  { name: 'Dad', balance: 25, rate: 0, minPayment: 0, note: 'Beer' },
+  { name: 'Mom', balance: 150, rate: 0, minPayment: 0 },
 ];
 
 export const USER_TELECOM = {
