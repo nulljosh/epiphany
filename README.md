@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80" style="border-radius:16px">
 
 # Epiphany.
-![version](https://img.shields.io/badge/version-v1.0.1--beta-blue)
+![version](https://img.shields.io/badge/version-v1.0.2--beta-blue)
 
 Personal intelligence platform. Map, markets, and people. Palantir for regular people.
 
@@ -19,6 +19,7 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
 - **Command Bar** (Cmd+K) for universal search
 - **Situation Monitor** with severity cards, source health, event timeline
 - **Auth + Billing** with Free and Premium ($1/wk) tiers
+- **Landing Page** with animated hero, market ticker, feature showcase, and pricing
 - **PWA** with offline service worker
 - **Companions** for iOS, macOS, and watchOS
 
