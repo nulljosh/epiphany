@@ -24,6 +24,7 @@ import PeoplePanel from './components/PeoplePanel';
 import CommandBar from './components/CommandBar';
 import AiPanel from './components/AiPanel';
 import AuthPage from './pages/AuthPage';
+import LandingPage from './pages/LandingPage';
 import DesktopLayout from './layouts/DesktopLayout';
 import MobileLayout from './layouts/MobileLayout';
 
@@ -160,6 +161,7 @@ export default function App() {
   const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout, refresh, changeName, changeEmail, changePassword } = useAuth();
   const resetToken = useMemo(() => new URLSearchParams(window.location.search).get('token'), []);
   const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
+  const [showLanding, setShowLanding] = useState(true);
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
   const [dark, setDark] = useState(true);
@@ -992,6 +994,16 @@ const reset = useCallback(() => {
   const handleMapReady = useCallback((map) => {
     mapInstanceRef.current = map;
   }, []);
+
+  // Landing page for unauthenticated visitors
+  if (!isAuthenticated && !authLoading && showLanding) {
+    return (
+      <LandingPage
+        onRegister={() => { setShowLanding(false); setAuthView('register'); }}
+        onLogin={() => { setShowLanding(false); setAuthView('login'); }}
+      />
+    );
+  }
 
   // Auth gate
   const authGate = AuthPage({ authLoading, isAuthenticated, authView, setAuthView, authError, resetToken, login, register, t });
