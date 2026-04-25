@@ -2,6 +2,33 @@
 
 ## Active
 
+### Net Worth + Predictions integration
+- Pull `USER_ACCOUNTS`, `USER_DEBT`, `USER_GOALS`, `USER_INCOME_PHASES` from `userProfile.js` into a unified net-worth view
+- Chart: current net worth over time (from portfolio history) + projected trajectory
+- Run `projectNetWorth()` from `debtProjections.js` using real KV portfolio snapshots
+- Show debt-free date, savings milestone dates, surplus trend
+- Entry point: `FinanceDashboard.jsx` already has the simulation infra — wire in real data
+
+### Fix Vercel monorepo deployment
+- The `apps/` monorepo may be trying to deploy all sub-apps as a single Vercel project
+- Check `.vercel/project.json` — each sub-app (epiphany, dose, tally, etc.) must have its own linked Vercel project
+- Audit `nulljosh-9577s-projects` Vercel team for orphan projects consuming free tier (currently at ~75% of 1M req)
+- Fix: `cd apps/epiphany && vercel link` to ensure it's linked to its own project, not the monorepo root
+
+### Local LLM cost reduction (Ollama)
+- Already installed: `gemma4:e2b` (Ollama, 7.2GB, 128K context)
+- Registered in `~/.openclaw/agents/main/agent/models.json`
+- Wire Epiphany AI panel to support Ollama endpoint as a fallback (`http://localhost:11434/api/generate`)
+- Add model selector in Settings: `claude` (API) vs `ollama/gemma4:e2b` (local, free)
+- Gate: only show local option when Ollama is running (health check `http://localhost:11434`)
+
+### Integrate "remaining days" life conversation
+- Pull context from previous conversations about life planning / remaining-days framework
+- Add to `apps/life` project or create a new `Life` section within Epiphany
+- Connect to `RoadmapProjection.jsx` or a new view showing milestones, time horizons, probability curves
+
+
+
 ### Stripe $1/week
 - Have: `server/api/stripe.js`, `server/api/stripe-webhook.js`, `user.tier` in KV
 - TODO: Create price in Stripe dashboard, wire webhook to upgrade tier, add feature gates

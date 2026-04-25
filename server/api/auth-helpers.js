@@ -11,7 +11,7 @@ export function parseCookies(req) {
 
 export async function getSessionUser(req) {
   const cookies = parseCookies(req);
-  const token = cookies.monica_session;
+  const token = cookies.epiphany_session;
   if (!token) return null;
   const kv = await getKv();
   if (!kv) return null;

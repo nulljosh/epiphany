@@ -76,23 +76,73 @@ function fadeStyle(mounted, delay = 0) {
   return { animation: mounted ? `authFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both` : 'none', opacity: mounted ? undefined : 0 };
 }
 
+function UserAvatar({ name, avatarUrl }) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name || 'User'}
+        style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(0,228,106,0.3)' }}
+      />
+    );
+  }
+  const initials = name ? name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '?';
+  return (
+    <div style={{
+      width: 56, height: 56, borderRadius: '50%',
+      background: 'rgba(0,228,106,0.12)', border: '2px solid rgba(0,228,106,0.25)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 20, fontWeight: 700, color: '#00e46a', fontFamily: FONT,
+    }}>
+      {initials}
+    </div>
+  );
+}
+
 export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
+  const [step, setStep] = useState('email'); // 'email' | 'password'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [lookupData, setLookupData] = useState(null); // { found, name, avatarUrl }
+  const [lookingUp, setLookingUp] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotMsg, setForgotMsg] = useState('');
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const passwordRef = useRef(null);
 
   useEffect(() => { requestAnimationFrame(() => setMounted(true)); }, []);
 
-  const handleSubmit = async (e) => {
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLookingUp(true);
+    try {
+      const res = await fetch(`/api/auth?action=lookup&email=${encodeURIComponent(email.trim())}`, { credentials: 'include' });
+      const data = await res.json();
+      setLookupData(data);
+    } catch {
+      setLookupData({ found: false });
+    }
+    setLookingUp(false);
+    setStep('password');
+    setTimeout(() => passwordRef.current?.focus(), 80);
+  };
+
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     await onLogin(email, password);
     setSubmitting(false);
+  };
+
+  const handleBack = () => {
+    setStep('email');
+    setLookupData(null);
+    setPassword('');
+    setForgotMode(false);
   };
 
   const handleForgot = async (e) => {
@@ -120,33 +170,85 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36, ...fadeStyle(mounted, 0.05) }}>
           <div style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>M</span>
+            <span style={{ fontSize: 22, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>E</span>
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Personal intelligence platform</p>
         </div>
 
-        {/* Form */}
-        <div style={{ ...card, ...fadeStyle(mounted, 0.12) }}>
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 20 }}>
-              <label style={label}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" placeholder="you@example.com" />
+        {/* Step 1: Email */}
+        {step === 'email' && (
+          <div style={{ ...card, ...fadeStyle(mounted, 0.12) }}>
+            <form onSubmit={handleEmailSubmit}>
+              <div style={{ marginBottom: 24 }}>
+                <label style={label}>Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                  className="auth-input"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <button type="submit" disabled={lookingUp} className="auth-btn">
+                {lookingUp ? 'Looking up...' : 'Continue'}
+              </button>
+            </form>
+            <p style={{ textAlign: 'center', marginTop: 24, marginBottom: 0, fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>
+              No account? <button onClick={onSwitchToRegister} className="auth-link-accent">Create one</button>
+            </p>
+          </div>
+        )}
+
+        {/* Step 2: Password (with user identity shown) */}
+        {step === 'password' && (
+          <div style={{ ...card, animation: 'authFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+            {/* User identity card */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <UserAvatar name={lookupData?.name} avatarUrl={lookupData?.avatarUrl} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {lookupData?.name && (
+                  <div style={{ fontWeight: 600, fontSize: 15, color: '#fff', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {lookupData.name}
+                  </div>
+                )}
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {email}
+                </div>
+              </div>
+              <button type="button" onClick={handleBack} className="auth-link" style={{ flexShrink: 0, fontSize: 11 }}>
+                Change
+              </button>
             </div>
-            <div style={{ marginBottom: 14 }}>
-              <label style={label}>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Min 8 characters" />
-            </div>
-            <div style={{ marginBottom: 28, textAlign: 'right' }}>
-              <button type="button" onClick={() => { setForgotMode(true); setForgotMsg(''); setForgotEmail(email); }} className="auth-link">Forgot password?</button>
-            </div>
-            {error && <div style={errorBox}>{error}</div>}
-            <button type="submit" disabled={submitting} className="auth-btn">{submitting ? 'Signing in...' : 'Sign In'}</button>
-          </form>
-          <p style={{ textAlign: 'center', marginTop: 24, marginBottom: 0, fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>
-            No account? <button onClick={onSwitchToRegister} className="auth-link-accent">Create one</button>
-          </p>
-        </div>
+
+            <form onSubmit={handlePasswordSubmit}>
+              <div style={{ marginBottom: 14 }}>
+                <label style={label}>Password</label>
+                <input
+                  ref={passwordRef}
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="auth-input"
+                  placeholder="Your password"
+                />
+              </div>
+              <div style={{ marginBottom: 28, textAlign: 'right' }}>
+                <button type="button" onClick={() => { setForgotMode(true); setForgotMsg(''); setForgotEmail(email); }} className="auth-link">
+                  Forgot password?
+                </button>
+              </div>
+              {error && <div style={errorBox}>{error}</div>}
+              <button type="submit" disabled={submitting} className="auth-btn">
+                {submitting ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Forgot password */}
         {forgotMode && (
@@ -169,7 +271,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', ...fadeStyle(mounted, 0.25) }}>v3.5.2</div>
+        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', ...fadeStyle(mounted, 0.25) }}>v3.5.3</div>
       </div>
     </div>
   );

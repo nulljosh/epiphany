@@ -20,15 +20,16 @@ export const USER_BUDGET = {
     { name: 'Cell (Bell)', amount: 167, frequency: 'monthly' },
     { name: 'Vape', amount: 150, frequency: 'monthly' },
     { name: 'Weed', amount: 75, frequency: 'monthly' },
-    { name: 'Claude', amount: 80, frequency: 'monthly' },
+    { name: 'Claude', amount: 130, frequency: 'monthly' },
     { name: 'Other', amount: 140, frequency: 'monthly' },
   ],
 };
 
 export const USER_DEBT = [
   { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
-  { name: 'Telus', balance: 800, rate: 0, minPayment: 208 },
-  { name: 'Bell', balance: 942, rate: 0, minPayment: 167 },
+  { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
+  { name: 'Mom', balance: 270, rate: 0, minPayment: 0 },
+  { name: 'Ben', balance: 110, rate: 0, minPayment: 0 },
 ];
 
 export const USER_TELECOM = {
@@ -47,7 +48,7 @@ export const USER_TELECOM = {
 export const USER_BILLS = [
   { name: 'Telus', provider: 'TELUS Mobility', amount: 208.47, dueDay: 15, category: 'phone', account: '44699967' },
   { name: 'Bell', provider: 'Bell Mobility', amount: 167, dueDay: 23, category: 'phone' },
-  { name: 'Claude', provider: 'Anthropic', amount: 31.36, dueDay: 25, category: 'subscription' },
+  { name: 'Claude Max', provider: 'Anthropic', amount: 136.60, dueDay: 5, category: 'subscription' },
   { name: 'Compass', provider: 'TransLink', amount: 10, dueDay: 27, category: 'transit' },
 ];
 

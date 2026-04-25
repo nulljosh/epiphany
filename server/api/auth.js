@@ -28,7 +28,7 @@ async function checkRateLimit(kv, ip) {
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 const VERIFY_TTL = 24 * 60 * 60; // 24 hours
 const RESET_TTL = 60 * 60; // 1 hour
-const DEFAULT_BASE_URL = 'https://monica.heyitsmejosh.com';
+const DEFAULT_BASE_URL = 'https://epiphany.heyitsmejosh.com';
 
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -37,13 +37,13 @@ function generateToken() {
 function setSessionCookie(res, token) {
   const secure = process.env.NODE_ENV === 'production';
   res.setHeader('Set-Cookie', [
-    `monica_session=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL}; SameSite=Lax${secure ? '; Secure' : ''}`,
+    `epiphany_session=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL}; SameSite=Lax${secure ? '; Secure' : ''}`,
   ]);
 }
 
 function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', [
-    'monica_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax',
+    'epiphany_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax',
   ]);
 }
 
@@ -135,6 +135,23 @@ export default async function handler(req, res) {
     }
   }
 
+  // GET: lookup user by email (for 2-step login — only exposes name + avatar)
+  if (req.method === 'GET' && action === 'lookup') {
+    const { email } = req.query;
+    if (!email) return errorResponse(res, 400, 'Email is required');
+    try {
+      const user = await kv.get(`user:${email.toLowerCase().trim()}`);
+      if (!user) return res.status(200).json({ found: false });
+      return res.status(200).json({
+        found: true,
+        name: user.name || user.fullName || null,
+        avatarUrl: user.avatarUrl || null,
+      });
+    } catch {
+      return res.status(200).json({ found: false });
+    }
+  }
+
   if (req.method !== 'POST') {
     return errorResponse(res, 405, 'Method not allowed');
   }
@@ -187,7 +204,7 @@ export default async function handler(req, res) {
       const verifyUrl = `${getBaseUrl()}/api/auth?action=verify-email&token=${verifyToken}`;
       sendEmail({
         to: normalizedEmail,
-        subject: 'Verify your Monica account',
+        subject: 'Verify your Epiphany account',
         html: `<p>Click <a href="${verifyUrl}">here</a> to verify your email address.</p><p>Or copy this link: ${verifyUrl}</p>`,
       }).catch((err) => console.warn('[AUTH] Verification email failed:', err.message));
 
@@ -351,7 +368,7 @@ export default async function handler(req, res) {
         const resetUrl = `${getBaseUrl()}/reset?token=${resetToken}`;
         sendEmail({
           to: email.toLowerCase(),
-          subject: 'Reset your Monica password',
+          subject: 'Reset your Epiphany password',
           html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p><p>Or copy this link: ${resetUrl}</p>`,
         }).catch((err) => console.warn('[AUTH] Reset email failed:', err.message));
       }
