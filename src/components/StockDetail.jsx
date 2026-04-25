@@ -225,7 +225,7 @@ function computeATR(data, period) {
   return result;
 }
 
-const STORAGE_KEY = 'monica-indicators';
+const STORAGE_KEY = 'epiphany-indicators';
 
 function loadIndicators() {
   try {
@@ -721,7 +721,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             {symbol}
           </div>
           <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 4 }}>
-            {stock.name || symbol}
+            {d.shortName || d.longName || d.name || stock.name}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: t.text }}>

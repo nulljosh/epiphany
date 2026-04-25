@@ -215,9 +215,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   useEffect(() => {
     if (!initialSymbol || !stocks) return;
     const data = stocks[initialSymbol];
-    if (data) {
-      setSelectedStock({ symbol: initialSymbol, name: data.name || initialSymbol, price: data.price, changePercent: data.changePercent || 0 });
-    }
+    setSelectedStock({ symbol: initialSymbol, name: data?.name || initialSymbol, price: data?.price ?? 0, changePercent: data?.changePercent ?? 0 });
     onConsumeInitialSymbol?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSymbol]);

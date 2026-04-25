@@ -47,41 +47,39 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [avatarVersion, setAvatarVersion] = useState(null);
   const avatarUrl = user?.avatarUrl ? `${user.avatarUrl}?v=${avatarVersion || user.avatarUpdatedAt || '1'}` : null;
 
-  const generateBitmapAvatar = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
+  const generatePixelArtSVG = () => {
     const palettes = [
-      ['#e63946','#457b9d','#1d3557','#f1faee','#a8dadc'],
-      ['#7b2d8b','#c77dff','#e0aaff','#10002b','#240046'],
-      ['#0077b6','#00b4d8','#90e0ef','#caf0f8','#03045e'],
-      ['#d62828','#f77f00','#fcbf49','#eae2b7','#003049'],
-      ['#2d6a4f','#52b788','#b7e4c7','#d8f3dc','#1b4332'],
+      ['#e63946', '#457b9d', '#1d3557'],
+      ['#7b2d8b', '#c77dff', '#e0aaff'],
+      ['#0077b6', '#00b4d8', '#90e0ef'],
+      ['#d62828', '#f77f00', '#fcbf49'],
+      ['#2d6a4f', '#52b788', '#b7e4c7'],
     ];
+    const bgs = ['#111', '#0d0d0d', '#1a1a1a', '#0f0f1a', '#0a1a0a'];
     const palette = palettes[Math.floor(Math.random() * palettes.length)];
-    // Fill background
-    ctx.fillStyle = palette[3];
-    ctx.fillRect(0, 0, 64, 64);
-    // Symmetric 4x4 tile pattern (mirrored left-right)
-    const tileSize = 8;
-    for (let row = 0; row < 8; row++) {
-      for (let col = 0; col < 4; col++) {
-        if (Math.random() > 0.45) {
-          ctx.fillStyle = palette[Math.floor(Math.random() * 3)];
-          ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
-          ctx.fillRect((7 - col) * tileSize, row * tileSize, tileSize, tileSize);
-        }
+    const bg = bgs[Math.floor(Math.random() * bgs.length)];
+    const px = 8; const size = 8; const total = size * px;
+    const grid = Array.from({ length: size }, () =>
+      Array.from({ length: Math.ceil(size / 2) }, () =>
+        Math.random() > 0.45 ? Math.floor(Math.random() * 3) : -1
+      )
+    );
+    let rects = '';
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        const ci = grid[row][col < size / 2 ? col : size - 1 - col];
+        if (ci >= 0) rects += `<rect x="${col * px}" y="${row * px}" width="${px}" height="${px}" fill="${palette[ci]}"/>`;
       }
     }
-    return canvas.toDataURL('image/jpeg', 0.9);
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="${total}" height="${total}" shape-rendering="crispEdges"><rect width="${total}" height="${total}" fill="${bg}"/>${rects}</svg>`;
   };
 
   const handleGenerateAvatar = async () => {
     setAvatarUploading(true);
     setAvatarMsg(null);
     try {
-      const base64 = generateBitmapAvatar();
-      const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) });
+      const base64 = btoa(generatePixelArtSVG());
+      const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
       const data = await res.json();
       if (data.ok && data.avatarUrl) { setAvatarVersion(Date.now()); setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
       else setAvatarMsg({ text: data.error || 'Failed', error: true });

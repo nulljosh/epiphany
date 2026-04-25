@@ -133,6 +133,8 @@ async function fetchFmpBatch(symbolList) {
       .filter(q => q.symbol && typeof q.price === 'number')
       .map(q => ({
         symbol: yahooSymbolMap[q.symbol] || q.symbol,
+        name: q.name || null,
+        shortName: q.name || null,
         price: q.price,
         change: q.change ?? 0,
         changePercent: q.changesPercentage ?? 0,
@@ -175,6 +177,7 @@ async function fetchYahooBatch(symbolList) {
         .filter(q => typeof q.regularMarketPrice === 'number')
         .map(q => ({
           symbol: q.symbol,
+          shortName: q.shortName || q.longName || null,
           price: q.regularMarketPrice,
           change: q.regularMarketChange ?? 0,
           changePercent: q.regularMarketChangePercent ?? 0,
@@ -294,6 +297,32 @@ export default async function handler(req, res) {
     // Try FMP batch first (single API call for all symbols)
     let stocks = await fetchFmpBatch(symbolList);
     let source = 'fmp';
+
+    // Supplement FMP fundamentals from Yahoo v7 when FMP omits them (free tier)
+    if (stocks && stocks.length > 0) {
+      const needsFundamentals = stocks.filter(s => s.peRatio === null && s.marketCap === null).map(s => s.symbol);
+      if (needsFundamentals.length > 0) {
+        const supplement = await fetchYahooBatch(needsFundamentals);
+        if (supplement) {
+          const suppMap = new Map(supplement.map(s => [s.symbol, s]));
+          stocks = stocks.map(s => {
+            const y = suppMap.get(s.symbol);
+            if (!y) return s;
+            return {
+              ...s,
+              shortName: s.shortName ?? y.shortName,
+              peRatio: s.peRatio ?? y.peRatio,
+              marketCap: s.marketCap ?? y.marketCap,
+              eps: s.eps ?? y.eps,
+              avgVolume: s.avgVolume ?? y.avgVolume,
+              beta: s.beta ?? y.beta,
+              yield: s.yield ?? y.yield,
+            };
+          });
+          source = 'mixed';
+        }
+      }
+    }
 
     // Fallback to Yahoo if FMP fails or returns too few
     if (!stocks || stocks.length < symbolList.length * 0.5) {

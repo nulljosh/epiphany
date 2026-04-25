@@ -187,7 +187,7 @@ struct StockDetailView: View {
                 Spacer()
             }
         }
-        .navigationTitle(stock.symbol)
+        .navigationTitle(stock.name == stock.symbol ? stock.symbol : stock.name)
         .toolbar {
             if appState.isLoggedIn {
                 ToolbarItem(placement: .automatic) {

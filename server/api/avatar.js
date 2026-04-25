@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const session = await getSessionUser(req);
     if (!session) return errorResponse(res, 401, 'Authentication required');
 
-    const { image } = req.body || {};
+    const { image, format } = req.body || {};
     if (!image) return errorResponse(res, 400, 'image (base64) is required');
 
     const user = await kv.get(`user:${session.email}`);
@@ -29,14 +29,18 @@ export default async function handler(req, res) {
       return errorResponse(res, 400, 'Image too large (max 5MB)');
     }
 
+    const isSvg = format === 'svg';
+    const ext = isSvg ? 'svg' : 'jpg';
+    const contentType = isSvg ? 'image/svg+xml' : 'image/jpeg';
+
     // Delete old avatar if exists
     if (user.avatarUrl) {
       try { await del(user.avatarUrl); } catch {}
     }
 
-    const blob = await put(`avatars/${user.id}.jpg`, buffer, {
+    const blob = await put(`avatars/${user.id}.${ext}`, buffer, {
       access: 'public',
-      contentType: 'image/jpeg',
+      contentType,
       addRandomSuffix: false,
     });
 
