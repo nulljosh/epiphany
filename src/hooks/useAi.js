@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 
-const CONV_KEY = 'monica_ai_conv';
+const CONV_KEY = 'epiphany_ai_conv';
 
 export function useAi() {
   const [messages, setMessages] = useState([]);

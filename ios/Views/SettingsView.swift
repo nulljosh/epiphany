@@ -97,13 +97,13 @@ struct SettingsView: View {
                     Button("Open Web Upgrade") {
                         // StoreKit 2 requires App Store Connect product setup;
                         // linking to web upgrade page for now.
-                        if let url = URL(string: "https://monica.heyitsmejosh.com/settings") {
+                        if let url = URL(string: "https://epiphany.heyitsmejosh.com/settings") {
                             openURL(url)
                         }
                     }
                     Button("Cancel", role: .cancel) {}
                 } message: {
-                    Text("Subscription upgrades are handled on the web. You will be redirected to Monica on the web to complete the upgrade.")
+                    Text("Subscription upgrades are handled on the web. You will be redirected to Epiphany on the web to complete the upgrade.")
                 }
 
                 Section("Account") {
@@ -453,7 +453,7 @@ private struct DeleteAccountSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("This permanently deletes your Monica account and associated data.")
+                    Text("This permanently deletes your Epiphany account and associated data.")
                         .foregroundStyle(.secondary)
                 }
 

@@ -678,7 +678,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
           backdropFilter: 'blur(40px) saturate(180%)',
           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
           borderRadius: '16px 16px 0 0',
-          padding: 20,
+          padding: 20, paddingTop: 44,
           animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
@@ -739,7 +739,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
         </div>
 
         {/* Range Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
+        <div style={{ display: 'flex', gap: 3, marginBottom: 8, overflowX: 'auto', flexWrap: 'wrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
           {RANGES.map(r => (
             <button
               key={r.key}
@@ -763,7 +763,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
         </div>
 
         {/* Chart Type Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
+        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', flexWrap: 'wrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
           {CHART_TYPES.map(ct => (
             <button
               key={ct.key}

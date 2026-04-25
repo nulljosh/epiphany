@@ -169,7 +169,7 @@ final class AppState {
     func biometricLogin() async {
         error = nil
         do {
-            try await biometricAuth.authenticate(localizedReason: "Sign in to Monica")
+            try await biometricAuth.authenticate(localizedReason: "Sign in to Epiphany")
             guard let creds = biometricAuth.loadSavedCredentials() else {
                 error = "No saved credentials found"
                 return

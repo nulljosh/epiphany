@@ -7,8 +7,9 @@ import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
+import RoadmapProjection from './RoadmapProjection';
 
-const TABS = ['portfolio', 'budget', 'spending', 'dashboard'];
+const TABS = ['portfolio', 'budget', 'spending', 'dashboard', 'roadmap'];
 
 const INCOME_SCENARIOS = [
   { label: '+$500', delta: 500, color: '#30D158' },
@@ -1420,6 +1421,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             incomePhases={incomePhases}
           />
         )}
+        {tab === 'roadmap' && <RoadmapProjection t={t} />}
       </div>
     </div>
   );
