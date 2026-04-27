@@ -301,12 +301,27 @@ class IBKRAdapter extends BrokerAdapter {
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
-export const createBroker = (type, config = {}) => {
+// WealthsimpleAdapter is server-side only (node fetch, KV dependency)
+// Import lazily to avoid bundling into browser build
+let _WealthsimpleAdapter = null;
+async function loadWealthsimple() {
+  if (!_WealthsimpleAdapter) {
+    const mod = await import('./brokers/wealthsimple.js');
+    _WealthsimpleAdapter = mod.WealthsimpleAdapter;
+  }
+  return _WealthsimpleAdapter;
+}
+
+export const createBroker = async (type, config = {}) => {
   switch (type) {
-    case 'ctrader':     return new CTraderAdapter(config);
-    case 'tradingview': return new TradingViewAdapter(config);
-    case 'alpaca':      return new AlpacaAdapter(config);
-    case 'ibkr':        return new IBKRAdapter(config);
+    case 'ctrader':       return new CTraderAdapter(config);
+    case 'tradingview':   return new TradingViewAdapter(config);
+    case 'alpaca':        return new AlpacaAdapter(config);
+    case 'ibkr':          return new IBKRAdapter(config);
+    case 'wealthsimple': {
+      const WS = await loadWealthsimple();
+      return new WS(config);
+    }
     default: throw new Error(`[BROKER] Unknown broker type: ${type}`);
   }
 };
