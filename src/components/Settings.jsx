@@ -45,7 +45,9 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
   const [avatarVersion, setAvatarVersion] = useState(null);
-  const avatarUrl = user?.avatarUrl ? `${user.avatarUrl}?v=${avatarVersion || user.avatarUpdatedAt || '1'}` : null;
+  const [localAvatarUrl, setLocalAvatarUrl] = useState(null);
+  const baseAvatarUrl = localAvatarUrl || user?.avatarUrl;
+  const avatarUrl = baseAvatarUrl ? `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}` : null;
 
   const generatePixelArtSVG = () => {
     const palettes = [
@@ -81,7 +83,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       const base64 = btoa(generatePixelArtSVG());
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
       const data = await res.json();
-      if (data.ok && data.avatarUrl) { setAvatarVersion(Date.now()); setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
+      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
       else setAvatarMsg({ text: data.error || 'Failed', error: true });
     } catch { setAvatarMsg({ text: 'Failed', error: true }); }
     finally { setAvatarUploading(false); }
@@ -148,7 +150,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             {/* Avatar + identity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div onClick={handleGenerateAvatar} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: t.glass, border: `2px solid ${t.border}`, cursor: avatarUploading ? 'wait' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: avatarUploading ? 0.6 : 1 }} title="Click to generate new avatar">
-                {avatarUrl ? <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }} /> : null}
+                {avatarUrl ? <img key={avatarVersion} src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }} /> : null}
                 <span style={{ fontSize: 20, color: t.textTertiary, display: avatarUrl ? 'none' : 'block' }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span>
               </div>
               <div>

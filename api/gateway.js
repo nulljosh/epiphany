@@ -1,7 +1,8 @@
-// Monica API Gateway - single serverless function routing
+// Epiphany API Gateway - single serverless function routing
 // Critical routes are static imports (fail fast at build).
 // Non-critical routes use lazy() so one broken file can't kill everything.
 
+import '../server/api/_startup-check.js';
 import auth from '../server/api/auth.js';
 import stocksFree from '../server/api/stocks-free.js';
 import markets from '../server/api/markets.js';

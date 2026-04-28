@@ -549,13 +549,16 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     if (mapLayers.news !== false)
     payload.events.slice(0, 16).forEach((ev) => {
-      const kw = geoKeywordMatch(ev.title);
-      if (!kw) return; // Only show events with a real geographic match
+      // Use server-provided country centroid first, fall back to title keyword match
+      let coords = (typeof ev.lat === 'number' && typeof ev.lon === 'number')
+        ? { lat: ev.lat, lon: ev.lon, label: ev.country || 'Global' }
+        : geoKeywordMatch(ev.title);
+      if (!coords) return;
       addMarker(
         'width:14px;height:14px;border-radius:50%;background:#22D3EE;animation:pulse-cyan 2.2s infinite;',
-        `${kw.label}: ${ev.title}`,
-        { type: 'event', title: ev.country ? `[${ev.country}] ${kw.label}` : kw.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
-        kw.lon, kw.lat, 'news'
+        `${coords.label}: ${ev.title}`,
+        { type: 'event', title: ev.country ? `[${ev.country}] ${coords.label}` : coords.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
+        coords.lon, coords.lat, 'news'
       );
     });
 

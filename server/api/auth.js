@@ -75,7 +75,7 @@ async function requireAuthenticatedUser(req, kv) {
 
 async function updateCurrentSession(req, kv, updater) {
   const cookies = parseCookies(req);
-  const token = cookies.monica_session;
+  const token = cookies.epiphany_session;
   if (!token) return;
   const sessionKey = `session:${token}`;
   const current = await kv.get(sessionKey);
@@ -501,7 +501,7 @@ export default async function handler(req, res) {
     }
 
     const cookies = parseCookies(req);
-    const token = cookies.monica_session;
+    const token = cookies.epiphany_session;
     if (token) {
       await kv.del(`session:${token}`);
     }
@@ -531,7 +531,7 @@ export default async function handler(req, res) {
   // POST: logout
   if (action === 'logout') {
     const cookies = parseCookies(req);
-    const token = cookies.monica_session;
+    const token = cookies.epiphany_session;
     if (token) {
       await kv.del(`session:${token}`);
     }
