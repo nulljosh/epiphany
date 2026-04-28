@@ -97,22 +97,29 @@ const CACHE_TTL = {
 };
 
 export default async function handler(req, res) {
-  const ua = req.headers['user-agent'] || '';
-  if (BOT_PATTERNS.test(ua)) {
-    return res.status(403).json({ error: 'Blocked' });
+  try {
+    const ua = req.headers['user-agent'] || '';
+    if (BOT_PATTERNS.test(ua)) {
+      return res.status(403).json({ error: 'Blocked' });
+    }
+
+    const routePath = getRoutePath(req);
+    const route = ROUTES[routePath];
+
+    if (!route) {
+      return res.status(404).json({ error: `Unknown API route: ${routePath || '(empty)'}` });
+    }
+
+    if (req.method === 'GET' && CACHE_TTL[routePath]) {
+      const ttl = CACHE_TTL[routePath];
+      res.setHeader('Cache-Control', `s-maxage=${ttl}, stale-while-revalidate=${ttl * 2}`);
+    }
+
+    return await route(req, res);
+  } catch (err) {
+    console.error('[GATEWAY] Unhandled error:', err.message, err.stack?.split('\n')[1]);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   }
-
-  const routePath = getRoutePath(req);
-  const route = ROUTES[routePath];
-
-  if (!route) {
-    return res.status(404).json({ error: `Unknown API route: ${routePath || '(empty)'}` });
-  }
-
-  if (req.method === 'GET' && CACHE_TTL[routePath]) {
-    const ttl = CACHE_TTL[routePath];
-    res.setHeader('Cache-Control', `s-maxage=${ttl}, stale-while-revalidate=${ttl * 2}`);
-  }
-
-  return route(req, res);
 }

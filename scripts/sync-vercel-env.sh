@@ -51,9 +51,11 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   fi
 
   echo "  Pushing $KEY..."
+  # Strip surrounding quotes from value
+  CLEAN_VALUE=$(echo "$VALUE" | sed 's/^"//;s/"$//')
   for env in "${ENVS[@]}"; do
     vercel env rm "$KEY" "$env" --yes 2>/dev/null || true
-    printf '%s' "$VALUE" | vercel env add "$KEY" "$env" 2>/dev/null
+    vercel env add "$KEY" "$env" --value "$CLEAN_VALUE" --yes 2>/dev/null || true
   done
   ((pushed++)) || true
 
