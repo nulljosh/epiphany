@@ -38,13 +38,13 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#060a0f', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '30%', left: '50%', width: 800, height: 800, transform: 'translate(-50%, -50%)', background: 'rgba(0,228,106,0.02)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '30%', left: '50%', width: 800, height: 800, transform: 'translate(-50%, -50%)', background: 'rgba(255,255,255,0.01)', pointerEvents: 'none' }} />
 
       <div style={{ width: '100%', maxWidth: 900, position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32, ...fadeStyle(mounted, 0.05) }}>
-          <div style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 20, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>M</span>
+          <div style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 20, fontWeight: 700, color: '#ffffff', lineHeight: 1 }}>M</span>
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Create your account to get started</p>
@@ -53,8 +53,8 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
         {/* Pricing tiers */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 28, ...fadeStyle(mounted, 0.1) }}>
           {TIERS.map(tier => (
-            <div key={tier.name} style={{ background: 'rgba(255,255,255,0.025)', border: tier.highlight ? '1px solid rgba(0,228,106,0.25)' : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 22, backdropFilter: 'blur(20px)' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: tier.highlight ? '#00e46a' : 'rgba(255,255,255,0.7)', marginBottom: 6 }}>{tier.name}</div>
+            <div key={tier.name} style={{ background: 'rgba(255,255,255,0.025)', border: tier.highlight ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 22, backdropFilter: 'blur(20px)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: tier.highlight ? '#ffffff' : 'rgba(255,255,255,0.7)', marginBottom: 6 }}>{tier.name}</div>
               <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
                 {tier.price}<span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontWeight: 400, marginLeft: 2 }}>{tier.period}</span>
               </div>

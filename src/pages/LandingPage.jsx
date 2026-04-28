@@ -75,11 +75,6 @@ export default function LandingPage({ onRegister, onLogin }) {
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
-      const grad = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H * 0.4, W * 0.7);
-      grad.addColorStop(0, 'rgba(40, 80, 140, 0.15)');
-      grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, H);
 
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -90,7 +85,7 @@ export default function LandingPage({ onRegister, onLogin }) {
             ctx.beginPath();
             ctx.moveTo(nodes[i].x, nodes[i].y);
             ctx.lineTo(nodes[j].x, nodes[j].y);
-            ctx.strokeStyle = `rgba(80, 160, 255, ${(1 - dist / 120) * 0.12})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - dist / 120) * 0.07})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -104,13 +99,13 @@ export default function LandingPage({ onRegister, onLogin }) {
           const pr = 6 + 4 * Math.abs(Math.sin(n.pulse * 0.5));
           ctx.beginPath();
           ctx.arc(n.x, n.y, pr, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(80, 160, 255, ${a * 0.4})`;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.2})`;
           ctx.lineWidth = 1;
           ctx.stroke();
         }
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(100, 180, 255, ${a * 0.7})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${a * 0.45})`;
         ctx.fill();
         n.x += n.vx; n.y += n.vy;
         if (n.x < 0) n.x = W;
@@ -207,7 +202,7 @@ export default function LandingPage({ onRegister, onLogin }) {
           <div className="features-grid reveal">
             <div className="feature-card">
               <div className="feature-icon blue">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(65% 0.2 232)" strokeWidth="1.8">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8">
                   <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z" />
                   <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
                 </svg>
@@ -225,7 +220,7 @@ export default function LandingPage({ onRegister, onLogin }) {
             </div>
             <div className="feature-card">
               <div className="feature-icon amber">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(75% 0.16 70)" strokeWidth="1.8">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8">
                   <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
                   <polyline points="16 7 22 7 22 13" />
                 </svg>
@@ -242,7 +237,7 @@ export default function LandingPage({ onRegister, onLogin }) {
             </div>
             <div className="feature-card">
               <div className="feature-icon green">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(70% 0.18 145)" strokeWidth="1.8">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                 </svg>
@@ -271,9 +266,9 @@ export default function LandingPage({ onRegister, onLogin }) {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
-                { color: 'var(--blue)',  title: 'Live flight tracking',  body: 'See every aircraft overhead with flight number and airline.' },
-                { color: 'var(--amber)', title: 'Incident layer',        body: 'Traffic, construction, emergency services, and crime reports.' },
-                { color: 'var(--green)', title: 'Local events',          body: 'Concerts, sports, community events. Pulled from Ticketmaster and OSM.' },
+                { color: 'rgba(255,255,255,0.8)',  title: 'Live flight tracking',  body: 'See every aircraft overhead with flight number and airline.' },
+                { color: 'rgba(255,255,255,0.5)', title: 'Incident layer',        body: 'Traffic, construction, emergency services, and crime reports.' },
+                { color: 'rgba(255,255,255,0.35)', title: 'Local events',          body: 'Concerts, sports, community events. Pulled from Ticketmaster and OSM.' },
               ].map(({ color, title, body }) => (
                 <div key={title} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, marginTop: 7, flexShrink: 0 }} />
@@ -293,37 +288,37 @@ export default function LandingPage({ onRegister, onLogin }) {
                 </div>
                 <div className="mock-map">
                   <svg width="100%" height="100%" viewBox="0 0 280 480" preserveAspectRatio="xMidYMid slice">
-                    <rect width="280" height="480" fill="#1a2a1a" />
-                    <line x1="0" y1="240" x2="280" y2="240" stroke="#2a3a2a" strokeWidth="8" />
-                    <line x1="0" y1="300" x2="280" y2="300" stroke="#2a3a2a" strokeWidth="4" />
-                    <line x1="140" y1="0" x2="140" y2="480" stroke="#2a3a2a" strokeWidth="6" />
-                    <line x1="80" y1="0" x2="80" y2="480" stroke="#2a3a2a" strokeWidth="3" />
-                    <line x1="200" y1="0" x2="200" y2="480" stroke="#2a3a2a" strokeWidth="3" />
-                    <line x1="0" y1="360" x2="200" y2="160" stroke="#2a3a2a" strokeWidth="4" />
-                    <rect x="10" y="10" width="60" height="80" rx="4" fill="#1e321e" opacity="0.8" />
-                    <rect x="160" y="320" width="100" height="80" rx="4" fill="#1e321e" opacity="0.8" />
-                    <rect x="100" y="100" width="40" height="40" rx="2" fill="#1e321e" opacity="0.6" />
-                    <circle cx="140" cy="240" r="10" fill="oklch(65% 0.2 232)" opacity="0.3" />
-                    <circle cx="140" cy="240" r="5" fill="oklch(65% 0.2 232)" />
+                    <rect width="280" height="480" fill="#111" />
+                    <line x1="0" y1="240" x2="280" y2="240" stroke="#222" strokeWidth="8" />
+                    <line x1="0" y1="300" x2="280" y2="300" stroke="#222" strokeWidth="4" />
+                    <line x1="140" y1="0" x2="140" y2="480" stroke="#222" strokeWidth="6" />
+                    <line x1="80" y1="0" x2="80" y2="480" stroke="#222" strokeWidth="3" />
+                    <line x1="200" y1="0" x2="200" y2="480" stroke="#222" strokeWidth="3" />
+                    <line x1="0" y1="360" x2="200" y2="160" stroke="#222" strokeWidth="4" />
+                    <rect x="10" y="10" width="60" height="80" rx="4" fill="#1a1a1a" opacity="0.8" />
+                    <rect x="160" y="320" width="100" height="80" rx="4" fill="#1a1a1a" opacity="0.8" />
+                    <rect x="100" y="100" width="40" height="40" rx="2" fill="#1a1a1a" opacity="0.6" />
+                    <circle cx="140" cy="240" r="10" fill="rgba(255,255,255,0.15)" />
+                    <circle cx="140" cy="240" r="5" fill="rgba(255,255,255,0.85)" />
                     <g className="map-dot" transform="translate(60,80) rotate(45)">
-                      <text fontSize="16" fill="#4FC3F7" textAnchor="middle">&#9992;</text>
+                      <text fontSize="16" fill="rgba(255,255,255,0.75)" textAnchor="middle">&#9992;</text>
                     </g>
                     <g className="map-dot" transform="translate(220,140) rotate(135)">
-                      <text fontSize="14" fill="#4FC3F7" textAnchor="middle">&#9992;</text>
+                      <text fontSize="14" fill="rgba(255,255,255,0.75)" textAnchor="middle">&#9992;</text>
                     </g>
                     <g className="map-dot" transform="translate(180,380) rotate(200)">
-                      <text fontSize="13" fill="#4FC3F7" textAnchor="middle">&#9992;</text>
+                      <text fontSize="13" fill="rgba(255,255,255,0.75)" textAnchor="middle">&#9992;</text>
                     </g>
-                    <circle className="map-dot" cx="100" cy="160" r="6" fill="#4CAF50" />
-                    <circle className="map-dot" cx="200" cy="200" r="6" fill="#4CAF50" />
-                    <circle className="map-dot" cx="60" cy="320" r="5" fill="#4CAF50" />
+                    <circle className="map-dot" cx="100" cy="160" r="6" fill="rgba(255,255,255,0.5)" />
+                    <circle className="map-dot" cx="200" cy="200" r="6" fill="rgba(255,255,255,0.5)" />
+                    <circle className="map-dot" cx="60" cy="320" r="5" fill="rgba(255,255,255,0.5)" />
                     <g className="map-dot" transform="translate(190,100)">
-                      <polygon points="0,-10 9,6 -9,6" fill="#FF9800" opacity="0.9" />
-                      <text y="4" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">!</text>
+                      <polygon points="0,-10 9,6 -9,6" fill="rgba(255,255,255,0.4)" />
+                      <text y="4" fontSize="7" fill="#000" textAnchor="middle" fontWeight="bold">!</text>
                     </g>
                     <g className="map-dot" transform="translate(240,260)">
-                      <polygon points="0,-8 7,5 -7,5" fill="#FF9800" opacity="0.9" />
-                      <text y="3" fontSize="6" fill="#fff" textAnchor="middle" fontWeight="bold">!</text>
+                      <polygon points="0,-8 7,5 -7,5" fill="rgba(255,255,255,0.4)" />
+                      <text y="3" fontSize="6" fill="#000" textAnchor="middle" fontWeight="bold">!</text>
                     </g>
                     <text x="60" y="95" fontSize="8" fill="rgba(255,255,255,0.5)" textAnchor="middle">Flight DAL822</text>
                     <text x="100" y="148" fontSize="8" fill="rgba(255,255,255,0.5)" textAnchor="middle">Stadium</text>
@@ -366,7 +361,7 @@ export default function LandingPage({ onRegister, onLogin }) {
                   'Trading simulator with Kelly criterion position sizing',
                 ].map(item => (
                   <li key={item} style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 300, display: 'flex', gap: 12 }}>
-                    <span style={{ color: 'var(--amber)', fontFamily: 'var(--mono)' }}>&#8594;</span>
+                    <span style={{ color: 'var(--text3)', fontFamily: 'var(--mono)' }}>&#8594;</span>
                     {item}
                   </li>
                 ))}
@@ -381,7 +376,7 @@ export default function LandingPage({ onRegister, onLogin }) {
                   <div className="mkt-change">+$1,240.50 (1.0%) today</div>
                 </div>
                 {MKT_DATA.map((d, i) => {
-                  const color = d.up ? 'oklch(70% 0.18 145)' : 'oklch(65% 0.2 20)';
+                  const color = d.up ? '#ffffff' : 'rgba(255,255,255,0.35)';
                   return (
                     <div className="mkt-row" key={d.sym}>
                       <div>
@@ -423,15 +418,15 @@ export default function LandingPage({ onRegister, onLogin }) {
           </div>
           <div className="data-grid reveal">
             <div className="data-cell">
-              <div className="data-cell-num" style={{ color: 'var(--blue)' }}>8+</div>
+              <div className="data-cell-num">8+</div>
               <div className="data-cell-label">Real-time data layers on the map</div>
             </div>
             <div className="data-cell">
-              <div className="data-cell-num" style={{ color: 'var(--amber)' }}>30s</div>
+              <div className="data-cell-num">30s</div>
               <div className="data-cell-label">Market refresh interval</div>
             </div>
             <div className="data-cell">
-              <div className="data-cell-num" style={{ color: 'var(--green)' }}>&infin;</div>
+              <div className="data-cell-num">&infin;</div>
               <div className="data-cell-label">Stocks, crypto, and commodities tracked</div>
             </div>
             <div className="data-cell">

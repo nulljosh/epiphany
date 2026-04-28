@@ -45,7 +45,7 @@ function NetworkCanvas() {
           const dy = nodes[i].y - nodes[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 120) {
-            ctx.strokeStyle = `rgba(0,228,106,${(1 - dist / 120) * 0.06})`;
+            ctx.strokeStyle = `rgba(255,255,255,${(1 - dist / 120) * 0.05})`;
             ctx.beginPath();
             ctx.moveTo(nodes[i].x, nodes[i].y);
             ctx.lineTo(nodes[j].x, nodes[j].y);
@@ -53,7 +53,7 @@ function NetworkCanvas() {
           }
         }
       }
-      ctx.fillStyle = 'rgba(0,228,106,0.12)';
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
       for (const n of nodes) {
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
@@ -82,7 +82,7 @@ function UserAvatar({ name, avatarUrl }) {
       <img
         src={avatarUrl}
         alt={name || 'User'}
-        style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(0,228,106,0.3)' }}
+        style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }}
       />
     );
   }
@@ -90,9 +90,9 @@ function UserAvatar({ name, avatarUrl }) {
   return (
     <div style={{
       width: 56, height: 56, borderRadius: '50%',
-      background: 'rgba(0,228,106,0.12)', border: '2px solid rgba(0,228,106,0.25)',
+      background: 'rgba(255,255,255,0.06)', border: '2px solid rgba(255,255,255,0.15)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 20, fontWeight: 700, color: '#00e46a', fontFamily: FONT,
+      fontSize: 20, fontWeight: 700, color: '#ffffff', fontFamily: FONT,
     }}>
       {initials}
     </div>
@@ -164,13 +164,13 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
   return (
     <div style={{ minHeight: '100vh', background: '#060a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
       <NetworkCanvas />
-      <div style={{ position: 'absolute', top: '35%', left: '50%', width: 700, height: 700, transform: 'translate(-50%, -50%)', background: 'rgba(0,228,106,0.02)', animation: 'authPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '35%', left: '50%', width: 700, height: 700, transform: 'translate(-50%, -50%)', background: 'rgba(255,255,255,0.01)', animation: 'authPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
 
       <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36, ...fadeStyle(mounted, 0.05) }}>
-          <div style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14, background: 'rgba(0,228,106,0.1)', border: '1px solid rgba(0,228,106,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#00e46a', lineHeight: 1 }}>E</span>
+          <div style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 22, fontWeight: 700, color: '#ffffff', lineHeight: 1 }}>E</span>
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Personal intelligence platform</p>

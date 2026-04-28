@@ -29,7 +29,7 @@
   color: rgba(255,255,255,0.2);
 }
 .auth-input:focus {
-  border-color: rgba(0,228,106,0.4);
+  border-color: rgba(255,255,255,0.2);
   background: rgba(255,255,255,0.05);
 }
 .auth-input-sm {
@@ -46,14 +46,14 @@
   transition: border-color 0.2s;
 }
 .auth-input-sm:focus {
-  border-color: rgba(0,228,106,0.35);
+  border-color: rgba(255,255,255,0.2);
 }
 
 /* Primary CTA button */
 .auth-btn {
   width: 100%;
   padding: 15px;
-  background: #00e46a;
+  background: #ffffff;
   color: #000;
   border: none;
   border-radius: 12px;
@@ -93,7 +93,7 @@
 .auth-link-accent {
   background: none;
   border: none;
-  color: #00e46a;
+  color: rgba(255,255,255,0.85);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -103,5 +103,5 @@
   letter-spacing: 0.01em;
 }
 .auth-link-accent:hover {
-  color: #33ff8a;
+  color: #ffffff;
 }

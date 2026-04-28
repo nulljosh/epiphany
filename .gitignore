@@ -144,3 +144,4 @@ frontend/out/
 .env*.local
 .env.vercel
 *.profraw
+.env.prod
