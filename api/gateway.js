@@ -4,6 +4,7 @@
 
 import '../server/api/_startup-check.js';
 import auth from '../server/api/auth.js';
+import { errorResponse } from '../server/api/auth-helpers.js';
 import stocksFree from '../server/api/stocks-free.js';
 import markets from '../server/api/markets.js';
 import latest from '../server/api/latest.js';
@@ -118,8 +119,6 @@ export default async function handler(req, res) {
     return await route(req, res);
   } catch (err) {
     console.error('[GATEWAY] Unhandled error:', err.message, err.stack?.split('\n')[1]);
-    if (!res.headersSent) {
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+    if (!res.headersSent) return errorResponse(res, 500, 'Internal server error');
   }
 }

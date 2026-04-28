@@ -10,6 +10,13 @@ for (const key of ['KV_REST_API_URL', 'KV_REST_API_TOKEN', 'KV_REST_API_READ_ONL
   if (process.env[key]) process.env[key] = process.env[key].trim();
 }
 
+function wrapOp(name, fn) {
+  return async (...args) => {
+    try { return await fn(...args); }
+    catch (err) { console.error(`[KV] ${name} error:`, err.message); return null; }
+  };
+}
+
 export async function getKv() {
   if (!_loaded) {
     _loaded = true;
@@ -38,18 +45,8 @@ export async function getKv() {
               }
             };
           }
-          if (prop === 'set') {
-            return async (...args) => {
-              try { return await target.set(...args); }
-              catch (err) { console.error('[KV] set error:', err.message); return null; }
-            };
-          }
-          if (prop === 'del') {
-            return async (...args) => {
-              try { return await target.del(...args); }
-              catch (err) { console.error('[KV] del error:', err.message); return null; }
-            };
-          }
+          if (prop === 'set') return wrapOp('set', target.set.bind(target));
+          if (prop === 'del') return wrapOp('del', target.del.bind(target));
           const val = target[prop];
           return typeof val === 'function' ? val.bind(target) : val;
         }
