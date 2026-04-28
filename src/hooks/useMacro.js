@@ -19,7 +19,7 @@ export function useMacro() {
           throw new Error(data?.error || `Request failed: ${res.status}`);
         }
 
-        setMacro(data);
+        setMacro(Array.isArray(data) ? Object.fromEntries(data.map(item => [item.id, item])) : data);
       } catch (err) {
         if (err.name === 'AbortError') return;
         setError(err.message || 'Failed to load macro data');
