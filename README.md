@@ -36,4 +36,4 @@ Deploy: Vercel
 
 ## License
 
-Apache 2.0, 2026, Joshua Trommel
+MIT 2026, Joshua Trommel
