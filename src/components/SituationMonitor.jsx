@@ -318,21 +318,9 @@ export default function SituationMonitor({
 
       {/* Macro summary */}
       {macro.length > 0 && (() => {
-        const byId = Object.fromEntries(macro.map(m => [m.id, m]));
-        const fmt = (m) => m ? `${m.value}${m.unit === '%' ? '%' : ''}` : 'n/a';
-        const dir = (m) => m?.change > 0 ? 'up' : m?.change < 0 ? 'down' : 'flat';
-        const pct = (m) => m ? `${m.change > 0 ? '+' : ''}${m.changePercent}%` : '';
-        const fedFunds = byId.fedFunds || byId.fed_funds || macro.find(m => /fed/i.test(m.name));
-        const gdp = byId.gdp || macro.find(m => /gdp/i.test(m.name));
-        const unemployment = byId.unemployment || macro.find(m => /unemploy/i.test(m.name));
-        const cpi = byId.cpi || byId.inflation || macro.find(m => /cpi|inflation/i.test(m.name));
-        const lines = [];
-        if (fedFunds) lines.push(`Fed funds rate at ${fmt(fedFunds)} (${pct(fedFunds)}).`);
-        if (gdp) lines.push(`GDP growth ${dir(gdp)} at ${fmt(gdp)}.`);
-        if (cpi) lines.push(`CPI at ${fmt(cpi)} (${pct(cpi)}).`);
-        if (unemployment) lines.push(`Unemployment at ${fmt(unemployment)}.`);
-        const remaining = macro.filter(m => m !== fedFunds && m !== gdp && m !== cpi && m !== unemployment).slice(0, 2);
-        remaining.forEach(m => lines.push(`${m.name} at ${fmt(m)} (${pct(m)}).`));
+        const fmt = (m) => `${m.value}${m.unit === '%' ? '%' : ''}`;
+        const pct = (m) => m.changePercent != null ? ` (${m.changePercent > 0 ? '+' : ''}${m.changePercent}%)` : '';
+        const lines = macro.slice(0, 6).map(m => `${m.name} at ${fmt(m)}${pct(m)}.`);
         return (
           <p style={{ fontSize: 11, color: t.textSecondary, lineHeight: 1.5, margin: '0 0 10px 0' }}>
             {lines.join(' ')}
