@@ -76,6 +76,7 @@
 - Rename: Monica → Epiphany (GitHub repo, Vercel, iOS/macOS bundle IDs, READMEs, CLAUDE.md, memory)
 - STALE indicator / heartbeat
 - Macro pulse strip (dynamic from `/api/macro`)
+- MacroPanel data-shape fix (ca43e23)
 - Map layers (11 layers, coord validation, mapLayers filtering)
 - Ticker (live data + static fallback)
 - Avatar sync iOS/web
