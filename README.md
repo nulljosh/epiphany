@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80" style="border-radius:16px">
 
 # Epiphany.
-![version](https://img.shields.io/badge/version-v1.0.2--beta-blue)
+![version](https://img.shields.io/badge/version-v1.1.0-blue)
 
 Personal intelligence platform. Map, markets, and people. Palantir for regular people.
 
