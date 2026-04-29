@@ -8,7 +8,7 @@ async function getResend() {
   return _resend;
 }
 
-const FROM = 'Epiphany <noreply@monica.heyitsmejosh.com>';
+const FROM = 'Epiphany <noreply@epiphany.heyitsmejosh.com>';
 
 export async function sendEmail({ to, subject, html }) {
   const resend = await getResend();
