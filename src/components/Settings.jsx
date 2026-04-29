@@ -87,7 +87,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
     setAvatarUploading(true);
     setAvatarMsg(null);
     try {
-      const base64 = btoa(generatePixelArtSVG());
+      const svg = generatePixelArtSVG();
+      const base64 = btoa(unescape(encodeURIComponent(svg)));
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
       const data = await res.json();
       if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); showAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }

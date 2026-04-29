@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       try { await del(user.avatarUrl); } catch {}
     }
 
-    const blob = await put(`avatars/${user.id}.${ext}`, buffer, {
+    const blob = await put(`avatars/${user.id}-${Date.now()}.${ext}`, buffer, {
       access: 'public',
       contentType,
       addRandomSuffix: false,
