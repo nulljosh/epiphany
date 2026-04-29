@@ -2,11 +2,6 @@
 
 ## Active
 
-### Fix reset password email (Resend domain not verified)
-- Root cause: `epiphany.heyitsmejosh.com` is not verified in the Resend dashboard
-- The RESEND_API_KEY in Vercel is a send-only restricted key — cannot manage domains via API
-- Fix: log into resend.com → Domains → Add `epiphany.heyitsmejosh.com` → copy the 2 DKIM CNAME records + SPF TXT → paste into Cloudflare DNS for heyitsmejosh.com zone (flarectl or dashboard)
-- Once DNS propagates (~5 min), reset password emails will work
 
 ### Net Worth + Predictions integration
 - Pull `USER_ACCOUNTS`, `USER_DEBT`, `USER_GOALS`, `USER_INCOME_PHASES` from `userProfile.js` into a unified net-worth view
