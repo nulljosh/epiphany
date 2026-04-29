@@ -4,7 +4,7 @@ import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
 import { getFmpApiKey, FMP_BASE } from './stocks-shared.js';
 
-const MODEL = 'claude-sonnet-4-5-20241022';
+const MODEL = 'claude-sonnet-4-6';
 const MAX_HISTORY = 20;
 
 const TOOLS = [

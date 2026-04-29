@@ -399,7 +399,7 @@ export default async function handler(req, res) {
     user.passwordHash = await bcrypt.hash(password, 10);
     await kv.set(`user:${resetData.email}`, user);
     await kv.del(`reset:${token}`);
-    return res.status(200).json({ ok: true, message: 'Password has been reset successfully' });
+    return res.status(200).json({ ok: true, message: 'Password has been reset successfully', name: user.name || null });
   }
 
   // POST: change-password

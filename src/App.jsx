@@ -995,6 +995,13 @@ const reset = useCallback(() => {
     mapInstanceRef.current = map;
   }, []);
 
+  const handleTickerItemClick = useCallback((sym) => {
+    setCommandBarStock(sym);
+    setActiveTab('markets');
+    if (isMobileNav) setMobilePanelOpen(true);
+    else setDesktopPanelOpen(true);
+  }, [isMobileNav]);
+
   // Landing page for unauthenticated visitors
   if (!isAuthenticated && !authLoading && showLanding) {
     return (
@@ -1241,12 +1248,7 @@ const reset = useCallback(() => {
         activeCount={activeCount}
         isFree={isFree} setShowPricing={setShowPricing} logout={logout}
         panelContent={renderPanelContent()}
-        onTickerItemClick={(sym) => {
-          setCommandBarStock(sym);
-          setActiveTab('markets');
-          if (isMobileNav) setMobilePanelOpen(true);
-          else setDesktopPanelOpen(true);
-        }}
+        onTickerItemClick={handleTickerItemClick}
       />
 
       {/* Map cell */}

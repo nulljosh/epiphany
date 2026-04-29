@@ -5,6 +5,7 @@ export default function ResetPasswordPage({ token, onBack }) {
   const [confirm, setConfirm] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [resetName, setResetName] = useState('');
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
@@ -27,6 +28,7 @@ export default function ResetPasswordPage({ token, onBack }) {
         setError(data.error || 'Reset failed');
       } else {
         setMessage(data.message || 'Password reset successfully.');
+        setResetName(data.name || '');
         setDone(true);
       }
     } catch {
@@ -74,6 +76,7 @@ export default function ResetPasswordPage({ token, onBack }) {
 
         {done ? (
           <>
+            {resetName && <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Hi {resetName}</p>}
             <p style={{ color: '#00d46a', fontSize: 14 }}>{message}</p>
             <button
               onClick={onBack}

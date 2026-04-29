@@ -228,6 +228,7 @@ const Ticker = memo(({ items, theme, onItemClick }) => {
     </div>
   );
 }, (prevProps, nextProps) => {
+  if (prevProps.onItemClick !== nextProps.onItemClick) return false;
   if (prevProps.items.length !== nextProps.items.length) return false;
 
   for (let i = 0; i < prevProps.items.length; i++) {

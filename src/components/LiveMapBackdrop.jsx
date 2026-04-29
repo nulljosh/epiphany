@@ -166,6 +166,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [geoState, setGeoState] = useState('checking');
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [] });
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => { centerRef.current = center; }, [center]);
 
@@ -286,6 +288,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   }, [requestLocation]);
 
   useEffect(() => {
+    setMapError(false);
     let map;
     (async () => {
       try {
@@ -322,8 +325,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             pendingFlyRef.current = null;
           }
         });
+        map.on('error', () => setMapError(true));
       } catch (err) {
         console.warn('Backdrop map failed:', err.message);
+        setMapError(true);
       }
     })();
     return () => {
@@ -335,7 +340,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         setMapLoaded(false);
       }
     };
-  }, []);
+  }, [retryKey]);
 
   // Swap basemap style on theme change without destroying the map
   useEffect(() => {
@@ -775,6 +780,18 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       >
         ⌖
       </button>
+
+      {mapError && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,6,23,0.82)', backdropFilter: 'blur(8px)' }}>
+          <div style={{ textAlign: 'center', color: '#fff', fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif' }}>
+            <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>Map failed to load</div>
+            <button
+              onClick={() => { setMapError(false); setRetryKey(k => k + 1); }}
+              style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+            >Retry</button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

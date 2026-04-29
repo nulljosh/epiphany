@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 import { fileToBase64 } from '../utils/helpers';
 
@@ -44,6 +44,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
 
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
+  const avatarMsgTimerRef = useRef(null);
   const [avatarVersion, setAvatarVersion] = useState(null);
   const [localAvatarUrl, setLocalAvatarUrl] = useState(null);
   const baseAvatarUrl = localAvatarUrl || user?.avatarUrl;
@@ -76,6 +77,12 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="${total}" height="${total}" shape-rendering="crispEdges"><rect width="${total}" height="${total}" fill="${bg}"/>${rects}</svg>`;
   };
 
+  const showAvatarMsg = useCallback((msg) => {
+    if (avatarMsgTimerRef.current) clearTimeout(avatarMsgTimerRef.current);
+    setAvatarMsg(msg);
+    avatarMsgTimerRef.current = setTimeout(() => setAvatarMsg(null), 3000);
+  }, []);
+
   const handleGenerateAvatar = async () => {
     setAvatarUploading(true);
     setAvatarMsg(null);
@@ -83,9 +90,9 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       const base64 = btoa(generatePixelArtSVG());
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
       const data = await res.json();
-      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); setAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
-      else setAvatarMsg({ text: data.error || 'Failed', error: true });
-    } catch { setAvatarMsg({ text: 'Failed', error: true }); }
+      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); showAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
+      else showAvatarMsg({ text: data.error || 'Failed', error: true });
+    } catch { showAvatarMsg({ text: 'Failed', error: true }); }
     finally { setAvatarUploading(false); }
   };
 

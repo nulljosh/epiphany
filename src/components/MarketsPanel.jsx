@@ -122,8 +122,8 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
         <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{symbol}</div>
         <div style={{ fontSize: 11, color: t.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
       </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{formatCurrency(price)}</div>
+      <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '45%' }}>
+        <div style={{ fontWeight: 600, fontSize: 14, color: t.text, whiteSpace: 'nowrap' }}>{formatCurrency(price)}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <ChangePill value={changePercent} />
           {Math.abs(changePercent) >= 5 && (
@@ -318,7 +318,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   };
 
   return (
-    <div style={{ padding: 16, fontFamily: font }}>
+    <div style={{ padding: 16, fontFamily: font, minWidth: 0, overflow: 'hidden', boxSizing: 'border-box' }}>
       {/* Sticky header: market status + search + sort stays visible while scrolling results */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 3,
