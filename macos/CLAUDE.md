@@ -1,6 +1,6 @@
 # Epiphany macOS
 
-v0.6.1 — Native macOS intelligence dashboard. 5-tab SwiftUI app synced with web v1.0.0-beta.
+v1.1.0 — Native macOS intelligence dashboard. 5-tab SwiftUI app synced with web v1.1.0.
 
 ## Rules
 

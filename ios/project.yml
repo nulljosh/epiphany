@@ -29,8 +29,8 @@ targets:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-      PRODUCT_NAME: Monica
-      PRODUCT_MODULE_NAME: Monica
+      PRODUCT_NAME: Epiphany
+      PRODUCT_MODULE_NAME: Epiphany
       # CODE_SIGN_ENTITLEMENTS: Epiphany.entitlements  # Requires paid Apple Developer Program
   EpiphanyTests:
     type: bundle.unit-test

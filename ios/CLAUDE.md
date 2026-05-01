@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.4.0 — Native iPhone intelligence app. 4-tab SwiftUI app, portrait-only, dark mode only.
+v1.4.0 — Native iPhone intelligence app. 4-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -32,6 +32,6 @@ xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination '
 - `Views/PeopleView.swift` — Person search + index grid
 - `ContentView.swift` — Tab navigation, parallel data preloading on launch
 - `Models/AppState.swift` — @Observable shared state, avatar persistence
-- `API/EpiphanyAPI.swift` — All backend requests (base: monica.heyitsmejosh.com, 2min cache, cookie session)
+- `API/EpiphanyAPI.swift` — All backend requests (base: epiphany.heyitsmejosh.com, 2min cache, cookie session)
 - `Services/TallyService.swift` — Tally API client + keychain credentials
 - `Models/SituationData.swift` — Map data models
