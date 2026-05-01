@@ -73,8 +73,10 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const avatarMsgTimerRef = useRef(null);
   const [avatarVersion, setAvatarVersion] = useState(null);
   const [localAvatarUrl, setLocalAvatarUrl] = useState(null);
+  const [imgError, setImgError] = useState(false);
   const baseAvatarUrl = localAvatarUrl || user?.avatarUrl;
   const avatarUrl = baseAvatarUrl ? `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}` : null;
+  useEffect(() => { setImgError(false); }, [avatarUrl]);
 
   const generatePixelArtSVG = () => {
     const palettes = [
@@ -184,8 +186,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             {/* Avatar + identity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div onClick={handleGenerateAvatar} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: t.glass, border: `2px solid ${t.border}`, cursor: avatarUploading ? 'wait' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: avatarUploading ? 0.6 : 1 }} title="Click to generate new avatar">
-                {avatarUrl ? <img key={avatarVersion} src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }} /> : null}
-                <span style={{ fontSize: 20, color: t.textTertiary, display: avatarUrl ? 'none' : 'block' }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span>
+                {avatarUrl && !imgError ? <img key={avatarVersion} src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgError(true)} /> : null}
+                {(!avatarUrl || imgError) ? <span style={{ fontSize: 20, color: t.textTertiary }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span> : null}
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>{user.name || user.email}</div>
