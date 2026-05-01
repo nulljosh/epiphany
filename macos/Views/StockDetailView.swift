@@ -150,6 +150,15 @@ struct StockDetailView: View {
                     if let e = stock.formattedEPS {
                         statCell("EPS", value: e)
                     }
+                    if let b = stock.formattedBeta {
+                        statCell("Beta", value: b)
+                    }
+                    if let y = stock.formattedYield {
+                        statCell("Yield", value: y)
+                    }
+                    if let av = stock.formattedAvgVolume {
+                        statCell("Avg Vol", value: av)
+                    }
                 }
                 .padding()
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))

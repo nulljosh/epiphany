@@ -37,6 +37,9 @@ struct Stock: Decodable, Identifiable, Hashable {
     let dayHigh: Double
     let dayLow: Double
     let eps: Double?
+    let beta: Double?
+    let yield: Double?
+    let avgVolume: Double?
 
     var id: String { symbol }
 
@@ -73,6 +76,23 @@ struct Stock: Decodable, Identifiable, Hashable {
         return String(format: "$%.2f", e)
     }
 
+    var formattedBeta: String? {
+        guard let b = beta else { return nil }
+        return String(format: "%.2f", b)
+    }
+
+    var formattedYield: String? {
+        guard let y = yield, y > 0 else { return nil }
+        return String(format: "%.2f%%", y)
+    }
+
+    var formattedAvgVolume: String? {
+        guard let av = avgVolume, av > 0 else { return nil }
+        if av >= 1_000_000 { return String(format: "%.1fM", av / 1_000_000) }
+        if av >= 1_000 { return String(format: "%.0fK", av / 1_000) }
+        return String(format: "%.0f", av)
+    }
+
     var dayRange: String? {
         guard dayLow > 0 && dayHigh > 0 else { return nil }
         return String(format: "$%.2f - $%.2f", dayLow, dayHigh)
@@ -84,7 +104,7 @@ struct Stock: Decodable, Identifiable, Hashable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case symbol, name, price, change, volume, marketCap, peRatio, eps
+        case symbol, name, price, change, volume, marketCap, peRatio, eps, beta, yield, avgVolume
         case changePercent = "changesPercentage"
         case changePercentAlt = "changePercent"
         case changePercentSnake = "change_percent"
@@ -139,12 +159,16 @@ struct Stock: Decodable, Identifiable, Hashable {
         dayHigh = container.flexibleDouble(forKey: .dayHigh) ?? 0
         dayLow = container.flexibleDouble(forKey: .dayLow) ?? 0
         eps = container.flexibleDouble(forKey: .eps)
+        beta = container.flexibleDouble(forKey: .beta)
+        yield = container.flexibleDouble(forKey: .yield)
+        avgVolume = container.flexibleDouble(forKey: .avgVolume)
     }
 
     init(symbol: String, name: String, price: Double, change: Double = 0,
          changePercent: Double = 0, volume: Double = 0, high52: Double = 0, low52: Double = 0,
          marketCap: Double? = nil, peRatio: Double? = nil, open: Double = 0,
-         prevClose: Double = 0, dayHigh: Double = 0, dayLow: Double = 0, eps: Double? = nil) {
+         prevClose: Double = 0, dayHigh: Double = 0, dayLow: Double = 0, eps: Double? = nil,
+         beta: Double? = nil, yield: Double? = nil, avgVolume: Double? = nil) {
         self.symbol = symbol
         self.name = name
         self.price = price
@@ -160,5 +184,8 @@ struct Stock: Decodable, Identifiable, Hashable {
         self.dayHigh = dayHigh
         self.dayLow = dayLow
         self.eps = eps
+        self.beta = beta
+        self.yield = yield
+        self.avgVolume = avgVolume
     }
 }

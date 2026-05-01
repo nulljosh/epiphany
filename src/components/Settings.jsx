@@ -4,6 +4,7 @@ import { fileToBase64 } from '../utils/helpers';
 
 const NAV_ITEMS = [
   { id: 'account', label: 'Account' },
+  { id: 'tally', label: 'Tally' },
   { id: 'map', label: 'Map Layers' },
   { id: 'about', label: 'About' },
 ];
@@ -41,6 +42,31 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   useEffect(() => {
     if (refreshUser) refreshUser();
   }, []);
+
+  const [tallyConnected, setTallyConnected] = useState(false);
+  const [tallyUsername, setTallyUsername] = useState('');
+  const [tallyPassword, setTallyPassword] = useState('');
+  const [tallyConnecting, setTallyConnecting] = useState(false);
+  const [tallyMsg, setTallyMsg] = useState(null);
+  useEffect(() => {
+    fetch('/api/tally?action=status').then(r => r.json()).then(d => setTallyConnected(d.connected)).catch(() => {});
+  }, []);
+
+  const handleTallyConnect = async () => {
+    setTallyConnecting(true); setTallyMsg(null);
+    try {
+      const res = await fetch('/api/tally?action=connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tallyUsername, password: tallyPassword }) });
+      const d = await res.json();
+      if (!res.ok) { setTallyMsg({ error: true, text: d.error || 'Connection failed' }); }
+      else { setTallyConnected(true); setTallyUsername(''); setTallyPassword(''); setTallyMsg({ error: false, text: 'Connected to Tally' }); }
+    } catch { setTallyMsg({ error: true, text: 'Network error' }); }
+    setTallyConnecting(false);
+  };
+
+  const handleTallyDisconnect = async () => {
+    await fetch('/api/tally?action=disconnect', { method: 'POST' });
+    setTallyConnected(false); setTallyMsg(null);
+  };
 
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
@@ -211,6 +237,28 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
             <div style={{ marginTop: 24 }}>
               <button onClick={logout} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>Sign Out</button>
             </div>
+          </>
+        )}
+
+        {section === 'tally' && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>BC Self-Serve</div>
+            {tallyConnected ? (
+              <>
+                <Row label="Status" t={t}><span style={{ fontSize: 12, color: '#30d158', fontFamily: font }}>Connected</span></Row>
+                <div style={{ marginTop: 16 }}>
+                  <button onClick={handleTallyDisconnect} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>Disconnect</button>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: 12, color: t.textSecondary, margin: '0 0 8px' }}>Connect your Tally account to see payment info in your portfolio.</p>
+                <input value={tallyUsername} onChange={e => setTallyUsername(e.target.value)} placeholder="Username" autoCapitalize="none" style={inputStyle} />
+                <input type="password" value={tallyPassword} onChange={e => setTallyPassword(e.target.value)} placeholder="Password" style={inputStyle} />
+                <button onClick={handleTallyConnect} disabled={tallyConnecting || !tallyUsername || !tallyPassword} style={btnStyle(true)}>{tallyConnecting ? '...' : 'Connect'}</button>
+                {tallyMsg && <div style={msgStyle(tallyMsg.error)}>{tallyMsg.text}</div>}
+              </div>
+            )}
           </>
         )}
 
