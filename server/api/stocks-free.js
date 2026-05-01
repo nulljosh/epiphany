@@ -300,7 +300,7 @@ export default async function handler(req, res) {
 
     // Supplement FMP fundamentals from Yahoo v7 when FMP omits them (free tier)
     if (stocks && stocks.length > 0) {
-      const needsFundamentals = stocks.filter(s => s.peRatio === null && s.marketCap === null).map(s => s.symbol);
+      const needsFundamentals = stocks.filter(s => s.peRatio === null || s.marketCap === null).map(s => s.symbol);
       if (needsFundamentals.length > 0) {
         const supplement = await fetchYahooBatch(needsFundamentals);
         if (supplement) {

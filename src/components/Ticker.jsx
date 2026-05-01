@@ -139,7 +139,7 @@ const Ticker = memo(({ items, theme, onItemClick }) => {
       onClick={(e) => {
         const threshold = e.pointerType === 'touch' ? 12 : 10;
         if (dragDistanceRef.current > threshold) { e.preventDefault(); return; }
-        if (onItemClick) onItemClick(item.name);
+        if (onItemClick) onItemClick(item.key);
       }}
       style={{
         display: 'flex',

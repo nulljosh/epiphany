@@ -1,6 +1,6 @@
 # Epiphany -- Technical Whitepaper
 
-**v1.0.2-beta** | April 2026
+**v1.1.0** | May 2026
 
 ## Overview
 

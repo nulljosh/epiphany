@@ -261,6 +261,7 @@ const parseStockData = (raw) => {
     if (symbol && typeof price === 'number') {
       stockMap[symbol] = {
         symbol,
+        shortName: s.shortName || s.name || null,
         price,
         change: change ?? 0,
         changePercent: changePercent ?? 0,

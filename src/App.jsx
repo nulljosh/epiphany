@@ -917,7 +917,7 @@ const reset = useCallback(() => {
         const stock = stocks[sym];
         return {
           key: stock.symbol,
-          name: stock.symbol,
+          name: stock.shortName || stock.name || stock.symbol,
           price: stock.price,
           change: stock.changePercent || 0,
         };

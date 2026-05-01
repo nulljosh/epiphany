@@ -123,10 +123,11 @@ function buildPopupHTML(data) {
   </div>`;
 }
 
-function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, layerType, activePopupRef) {
+function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, layerType, activePopupRef, content = '') {
   if (lon == null || lat == null || isNaN(lon) || isNaN(lat)) return;
   const el = document.createElement('div');
   el.style.cssText = css;
+  if (content) el.textContent = content;
   if (title) el.title = title;
   if (layerType) el._layerType = layerType;
   const showPopup = () => {
@@ -493,8 +494,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    const addMarker = (css, title, data, lon, lat, layerType) =>
-      createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef);
+    const addMarker = (css, title, data, lon, lat, layerType, content = '') =>
+      createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef, content);
 
     if (mapLayers.incidents !== false)
     payload.incidents.slice(0, 15).forEach((inc) => {
@@ -646,10 +647,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
       const isEstimated = fl.estimated === true;
       addMarker(
-        `width:12px;height:12px;border-radius:2px;background:${isEstimated ? 'transparent' : '#818cf8'};${isEstimated ? 'border:2px dashed #818cf8;' : ''}animation:pulse-blue 2.4s infinite;${heading}`,
+        `width:20px;height:20px;background:transparent;font-size:16px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;opacity:${isEstimated ? 0.5 : 1};${heading}`,
         `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}${isEstimated ? ' (est)' : ''}`,
         { type: 'flight', title: `${fl.callsign || fl.icao24 || 'Aircraft'}${isEstimated ? ' (estimated)' : ''}`, detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: isEstimated ? 'Estimated positions' : 'OpenSky Network', link: isEstimated ? null : `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
-        fl.lon, fl.lat, 'flights'
+        fl.lon, fl.lat, 'flights', '✈'
       );
     });
 

@@ -233,7 +233,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
 
         {section === 'about' && (
           <>
-            <Row label="Version" t={t}><span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>v1.0.0-beta</span></Row>
+            <Row label="Version" t={t}><span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>v1.1.0</span></Row>
             <Row label="Name" t={t}><span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>Epiphany</span></Row>
           </>
         )}
