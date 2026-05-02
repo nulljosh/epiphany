@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.4.0 — Native iPhone intelligence app. 4-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
+v1.5.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -14,8 +14,9 @@ v1.4.0 — Native iPhone intelligence app. 4-tab SwiftUI app, portrait-only, dar
 
 1. **Situation** — MapKit map with 8 toggleable live data layers. Default home screen.
 2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index.
-3. **People** — Person search with Google/DuckDuckGo/Wikipedia cascade, social links, indexed profiles.
-4. **Settings** — Profile (avatar + keychain), subscription tier, map layer toggles, Tally integration.
+3. **Portfolio** — Spending chart + forecast, holdings, budget, debt/goals calendar, statements.
+4. **People** — Person search with Google/DuckDuckGo/Wikipedia cascade, social links, indexed profiles.
+5. **Settings** — Profile (avatar + keychain), subscription tier, map layer toggles, Tally integration.
 
 ## Run
 
@@ -29,6 +30,7 @@ xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination '
 
 - `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires)
 - `Views/MarketsView.swift` — Markets list + inline portfolio, stock detail sheets
+- `Views/PortfolioView.swift` — Spending chart, holdings, budget, debt/goals calendar, statements
 - `Views/PeopleView.swift` — Person search + index grid
 - `ContentView.swift` — Tab navigation, parallel data preloading on launch
 - `Models/AppState.swift` — @Observable shared state, avatar persistence
