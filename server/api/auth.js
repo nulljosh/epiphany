@@ -9,7 +9,7 @@ const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
 const RATE_LIMIT_MAX = 15;
 
 async function checkRateLimit(kv, ip) {
-  if (!kv) return true; // fail open if KV is unavailable
+  if (!kv) return false;
   const now = Date.now();
   const key = `ratelimit:${ip}`;
   const entry = await kv.get(key);

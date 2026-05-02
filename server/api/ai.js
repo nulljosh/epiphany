@@ -249,6 +249,20 @@ export default async function handler(req, res) {
   }
 
   const kv = await getKv();
+
+  if (kv) {
+    const userLimitKey = `rl:ai:user:${session.userId}`;
+    const now = Date.now();
+    const userEntry = await kv.get(userLimitKey);
+    if (!userEntry || now - userEntry.firstAttempt > 3_600_000) {
+      await kv.set(userLimitKey, { count: 1, firstAttempt: now }, { ex: 3600 });
+    } else if (userEntry.count >= 20) {
+      return errorResponse(res, 429, 'AI hourly limit reached');
+    } else {
+      await kv.set(userLimitKey, { count: userEntry.count + 1, firstAttempt: userEntry.firstAttempt }, { ex: 3600 });
+    }
+  }
+
   const { message, conversationId } = req.body;
   if (!message || typeof message !== 'string') return errorResponse(res, 400, 'message required');
 
