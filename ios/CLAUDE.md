@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.5.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
+v1.6.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 

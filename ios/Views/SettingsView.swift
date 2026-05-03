@@ -287,30 +287,21 @@ struct SettingsView: View {
     }
 
     private var tierLabel: String {
-        switch appState.user?.tier {
-        case "starter": return "Starter"
-        case "pro": return "Pro"
-        case "ultra": return "Ultra"
+        switch appState.user?.tier?.lowercased() {
+        case "starter", "weekly": return "Weekly"
         default: return "Free"
         }
     }
 
     private var tierColor: Color {
-        switch appState.user?.tier?.lowercased() {
-        case "starter", "weekly": return Palette.appleBlue
-        case "pro": return Palette.warningAmber
-        default: return .secondary
-        }
+        appState.user?.tier?.lowercased() == "starter" || appState.user?.tier?.lowercased() == "weekly"
+            ? Palette.appleBlue : .secondary
     }
 
     private var normalizedTier: SubscriptionTier {
         switch appState.user?.tier?.lowercased() {
-        case "starter", "weekly":
-            return .starter
-        case "pro":
-            return .pro
-        default:
-            return .free
+        case "starter", "weekly": return .starter
+        default: return .free
         }
     }
 }
@@ -592,7 +583,6 @@ private struct ConnectTallySheet: View {
     private func submit() async {
         localError = nil
         step = .loggingIn
-        // Give UI a moment to update before the blocking network call
         try? await Task.sleep(nanoseconds: 100_000_000)
         step = .fetchingData
         let errorMsg = await appState.connectTally(username: username, password: password)
