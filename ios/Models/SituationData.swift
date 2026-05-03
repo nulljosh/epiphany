@@ -580,3 +580,45 @@ struct Wildfire: Codable, Identifiable {
         CLLocationCoordinate2D(latitude: lat, longitude: lon)
     }
 }
+
+// MARK: - AQI
+
+struct AQIResponse: Codable {
+    let readings: [AQIReading]
+    let count: Int
+}
+
+struct AQIReading: Codable, Identifiable {
+    let id: Int?
+    let lat: Double
+    let lon: Double
+    let city: String?
+    let parameter: String?
+    let value: Double?
+    let unit: String?
+    let aqi: Int?
+    let lastUpdated: String?
+
+    var stableId: String { "\(lat)-\(lon)-\(city ?? "")" }
+    var computedId: String { id.map(String.init) ?? stableId }
+    var idValue: String { computedId }
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+
+    var displayAQI: Int { aqi ?? Int(value ?? 0) }
+
+    var aqiLevel: String {
+        let v = displayAQI
+        if v <= 50 { return "Good" }
+        if v <= 100 { return "Moderate" }
+        if v <= 150 { return "Unhealthy (Sensitive)" }
+        return "Unhealthy"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, lat, lon, city, parameter, value, unit, aqi
+        case lastUpdated
+    }
+}

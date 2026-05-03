@@ -165,7 +165,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [userPosition, setUserPosition] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : null);
   const [locLabel, setLocLabel] = useState('Locating\u2026');
   const [geoState, setGeoState] = useState('checking');
-  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [] });
+  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [], aqiReadings: [] });
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -398,7 +398,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           }
           return fallback;
         };
-        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl] = await Promise.all([
+        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl, aqi] = await Promise.all([
           safeFetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [] }),
           safeFetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [], flow: {} }),
           safeFetch(apiPath(`/api/earthquakes?lat=${center.lat}&lon=${center.lon}&radius=500`), { earthquakes: [] }),
@@ -410,6 +410,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           safeFetch(apiPath(`/api/weather-alerts?lat=${center.lat}&lon=${center.lon}`), { alerts: [] }),
           safeFetch(apiPath(`/api/wildfires?lat=${center.lat}&lon=${center.lon}`), { fires: [] }),
           safeFetch(apiPath(`/api/flights?${bboxQ}`), { states: [] }),
+          safeFetch(apiPath(`/api/aqi?lat=${center.lat}&lon=${center.lon}`), { readings: [] }),
         ]);
         if (!cancelled) {
           fetchCountRef.current += 1;
@@ -425,6 +426,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             weatherAlerts: weather.alerts || [],
             wildfires: fires.fires || [],
             flights: fl.states || [],
+            aqiReadings: aqi.readings || [],
           });
         }
       } catch {
@@ -498,7 +500,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef, content);
 
     if (mapLayers.incidents !== false)
-    payload.incidents.slice(0, 15).forEach((inc) => {
+    payload.incidents.slice(0, 25).forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
       const t = inc.type || 'incident';
       const cat = inc.category || 'infrastructure';
@@ -507,8 +509,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const isHospital = t === 'hospital';
       const isFire = t === 'fire_station' || t === 'ambulance_station' || t === 'ses_station';
       const isBarrier = t === 'toll_booth' || t === 'border_control';
+      const isAirport = t === 'airport' || cat === 'airport';
+      const isTransit = t === 'train_station' || t === 'bus_station' || cat === 'transit';
+      const isMuseum = t === 'museum' || cat === 'cultural';
       const isInfra = !isConstruction;
-      // Infrastructure gets smaller, muted markers
       const css = isConstruction
         ? 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);animation:pulse-amber 1.8s infinite;'
         : isPolice
@@ -519,13 +523,20 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         ? `width:${isInfra ? 8 : 12}px;height:${isInfra ? 8 : 12}px;border-radius:50%;background:#f97316;border:2px solid rgba(255,255,255,${isInfra ? 0.3 : 0.6});opacity:${isInfra ? 0.6 : 1};`
         : isBarrier
         ? 'width:10px;height:10px;border-radius:2px;background:#6b7280;border:2px solid rgba(255,255,255,0.5);'
+        : isAirport
+        ? 'width:22px;height:22px;background:transparent;font-size:16px;line-height:22px;text-align:center;display:flex;align-items:center;justify-content:center;'
+        : isTransit
+        ? 'width:10px;height:10px;border-radius:2px;background:#818cf8;border:2px solid rgba(255,255,255,0.5);'
+        : isMuseum
+        ? 'width:10px;height:10px;border-radius:50%;background:#a78bfa;border:2px solid rgba(255,255,255,0.5);'
         : 'width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid rgba(255,255,255,0.5);animation:pulse-amber 1.8s infinite;';
-      const label = inc.title || (isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isBarrier ? 'CHECKPOINT' : t.toUpperCase());
+      const label = inc.title || (isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isBarrier ? 'CHECKPOINT' : isAirport ? 'AIRPORT' : isTransit ? 'TRANSIT' : t.toUpperCase());
       addMarker(
         css,
         inc.description || inc.title || t,
         { type: t, title: label, detail: inc.description || label, level: cat === 'construction' ? 'active' : 'infrastructure', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon) },
-        inc.lon, inc.lat, 'incidents'
+        inc.lon, inc.lat, 'incidents',
+        isAirport ? '✈' : ''
       );
     });
 
@@ -654,6 +665,22 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       );
     });
 
+    // AQI readings
+    if (mapLayers.incidents !== false)
+    payload.aqiReadings.slice(0, 15).forEach((reading) => {
+      if (reading.lat == null || reading.lon == null) return;
+      const aqi = reading.aqi || reading.value || 0;
+      const aqiColor = aqi <= 50 ? '#22c55e' : aqi <= 100 ? '#eab308' : aqi <= 150 ? '#f97316' : '#ef4444';
+      const aqiLevel = aqi <= 50 ? 'good' : aqi <= 100 ? 'moderate' : aqi <= 150 ? 'unhealthy (sensitive)' : 'unhealthy';
+      const size = 28;
+      addMarker(
+        `width:${size}px;height:${size}px;border-radius:50%;background:${aqiColor}22;border:2px solid ${aqiColor};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${aqiColor};font-family:-apple-system,sans-serif;`,
+        `AQI ${aqi} - ${reading.city || 'Station'}`,
+        { type: 'aqi', title: `AQI ${aqi}`, detail: `${reading.parameter || 'PM2.5'}: ${reading.value || aqi} ${reading.unit || 'µg/m³'} — ${reading.city || 'Air Quality Station'}`, level: aqiLevel, source: 'OpenAQ', link: `https://openaq.org/#/location/${reading.id || ''}` },
+        reading.lon, reading.lat, 'incidents', `${Math.round(aqi)}`
+      );
+    });
+
     if (mapLayers.predictions !== false)
     payload.markets.slice(0, 20).forEach((m) => {
       const p = geoKeywordMatch(m.question);
@@ -700,6 +727,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     payload.weatherAlerts.forEach(w => addPoint(w.lat, w.lon, 0.8));
     payload.wildfires.forEach(f => addPoint(f.lat, f.lon, 0.9));
     payload.flights.forEach(f => addPoint(f.lat, f.lon, 0.2));
+    payload.aqiReadings.forEach(r => {
+      const aqi = r.aqi || r.value || 0;
+      addPoint(r.lat, r.lon, Math.min(aqi / 150, 1));
+    });
 
     const geojson = { type: 'FeatureCollection', features };
 
@@ -714,17 +745,20 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           source: 'heatmap-source',
           paint: {
             'heatmap-weight': ['get', 'weight'],
-            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 12, 3],
-            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 8, 12, 30],
-            'heatmap-opacity': 0.6,
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 10, 2, 14, 4],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 16, 8, 40, 12, 80, 15, 120],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 15, 0.5],
             'heatmap-color': [
               'interpolate', ['linear'], ['heatmap-density'],
-              0, 'rgba(0,0,0,0)',
-              0.2, 'rgba(34,211,238,0.3)',
-              0.4, 'rgba(59,130,246,0.5)',
-              0.6, 'rgba(245,158,11,0.6)',
-              0.8, 'rgba(239,68,68,0.7)',
-              1, 'rgba(239,68,68,0.9)',
+              0,    'rgba(0,0,0,0)',
+              0.08, 'rgba(34,211,238,0.12)',
+              0.2,  'rgba(34,211,238,0.28)',
+              0.35, 'rgba(59,130,246,0.42)',
+              0.5,  'rgba(99,102,241,0.55)',
+              0.65, 'rgba(245,158,11,0.65)',
+              0.8,  'rgba(239,68,68,0.75)',
+              0.92, 'rgba(220,38,38,0.85)',
+              1,    'rgba(185,28,28,0.95)',
             ],
           },
         });

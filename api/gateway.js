@@ -31,6 +31,7 @@ const ROUTES = {
   latest,
 
   // Everything else -- lazy loaded, isolated failures
+  aqi:                  lazy(() => import('../server/api/aqi.js')),
   ai:                   lazy(() => import('../server/api/ai.js')),
   'daily-brief':        lazy(() => import('../server/api/daily-brief.js')),
   commodities:          lazy(() => import('../server/api/commodities.js')),

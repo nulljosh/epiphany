@@ -18,12 +18,15 @@ function categorize(el) {
   const emergency = tags.emergency;
   const amenity = tags.amenity;
   const barrier = tags.barrier;
+  const aeroway = tags.aeroway;
+  const railway = tags.railway;
+  const tourism = tags.tourism;
 
   // Active incidents -- things that are temporary or in-progress
   if (highway === 'construction' || highway === 'road_works') {
     return { category: 'construction', type: highway };
   }
-  if (tags.railway === 'construction') {
+  if (railway === 'construction') {
     return { category: 'construction', type: 'railway_construction' };
   }
 
@@ -48,6 +51,22 @@ function categorize(el) {
     return { category: 'barrier', type: barrier };
   }
 
+  // Transport hubs
+  if (aeroway === 'aerodrome') {
+    return { category: 'airport', type: 'airport' };
+  }
+  if (railway === 'station') {
+    return { category: 'transit', type: 'train_station' };
+  }
+  if (amenity === 'bus_station') {
+    return { category: 'transit', type: 'bus_station' };
+  }
+
+  // Cultural
+  if (tourism === 'museum') {
+    return { category: 'cultural', type: 'museum' };
+  }
+
   // Low-signal infrastructure -- filter these out
   if (highway === 'speed_camera' || tags.traffic_calming) {
     return { category: 'low_signal', type: highway || 'traffic_calming' };
@@ -69,6 +88,10 @@ function friendlyTitle(category, type, name) {
     police: 'Police Station',
     toll_booth: 'Toll Booth',
     border_control: 'Border Crossing',
+    airport: 'Airport',
+    train_station: 'Train Station',
+    bus_station: 'Bus Station',
+    museum: 'Museum',
   };
   return titles[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -82,7 +105,7 @@ async function fetchIncidents(bbox) {
 
   const { lamin, lomin, lamax, lomax } = bbox;
   const bb = `${lamin},${lomin},${lamax},${lomax}`;
-  const query = `[out:json][timeout:10];(` +
+  const query = `[out:json][timeout:12];(` +
     `way["highway"="construction"](${bb});` +
     `node["highway"="construction"](${bb});` +
     `node["highway"="road_works"](${bb});` +
@@ -95,7 +118,13 @@ async function fetchIncidents(bbox) {
     `node["amenity"="hospital"](${bb});` +
     `way["amenity"="hospital"](${bb});` +
     `node["barrier"~"^(toll_booth|border_control)$"](${bb});` +
-    `);out center 40;`;
+    `node["aeroway"="aerodrome"](${bb});` +
+    `way["aeroway"="aerodrome"](${bb});` +
+    `node["railway"="station"](${bb});` +
+    `node["amenity"="bus_station"](${bb});` +
+    `node["tourism"="museum"](${bb});` +
+    `way["tourism"="museum"](${bb});` +
+    `);out center 60;`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);

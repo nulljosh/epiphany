@@ -475,6 +475,16 @@ final class EpiphanyAPI: @unchecked Sendable {
         return response.fires
     }
 
+    func fetchAQI(lat: Double, lon: Double) async throws -> [AQIReading] {
+        let url = try makeURL("/api/aqi", query: [
+            "lat": String(lat),
+            "lon": String(lon),
+        ])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(AQIResponse.self, from: data).readings
+    }
+
     // MARK: - People Search
 
     func fetchPeople(query: String) async throws -> PersonProfile {

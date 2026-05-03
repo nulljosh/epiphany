@@ -376,6 +376,13 @@ final class EpiphanyAPI {
         return response.fires
     }
 
+    func fetchAQI(lat: Double, lon: Double) async throws -> [AQIReading] {
+        let url = try makeURL("/api/aqi", query: ["lat": String(lat), "lon": String(lon)])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(AQIResponse.self, from: data).readings
+    }
+
     func fetchDailyBrief() async throws -> DailyBrief {
         let url = try makeURL("/api/daily-brief")
         let request = URLRequest(url: url)

@@ -19,16 +19,19 @@ export default function MobileLayout({
         <div style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <button
             onClick={() => setMobileTabsOpen(p => !p)}
+            aria-label="Menu"
             style={{
               width: 44, height: 44, borderRadius: 10, border: 'none',
               background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
               backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-              color: t.text, fontSize: 18, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: 'none',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: 'none', overflow: 'visible',
             }}
           >
-            {mobileTabsOpen ? '\u00d7' : '\u2630'}
+            {mobileTabsOpen
+              ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={t.text} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={t.text} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+            }
           </button>
           {mobileTabsOpen && (
             <div style={{

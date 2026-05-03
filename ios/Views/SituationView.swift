@@ -16,6 +16,7 @@ struct SituationView: View {
     @State private var localEvents: [LocalEvent] = []
     @State private var trafficData: TrafficData?
     @State private var wildfires: [Wildfire] = []
+    @State private var aqiReadings: [AQIReading] = []
 
     @State private var error: String?
     @State private var flightStatusMessage: String?
@@ -37,6 +38,7 @@ struct SituationView: View {
     @AppStorage("showLocalEvents") private var showLocalEvents = true
     @AppStorage("showTraffic") private var showTraffic = true
     @AppStorage("showWildfires") private var showWildfires = true
+    @AppStorage("showAQI") private var showAQI = true
 
     private var currentRegion: MKCoordinateRegion {
         locationManager.region ?? LocationManager.fallbackRegion
@@ -282,6 +284,40 @@ struct SituationView: View {
         }
     }
 
+    @MapContentBuilder
+    private var aqiAnnotations: some MapContent {
+        if showAQI {
+            ForEach(aqiReadings.prefix(10)) { reading in
+                Annotation("AQI \(reading.displayAQI)", coordinate: reading.coordinate) {
+                    Button {
+                        Haptics.impact(.light)
+                        selectedEvent = .aqi(reading)
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(aqiSwiftColor(reading.displayAQI).opacity(0.15))
+                                .frame(width: 32, height: 32)
+                            Circle()
+                                .strokeBorder(aqiSwiftColor(reading.displayAQI), lineWidth: 1.5)
+                                .frame(width: 32, height: 32)
+                            Text("\(reading.displayAQI)")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(aqiSwiftColor(reading.displayAQI))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func aqiSwiftColor(_ aqi: Int) -> Color {
+        if aqi <= 50 { return .green }
+        if aqi <= 100 { return .yellow }
+        if aqi <= 150 { return .orange }
+        return .red
+    }
+
     // MARK: - Computed helpers
 
     private var locatableLocalEvents: [LocalEvent] {
@@ -291,12 +327,12 @@ struct SituationView: View {
     private var totalEventCount: Int {
         earthquakes.count + flights.count + incidents.count + weatherAlerts.count
         + crimeIncidents.count + locatableLocalEvents.count
-        + (trafficData?.incidents?.count ?? 0) + wildfires.count
+        + (trafficData?.incidents?.count ?? 0) + wildfires.count + aqiReadings.count
     }
 
     private var allSourcesDisabled: Bool {
         !showEarthquakes && !showFlights && !showIncidents && !showWeatherAlerts
-        && !showCrime && !showLocalEvents && !showTraffic && !showWildfires
+        && !showCrime && !showLocalEvents && !showTraffic && !showWildfires && !showAQI
     }
 
     // MARK: - Overlays
@@ -392,6 +428,7 @@ struct SituationView: View {
             localEventAnnotations
             trafficAnnotations
             wildfireAnnotations
+            aqiAnnotations
             UserAnnotation()
         }
         .mapStyle(.standard(elevation: .realistic))
@@ -476,7 +513,7 @@ struct SituationView: View {
         let lomin = center.longitude - span.longitudeDelta / 2
         let lomax = center.longitude + span.longitudeDelta / 2
 
-        let completion = LoadCompletion(total: 8)
+        let completion = LoadCompletion(total: 9)
 
         // Each source loads independently and applies state as soon as it arrives.
         // No source blocks another.
@@ -549,6 +586,15 @@ struct SituationView: View {
             let r = await loadSection(label: "Wildfires") { try await EpiphanyAPI.shared.fetchWildfires(lat: center.latitude, lon: center.longitude) }
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { wildfires = r.value }
+            if let e = r.error { await completion.addError(e) }
+        }
+
+        Task { @MainActor in
+            defer { Task { await completion.done() } }
+            guard showAQI else { aqiReadings = []; return }
+            let r = await loadSection(label: "AQI") { try await EpiphanyAPI.shared.fetchAQI(lat: center.latitude, lon: center.longitude) }
+            guard loadRegionId == regionId else { return }
+            if r.error == nil || !r.value.isEmpty { aqiReadings = r.value }
             if let e = r.error { await completion.addError(e) }
         }
 
@@ -852,6 +898,7 @@ private enum MapEventDetail: Identifiable {
     case crime(CrimeIncident)
     case localEvent(LocalEvent)
     case trafficIncident(TrafficData.TrafficIncident)
+    case aqi(AQIReading)
 
     var id: String {
         switch self {
@@ -869,6 +916,8 @@ private enum MapEventDetail: Identifiable {
             return "local-\(event.id)"
         case .trafficIncident(let incident):
             return "traffic-\(incident.id)"
+        case .aqi(let reading):
+            return "aqi-\(reading.idValue)"
         }
     }
 }
@@ -977,6 +1026,7 @@ private struct SituationEventDetailView: View {
         case .crime(let c): return c.coordinate
         case .localEvent(let e): return e.coordinate
         case .trafficIncident(let t): return t.coordinate
+        case .aqi(let r): return r.coordinate
         }
     }
 
@@ -989,6 +1039,7 @@ private struct SituationEventDetailView: View {
         case .crime: return "Crime"
         case .localEvent: return "Local Event"
         case .trafficIncident: return "Traffic"
+        case .aqi: return "Air Quality"
         }
     }
 
@@ -1001,6 +1052,7 @@ private struct SituationEventDetailView: View {
         case .crime: return "shield.lefthalf.filled"
         case .localEvent: return "mappin.circle.fill"
         case .trafficIncident: return "car.fill"
+        case .aqi: return "aqi.medium"
         }
     }
 
@@ -1013,6 +1065,7 @@ private struct SituationEventDetailView: View {
         case .crime: return .red
         case .localEvent: return Palette.appleBlue
         case .trafficIncident: return .orange
+        case .aqi(let r): return aqiSwiftColor(r.displayAQI)
         }
     }
 
@@ -1048,6 +1101,8 @@ private struct SituationEventDetailView: View {
             return event.title
         case .trafficIncident(let incident):
             return incident.title ?? "Traffic Incident"
+        case .aqi(let r):
+            return "AQI \(r.displayAQI) -- \(r.city ?? "Station")"
         }
     }
 
@@ -1067,6 +1122,8 @@ private struct SituationEventDetailView: View {
             return event.eventDescription ?? event.venue ?? event.source
         case .trafficIncident(let incident):
             return incident.severity?.capitalized
+        case .aqi(let r):
+            return r.aqiLevel
         }
     }
 
@@ -1133,6 +1190,18 @@ private struct SituationEventDetailView: View {
             if let lat = incident.latitude { result.append(("Latitude", String(format: "%.4f", lat))) }
             if let lon = incident.longitude { result.append(("Longitude", String(format: "%.4f", lon))) }
             return result.isEmpty ? [("Info", "No details available")] : result
+        case .aqi(let r):
+            var result: [(label: String, value: String)] = [
+                ("AQI", "\(r.displayAQI)"),
+                ("Level", r.aqiLevel),
+            ]
+            if let param = r.parameter, let val = r.value, let unit = r.unit {
+                result.append((param, "\(val) \(unit)"))
+            }
+            if let city = r.city { result.append(("Station", city)) }
+            result.append(("Latitude", String(format: "%.4f", r.lat)))
+            result.append(("Longitude", String(format: "%.4f", r.lon)))
+            return result
         }
     }
 }
