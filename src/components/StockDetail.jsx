@@ -267,10 +267,12 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const [editingIndicator, setEditingIndicator] = useState(null);
   const oscillatorContainerRef = useRef(null);
   const oscillatorChartRef = useRef(null);
+  const scrollRef = useRef(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
   // Persist indicators to localStorage
   useEffect(() => { saveIndicators(activeIndicators); }, [activeIndicators]);
+  useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, [symbol]);
 
   const addIndicator = useCallback((key) => {
     const lib = INDICATOR_LIBRARY.find(i => i.key === key);
@@ -671,6 +673,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     >
       <div
         onClick={e => e.stopPropagation()}
+        ref={scrollRef}
         style={{
           width: '100%', maxWidth: 'min(520px, 100vw)',
           maxHeight: '92dvh', overflow: 'auto',

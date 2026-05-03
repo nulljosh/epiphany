@@ -110,8 +110,8 @@ enum TallyService {
         let config = URLSessionConfiguration.default
         config.httpCookieAcceptPolicy = .always
         config.httpCookieStorage = HTTPCookieStorage.shared
-        config.timeoutIntervalForRequest = 15
-        config.timeoutIntervalForResource = 30
+        config.timeoutIntervalForRequest = 45
+        config.timeoutIntervalForResource = 90
         return URLSession(configuration: config)
     }()
 

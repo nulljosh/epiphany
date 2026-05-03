@@ -18,6 +18,16 @@ struct MarketsView: View {
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
+    private static let assetDisplayNames: [String: String] = [
+        "Gold": "Gold (XAU/USD)", "Silver": "Silver (XAG/USD)",
+        "Oil": "WTI Crude Oil", "Natgas": "Natural Gas",
+        "Copper": "Copper (HG)", "Platinum": "Platinum (PL)",
+        "Palladium": "Palladium (PA)",
+        "Nas100": "Nasdaq 100", "Us500": "S&P 500", "Us30": "Dow Jones",
+        "Dxy": "US Dollar Index",
+        "Btc": "Bitcoin", "Eth": "Ethereum",
+    ]
+
     private func rebuildItems() {
         var items: [MarketItem] = []
         for stock in appState.stocks {
@@ -28,14 +38,16 @@ struct MarketsView: View {
             ))
         }
         for commodity in appState.commodities {
+            let displayName = Self.assetDisplayNames[commodity.name] ?? commodity.name
             items.append(MarketItem(
-                name: commodity.name, symbol: commodity.name, price: commodity.price,
+                name: displayName, symbol: commodity.name, price: commodity.price,
                 changePercent: commodity.changePercent, marketCap: nil, peRatio: nil, kind: .commodity
             ))
         }
         for coin in appState.crypto {
+            let displayName = Self.assetDisplayNames[coin.symbol.capitalized] ?? coin.symbol.uppercased()
             items.append(MarketItem(
-                name: coin.symbol, symbol: coin.symbol, price: coin.spot,
+                name: displayName, symbol: coin.symbol.uppercased(), price: coin.spot,
                 changePercent: coin.chgPct, marketCap: nil, peRatio: nil, kind: .crypto
             ))
         }

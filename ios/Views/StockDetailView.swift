@@ -32,6 +32,7 @@ struct StockDetailView: View {
     @State private var smaPeriod = 20
     @State private var emaPeriod = 50
     @State private var showIndicatorConfig = false
+    @State private var liveStock: Stock?
 
     private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
 
@@ -148,22 +149,23 @@ struct StockDetailView: View {
                     if stock.volume > 0 {
                         statCell("Volume", value: stock.formattedVolume)
                     }
-                    if let cap = stock.formattedMarketCap {
+                    let enriched = liveStock ?? stock
+                    if let cap = enriched.formattedMarketCap {
                         statCell("Market Cap", value: "$\(cap)")
                     }
-                    if let pe = stock.formattedPERatio {
+                    if let pe = enriched.formattedPERatio {
                         statCell("P/E Ratio", value: pe)
                     }
-                    if let e = stock.formattedEPS {
+                    if let e = enriched.formattedEPS {
                         statCell("EPS", value: e)
                     }
-                    if let b = stock.formattedBeta {
+                    if let b = enriched.formattedBeta {
                         statCell("Beta", value: b)
                     }
-                    if let y = stock.formattedYield {
+                    if let y = enriched.formattedYield {
                         statCell("Yield", value: y)
                     }
-                    if let av = stock.formattedAvgVolume {
+                    if let av = enriched.formattedAvgVolume {
                         statCell("Avg Vol", value: av)
                     }
                 }
@@ -239,6 +241,9 @@ struct StockDetailView: View {
         }
         .task {
             await loadRelatedNews()
+        }
+        .task {
+            liveStock = try? await EpiphanyAPI.shared.fetchStockQuote(symbol: stock.symbol)
         }
     }
 

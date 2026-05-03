@@ -118,6 +118,16 @@ final class AppState {
 
     // MARK: - Auth
 
+    #if DEBUG
+    func autoLoginIfNeeded() {
+        guard !isLoggedIn,
+              let email = ProcessInfo.processInfo.environment["DEV_EMAIL"],
+              let password = ProcessInfo.processInfo.environment["DEV_PASSWORD"]
+        else { return }
+        Task { await login(email: email, password: password) }
+    }
+    #endif
+
     func checkSession() async {
         do {
             user = try await EpiphanyAPI.shared.me()

@@ -500,29 +500,20 @@ private struct DeleteAccountSheet: View {
 private enum SubscriptionTier: String, CaseIterable, Identifiable {
     case free
     case starter
-    case pro
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .free:
-            return "Free"
-        case .starter:
-            return "Weekly"
-        case .pro:
-            return "Pro"
+        case .free: return "Free"
+        case .starter: return "Weekly"
         }
     }
 
     var price: String? {
         switch self {
-        case .free:
-            return "Free"
-        case .starter:
-            return "$1/wk"
-        case .pro:
-            return "$4/wk"
+        case .free: return "Free"
+        case .starter: return "$1/wk"
         }
     }
 }
@@ -533,8 +524,19 @@ private struct ConnectTallySheet: View {
 
     @State private var username = ""
     @State private var password = ""
-    @State private var isSubmitting = false
+    @State private var step: ConnectStep = .idle
     @State private var localError: String?
+
+    private enum ConnectStep {
+        case idle, loggingIn, fetchingData
+        var label: String {
+            switch self {
+            case .idle: return "Connect"
+            case .loggingIn: return "Logging in to BC Self-Serve..."
+            case .fetchingData: return "Fetching payment data... (30s)"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -551,6 +553,17 @@ private struct ConnectTallySheet: View {
                     SecureField("Password", text: $password)
                 }
 
+                if step != .idle {
+                    Section {
+                        HStack(spacing: 10) {
+                            ProgressView()
+                            Text(step.label)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 if let localError {
                     Section {
                         Text(localError)
@@ -559,10 +572,10 @@ private struct ConnectTallySheet: View {
                 }
 
                 Section {
-                    Button(isSubmitting ? "Connecting..." : "Connect") {
+                    Button(step == .idle ? "Connect" : step.label) {
                         Task { await submit() }
                     }
-                    .disabled(isSubmitting || username.isEmpty || password.isEmpty)
+                    .disabled(step != .idle || username.isEmpty || password.isEmpty)
                 }
             }
             .navigationTitle("Connect Tally")
@@ -570,15 +583,20 @@ private struct ConnectTallySheet: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }
+                        .disabled(step != .idle)
                 }
             }
         }
     }
 
     private func submit() async {
-        isSubmitting = true
-        defer { isSubmitting = false }
+        localError = nil
+        step = .loggingIn
+        // Give UI a moment to update before the blocking network call
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        step = .fetchingData
         let errorMsg = await appState.connectTally(username: username, password: password)
+        step = .idle
         if errorMsg == nil {
             dismiss()
         } else {

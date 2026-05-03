@@ -166,6 +166,14 @@ final class EpiphanyAPI: @unchecked Sendable {
         return try decode([Stock].self, from: data)
     }
 
+    func fetchStockQuote(symbol: String) async throws -> Stock? {
+        let url = try makeURL("/api/stocks-free", query: ["symbols": symbol])
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let data = try await perform(request)
+        return try decode([Stock].self, from: data).first
+    }
+
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
         let interval: String
         switch range {

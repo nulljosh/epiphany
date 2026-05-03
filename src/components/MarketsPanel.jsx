@@ -232,7 +232,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         if (!s.symbol || typeof s.price !== 'number') return;
         items.push({
           symbol: s.symbol,
-          name: s.name || s.symbol,
+          name: s.shortName || s.symbol,
           price: s.price,
           changePercent: s.changePercent || 0,
           kind: 'stock',

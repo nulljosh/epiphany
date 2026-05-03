@@ -23,6 +23,9 @@ struct EpiphanyApp: App {
 
                 // Restore auth DURING splash so login sheet never flashes.
                 await appState.restoreAuthentication()
+                #if DEBUG
+                appState.autoLoginIfNeeded()
+                #endif
                 appState.error = nil
 
                 withAnimation(.easeOut(duration: 0.6)) {
