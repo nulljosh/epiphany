@@ -23,6 +23,11 @@ targets:
           - "README.md"
           - "CLAUDE.md"
           - "architecture.svg"
+          - "AppIcon.svg"
+          - "icon.svg"
+          - "plan.md"
+          - "scripts"
+          - "*.profraw"
           - Tests
           - UITests
     settings:

@@ -4,6 +4,13 @@ import Network
 import SwiftUI
 import UIKit
 
+private func aqiSwiftColor(_ aqi: Int) -> Color {
+    if aqi <= 50 { return .green }
+    if aqi <= 100 { return .yellow }
+    if aqi <= 150 { return .orange }
+    return .red
+}
+
 struct SituationView: View {
     @State private var locationManager = LocationManager()
     @State private var mapPosition = MapCameraPosition.region(LocationManager.fallbackRegion)
@@ -309,13 +316,6 @@ struct SituationView: View {
                 }
             }
         }
-    }
-
-    private func aqiSwiftColor(_ aqi: Int) -> Color {
-        if aqi <= 50 { return .green }
-        if aqi <= 100 { return .yellow }
-        if aqi <= 150 { return .orange }
-        return .red
     }
 
     // MARK: - Computed helpers

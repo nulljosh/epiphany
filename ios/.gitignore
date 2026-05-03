@@ -22,3 +22,8 @@ Package.resolved
 # OS
 .DS_Store
 *.swp
+
+# Xcode artifacts
+*.profraw
+scripts/
+plan.md
