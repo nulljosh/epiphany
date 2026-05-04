@@ -6,8 +6,6 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @State private var showUpgradeAlert = false
     @State private var upgradeTarget: SubscriptionTier?
-    @State private var showChangeEmail = false
-    @State private var showChangePassword = false
     @State private var showDeleteAccount = false
     @State private var isUploadingAvatar = false
     @State private var showConnectTally = false
@@ -101,13 +99,9 @@ struct SettingsView: View {
                     Button("Change Name") {
                         showChangeName = true
                     }
-
-                    Button("Change Email") {
-                        showChangeEmail = true
-                    }
-
-                    Button("Change Password") {
-                        showChangePassword = true
+                    NavigationLink("Security") {
+                        SecuritySection()
+                            .environment(appState)
                     }
                 }
 
@@ -138,14 +132,6 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    NavigationLink {
-                        MapSourcesSettingsView()
-                    } label: {
-                        Label("Map Sources", systemImage: "map")
-                    }
-                }
-
-                Section {
                     Button(role: .destructive) {
                         Task { await appState.logout() }
                     } label: {
@@ -169,26 +155,10 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .tint(Palette.appleBlue)
                 }
-
-                Section {
-                    NavigationLink {
-                        MapSourcesSettingsView()
-                    } label: {
-                        Label("Map Sources", systemImage: "map")
-                    }
-                }
             }
         }
         .sheet(isPresented: $showChangeName) {
             ChangeNameSheet()
-                .environment(appState)
-        }
-        .sheet(isPresented: $showChangeEmail) {
-            ChangeEmailSheet()
-                .environment(appState)
-        }
-        .sheet(isPresented: $showChangePassword) {
-            ChangePasswordSheet()
                 .environment(appState)
         }
         .sheet(isPresented: $showDeleteAccount) {
@@ -708,4 +678,24 @@ struct MapSourcesSettingsView: View {
     }
 }
 
+private struct SecuritySection: View {
+    @Environment(AppState.self) private var appState
+    @State private var showChangeEmail = false
+    @State private var showChangePassword = false
 
+    var body: some View {
+        List {
+            Section {
+                Button("Change Email") { showChangeEmail = true }
+                Button("Change Password") { showChangePassword = true }
+            }
+        }
+        .navigationTitle("Security")
+        .sheet(isPresented: $showChangeEmail) {
+            ChangeEmailSheet().environment(appState)
+        }
+        .sheet(isPresented: $showChangePassword) {
+            ChangePasswordSheet().environment(appState)
+        }
+    }
+}
