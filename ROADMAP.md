@@ -113,8 +113,14 @@ Ordered by effort (fewest tokens → most). Ship the top first.
 - Geocoding / places (HERE)
 - High-res wildfire (FIRMS_MAP)
 - Local events (TICKETMASTER)
-- FMP stock data
+- FMP stock data (`FMP_API_KEY` in Vercel env → unblocks market cap + P/E on iOS)
 - Blob-cached latest snapshot (`/api/latest`) — restore handler when ready
+
+### iOS map sources (custom tile overlay)
+- Swap SwiftUI `Map {}` for `MKMapView` via `UIViewRepresentable` in `SituationView.swift`
+- New `ios/Helpers/MapViewRepresentable.swift` — `MKTileOverlay` support for any XYZ tile URL
+- Settings picker: 10 presets (OSM, ESRI Satellite, Stamen Terrain, CartoDB Dark, etc.) + custom URL field
+- `@AppStorage("customTileURL")` persists selection
 
 ### Security + API audit
 - Per-service API audit: keep/drop, data populated?, reliable?, safe?
@@ -136,6 +142,8 @@ Ordered by effort (fewest tokens → most). Ship the top first.
 
 ## Done
 
+- iOS plane filter: flights >35,000 ft hidden by default; Settings toggle to re-enable
+- iOS avatar: pixel art generator (no photo picker); SVGRasterizer white-render fixed
 - Rename: Monica → Epiphany (GitHub repo, Vercel, iOS/macOS bundle IDs, READMEs, CLAUDE.md, memory)
 - STALE indicator / heartbeat
 - Macro pulse strip (dynamic from `/api/macro`)
