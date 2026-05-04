@@ -81,23 +81,68 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
   const generateNodeGraphSVG = () => {
-    const colors = ['#7aab7a', '#c8913a', '#5b8fc9', '#c96b6b', '#9b7ac9'];
-    const nodeColor = colors[Math.floor(Math.random() * colors.length)];
-    const jitter = (n) => n + (Math.random() - 0.5) * 8;
-    const nodes = [
-      [jitter(100), jitter(48)], [jitter(64), jitter(74)], [jitter(136), jitter(74)],
-      [jitter(52), jitter(108)], [100, 100], [jitter(148), jitter(108)],
-      [jitter(80), jitter(148)], [jitter(120), jitter(148)],
+    const r = () => Math.random();
+    const palettes = [
+      ['#5b8fc9','#7aabde','#3a6fa8'], ['#7aab7a','#5a9e5a','#a8d4a8'],
+      ['#c96b6b','#e08080','#a84444'], ['#9b7ac9','#b89de0','#7a5aa8'],
+      ['#c8913a','#e0b060','#a87020'], ['#5bc9c9','#3aa8a8','#80dede'],
+      ['#c96ba8','#e080c0','#a84480'], ['#c9c96b','#e0d840','#a8a830'],
     ];
-    const allEdges = [[0,1],[0,2],[1,3],[2,5],[1,4],[2,4],[3,4],[4,5],[3,6],[5,7],[4,6],[4,7],[6,7]];
-    const edges = allEdges.filter(() => Math.random() > 0.25);
+    const palette = palettes[Math.floor(r() * palettes.length)];
+    const styles = ['scatter','radial','chain','layered','cluster'];
+    const style = styles[Math.floor(r() * styles.length)];
+    const nodeCount = 5 + Math.floor(r() * 7);
+    const cx = 100, cy = 100;
+    let nodes = [];
+    if (style === 'radial') {
+      nodes.push([cx, cy]);
+      for (let i = 1; i < nodeCount; i++) {
+        const a = (i / (nodeCount - 1)) * Math.PI * 2 + r() * 0.5;
+        const d = 28 + r() * 38;
+        nodes.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]);
+      }
+    } else if (style === 'chain') {
+      let x = 40 + r() * 20, y = 55 + r() * 20;
+      for (let i = 0; i < nodeCount; i++) {
+        nodes.push([Math.max(32, Math.min(168, x)), Math.max(32, Math.min(168, y))]);
+        x += 14 + r() * 18; y += (r() - 0.5) * 44;
+      }
+    } else if (style === 'layered') {
+      const rows = [Math.ceil(nodeCount / 3), Math.ceil(nodeCount / 3), nodeCount - 2 * Math.ceil(nodeCount / 3)];
+      [55, 100, 145].forEach((yPos, l) => {
+        const n = Math.max(1, rows[l]);
+        for (let i = 0; i < n; i++) nodes.push([(200 / (n + 1)) * (i + 1) + (r() - 0.5) * 14, yPos + (r() - 0.5) * 14]);
+      });
+    } else if (style === 'cluster') {
+      const cc = Array.from({ length: 2 + Math.floor(r() * 2) }, () => [45 + r() * 110, 45 + r() * 110]);
+      for (let i = 0; i < nodeCount; i++) { const c = cc[i % cc.length]; nodes.push([c[0] + (r() - 0.5) * 36, c[1] + (r() - 0.5) * 36]); }
+    } else {
+      for (let i = 0; i < nodeCount; i++) { const a = r() * Math.PI * 2, d = r() * 68; nodes.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]); }
+    }
+    nodes = nodes.map(([x, y]) => [Math.max(28, Math.min(172, x)), Math.max(28, Math.min(172, y))]);
+    const edges = [];
+    for (let i = 1; i < nodes.length; i++) {
+      let near = 0, minD = Infinity;
+      for (let j = 0; j < i; j++) { const d = Math.hypot(nodes[i][0] - nodes[j][0], nodes[i][1] - nodes[j][1]); if (d < minD) { minD = d; near = j; } }
+      edges.push([i, near]);
+    }
+    const extras = Math.floor(r() * nodeCount * 0.8);
+    for (let k = 0; k < extras; k++) {
+      const a = Math.floor(r() * nodes.length), b = Math.floor(r() * nodes.length);
+      if (a !== b && !edges.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) edges.push([a, b]);
+    }
+    const sw = (1 + r() * 1.5).toFixed(1);
+    const so = (0.15 + r() * 0.28).toFixed(2);
+    const bgs = ['#0f0f0f','#0d1520','#120d0d','#0d1210','#12100d'];
+    const bg = bgs[Math.floor(r() * bgs.length)];
+    const multiColor = r() > 0.35;
     const edgeSvg = edges.map(([a, b]) =>
-      `<line x1="${nodes[a][0].toFixed(1)}" y1="${nodes[a][1].toFixed(1)}" x2="${nodes[b][0].toFixed(1)}" y2="${nodes[b][1].toFixed(1)}" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>`
+      `<line x1="${nodes[a][0].toFixed(1)}" y1="${nodes[a][1].toFixed(1)}" x2="${nodes[b][0].toFixed(1)}" y2="${nodes[b][1].toFixed(1)}" stroke="rgba(255,255,255,${so})" stroke-width="${sw}"/>`
     ).join('');
     const nodeSvg = nodes.map(([x, y], i) =>
-      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i === 0 || i === 4 ? 9 : 7}" fill="${nodeColor}"/>`
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(3.5 + r() * 7).toFixed(1)}" fill="${multiColor ? palette[i % palette.length] : palette[0]}"/>`
     ).join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><circle cx="100" cy="100" r="100" fill="#0f0f0f"/>${edgeSvg}${nodeSvg}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><circle cx="100" cy="100" r="100" fill="${bg}"/>${edgeSvg}${nodeSvg}</svg>`;
   };
 
   const showAvatarMsg = useCallback((msg) => {
