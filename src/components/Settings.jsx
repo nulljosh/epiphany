@@ -119,7 +119,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
       const base64 = btoa(unescape(encodeURIComponent(svg)));
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
       const data = await res.json();
-      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); showAvatarMsg({ text: 'New avatar generated', error: false }); if (refreshUser) refreshUser(); }
+      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); showAvatarMsg({ text: 'New avatar generated', error: false }); }
       else showAvatarMsg({ text: data.error || 'Failed', error: true });
     } catch { showAvatarMsg({ text: 'Failed', error: true }); }
     finally { setAvatarUploading(false); }
