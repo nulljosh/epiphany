@@ -141,28 +141,27 @@ struct SituationView: View {
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
         if showIncidents {
-            // Active incidents (construction, road works) -- prominent orange/yellow
             ForEach(Array(activeIncidents.prefix(maxIncidentAnnotations))) { incident in
                 Annotation(incident.title, coordinate: incident.coordinate) {
                     Button {
                         Haptics.impact(.medium)
                         selectedEvent = .incident(incident)
                     } label: {
-                        sfPin(incidentSymbol(incident.title), color: incidentColor(incident.title))
+                        Text(incidentEmoji(incident.title))
+                            .font(.caption)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            // Infrastructure (police, fire, hospital) -- muted, smaller
             ForEach(Array(infrastructureIncidents.prefix(15))) { incident in
                 Annotation(incident.title, coordinate: incident.coordinate) {
                     Button {
                         Haptics.impact(.light)
                         selectedEvent = .incident(incident)
                     } label: {
-                        Image(systemName: incidentSymbol(incident.title))
+                        Text(incidentEmoji(incident.title))
                             .font(.caption2)
-                            .foregroundStyle(incidentColor(incident.title).opacity(0.7))
+                            .opacity(0.7)
                     }
                     .buttonStyle(.plain)
                 }
@@ -176,6 +175,22 @@ struct SituationView: View {
 
     private var infrastructureIncidents: [Incident] {
         incidents.filter { $0.isInfrastructure }
+    }
+
+    private func incidentEmoji(_ title: String) -> String {
+        let t = title.lowercased()
+        if t.contains("police") { return "🚔" }
+        if t.contains("fire") || t.contains("hydrant") { return "🚒" }
+        if t.contains("hospital") || t.contains("emergency") { return "🏥" }
+        if t.contains("construction") || t.contains("road_works") { return "🚧" }
+        if t.contains("border") || t.contains("crossing") { return "🛂" }
+        if t.contains("accident") || t.contains("crash") { return "💥" }
+        if t.contains("closure") || t.contains("blocked") { return "🚫" }
+        if t.contains("hazard") { return "⚠️" }
+        if t.contains("flood") || t.contains("water") { return "💧" }
+        if t.contains("airport") { return "🛫" }
+        if t.contains("train") || t.contains("transit") || t.contains("bus") { return "🚉" }
+        return "⚠️"
     }
 
     private func incidentSymbol(_ title: String) -> String {
@@ -214,7 +229,8 @@ struct SituationView: View {
                             Haptics.impact(.medium)
                             selectedEvent = .weatherAlert(alert)
                         } label: {
-                            sfPin("cloud.bolt.fill", color: .yellow)
+                            Text("⛈️")
+                                .font(.caption)
                         }
                         .buttonStyle(.plain)
                     }
@@ -232,7 +248,8 @@ struct SituationView: View {
                         Haptics.impact(.medium)
                         selectedEvent = .crime(crime)
                     } label: {
-                        sfPin("exclamationmark.circle.fill", color: .red)
+                        Text("🚨")
+                            .font(.caption)
                     }
                     .buttonStyle(.plain)
                 }
@@ -250,7 +267,8 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .localEvent(event)
                         } label: {
-                            sfPin("mappin", color: .green)
+                            Text("📍")
+                                .font(.caption)
                         }
                         .buttonStyle(.plain)
                     }
@@ -269,7 +287,8 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .trafficIncident(incident)
                         } label: {
-                            sfPin("car.fill", color: .mint)
+                            Text("🚗")
+                                .font(.caption)
                         }
                         .buttonStyle(.plain)
                     }
@@ -283,11 +302,8 @@ struct SituationView: View {
         if showWildfires {
             ForEach(wildfires) { fire in
                 Annotation("Wildfire", coordinate: fire.coordinate) {
-                    Image(systemName: "flame.fill")
+                    Text("🔥")
                         .font(.caption)
-                        .foregroundStyle(.orange)
-                        .padding(4)
-                        .background(.black.opacity(0.6), in: Circle())
                 }
             }
         }
@@ -1022,7 +1038,7 @@ private struct SituationEventDetailView: View {
     private var eventCoordinate: CLLocationCoordinate2D? {
         switch event {
         case .earthquake(let q): return q.coordinate
-        case .flight(let f): return f.coordinate
+        case .flight: return nil  // directions to a moving airplane make no sense
         case .incident(let i): return i.coordinate
         case .weatherAlert(let a): return a.coordinate
         case .crime(let c): return c.coordinate
@@ -1073,6 +1089,10 @@ private struct SituationEventDetailView: View {
 
     private var eventURL: URL? {
         switch event {
+        case .flight(let f):
+            let cs = f.callsign.trimmingCharacters(in: .whitespaces)
+            guard !cs.isEmpty else { return nil }
+            return URL(string: "https://www.flightaware.com/live/flight/\(cs)")
         case .localEvent(let e):
             guard let urlStr = e.url else { return nil }
             return URL(string: urlStr)

@@ -217,10 +217,10 @@ export default function App() {
       }
       // Skip shortcuts when typing in inputs
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      // Number keys 1-4 switch tabs
+      // Number keys switch tabs
       const numKey = parseInt(e.key);
-      if (numKey >= 1 && numKey <= 5) {
-        const tabs = ['situation', 'markets', 'portfolio', 'people', 'settings'];
+      if (numKey >= 1 && numKey <= 6) {
+        const tabs = ['situation', 'markets', 'simulator', 'portfolio', 'people', 'settings'];
         const tab = tabs[numKey - 1];
         setActiveTab(tab);
         if (isMobileNav) setMobilePanelOpen(true);
