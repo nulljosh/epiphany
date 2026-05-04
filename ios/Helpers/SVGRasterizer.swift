@@ -32,10 +32,20 @@ final class SVGRasterizer: NSObject, WKNavigationDelegate {
         svg{width:100%;height:100%;display:block}</style></head>
         <body>\(svg)</body></html>
         """
-        return await withCheckedContinuation { cont in
+        // WKWebView must be in the view hierarchy to snapshot correctly.
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first
+        window?.addSubview(webView)
+        webView.isHidden = true
+
+        let result = await withCheckedContinuation { cont in
             continuation = cont
             webView.loadHTMLString(html, baseURL: nil)
         }
+
+        webView.removeFromSuperview()
+        return result
     }
 
     nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

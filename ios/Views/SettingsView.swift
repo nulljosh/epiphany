@@ -1,4 +1,3 @@
-import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -10,13 +9,9 @@ struct SettingsView: View {
     @State private var showChangeEmail = false
     @State private var showChangePassword = false
     @State private var showDeleteAccount = false
-    @State private var avatarItem: PhotosPickerItem?
     @State private var isUploadingAvatar = false
     @State private var showConnectTally = false
     @State private var showChangeName = false
-    @State private var showAvatarOptions = false
-    @State private var showPhotoPicker = false
-    @State private var showCamera = false
 
 
     var body: some View {
@@ -30,10 +25,6 @@ struct SettingsView: View {
             if appState.avatarImageData == nil {
                 appState.loadAvatar()
             }
-        }
-        .onChange(of: avatarItem) { _, newItem in
-            guard let newItem else { return }
-            uploadAvatar(item: newItem)
         }
     }
 
@@ -213,7 +204,8 @@ struct SettingsView: View {
 
     private var avatarPickerButton: some View {
         Button {
-            showAvatarOptions = true
+            guard !isUploadingAvatar else { return }
+            Task { await generateAndUploadAvatar() }
         } label: {
             ZStack {
                 if let data = appState.avatarImageData,
@@ -240,27 +232,6 @@ struct SettingsView: View {
                 }
             }
         }
-        .confirmationDialog("Change Profile Photo", isPresented: $showAvatarOptions) {
-            Button("Photo Library") { showPhotoPicker = true }
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Take Photo") { showCamera = true }
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .photosPicker(isPresented: $showPhotoPicker, selection: $avatarItem, matching: .images)
-        .fullScreenCover(isPresented: $showCamera) {
-            CameraPickerView { image in
-                if let jpegData = image.downsizedForAvatar().jpegData(compressionQuality: 0.7) {
-                    appState.saveAvatarData(jpegData)
-                    isUploadingAvatar = true
-                    Task {
-                        _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
-                        isUploadingAvatar = false
-                    }
-                }
-            }
-            .ignoresSafeArea()
-        }
     }
 
     private var avatarInitial: String {
@@ -271,16 +242,68 @@ struct SettingsView: View {
         return String(first).uppercased()
     }
 
-    private func uploadAvatar(item: PhotosPickerItem) {
-        Task { @MainActor in
-            if let data = try? await item.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-                let resized = uiImage.downsizedForAvatar()
-                if let jpegData = resized.jpegData(compressionQuality: 0.7) {
-                    appState.saveAvatarData(jpegData)
-                    isUploadingAvatar = true
-                    _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
-                    isUploadingAvatar = false
+    @MainActor
+    private func generateAndUploadAvatar() async {
+        isUploadingAvatar = true
+        let image = Self.generatePixelArtImage()
+        if let jpegData = image.jpegData(compressionQuality: 0.9) {
+            appState.saveAvatarData(jpegData)
+            _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
+        }
+        isUploadingAvatar = false
+    }
+
+    private static func generatePixelArtImage() -> UIImage {
+        let palettes: [[UIColor]] = [
+            [UIColor(red: 0.90, green: 0.22, blue: 0.27, alpha: 1),
+             UIColor(red: 0.27, green: 0.48, blue: 0.62, alpha: 1),
+             UIColor(red: 0.11, green: 0.21, blue: 0.34, alpha: 1)],
+            [UIColor(red: 0.48, green: 0.18, blue: 0.55, alpha: 1),
+             UIColor(red: 0.78, green: 0.49, blue: 1.00, alpha: 1),
+             UIColor(red: 0.88, green: 0.67, blue: 1.00, alpha: 1)],
+            [UIColor(red: 0.00, green: 0.47, blue: 0.71, alpha: 1),
+             UIColor(red: 0.00, green: 0.71, blue: 0.85, alpha: 1),
+             UIColor(red: 0.56, green: 0.88, blue: 0.94, alpha: 1)],
+            [UIColor(red: 0.84, green: 0.16, blue: 0.16, alpha: 1),
+             UIColor(red: 0.97, green: 0.50, blue: 0.00, alpha: 1),
+             UIColor(red: 0.99, green: 0.75, blue: 0.29, alpha: 1)],
+            [UIColor(red: 0.18, green: 0.42, blue: 0.31, alpha: 1),
+             UIColor(red: 0.32, green: 0.72, blue: 0.53, alpha: 1),
+             UIColor(red: 0.72, green: 0.89, blue: 0.78, alpha: 1)],
+        ]
+        let bgs: [UIColor] = [
+            UIColor(white: 0.067, alpha: 1),
+            UIColor(white: 0.051, alpha: 1),
+            UIColor(white: 0.102, alpha: 1),
+            UIColor(red: 0.059, green: 0.059, blue: 0.102, alpha: 1),
+            UIColor(red: 0.039, green: 0.102, blue: 0.039, alpha: 1),
+        ]
+        let palette = palettes.randomElement()!
+        let bg = bgs.randomElement()!
+        let px = 8; let gridSize = 8
+        let totalPx = gridSize * px
+        let size = CGSize(width: totalPx, height: totalPx)
+
+        var grid = Array(repeating: Array(repeating: -1, count: gridSize), count: gridSize)
+        for row in 0..<gridSize {
+            for col in 0..<(gridSize / 2 + gridSize % 2) {
+                let ci = Double.random(in: 0..<1) > 0.45 ? Int.random(in: 0..<3) : -1
+                grid[row][col] = ci
+                grid[row][gridSize - 1 - col] = ci
+            }
+        }
+
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { ctx in
+            bg.setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            for row in 0..<gridSize {
+                for col in 0..<gridSize {
+                    let ci = grid[row][col]
+                    if ci >= 0 {
+                        palette[ci].setFill()
+                        ctx.fill(CGRect(x: col * px, y: row * px, width: px, height: px))
+                    }
                 }
             }
         }
@@ -654,6 +677,7 @@ private struct ChangeNameSheet: View {
 struct MapSourcesSettingsView: View {
     @AppStorage("showEarthquakes") private var showEarthquakes = true
     @AppStorage("showFlights") private var showFlights = true
+    @AppStorage("showHighAltFlights") private var showHighAltFlights = false
     @AppStorage("showIncidents") private var showIncidents = true
     @AppStorage("showWeatherAlerts") private var showWeatherAlerts = true
     @AppStorage("showCrime") private var showCrime = true
@@ -666,6 +690,11 @@ struct MapSourcesSettingsView: View {
             Section {
                 Toggle("Earthquakes", isOn: $showEarthquakes)
                 Toggle("Flights", isOn: $showFlights)
+                if showFlights {
+                    Toggle("High-Altitude Flights (>35,000 ft)", isOn: $showHighAltFlights)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 Toggle("Incidents", isOn: $showIncidents)
                 Toggle("Weather Alerts", isOn: $showWeatherAlerts)
                 Toggle("Crime", isOn: $showCrime)
@@ -679,46 +708,4 @@ struct MapSourcesSettingsView: View {
     }
 }
 
-struct CameraPickerView: UIViewControllerRepresentable {
-    let onCapture: (UIImage) -> Void
-    @Environment(\.dismiss) private var dismiss
 
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.cameraCaptureMode = .photo
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: CameraPickerView
-        init(_ parent: CameraPickerView) { self.parent = parent }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.onCapture(image)
-            }
-            parent.dismiss()
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
-        }
-    }
-}
-
-private extension UIImage {
-    func downsizedForAvatar(maxDimension: CGFloat = 512) -> UIImage {
-        let maxSide = max(size.width, size.height)
-        guard maxSide > maxDimension else { return self }
-        let scale = maxDimension / maxSide
-        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        return renderer.image { _ in draw(in: CGRect(origin: .zero, size: newSize)) }
-    }
-}

@@ -203,6 +203,31 @@ async function fetchYahooBatch(symbolList) {
   return null;
 }
 
+// Yahoo v10 quoteSummary: reliable fundamentals (marketCap + trailingPE) with no API key
+async function fetchYahooFundamentals(symbol) {
+  for (const base of YAHOO_URLS) {
+    const url = `${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=summaryDetail,financialData`;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      const response = await fetch(url, { signal: controller.signal, headers: YAHOO_HEADERS });
+      clearTimeout(timeoutId);
+      if (!response.ok) continue;
+      const data = await response.json();
+      const sd = data.quoteSummary?.result?.[0]?.summaryDetail;
+      const fd = data.quoteSummary?.result?.[0]?.financialData;
+      if (!sd && !fd) continue;
+      return {
+        marketCap: sd?.marketCap?.raw ?? null,
+        peRatio: sd?.trailingPE?.raw ?? fd?.revenueGrowth?.raw ?? null,
+      };
+    } catch {
+      // try next base
+    }
+  }
+  return null;
+}
+
 // Yahoo fallback: per-symbol chart endpoint (last resort)
 async function fetchYahooSymbol(symbol) {
   for (const base of YAHOO_URLS) {
@@ -357,6 +382,26 @@ export default async function handler(req, res) {
         return res.status(200).json(staleCached);
       }
       return res.status(500).json({ error: 'No valid stock data received' });
+    }
+
+    // Last-resort: supplement missing fundamentals via Yahoo v10 quoteSummary
+    const missingFundamentals = stocks.filter(s => s.marketCap == null || s.peRatio == null);
+    if (missingFundamentals.length > 0) {
+      const fundamentalsResults = await Promise.all(
+        missingFundamentals.map(s => fetchYahooFundamentals(s.symbol))
+      );
+      const fundMap = new Map(
+        missingFundamentals.map((s, i) => [s.symbol, fundamentalsResults[i]])
+      );
+      stocks = stocks.map(s => {
+        const f = fundMap.get(s.symbol);
+        if (!f) return s;
+        return {
+          ...s,
+          marketCap: s.marketCap ?? f.marketCap,
+          peRatio: s.peRatio ?? f.peRatio,
+        };
+      });
     }
 
     if (ENABLE_CACHE) {

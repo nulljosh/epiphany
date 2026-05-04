@@ -46,6 +46,7 @@ struct SituationView: View {
     @AppStorage("showTraffic") private var showTraffic = true
     @AppStorage("showWildfires") private var showWildfires = true
     @AppStorage("showAQI") private var showAQI = true
+    @AppStorage("showHighAltFlights") private var showHighAltFlights = false
 
     private var currentRegion: MKCoordinateRegion {
         locationManager.region ?? LocationManager.fallbackRegion
@@ -117,10 +118,14 @@ struct SituationView: View {
         }
     }
 
+    private var visibleFlights: [Flight] {
+        flights.filter { showHighAltFlights || ($0.altitudeFeet ?? 0) <= 35000 }
+    }
+
     @MapContentBuilder
     private var flightAnnotations: some MapContent {
         if showFlights {
-            ForEach(flights) { flight in
+            ForEach(visibleFlights) { flight in
                 Annotation("Flight \(flight.callsign)", coordinate: flight.coordinate) {
                     Button {
                         Haptics.impact(.light)
