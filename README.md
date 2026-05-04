@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80" style="border-radius:16px">
 
 # Epiphany.
-![version](https://img.shields.io/badge/version-v1.3.1-blue)
+![version](https://img.shields.io/badge/version-v1.4.0-blue)
 
 Personal intelligence platform. Map, markets, and people. Palantir for regular people.
 
@@ -11,7 +11,7 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
 
 - **Live Map** with 11 data layers (flights, traffic, earthquakes, weather, crime, events, wildfires, news, incidents, predictions, heatmap)
 - **AI Analyst** powered by Claude with streaming chat and 10 tool functions
-- **Markets** with live stock data, ticker bar, anomaly detection, trading simulator
+- **Markets** with live stock data, 60fps ticker bar, 1m/15m/max timeframes, anomaly detection, trading simulator
 - **Portfolio** tracking holdings, budgets, debt payoff, and spending analysis
 - **People** search and index with relationship graph and news mentions (AI enrichment deferred)
 - **Prediction Markets** via Polymarket with whale tracking

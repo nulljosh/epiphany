@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.8.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
+v1.9.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -9,11 +9,12 @@ v1.8.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets
 - All data preloaded on launch in parallel (stocks, crypto, commodities, finance, Tally, fear/greed)
 - Stay logged in between launches (session cookie + keychain)
 - No emojis
+- Dark mode locked via `preferredColorScheme(.dark)` in EpiphanyApp — do not revert
 
 ## Tabs
 
 1. **Situation** — MapKit map with 8 toggleable live data layers. Default home screen.
-2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index. Feed pills: News | Macro | Alerts.
+2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index. Feed pills: News | Macro | Alerts. TickerBarView lives here (not ContentView).
 3. **Portfolio** — Spending chart + forecast, holdings, budget, debt/goals calendar, statements.
 4. **Settings** — Profile (avatar + keychain), subscription tier, Tally integration. Security: email/password. Map layers under dev mode only.
 
@@ -28,13 +29,18 @@ xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination '
 ## Key Files
 
 - `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires)
-- `Views/MarketsView.swift` — Markets list + inline portfolio, stock detail sheets
+- `Views/MarketsView.swift` — Markets list + inline portfolio, stock detail sheets, TickerBarView (scoped here to avoid back-button overlap on other tabs)
 - `Views/PortfolioView.swift` — Spending chart, holdings, budget, debt/goals calendar, statements
 - `Views/PeopleView.swift` — Person search + index grid
-- `ContentView.swift` — Tab navigation, parallel data preloading on launch
+- `ContentView.swift` — Tab navigation, parallel data preloading on launch (no ticker logic here)
 - `Models/AppState.swift` — @Observable shared state, avatar persistence
-- `API/EpiphanyAPI.swift` — All backend requests (base: epiphany.heyitsmejosh.com, 2min cache, cookie session)
+- `API/EpiphanyAPI.swift` — All backend requests. `fetchPriceHistory` maps display ranges (1m, 15m, max) to Yahoo Finance range+interval pairs
 - `Services/TallyService.swift` — Tally API client + keychain credentials
 - `Models/SituationData.swift` — Map data models (Flight now includes velocityKnots, headingDeg)
 - `Helpers/SVGRasterizer.swift` — WKWebView-based SVG-to-UIImage converter (fixes web-uploaded SVG avatars)
-- `Assets.xcassets/AppIcon.appiconset/AppIcon.png` — light mode icon (white bg hexagonal gem)
+- `Views/SettingsView.swift` — Avatar generator picks 1 of 3 topologies (star, hexagon, mesh) with high jitter and variable node sizes
+
+## Known Issues / Next
+
+- App icon still has light bg — regenerate from `ios/AppIcon.svg` with dark background
+- Wealthsimple unofficial API exists in `src/utils/brokers/wealthsimple.js` — not yet wired to portfolio sync
