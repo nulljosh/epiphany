@@ -218,8 +218,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     const data = stocks[initialSymbol];
     setSelectedStock({ symbol: initialSymbol, name: data?.name || initialSymbol, price: data?.price ?? 0, changePercent: data?.changePercent ?? 0 });
     onConsumeInitialSymbol?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSymbol]);
+  }, [initialSymbol, stocks]);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
   const status = getMarketStatus();

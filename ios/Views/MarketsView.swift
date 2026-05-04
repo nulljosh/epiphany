@@ -15,6 +15,12 @@ struct MarketsView: View {
     @State private var selectedNewsURL: URL?
     @State private var portfolioExpanded = true
     @State private var cachedItems: [MarketItem] = []
+    @State private var feedDest: FeedDest? = nil
+
+    enum FeedDest: Identifiable {
+        case news, macro, alerts
+        var id: Self { self }
+    }
 
     private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -276,9 +282,7 @@ struct MarketsView: View {
 
                         Section("Feed") {
                             HStack(spacing: 10) {
-                                NavigationLink {
-                                    NewsView().environment(appState)
-                                } label: {
+                                Button { feedDest = .news } label: {
                                     VStack(spacing: 4) {
                                         Image(systemName: "newspaper").font(.title3)
                                         Text("News").font(.caption.weight(.semibold))
@@ -287,9 +291,7 @@ struct MarketsView: View {
                                     .padding(.vertical, 10)
                                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                                 }
-                                NavigationLink {
-                                    MacroView().environment(appState)
-                                } label: {
+                                Button { feedDest = .macro } label: {
                                     VStack(spacing: 4) {
                                         Image(systemName: "chart.bar.doc.horizontal").font(.title3)
                                         Text("Macro").font(.caption.weight(.semibold))
@@ -298,9 +300,7 @@ struct MarketsView: View {
                                     .padding(.vertical, 10)
                                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                                 }
-                                NavigationLink {
-                                    AlertsView().environment(appState)
-                                } label: {
+                                Button { feedDest = .alerts } label: {
                                     VStack(spacing: 4) {
                                         Image(systemName: "bell.badge").font(.title3)
                                         Text("Alerts").font(.caption.weight(.semibold))
@@ -311,6 +311,13 @@ struct MarketsView: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .navigationDestination(item: $feedDest) { dest in
+                                switch dest {
+                                case .news: NewsView().environment(appState)
+                                case .macro: MacroView().environment(appState)
+                                case .alerts: AlertsView().environment(appState)
+                                }
+                            }
                         }
 
                         Section {

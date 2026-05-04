@@ -239,17 +239,19 @@ function saveIndicators(indicators) {
 }
 
 const RANGES = [
-  { key: '1d',  label: '1D',  interval: '5m' },
-  { key: '5d',  label: '1W',  interval: '15m' },
-  { key: '1mo', label: '1M',  interval: '1d' },
-  { key: '3mo', label: '3M',  interval: '1d' },
-  { key: '6mo', label: '6M',  interval: '1d' },
-  { key: 'ytd', label: 'YTD', interval: '1d' },
-  { key: '1y',  label: '1Y',  interval: '1d' },
-  { key: '2y',  label: '2Y',  interval: '1wk' },
-  { key: '5y',  label: '5Y',  interval: '1wk' },
-  { key: '10y', label: '10Y', interval: '1mo' },
-  { key: 'max', label: 'ALL', interval: '1mo' },
+  { key: '1m',  label: '1m',  range: '1d',  interval: '1m'  },
+  { key: '15m', label: '15m', range: '5d',  interval: '15m' },
+  { key: '1d',  label: '1D',  range: '1d',  interval: '5m'  },
+  { key: '5d',  label: '1W',  range: '5d',  interval: '30m' },
+  { key: '1mo', label: '1M',  range: '1mo', interval: '1d'  },
+  { key: '3mo', label: '3M',  range: '3mo', interval: '1d'  },
+  { key: '6mo', label: '6M',  range: '6mo', interval: '1d'  },
+  { key: 'ytd', label: 'YTD', range: 'ytd', interval: '1d'  },
+  { key: '1y',  label: '1Y',  range: '1y',  interval: '1d'  },
+  { key: '2y',  label: '2Y',  range: '2y',  interval: '1wk' },
+  { key: '5y',  label: '5Y',  range: '5y',  interval: '1wk' },
+  { key: '10y', label: '10Y', range: '10y', interval: '1mo' },
+  { key: 'max', label: 'ALL', range: 'max', interval: '1mo' },
 ];
 
 export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount }) {
@@ -311,7 +313,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     const rangeConfig = RANGES.find(r => r.key === range) || RANGES[2];
     try {
       const res = await fetch(
-        `/api/history?symbol=${encodeURIComponent(symbol)}&range=${rangeConfig.key}&interval=${rangeConfig.interval}`,
+        `/api/history?symbol=${encodeURIComponent(symbol)}&range=${rangeConfig.range ?? rangeConfig.key}&interval=${rangeConfig.interval}`,
         { signal }
       );
       if (!res.ok) throw new Error('Failed');

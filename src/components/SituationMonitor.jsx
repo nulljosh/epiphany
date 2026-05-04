@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useSituation } from '../hooks/useSituation';
 import { Card, BlinkingDot } from './ui';
+import DailyBrief from './DailyBrief';
 
 const CONGESTION_LEVELS = { heavy: 85, moderate: 55, clear: 15 };
 const SEVERITY = { critical: { label: 'CRITICAL', color: '#ef4444' }, elevated: { label: 'ELEVATED', color: '#f59e0b' }, monitor: { label: 'MONITOR', color: '#3b82f6' }, info: { label: 'INFO', color: '#6b7280' } };
@@ -287,6 +288,8 @@ export default function SituationMonitor({
           </span>
         )}
       </div>
+
+      <DailyBrief t={t} font={font} dark={dark} />
 
       {/* Source health strip — hidden on mobile */}
       {!isMobile && (
@@ -591,7 +594,7 @@ export default function SituationMonitor({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: t.textSecondary, fontFamily: font, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Flights nearby {flightsLoading && <span style={{ color: t.textTertiary }}>(updating...)</span>}
+            Flights nearby
           </div>
           {flightsError && <div style={{ fontSize: 10, color: t.red, fontFamily: font }}>{flightsError}</div>}
           {nearbyFlights.length === 0 && !flightsLoading && (

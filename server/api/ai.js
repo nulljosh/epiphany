@@ -80,6 +80,11 @@ const TOOLS = [
       required: ['text'],
     },
   },
+  {
+    name: 'get_daily_brief',
+    description: 'Get today\'s market brief: top movers (gainers/losers) and curated headlines',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
 ];
 
 async function fetchStockQuote(symbol) {
@@ -207,13 +212,20 @@ async function executeTool(name, input, userId, kv) {
       ]);
       return { ok: true, noteId };
     }
+    case 'get_daily_brief': {
+      try {
+        const res = await fetch('https://epiphany.heyitsmejosh.com/api/daily-brief');
+        if (!res.ok) return { error: 'Brief unavailable' };
+        return await res.json();
+      } catch { return { error: 'Brief fetch failed' }; }
+    }
     default:
       return { error: `Unknown tool: ${name}` };
   }
 }
 
 async function buildSystemPrompt(userId, kv) {
-  const parts = ['You are Monica, a personal intelligence analyst. You help the user understand their financial situation, market conditions, and local events. Be concise and direct. Use data from tools when answering factual questions.'];
+  const parts = ['You are Epiphany, a personal intelligence analyst. You help the user understand their financial situation, market conditions, and local events. Be concise and direct. Use data from tools when answering factual questions.'];
 
   const [portfolio, watchlist, alerts] = await Promise.all([
     kv.get(`portfolio:${userId}`),
