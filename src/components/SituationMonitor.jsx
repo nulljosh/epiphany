@@ -110,6 +110,8 @@ export default function SituationMonitor({
   const [showTrades, setShowTrades] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showDetections, setShowDetections] = useState(true);
+  const [showDispatch, setShowDispatch] = useState(true);
+  const [showCrime, setShowCrime] = useState(false);
   const initialFlyDone = useRef(false);
   const loadTimestamps = useRef({ flights: null, traffic: null, earthquakes: null, events: null });
 
@@ -119,7 +121,7 @@ export default function SituationMonitor({
     activeCenter,
     worldCities, userLocation,
     flights, traffic, flightsLoading, trafficLoading, flightsError, trafficError,
-    incidents, earthquakes, events, weatherAlerts, macro,
+    incidents, earthquakes, events, weatherAlerts, macro, crimeIncidents, dispatchCalls,
   } = useSituation();
 
   useEffect(() => {
@@ -310,6 +312,72 @@ export default function SituationMonitor({
             <div style={{ padding: '0 8px 8px', maxHeight: 220, overflowY: 'auto' }}>
               {detections.map(d => (
                 <DetectionCard key={d.id} {...d} t={t} font={font} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Emergency Calls */}
+      {dispatchCalls.length > 0 && (
+        <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
+          <button
+            onClick={() => setShowDispatch(!showDispatch)}
+            style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
+          >
+            <span>emergency calls ({dispatchCalls.length})</span>
+            <span>{showDispatch ? '−' : '+'}</span>
+          </button>
+          {showDispatch && (
+            <div style={{ padding: '0 8px 8px', maxHeight: 200, overflowY: 'auto' }}>
+              {dispatchCalls.slice(0, 15).map((call, i) => {
+                const isPolice = call.type === 'police';
+                const isFire = call.type === 'fire';
+                const color = isPolice ? '#3b82f6' : isFire ? '#f97316' : '#22d3ee';
+                const icon = isPolice ? '🚔' : isFire ? '🚒' : '🚑';
+                const detail = [call.address, call.source].filter(Boolean).join(' · ');
+                return (
+                  <DetectionCard
+                    key={`dispatch-${i}`}
+                    type={`${icon} ${(call.type || 'emergency').toUpperCase()}`}
+                    title={call.title}
+                    detail={detail || null}
+                    severity={call.severity || 'elevated'}
+                    color={color}
+                    time={call.timestamp ? new Date(call.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null}
+                    t={t}
+                    font={font}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Crime */}
+      {crimeIncidents.length > 0 && (
+        <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
+          <button
+            onClick={() => setShowCrime(!showCrime)}
+            style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
+          >
+            <span>crime ({crimeIncidents.length})</span>
+            <span>{showCrime ? '−' : '+'}</span>
+          </button>
+          {showCrime && (
+            <div style={{ padding: '0 8px 8px', maxHeight: 180, overflowY: 'auto' }}>
+              {crimeIncidents.slice(0, 12).map((inc, i) => (
+                <DetectionCard
+                  key={`crime-${i}`}
+                  type="crime"
+                  title={inc.title || inc.category || 'Incident'}
+                  severity={inc.severity === 'high' ? 'critical' : inc.severity === 'medium' ? 'elevated' : 'monitor'}
+                  color="#ef4444"
+                  time={inc.timestamp ? new Date(inc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null}
+                  t={t}
+                  font={font}
+                />
               ))}
             </div>
           )}

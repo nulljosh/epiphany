@@ -14,6 +14,7 @@ export const WORLD_CITIES = [
 const FLIGHT_REFRESH    = 5 * 60_000;
 const TRAFFIC_REFRESH   = 5 * 60_000;
 const SITUATION_REFRESH = 10 * 60_000;
+const DISPATCH_REFRESH  = 60_000;
 const LAST_GEO_KEY = 'monica_last_geo';
 const FRESH_GEO_MS = 30 * 60 * 1000;
 const FRESH_IP_MS = 5 * 60 * 1000;
@@ -64,6 +65,7 @@ export function useSituation() {
   const [crimeIncidents, setCrimeIncidents] = useState([]);
   const [localEvents, setLocalEvents] = useState([]);
   const [macro, setMacro] = useState([]);
+  const [dispatchCalls, setDispatchCalls] = useState([]);
 
   const activeCenter = selectedCity
     ? { lat: selectedCity.lat, lon: selectedCity.lon, label: selectedCity.label }
@@ -182,8 +184,16 @@ export function useSituation() {
     } catch { /* non-critical */ }
   }, []);
 
+  const fetchDispatch = useCallback(async () => {
+    try {
+      const data = await fetchWithTimeout(apiPath(`/api/dispatch?lat=${activeCenter.lat}&lon=${activeCenter.lon}`));
+      setDispatchCalls(data.calls ?? []);
+    } catch { /* non-critical */ }
+  }, [activeCenter.lat, activeCenter.lon]);
+
   useVisibilityPolling(fetchFlights, FLIGHT_REFRESH, [fetchFlights]);
   useVisibilityPolling(fetchTraffic, TRAFFIC_REFRESH, [fetchTraffic]);
+  useVisibilityPolling(fetchDispatch, DISPATCH_REFRESH, [fetchDispatch]);
 
   const fetchAllSituation = useCallback(() => {
     if (process.env.NODE_ENV === 'test') return;
@@ -205,7 +215,7 @@ export function useSituation() {
     worldCities: WORLD_CITIES,
     flights, flightsLoading, flightsError,
     traffic, trafficLoading, trafficError,
-    incidents, earthquakes, events, weatherAlerts, crimeIncidents, localEvents, macro,
+    incidents, earthquakes, events, weatherAlerts, crimeIncidents, localEvents, macro, dispatchCalls,
     refetchFlights: fetchFlights,
     refetchTraffic: fetchTraffic,
   };

@@ -49,6 +49,47 @@ function distance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+async function fetchNYC(lat, lon) {
+  const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const data = await fetchWithTimeout(
+    `https://data.cityofnewyork.us/resource/5uac-w243.json?$where=cmplnt_fr_dt>='${since}'&$limit=50&$order=cmplnt_fr_dt DESC`
+  );
+  return (Array.isArray(data) ? data : []).filter(i => i.latitude && i.longitude).map(i => ({
+    lat: parseFloat(i.latitude), lng: parseFloat(i.longitude), type: 'crime',
+    category: i.ofns_desc || 'Unknown',
+    title: i.ofns_desc || 'Crime incident',
+    severity: categorySeverity(i.ofns_desc),
+    timestamp: i.cmplnt_fr_dt || new Date().toISOString(), source: 'nyc_opendata',
+  }));
+}
+
+async function fetchBoston(lat, lon) {
+  const data = await fetchWithTimeout(
+    `https://data.boston.gov/api/3/action/datastore_search?resource_id=12cb3883-56f5-47de-afa5-3b1cf61b257b&limit=50&sort=occurred_on_date desc`
+  );
+  const records = data?.result?.records || [];
+  return records.filter(i => i.lat && i.long && Math.abs(parseFloat(i.lat) - lat) < 0.1).map(i => ({
+    lat: parseFloat(i.lat), lng: parseFloat(i.long), type: 'crime',
+    category: i.offense_description || 'Unknown',
+    title: i.offense_description || 'Crime incident',
+    severity: categorySeverity(i.offense_description),
+    timestamp: i.occurred_on_date || new Date().toISOString(), source: 'boston_opendata',
+  }));
+}
+
+async function fetchAustinCrime(lat, lon) {
+  const data = await fetchWithTimeout(
+    `https://data.austintexas.gov/resource/fdj4-gpfu.json?$where=within_circle(location,${lat},${lon},10000)&$limit=50&$order=occurred_date DESC`
+  );
+  return (Array.isArray(data) ? data : []).filter(i => i.latitude && i.longitude).map(i => ({
+    lat: parseFloat(i.latitude), lng: parseFloat(i.longitude), type: 'crime',
+    category: i.highest_offense_description || 'Unknown',
+    title: i.highest_offense_description || 'Crime incident',
+    severity: categorySeverity(i.highest_offense_description),
+    timestamp: i.occurred_date || new Date().toISOString(), source: 'austin_opendata',
+  }));
+}
+
 // US city portals -- only query if user is within 50km
 const US_PORTALS = [
   { name: 'sf_opendata', lat: 37.7749, lon: -122.4194, fetch: fetchSF },
@@ -56,6 +97,9 @@ const US_PORTALS = [
   { name: 'la_opendata', lat: 34.0522, lon: -118.2437, fetch: fetchLA },
   { name: 'seattle_opendata', lat: 47.6062, lon: -122.3321, fetch: fetchSeattle },
   { name: 'portland_opendata', lat: 45.5155, lon: -122.6789, fetch: fetchPortland },
+  { name: 'nyc_opendata', lat: 40.7128, lon: -74.0060, fetch: fetchNYC },
+  { name: 'boston_opendata', lat: 42.3601, lon: -71.0589, fetch: fetchBoston },
+  { name: 'austin_opendata', lat: 30.2672, lon: -97.7431, fetch: fetchAustinCrime },
 ];
 
 async function fetchSF(lat, lon) {

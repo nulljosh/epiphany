@@ -165,7 +165,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [userPosition, setUserPosition] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : null);
   const [locLabel, setLocLabel] = useState('Locating\u2026');
   const [geoState, setGeoState] = useState('checking');
-  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [], aqiReadings: [] });
+  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [], aqiReadings: [], emergencyIncidents: [] });
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -398,7 +398,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           }
           return fallback;
         };
-        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl, aqi] = await Promise.all([
+        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl, aqi, emerg] = await Promise.all([
           safeFetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [] }),
           safeFetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [], flow: {} }),
           safeFetch(apiPath(`/api/earthquakes?lat=${center.lat}&lon=${center.lon}&radius=500`), { earthquakes: [] }),
@@ -411,6 +411,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           safeFetch(apiPath(`/api/wildfires?lat=${center.lat}&lon=${center.lon}`), { fires: [] }),
           safeFetch(apiPath(`/api/flights?${bboxQ}`), { states: [] }),
           safeFetch(apiPath(`/api/aqi?lat=${center.lat}&lon=${center.lon}`), { readings: [] }),
+          safeFetch(apiPath(`/api/emergency?lat=${center.lat}&lon=${center.lon}&${bboxQ}`), { incidents: [] }),
         ]);
         if (!cancelled) {
           fetchCountRef.current += 1;
@@ -427,6 +428,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
             wildfires: fires.fires || [],
             flights: fl.states || [],
             aqiReadings: aqi.readings || [],
+            emergencyIncidents: emerg.incidents || [],
           });
         }
       } catch {
@@ -484,6 +486,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       wa: payload.weatherAlerts.length,
       wf: payload.wildfires.length,
       fl: payload.flights.length,
+      em: payload.emergencyIncidents.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
       v: fetchCountRef.current,
       ml: Object.keys(mapLayers).filter(k => mapLayers[k] !== false).join(','),
@@ -657,11 +660,28 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (fl.lat == null || fl.lon == null) return;
       const heading = fl.heading != null ? `transform:rotate(${fl.heading}deg);` : '';
       const isEstimated = fl.estimated === true;
+      const cs = (fl.callsign || '').trim();
+      const trackLink = cs ? `https://www.flightaware.com/live/flight/${cs}` : null;
       addMarker(
         `width:20px;height:20px;background:transparent;font-size:16px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;opacity:${isEstimated ? 0.5 : 1};${heading}`,
-        `${fl.callsign || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}${isEstimated ? ' (est)' : ''}`,
-        { type: 'flight', title: `${fl.callsign || fl.icao24 || 'Aircraft'}${isEstimated ? ' (estimated)' : ''}`, detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: isEstimated ? 'Estimated positions' : 'OpenSky Network', link: isEstimated ? null : `https://opensky-network.org/aircraft-profile?icao24=${fl.icao24}` },
+        `${cs || fl.icao24 || 'Aircraft'} ${fl.altitude ? fl.altitude + 'ft' : ''}${isEstimated ? ' (est)' : ''}`,
+        { type: 'flight', title: `${cs || fl.icao24 || 'Aircraft'}${isEstimated ? ' (estimated)' : ''}`, detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}`, level: 'monitor', source: isEstimated ? 'Estimated positions' : 'OpenSky Network', link: isEstimated ? null : trackLink },
         fl.lon, fl.lat, 'flights', '✈'
+      );
+    });
+
+    // Emergency services (Waze + city CAD: police, fire, EMS, accidents)
+    if (mapLayers.incidents !== false)
+    payload.emergencyIncidents.slice(0, 50).forEach((ev) => {
+      if (ev.lat == null || ev.lng == null) return;
+      const cat = ev.category || 'alert';
+      const icon = cat === 'police' ? '🚔' : cat === 'fire' ? '🚒' : cat === 'ems' ? '🚑' : cat === 'accident' ? '💥' : cat === 'hazard' ? '⚠️' : cat === 'road_closed' ? '🚫' : '🚨';
+      const color = cat === 'police' ? '#3b82f6' : cat === 'fire' ? '#ef4444' : cat === 'ems' ? '#f97316' : cat === 'accident' ? '#f59e0b' : '#94a3b8';
+      addMarker(
+        `width:20px;height:20px;background:transparent;font-size:14px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 3px ${color}88);`,
+        ev.title,
+        { type: 'emergency', title: ev.title, detail: `Source: ${ev.source || 'Live feed'} | ${ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : ''}`, level: ev.severity || 'medium', source: ev.source || 'Emergency feed', link: null },
+        ev.lng, ev.lat, 'incidents', icon
       );
     });
 
@@ -727,6 +747,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     payload.weatherAlerts.forEach(w => addPoint(w.lat, w.lon, 0.8));
     payload.wildfires.forEach(f => addPoint(f.lat, f.lon, 0.9));
     payload.flights.forEach(f => addPoint(f.lat, f.lon, 0.2));
+    payload.emergencyIncidents.forEach(e => addPoint(e.lat, e.lng, 0.8));
     payload.aqiReadings.forEach(r => {
       const aqi = r.aqi || r.value || 0;
       addPoint(r.lat, r.lon, Math.min(aqi / 150, 1));

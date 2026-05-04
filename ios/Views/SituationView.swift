@@ -108,7 +108,8 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .earthquake(quake)
                     } label: {
-                        sfPin("mountain.2.fill", color: .orange)
+                        Text("⚠️")
+                            .font(.caption)
                     }
                     .buttonStyle(.plain)
                 }
@@ -125,7 +126,8 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .flight(flight)
                     } label: {
-                        sfPin("airplane", color: .cyan)
+                        Text("✈️")
+                            .font(.title3)
                     }
                     .buttonStyle(.plain)
                 }

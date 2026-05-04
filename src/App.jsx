@@ -1037,6 +1037,7 @@ const reset = useCallback(() => {
   const TAB_PILLS = [
     { key: 'situation', label: 'Situation' },
     { key: 'markets', label: 'Markets' },
+    { key: 'simulator', label: 'Simulator' },
     { key: 'portfolio', label: 'Portfolio' },
     { key: 'people', label: 'People' },
     { key: 'settings', label: 'Settings' },

@@ -5,9 +5,10 @@ import useFearGreed from '../hooks/useFearGreed';
 import { SECTOR_MAP, SECTOR_ORDER } from '../hooks/useStocks';
 
 const SORT_OPTIONS = [
-  { key: 'symbol', label: 'Symbol' },
-  { key: 'price', label: 'Price' },
+  { key: 'momentum', label: 'Hot' },
   { key: 'changePercent', label: '% Change' },
+  { key: 'price', label: 'Price' },
+  { key: 'symbol', label: 'Symbol' },
 ];
 
 const COMMODITY_KEYS = ['gold', 'silver', 'platinum', 'palladium', 'copper', 'oil', 'natgas'];
@@ -206,7 +207,7 @@ function SectorGroups({ filtered, watchlist, toggleSymbol, isAuthenticated, t, g
 
 export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, toggleSymbol, isAuthenticated, initialSymbol, onConsumeInitialSymbol }) {
   const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState('changePercent');
+  const [sortKey, setSortKey] = useState('momentum');
   const [sortAsc, setSortAsc] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const { score: fgScore, rating: fgRating } = useFearGreed();
@@ -295,6 +296,10 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       let cmp = 0;
       if (sortKey === 'symbol') cmp = a.symbol.localeCompare(b.symbol);
       else if (sortKey === 'price') cmp = a.price - b.price;
+      else if (sortKey === 'momentum') {
+        const score = item => Math.abs(item.changePercent) * Math.log10(Math.max(10, item.volume || item.avgVolume || 10));
+        cmp = score(a) - score(b);
+      }
       else cmp = a.changePercent - b.changePercent;
       return sortAsc ? cmp : -cmp;
     });
