@@ -34,7 +34,8 @@ final class AppState {
     }()
 
     func loadAvatar() {
-        if let data = try? Data(contentsOf: Self.avatarFileURL) {
+        if let data = try? Data(contentsOf: Self.avatarFileURL),
+           UIImage(data: data) != nil {
             avatarImageData = data
             return
         }
@@ -42,9 +43,14 @@ final class AppState {
         let cacheBusted = urlString + "?v=\(user?.avatarUpdatedAt ?? 1)"
         guard let url = URL(string: cacheBusted) else { return }
         Task { @MainActor in
-            if let (data, _) = try? await URLSession.shared.data(from: url) {
+            guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
+            if UIImage(data: data) != nil {
                 avatarImageData = data
                 try? data.write(to: Self.avatarFileURL)
+            } else if let rasterized = await SVGRasterizer.rasterize(data),
+                      let jpegData = rasterized.jpegData(compressionQuality: 0.85) {
+                avatarImageData = jpegData
+                try? jpegData.write(to: Self.avatarFileURL)
             }
         }
     }

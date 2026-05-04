@@ -1,8 +1,8 @@
-![Monica iOS](icon.svg)
+<img src="icon.svg" width="80">
 
-# Monica iOS
+# Epiphany iOS
 
-![version](https://img.shields.io/badge/version-v1.4.0-blue)
+![version](https://img.shields.io/badge/version-v1.7.0-blue)
 
 <p align="center"><img src="Resources/preview.png" width="300"></p>
 

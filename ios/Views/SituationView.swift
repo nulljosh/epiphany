@@ -1143,6 +1143,8 @@ private struct SituationEventDetailView: View {
             if let origin = flight.origin { result.append(("Origin", origin)) }
             if let dest = flight.destination { result.append(("Destination", dest)) }
             if let alt = flight.altitudeFeet { result.append(("Altitude", "\(alt) ft")) }
+            if let spd = flight.velocityKnots { result.append(("Speed", "\(spd) kts")) }
+            if let hdg = flight.headingDeg { result.append(("Heading", "\(hdg)\u{00B0}")) }
             result.append(("Latitude", String(format: "%.4f", flight.latitude)))
             result.append(("Longitude", String(format: "%.4f", flight.longitude)))
             result.append(("Status", flight.status ?? "Live"))

@@ -127,6 +127,8 @@ struct Flight: Codable, Identifiable {
     let latitude: Double
     let longitude: Double
     let altitudeFeet: Int?
+    let velocityKnots: Int?
+    let headingDeg: Int?
     let status: String?
 
     var coordinate: CLLocationCoordinate2D {
@@ -135,8 +137,10 @@ struct Flight: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case id, callsign, origin, destination, latitude, longitude, status
-        case icao24, lat, lon, altitude
+        case icao24, lat, lon, altitude, velocity, heading
         case altitudeFeet = "altitude_feet"
+        case velocityKnots = "velocity_knots"
+        case headingDeg = "heading_deg"
     }
 
     init(
@@ -147,6 +151,8 @@ struct Flight: Codable, Identifiable {
         latitude: Double,
         longitude: Double,
         altitudeFeet: Int?,
+        velocityKnots: Int?,
+        headingDeg: Int?,
         status: String?
     ) {
         self.id = id
@@ -156,6 +162,8 @@ struct Flight: Codable, Identifiable {
         self.latitude = latitude
         self.longitude = longitude
         self.altitudeFeet = altitudeFeet
+        self.velocityKnots = velocityKnots
+        self.headingDeg = headingDeg
         self.status = status
     }
 
@@ -174,6 +182,10 @@ struct Flight: Codable, Identifiable {
             ?? 0
         altitudeFeet = container.lossyInt(forKey: .altitudeFeet)
             ?? container.lossyInt(forKey: .altitude)
+        velocityKnots = container.lossyInt(forKey: .velocityKnots)
+            ?? container.lossyInt(forKey: .velocity)
+        headingDeg = container.lossyInt(forKey: .headingDeg)
+            ?? container.lossyInt(forKey: .heading)
         status = container.lossyString(forKey: .status)
     }
 
@@ -186,6 +198,8 @@ struct Flight: Codable, Identifiable {
         try container.encode(latitude, forKey: .latitude)
         try container.encode(longitude, forKey: .longitude)
         try container.encodeIfPresent(altitudeFeet, forKey: .altitudeFeet)
+        try container.encodeIfPresent(velocityKnots, forKey: .velocityKnots)
+        try container.encodeIfPresent(headingDeg, forKey: .headingDeg)
         try container.encodeIfPresent(status, forKey: .status)
     }
 }

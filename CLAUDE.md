@@ -1,6 +1,6 @@
 # Epiphany
 
-v1.2.0 -- Personal intelligence platform. Palantir for regular people.
+v1.3.0 -- Personal intelligence platform. Palantir for regular people.
 
 ## Rules
 
@@ -31,6 +31,7 @@ Deploy: Vercel. Repo: github.com/nulljosh/epiphany
 - **Map**: `src/components/LiveMapBackdrop.jsx` (11 data layers, MapLibre GL)
 - **KV**: `server/api/_kv.js` (Upstash Redis) -- trims env var whitespace at load; wraps get/set/del to catch UrlError; always import via getKv(), never @vercel/kv directly
 - **Stocks**: `server/api/stocks-free.js` -- FMP batch (price/volume), Yahoo v7 supplement (P/E, mkt cap, EPS, beta, yield when FMP omits them). Cache key `stocks:free:v2:*`. Web + watchOS use this; iOS/macOS use `server/api/stocks.js`.
-- **Avatar**: `server/api/avatar.js` -- accepts JPEG or SVG (`format: 'svg'`), stores to Vercel Blob. Web generates 8-bit pixel art SVG; iOS/macOS use photo picker JPEG.
+- **Avatar**: `server/api/avatar.js` -- accepts JPEG or SVG (`format: 'svg'`), stores to Vercel Blob. Web generates 8-bit pixel art SVG; iOS/macOS use photo picker JPEG. iOS rasterizes SVG avatars via `SVGRasterizer.swift` (WKWebView snapshot) when fetching web-uploaded SVGs.
+- **TradingView MCP**: `.mcp.json` wired to `_external/tradingview-mcp/src/server.js` — 78 CDP tools for chart analysis and Pine Script dev. Start TradingView Desktop with `--remote-debugging-port=9222` before using.
 - **Landing Page**: `src/pages/LandingPage.jsx` + `src/pages/landing.css` -- shown to unauthenticated visitors before auth flow. Fraunces serif headlines, animated node-graph canvas, scrolling ticker, feature/pricing sections. Gate in `App.jsx` via `showLanding` state.
 - **Roadmap**: `ROADMAP.md`

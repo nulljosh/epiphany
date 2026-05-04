@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.6.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
+v1.7.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -36,4 +36,6 @@ xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination '
 - `Models/AppState.swift` — @Observable shared state, avatar persistence
 - `API/EpiphanyAPI.swift` — All backend requests (base: epiphany.heyitsmejosh.com, 2min cache, cookie session)
 - `Services/TallyService.swift` — Tally API client + keychain credentials
-- `Models/SituationData.swift` — Map data models
+- `Models/SituationData.swift` — Map data models (Flight now includes velocityKnots, headingDeg)
+- `Helpers/SVGRasterizer.swift` — WKWebView-based SVG-to-UIImage converter (fixes web-uploaded SVG avatars)
+- `Assets.xcassets/AppIcon.appiconset/AppIcon.png` — light mode icon (white bg hexagonal gem)
