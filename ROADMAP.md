@@ -29,10 +29,10 @@ Ordered by effort (fewest tokens → most). Ship the top first.
 
 ## Tier 2 — Small fixes (30–60 min)
 
-### AI Enrich button fails on Vercel
-- `server/api/people-enrich.js:48,78-88` — `runClaudeCLI` fallback is dead on Vercel
-- Remove `runClaudeCLI` dead code; require `ANTHROPIC_API_KEY` env var (already rotated)
-- Include `err.message` in `:168` catch so frontend shows specifics, not "Enrichment failed"
+### AI Enrich — DEFERRED
+- People enrichment via AI is disabled until a cheaper provider decision is made
+- `people-enrich.js` code is clean (no dead code), just needs `ANTHROPIC_API_KEY` when re-enabled
+- Do not wire up or expose this feature until provider is chosen
 
 ### Avatar toast fires but image doesn't change
 - Brain dump 2026-04-23: toast fires, avatar doesn't update
