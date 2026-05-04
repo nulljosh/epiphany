@@ -15,7 +15,7 @@ struct TickerBarView: View {
             if cachedLoopingStocks.isEmpty {
                 EmptyView()
             } else {
-                TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { context in
+                TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
                     let offset = scrollOffset(at: context.date)
                     HStack(spacing: itemSpacing) {
                         ForEach(Array(cachedLoopingStocks.enumerated()), id: \.offset) { _, stock in

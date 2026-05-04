@@ -16,6 +16,7 @@ struct MarketsView: View {
     @State private var portfolioExpanded = true
     @State private var cachedItems: [MarketItem] = []
     @State private var feedDest: FeedDest? = nil
+    @State private var tickerSelectedStock: Stock?
 
     enum FeedDest: Identifiable {
         case news, macro, alerts
@@ -419,7 +420,10 @@ struct MarketsView: View {
             .navigationTitle("Markets")
         }
         .sheet(item: $selectedStock) { stock in
-            let stocks = appState.stocks
+            let stocks = filteredItems.compactMap { item -> Stock? in
+                if case .stock(let s) = item.kind { return s }
+                return nil
+            }
             let initialIndex = stocks.firstIndex(where: { $0.symbol == stock.symbol }) ?? 0
             NavigationStack {
                 StockDetailPageView(stocks: stocks, initialIndex: initialIndex)
@@ -439,6 +443,19 @@ struct MarketsView: View {
         .sheet(item: $selectedNewsURL) { url in
             SafariView(url: url)
                 .ignoresSafeArea()
+        }
+        .sheet(item: $tickerSelectedStock) { stock in
+            NavigationStack {
+                StockDetailView(stock: stock)
+                    .environment(appState)
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if !appState.stocks.isEmpty {
+                TickerBarView(appState: appState) { stock in
+                    tickerSelectedStock = stock
+                }
+            }
         }
         .onAppear {
             isVisible = true
@@ -578,7 +595,7 @@ private struct MarketItem: Identifiable {
     }
 
     var yahooSymbol: String? {
-        let lower = name.lowercased()
+        let lower = symbol.lowercased()
         switch kind {
         case .stock: return symbol
         case .commodity:

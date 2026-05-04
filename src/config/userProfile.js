@@ -29,8 +29,9 @@ export const USER_BUDGET = {
 export const USER_DEBT = [
   { name: 'Visa', balance: 5000, rate: 19.99, minPayment: 500 },
   { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
+  { name: 'Telus (past due)', balance: 337.02, rate: 0, minPayment: 0, note: 'Due 2026-05-26' },
   { name: 'Dad', balance: 25, rate: 0, minPayment: 0, note: 'Beer' },
-  { name: 'Mom', balance: 150, rate: 0, minPayment: 0 },
+  { name: 'Mom', balance: 100, rate: 0, minPayment: 0 },
 ];
 
 export const USER_TELECOM = {
@@ -43,6 +44,7 @@ export const USER_TELECOM = {
     { month: '2025-10', total: 215.88, paid: true, note: 'Paid at Telus Willowbrook' },
     { month: '2025-11', total: 333.36, paid: false, note: 'Includes past due' },
     { month: '2025-12', total: 458.74, paid: false, note: '$243.19 past due + $215.55 new + $7.08 late fee' },
+    { month: '2026-05', total: 672.90, paid: false, note: '$335.88 new + $337.02 past due, due 2026-05-26' },
   ],
 };
 

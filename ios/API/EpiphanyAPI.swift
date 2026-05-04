@@ -175,16 +175,19 @@ final class EpiphanyAPI: @unchecked Sendable {
     }
 
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
-        let interval: String
+        let (finalRange, finalInterval): (String, String)
         switch range {
-        case "1d": interval = "5m"
-        case "5d": interval = "15m"
-        default: interval = "1d"
+        case "1m":  (finalRange, finalInterval) = ("1d",  "1m")
+        case "15m": (finalRange, finalInterval) = ("5d",  "15m")
+        case "max": (finalRange, finalInterval) = ("max", "1d")
+        case "1d":  (finalRange, finalInterval) = ("1d",  "5m")
+        case "5d":  (finalRange, finalInterval) = ("5d",  "15m")
+        default:    (finalRange, finalInterval) = (range,  "1d")
         }
         let url = try makeURL("/api/history", query: [
             "symbol": symbol,
-            "range": range,
-            "interval": interval
+            "range": finalRange,
+            "interval": finalInterval
         ])
         let request = URLRequest(url: url)
         let data = try await perform(request)

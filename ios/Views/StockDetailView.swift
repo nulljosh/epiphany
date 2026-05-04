@@ -27,14 +27,14 @@ struct StockDetailView: View {
     @State private var isLoadingNews = true
     @State private var scrubPrice: (date: Date, price: Double)?
     @State private var selectedNewsURL: URL?
-    @State private var showSMA = false
-    @State private var showEMA = false
+    @State private var showSMA = true
+    @State private var showEMA = true
     @State private var smaPeriod = 20
     @State private var emaPeriod = 50
     @State private var showIndicatorConfig = false
     @State private var liveStock: Stock?
 
-    private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
+    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "max"]
 
     private var isWatchlisted: Bool {
         appState.isInWatchlist(stock.symbol)
@@ -561,9 +561,9 @@ struct StockDetailView: View {
 
     private var xAxisFormat: Date.FormatStyle {
         switch selectedRange {
-        case "1d":
+        case "1m", "1d":
             return .dateTime.hour().minute()
-        case "5d":
+        case "15m", "5d":
             return .dateTime.weekday(.abbreviated).hour()
         case "1mo":
             return .dateTime.month(.abbreviated).day()
@@ -659,7 +659,7 @@ private struct IntradayXScaleModifier: ViewModifier {
     }()
 
     func body(content: Content) -> some View {
-        if selectedRange == "1d", let first = firstDate {
+        if ["1d", "1m", "15m"].contains(selectedRange), let first = firstDate {
             let cal = Self.easternCalendar
             let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
             let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first

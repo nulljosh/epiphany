@@ -3,8 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppState.self) private var appState
     @State private var selectedTab = 0
-    @State private var tickerSelectedStock: Stock?
-    @State private var showTicker = false
  
     var body: some View {
         @Bindable var appState = appState
@@ -38,29 +36,6 @@ struct ContentView: View {
             Haptics.selection()
         }
         .tint(Palette.appleBlue)
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if showTicker {
-                TickerBarView(appState: appState) { stock in
-                    tickerSelectedStock = stock
-                }
-            }
-        }
-        .onChange(of: selectedTab) { _, tab in
-            if tab == 1 && !appState.stocks.isEmpty {
-                Task {
-                    try? await Task.sleep(for: .milliseconds(400))
-                    withAnimation(.easeIn(duration: 0.2)) { showTicker = true }
-                }
-            } else {
-                showTicker = false
-            }
-        }
-        .sheet(item: $tickerSelectedStock) { stock in
-            NavigationStack {
-                StockDetailView(stock: stock)
-                    .environment(appState)
-            }
-        }
         .overlay(alignment: .top) {
             if let error = appState.error, !error.isEmpty {
                 SharedErrorBanner(message: error) {
