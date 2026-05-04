@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 import { fileToBase64 } from '../utils/helpers';
 
-const NAV_ITEMS = [
+const BASE_NAV = [
   { id: 'account', label: 'Account' },
+  { id: 'security', label: 'Security' },
   { id: 'tally', label: 'Tally' },
-  { id: 'map', label: 'Map Layers' },
   { id: 'about', label: 'About' },
 ];
 
@@ -20,6 +20,8 @@ function Row({ label, children, t }) {
 
 export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser }) {
   const [section, setSection] = useState('account');
+  const devMode = typeof localStorage !== 'undefined' && !!localStorage.getItem('epiphany_dev');
+  const NAV_ITEMS = devMode ? [...BASE_NAV, { id: 'map', label: 'Map Layers' }] : BASE_NAV;
 
   const [name, setName] = useState(user?.name || '');
   useEffect(() => { setName(user?.name || ''); }, [user?.name]);
@@ -78,31 +80,24 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   const avatarUrl = baseAvatarUrl ? `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}` : null;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
-  const generatePixelArtSVG = () => {
-    const palettes = [
-      ['#e63946', '#457b9d', '#1d3557'],
-      ['#7b2d8b', '#c77dff', '#e0aaff'],
-      ['#0077b6', '#00b4d8', '#90e0ef'],
-      ['#d62828', '#f77f00', '#fcbf49'],
-      ['#2d6a4f', '#52b788', '#b7e4c7'],
+  const generateNodeGraphSVG = () => {
+    const colors = ['#7aab7a', '#c8913a', '#5b8fc9', '#c96b6b', '#9b7ac9'];
+    const nodeColor = colors[Math.floor(Math.random() * colors.length)];
+    const jitter = (n) => n + (Math.random() - 0.5) * 8;
+    const nodes = [
+      [jitter(100), jitter(48)], [jitter(64), jitter(74)], [jitter(136), jitter(74)],
+      [jitter(52), jitter(108)], [100, 100], [jitter(148), jitter(108)],
+      [jitter(80), jitter(148)], [jitter(120), jitter(148)],
     ];
-    const bgs = ['#111', '#0d0d0d', '#1a1a1a', '#0f0f1a', '#0a1a0a'];
-    const palette = palettes[Math.floor(Math.random() * palettes.length)];
-    const bg = bgs[Math.floor(Math.random() * bgs.length)];
-    const px = 8; const size = 8; const total = size * px;
-    const grid = Array.from({ length: size }, () =>
-      Array.from({ length: Math.ceil(size / 2) }, () =>
-        Math.random() > 0.45 ? Math.floor(Math.random() * 3) : -1
-      )
-    );
-    let rects = '';
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        const ci = grid[row][col < size / 2 ? col : size - 1 - col];
-        if (ci >= 0) rects += `<rect x="${col * px}" y="${row * px}" width="${px}" height="${px}" fill="${palette[ci]}"/>`;
-      }
-    }
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="${total}" height="${total}" shape-rendering="crispEdges"><rect width="${total}" height="${total}" fill="${bg}"/>${rects}</svg>`;
+    const allEdges = [[0,1],[0,2],[1,3],[2,5],[1,4],[2,4],[3,4],[4,5],[3,6],[5,7],[4,6],[4,7],[6,7]];
+    const edges = allEdges.filter(() => Math.random() > 0.25);
+    const edgeSvg = edges.map(([a, b]) =>
+      `<line x1="${nodes[a][0].toFixed(1)}" y1="${nodes[a][1].toFixed(1)}" x2="${nodes[b][0].toFixed(1)}" y2="${nodes[b][1].toFixed(1)}" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>`
+    ).join('');
+    const nodeSvg = nodes.map(([x, y], i) =>
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i === 0 || i === 4 ? 9 : 7}" fill="${nodeColor}"/>`
+    ).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><circle cx="100" cy="100" r="100" fill="#0f0f0f"/>${edgeSvg}${nodeSvg}</svg>`;
   };
 
   const showAvatarMsg = useCallback((msg) => {
@@ -112,14 +107,16 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
   }, []);
 
   const handleGenerateAvatar = async () => {
+    const svg = generateNodeGraphSVG();
+    const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+    setLocalAvatarUrl(dataUrl);
+    setAvatarVersion(Date.now());
     setAvatarUploading(true);
-    setAvatarMsg(null);
     try {
-      const svg = generatePixelArtSVG();
       const base64 = btoa(unescape(encodeURIComponent(svg)));
       const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
       const data = await res.json();
-      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); showAvatarMsg({ text: 'New avatar generated', error: false }); }
+      if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); showAvatarMsg({ text: 'Saved', error: false }); }
       else showAvatarMsg({ text: data.error || 'Failed', error: true });
     } catch { showAvatarMsg({ text: 'Failed', error: true }); }
     finally { setAvatarUploading(false); }
@@ -183,7 +180,6 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
 
         {section === 'account' && user && (
           <>
-            {/* Avatar + identity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div onClick={handleGenerateAvatar} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: t.glass, border: `2px solid ${t.border}`, cursor: avatarUploading ? 'wait' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: avatarUploading ? 0.6 : 1 }} title="Click to generate new avatar">
                 {avatarUrl && !imgError ? <img key={avatarVersion} src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgError(true)} /> : null}
@@ -192,11 +188,27 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: t.text, fontFamily: font }}>{user.name || user.email}</div>
                 <div style={{ fontSize: 11, color: avatarMsg ? (avatarMsg.error ? '#ef4444' : t.green) : t.textTertiary, marginTop: 2 }}>
-                  {avatarUploading ? 'Generating...' : avatarMsg ? avatarMsg.text : 'Click to generate avatar'}
+                  {avatarUploading ? 'Uploading...' : avatarMsg ? avatarMsg.text : 'Click to generate avatar'}
                 </div>
               </div>
               <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierColor, background: `${tierColor}18`, padding: '2px 8px', borderRadius: 999 }}>{tierLabel}</span>
             </div>
+
+            <Row label="Display name" t={t}>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={{ ...inputStyle, width: 140 }} onKeyDown={e => e.key === 'Enter' && handleNameSave()} />
+              <button onClick={handleNameSave} disabled={nameSaving} style={btnStyle(true)}>{nameSaving ? '...' : 'Save'}</button>
+            </Row>
+            {nameMsg && <div style={msgStyle(nameMsg.error)}>{nameMsg.text}</div>}
+
+            <div style={{ marginTop: 24 }}>
+              <button onClick={logout} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>Sign Out</button>
+            </div>
+          </>
+        )}
+
+        {section === 'security' && user && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>Account Security</div>
 
             <Row label="Email" t={t}>
               <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{user.email}</span>
@@ -214,12 +226,6 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
               </div>
             )}
 
-            <Row label="Display name" t={t}>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={{ ...inputStyle, width: 140 }} onKeyDown={e => e.key === 'Enter' && handleNameSave()} />
-              <button onClick={handleNameSave} disabled={nameSaving} style={btnStyle(true)}>{nameSaving ? '...' : 'Save'}</button>
-            </Row>
-            {nameMsg && <div style={msgStyle(nameMsg.error)}>{nameMsg.text}</div>}
-
             <Row label="Password" t={t}>
               <button style={btnStyle(false)} onClick={() => setShowPasswordForm(!showPasswordForm)}>Change</button>
             </Row>
@@ -235,10 +241,6 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
                 {pwMsg && <div style={msgStyle(pwMsg.error)}>{pwMsg.text}</div>}
               </div>
             )}
-
-            <div style={{ marginTop: 24 }}>
-              <button onClick={logout} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>Sign Out</button>
-            </div>
           </>
         )}
 

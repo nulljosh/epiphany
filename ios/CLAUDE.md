@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.7.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
+v1.8.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -13,10 +13,9 @@ v1.7.0 — Native iPhone intelligence app. 5-tab SwiftUI app, portrait-only, dar
 ## Tabs
 
 1. **Situation** — MapKit map with 8 toggleable live data layers. Default home screen.
-2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index.
+2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index. Feed pills: News | Macro | Alerts.
 3. **Portfolio** — Spending chart + forecast, holdings, budget, debt/goals calendar, statements.
-4. **People** — Person search with Google/DuckDuckGo/Wikipedia cascade, social links, indexed profiles.
-5. **Settings** — Profile (avatar + keychain), subscription tier, map layer toggles, Tally integration.
+4. **Settings** — Profile (avatar + keychain), subscription tier, Tally integration. Security: email/password. Map layers under dev mode only.
 
 ## Run
 

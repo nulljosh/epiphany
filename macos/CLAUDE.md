@@ -1,6 +1,6 @@
 # Epiphany macOS
 
-v1.1.0 — Native macOS intelligence dashboard. 5-tab SwiftUI app synced with web v1.1.0.
+v1.2.0 — Native macOS intelligence dashboard. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings).
 
 ## Rules
 

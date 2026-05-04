@@ -28,17 +28,11 @@ struct ContentView: View {
                 }
                 .tag(2)
 
-            PeopleView()
-                .tabItem {
-                    Label("People", systemImage: "person.crop.rectangle.stack")
-                }
-                .tag(3)
-
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-                .tag(4)
+                .tag(3)
         }
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()

@@ -245,66 +245,66 @@ struct SettingsView: View {
     @MainActor
     private func generateAndUploadAvatar() async {
         isUploadingAvatar = true
-        let image = Self.generatePixelArtImage()
-        if let jpegData = image.jpegData(compressionQuality: 0.9) {
-            appState.saveAvatarData(jpegData)
-            _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
+        let image = Self.generateNodeGraphImage()
+        guard let jpegData = image.jpegData(compressionQuality: 0.9) else {
+            isUploadingAvatar = false
+            return
         }
+        appState.saveAvatarData(jpegData)
         isUploadingAvatar = false
+        _ = try? await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
     }
 
-    private static func generatePixelArtImage() -> UIImage {
-        let palettes: [[UIColor]] = [
-            [UIColor(red: 0.90, green: 0.22, blue: 0.27, alpha: 1),
-             UIColor(red: 0.27, green: 0.48, blue: 0.62, alpha: 1),
-             UIColor(red: 0.11, green: 0.21, blue: 0.34, alpha: 1)],
-            [UIColor(red: 0.48, green: 0.18, blue: 0.55, alpha: 1),
-             UIColor(red: 0.78, green: 0.49, blue: 1.00, alpha: 1),
-             UIColor(red: 0.88, green: 0.67, blue: 1.00, alpha: 1)],
-            [UIColor(red: 0.00, green: 0.47, blue: 0.71, alpha: 1),
-             UIColor(red: 0.00, green: 0.71, blue: 0.85, alpha: 1),
-             UIColor(red: 0.56, green: 0.88, blue: 0.94, alpha: 1)],
-            [UIColor(red: 0.84, green: 0.16, blue: 0.16, alpha: 1),
-             UIColor(red: 0.97, green: 0.50, blue: 0.00, alpha: 1),
-             UIColor(red: 0.99, green: 0.75, blue: 0.29, alpha: 1)],
-            [UIColor(red: 0.18, green: 0.42, blue: 0.31, alpha: 1),
-             UIColor(red: 0.32, green: 0.72, blue: 0.53, alpha: 1),
-             UIColor(red: 0.72, green: 0.89, blue: 0.78, alpha: 1)],
+    private static func generateNodeGraphImage() -> UIImage {
+        let palettes: [UIColor] = [
+            UIColor(red: 0.48, green: 0.67, blue: 0.48, alpha: 1), // sage
+            UIColor(red: 0.78, green: 0.57, blue: 0.23, alpha: 1), // amber
+            UIColor(red: 0.36, green: 0.56, blue: 0.79, alpha: 1), // blue
+            UIColor(red: 0.79, green: 0.42, blue: 0.42, alpha: 1), // coral
+            UIColor(red: 0.61, green: 0.48, blue: 0.79, alpha: 1), // violet
         ]
-        let bgs: [UIColor] = [
-            UIColor(white: 0.067, alpha: 1),
-            UIColor(white: 0.051, alpha: 1),
-            UIColor(white: 0.102, alpha: 1),
-            UIColor(red: 0.059, green: 0.059, blue: 0.102, alpha: 1),
-            UIColor(red: 0.039, green: 0.102, blue: 0.039, alpha: 1),
-        ]
-        let palette = palettes.randomElement()!
-        let bg = bgs.randomElement()!
-        let px = 8; let gridSize = 8
-        let totalPx = gridSize * px
-        let size = CGSize(width: totalPx, height: totalPx)
+        let nodeColor = palettes.randomElement()!
+        let size: CGFloat = 200
+        let cx: CGFloat = 100, cy: CGFloat = 100
+        let jitter: CGFloat = 5
 
-        var grid = Array(repeating: Array(repeating: -1, count: gridSize), count: gridSize)
-        for row in 0..<gridSize {
-            for col in 0..<(gridSize / 2 + gridSize % 2) {
-                let ci = Double.random(in: 0..<1) > 0.45 ? Int.random(in: 0..<3) : -1
-                grid[row][col] = ci
-                grid[row][gridSize - 1 - col] = ci
-            }
+        let baseOffsets: [(CGFloat, CGFloat)] = [
+            (0, -48), (-36, -26), (36, -26),
+            (-48, 8), (0, 0), (48, 8),
+            (-20, 48), (20, 48)
+        ]
+        let nodes = baseOffsets.map { dx, dy in
+            CGPoint(
+                x: cx + dx + CGFloat.random(in: -jitter...jitter),
+                y: cy + dy + CGFloat.random(in: -jitter...jitter)
+            )
         }
 
-        let renderer = UIGraphicsImageRenderer(size: size)
+        let allEdges: [(Int, Int)] = [
+            (0,1),(0,2),(1,3),(2,5),(1,4),(2,4),
+            (3,4),(4,5),(3,6),(5,7),(4,6),(4,7),(6,7)
+        ]
+        let activeEdges = allEdges.filter { _ in Double.random(in: 0...1) > 0.25 }
+
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
         return renderer.image { ctx in
-            bg.setFill()
-            ctx.fill(CGRect(origin: .zero, size: size))
-            for row in 0..<gridSize {
-                for col in 0..<gridSize {
-                    let ci = grid[row][col]
-                    if ci >= 0 {
-                        palette[ci].setFill()
-                        ctx.fill(CGRect(x: col * px, y: row * px, width: px, height: px))
-                    }
-                }
+            let cgCtx = ctx.cgContext
+            UIColor(white: 0.06, alpha: 1).setFill()
+            UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: size, height: size)).fill()
+
+            cgCtx.setStrokeColor(UIColor(white: 1, alpha: 0.22).cgColor)
+            cgCtx.setLineWidth(1.5)
+            cgCtx.setLineCap(.round)
+            for (a, b) in activeEdges {
+                cgCtx.move(to: nodes[a])
+                cgCtx.addLine(to: nodes[b])
+            }
+            cgCtx.strokePath()
+
+            nodeColor.setFill()
+            for (i, node) in nodes.enumerated() {
+                let r: CGFloat = (i == 0 || i == 4) ? 9 : 7
+                UIBezierPath(ovalIn: CGRect(x: node.x - r, y: node.y - r, width: r * 2, height: r * 2)).fill()
             }
         }
     }

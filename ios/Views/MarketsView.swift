@@ -274,25 +274,43 @@ struct MarketsView: View {
                             )
                         }
 
-                        Section {
-                            NavigationLink {
-                                NewsView()
-                                    .environment(appState)
-                            } label: {
-                                Label("News", systemImage: "newspaper")
+                        Section("Feed") {
+                            HStack(spacing: 10) {
+                                NavigationLink {
+                                    NewsView().environment(appState)
+                                } label: {
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "newspaper").font(.title3)
+                                        Text("News").font(.caption.weight(.semibold))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                }
+                                NavigationLink {
+                                    MacroView().environment(appState)
+                                } label: {
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "chart.bar.doc.horizontal").font(.title3)
+                                        Text("Macro").font(.caption.weight(.semibold))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                }
+                                NavigationLink {
+                                    AlertsView().environment(appState)
+                                } label: {
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "bell.badge").font(.title3)
+                                        Text("Alerts").font(.caption.weight(.semibold))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                                }
                             }
-                            NavigationLink {
-                                MacroView()
-                                    .environment(appState)
-                            } label: {
-                                Label("Macro", systemImage: "chart.bar.doc.horizontal")
-                            }
-                            NavigationLink {
-                                AlertsView()
-                                    .environment(appState)
-                            } label: {
-                                Label("Alerts", systemImage: "bell.badge")
-                            }
+                            .buttonStyle(.plain)
                         }
 
                         Section {
