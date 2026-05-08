@@ -44,12 +44,12 @@
         <false/>
     </dict>
     <key>NSFaceIDUsageDescription</key>
-    <string>Sign in to Monica with Face ID</string>
+    <string>Sign in to Epiphany with Face ID</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Monica uses your location to show nearby earthquakes, flights, incidents, and weather alerts.</string>
+    <string>Epiphany uses your location to show nearby earthquakes, flights, incidents, and weather alerts.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Choose a profile photo for your Monica account.</string>
+    <string>Choose a profile photo for your Epiphany account.</string>
     <key>NSCameraUsageDescription</key>
-    <string>Take a profile photo for your Monica account.</string>
+    <string>Take a profile photo for your Epiphany account.</string>
 </dict>
 </plist>
