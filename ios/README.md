@@ -2,7 +2,7 @@
 
 # Epiphany iOS
 
-![version](https://img.shields.io/badge/version-v1.7.0-blue)
+![version](https://img.shields.io/badge/version-v2.0.0-blue)
 
 <p align="center"><img src="Resources/preview.png" width="300"></p>
 

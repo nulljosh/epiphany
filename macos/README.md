@@ -1,11 +1,11 @@
-![Monica macOS](icon.svg)
+![Epiphany macOS](icon.svg)
 
-# Monica macOS
+# Epiphany macOS
 
-![version](https://img.shields.io/badge/version-v0.6.1-blue)
+![version](https://img.shields.io/badge/version-v1.3.0-blue)
 
-Native macOS companion for Monica. MapKit map, markets table, predictions, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
-[Monica](https://monica.heyitsmejosh.com) | ![Architecture](architecture.svg)
+Native macOS companion for Epiphany. MapKit map with layer switcher + venue chips, markets table, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
+[Epiphany](https://epiphany.heyitsmejosh.com) | ![Architecture](architecture.svg)
 
 ## Features
 - MapKit map with 7 data layers (earthquakes, flights, incidents, weather, crime, local events, traffic)

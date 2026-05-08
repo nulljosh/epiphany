@@ -1,5 +1,5 @@
 import XCTest
-@testable import Monica
+@testable import Epiphany
 
 final class PersonSearchResultTests: XCTestCase {
 

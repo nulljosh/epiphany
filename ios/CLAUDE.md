@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v1.9.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
+v2.0.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, dark mode only. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -28,7 +28,7 @@ xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination '
 
 ## Key Files
 
-- `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires)
+- `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires). Map layer switcher (Hybrid/Satellite/Standard/Terrain) persisted via AppStorage. Venue category chips (Restaurant/Gas/Groceries/Coffee/Parks/Shopping) trigger MKLocalSearch.
 - `Views/MarketsView.swift` — Markets list + inline portfolio, stock detail sheets, TickerBarView (scoped here to avoid back-button overlap on other tabs)
 - `Views/PortfolioView.swift` — Spending chart, holdings, budget, debt/goals calendar, statements
 - `Views/PeopleView.swift` — Person search + index grid

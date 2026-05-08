@@ -1,7 +1,7 @@
 // TODO: rewrite against current AppState API (loadPortfolio/markets removed)
 #if false
 import XCTest
-@testable import Monica
+@testable import Epiphany
 
 @MainActor
 final class AppStateTests: XCTestCase {

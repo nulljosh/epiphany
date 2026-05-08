@@ -1,6 +1,76 @@
 import MapKit
 import SwiftUI
 
+private enum MapLayerStyle: String, CaseIterable {
+    case hybrid, satellite, standard, terrain
+
+    var label: String {
+        switch self {
+        case .hybrid:    return "Hybrid"
+        case .satellite: return "Satellite"
+        case .standard:  return "Standard"
+        case .terrain:   return "Terrain"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .hybrid:    return "map.fill"
+        case .satellite: return "globe.americas.fill"
+        case .standard:  return "map"
+        case .terrain:   return "mountain.2"
+        }
+    }
+
+    var mapStyle: MapStyle {
+        switch self {
+        case .hybrid:    return .hybrid(elevation: .realistic)
+        case .satellite: return .imagery(elevation: .realistic)
+        case .standard:  return .standard(elevation: .realistic)
+        case .terrain:   return .standard(elevation: .realistic, pointsOfInterest: .all)
+        }
+    }
+}
+
+private enum VenueCategory: String, CaseIterable {
+    case restaurant, gas, groceries, coffee, parks, shopping
+
+    var label: String { rawValue.capitalized }
+
+    var icon: String {
+        switch self {
+        case .restaurant: return "fork.knife"
+        case .gas:        return "fuelpump.fill"
+        case .groceries:  return "cart.fill"
+        case .coffee:     return "cup.and.saucer.fill"
+        case .parks:      return "leaf.fill"
+        case .shopping:   return "bag.fill"
+        }
+    }
+
+    var poiCategory: MKPointOfInterestCategory {
+        switch self {
+        case .restaurant: return .restaurant
+        case .gas:        return .gasStation
+        case .groceries:  return .foodMarket
+        case .coffee:     return .cafe
+        case .parks:      return .park
+        case .shopping:   return .store
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .restaurant: return .orange
+        case .gas:        return .yellow
+        case .groceries:  return .green
+        case .coffee:     return Color(red: 0.59, green: 0.39, blue: 0.2)
+        case .parks:      return .mint
+        case .shopping:   return .pink
+        }
+    }
+}
+
 struct SituationView: View {
     @Environment(AppState.self) private var appState
 
@@ -30,6 +100,15 @@ struct SituationView: View {
     @State private var hasLoaded = false
     @State private var selectedEvent: MapEventDetail?
     @State private var loadTask: Task<Void, Never>?
+
+    @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.hybrid.rawValue
+    @State private var selectedVenueCategory: VenueCategory?
+    @State private var venueResults: [MKMapItem] = []
+    @State private var isSearchingVenues = false
+
+    private var activeMapStyle: MapStyle {
+        MapLayerStyle(rawValue: mapLayerRaw)?.mapStyle ?? .hybrid(elevation: .realistic)
+    }
 
     var body: some View {
         mapView
@@ -225,8 +304,103 @@ struct SituationView: View {
                     .buttonStyle(.plain)
                 }
             }
+
+            if let cat = selectedVenueCategory {
+                ForEach(venueResults, id: \.self) { item in
+                    if let coord = item.placemark.location?.coordinate {
+                        Annotation(item.name ?? cat.label, coordinate: coord) {
+                            Image(systemName: cat.icon)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(6)
+                                .background(cat.tint, in: Circle())
+                        }
+                    }
+                }
+            }
         }
-        .mapStyle(.standard(elevation: .realistic))
+        .mapStyle(activeMapStyle)
+        .overlay(alignment: .bottom) { venueCategoryBar }
+        .overlay(alignment: .bottomTrailing) { layerPickerButton }
+    }
+
+    @ViewBuilder
+    private var venueCategoryBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(VenueCategory.allCases, id: \.self) { cat in
+                    Button {
+                        if selectedVenueCategory == cat {
+                            selectedVenueCategory = nil
+                            venueResults = []
+                        } else {
+                            selectedVenueCategory = cat
+                            Task { await searchVenues(cat) }
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            if isSearchingVenues && selectedVenueCategory == cat {
+                                ProgressView().controlSize(.mini).tint(.white)
+                            } else {
+                                Image(systemName: cat.icon)
+                                    .font(.caption.weight(.semibold))
+                            }
+                            Text(cat.label)
+                                .font(.caption.weight(.semibold))
+                        }
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 7)
+                        .background(
+                            selectedVenueCategory == cat ? cat.tint : Color.black.opacity(0.6),
+                            in: Capsule()
+                        )
+                        .foregroundStyle(.white)
+                        .overlay(
+                            Capsule().stroke(
+                                selectedVenueCategory == cat ? Color.clear : Color.white.opacity(0.15),
+                                lineWidth: 1
+                            )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 14)
+        }
+        .padding(.bottom, 16)
+    }
+
+    @ViewBuilder
+    private var layerPickerButton: some View {
+        Menu {
+            ForEach(MapLayerStyle.allCases, id: \.rawValue) { style in
+                Button {
+                    mapLayerRaw = style.rawValue
+                } label: {
+                    Label(style.label, systemImage: style.icon)
+                }
+            }
+        } label: {
+            Image(systemName: MapLayerStyle(rawValue: mapLayerRaw)?.icon ?? "map.fill")
+                .font(.body.weight(.medium))
+                .foregroundStyle(.white)
+                .frame(width: 36, height: 36)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .padding(.trailing, 12)
+        .padding(.bottom, 52)
+    }
+
+    private func searchVenues(_ category: VenueCategory) async {
+        isSearchingVenues = true
+        defer { isSearchingVenues = false }
+        let request = MKLocalSearch.Request()
+        request.region = visibleRegion
+        request.pointOfInterestFilter = MKPointOfInterestFilter(including: [category.poiCategory])
+        request.resultTypes = .pointOfInterest
+        if let response = try? await MKLocalSearch(request: request).start() {
+            venueResults = response.mapItems
+        }
     }
 
     private func aqiColor(_ aqi: Int) -> Color {
