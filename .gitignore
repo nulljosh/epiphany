@@ -145,3 +145,4 @@ frontend/out/
 .env.vercel
 *.profraw
 .env.prod
+supabase/.temp/
