@@ -42,5 +42,4 @@ xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination '
 
 ## Known Issues / Next
 
-- App icon still has light bg — regenerate from `ios/AppIcon.svg` with dark background
 - Wealthsimple unofficial API exists in `src/utils/brokers/wealthsimple.js` — not yet wired to portfolio sync
