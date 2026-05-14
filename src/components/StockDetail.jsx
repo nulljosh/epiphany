@@ -272,6 +272,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const scrollRef = useRef(null);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
+  const symbol = stock?.symbol;
+
   // Persist indicators to localStorage
   useEffect(() => { saveIndicators(activeIndicators); }, [activeIndicators]);
   useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, [symbol]);
@@ -291,8 +293,6 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     setActiveIndicators(prev => prev.map(i => i.id === id ? { ...i, params: { ...i.params, ...params } } : i));
     setEditingIndicator(null);
   }, []);
-
-  const symbol = stock?.symbol;
 
   // Fetch full stock detail (open, prevClose, marketCap, etc.)
   const fetchDetail = useCallback(async (signal) => {
@@ -627,12 +627,10 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     }
   }, [history, dark, activeIndicators]);
 
-  if (!stock) return null;
-
   const d = detail || EMPTY;
-  const price = d.price ?? stock.price;
-  const change = d.change ?? (stock.changePercent != null ? (price * stock.changePercent / 100) : 0);
-  const changePercent = d.changePercent ?? stock.changePercent ?? 0;
+  const price = d.price ?? stock?.price;
+  const change = d.change ?? (stock?.changePercent != null ? (price * stock.changePercent / 100) : 0);
+  const changePercent = d.changePercent ?? stock?.changePercent ?? 0;
   const positive = changePercent >= 0;
   const changeColor = positive ? '#30D158' : '#FF453A';
 
@@ -641,16 +639,18 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     { label: 'High', value: d.high ? formatCurrency(d.high) : '--' },
     { label: 'Low', value: d.low ? formatCurrency(d.low) : '--' },
     { label: 'Prev Close', value: d.prevClose ? formatCurrency(d.prevClose) : '--' },
-    { label: 'Volume', value: formatVolume(d.volume ?? stock.volume) },
+    { label: 'Volume', value: formatVolume(d.volume ?? stock?.volume) },
     { label: 'Avg Vol', value: formatVolume(d.avgVolume) },
-    { label: '52W H', value: (d.fiftyTwoWeekHigh ?? stock.high52) ? formatCurrency(d.fiftyTwoWeekHigh ?? stock.high52) : '--' },
-    { label: '52W L', value: (d.fiftyTwoWeekLow ?? stock.low52) ? formatCurrency(d.fiftyTwoWeekLow ?? stock.low52) : '--' },
+    { label: '52W H', value: (d.fiftyTwoWeekHigh ?? stock?.high52) ? formatCurrency(d.fiftyTwoWeekHigh ?? stock?.high52) : '--' },
+    { label: '52W L', value: (d.fiftyTwoWeekLow ?? stock?.low52) ? formatCurrency(d.fiftyTwoWeekLow ?? stock?.low52) : '--' },
     { label: 'Mkt Cap', value: formatMarketCap(d.marketCap) },
     { label: 'P/E', value: d.peRatio != null ? d.peRatio.toFixed(2) : '--' },
     { label: 'EPS', value: d.eps != null ? `$${d.eps.toFixed(2)}` : '--' },
     { label: 'Yield', value: d.yield != null ? `${d.yield.toFixed(2)}%` : '--' },
     { label: 'Beta', value: d.beta != null ? d.beta.toFixed(2) : '--' },
   ], [d, stock]);
+
+  if (!stock) return null;
 
   const glass = {
     background: t.glass,
