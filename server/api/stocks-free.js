@@ -206,7 +206,7 @@ async function fetchYahooBatch(symbolList) {
 // Yahoo v10 quoteSummary: reliable fundamentals (marketCap + trailingPE) with no API key
 async function fetchYahooFundamentals(symbol) {
   for (const base of YAHOO_URLS) {
-    const url = `${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=summaryDetail,financialData`;
+    const url = `${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=summaryDetail,defaultKeyStatistics`;
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -215,11 +215,11 @@ async function fetchYahooFundamentals(symbol) {
       if (!response.ok) continue;
       const data = await response.json();
       const sd = data.quoteSummary?.result?.[0]?.summaryDetail;
-      const fd = data.quoteSummary?.result?.[0]?.financialData;
-      if (!sd && !fd) continue;
+      const ks = data.quoteSummary?.result?.[0]?.defaultKeyStatistics;
+      if (!sd && !ks) continue;
       return {
         marketCap: sd?.marketCap?.raw ?? null,
-        peRatio: sd?.trailingPE?.raw ?? fd?.revenueGrowth?.raw ?? null,
+        peRatio: sd?.trailingPE?.raw ?? ks?.trailingPE?.raw ?? null,
       };
     } catch {
       // try next base

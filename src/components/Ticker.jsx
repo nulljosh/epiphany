@@ -24,6 +24,7 @@ const Ticker = memo(({ items, theme, onItemClick }) => {
   const lastPointerXRef = useRef(0);
   const lastPointerTimeRef = useRef(0);
   const momentumRef = useRef(null);
+  const hasCapturedRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [segmentVersion, setSegmentVersion] = useState(0);
 
@@ -98,33 +99,36 @@ const Ticker = memo(({ items, theme, onItemClick }) => {
     if (!items.length) return;
     if (momentumRef.current) cancelAnimationFrame(momentumRef.current);
     dragDistanceRef.current = 0;
+    hasCapturedRef.current = false;
     dragStartXRef.current = e.clientX;
     dragStartOffsetRef.current = offsetRef.current;
     lastPointerXRef.current = e.clientX;
     lastPointerTimeRef.current = performance.now();
     velocityRef.current = 0;
     setIsDragging(true);
-    e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
   const handlePointerMove = (e) => {
     if (!isDragging || !segmentWidthRef.current) return;
     const delta = e.clientX - dragStartXRef.current;
     dragDistanceRef.current = Math.max(dragDistanceRef.current, Math.abs(delta));
+    if (!hasCapturedRef.current && dragDistanceRef.current > 8) {
+      hasCapturedRef.current = true;
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    }
     offsetRef.current = normalizeOffset(dragStartOffsetRef.current + delta, segmentWidthRef.current);
     applyOffset();
-    // Track velocity for momentum
     const now = performance.now();
     const dt = now - lastPointerTimeRef.current;
     if (dt > 0) {
-      velocityRef.current = (e.clientX - lastPointerXRef.current) / Math.max(dt, 1) * 16; // px per frame
+      velocityRef.current = (e.clientX - lastPointerXRef.current) / Math.max(dt, 1) * 16;
     }
     lastPointerXRef.current = e.clientX;
     lastPointerTimeRef.current = now;
   };
 
   const handlePointerUp = (e) => {
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    if (hasCapturedRef.current) e.currentTarget.releasePointerCapture?.(e.pointerId);
     if (Math.abs(velocityRef.current) > 1) {
       startMomentum();
     } else {
