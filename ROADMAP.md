@@ -145,7 +145,8 @@ Ordered by effort (fewest tokens → most). Ship the top first.
 - iOS plane filter: flights >35,000 ft hidden by default; Settings toggle to re-enable
 - iOS avatar: pixel art generator (no photo picker); SVGRasterizer white-render fixed
 - Rename: Monica → Epiphany (GitHub repo, Vercel, iOS/macOS bundle IDs, READMEs, CLAUDE.md, memory)
-- STALE indicator / heartbeat
+- STALE indicator / heartbeat (enhanced: age label "STALE (Xm)", portfolio sync stale, iOS/macOS native implementation)
+- Ticker visibility toggle (web Settings + iOS Settings + macOS Settings, localStorage/AppStorage persisted)
 - Macro pulse strip (dynamic from `/api/macro`)
 - MacroPanel data-shape fix (ca43e23)
 - Map layers (11 layers, coord validation, mapLayers filtering)

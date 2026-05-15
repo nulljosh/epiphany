@@ -69,6 +69,7 @@ async function pushToServer(data) {
 export function usePortfolio(stocks, isAuthenticated) {
   const [customData, setCustomData] = useState(() => loadFromStorage());
   const [serverLoaded, setServerLoaded] = useState(false);
+  const [portfolioFetchedAt, setPortfolioFetchedAt] = useState(null);
   const isDemo = !customData;
 
   const persistPortfolio = useCallback((nextData) => {
@@ -84,6 +85,7 @@ export function usePortfolio(stocks, isAuthenticated) {
     if (!isAuthenticated || serverLoaded) return;
     fetchServerPortfolio().then(data => {
       setServerLoaded(true);
+      setPortfolioFetchedAt(new Date());
       if (data) {
         setCustomData(data);
         saveToStorage(data);
@@ -213,6 +215,7 @@ export function usePortfolio(stocks, isAuthenticated) {
     surplus,
     netWorth,
     isDemo,
+    portfolioFetchedAt,
     importData,
     importSpendingMonth,
     syncSpendingMonths,

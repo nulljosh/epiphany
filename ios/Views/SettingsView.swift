@@ -103,6 +103,7 @@ struct SettingsView: View {
                         SecuritySection()
                             .environment(appState)
                     }
+                    Toggle("Show ticker bar", isOn: $appState.showTickerBar)
                 }
 
 

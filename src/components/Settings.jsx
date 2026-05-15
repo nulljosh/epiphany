@@ -18,7 +18,7 @@ function Row({ label, children, t }) {
   );
 }
 
-export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser }) {
+export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, tickerVisible, setTickerVisible, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser }) {
   const [section, setSection] = useState('account');
   const devMode = typeof localStorage !== 'undefined' && !!localStorage.getItem('epiphany_dev');
   const NAV_ITEMS = devMode ? [...BASE_NAV, { id: 'map', label: 'Map Layers' }] : BASE_NAV;
@@ -244,6 +244,25 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, us
               <button onClick={handleNameSave} disabled={nameSaving} style={btnStyle(true)}>{nameSaving ? '...' : 'Save'}</button>
             </Row>
             {nameMsg && <div style={msgStyle(nameMsg.error)}>{nameMsg.text}</div>}
+
+            {setTickerVisible && (
+              <Row label="Show ticker" t={t}>
+                <button
+                  onClick={() => setTickerVisible(v => !v)}
+                  style={{
+                    width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', padding: 0,
+                    background: tickerVisible ? '#30D158' : t.border, position: 'relative',
+                    transition: 'background 0.2s ease',
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 2, width: 20, height: 20, borderRadius: 10,
+                    background: '#fff', transition: 'left 0.2s ease',
+                    left: tickerVisible ? 22 : 2,
+                  }} />
+                </button>
+              </Row>
+            )}
 
             <div style={{ marginTop: 24 }}>
               <button onClick={logout} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>Sign Out</button>

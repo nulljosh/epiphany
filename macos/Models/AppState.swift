@@ -24,6 +24,12 @@ final class AppState {
     var isAuthenticating = false
     var error: String?
     var financeDataLoaded = false
+    var stocksFetchedAt: Date?
+    var portfolioFetchedAt: Date?
+    var isStockDataStale: Bool {
+        guard let t = stocksFetchedAt else { return false }
+        return Date().timeIntervalSince(t) > 300
+    }
     var dailyBrief: DailyBrief?
     var avatarImageData: Data?
 
@@ -267,7 +273,7 @@ final class AppState {
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
-            if !stocks.isEmpty { error = nil }
+            if !stocks.isEmpty { error = nil; stocksFetchedAt = .now }
         } catch {
             self.error = error.localizedDescription
         }
@@ -319,6 +325,7 @@ final class AppState {
             // Don't surface portfolio errors to user
         }
         financeDataLoaded = true
+        portfolioFetchedAt = .now
     }
 
     func saveFinanceData() async {

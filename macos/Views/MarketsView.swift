@@ -163,6 +163,15 @@ struct MarketsView: View {
                     .padding(.horizontal)
                     .padding(.vertical, 8)
 
+                    if appState.isStockDataStale, let fetchedAt = appState.stocksFetchedAt {
+                        (Text("Data may be stale \u{00B7} updated ") + Text(fetchedAt, style: .relative) + Text(" ago"))
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 4)
+                            .background(.black.opacity(0.4))
+                    }
+
                     if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
                         HStack(spacing: 10) {
                             Text("\(fgScore)")

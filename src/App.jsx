@@ -165,10 +165,14 @@ export default function App() {
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
   const [dark, setDark] = useState(true);
+  const [tickerVisible, setTickerVisible] = useState(() => {
+    try { return localStorage.getItem('epiphany_ticker_visible') !== 'false'; } catch { return true; }
+  });
   const [activeTab, setActiveTab] = useState('situation');
   const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false, incidents: true, crime: true, localEvents: true, wildfires: true });
   const mapInstanceRef = useRef(null);
   useEffect(() => { applyResolvedTheme(dark ? 'dark' : 'light'); }, [dark]);
+  useEffect(() => { try { localStorage.setItem('epiphany_ticker_visible', tickerVisible); } catch {} }, [tickerVisible]);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const [showPricing, setShowPricing] = useState(false);
@@ -1135,7 +1139,7 @@ const reset = useCallback(() => {
   );
 
 
-  const settingsProps = { dark, setDark, t, mapLayers, setMapLayers, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser: refresh };
+  const settingsProps = { dark, setDark, t, mapLayers, setMapLayers, tickerVisible, setTickerVisible, user, logout, subscription, changeName, changeEmail, changePassword, refreshUser: refresh };
 
   const glassButton = {
     background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.72)',
@@ -1250,6 +1254,7 @@ const reset = useCallback(() => {
         isFree={isFree} setShowPricing={setShowPricing} logout={logout}
         panelContent={renderPanelContent()}
         onTickerItemClick={handleTickerItemClick}
+        tickerVisible={tickerVisible}
       />
 
       {/* Map cell */}

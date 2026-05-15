@@ -54,10 +54,13 @@ export const BlinkingDot = ({ color, delay = 0, speed = 2 }) => (
 
 export const StatusBar = ({ t, reliability }) => {
   const status = reliability?.status || 'live';
+  const staleAgeMin = status === 'stale' && reliability?.lastSuccessAt
+    ? Math.round((Date.now() - reliability.lastSuccessAt) / 60000)
+    : null;
   const cfg = status === 'loading'
     ? { label: 'LOADING', color: t.textSecondary }
     : status === 'stale'
-    ? { label: 'STALE', color: '#ff6b6b' }
+    ? { label: staleAgeMin != null ? `STALE (${staleAgeMin}m)` : 'STALE', color: '#ff6b6b' }
     : status === 'fallback'
       ? { label: 'FALLBACK', color: '#f5a623' }
       : { label: 'LIVE', color: t.green };

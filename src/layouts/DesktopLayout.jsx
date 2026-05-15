@@ -14,17 +14,18 @@ export default function DesktopLayout({
   showAlerts, setShowAlerts, activeCount,
   isFree, setShowPricing, logout,
   panelContent, onTickerItemClick,
+  tickerVisible = true,
 }) {
   return (
     <>
       {/* Ticker */}
-      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: 28, maxHeight: 36, overflow: 'hidden' }}>
-        {tickerItems.length > 0
+      <div className="monica-ticker" style={{ gridColumn: '1 / -1', minHeight: tickerVisible ? 28 : 0, maxHeight: tickerVisible ? 36 : 0, overflow: 'hidden', transition: 'min-height 0.2s ease, max-height 0.2s ease' }}>
+        {tickerVisible && (tickerItems.length > 0
           ? <Ticker items={tickerItems} theme={t} onItemClick={onTickerItemClick} />
           : <div style={{ height: 28, background: t.glass, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 10, color: t.textTertiary, fontFamily: FONT }}>Loading ticker...</span>
             </div>
-        }
+        )}
       </div>
 
       {/* Header */}

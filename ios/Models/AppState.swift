@@ -23,6 +23,13 @@ final class AppState {
     var isAuthenticating = false
     var error: String?
     var financeDataLoaded = false
+    var stocksFetchedAt: Date?
+    var portfolioFetchedAt: Date?
+    var isStockDataStale: Bool {
+        guard let t = stocksFetchedAt else { return false }
+        return Date().timeIntervalSince(t) > 300
+    }
+    @AppStorage("epiphany_show_ticker") var showTickerBar: Bool = true
     var dailyBrief: DailyBrief?
     var tallyPayment: TallyPaymentInfo?
     var tallyConnected: Bool = TallyService.loadCredentials() != nil
@@ -284,7 +291,7 @@ final class AppState {
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
-            if !stocks.isEmpty { error = nil }
+            if !stocks.isEmpty { error = nil; stocksFetchedAt = .now }
         } catch {
             handleError(error)
         }
@@ -370,6 +377,7 @@ final class AppState {
             // Don't show error for portfolio -- just mark as loaded
         }
         financeDataLoaded = true
+        portfolioFetchedAt = .now
     }
 
     func saveFinanceData() async {

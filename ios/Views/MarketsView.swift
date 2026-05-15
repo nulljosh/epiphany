@@ -451,9 +451,20 @@ struct MarketsView: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if !appState.stocks.isEmpty {
-                TickerBarView(appState: appState) { stock in
-                    tickerSelectedStock = stock
+            VStack(spacing: 0) {
+                if appState.isStockDataStale, let fetchedAt = appState.stocksFetchedAt {
+                    (Text("Data may be stale \u{00B7} updated ") + Text(fetchedAt, style: .relative) + Text(" ago"))
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.6))
+                }
+                if appState.showTickerBar && !appState.stocks.isEmpty {
+                    TickerBarView(appState: appState) { stock in
+                        tickerSelectedStock = stock
+                    }
+                    .opacity(appState.isStockDataStale ? 0.65 : 1.0)
                 }
             }
         }

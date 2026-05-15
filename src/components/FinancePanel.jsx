@@ -641,7 +641,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const {
     holdings, accounts, budget, debt, goals, spending, giving, incomePhases,
     stocksValue, cashValue, totalDebt, totalIncome, totalExpenses,
-    surplus, netWorth, isDemo, importData, syncSpendingMonths, exportData, saveData, resetToDemo,
+    surplus, netWorth, isDemo, portfolioFetchedAt, importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
 
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
@@ -889,6 +889,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           <span>Cash: {formatCurrency(cashValue, 'CAD')}</span>
           <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>
         </div>
+        {portfolioFetchedAt && (Date.now() - portfolioFetchedAt.getTime()) > 5 * 60 * 1000 && (
+          <div style={{ fontSize: 11, color: '#d4a843', marginTop: 4 }}>
+            Synced {Math.round((Date.now() - portfolioFetchedAt.getTime()) / 60000)}m ago
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 4, padding: '0 16px', marginBottom: 16, overflowX: 'auto' }}>

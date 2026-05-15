@@ -179,6 +179,12 @@ struct SettingsView: View {
                     showChangePassword = true
                 }
             }
+            Divider()
+            Toggle("Show ticker bar", isOn: Binding(
+                get: { UserDefaults.standard.object(forKey: "epiphany_show_ticker") as? Bool ?? true },
+                set: { UserDefaults.standard.set($0, forKey: "epiphany_show_ticker") }
+            ))
+            .padding(.top, 4)
         }
     }
 
