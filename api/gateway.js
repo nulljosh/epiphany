@@ -38,6 +38,7 @@ const ROUTES = {
   'fear-greed':         lazy(() => import('../server/api/fear-greed.js')),
   crime:                lazy(() => import('../server/api/crime.js')),
   cron:                 lazy(() => import('../server/api/cron.js')),
+  'supabase-ping':      lazy(() => import('../server/api/supabase-ping.js')),
   defuddle:             lazy(() => import('../server/api/defuddle.js')),
   earthquakes:          lazy(() => import('../server/api/earthquakes.js')),
   events:               lazy(() => import('../server/api/events.js')),
