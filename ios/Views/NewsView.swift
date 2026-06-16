@@ -1,0 +1,174 @@
+import SwiftUI
+
+struct NewsView: View {
+    @Environment(AppState.self) private var appState
+    @State private var articles: [NewsArticle] = []
+    @State private var isLoading = false
+    @State private var error: String?
+    @State private var hasLoaded = false
+    @State private var selectedNewsURL: URL?
+
+    private static let englishStops: Set<String> = [
+        "the", "is", "are", "was", "has", "for", "and", "but", "not", "this",
+        "that", "with", "from", "will", "been", "have", "its", "says", "said",
+        "new", "after", "how", "why", "what", "who", "could", "would", "about",
+        "into", "over", "more", "than", "also", "their", "which",
+        "on", "at", "by", "to", "in", "of", "as", "an", "or", "no", "up"
+    ]
+
+    private var cleanArticles: [NewsArticle] {
+        articles.filter { article in
+            let title = article.title
+            guard title.count > 10 else { return false }
+            let latinCount = title.unicodeScalars.filter { $0.value < 128 }.count
+            let ratio = Double(latinCount) / Double(max(title.count, 1))
+            guard ratio > 0.6 else { return false }
+            let words = title.lowercased()
+                .components(separatedBy: .alphanumerics.inverted)
+                .filter { !$0.isEmpty }
+            let matches = words.filter { Self.englishStops.contains($0) }.count
+            return matches >= 2
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading && articles.isEmpty {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if !isLoading && cleanArticles.isEmpty {
+                    ContentUnavailableView(
+                        "News Temporarily Unavailable",
+                        systemImage: "newspaper",
+                        description: Text("Pull to refresh or try again later.")
+                    )
+                    .refreshable {
+                        await loadNews()
+                    }
+                } else {
+                    List {
+                        if let errorMessage = error {
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundStyle(Palette.dangerRed)
+                                .listRowBackground(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(.ultraThinMaterial)
+                                        .padding(2)
+                                )
+                        }
+
+                        ForEach(cleanArticles) { article in
+                            Button {
+                                guard !article.url.isEmpty, let url = URL(string: article.url) else { return }
+                                selectedNewsURL = url
+                            } label: {
+                                NewsRow(article: article)
+                            }
+                            .buttonStyle(BounceButtonStyle())
+                            .listRowBackground(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.ultraThinMaterial)
+                                    .padding(2)
+                            )
+                        }
+                    }
+                    .refreshable {
+                        await loadNews()
+                    }
+                }
+            }
+            .navigationTitle("News")
+            .sheet(item: $selectedNewsURL) { url in
+                ArticleReaderView(url: url)
+            }
+        }
+        .onAppear {
+            guard !hasLoaded else { return }
+            hasLoaded = true
+            Task {
+                await loadNews()
+            }
+        }
+    }
+
+    private func loadNews() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            articles = try await EpiphanyAPI.shared.fetchNews()
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
+private struct NewsRow: View {
+    let article: NewsArticle
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(cleanTitle)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(3)
+
+                Text(bylineText)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            if let imageURL = articleImageURL {
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    default:
+                        Palette.overlay.opacity(0.06)
+                    }
+                }
+                .frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var cleanTitle: String {
+        // Strip excess whitespace from GDELT titles
+        article.title
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+    }
+
+    private var articleImageURL: URL? {
+        guard let urlString = article.imageUrl, !urlString.isEmpty else { return nil }
+        return URL(string: urlString)
+    }
+
+    private var bylineText: String {
+        let source = article.source.isEmpty ? "GDELT" : article.source
+        let relativeDate = timeAgo(from: article.publishedAt)
+        if relativeDate.isEmpty { return source }
+        return "\(source)  \(relativeDate)"
+    }
+
+    private func timeAgo(from publishedAt: String) -> String {
+        guard !publishedAt.isEmpty else { return "" }
+        guard let date = parseDate(publishedAt) else { return "" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private func parseDate(_ text: String) -> Date? {
+        DateParsing.parse(text)
+    }
+}

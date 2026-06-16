@@ -1,0 +1,78 @@
+version: 1
+
+workflows:
+  default:
+    name: Epiphany iOS Build & Test
+    actions:
+      post-clone:
+        - name: Regenerate Xcode project
+          script: |
+            #!/bin/bash
+            set -e
+
+            # Determine correct working directory
+            if [ -d "$CI_PRIMARY_REPOSITORY_PATH/apps/epiphany/ios" ]; then
+                WD="$CI_PRIMARY_REPOSITORY_PATH/apps/epiphany/ios"
+            elif [ -d "$CI_PRIMARY_REPOSITORY_PATH/epiphany/ios" ]; then
+                WD="$CI_PRIMARY_REPOSITORY_PATH/epiphany/ios"
+            else
+                WD="$(pwd)/epiphany/ios"
+            fi
+
+            cd "$WD" || exit 1
+
+            # Install xcodegen with timeout and retry
+            if ! command -v xcodegen &> /dev/null; then
+                echo "Installing xcodegen..."
+                brew install xcodegen 2>&1 || {
+                    echo "Brew install failed, checking common paths..."
+                    [ -f /opt/homebrew/bin/xcodegen ] || exit 1
+                }
+            fi
+
+            # Generate project from YAML
+            echo "Generating Xcode project from project.yml..."
+            xcodegen generate
+            echo "Project generation complete"
+
+      build:
+        - name: Build Epiphany
+          script: |
+            #!/bin/bash
+            set -e
+
+            # Verify project exists
+            if [ ! -f "Epiphany.xcodeproj/project.pbxproj" ]; then
+                echo "Error: Epiphany.xcodeproj not found"
+                exit 1
+            fi
+
+            xcodebuild -scheme Epiphany -configuration Release build
+
+      test:
+        - name: Run Unit Tests
+          script: |
+            #!/bin/bash
+            set -e
+            xcodebuild test -scheme Epiphany -configuration Release -destination 'generic/platform=iOS'
+
+      on-fail:
+        - name: Collect build artifacts
+          script: |
+            #!/bin/bash
+            # Capture build logs for debugging
+            echo "Build failed. Collecting diagnostics..."
+            ls -la "Epiphany.xcodeproj/project.pbxproj" || echo "Project file missing"
+            xcodegen --version || echo "xcodegen not available"
+
+environment_variables:
+  - name: FASTLANE_USER
+    isSecret: true
+  - name: FASTLANE_PASSWORD
+    isSecret: true
+
+triggers:
+  - type: branch
+    pattern: main
+  - type: pull_request
+    pattern: main

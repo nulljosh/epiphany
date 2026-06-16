@@ -1,0 +1,54 @@
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+:root {
+  /* Typography */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+
+  --font-weight-thin: 200;
+  --font-weight-light: 300;
+  --font-weight-1: 400;
+  --font-weight-2: 500;
+  --font-weight-3: 600;
+  --font-weight-4: 700;
+  --font-weight-5: 800;
+
+  /* Spacing */
+  --space-0: 0px;
+  --space-1: 0.5px;
+  --space-2: 1px;
+  --space-3: 2px;
+  --space-4: 3px;
+  --space-5: 4px;
+  --space-6: 6px;
+  --space-7: 8px;
+  --space-8: 12px;
+  --space-9: 16px;
+  --space-10: 24px;
+  --space-11: 32px;
+  --space-12: 48px;
+  --space-13: 64px;
+
+  /* Effects (unused - app uses Tailwind shadows) */
+  --shadow-sm: rgba(0, 0, 0, 0.1) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  --radius: 12px;
+  --border: 0px solid rgb(229, 231, 235);
+
+  /* Readout tokens */
+  --radius-pill: 28px;
+  --border-overlay: rgba(255,255,255,0.06);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
