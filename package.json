@@ -1,0 +1,64 @@
+{
+  "name": "epiphany",
+  "private": true,
+  "version": "2.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:speed": "playwright test tests/speed.spec.js"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@stripe/stripe-js": "^8.7.0",
+    "@trickfilm400/rollup-plugin-off-main-thread": "^3.0.0-pre1",
+    "@upstash/redis": "^1.38.0",
+    "@vercel/blob": "^2.1.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
+    "dotenv": "^17.3.1",
+    "es-abstract": "^1.23.10",
+    "jsdom": "^27.4.0",
+    "lightweight-charts": "^5.1.0",
+    "maplibre-gl": "^5.18.0",
+    "pdf-parse": "^1.1.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^3.6.0",
+    "resend": "^6.9.4",
+    "stripe": "^20.3.1"
+  },
+  "overrides": {
+    "serialize-javascript": ">=7.0.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.0.16",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "0.4.24",
+    "globals": "^16.5.0",
+    "playwright": "^1.58.0",
+    "terser": "^5.46.1",
+    "vite": "^7.2.4",
+    "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.5",
+    "wrangler": "^4.56.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

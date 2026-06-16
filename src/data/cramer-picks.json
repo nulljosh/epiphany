@@ -1,0 +1,167 @@
+[
+  {
+    "ticker": "SOFI",
+    "call": "BUY",
+    "date": "2022-04-01",
+    "price_at_call": 14.20,
+    "outcome_price": 4.70,
+    "outcome_pct": -66.9,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Called it a buy at $14. SoFi dropped 67% over next 6 months."
+  },
+  {
+    "ticker": "META",
+    "call": "BUY",
+    "date": "2022-10-03",
+    "price_at_call": 134.90,
+    "outcome_price": 88.09,
+    "outcome_pct": -34.7,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Defended Meta aggressively before Q3 earnings. Stock continued falling to $88."
+  },
+  {
+    "ticker": "SVB",
+    "call": "SAFE",
+    "date": "2023-03-08",
+    "price_at_call": 267.83,
+    "outcome_price": 0.01,
+    "outcome_pct": -99.9,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Said SVB depositors were safe on March 8, 2023. Bank failed March 10."
+  },
+  {
+    "ticker": "COIN",
+    "call": "BUY",
+    "date": "2021-11-09",
+    "price_at_call": 357.39,
+    "outcome_price": 40.58,
+    "outcome_pct": -88.6,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Cramer pounded the table on Coinbase near peak. Down 89% by Jan 2023."
+  },
+  {
+    "ticker": "NVDA",
+    "call": "BUY",
+    "date": "2023-05-30",
+    "price_at_call": 379.80,
+    "outcome_price": 495.22,
+    "outcome_pct": 30.4,
+    "outcome": "WIN",
+    "inverse_outcome": "LOSS",
+    "notes": "Post-blowout earnings call. Rare correct Cramer pick — NVDA ripped higher."
+  },
+  {
+    "ticker": "TWTR",
+    "call": "BUY",
+    "date": "2022-04-14",
+    "price_at_call": 45.08,
+    "outcome_price": 54.20,
+    "outcome_pct": 20.2,
+    "outcome": "WIN",
+    "inverse_outcome": "LOSS",
+    "notes": "Called it a buy right before Musk made offer at $54.20. Lucky timing."
+  },
+  {
+    "ticker": "AMZN",
+    "call": "BUY",
+    "date": "2022-04-29",
+    "price_at_call": 113.00,
+    "outcome_price": 87.60,
+    "outcome_pct": -22.5,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Post-Q1 miss, said Amazon was a great buy. Continued dropping for 6 months."
+  },
+  {
+    "ticker": "RIVN",
+    "call": "BUY",
+    "date": "2021-11-10",
+    "price_at_call": 100.73,
+    "outcome_price": 15.60,
+    "outcome_pct": -84.5,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Hyped Rivian IPO near peak. Down 84.5% a year later."
+  },
+  {
+    "ticker": "INTC",
+    "call": "BUY",
+    "date": "2023-07-28",
+    "price_at_call": 35.44,
+    "outcome_price": 20.84,
+    "outcome_pct": -41.2,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Said Intel was a comeback story after Pat Gelsinger earnings. Fell 41% by 2024."
+  },
+  {
+    "ticker": "PARA",
+    "call": "BUY",
+    "date": "2022-08-10",
+    "price_at_call": 26.40,
+    "outcome_price": 10.20,
+    "outcome_pct": -61.4,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Called Paramount a streaming winner. Stock cratered 61% over next 18 months."
+  },
+  {
+    "ticker": "DIS",
+    "call": "BUY",
+    "date": "2022-11-09",
+    "price_at_call": 86.75,
+    "outcome_price": 78.73,
+    "outcome_pct": -9.2,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Called Disney cheap after Bob Chapek fired. Slight additional decline before recovery."
+  },
+  {
+    "ticker": "PYPL",
+    "call": "BUY",
+    "date": "2022-02-02",
+    "price_at_call": 134.00,
+    "outcome_price": 68.37,
+    "outcome_pct": -49.0,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Defended PayPal vigorously as it crashed. Lost another 49% over next year."
+  },
+  {
+    "ticker": "HOOD",
+    "call": "BUY",
+    "date": "2021-08-04",
+    "price_at_call": 70.39,
+    "outcome_price": 8.60,
+    "outcome_pct": -87.8,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Called Robinhood a buy on IPO fever. Down 88% within 18 months."
+  },
+  {
+    "ticker": "AAPL",
+    "call": "BUY",
+    "date": "2023-01-03",
+    "price_at_call": 125.07,
+    "outcome_price": 189.30,
+    "outcome_pct": 51.4,
+    "outcome": "WIN",
+    "inverse_outcome": "LOSS",
+    "notes": "Held conviction on Apple through dip. Correct call — stock recovered strongly."
+  },
+  {
+    "ticker": "CS",
+    "call": "SAFE",
+    "date": "2023-03-14",
+    "price_at_call": 2.67,
+    "outcome_price": 0.89,
+    "outcome_pct": -66.7,
+    "outcome": "LOSS",
+    "inverse_outcome": "WIN",
+    "notes": "Said Credit Suisse situation was manageable. UBS emergency takeover followed at massive discount."
+  }
+]
