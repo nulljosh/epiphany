@@ -12,7 +12,6 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
   <img src="public/screenshots/screenshot-markets-new.png" width="180">
   <img src="public/screenshots/screenshot-stocks-new.png" width="180">
   <img src="public/screenshots/screenshot-portfolio-new.png" width="180">
-  <img src="public/screenshots/screenshot-settings-new.png" width="180">
 </p>
 
 ## Tabs
