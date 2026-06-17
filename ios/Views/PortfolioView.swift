@@ -604,7 +604,7 @@ struct PortfolioView: View {
                 ForEach(nonEmpty) { account in
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(shortenAccountName(account.name))
+                            Text(account.name)
                                 .font(.callout.weight(.semibold))
                                 .foregroundStyle(Palette.text)
                             if account.type != nil {
@@ -624,15 +624,6 @@ struct PortfolioView: View {
             }
             .padding(.vertical, 8)
         })
-    }
-
-    private func shortenAccountName(_ name: String) -> String {
-        if name.contains("Wealthsimple Trade MSB") {
-            return "Trade"
-        } else if name.contains("Wealthsimple Trade CRYPTO") {
-            return "Trade Crypto"
-        }
-        return name
     }
 
     private var combinedSpendingCard: some View {

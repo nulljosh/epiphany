@@ -71,6 +71,14 @@ export default async function handler(req, res) {
         marketValue: h.marketValue, account: h.account, source: 'broker',
       }));
     }
+    if (Array.isArray(snapshot?.accounts) && snapshot.accounts.length > 0
+        && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
+      const manualAccounts = (data.accounts || []).filter(a => a.source !== 'broker');
+      const brokerAccounts = snapshot.accounts.map(a => ({
+        name: a.name, type: a.type, balance: a.balance, source: 'broker',
+      }));
+      data.accounts = [...manualAccounts, ...brokerAccounts];
+    }
     return res.status(200).json(data);
   }
 
