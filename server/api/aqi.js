@@ -1,3 +1,4 @@
+import { withMapErrorHandler } from './_map-error-handler.js';
 // Air quality readings from OpenAQ v2 (free, no auth required)
 const OPENAQ_URL = 'https://api.openaq.org/v2/latest';
 const CACHE_TTL = 10 * 60 * 1000;
@@ -69,7 +70,7 @@ function pm25ToAQI(pm25) {
   return pm25 > 500 ? 500 : 0;
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   const { lat, lon } = req.query;
   if (!lat || !lon) return res.status(400).json({ error: 'lat and lon required' });
@@ -78,3 +79,5 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=600');
   return res.status(200).json({ readings, count: readings.length });
 }
+
+export default withMapErrorHandler(handler);

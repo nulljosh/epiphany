@@ -1,3 +1,4 @@
+import { withMapErrorHandler } from './_map-error-handler.js';
 // Crime data endpoint: universal coverage for any location
 // Sources: US city open data portals (when nearby), Canadian open data, news RSS fallback
 
@@ -304,7 +305,7 @@ function categorySeverity(category) {
   return 'low';
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const lat = parseFloat(req.query.lat);
   const lon = parseFloat(req.query.lon);
 
@@ -378,3 +379,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export default withMapErrorHandler(handler);

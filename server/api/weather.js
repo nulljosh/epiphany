@@ -1,3 +1,4 @@
+import { withMapErrorHandler } from './_map-error-handler.js';
 import { applyCors } from './_cors.js';
 
 // Open-Meteo: free, no API key, global coverage
@@ -40,7 +41,7 @@ function weatherIcon(code) {
   return 'storm';
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -100,3 +101,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export default withMapErrorHandler(handler);

@@ -1,3 +1,4 @@
+import { withMapErrorHandler } from './_map-error-handler.js';
 // Local events endpoint: PredictHQ (primary) + free fallbacks for universal coverage
 // Fallbacks: Wikipedia GeoSearch (multi-point), OSM venues, Eventbrite, news RSS
 
@@ -258,7 +259,7 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const lat = parseFloat(req.query.lat);
   const lon = parseFloat(req.query.lon);
   const radius = req.query.radius || '50km';
@@ -351,3 +352,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export default withMapErrorHandler(handler);

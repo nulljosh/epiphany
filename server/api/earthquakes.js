@@ -1,3 +1,5 @@
+import { withMapErrorHandler } from './_map-error-handler.js';
+
 // USGS Earthquake Feed — M2.5+ past 24h (free, no auth, global)
 // Accepts optional lat, lon, radius (km) query params to filter by distance
 const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
@@ -28,7 +30,7 @@ function filterByRadius(earthquakes, lat, lon, radiusKm) {
   return earthquakes.filter(eq => haversineKm(lat, lon, eq.lat, eq.lon) <= radiusKm);
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const userLat = parseFloat(req.query.lat);
@@ -90,3 +92,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export default withMapErrorHandler(handler);
