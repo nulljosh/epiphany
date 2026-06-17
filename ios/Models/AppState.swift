@@ -345,13 +345,17 @@ final class AppState {
 
     func preloadSparklines() async {
         let symbols = stocks.map(\.symbol)
-        for symbol in symbols {
-            guard sparklineCache[symbol] == nil else { continue }
-            do {
-                let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol)
-                sparklineCache[symbol] = prices
-            } catch {
-                sparklineCache[symbol] = []
+        await withTaskGroup(of: Void.self) { group in
+            for symbol in symbols {
+                guard sparklineCache[symbol] == nil else { continue }
+                group.addTask {
+                    do {
+                        let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol)
+                        self.sparklineCache[symbol] = prices
+                    } catch {
+                        self.sparklineCache[symbol] = []
+                    }
+                }
             }
         }
     }

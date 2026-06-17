@@ -52,15 +52,19 @@ struct ContentView: View {
     }
 
     private func preloadMarketData() async {
-        async let s: Void = appState.loadStocks()
-        async let c: Void = appState.loadCommodities()
-        async let k: Void = appState.loadCrypto()
-        async let w: Void = appState.loadWatchlist()
-        async let f: Void = appState.loadFinanceData()
-        async let t: Void = appState.loadTallyData()
-        async let st: Void = appState.loadStatements()
-        async let fg: Void = appState.loadFearGreed()
-        _ = await (s, c, k, w, f, t, st, fg)
+        do {
+            async let s: Void = appState.loadStocks()
+            async let c: Void = appState.loadCommodities()
+            async let k: Void = appState.loadCrypto()
+            async let w: Void = appState.loadWatchlist()
+            async let f: Void = appState.loadFinanceData()
+            async let t: Void = appState.loadTallyData()
+            async let st: Void = appState.loadStatements()
+            async let fg: Void = appState.loadFearGreed()
+            _ = await (s, c, k, w, f, t, st, fg)
+        } catch {
+            appState.error = "Failed to load market data"
+        }
     }
 }
 
