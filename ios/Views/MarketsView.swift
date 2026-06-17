@@ -411,7 +411,11 @@ struct MarketsView: View {
             }
         }
         .refreshable {
-            try await appState.refreshMarkets()
+            do {
+                try await appState.refreshMarkets()
+            } catch {
+                print("Market refresh failed: \(error)")
+            }
         }
     }
 
