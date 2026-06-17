@@ -333,9 +333,26 @@ final class AppState {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
                 print("[Portfolio] Rebuilt with \(stocks.count) stocks, holdings count: \(portfolio?.holdings.count ?? 0)")
             }
-            if !stocks.isEmpty { error = nil; stocksFetchedAt = .now }
+            if !stocks.isEmpty {
+                error = nil
+                stocksFetchedAt = .now
+                await preloadSparklines()
+            }
         } catch {
             handleError(error)
+        }
+    }
+
+    func preloadSparklines() async {
+        let symbols = stocks.map(\.symbol)
+        for symbol in symbols {
+            guard sparklineCache[symbol] == nil else { continue }
+            do {
+                let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol)
+                sparklineCache[symbol] = prices
+            } catch {
+                sparklineCache[symbol] = []
+            }
         }
     }
 

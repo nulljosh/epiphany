@@ -256,22 +256,6 @@ struct MarketsView: View {
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
 
-            Section {
-                HStack(spacing: 8) {
-                    Button(action: { showNewsDrawer = true }) {
-                        Text("News")
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Palette.overlay.opacity(0.3), in: Capsule())
-                    }
-                    .foregroundStyle(.primary)
-                    Spacer()
-                }
-            }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-
             if isSearching {
                 Section {
                     HStack {
@@ -391,12 +375,12 @@ struct MarketsView: View {
         }
         .animation(.smooth, value: searchText)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if appState.dailyBrief?.points.isEmpty == false {
-                VStack(spacing: 0) {
-                    Divider()
-                    Button(action: { showBriefDrawer = true }) {
+            VStack(spacing: 0) {
+                Divider()
+                HStack(spacing: 12) {
+                    Button(action: { showNewsDrawer = true }) {
                         HStack {
-                            Text("Daily Brief")
+                            Text("News")
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
                             Image(systemName: "chevron.up")
@@ -404,10 +388,26 @@ struct MarketsView: View {
                         }
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
-                        .padding(12)
                     }
-                    .background(.ultraThinMaterial)
+                    .buttonStyle(BounceButtonStyle())
+
+                    if appState.dailyBrief?.points.isEmpty == false {
+                        Button(action: { showBriefDrawer = true }) {
+                            HStack {
+                                Text("Daily Brief")
+                                    .font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Image(systemName: "chevron.up")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(BounceButtonStyle())
+                    }
                 }
+                .padding(12)
+                .background(.ultraThinMaterial)
             }
         }
         .refreshable {
@@ -442,15 +442,6 @@ struct MarketsView: View {
             )
         }
         .buttonStyle(BounceButtonStyle())
-        .task {
-            guard appState.sparklineCache[stock.symbol] == nil else { return }
-            do {
-                let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: stock.symbol)
-                appState.sparklineCache[stock.symbol] = prices
-            } catch {
-                appState.sparklineCache[stock.symbol] = []
-            }
-        }
     }
 
     private func commodityCryptoRow(_ item: MarketItem) -> some View {
