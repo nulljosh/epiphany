@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v2.2.2 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.heyitsmejosh.com
+v2.2.3 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
@@ -43,6 +43,8 @@ Version lives in `project.yml` (`MARKETING_VERSION`). On every release, sync the
 
 ## Recent Fixes
 
+- **Markets search bar** (06-17): Search now matches native iOS Stocks app — bottom-pinned bar (mic icon, blue circular X to dismiss) via `safeAreaInset(edge: .bottom)`, auto-focuses keyboard on activation, replaces old inline top-of-list search row. Floating search icon hides while active.
+- **PersonModels test drift** (06-17): `SocialLink`/`PersonSearchResult` now conform to `Identifiable` (`id` = url) and `SocialLink` gained computed `displayName`/`systemImage` (fallback to platform name / "globe"); `PersonSearchResult` decodes missing fields as `""` instead of failing. Fixes `PersonDataTests`. `AppStateTests.swift` still has deeper drift against current `User`/`APIError`/`PriceAlert` shapes — needs a dedicated pass, not touched.
 - **Markets sparklines** (06-16): StockRow now renders sparklines with minimal data (1+ points), not just 2+. Fixes 10-15% missing graphs. Fetch changed to `.task` for proper async lifecycle.
 
 ## Known Issues / Next
