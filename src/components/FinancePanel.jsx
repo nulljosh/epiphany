@@ -1035,7 +1035,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
                 <div style={labelStyle}>Cash Accounts</div>
-                {accounts.map((account, index) => (
+                {accounts.filter(a => a.balance > 0).map((account, index) => (
                   <div key={`${account.name}-${index}`} style={rowStyle}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{account.name}</div>
