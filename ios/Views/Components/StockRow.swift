@@ -69,7 +69,7 @@ struct StockRow: View {
 
             Spacer()
 
-            if let data = sparklineData, data.count >= 2 {
+            if let data = sparklineData, !data.isEmpty {
                 SparklinePath(data: data, color: changeColor)
                     .frame(width: 40, height: 20)
             }

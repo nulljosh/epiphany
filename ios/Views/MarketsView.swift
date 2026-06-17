@@ -442,14 +442,13 @@ struct MarketsView: View {
             )
         }
         .buttonStyle(BounceButtonStyle())
-        .onAppear {
-            Task {
-                if appState.sparklineCache[stock.symbol] == nil {
-                    do {
-                        let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: stock.symbol)
-                        appState.sparklineCache[stock.symbol] = prices
-                    } catch {}
-                }
+        .task {
+            guard appState.sparklineCache[stock.symbol] == nil else { return }
+            do {
+                let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: stock.symbol)
+                appState.sparklineCache[stock.symbol] = prices
+            } catch {
+                appState.sparklineCache[stock.symbol] = []
             }
         }
     }

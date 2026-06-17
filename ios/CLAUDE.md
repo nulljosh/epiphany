@@ -41,6 +41,11 @@ Version lives in `project.yml` (`MARKETING_VERSION`). On every release, sync the
 - `Helpers/SVGRasterizer.swift` — WKWebView-based SVG-to-UIImage converter (fixes web-uploaded SVG avatars)
 - `Views/SettingsView.swift` — Avatar generator picks 1 of 3 topologies (star, hexagon, mesh) with high jitter and variable node sizes
 
+## Recent Fixes
+
+- **Markets sparklines** (06-16): StockRow now renders sparklines with minimal data (1+ points), not just 2+. Fixes 10-15% missing graphs. Fetch changed to `.task` for proper async lifecycle.
+
 ## Known Issues / Next
 
 - Wealthsimple unofficial API exists in `src/utils/brokers/wealthsimple.js` — not yet wired to portfolio sync
+- 500 error intermittent on app startup (~30-45 min window 06-16) — likely Yahoo Finance IP block or crumb fetch failure; monitor after deploy
