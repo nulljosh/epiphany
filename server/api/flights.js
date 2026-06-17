@@ -1,4 +1,3 @@
-import { withMapErrorHandler } from './_map-error-handler.js';
 // Flights proxy — adsb.lol primary, OpenSky Network fallback
 // Returns live flight states within a bounding box
 // Cache: 60s in-memory keyed by bbox
@@ -156,7 +155,7 @@ async function fetchAdsbLol(bbox) {
   };
 }
 
-async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -224,5 +223,3 @@ async function handler(req, res) {
   res.setHeader('X-Cache', 'MISS');
   return res.status(200).json(result);
 }
-
-export default withMapErrorHandler(handler);

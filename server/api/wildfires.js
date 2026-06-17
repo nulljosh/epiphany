@@ -1,11 +1,10 @@
-import { withMapErrorHandler } from './_map-error-handler.js';
 import { applyCors } from './_cors.js';
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
 
 let cache = { ts: 0, data: null, key: '' };
 
-async function handler(req, res) {
+export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -121,5 +120,3 @@ async function fetchFIRMS(lat, lon, signal) {
     return [];
   }
 }
-
-export default withMapErrorHandler(handler);
