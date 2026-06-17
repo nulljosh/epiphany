@@ -5,7 +5,15 @@
 
 Personal intelligence platform. Map, markets, and people. Palantir for regular people.
 
-[Live](https://epiphany.heyitsmejosh.com) | [Architecture](architecture.svg) | [Whitepaper](WHITEPAPER.md) | [Roadmap](ROADMAP.md)
+[Live](https://epiphany.heyitsmejosh.com) | [Architecture](architecture.svg) | [Whitepaper](WHITEPAPER.md)
+
+<p align="center">
+  <img src="public/screenshots/screenshot-situation-new.png" width="180">
+  <img src="public/screenshots/screenshot-markets-new.png" width="180">
+  <img src="public/screenshots/screenshot-stocks-new.png" width="180">
+  <img src="public/screenshots/screenshot-portfolio-new.png" width="180">
+  <img src="public/screenshots/screenshot-settings-new.png" width="180">
+</p>
 
 ## Tabs
 
@@ -44,9 +52,3 @@ Deploy: Vercel (`npx vercel --prod`)
 ## License
 
 MIT 2026, Joshua Trommel
-
-## Roadmap
-
-Live: map, markets, portfolio, simulator, prediction markets, knowledge graph, auth, billing, native apps.
-
-Optional API keys for macro + flights data: see [ROADMAP.md](ROADMAP.md) for setup details.
