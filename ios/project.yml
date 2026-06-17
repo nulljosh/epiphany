@@ -7,7 +7,7 @@ options:
 settings:
   DEVELOPMENT_TEAM: QMM486NPYC
   SWIFT_VERSION: "6.0"
-  MARKETING_VERSION: 2.1.0
+  MARKETING_VERSION: 2.2.2
   CURRENT_PROJECT_VERSION: "1"
   CODE_SIGN_STYLE: Automatic
 targets:
@@ -38,12 +38,14 @@ targets:
           - "Tests"
           - "UITests"
           - "EpiphanyTests"
+          - "build-archive"
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       PRODUCT_NAME: Epiphany
       PRODUCT_MODULE_NAME: Epiphany
+      TARGETED_DEVICE_FAMILY: "1"
       # CODE_SIGN_ENTITLEMENTS: Epiphany.entitlements  # Requires paid Apple Developer Program
   EpiphanyTests:
     type: bundle.unit-test
