@@ -84,8 +84,7 @@ function AutopilotCard({ dark, t }) {
         {state?.pro && settings && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <button onClick={() => save({ mode: 'paper' })} disabled={saving} style={pill(settings.mode === 'paper')}>Paper</button>
-              <button onClick={() => save({ mode: 'live' })} disabled={saving} style={pill(settings.mode === 'live')}>Live</button>
+              <span style={pill(true)}>Paper</span>
               <div style={{ flex: 1 }} />
               <span style={{ fontSize: 11, color: t.textTertiary }}>Max / trade</span>
               <input
@@ -96,11 +95,9 @@ function AutopilotCard({ dark, t }) {
                 style={{ width: 72, padding: '5px 8px', borderRadius: 8, border: `1px solid ${t.border}`, background: t.glass, color: t.text, fontSize: 12, fontFamily: font }}
               />
             </div>
-            {settings.mode === 'live' && (
-              <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 10 }}>
-                Live mode trades with real money, capped at your max per trade.
-              </div>
-            )}
+            <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 10 }}>
+              Paper trading only -- simulated fills, no real orders are placed.
+            </div>
             {trades.length > 0 && (
               <>
                 <div style={{ ...label, marginBottom: 4 }}>Recent auto-trades</div>

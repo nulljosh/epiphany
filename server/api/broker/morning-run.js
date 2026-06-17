@@ -8,8 +8,9 @@
 // Signals are computed once per watchlist symbol from 6 months of daily closes
 // (drift/vol estimated from log returns, SMA20/50 momentum tilt, GBM Monte
 // Carlo bull probability), then executed per user: paper mode logs simulated
-// fills against a KV position book; live mode (the default) places real orders
-// through the user's linked SnapTrade brokerage, capped at maxNotional per trade.
+// fills against a KV position book. Live mode (real orders through the user's
+// linked SnapTrade brokerage) exists below but is unreachable -- autopilot.js
+// forces mode to 'paper' until live execution is vetted further.
 import { getKv } from '../_kv.js';
 import { isProByEmail } from '../gates.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
