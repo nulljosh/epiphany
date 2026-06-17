@@ -28,9 +28,9 @@ export default async function handler(req, res) {
       enabled: settings.enabled,
       mode: settings.mode,
       maxNotional: settings.maxNotional,
-      allocation: settings.allocation,
-      allowCrypto: settings.allowCrypto,
-      allowOvernight: settings.allowOvernight,
+      allocation: settings.allocation ?? 10,
+      allowCrypto: settings.allowCrypto ?? false,
+      allowOvernight: settings.allowOvernight ?? false,
     } : { enabled: false, mode: 'live', maxNotional: 500, allocation: 10, allowCrypto: false, allowOvernight: false };
     return res.status(200).json({
       ok: true,

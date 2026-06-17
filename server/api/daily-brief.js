@@ -116,8 +116,11 @@ export default async function handler(req, res) {
       fetchHeadlines(),
     ]);
 
+    const { points, summary } = buildBrief(movers, headlines);
+
     const brief = {
-      points: buildBrief(movers, headlines),
+      summary,
+      points,
       gainers: movers.gainers,
       losers: movers.losers,
       generatedAt: new Date().toISOString(),
