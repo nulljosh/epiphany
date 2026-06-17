@@ -16,11 +16,9 @@ struct MarketsView: View {
     @State private var cachedItems: [MarketItem] = []
     @State private var feedDest: FeedDest? = nil
     @State private var tickerSelectedStock: Stock?
-    @State private var showNewsDrawer = false
     @State private var newsArticles: [NewsArticle] = []
     @State private var isLoadingNews = false
     @State private var selectedStockForNews: Stock?
-    @State private var showBriefDrawer = false
     @State private var isSearching = false
 
     enum FeedDest: Identifiable {
@@ -207,29 +205,70 @@ struct MarketsView: View {
                     .environment(appState)
             }
         }
-        .sheet(isPresented: $showNewsDrawer) {
-            NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .onAppear {
-                    guard let stock = selectedStockForNews else { return }
-                    Task {
-                        isLoadingNews = true
-                        do {
-                            newsArticles = try await EpiphanyAPI.shared.fetchStockNews(query: stock.symbol)
-                        } catch {
-                            print("Failed to load news for \(stock.symbol): \(error)")
-                        }
-                        isLoadingNews = false
-                    }
+        .onChange(of: selectedStockForNews) { _, stock in
+            guard let stock else { return }
+            Task {
+                isLoadingNews = true
+                do {
+                    newsArticles = try await EpiphanyAPI.shared.fetchStockNews(query: stock.symbol)
+                } catch {
+                    print("Failed to load news for \(stock.symbol): \(error)")
                 }
-        }
-        .sheet(isPresented: $showBriefDrawer) {
-            BriefDrawerView(brief: appState.dailyBrief)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                isLoadingNews = false
+            }
         }
         .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
+        .overlay(alignment: .bottom) { newsDrawerOverlay }
+    }
+
+    @State private var drawerState: DrawerState = .peek
+    @GestureState private var dragTranslation: CGFloat = 0
+
+    private enum DrawerState: CaseIterable {
+        case peek, medium, large
+        func height(in totalHeight: CGFloat) -> CGFloat {
+            switch self {
+            case .peek: return 64
+            case .medium: return totalHeight * 0.45
+            case .large: return totalHeight * 0.85
+            }
+        }
+    }
+
+    private var newsDrawerOverlay: some View {
+        GeometryReader { geo in
+            let target = drawerState.height(in: geo.size.height) - dragTranslation
+            let height = min(max(64, target), geo.size.height - 80)
+            VStack(spacing: 0) {
+                NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, brief: appState.dailyBrief)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: height, alignment: .top)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .shadow(radius: 8, y: -2)
+            .overlay(alignment: .top) {
+                Color.clear
+                    .frame(height: 60)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture()
+                            .updating($dragTranslation) { value, state, _ in
+                                state = value.translation.height
+                            }
+                            .onEnded { value in
+                                let totalHeight = geo.size.height
+                                let predicted = drawerState.height(in: totalHeight) - value.translation.height
+                                drawerState = DrawerState.allCases.min(
+                                    by: { abs($0.height(in: totalHeight) - predicted) < abs($1.height(in: totalHeight) - predicted) }
+                                ) ?? .peek
+                            }
+                    )
+            }
+            .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.86), value: drawerState)
+            .padding(.horizontal, 8)
+            .padding(.bottom, 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        }
     }
 
     @ViewBuilder
@@ -374,42 +413,6 @@ struct MarketsView: View {
             )
         }
         .animation(.smooth, value: searchText)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 0) {
-                Divider()
-                HStack(spacing: 12) {
-                    Button(action: { showNewsDrawer = true }) {
-                        HStack {
-                            Text("News")
-                                .font(.subheadline.weight(.semibold))
-                            Spacer()
-                            Image(systemName: "chevron.up")
-                                .font(.caption.weight(.semibold))
-                        }
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(BounceButtonStyle())
-
-                    if appState.dailyBrief?.points.isEmpty == false {
-                        Button(action: { showBriefDrawer = true }) {
-                            HStack {
-                                Text("Daily Brief")
-                                    .font(.subheadline.weight(.semibold))
-                                Spacer()
-                                Image(systemName: "chevron.up")
-                                    .font(.caption.weight(.semibold))
-                            }
-                            .foregroundStyle(.primary)
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(BounceButtonStyle())
-                    }
-                }
-                .padding(12)
-                .background(.ultraThinMaterial)
-            }
-        }
         .refreshable {
             do {
                 try await appState.refreshMarkets()
@@ -424,7 +427,7 @@ struct MarketsView: View {
         Button {
             selectedStock = stock
             selectedStockForNews = stock
-            showNewsDrawer = true
+            drawerState = .medium
         } label: {
             StockRow(
                 stock: stock,
@@ -449,6 +452,7 @@ struct MarketsView: View {
             selectedMarketItem = item
         } label: {
             MarketRow(
+                symbol: item.symbol,
                 name: item.name,
                 priceText: String(format: "$%.2f", item.price),
                 changePercent: item.changePercent,
@@ -646,6 +650,7 @@ private struct MarketItem: Identifiable {
 // MARK: - MarketRow
 
 private struct MarketRow: View {
+    let symbol: String
     let name: String
     let priceText: String
     let changePercent: Double
@@ -676,8 +681,8 @@ private struct MarketRow: View {
             }
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(symbolOrName)
-                    .font(.subheadline.weight(.medium))
+                Text(symbol.uppercased())
+                    .font(.subheadline.weight(.semibold))
                 Text(name)
                     .font(.caption2)
                     .foregroundStyle(.secondary)

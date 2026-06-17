@@ -44,6 +44,14 @@ export default async function handler(req, res) {
   const SYMBOL_MAP = {
     XAUUSD: 'GC=F', XAGUSD: 'SI=F', XPTUSD: 'PL=F', XPDUSD: 'PA=F',
     XCUUSD: 'HG=F', USOIL: 'CL=F', NGAS: 'NG=F',
+    // Matches commodity.name values emitted by server/api/commodities.js
+    Gold: 'GC=F', Silver: 'SI=F', Platinum: 'PL=F', Palladium: 'PA=F',
+    Copper: 'HG=F', Oil: 'CL=F', Natgas: 'NG=F',
+    Nas100: '^NDX', Us500: '^GSPC', Us30: '^DJI', Dxy: 'DX-Y.NYB',
+    // Raw crypto symbols emitted by server/api/crypto.js (uppercased)
+    BTC: 'BTC-USD', ETH: 'ETH-USD', SOL: 'SOL-USD', DOGE: 'DOGE-USD',
+    ADA: 'ADA-USD', XRP: 'XRP-USD', DOT: 'DOT-USD', AVAX: 'AVAX-USD',
+    LINK: 'LINK-USD', LTC: 'LTC-USD',
     'BTC-USD': 'BTC-USD', 'ETH-USD': 'ETH-USD',
   };
   const yahooSymbol = SYMBOL_MAP[symbol] || symbol;
