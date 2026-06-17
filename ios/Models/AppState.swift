@@ -336,26 +336,30 @@ final class AppState {
             if !stocks.isEmpty {
                 error = nil
                 stocksFetchedAt = .now
-                await preloadSparklines()
+                Task { await preloadSparklines() }
             }
         } catch {
             handleError(error)
         }
     }
 
+    @MainActor
     func preloadSparklines() async {
         let symbols = stocks.map(\.symbol)
-        await withTaskGroup(of: Void.self) { group in
+        await withTaskGroup(of: (String, [Double]).self) { group in
             for symbol in symbols {
                 guard sparklineCache[symbol] == nil else { continue }
-                group.addTask {
+                group.addTask { @MainActor in
                     do {
                         let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol)
-                        self.sparklineCache[symbol] = prices
+                        return (symbol, prices)
                     } catch {
-                        self.sparklineCache[symbol] = []
+                        return (symbol, [])
                     }
                 }
+            }
+            for await (symbol, prices) in group {
+                self.sparklineCache[symbol] = prices
             }
         }
     }
