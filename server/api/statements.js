@@ -3,6 +3,11 @@ import { getStatementsPayload, summarizeStatementBuffer } from './statements-dat
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
+import { summarizeTransactions } from './statements-shared.js';
+
+function transactionId(txn) {
+  return `${txn?.date}|${txn?.description}|${txn?.amount}`;
+}
 
 function safeName(name = 'statement.pdf') {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-');
@@ -101,6 +106,47 @@ export default async function handler(req, res) {
       await kv.set(statementsKey, nextStatements);
 
       return res.status(200).json({ ok: true, statement: nextRecord, statements: nextStatements });
+    }
+
+    if (req.method === 'DELETE' && action === 'delete') {
+      const id = typeof req.query?.id === 'string' ? req.query.id : '';
+      if (!id) return errorResponse(res, 400, 'id is required');
+
+      const statements = await kv.get(statementsKey);
+      const nextStatements = (Array.isArray(statements) ? statements : []).filter((item) => item?.id !== id);
+      await kv.set(statementsKey, nextStatements);
+      await kv.del(`statement-file:${id}`);
+
+      return res.status(200).json({ ok: true, statements: nextStatements });
+    }
+
+    if (req.method === 'PATCH' && action === 'edit-transaction') {
+      const id = typeof req.body?.id === 'string' ? req.body.id : '';
+      const txnId = typeof req.body?.transactionId === 'string' ? req.body.transactionId : '';
+      const category = typeof req.body?.category === 'string' ? req.body.category : '';
+      if (!id || !txnId || !category) {
+        return errorResponse(res, 400, 'id, transactionId and category are required');
+      }
+
+      const statements = await kv.get(statementsKey);
+      const list = Array.isArray(statements) ? statements : [];
+      const index = list.findIndex((item) => item?.id === id);
+      if (index === -1) return errorResponse(res, 404, 'Statement not found');
+
+      const statement = list[index];
+      const nextTransactions = (statement.transactions || []).map((txn) =>
+        transactionId(txn) === txnId ? { ...txn, category } : txn
+      );
+      const nextStatement = {
+        ...statement,
+        transactions: nextTransactions,
+        spendingMonth: summarizeTransactions(nextTransactions, statement.filename),
+      };
+      const nextStatements = [...list];
+      nextStatements[index] = nextStatement;
+      await kv.set(statementsKey, nextStatements);
+
+      return res.status(200).json({ ok: true, statement: nextStatement, statements: nextStatements });
     }
 
     return errorResponse(res, 405, 'Method not allowed');

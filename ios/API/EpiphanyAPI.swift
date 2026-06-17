@@ -439,6 +439,30 @@ final class EpiphanyAPI: @unchecked Sendable {
         return wrapper.statements
     }
 
+    func deleteStatement(id: String) async throws -> [Statement] {
+        let url = try makeURL("/api/statements", query: ["action": "delete", "id": id])
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        let data = try await perform(request)
+        let wrapper = try decode(StatementsWrapper.self, from: data)
+        return wrapper.statements
+    }
+
+    func editStatementTransaction(id: String, transactionId: String, category: String) async throws -> [Statement] {
+        let url = try makeURL("/api/statements", query: ["action": "edit-transaction"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode([
+            "id": id,
+            "transactionId": transactionId,
+            "category": category,
+        ])
+        let data = try await perform(request)
+        let wrapper = try decode(StatementsWrapper.self, from: data)
+        return wrapper.statements
+    }
+
     // MARK: - Watchlist
 
     func fetchWatchlist() async throws -> [WatchlistItem] {

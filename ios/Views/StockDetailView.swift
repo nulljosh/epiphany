@@ -79,17 +79,12 @@ struct StockDetailView: View {
                         .foregroundStyle(changeColor)
                     }
                     if let sig = Indicators.signal(closes: priceHistory.map(\.close)) {
-                        VStack(spacing: 4) {
-                            Text(sig.rawValue.uppercased())
-                                .font(.caption2.weight(.bold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 3)
-                                .background(signalColor(sig).opacity(0.18), in: Capsule())
-                                .foregroundStyle(signalColor(sig))
-                            Text("Educational and informational only. Not investment advice.")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(sig.rawValue.uppercased())
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 3)
+                            .background(signalColor(sig).opacity(0.18), in: Capsule())
+                            .foregroundStyle(signalColor(sig))
                     }
                 }
                 .padding(.top, 8)
@@ -226,7 +221,7 @@ struct StockDetailView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if !relatedNews.isEmpty {
+            if isLoadingNews || !relatedNews.isEmpty {
                 Button {
                     showNewsDrawer = true
                 } label: {
@@ -238,12 +233,17 @@ struct StockDetailView: View {
                             Text("Latest News")
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
-                            Text("\(relatedNews.count)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.up")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                            if isLoadingNews {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Text("\(relatedNews.count)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Image(systemName: "chevron.up")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 10)
@@ -253,8 +253,9 @@ struct StockDetailView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(isLoadingNews)
                 .gesture(DragGesture(minimumDistance: 10).onEnded { value in
-                    if value.translation.height < 0 { showNewsDrawer = true }
+                    if !isLoadingNews && value.translation.height < 0 { showNewsDrawer = true }
                 })
             }
         }
