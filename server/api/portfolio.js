@@ -62,20 +62,14 @@ export default async function handler(req, res) {
     console.log(`[portfolio] GET ${kvKey}:`, `${JSON.stringify(data).length} bytes`);
 
     // Overlay the latest broker snapshot so native clients always see fresh
-    // SnapTrade holdings + accounts, even if the web app hasn't re-persisted them yet.
+    // SnapTrade holdings, even if the web app hasn't re-persisted them yet.
     const snapshot = await kv.get(`broker:snapshot:${session.userId}`);
-    if (snapshot && (!data.updatedAt || new Date(snapshot.syncedAt) > new Date(data.updatedAt || 0))) {
-      if (Array.isArray(snapshot.holdings) && snapshot.holdings.length > 0) {
-        data.holdings = snapshot.holdings.map(h => ({
-          symbol: h.symbol, shares: h.shares, costBasis: null,
-          marketValue: h.marketValue, account: h.account, source: 'broker',
-        }));
-      }
-      if (snapshot.balance) {
-        data.accounts = [
-          { name: 'Cash', type: 'checking', currency: 'CAD', balance: snapshot.balance.total || snapshot.balance.cash || 0 },
-        ];
-      }
+    if (Array.isArray(snapshot?.holdings) && snapshot.holdings.length > 0
+        && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
+      data.holdings = snapshot.holdings.map(h => ({
+        symbol: h.symbol, shares: h.shares, costBasis: null,
+        marketValue: h.marketValue, account: h.account, source: 'broker',
+      }));
     }
     return res.status(200).json(data);
   }
