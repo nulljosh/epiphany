@@ -126,7 +126,7 @@ function buildPopupHTML(data) {
     <div style="margin-top:4px;color:#cbd5e1;font-size:11px;line-height:1.45">${esc(data.detail)}</div>
     <div style="margin-top:6px;font-size:10px;color:#67e8f9;text-transform:uppercase;letter-spacing:0.06em">${esc(data.level)}</div>
     <div style="margin-top:6px;font-size:10px;color:#93c5fd">Source: ${esc(data.source || 'Unknown')}</div>
-    ${data.link ? `<a href="${esc(data.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;color:#60a5fa;font-size:11px;text-decoration:underline">Open source &#8594;</a>` : ''}
+    ${data.link ? `<a href="${esc(data.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;color:#60a5fa;font-size:11px;text-decoration:underline">${esc(data.linkLabel || 'Open source')} &#8594;</a>` : ''}
   </div>`;
 }
 
@@ -626,7 +626,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         css,
         inc.description || inc.title || t,
-        { type: t, title: label, detail: inc.description || label, level: cat === 'construction' ? 'active' : 'infrastructure', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon) },
+        { type: t, title: label, detail: inc.description || label, level: cat === 'construction' ? 'active' : 'infrastructure', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon), linkLabel: 'Get Directions' },
         inc.lon, inc.lat, 'incidents',
         isAirport ? '✈' : ''
       );
@@ -639,7 +639,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         `width:48px;height:6px;border-radius:999px;background:${trafficColor(inc)};border:1px solid rgba(0,0,0,0.2);transform:rotate(18deg);animation:pulse-amber 1.6s infinite;`,
         inc.description || inc.type || 'traffic incident',
-        { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local', source: 'Traffic feed / fallback model', link: mapsLink(p.lat, p.lon) },
+        { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local', source: 'Traffic feed / fallback model', link: mapsLink(p.lat, p.lon), linkLabel: 'Get Directions' },
         p.lon, p.lat, 'traffic'
       );
     });
@@ -698,7 +698,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         'width:10px;height:10px;border-radius:50%;background:#ef4444;animation:pulse-red 2s infinite;',
         crime.title || 'Crime',
-        { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}${crime.timestamp ? ` -- ${new Date(crime.timestamp).toLocaleDateString()}` : ''}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon) },
+        { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}${crime.timestamp ? ` -- ${new Date(crime.timestamp).toLocaleDateString()}` : ''}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
         lon, lat, 'crime'
       );
     });
@@ -712,7 +712,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         'width:14px;height:14px;border-radius:50%;background:#a855f7;animation:pulse-cyan 2.2s infinite;',
         ev.title || (ev.kind === 'place' ? 'Place' : 'Event'),
-        { type: 'local-event', title: ev.title || (ev.kind === 'place' ? 'Place' : 'Event'), detail: ev.description || ev.venue || ev.source || (ev.kind === 'place' ? 'Nearby place' : 'Nearby event'), level: ev.kind === 'place' ? 'place' : 'event', source: ev.source || 'Map data', link: ev.url || mapsLink(lat, lon), image: ev.image || null },
+        { type: 'local-event', title: ev.title || (ev.kind === 'place' ? 'Place' : 'Event'), detail: ev.description || ev.venue || ev.source || (ev.kind === 'place' ? 'Nearby place' : 'Nearby event'), level: ev.kind === 'place' ? 'place' : 'event', source: ev.source || 'Map data', link: ev.url || mapsLink(lat, lon), linkLabel: ev.url ? 'Open source' : 'Get Directions', image: ev.image || null },
         lon, lat, 'localEvents'
       );
     });
@@ -744,7 +744,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         'width:12px;height:12px;border-radius:50%;background:#f59e0b;animation:pulse-amber 1.8s infinite;',
         wa.event || 'Weather Alert',
-        { type: 'weather', title: wa.event || 'Weather Alert', detail: wa.headline || wa.event, level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon) },
+        { type: 'weather', title: wa.event || 'Weather Alert', detail: wa.headline || wa.event, level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
         lon, lat, 'weather'
       );
     });
@@ -756,7 +756,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       addMarker(
         'width:10px;height:10px;border-radius:50%;background:#f97316;animation:pulse-amber 1.6s infinite;',
         'Wildfire',
-        { type: 'wildfire', title: 'Active Fire', detail: `Confidence: ${fire.confidence || 'Unknown'} -- ${fire.date || 'Recent'}`, level: 'elevated', source: 'NASA FIRMS', link: mapsLink(fire.lat, fire.lon) },
+        { type: 'wildfire', title: 'Active Fire', detail: `Confidence: ${fire.confidence || 'Unknown'} -- ${fire.date || 'Recent'}`, level: 'elevated', source: 'NASA FIRMS', link: mapsLink(fire.lat, fire.lon), linkLabel: 'Get Directions' },
         fire.lon, fire.lat, 'wildfires'
       );
     });
