@@ -455,7 +455,8 @@ struct MarketsView: View {
                 isFavorited: appState.isLocalFavorite(item.name),
                 onToggleFavorite: {
                     appState.toggleLocalFavorite(item.name)
-                }
+                },
+                sparklineData: appState.sparklineCache[item.symbol]
             )
         }
         .buttonStyle(BounceButtonStyle())
@@ -650,6 +651,7 @@ private struct MarketRow: View {
     let changePercent: Double
     var isFavorited: Bool = false
     var onToggleFavorite: (() -> Void)? = nil
+    var sparklineData: [Double]? = nil
 
     private var changeColorValue: Color {
         Palette.forChange(changePercent)
@@ -682,6 +684,12 @@ private struct MarketRow: View {
                     .lineLimit(1)
             }
             Spacer()
+
+            if let data = sparklineData, !data.isEmpty {
+                SparklinePath(data: data, color: changeColorValue)
+                    .frame(width: 40, height: 20)
+            }
+
             VStack(alignment: .trailing, spacing: 2) {
                 Text(priceText)
                     .font(.subheadline.weight(.medium))

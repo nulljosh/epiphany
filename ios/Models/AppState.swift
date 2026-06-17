@@ -344,7 +344,8 @@ final class AppState {
     }
 
     func preloadSparklines() async {
-        for symbol in stocks.map(\.symbol) {
+        let symbols = stocks.map(\.symbol) + commodities.map(\.name) + crypto.map(\.symbol)
+        for symbol in symbols {
             guard sparklineCache[symbol] == nil else { continue }
             Task {
                 do {
