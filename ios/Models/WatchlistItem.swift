@@ -16,4 +16,11 @@ struct WatchlistItem: Codable, Identifiable {
         case userEmail = "user_email"
         case addedAt = "added_at"
     }
+
+    init(id: String, symbol: String) {
+        self.symbol = symbol
+        self.userEmail = nil
+        self.addedAt = nil
+        self.rawId = id
+    }
 }
