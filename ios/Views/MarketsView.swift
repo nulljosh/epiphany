@@ -221,9 +221,9 @@ struct MarketsView: View {
                 isLoadingNews = false
             }
         }
+        .overlay(alignment: .bottom) { if !isSearching { newsDrawerOverlay } }
         .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
         .safeAreaInset(edge: .bottom, spacing: 0) { if isSearching { bottomSearchBar } }
-        .overlay(alignment: .bottom) { newsDrawerOverlay }
     }
 
     private var bottomSearchBar: some View {
