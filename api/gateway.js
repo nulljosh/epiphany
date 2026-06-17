@@ -125,7 +125,8 @@ export default async function handler(req, res) {
 
     return await route(req, res);
   } catch (err) {
-    console.error('[GATEWAY] Unhandled error:', err.message, err.stack?.split('\n')[1]);
-    if (!res.headersSent) return errorResponse(res, 500, 'Internal server error');
+    const routePath = getRoutePath(req);
+    console.error(`[GATEWAY] Unhandled error on /${routePath}:`, err.message, err.stack?.split('\n')[1]);
+    if (!res.headersSent) return errorResponse(res, 500, `Internal server error (${routePath})`);
   }
 }
