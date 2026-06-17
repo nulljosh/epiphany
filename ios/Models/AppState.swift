@@ -4,6 +4,7 @@ import LocalAuthentication
 @MainActor
 @Observable
 final class AppState {
+    var authAPI: AuthAPI = EpiphanyAPI.shared
     let biometricAuth = BiometricAuthService()
     var user: User?
     var isLoggedIn: Bool { user != nil }
@@ -197,7 +198,7 @@ final class AppState {
         defer { isAuthenticating = false }
 
         do {
-            user = try await EpiphanyAPI.shared.login(email: creds.email, password: creds.password)
+            user = try await authAPI.login(email: creds.email, password: creds.password)
             error = nil
         } catch {
             user = nil
@@ -205,11 +206,11 @@ final class AppState {
     }
 
     func login(email: String, password: String) async {
-        await authenticate { try await EpiphanyAPI.shared.login(email: email, password: password) }
+        await authenticate { try await authAPI.login(email: email, password: password) }
     }
 
     func register(email: String, password: String) async {
-        await authenticate { try await EpiphanyAPI.shared.register(email: email, password: password) }
+        await authenticate { try await authAPI.register(email: email, password: password) }
     }
 
     func saveBiometricCredentials(email: String, password: String) {
@@ -273,7 +274,7 @@ final class AppState {
     func changeEmail(to newEmail: String, password: String) async -> Bool {
         error = nil
         do {
-            user = try await EpiphanyAPI.shared.changeEmail(newEmail: newEmail, password: password)
+            user = try await authAPI.changeEmail(newEmail: newEmail, password: password)
             biometricAuth.saveCredentials(email: newEmail, password: password)
             return true
         } catch {
@@ -285,7 +286,7 @@ final class AppState {
     func changeName(name: String) async -> Bool {
         error = nil
         do {
-            user = try await EpiphanyAPI.shared.changeName(name: name)
+            user = try await authAPI.changeName(name: name)
             return true
         } catch {
             self.error = error.localizedDescription
@@ -296,7 +297,7 @@ final class AppState {
     func changePassword(currentPassword: String, newPassword: String) async -> Bool {
         error = nil
         do {
-            try await EpiphanyAPI.shared.changePassword(currentPassword: currentPassword, newPassword: newPassword)
+            try await authAPI.changePassword(currentPassword: currentPassword, newPassword: newPassword)
             if let email = user?.email {
                 biometricAuth.saveCredentials(email: email, password: newPassword)
             }

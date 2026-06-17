@@ -10,7 +10,7 @@ final class AppStateTests: XCTestCase {
         super.setUp()
         appState = AppState()
         mockAPI = MockEpiphanyAPI()
-        // Inject mock API (assumes EpiphanyAPI.shared can be overridden)
+        appState.authAPI = mockAPI
     }
 
     override func tearDown() {
@@ -364,7 +364,7 @@ final class AppStateTests: XCTestCase {
 
 // MARK: - Mock API
 
-class MockEpiphanyAPI {
+class MockEpiphanyAPI: AuthAPI {
     var mockLoginResult: User?
     var mockLoginError: APIError?
     var mockRegisterResult: User?
