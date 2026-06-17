@@ -182,6 +182,46 @@ export class SnapTradeAdapter {
     return { total, accounts: accountsOut };
   }
 
+  // Registered/tax-advantaged account names imply an "investment" account;
+  // everything else (chequing/spend accounts like Wealthsimple's "Vacation"
+  // sub-account) is "cash". SnapTrade doesn't reliably expose a usable type
+  // field across brokerages, so we infer from the account name.
+  static inferAccountType(name) {
+    return /tfsa|rrsp|resp|rrif|lira|fhsa|margin|individual/i.test(name || '') ? 'investment' : 'cash';
+  }
+
+  // One row per linked account: id, name, type, and total balance (cash +
+  // holdings market value). This is what should be persisted/displayed --
+  // getBalance()/getHoldings() alone only give partial, unmerged pictures.
+  async getAccounts() {
+    const accounts = await this.listAccounts();
+    const out = [];
+    for (const acct of accounts) {
+      const name = acct.name || acct.id;
+      const [balances, positions] = await Promise.all([
+        this._request('GET', `/accounts/${acct.id}/balances`, {
+          query: { userId: this.userId, userSecret: this.userSecret },
+        }),
+        this._request('GET', `/accounts/${acct.id}/positions`, {
+          query: { userId: this.userId, userSecret: this.userSecret },
+        }),
+      ]);
+      const cash = (balances ?? []).reduce((sum, b) => sum + Number(b.cash ?? 0), 0);
+      const holdingsValue = (positions ?? []).reduce((sum, pos) => {
+        const price = Number(pos.price) > 0 ? Number(pos.price) : null;
+        const units = Number(pos.units ?? 0);
+        return sum + (price != null ? price * units : 0);
+      }, 0);
+      out.push({
+        id: acct.id,
+        name,
+        type: SnapTradeAdapter.inferAccountType(name),
+        balance: cash + holdingsValue,
+      });
+    }
+    return out;
+  }
+
   // Resolve a ticker to a universal symbol id tradable at this account's brokerage.
   async findSymbolId(accountId, ticker) {
     const results = await this._request('POST', `/accounts/${accountId}/symbols`, {

@@ -51,10 +51,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, linked: false, linkUrl });
     }
 
-    const [holdings, balance, connections] = await Promise.all([
-      adapter.getHoldings(), adapter.getBalance(), adapter.listConnections().catch(() => []),
+    const [holdings, balance, snapAccounts, connections] = await Promise.all([
+      adapter.getHoldings(), adapter.getBalance(), adapter.getAccounts(), adapter.listConnections().catch(() => []),
     ]);
-    const snapshot = { holdings, balance, connections, syncedAt: new Date().toISOString() };
+    const snapshot = { holdings, balance, accounts: snapAccounts, connections, syncedAt: new Date().toISOString() };
     if (kv) await kv.set(snapshotKey, snapshot);
 
     console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.total.toFixed(2)} cash`);

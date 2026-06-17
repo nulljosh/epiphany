@@ -117,6 +117,7 @@ struct FinanceData: Codable {
         var typeLabel: String {
             switch type ?? "" {
             case "chequing": return "Chequing"
+            case "cash": return "Cash"
             case "investment": return "Investment"
             case "gift": return "Gift Card"
             default: return (type ?? "Account").capitalized
