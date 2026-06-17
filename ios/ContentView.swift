@@ -32,10 +32,15 @@ struct ContentView: View {
                 }
                 .tag(3)
         }
+        .toolbar(.hidden, for: .tabBar)
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()
         }
         .tint(Palette.appleBlue)
+        .overlay(alignment: .bottom) {
+            FloatingTabBar(selectedTab: $selectedTab)
+                .padding(.bottom, 8)
+        }
         .overlay(alignment: .top) {
             if let error = appState.error, !error.isEmpty {
                 SharedErrorBanner(message: error) {
@@ -69,6 +74,44 @@ struct ContentView: View {
         .environment(AppState())
 }
 
+
+private struct FloatingTabBar: View {
+    @Binding var selectedTab: Int
+
+    private let icons = ["map", "chart.line.uptrend.xyaxis", "briefcase", "gearshape"]
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(icons.indices, id: \.self) { index in
+                tabButton(index)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .frame(maxWidth: 260)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Palette.overlay.opacity(0.08), lineWidth: 1))
+        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+    }
+
+    private func tabButton(_ index: Int) -> some View {
+        Button {
+            selectedTab = index
+            Haptics.selection()
+        } label: {
+            Image(systemName: icons[index])
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(selectedTab == index ? Palette.text : Palette.textSecondary)
+                .frame(width: 44, height: 36)
+                .background {
+                    if selectedTab == index {
+                        Capsule().fill(Palette.overlay.opacity(0.08))
+                    }
+                }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
 
 private struct SharedErrorBanner: View {
     let message: String
