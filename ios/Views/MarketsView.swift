@@ -683,8 +683,6 @@ private struct MarketRow: View {
                 .buttonStyle(BounceButtonStyle())
             }
 
-            marketIcon
-
             VStack(alignment: .leading, spacing: 1) {
                 Text(symbolOrName)
                     .font(.subheadline.weight(.medium))
