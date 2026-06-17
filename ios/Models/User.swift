@@ -7,6 +7,6 @@ struct User: Codable {
     let tier: String?
     let verified: Bool?
     let stripeCustomerId: String?
-    let avatarUrl: String?
-    let avatarUpdatedAt: Int?
+    var avatarUrl: String?
+    var avatarUpdatedAt: Int?
 }

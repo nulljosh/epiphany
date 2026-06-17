@@ -155,8 +155,12 @@ struct PortfolioView: View {
                         }
                     }
                     .refreshable {
-                        try await appState.refreshPortfolio()
-                        Haptics.notification(.success)
+                        do {
+                            try await appState.refreshPortfolio()
+                            Haptics.notification(.success)
+                        } catch {
+                            print("Portfolio refresh failed: \(error)")
+                        }
                     }
                 }
             }

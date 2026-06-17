@@ -218,40 +218,42 @@ struct SettingsView: View {
 
 
     private var avatarPickerButton: some View {
-        Button {
-            guard !isUploadingAvatar else { return }
-            Task { await generateAndUploadAvatar() }
-        } label: {
-            ZStack {
-                if let data = appState.avatarImageData,
-                   let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 56, height: 56)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Palette.appleBlue.opacity(0.2))
-                        .frame(width: 56, height: 56)
-                    Text(avatarInitial)
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(Palette.appleBlue)
-                }
-                if isUploadingAvatar {
-                    Circle()
-                        .fill(.black.opacity(0.5))
-                        .frame(width: 56, height: 56)
-                    ProgressView()
-                        .tint(Palette.text)
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                guard !isUploadingAvatar else { return }
+                Task { await generateAndUploadAvatar() }
+            } label: {
+                ZStack {
+                    if let data = appState.avatarImageData,
+                       let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 56, height: 56)
+                            .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Palette.appleBlue.opacity(0.2))
+                            .frame(width: 56, height: 56)
+                        Text(avatarInitial)
+                            .font(.title2.weight(.semibold))
+                            .foregroundStyle(Palette.appleBlue)
+                    }
+                    if isUploadingAvatar {
+                        Circle()
+                            .fill(.black.opacity(0.5))
+                            .frame(width: 56, height: 56)
+                        ProgressView()
+                            .tint(Palette.text)
+                    }
                 }
             }
-        }
-        if let error = avatarError {
-            Text(error)
-                .font(.caption)
-                .foregroundStyle(.red)
-                .padding(.horizontal)
+            if let error = avatarError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .padding(.horizontal)
+            }
         }
     }
 
@@ -276,9 +278,8 @@ struct SettingsView: View {
             let avatarUrl = try await EpiphanyAPI.shared.uploadAvatar(imageData: jpegData)
             if var user = appState.user {
                 user.avatarUrl = avatarUrl
-                user.avatarUpdatedAt = Date().ISO8601Format()
+                user.avatarUpdatedAt = Int(Date().timeIntervalSince1970)
                 appState.user = user
-                await appState.saveUser()
             }
             avatarError = nil
         } catch {
