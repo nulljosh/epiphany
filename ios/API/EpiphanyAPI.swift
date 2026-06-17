@@ -26,7 +26,16 @@ enum APIError: LocalizedError {
 }
 
 @MainActor
-final class EpiphanyAPI: @unchecked Sendable {
+protocol AuthAPI {
+    func login(email: String, password: String) async throws -> User
+    func register(email: String, password: String) async throws -> User
+    func changeEmail(newEmail: String, password: String) async throws -> User
+    func changeName(name: String) async throws -> User
+    func changePassword(currentPassword: String, newPassword: String) async throws
+}
+
+@MainActor
+final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     static let shared = EpiphanyAPI()
 
     private let baseURL = "https://epiphany.heyitsmejosh.com"
