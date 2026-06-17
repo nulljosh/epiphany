@@ -122,8 +122,12 @@ async function deleteSupabaseUserData(email) {
 }
 
 export default async function handler(req, res) {
-  const kv = await getKv();
-  const { action } = req.query;
+  try {
+    const kv = await getKv();
+    if (!kv) {
+      return errorResponse(res, 503, 'Database connection unavailable');
+    }
+    const { action } = req.query;
 
   // GET: check current session
   if (req.method === 'GET' && action === 'me') {
@@ -551,4 +555,8 @@ export default async function handler(req, res) {
   }
 
   return errorResponse(res, 400, 'Unknown action');
+  } catch (err) {
+    console.error('[AUTH] Uncaught handler error:', err.message, err.stack);
+    return errorResponse(res, 500, 'Internal server error');
+  }
 }
