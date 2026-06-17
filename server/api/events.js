@@ -1,3 +1,5 @@
+import { withMapErrorHandler } from './_map-error-handler.js';
+
 // GDELT Project — global news events, geocoded, real-time 15min updates (free, no auth)
 const GDELT_BASE = 'https://api.gdeltproject.org/api/v2/doc/doc';
 
@@ -75,7 +77,7 @@ function buildMeta(status, extra = {}) {
   };
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const lat = parseFloat(req.query.lat);
@@ -151,3 +153,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export default withMapErrorHandler(handler);
