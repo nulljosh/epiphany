@@ -1550,9 +1550,11 @@ private struct VenueDetailSheet: View {
             }
             Spacer()
             Button {
-                item.openInMaps()
+                item.openInMaps(launchOptions: [
+                    MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDefault,
+                ])
             } label: {
-                Label("Open in Maps", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.circle.fill")
                     .font(.subheadline.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
