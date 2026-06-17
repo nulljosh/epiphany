@@ -44,7 +44,7 @@ Version lives in `project.yml` (`MARKETING_VERSION`). On every release, sync the
 ## Recent Fixes
 
 - **Markets search bar** (06-17): Search now matches native iOS Stocks app — bottom-pinned bar (mic icon, blue circular X to dismiss) via `safeAreaInset(edge: .bottom)`, auto-focuses keyboard on activation, replaces old inline top-of-list search row. Floating search icon hides while active.
-- **PersonModels test drift** (06-17): `SocialLink`/`PersonSearchResult` now conform to `Identifiable` (`id` = url) and `SocialLink` gained computed `displayName`/`systemImage` (fallback to platform name / "globe"); `PersonSearchResult` decodes missing fields as `""` instead of failing. Fixes `PersonDataTests`. `AppStateTests.swift` still has deeper drift against current `User`/`APIError`/`PriceAlert` shapes — needs a dedicated pass, not touched.
+- **PersonModels test drift** (06-17): `SocialLink`/`PersonSearchResult` now conform to `Identifiable` (`id` = url) and `SocialLink` gained computed `displayName`/`systemImage` (fallback to platform name / "globe"); `PersonSearchResult` decodes missing fields as `""` instead of failing. Fixes `PersonDataTests`. `AppStateTests.swift` drift against `User`/`APIError`/`PriceAlert` fixed (06-17): removed stale `avatar`/`createdAt` params from `User` inits, `price:`→`targetPrice:`+`direction:` on `PriceAlert`, `.serverError`→`.httpError(500, ...)` on `APIError` mocks. Not yet confirmed green on a real machine (xcodebuild unavailable in this environment — full Xcode not selected).
 - **Markets sparklines** (06-16): StockRow now renders sparklines with minimal data (1+ points), not just 2+. Fixes 10-15% missing graphs. Fetch changed to `.task` for proper async lifecycle.
 
 ## Known Issues / Next

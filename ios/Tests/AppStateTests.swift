@@ -37,10 +37,9 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "test@example.com",
             name: "Test User",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
         mockAPI.mockLoginResult = mockUser
 
@@ -69,10 +68,9 @@ final class AppStateTests: XCTestCase {
             id: "user-2",
             email: "newuser@example.com",
             name: nil,
-            avatar: nil,
-            verified: false,
             tier: "free",
-            createdAt: Date()
+            verified: false,
+            stripeCustomerId: nil
         )
         mockAPI.mockRegisterResult = mockUser
 
@@ -89,14 +87,13 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "test@example.com",
             name: "Test",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
-        appState.portfolio = Portfolio(netWorth: 10000, cashBalance: 5000)
+        appState.portfolio = Portfolio(totalValue: 10000, dayChange: 0, dayChangePercent: 0, holdings: [])
         appState.watchlist = [WatchlistItem(id: "w1", symbol: "AAPL")]
-        appState.stocks = [Stock(symbol: "AAPL", price: 150)]
+        appState.stocks = [Stock(symbol: "AAPL", name: "AAPL", price: 150)]
         appState.error = "Some error"
 
         await appState.logout()
@@ -116,20 +113,18 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "newemail@example.com",
             name: "Test User",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
         mockAPI.mockChangeEmailResult = updatedUser
         appState.user = User(
             id: "user-1",
             email: "old@example.com",
             name: "Test User",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
 
         let success = await appState.changeEmail(to: "newemail@example.com", password: "password123")
@@ -145,10 +140,9 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "test@example.com",
             name: "Test User",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
 
         let success = await appState.changeEmail(to: "new@example.com", password: "wrong")
@@ -163,10 +157,9 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "test@example.com",
             name: "Test User",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
 
         let success = await appState.changePassword(currentPassword: "oldpass", newPassword: "newpass")
@@ -180,20 +173,18 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "test@example.com",
             name: "New Name",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
         mockAPI.mockChangeNameResult = updatedUser
         appState.user = User(
             id: "user-1",
             email: "test@example.com",
             name: "Old Name",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
 
         let success = await appState.changeName(name: "New Name")
@@ -219,9 +210,9 @@ final class AppStateTests: XCTestCase {
 
     func testWatchlistStocks() {
         appState.stocks = [
-            Stock(symbol: "AAPL", price: 150),
-            Stock(symbol: "MSFT", price: 300),
-            Stock(symbol: "GOOGL", price: 2000),
+            Stock(symbol: "AAPL", name: "AAPL", price: 150),
+            Stock(symbol: "MSFT", name: "MSFT", price: 300),
+            Stock(symbol: "GOOGL", name: "GOOGL", price: 2000),
         ]
         appState.watchlist = [
             WatchlistItem(id: "w1", symbol: "AAPL"),
@@ -238,9 +229,9 @@ final class AppStateTests: XCTestCase {
 
     func testNonWatchlistStocks() {
         appState.stocks = [
-            Stock(symbol: "AAPL", price: 150),
-            Stock(symbol: "MSFT", price: 300),
-            Stock(symbol: "GOOGL", price: 2000),
+            Stock(symbol: "AAPL", name: "AAPL", price: 150),
+            Stock(symbol: "MSFT", name: "MSFT", price: 300),
+            Stock(symbol: "GOOGL", name: "GOOGL", price: 2000),
         ]
         appState.watchlist = [
             WatchlistItem(id: "w1", symbol: "AAPL"),
@@ -316,10 +307,9 @@ final class AppStateTests: XCTestCase {
             id: "user-1",
             email: "test@example.com",
             name: "Test",
-            avatar: nil,
-            verified: true,
             tier: "free",
-            createdAt: Date()
+            verified: true,
+            stripeCustomerId: nil
         )
 
         appState.handleError(APIError.unauthorized)
@@ -357,9 +347,9 @@ final class AppStateTests: XCTestCase {
 
     func testActiveAndTriggeredAlerts() {
         appState.alerts = [
-            PriceAlert(id: "a1", symbol: "AAPL", price: 150, triggered: false),
-            PriceAlert(id: "a2", symbol: "MSFT", price: 300, triggered: true),
-            PriceAlert(id: "a3", symbol: "GOOGL", price: 2000, triggered: false),
+            PriceAlert(id: "a1", userEmail: nil, symbol: "AAPL", targetPrice: 150, direction: .above, triggered: false, createdAt: nil),
+            PriceAlert(id: "a2", userEmail: nil, symbol: "MSFT", targetPrice: 300, direction: .above, triggered: true, createdAt: nil),
+            PriceAlert(id: "a3", userEmail: nil, symbol: "GOOGL", targetPrice: 2000, direction: .above, triggered: false, createdAt: nil),
         ]
 
         let active = appState.activeAlerts
@@ -401,7 +391,7 @@ class MockEpiphanyAPI {
             throw error
         }
         guard let user = mockRegisterResult else {
-            throw APIError.serverError
+            throw APIError.httpError(500, "Server error")
         }
         return user
     }
@@ -411,7 +401,7 @@ class MockEpiphanyAPI {
             throw error
         }
         guard let user = mockChangeEmailResult else {
-            throw APIError.serverError
+            throw APIError.httpError(500, "Server error")
         }
         return user
     }
@@ -421,7 +411,7 @@ class MockEpiphanyAPI {
             throw error
         }
         guard let user = mockChangeNameResult else {
-            throw APIError.serverError
+            throw APIError.httpError(500, "Server error")
         }
         return user
     }
