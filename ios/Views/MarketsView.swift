@@ -20,6 +20,7 @@ struct MarketsView: View {
     @State private var isLoadingNews = false
     @State private var selectedStockForNews: Stock?
     @State private var isSearching = false
+    @FocusState private var searchFieldFocused: Bool
 
     enum FeedDest: Identifiable {
         case news, macro, alerts
@@ -162,13 +163,16 @@ struct MarketsView: View {
                     }
             }
 
-            Button {
-                isSearching = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.headline)
-                    .foregroundStyle(Palette.appleBlue)
-                    .padding(12)
+            if !isSearching {
+                Button {
+                    isSearching = true
+                    searchFieldFocused = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .font(.headline)
+                        .foregroundStyle(Palette.appleBlue)
+                        .padding(12)
+                }
             }
         }
         .sheet(item: $selectedStock) { stock in
@@ -218,7 +222,41 @@ struct MarketsView: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
+        .safeAreaInset(edge: .bottom, spacing: 0) { if isSearching { bottomSearchBar } }
         .overlay(alignment: .bottom) { newsDrawerOverlay }
+    }
+
+    private var bottomSearchBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Search markets", text: $searchText)
+                    .focused($searchFieldFocused)
+                    .textInputAutocapitalization(.never)
+                    .submitLabel(.search)
+                Image(systemName: "mic.fill")
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+
+            Button {
+                searchText = ""
+                isSearching = false
+                searchFieldFocused = false
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Palette.appleBlue, in: Circle())
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.bar)
     }
 
     @State private var drawerState: DrawerState = .peek
@@ -245,11 +283,15 @@ struct MarketsView: View {
             .frame(maxWidth: .infinity)
             .frame(height: height, alignment: .top)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
             .shadow(radius: 8, y: -2)
             .overlay(alignment: .top) {
                 Color.clear
                     .frame(height: 60)
                     .contentShape(Rectangle())
+                    .onTapGesture {
+                        drawerState = drawerState == .peek ? .medium : .peek
+                    }
                     .gesture(
                         DragGesture()
                             .updating($dragTranslation) { value, state, _ in
@@ -294,35 +336,6 @@ struct MarketsView: View {
             Section { fearGreedView }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
-
-            if isSearching {
-                Section {
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-                        TextField("Search markets", text: $searchText)
-                            .textInputAutocapitalization(.never)
-                        if !searchText.isEmpty {
-                            Button {
-                                searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                        } else {
-                            Button {
-                                isSearching = false
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-            }
 
             if !appState.watchlistStocks.isEmpty {
                 Section("Watchlist") {
