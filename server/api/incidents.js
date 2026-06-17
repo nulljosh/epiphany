@@ -1,4 +1,3 @@
-import { withMapErrorHandler } from './_map-error-handler.js';
 // Road incidents + nearby infrastructure from OpenStreetMap Overpass API (free, no auth)
 // Returns active incidents (construction, road works) separately from static infrastructure
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
@@ -191,7 +190,7 @@ async function fetchIncidents(bbox) {
   }
 }
 
-async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   const { lamin, lomin, lamax, lomax, lat, lon } = req.query;
   let bbox;
@@ -231,5 +230,3 @@ async function handler(req, res) {
           : {}),
   });
 }
-
-export default withMapErrorHandler(handler);
