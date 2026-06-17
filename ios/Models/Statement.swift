@@ -1,19 +1,22 @@
 import Foundation
 
 struct Statement: Codable, Identifiable {
+    let recordId: String?
     let filename: String
     let transactions: [Transaction]
     let spendingMonth: FinanceData.SpendingMonth?
 
-    var id: String { filename }
+    var id: String { recordId ?? filename }
 
     private enum CodingKeys: String, CodingKey {
+        case recordId = "id"
         case filename
         case transactions
         case spendingMonth
     }
 
-    init(filename: String, transactions: [Transaction], spendingMonth: FinanceData.SpendingMonth? = nil) {
+    init(recordId: String? = nil, filename: String, transactions: [Transaction], spendingMonth: FinanceData.SpendingMonth? = nil) {
+        self.recordId = recordId
         self.filename = filename
         self.transactions = transactions
         self.spendingMonth = spendingMonth
@@ -21,6 +24,7 @@ struct Statement: Codable, Identifiable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        recordId = try container.decodeIfPresent(String.self, forKey: .recordId)
         filename = try container.decodeIfPresent(String.self, forKey: .filename) ?? "Statement"
         transactions = try container.decodeIfPresent([Transaction].self, forKey: .transactions) ?? []
         spendingMonth = try container.decodeIfPresent(FinanceData.SpendingMonth.self, forKey: .spendingMonth)

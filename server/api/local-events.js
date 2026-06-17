@@ -92,6 +92,7 @@ async function fetchEventbrite(lat, lon) {
         source: 'eventbrite',
         description: e.description?.text?.slice(0, 200) || null,
         venue: venue.name || null,
+        image: e.logo?.url || null,
       });
     }
   } catch { /* Eventbrite unavailable */ }

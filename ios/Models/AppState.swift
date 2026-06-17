@@ -361,6 +361,7 @@ final class AppState {
     func loadCommodities(force: Bool = false) async {
         do {
             commodities = try await EpiphanyAPI.shared.fetchCommodities()
+            if !commodities.isEmpty { Task { await preloadSparklines() } }
         } catch {
             handleError(error)
         }
@@ -369,6 +370,7 @@ final class AppState {
     func loadCrypto(force: Bool = false) async {
         do {
             crypto = try await EpiphanyAPI.shared.fetchCrypto()
+            if !crypto.isEmpty { Task { await preloadSparklines() } }
         } catch {
             handleError(error)
         }

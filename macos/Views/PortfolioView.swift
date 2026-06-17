@@ -27,6 +27,13 @@ private enum IncomeScenario: String, CaseIterable, Identifiable {
     }
 }
 
+private let editableCategories = [
+    "food", "shopping", "tech", "apps", "transit", "gas", "pets", "laundry",
+    "fitness", "entertainment", "auto", "services", "transfers", "vape",
+    "alcohol", "cannabis", "housing", "utilities", "health", "insurance",
+    "subscriptions", "other", "uncategorized",
+].sorted()
+
 private let categoryColors: [String: Color] = [
     "housing": Palette.appleBlue,
     "food": Palette.successGreen,
@@ -697,6 +704,10 @@ struct PortfolioView: View {
                                             .font(.caption)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .lineLimit(2)
+                                        Text(transaction.category ?? "uncategorized")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 92, alignment: .leading)
                                         Text(
                                             transaction.amount,
                                             format: .currency(code: currencyCode)
@@ -711,6 +722,14 @@ struct PortfolioView: View {
                                     }
                                     .padding(.horizontal)
                                     .padding(.vertical, 8)
+                                    .contentShape(Rectangle())
+                                    .contextMenu {
+                                        ForEach(editableCategories, id: \.self) { category in
+                                            Button(category.capitalized) {
+                                                Task { await editTransactionCategory(statement: statement, transaction: transaction, category: category) }
+                                            }
+                                        }
+                                    }
 
                                     if transaction.id != statement.transactions.last?.id {
                                         Divider().padding(.horizontal)
@@ -726,6 +745,13 @@ struct PortfolioView: View {
                                 Text("\(statement.transactions.count)")
                                     .font(.caption.monospaced())
                                     .foregroundStyle(.secondary)
+                                Button {
+                                    Task { await deleteStatement(statement) }
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
                             }
                             .padding(.horizontal)
                             .padding(.vertical, 12)
@@ -737,6 +763,22 @@ struct PortfolioView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func deleteStatement(_ statement: Statement) async {
+        if let updated = try? await EpiphanyAPI.shared.deleteStatement(id: statement.id) {
+            appState.statements = updated
+        }
+    }
+
+    private func editTransactionCategory(statement: Statement, transaction: Transaction, category: String) async {
+        if let updated = try? await EpiphanyAPI.shared.editStatementTransaction(
+            id: statement.id,
+            transactionId: transaction.id,
+            category: category
+        ) {
+            appState.statements = updated
         }
     }
 

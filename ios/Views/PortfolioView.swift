@@ -139,13 +139,7 @@ struct PortfolioView: View {
                                 holdingsContent(portfolio)
                             }
 
-                            if hasDebtOrGoals {
-                                timelineStrip
-                            }
-
                             planningCard
-
-                            incomeTimelineSection
 
                             debtBreakdownSection
 
@@ -563,6 +557,13 @@ struct PortfolioView: View {
                     Text(String(format: "$%.2f", portfolio.totalValue))
                         .font(.system(size: 32, weight: .heavy))
                         .foregroundStyle(Palette.text)
+                    let cashTotal = appState.financeData?.accounts.reduce(0.0) { $0 + $1.balance } ?? 0
+                    let holdingsTotal = portfolio.holdings.reduce(0.0) { $0 + $1.marketValue }
+                    if holdingsTotal > 0 {
+                        Text("Cash \(CurrencyFormatter.formatPrice(cashTotal)) \u{00B7} Holdings \(CurrencyFormatter.formatPrice(holdingsTotal))")
+                            .font(.caption2)
+                            .foregroundStyle(Palette.textSecondary)
+                    }
                     HStack(spacing: 4) {
                         Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
                         Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
@@ -632,76 +633,6 @@ struct PortfolioView: View {
             return "Trade Crypto"
         }
         return name
-    }
-
-    private var hasDebtOrGoals: Bool {
-        let debt = appState.financeData?.debt ?? []
-        let goals = appState.financeData?.goals ?? []
-        return !debt.isEmpty || !goals.isEmpty || !UpcomingPayments.all.isEmpty
-    }
-
-    private var timelineStrip: some View {
-        let debt = appState.financeData?.debt ?? []
-        let goals = appState.financeData?.goals ?? []
-        let hiddenPayments = Set(["French bulldog", "Gold chain", "Car", "Computer", "Apple Developer Account"])
-        let hiddenGoals = Set(["French Bulldog", "French bulldog", "Car", "MacBook", "Chain"])
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("TIMELINE")
-                .font(.caption2.weight(.bold))
-                .foregroundStyle(Palette.textSecondary)
-                .tracking(1.0)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
-                        TimelineChip(
-                            icon: "calendar.badge.clock",
-                            label: "Payday",
-                            detail: "\(days)d",
-                            color: Palette.appleBlue
-                        )
-                    }
-
-                    ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
-                        if !hiddenPayments.contains(payment.name),
-                           let days = UpcomingPayments.daysUntil(payment), days >= 0 {
-                            TimelineChip(
-                                icon: payment.icon,
-                                label: payment.name,
-                                detail: days == 0 ? "Today" : "\(days)d",
-                                color: Palette.successGreen
-                            )
-                        }
-                    }
-
-                    ForEach(sortedDebtByPayoff(debt: debt), id: \.name) { item in
-                        let months = DebtCalc.monthsToPayoff(item: item)
-                        if !months.isInfinite {
-                            TimelineChip(
-                                icon: DebtCalc.icon(for: item.name),
-                                label: item.name,
-                                detail: DebtCalc.payoffLabel(months),
-                                color: months < 0.1 ? Palette.successGreen : months <= 3 ? Palette.warningAmber : Palette.dangerRed
-                            )
-                        }
-                    }
-
-                    ForEach(goals.filter { !hiddenGoals.contains($0.name) && $0.progress < 0.99 }, id: \.name) { goal in
-                        TimelineChip(
-                            icon: "flag",
-                            label: goal.name,
-                            detail: String(format: "%.0f%%", goal.progress * 100),
-                            color: Color(hex: goal.priorityColor)
-                        )
-                    }
-                }
-            }
-        }
-        .padding(.horizontal)
-    }
-
-    private func sortedDebtByPayoff(debt: [FinanceData.DebtItem]) -> [FinanceData.DebtItem] {
-        debt.sorted { DebtCalc.monthsToPayoff(item: $0) < DebtCalc.monthsToPayoff(item: $1) }
     }
 
     private var combinedSpendingCard: some View {
@@ -1517,50 +1448,6 @@ struct PortfolioView: View {
 
 extension PortfolioView {
     @ViewBuilder
-    var incomeTimelineSection: some View {
-        let phases = appState.financeData?.incomePhases ?? []
-        if !phases.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("INCOME TIMELINE")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(Palette.textSecondary)
-                    .tracking(1.0)
-                ForEach(phases) { phase in
-                    incomePhaseRow(phase)
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-
-    @ViewBuilder
-    func incomePhaseRow(_ phase: FinanceData.IncomePhase) -> some View {
-        HStack(spacing: 12) {
-            Circle()
-                .fill(Color(hex: phase.statusColor))
-                .frame(width: 10, height: 10)
-            VStack(alignment: .leading, spacing: 2) {
-                if let date = phase.date {
-                    Text(date)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Palette.textSecondary)
-                        .textCase(.uppercase)
-                }
-                Text("$\(Int(phase.monthly))/mo")
-                    .font(.title3.weight(.bold).monospacedDigit())
-                    .foregroundStyle(Color(hex: phase.statusColor))
-                Text(phase.label)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Palette.textSecondary)
-            }
-            Spacer()
-        }
-        .padding(12)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    @ViewBuilder
     var debtBreakdownSection: some View {
         let debt = appState.financeData?.debt ?? []
         if !debt.isEmpty {
@@ -1824,9 +1711,15 @@ private struct StatementManagerSheet: View {
     @State private var showFilePicker = false
     @State private var isUploading = false
     @State private var uploadError: String?
+    @State private var statements: [Statement] = []
+    @State private var selectedStatement: Statement?
 
     private var months: [FinanceData.SpendingMonth] {
         (appState.financeData?.spending ?? []).sorted { $0.sortKey > $1.sortKey }
+    }
+
+    private func statement(forMonth month: FinanceData.SpendingMonth) -> Statement? {
+        statements.first { $0.spendingMonth?.month == month.month }
     }
 
     var body: some View {
@@ -1837,25 +1730,32 @@ private struct StatementManagerSheet: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(months) { month in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(month.month)
-                                    .font(.body.weight(.medium))
-                                Text("\(month.sortedCategories.count) categories")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                        Button {
+                            selectedStatement = statement(forMonth: month)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(month.month)
+                                        .font(.body.weight(.medium))
+                                        .foregroundStyle(.primary)
+                                    Text("\(month.sortedCategories.count) categories")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text(month.total, format: .currency(code: Locale.current.currency?.identifier ?? "USD").precision(.fractionLength(0)))
+                                    .font(.body.weight(.semibold))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.primary)
                             }
-                            Spacer()
-                            Text(month.total, format: .currency(code: Locale.current.currency?.identifier ?? "USD").precision(.fractionLength(0)))
-                                .font(.body.weight(.semibold))
-                                .monospacedDigit()
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
+                        .disabled(statement(forMonth: month) == nil)
                     }
                     .onDelete { offsets in
-                        let toDelete = offsets.map { months[$0].month }
-                        for month in toDelete {
-                            Task { await appState.deleteSpendingMonth(month) }
+                        let toDelete = offsets.compactMap { statement(forMonth: months[$0]) }
+                        for statement in toDelete {
+                            Task { await deleteStatement(statement) }
                         }
                     }
                 }
@@ -1888,7 +1788,24 @@ private struct StatementManagerSheet: View {
                     Text(error)
                 }
             })
+            .sheet(item: $selectedStatement) { statement in
+                StatementTransactionsView(statement: statement) { updatedStatements in
+                    statements = updatedStatements
+                }
+            }
+            .task {
+                statements = (try? await EpiphanyAPI.shared.fetchStatements()) ?? []
+            }
         }
+    }
+
+    private func deleteStatement(_ statement: Statement) async {
+        do {
+            statements = try await EpiphanyAPI.shared.deleteStatement(id: statement.id)
+        } catch {
+            uploadError = error.localizedDescription
+        }
+        await appState.deleteSpendingMonth(statement.spendingMonth?.month ?? "")
     }
 
     private func handleFileSelection(_ result: Result<URL, Error>) {
@@ -1912,15 +1829,17 @@ private struct StatementManagerSheet: View {
             isUploading = true
             Task {
                 do {
-                    let statements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64)
+                    let updatedStatements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64)
                     await MainActor.run {
                         isUploading = false
-                        if let newMonth = statements.first?.spendingMonth {
-                            if appState.financeData?.spending.isEmpty ?? true {
-                                appState.financeData?.spending = [newMonth]
-                            } else {
-                                appState.financeData?.spending.append(newMonth)
-                            }
+                        statements = updatedStatements
+                        let newMonth = updatedStatements.first { $0.filename == filename }?.spendingMonth
+                            ?? updatedStatements.last?.spendingMonth
+                        if let newMonth {
+                            var spending = appState.financeData?.spending ?? []
+                            spending.removeAll { $0.month == newMonth.month }
+                            spending.append(newMonth)
+                            appState.financeData?.spending = spending
                         }
                     }
                 } catch {
@@ -1932,6 +1851,117 @@ private struct StatementManagerSheet: View {
             }
         } catch {
             uploadError = "Failed to read file: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Statement Transaction Editor
+
+private let editableCategories = [
+    "food", "shopping", "tech", "apps", "transit", "gas", "pets", "laundry",
+    "fitness", "entertainment", "auto", "services", "transfers", "vape",
+    "alcohol", "cannabis", "housing", "utilities", "health", "insurance",
+    "subscriptions", "other", "uncategorized",
+].sorted()
+
+private struct StatementTransactionsView: View {
+    let statement: Statement
+    var onUpdate: ([Statement]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var transactions: [Transaction]
+    @State private var editingTransaction: Transaction?
+    @State private var isSaving = false
+    @State private var error: String?
+
+    init(statement: Statement, onUpdate: @escaping ([Statement]) -> Void) {
+        self.statement = statement
+        self.onUpdate = onUpdate
+        _transactions = State(initialValue: statement.transactions)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List(transactions) { txn in
+                Button {
+                    editingTransaction = txn
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(txn.description)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Text(txn.category ?? "uncategorized")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(txn.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                            .font(.body.weight(.medium))
+                            .monospacedDigit()
+                            .foregroundStyle(.primary)
+                    }
+                }
+            }
+            .navigationTitle(statement.spendingMonth?.month ?? "Transactions")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .overlay {
+                if isSaving {
+                    ProgressView()
+                }
+            }
+            .alert("Error", isPresented: .constant(error != nil), actions: {
+                Button("OK") { error = nil }
+            }, message: {
+                if let error { Text(error) }
+            })
+            .sheet(item: $editingTransaction) { txn in
+                NavigationStack {
+                    List(editableCategories, id: \.self) { category in
+                        Button {
+                            Task { await updateCategory(for: txn, category: category) }
+                        } label: {
+                            HStack {
+                                Text(category.capitalized)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                if txn.category == category {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(.tint)
+                                }
+                            }
+                        }
+                    }
+                    .navigationTitle("Category")
+                    .navigationBarTitleDisplayMode(.inline)
+                }
+                .presentationDetents([.medium, .large])
+            }
+        }
+    }
+
+    private func updateCategory(for txn: Transaction, category: String) async {
+        editingTransaction = nil
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            let updatedStatements = try await EpiphanyAPI.shared.editStatementTransaction(
+                id: statement.id,
+                transactionId: txn.id,
+                category: category
+            )
+            if let updated = updatedStatements.first(where: { $0.id == statement.id }) {
+                transactions = updated.transactions
+            }
+            onUpdate(updatedStatements)
+        } catch {
+            self.error = error.localizedDescription
         }
     }
 }

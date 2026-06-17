@@ -1,23 +1,27 @@
 import Foundation
 
 struct Statement: Codable, Identifiable {
+    let recordId: String?
     let filename: String
     let transactions: [Transaction]
 
-    var id: String { filename }
+    var id: String { recordId ?? filename }
 
     private enum CodingKeys: String, CodingKey {
+        case recordId = "id"
         case filename
         case transactions
     }
 
-    init(filename: String, transactions: [Transaction]) {
+    init(recordId: String? = nil, filename: String, transactions: [Transaction]) {
+        self.recordId = recordId
         self.filename = filename
         self.transactions = transactions
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        recordId = try container.decodeIfPresent(String.self, forKey: .recordId)
         filename = try container.decodeIfPresent(String.self, forKey: .filename) ?? "Statement"
         transactions = try container.decodeIfPresent([Transaction].self, forKey: .transactions) ?? []
     }
