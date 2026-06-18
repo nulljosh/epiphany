@@ -226,10 +226,13 @@ struct SettingsView: View {
                 ZStack {
                     if let data = appState.avatarImageData,
                        let uiImage = UIImage(data: data) {
+                        Circle()
+                            .fill(Palette.appleBlue.opacity(0.12))
+                            .frame(width: 56, height: 56)
                         Image(uiImage: uiImage)
                             .resizable()
-                            .scaledToFill()
-                            .frame(width: 56, height: 56)
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
                             .clipShape(Circle())
                     } else {
                         Circle()

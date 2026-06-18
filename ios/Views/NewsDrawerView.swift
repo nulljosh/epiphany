@@ -6,29 +6,37 @@ struct NewsDrawerView: View {
     var brief: DailyBrief? = nil
     @State private var selectedNewsURL: URL?
 
+    private var sourceCount: Int {
+        Set(articles.map(\.source)).count
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Market News")
-                        .font(.headline.weight(.semibold))
-                    if let peek = brief?.summary ?? articles.first?.title {
-                        Text(peek)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
+            Capsule()
+                .fill(.secondary.opacity(0.4))
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Business News")
+                    .font(.title3.weight(.bold))
+                if sourceCount > 0 {
+                    Text("From \(sourceCount) source\(sourceCount == 1 ? "" : "s")")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-                Spacer()
-                Image(systemName: "chevron.up")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
             }
-            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.bottom, 12)
+
+            Divider()
+                .padding(.horizontal)
 
             if isLoading {
                 ProgressView()
-            } else if articles.isEmpty && brief == nil {
+            } else if articles.isEmpty {
                 ContentUnavailableView(
                     "No News",
                     systemImage: "newspaper",
@@ -36,17 +44,6 @@ struct NewsDrawerView: View {
                 )
             } else {
                 List {
-                    if let brief, let summary = brief.summary, !summary.isEmpty {
-                        Section("Daily Brief") {
-                            Text(summary)
-                                .font(.body)
-                                .listRowBackground(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(.ultraThinMaterial)
-                                        .padding(2)
-                                )
-                        }
-                    }
                     ForEach(articles.prefix(20)) { article in
                         Button {
                             guard let url = URL(string: article.url) else { return }

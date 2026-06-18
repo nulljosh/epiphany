@@ -44,7 +44,21 @@ export default async function handler(req, res) {
       if (kv) await kv.set(secretKey, { userSecret: reg.userSecret });
     }
 
-    const accounts = await adapter.listAccounts();
+    let accounts;
+    try {
+      accounts = await adapter.listAccounts();
+    } catch (err) {
+      // Stale userSecret (e.g. issued under a different SnapTrade env/key) --
+      // re-register once instead of surfacing a hard 401/1083 to the user.
+      if (cached?.userSecret && /1083|invalid userid|usersecret/i.test(err.message)) {
+        if (kv) await kv.del(secretKey);
+        const reg = await adapter.registerUser(session.userId);
+        if (kv) await kv.set(secretKey, { userSecret: reg.userSecret });
+        accounts = await adapter.listAccounts();
+      } else {
+        throw err;
+      }
+    }
     if (!accounts || accounts.length === 0) {
       const broker = typeof req.body?.broker === 'string' ? req.body.broker.toUpperCase() : null;
       const linkUrl = await adapter.loginLink(broker);

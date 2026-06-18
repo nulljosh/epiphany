@@ -27,11 +27,11 @@ export default async function handler(req, res) {
     const sanitized = settings ? {
       enabled: settings.enabled,
       mode: settings.mode,
-      maxNotional: settings.maxNotional,
+      maxNotional: settings.maxNotional ?? 1,
       allocation: settings.allocation ?? 10,
       allowCrypto: settings.allowCrypto ?? false,
       allowOvernight: settings.allowOvernight ?? false,
-    } : { enabled: false, mode: 'paper', maxNotional: 500, allocation: 10, allowCrypto: false, allowOvernight: false };
+    } : { enabled: false, mode: 'paper', maxNotional: 1, allocation: 10, allowCrypto: false, allowOvernight: false };
     return res.status(200).json({
       ok: true,
       pro,
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   const settings = {
     enabled: Boolean(enabled),
     mode: 'paper', // live execution disabled for now
-    maxNotional: Number.isFinite(cap) && cap > 0 ? Math.min(cap, MAX_NOTIONAL_CAP) : 500,
+    maxNotional: Number.isFinite(cap) && cap > 0 ? Math.min(cap, MAX_NOTIONAL_CAP) : 1,
     allocation: Number.isFinite(alloc) && alloc > 0 && alloc <= 100 ? alloc : 10, // % of portfolio
     allowCrypto: Boolean(allowCrypto),
     allowOvernight: Boolean(allowOvernight),

@@ -224,6 +224,8 @@ struct MarketsView: View {
         .overlay(alignment: .bottom) { if !isSearching { newsDrawerOverlay } }
         .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
         .safeAreaInset(edge: .bottom, spacing: 0) { if isSearching { bottomSearchBar } }
+        .onChange(of: isSearching) { _, active in appState.hideFloatingTabBar = active }
+        .onChange(of: drawerState) { _, state in appState.hideFloatingTabBar = state != .peek }
     }
 
     private var bottomSearchBar: some View {
@@ -289,9 +291,6 @@ struct MarketsView: View {
                 Color.clear
                     .frame(height: 60)
                     .contentShape(Rectangle())
-                    .onTapGesture {
-                        drawerState = drawerState == .peek ? .medium : .peek
-                    }
                     .gesture(
                         DragGesture()
                             .updating($dragTranslation) { value, state, _ in
