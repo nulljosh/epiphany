@@ -20,6 +20,14 @@ const SIGNAL_THRESHOLD = 0.55; // bull prob > 55% = buy, < 45% = sell
 const MOMENTUM_TILT_CAP = 0.08;
 const TRADE_LOG_LIMIT = 100;
 
+// Live mode is in a "get the ball rolling" probe phase: BTC only (cheap,
+// fractional-qty friendly, low blast radius), and hard-capped at a handful
+// of fills total -- once hit, auto-flips the user back to paper instead of
+// trading unsupervised forever. Raise/replace once live execution is trusted.
+const LIVE_PROBE_ORDER_SYMBOL = 'BTC';
+const LIVE_PROBE_PRICE_SYMBOL = 'BTC-USD'; // Yahoo ticker for the price/signal series
+const LIVE_PROBE_TRADE_CAP = 3;
+
 // GBM Monte Carlo — 500 paths, 30-day horizon, params estimated per symbol.
 function monteCarlo(price, mu, sigma, paths = 500, days = 30) {
   let bull = 0;
@@ -99,12 +107,16 @@ async function runLive(kv, userId, signals, maxNotional) {
   for (const sig of signals) {
     const ts = new Date().toISOString();
     try {
-      let qty = Math.floor(maxNotional / sig.price);
+      const isCrypto = sig.symbol === LIVE_PROBE_ORDER_SYMBOL;
+      // Crypto trades fractionally; equities are whole shares.
+      let qty = isCrypto
+        ? Number((maxNotional / sig.price).toFixed(8))
+        : Math.floor(maxNotional / sig.price);
       if (sig.signal === 'sell') {
         const held = holdings.filter((h) => h.symbol === sig.symbol).reduce((s, h) => s + h.shares, 0);
-        qty = Math.min(qty, Math.floor(held));
+        qty = isCrypto ? Math.min(qty, held) : Math.min(qty, Math.floor(held));
       }
-      if (qty < 1) continue;
+      if (qty <= 0 || (!isCrypto && qty < 1)) continue;
       const order = await adapter.placeOrder({ accountId, symbol: sig.symbol, side: sig.signal, qty });
       trades.push({
         ts, symbol: sig.symbol, side: sig.signal, qty, price: sig.price, mode: 'live',
@@ -128,6 +140,13 @@ async function runLive(kv, userId, signals, maxNotional) {
   return trades;
 }
 
+async function getLiveProbeSignal() {
+  const data = await getDailyCloses(LIVE_PROBE_PRICE_SYMBOL);
+  if (!data) return null;
+  const sig = buildSignal(data.closes, data.price);
+  return { symbol: LIVE_PROBE_ORDER_SYMBOL, price: data.price, ...sig };
+}
+
 async function executeForUser(kv, userId, signals) {
   const ap = await kv.get(`autopilot:${userId}`);
   if (!ap?.enabled) return { userId, skipped: 'disabled' };
@@ -135,10 +154,27 @@ async function executeForUser(kv, userId, signals) {
 
   const cap = Number(ap.maxNotional);
   const maxNotional = Number.isFinite(cap) && cap > 0 ? cap : 500;
-  const trades = ap.mode === 'live'
-    ? await runLive(kv, userId, signals, maxNotional)
-    : await runPaper(kv, userId, signals, maxNotional);
-  return { userId, mode: ap.mode, trades };
+
+  if (ap.mode !== 'live') {
+    const trades = await runPaper(kv, userId, signals, maxNotional);
+    return { userId, mode: ap.mode, trades };
+  }
+
+  // Live probe phase: BTC only, hard-capped trade count, auto-reverts to paper.
+  const countKey = `autopilot:liveCount:${userId}`;
+  const liveCount = Number((await kv.get(countKey)) || 0);
+  if (liveCount >= LIVE_PROBE_TRADE_CAP) {
+    await kv.set(`autopilot:${userId}`, { ...ap, mode: 'paper' });
+    return { userId, mode: 'live', skipped: `live probe cap (${LIVE_PROBE_TRADE_CAP}) reached -- reverted to paper` };
+  }
+
+  const btcSignal = await getLiveProbeSignal();
+  if (!btcSignal?.signal) return { userId, mode: 'live', skipped: 'no actionable BTC signal' };
+
+  const trades = await runLive(kv, userId, [btcSignal], maxNotional);
+  const filled = trades.filter((t) => !t.error).length;
+  if (filled > 0) await kv.set(countKey, liveCount + filled);
+  return { userId, mode: 'live', trades, liveCount: liveCount + filled };
 }
 
 function marketOpenNow() {
