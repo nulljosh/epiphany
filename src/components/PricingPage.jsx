@@ -196,7 +196,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
           {[
             { key: 'free', name: 'Free', price: '$0', period: 'forever', plan: null, features: ['Map + all data layers', 'Situation monitor (read)', 'Stock data + ticker', 'Weather/quakes/traffic'] },
-            { key: 'starter', name: 'Premium', price: '$1', period: 'per week', plan: 'starter', label: 'Get Premium -- $1/wk', recommended: true, features: ['Everything in Free', 'Portfolio + watchlist', 'Ontology writes + batch', 'Deep news + crime data', 'Situation monitor'] },
+            { key: 'starter', name: 'Premium', price: '$9.99', period: 'per month', plan: 'starter', label: 'Get Premium -- $9.99/mo', recommended: true, features: ['Everything in Free', 'Portfolio + watchlist', 'Ontology writes + batch', 'Deep news + crime data', 'Situation monitor'] },
           ].map(tier => (
             <div key={tier.key} style={{
               ...glassCard,
