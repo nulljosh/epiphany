@@ -454,7 +454,7 @@ export default function LandingPage({ onRegister, onLogin }) {
           <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Every screen</div>
           <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Built for daily use.</h2>
         </div>
-        <div className="lp-screens-gallery lp-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '2rem' }}>
+        <div className="lp-screens-gallery lp-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '2rem', maxWidth: '560px', margin: '2rem auto 0' }}>
           <div style={{ borderRadius: '1rem', overflow: 'hidden', background: '#0a0e15', aspectRatio: '9/20' }}>
             <img src="/screenshots/screenshot-markets-new.png" alt="Markets ticker" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
