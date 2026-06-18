@@ -13,24 +13,28 @@ struct ContentView: View {
                     Image(systemName: "map")
                 }
                 .tag(0)
+                .toolbar(.hidden, for: .tabBar)
 
             MarketsView()
                 .tabItem {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                 }
                 .tag(1)
+                .toolbar(.hidden, for: .tabBar)
 
             PortfolioView()
                 .tabItem {
                     Image(systemName: "briefcase")
                 }
                 .tag(2)
+                .toolbar(.hidden, for: .tabBar)
 
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape")
                 }
                 .tag(3)
+                .toolbar(.hidden, for: .tabBar)
         }
         .toolbar(.hidden, for: .tabBar)
         .onChange(of: selectedTab) { _, _ in
@@ -38,8 +42,10 @@ struct ContentView: View {
         }
         .tint(Palette.appleBlue)
         .overlay(alignment: .bottom) {
-            FloatingTabBar(selectedTab: $selectedTab)
-                .padding(.bottom, 8)
+            if !appState.hideFloatingTabBar {
+                FloatingTabBar(selectedTab: $selectedTab)
+                    .padding(.bottom, 8)
+            }
         }
         .overlay(alignment: .top) {
             if let error = appState.error, !error.isEmpty {
@@ -88,7 +94,7 @@ private struct FloatingTabBar: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 10)
-        .frame(maxWidth: 260)
+        .frame(maxWidth: 300)
         .background(.regularMaterial, in: Capsule())
         .overlay(Capsule().stroke(Palette.overlay.opacity(0.08), lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
@@ -100,9 +106,9 @@ private struct FloatingTabBar: View {
             Haptics.selection()
         } label: {
             Image(systemName: icons[index])
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 20, weight: .medium))
                 .foregroundStyle(selectedTab == index ? Palette.text : Palette.textSecondary)
-                .frame(width: 44, height: 36)
+                .frame(width: 50, height: 40)
                 .background {
                     if selectedTab == index {
                         Capsule().fill(Palette.overlay.opacity(0.08))

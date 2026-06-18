@@ -9,6 +9,7 @@ final class AppState {
     var user: User?
     var isLoggedIn: Bool { user != nil }
     var showLogin = false
+    var hideFloatingTabBar = false
     var stocks: [Stock] = []
     var portfolio: Portfolio?
     var watchlist: [WatchlistItem] = []

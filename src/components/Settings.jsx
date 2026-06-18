@@ -254,7 +254,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div onClick={handleGenerateAvatar} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: t.glass, border: `2px solid ${t.border}`, cursor: avatarUploading ? 'wait' : 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: avatarUploading ? 0.6 : 1 }} title="Click to generate new avatar">
-                {avatarUrl && !imgError ? <img key={avatarVersion} src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setImgError(true)} /> : null}
+                {avatarUrl && !imgError ? <img key={avatarVersion} src={avatarUrl} alt="Profile" style={{ width: '78%', height: '78%', objectFit: 'contain' }} onError={() => setImgError(true)} /> : null}
                 {(!avatarUrl || imgError) ? <span style={{ fontSize: 20, color: t.textTertiary }}>{(user.name || user.email)?.[0]?.toUpperCase() || '?'}</span> : null}
               </div>
               <div>
