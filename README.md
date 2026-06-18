@@ -41,6 +41,17 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
 - **PWA** — offline service worker
 - **Native** — iOS, macOS, watchOS companions
 
+## Weekend Roadmap
+
+- [ ] Watch first live Autopilot BTC probe fill (capped at 3 fractional trades, auto-reverts to paper)
+- [ ] Per-stock news drawer on `StockDetailView` (same drag pattern as Markets, scoped to that stock's news)
+- [ ] News-not-loading investigation (`fetchNews()` / backend news endpoint)
+- [ ] Statement upload UI bug — button doesn't persist the file (manual KV workaround used once, root cause still open)
+- [ ] Mom/dad debt amounts — update to $300/$350/$200 in Budget editor
+- [ ] App Store submission checklist (screenshots, privacy questionnaire, demo account, build green)
+
+See [ROADMAP.md](ROADMAP.md) for the full backlog.
+
 ## Setup
 
 See [CLAUDE.md](CLAUDE.md) for dev, test, and build commands.
