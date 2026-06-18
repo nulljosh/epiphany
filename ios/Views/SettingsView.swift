@@ -227,7 +227,7 @@ struct SettingsView: View {
                     if let data = appState.avatarImageData,
                        let uiImage = UIImage(data: data) {
                         Circle()
-                            .fill(Palette.appleBlue.opacity(0.12))
+                            .fill(Palette.overlay.opacity(0.08))
                             .frame(width: 56, height: 56)
                         Image(uiImage: uiImage)
                             .resizable()
