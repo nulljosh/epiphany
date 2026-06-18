@@ -1,0 +1,20 @@
+{
+  "pkg": "epiphany",
+  "globalName": "Epiphany",
+  "projectId": "18528671-87df-4b12-a65c-e0a243991bd1",
+  "shape": "package",
+  "componentSrcMap": {
+    "BlinkingDot": "src/components/ui.jsx",
+    "StatusBar": "src/components/ui.jsx",
+    "MobileMenu": "src/components/ui.jsx",
+    "MobileMenuItem": "src/components/ui.jsx",
+    "MobileMenuDivider": "src/components/ui.jsx",
+    "Card": "src/components/ui.jsx",
+    "SparklineChart": "src/components/SparklineChart.jsx",
+    "Ticker": "src/components/Ticker.jsx",
+    "NewsWidget": "src/components/NewsWidget.jsx",
+    "WeatherWidget": "src/components/WeatherWidget.jsx"
+  },
+  "cssEntry": "src/design-tokens.css",
+  "readmeHeader": ".design-sync/conventions.md"
+}
