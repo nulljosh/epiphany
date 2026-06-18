@@ -225,7 +225,6 @@ struct MarketsView: View {
         .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
         .safeAreaInset(edge: .bottom, spacing: 0) { if isSearching { bottomSearchBar } }
         .onChange(of: isSearching) { _, active in appState.hideFloatingTabBar = active }
-        .onChange(of: drawerState) { _, state in appState.hideFloatingTabBar = state != .peek }
     }
 
     private var bottomSearchBar: some View {
@@ -287,6 +286,7 @@ struct MarketsView: View {
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .shadow(radius: 8, y: -2)
+            .padding(.bottom, 80)
             .overlay(alignment: .top) {
                 Color.clear
                     .frame(height: 60)
