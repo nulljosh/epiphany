@@ -62,10 +62,16 @@ struct StockRow: View {
                 }
             }
 
-            Text(stock.symbol.uppercased())
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Palette.text)
-                .frame(minWidth: 50, alignment: .leading)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(stock.symbol.uppercased())
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Palette.text)
+                Text(stock.name)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .frame(minWidth: 50, alignment: .leading)
 
             Spacer()
 
