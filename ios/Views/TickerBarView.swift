@@ -3,11 +3,13 @@ import SwiftUI
 struct TickerBarView: View {
     let appState: AppState
     var onSelectStock: ((Stock) -> Void)? = nil
+    var showSparklines: Bool = false
+    var height: CGFloat = 32
 
     @State private var contentWidth: CGFloat = 0
 
     private let itemSpacing: CGFloat = 18
-    private let scrollSpeed: CGFloat = 30
+    private var scrollSpeed: CGFloat { showSparklines ? 14 : 30 }
 
     var body: some View {
         // Read appState.stocks directly -- the old onAppear/onChange cache
@@ -24,7 +26,10 @@ struct TickerBarView: View {
                             Button {
                                 onSelectStock?(stock)
                             } label: {
-                                TickerItemView(stock: stock)
+                                TickerItemView(
+                                    stock: stock,
+                                    sparklineData: showSparklines ? appState.sparklineCache[stock.symbol] : nil
+                                )
                             }
                             .buttonStyle(.plain)
                         }
@@ -43,7 +48,7 @@ struct TickerBarView: View {
                     }
                     .offset(x: -offset)
                 }
-                .frame(height: 32)
+                .frame(height: height)
                 .clipped()
                 .background(.thinMaterial)
                 .overlay(alignment: .bottom) {
@@ -62,6 +67,7 @@ struct TickerBarView: View {
 
 private struct TickerItemView: View {
     let stock: Stock
+    var sparklineData: [Double]? = nil
 
     private var changeColor: Color {
         stock.change >= 0 ? Palette.successGreen : Palette.dangerRed
@@ -72,6 +78,11 @@ private struct TickerItemView: View {
             Text(stock.symbol)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Palette.text)
+
+            if let data = sparklineData, !data.isEmpty {
+                SparklinePath(data: data, color: changeColor)
+                    .frame(width: 32, height: 16)
+            }
 
             Text(stock.price, format: .currency(code: "USD").precision(.fractionLength(2)))
                 .font(.caption.weight(.semibold).monospacedDigit())

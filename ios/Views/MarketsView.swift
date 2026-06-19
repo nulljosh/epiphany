@@ -164,14 +164,39 @@ struct MarketsView: View {
             }
 
             if !isSearching {
-                Button {
-                    isSearching = true
-                    searchFieldFocused = true
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.headline)
-                        .foregroundStyle(Palette.appleBlue)
-                        .padding(12)
+                HStack(spacing: 4) {
+                    Menu {
+                        Picker("Asset Type", selection: $marketFilter) {
+                            ForEach(MarketFilter.allCases) { filter in
+                                Text(filter.label).tag(filter)
+                            }
+                        }
+                        Picker("Sort By", selection: $sortField) {
+                            ForEach(MarketSortField.allCases) { field in
+                                Text(field.label).tag(field)
+                            }
+                        }
+                        Button {
+                            sortAscending.toggle()
+                        } label: {
+                            Label(sortAscending ? "Ascending" : "Descending", systemImage: sortAscending ? "arrow.up" : "arrow.down")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.headline)
+                            .foregroundStyle(Palette.appleBlue)
+                            .padding(12)
+                    }
+
+                    Button {
+                        isSearching = true
+                        searchFieldFocused = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.headline)
+                            .foregroundStyle(Palette.appleBlue)
+                            .padding(12)
+                    }
                 }
             }
         }
@@ -279,8 +304,13 @@ struct MarketsView: View {
             let target = drawerState.height(in: geo.size.height) - dragTranslation
             let height = min(max(64, target), geo.size.height - 80)
             VStack(spacing: 0) {
+                if drawerState == .large {
+                    TickerBarView(appState: appState, onSelectStock: { tickerSelectedStock = $0 }, showSparklines: true, height: 36)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
                 NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, brief: appState.dailyBrief)
             }
+            .animation(.easeInOut(duration: 0.25), value: drawerState)
             .frame(maxWidth: .infinity)
             .frame(height: height, alignment: .top)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -361,55 +391,6 @@ struct MarketsView: View {
                 )
             }
 
-            Section("Sort & Filter") {
-                VStack(spacing: 12) {
-                    HStack {
-                        Text("Asset Type")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Picker("Asset Type", selection: $marketFilter) {
-                            ForEach(MarketFilter.allCases) { filter in
-                                Text(filter.label).tag(filter)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                    }
-
-                    HStack {
-                        Text("Sort By")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Picker("Sort", selection: $sortField) {
-                            ForEach(MarketSortField.allCases) { field in
-                                Text(field.label).tag(field)
-                            }
-                        }
-                        .pickerStyle(.menu)
-
-                        Button {
-                            sortAscending.toggle()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: sortAscending ? "arrow.up" : "arrow.down")
-                                    .font(.caption.weight(.semibold))
-                                Text(sortAscending ? "ASC" : "DESC")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .textCase(.uppercase)
-                            }
-                        }
-                        .buttonStyle(BounceButtonStyle())
-                        .foregroundStyle(Palette.appleBlue)
-                    }
-                }
-            }
-            .listRowBackground(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.ultraThinMaterial)
-                    .padding(2)
-            )
-
             ForEach(filteredItems) { item in
                 switch item.kind {
                 case .stock(let stock):
@@ -418,11 +399,8 @@ struct MarketsView: View {
                     commodityCryptoRow(item)
                 }
             }
-            .listRowBackground(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.ultraThinMaterial)
-                    .padding(2)
-            )
+            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+            .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
         .refreshable {
