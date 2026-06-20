@@ -32,6 +32,7 @@ targets:
           - "plan.md"
           - "scripts"
           - "screenshots"
+          - "fastlane"
           - "Resources"
           - "*.profraw"
           - "*.xcworkspace"
