@@ -137,6 +137,8 @@ async function fetchAdsbLol(bbox) {
     onGround: a.alt_baro === 'ground',
     velocity: a.gs != null ? Math.round(a.gs) : null,
     heading:  a.track != null ? Math.round(a.track) : null,
+    registration: a.r ?? null,
+    aircraftType: a.t ?? null,
     vertRate: a.baro_rate ?? null,
   })).filter((f) =>
     f.lat != null && f.lon != null &&

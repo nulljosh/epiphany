@@ -774,12 +774,13 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         if (fl.heading != null) el.style.transform = `rotate(${fl.heading}deg)`;
         const hoverTitle = `${cs || fl.icao24 || 'Aircraft'} | ${fl.altitude ? fl.altitude + 'ft' : '?ft'} | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`;
         el.title = hoverTitle;
+        const aircraftDetail = [fl.aircraftType, fl.registration].filter(Boolean).join(' · ');
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           if (activePopupRef?.current) activePopupRef.current.remove();
           const popup = new maplibreRef.current.Popup({ offset: 14, closeButton: true, maxWidth: '320px', className: 'epiphany-map-popup' })
             .setLngLat([fl.lon, fl.lat])
-            .setHTML(buildPopupHTML({ type: 'flight', title: cs || fl.icao24 || 'Aircraft', detail: `Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`, level: 'monitor', source: 'OpenSky Network', link: trackLink }))
+            .setHTML(buildPopupHTML({ type: 'flight', title: cs || fl.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`, level: 'monitor', source: 'OpenSky Network', link: trackLink }))
             .addTo(mapInstanceRef.current);
           activePopupRef.current = popup;
         });

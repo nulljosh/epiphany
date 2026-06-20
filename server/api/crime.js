@@ -163,44 +163,12 @@ async function fetchPortland(lat, lon) {
   return [];
 }
 
-async function fetchVancouverCrime(lat, lon) {
-  const data = await fetchWithTimeout(
-    `https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/crime/records?limit=50&order_by=year desc,month desc&where=neighbourhood is not null`
-  );
-  const records = data?.results || [];
-  return records.filter(i => i.geom?.geometry?.coordinates).map(i => {
-    const [lng, recLat] = i.geom.geometry.coordinates;
-    return {
-      lat: recLat, lng, type: 'crime',
-      category: i.type || 'Unknown',
-      title: i.type || 'Crime incident',
-      severity: categorySeverity(i.type),
-      timestamp: i.year && i.month ? `${i.year}-${String(i.month).padStart(2, '0')}-01` : new Date().toISOString(),
-      source: 'vancouver_opendata',
-    };
-  });
-}
-
-async function fetchSurreyCrime(lat, lon) {
-  const data = await fetchWithTimeout(
-    `https://data.surrey.ca/api/3/action/datastore_search?resource_id=24cf498a-d041-4e92-9032-7d3eb2bb5ed7&limit=50`
-  );
-  const records = data?.result?.records || [];
-  return records.filter(i => i.Latitude && i.Longitude).map(i => ({
-    lat: parseFloat(i.Latitude), lng: parseFloat(i.Longitude), type: 'crime',
-    category: i['Crime Type'] || i.crime_type || 'Unknown',
-    title: i['Crime Type'] || i.crime_type || 'Crime incident',
-    severity: categorySeverity(i['Crime Type'] || i.crime_type),
-    timestamp: i.Date || i.date || new Date().toISOString(),
-    source: 'surrey_opendata',
-  }));
-}
-
-// Canadian open data portals -- only query if user is within 50km
-const CA_PORTALS = [
-  { name: 'vancouver_opendata', lat: 49.2827, lon: -123.1207, fetch: fetchVancouverCrime },
-  { name: 'surrey_opendata', lat: 49.1913, lon: -122.8490, fetch: fetchSurreyCrime },
-];
+// Vancouver's `crime` dataset and Surrey's CKAN datastore API have both been
+// retired (verified 2026-06-19: Vancouver no longer lists the dataset, Surrey's
+// endpoint 301s to an HTML portal). No replacement structured feed exists for
+// Metro Vancouver, so Canadian coverage (including Langley) relies entirely on
+// fetchNewsBasedCrime below.
+const CA_PORTALS = [];
 
 // Worldwide crime data via geocoded local news search -- works for any location
 async function fetchNewsBasedCrime(lat, lon) {
@@ -251,7 +219,11 @@ async function reverseGeocode(lat, lon) {
 // News RSS fallback: search Google News for local crime reports, localized to the user's country
 async function fetchCrimeNews(lat, lon, cityName, countryCode = 'US') {
   const incidents = [];
-  const query = encodeURIComponent(`"${cityName}" crime OR theft OR assault OR robbery`);
+  // Qualify the place name with its region/country in the query so small or
+  // ambiguous towns (e.g. "Langley" -- also exists in WA and the UK) actually
+  // surface results instead of being drowned out by name collisions.
+  const regionHint = countryCode === 'CA' ? 'BC OR Canada' : '';
+  const query = encodeURIComponent(`"${cityName}" ${regionHint} crime OR theft OR assault OR robbery`.trim());
   const cityLower = cityName.toLowerCase();
 
   try {
@@ -261,7 +233,7 @@ async function fetchCrimeNews(lat, lon, cityName, countryCode = 'US') {
 
     // Parse RSS items (simple regex extraction)
     const items = rss.match(/<item>[\s\S]*?<\/item>/g) || [];
-    for (const item of items.slice(0, 15)) {
+    for (const item of items.slice(0, 25)) {
       const titleMatch = item.match(/<title><!\[CDATA\[(.*?)\]\]>/);
       const dateMatch = item.match(/<pubDate>(.*?)<\/pubDate>/);
       const title = titleMatch ? titleMatch[1] : null;
@@ -271,8 +243,10 @@ async function fetchCrimeNews(lat, lon, cityName, countryCode = 'US') {
 
       // Relevance: article must actually mention the searched place --
       // prevents unrelated national news (e.g. a story from the other
-      // side of the country) from appearing as a local crime pin.
-      if (!lower.includes(cityLower)) continue;
+      // side of the country) from appearing as a local crime pin. Match on
+      // a word boundary so "Langley" doesn't also accept "Langley Park".
+      const cityRegex = new RegExp(`\\b${cityLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+      if (!cityRegex.test(lower)) continue;
 
       // Filter for crime-related articles
       const isCrime = ['crime', 'theft', 'assault', 'robbery', 'stabbing', 'shooting',
