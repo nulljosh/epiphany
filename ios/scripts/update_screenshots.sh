@@ -16,7 +16,7 @@ echo "==> Running fastlane snapshot"
 fastlane snapshot
 
 DEVICE="iPhone 17 Pro"
-SHOTS=("1-situation" "2-markets" "4-portfolio" "5-settings")
+SHOTS=("1-situation" "2-markets" "3-stock-detail" "4-portfolio" "5-settings")
 
 echo "==> Copying screenshots into screenshots/appstore"
 for shot in "${SHOTS[@]}"; do
@@ -39,8 +39,7 @@ echo "==> Committing"
 git commit -m "$(cat <<'EOF'
 Update Epiphany iOS App Store screenshots
 
-Regenerated via fastlane snapshot (3-stock-detail not automated yet -- requires
-drilling into a stock row, left as a manual/stale shot for now).
+Regenerated via fastlane snapshot, including 3-stock-detail.
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF

@@ -7,7 +7,7 @@ final class PreviewScreenshot: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testCaptureAppStoreScreenshots() throws {
+    private func launchAuthenticated() -> XCUIApplication {
         let app = XCUIApplication()
         setupSnapshot(app)
         app.launchArguments.append("UITEST_SNAPSHOT")
@@ -19,29 +19,54 @@ final class PreviewScreenshot: XCTestCase {
 
         // Wait for UI to settle: location fix arrives, map re-centers, tiles fetch.
         sleep(10)
-        snapshot("1-situation")
 
-        // Auto-login (if SNAPSHOT_EMAIL/PASSWORD were set) can take a few seconds;
-        // wait for the Portfolio "Sign In" placeholder to disappear before screenshotting
-        // the authenticated tabs, instead of guessing a fixed delay.
+        // Auto-login can take a few seconds; wait for the Portfolio "Sign In"
+        // placeholder to disappear before screenshotting authenticated tabs.
         let signInButton = app.buttons["Sign In"]
         for _ in 0..<20 {
             if !signInButton.exists { break }
             sleep(1)
         }
+        return app
+    }
 
-        let tabs = [
-            ("tab-markets", "2-markets"),
-            ("tab-portfolio", "4-portfolio"),
-            ("tab-settings", "5-settings"),
-        ]
-        for (identifier, name) in tabs {
-            let button = app.buttons[identifier]
-            if button.waitForExistence(timeout: 5) {
-                button.tap()
+    func testCaptureAppStoreScreenshots() throws {
+        // Run 1: Situation, Markets, and a fresh tap into stock detail.
+        // (Kept in one launch since the map needs its 10s location settle time once.)
+        var app = launchAuthenticated()
+        snapshot("1-situation")
+
+        if app.buttons["tab-markets"].waitForExistence(timeout: 5) {
+            app.buttons["tab-markets"].tap()
+            sleep(2)
+            snapshot("2-markets")
+
+            let row = app.buttons["market-stock-row"].firstMatch
+            if row.waitForExistence(timeout: 5) {
+                row.tap()
                 sleep(2)
-                snapshot(name)
+                snapshot("3-stock-detail")
             }
+        }
+        app.terminate()
+
+        // Run 2: fresh launch straight to Portfolio -- avoids needing to dismiss
+        // the stock-detail sheet (no close button, drag-to-dismiss proved flaky
+        // in CI and produced duplicate screenshots instead of advancing tabs).
+        app = launchAuthenticated()
+        if app.buttons["tab-portfolio"].waitForExistence(timeout: 5) {
+            app.buttons["tab-portfolio"].tap()
+            sleep(2)
+            snapshot("4-portfolio")
+        }
+        app.terminate()
+
+        // Run 3: fresh launch straight to Settings.
+        app = launchAuthenticated()
+        if app.buttons["tab-settings"].waitForExistence(timeout: 5) {
+            app.buttons["tab-settings"].tap()
+            sleep(2)
+            snapshot("5-settings")
         }
     }
 }

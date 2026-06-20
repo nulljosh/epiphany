@@ -435,6 +435,7 @@ struct MarketsView: View {
             )
         }
         .buttonStyle(BounceButtonStyle())
+        .accessibilityIdentifier("market-stock-row")
     }
 
     private func commodityCryptoRow(_ item: MarketItem) -> some View {
