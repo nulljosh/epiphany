@@ -208,7 +208,39 @@ async function fetchOSMVenues(lat, lon) {
       });
     }
   } catch { /* OSM venues unavailable */ }
+
+  // OSM doesn't carry photos; backfill from Wikipedia when a venue has a
+  // same-named article (common for museums, theatres, parks) so these places
+  // aren't the only ones in the feed without an image.
+  if (events.length) await backfillImagesFromWikipedia(events);
+
   return events;
+}
+
+// Batched exact-title lookup -- only attaches an image when Wikipedia has a
+// page matching the venue name (no fuzzy search, so no risk of mismatched photos).
+async function backfillImagesFromWikipedia(events) {
+  const titles = events.map(e => e.title);
+  try {
+    const data = await fetchWithTimeout(
+      `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles.join('|'))}` +
+      `&prop=pageimages&piprop=thumbnail|original&pithumbsize=480&redirects=1&format=json`
+    );
+    const pages = Object.values(data?.query?.pages || {});
+    const imageByTitle = new Map();
+    for (const page of pages) {
+      const image = page.original?.source || page.thumbnail?.source;
+      if (image) imageByTitle.set(page.title, image);
+    }
+    // `redirects` in the response maps a queried title to the page title it resolved to.
+    for (const r of (data?.query?.redirects || [])) {
+      if (imageByTitle.has(r.to)) imageByTitle.set(r.from, imageByTitle.get(r.to));
+    }
+    for (const event of events) {
+      const image = imageByTitle.get(event.title);
+      if (image) event.image = image;
+    }
+  } catch { /* Wikipedia image backfill unavailable */ }
 }
 
 // News RSS fallback: search for local events in news
@@ -233,11 +265,19 @@ async function fetchEventNews(lat, lon, cityName) {
         'show', 'exhibit', 'celebration', 'fundraiser', 'tournament'].some(k => lower.includes(k));
       if (!isEvent) continue;
 
+      // Google News titles are "Headline - Publication"; split that off so the
+      // publication can show as the venue/source instead of the detail panel
+      // having nothing but a title (the news item carries no other metadata).
+      const splitIdx = title.lastIndexOf(' - ');
+      const headline = splitIdx > 0 ? title.slice(0, splitIdx) : title;
+      const publication = splitIdx > 0 ? title.slice(splitIdx + 3) : null;
+
       events.push({
         lat: lat + (Math.random() - 0.5) * 0.01,
         lng: lon + (Math.random() - 0.5) * 0.01,
         type: 'local-event', kind: 'event', category: 'community',
-        title: title.length > 80 ? title.slice(0, 77) + '...' : title,
+        title: headline.length > 80 ? headline.slice(0, 77) + '...' : headline,
+        venue: publication,
         severity: 'low',
         timestamp: dateMatch ? new Date(dateMatch[1]).toISOString() : new Date().toISOString(),
         source: 'news_rss',
