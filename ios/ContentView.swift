@@ -55,7 +55,14 @@ struct ContentView: View {
                 .padding(.top, 8)
             }
         }
-        .task { await preloadMarketData() }
+        .task {
+            if CommandLine.arguments.contains("UITEST_SNAPSHOT"),
+               let email = ProcessInfo.processInfo.environment["SNAPSHOT_EMAIL"],
+               let password = ProcessInfo.processInfo.environment["SNAPSHOT_PASSWORD"] {
+                await appState.login(email: email, password: password)
+            }
+            await preloadMarketData()
+        }
         .sheet(isPresented: $appState.showLogin) {
             LoginSheet()
                 .environment(appState)
@@ -85,6 +92,7 @@ private struct FloatingTabBar: View {
     @Binding var selectedTab: Int
 
     private let icons = ["map", "chart.line.uptrend.xyaxis", "briefcase", "gearshape"]
+    private let identifiers = ["tab-situation", "tab-markets", "tab-portfolio", "tab-settings"]
 
     var body: some View {
         HStack(spacing: 0) {
@@ -116,6 +124,7 @@ private struct FloatingTabBar: View {
                 }
         }
         .frame(maxWidth: .infinity)
+        .accessibilityIdentifier(identifiers[index])
     }
 }
 
