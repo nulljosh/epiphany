@@ -63,6 +63,9 @@ See [CLAUDE.md](CLAUDE.md) for dev, test, and build commands.
 
 Deploy: Vercel (`npx vercel --prod`)
 
+## Known issues / next session
+- macOS + watchOS screenshot automation confirmed working (fastlane `mac_screenshots` lane, real app UI captured).
+
 ## License
 
 MIT 2026, Joshua Trommel
