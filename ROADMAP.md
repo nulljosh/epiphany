@@ -8,6 +8,7 @@ Last updated: 2026-06-13
 
 ## Open
 
+- Add `og:title`/`og:description`/`og:image` meta tags to `index.html` — currently zero OG tags, so shared links (iMessage/Slack/etc.) show no preview card. Confirmed still missing 2026-06-20; the rest of a June design-review note's "splash page is blank" claim is stale (`LandingPage.jsx` already ships a full hero/feature/screenshot/CTA landing for unauthenticated visitors, see CLAUDE.md).
 - Stocks list redesign like iOS Stocks: inline sparkline + ticker symbol in
   list — investigated 2026-06-13: needs a backend change (bulk stocks endpoint
   must return a price-history series per symbol for the sparkline), too large
