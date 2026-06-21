@@ -118,7 +118,7 @@ export default function SituationMonitor({
 
   const {
     activeCenter,
-    worldCities, userLocation,
+    worldCities, userLocation, selectedCity,
     flights, traffic, flightsLoading, trafficLoading, flightsError, trafficError,
     incidents, earthquakes, events, weatherAlerts, macro, crimeIncidents, dispatchCalls,
   } = useSituation();
@@ -248,7 +248,12 @@ export default function SituationMonitor({
   }, [earthquakes, events, trades, weatherAlerts]);
 
   useEffect(() => {
-    if (!initialFlyDone.current && mapFlyTo && activeCenter) {
+    // Don't lock in the fly-to on the synthetic NYC default (activeCenter
+    // falls back to WORLD_CITIES[0] before real geo resolves) -- wait for
+    // a selected city or a real userLocation, otherwise the map flies to
+    // NYC once and initialFlyDone latches true, stranding it there even
+    // after the real location loads a moment later.
+    if (!initialFlyDone.current && mapFlyTo && activeCenter && (selectedCity || userLocation)) {
       mapFlyTo({
         center: [activeCenter.lon, activeCenter.lat],
         zoom: 10,
@@ -256,7 +261,7 @@ export default function SituationMonitor({
       });
       initialFlyDone.current = true;
     }
-  }, [activeCenter, mapFlyTo]);
+  }, [activeCenter, mapFlyTo, selectedCity, userLocation]);
 
   return (
     <Card dark={dark} t={t} style={{ padding: '16px 20px' }}>
