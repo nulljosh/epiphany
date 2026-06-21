@@ -13,15 +13,16 @@ Last updated: 2026-06-13
   animations, cross-platform (web + iOS/macOS/watchOS). Not started — needs a
   design pass on which events specifically get an enter/loading animation
   before touching `LiveMapBackdrop.jsx`.
-- **"Map too zoomed out, renders no sources" — checked 2026-06-21, root cause still unconfirmed.**
-  `LiveMapBackdrop.jsx` has no `minzoom`/`maxzoom` layer constraint, and
-  `decimateByZoom` (line ~551) never returns an empty array for non-empty
-  input (worst case is 25% at zoom<10, not 0%). So the complaint isn't a
-  simple culling-threshold bug. Likely candidates not yet checked: the
-  data-fetch bbox/radius calculation at low zoom, or a screenshot-timing
-  artifact (captured before async data loaded). Needs an actual repro
-  (reload at a specific low zoom, check network tab for empty responses
-  vs. a render-layer issue) before a fix is attempted.
+- **"Map too zoomed out, renders no sources" — ROOT CAUSE FOUND 2026-06-21, fix not yet applied.**
+  `LiveMapBackdrop.jsx:442` builds the data-fetch bbox as a **fixed `center ± 1°`**
+  box (~111km) for incidents/traffic/flights/emergency, regardless of current
+  zoom. It's not a culling/decimation bug (`decimateByZoom` is fine). At low
+  zoom the visible map area is much larger than 111km, so almost everything
+  on screen is outside the fetched box and looks empty. Fix: scale the bbox
+  size to current zoom (e.g. derive degrees from the map's actual visible
+  bounds via `map.getBounds()` instead of a hardcoded ±1). Not applied this
+  pass — touches 5 API calls + needs a sanity check on API rate limits for a
+  bigger bbox at low zoom.
 - **Landing page screenshots incomplete** — `LandingPage.jsx` currently only
   shows a map screenshot. Should also show Markets, Portfolio, and Settings
   tabs, plus matching watchOS + macOS screenshots (README parity). Not
@@ -30,7 +31,7 @@ Last updated: 2026-06-13
 - People tab and TradingView MCP integration: see "Decide whether to also
   unhide People" and TradingView widget embedding entries below — both
   already tracked here, no new decision made in this pass.
-- Add `og:title`/`og:description`/`og:image` meta tags to `index.html` — currently zero OG tags, so shared links (iMessage/Slack/etc.) show no preview card. Confirmed still missing 2026-06-20; the rest of a June design-review note's "splash page is blank" claim is stale (`LandingPage.jsx` already ships a full hero/feature/screenshot/CTA landing for unauthenticated visitors, see CLAUDE.md).
+- [x] Add `og:title`/`og:description`/`og:image` meta tags to `index.html` — DONE 2026-06-21 (commit `c355a33`): added og:title/description/image/type/url + twitter:card + a plain `<meta name="description">`, using LandingPage.jsx's hero copy and `screenshot-situation-new.png` as the OG image. The rest of a June design-review note's "splash page is blank" claim is stale (`LandingPage.jsx` already ships a full hero/feature/screenshot/CTA landing for unauthenticated visitors, see CLAUDE.md).
 - Stocks list redesign like iOS Stocks: inline sparkline + ticker symbol in
   list — investigated 2026-06-13: needs a backend change (bulk stocks endpoint
   must return a price-history series per symbol for the sparkline), too large
