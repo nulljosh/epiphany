@@ -18,6 +18,10 @@ const DISPATCH_REFRESH  = 60_000;
 const LAST_GEO_KEY = 'epiphany_last_geo';
 const FRESH_GEO_MS = 30 * 60 * 1000;
 const FRESH_IP_MS = 5 * 60 * 1000;
+// ipapi.co's generic/default response for unresolved IPs lands on NYC --
+// treat coords near there as invalid rather than persisting/centering on them.
+const IP_GEO_JUNK = { lat: 40.7128, lon: -74.0060 };
+const isJunkGeo = (lat, lon) => Math.abs(lat - IP_GEO_JUNK.lat) < 0.01 && Math.abs(lon - IP_GEO_JUNK.lon) < 0.01;
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 function apiPath(path) {
@@ -82,7 +86,7 @@ export function useSituation() {
     }
     fetchWithTimeout('https://ipapi.co/json/')
       .then(data => {
-        if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        if (typeof data.latitude === 'number' && typeof data.longitude === 'number' && !isJunkGeo(data.latitude, data.longitude)) {
           setUserLocation({ lat: data.latitude, lon: data.longitude, city: data.city || 'IP fallback' });
         }
         else setLocationError('Geolocation unavailable');
