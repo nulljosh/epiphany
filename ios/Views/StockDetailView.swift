@@ -190,32 +190,12 @@ struct StockDetailView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
 
-                HStack(spacing: 12) {
-                    Button(action: { tradeSide = "buy"; Haptics.impact(.light); showTradeSheet = true }) {
-                        HStack {
-                            Image(systemName: "arrow.down")
-                            Text("Buy")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.vertical, 10)
-                        .background(.green, in: RoundedRectangle(cornerRadius: 8))
-                    }
-                    Button(action: { tradeSide = "sell"; Haptics.impact(.light); showTradeSheet = true }) {
-                        HStack {
-                            Image(systemName: "arrow.up")
-                            Text("Sell")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.vertical, 10)
-                        .background(.red, in: RoundedRectangle(cornerRadius: 8))
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
+                // Trade temporarily disabled — crashed on tap; web side already disabled pending SnapTrade sync fix
+                Text("Trading is temporarily disabled — coming back soon")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
 
                 Spacer()
             }

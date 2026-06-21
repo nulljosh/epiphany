@@ -889,13 +889,11 @@ const reset = useCallback(() => {
 
       {/* Map cell */}
       <div className="epiphany-map" style={{ gridColumn: isMobileNav ? '1 / -1' : '1', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, background: 'var(--epiphany-bg)' }}>
-        {!isMobileNav && (
-          <LiveMapBackdrop
-            dark={dark}
-            mapLayers={mapLayers}
-            onMapReady={handleMapReady}
-          />
-        )}
+        <LiveMapBackdrop
+          dark={dark}
+          mapLayers={mapLayers}
+          onMapReady={handleMapReady}
+        />
         <MobileLayout
           t={t} dark={dark} isMobileNav={isMobileNav}
           activeTab={activeTab}

@@ -5,6 +5,7 @@ platform :ios do
   lane :screenshots do
     sh("cd .. && xcodegen generate")
     snapshot
+    frameit(white: true)
   end
 
   desc "Build and upload a TestFlight beta"

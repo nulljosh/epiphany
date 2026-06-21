@@ -6,7 +6,7 @@ options:
 settings:
   DEVELOPMENT_TEAM: QMM486NPYC
   SWIFT_VERSION: "6.0"
-  MARKETING_VERSION: 2.2.2
+  MARKETING_VERSION: 2.2.4
   CURRENT_PROJECT_VERSION: "1"
 targets:
   Epiphany:
@@ -21,13 +21,18 @@ targets:
           - ".gitignore"
           - "*.svg"
           - "*.md"
+          - "*.app"
+          - "*.pkg"
           - Tests
           - UITests-mac
+          - fastlane
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       CODE_SIGN_ENTITLEMENTS: Epiphany.entitlements
+      INFOPLIST_KEY_CFBundleDisplayName: Epiphany
+      INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
   EpiphanyTests:
     type: bundle.unit-test
     platform: macOS
