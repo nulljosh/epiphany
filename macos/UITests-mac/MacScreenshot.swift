@@ -15,7 +15,11 @@ final class MacScreenshot: XCTestCase {
         app.launch()
         sleep(8)
 
-        let screenshot = XCUIScreen.main.screenshot()
+        app.activate()
+        sleep(1)
+        let window = app.windows.firstMatch
+        XCTAssertTrue(window.waitForExistence(timeout: 10), "App window never appeared")
+        let screenshot = window.screenshot()
         let dir = NSTemporaryDirectory() + "epiphany-mac-screenshots"
         do {
             try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
