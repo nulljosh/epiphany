@@ -8,6 +8,7 @@ struct ContentView: View {
     enum AppSection: String, CaseIterable, Identifiable {
         case situation = "Situation"
         case markets = "Markets"
+        case people = "People"
         case portfolio = "Portfolio"
         case settings = "Settings"
 
@@ -17,6 +18,7 @@ struct ContentView: View {
             switch self {
             case .situation: return "map"
             case .markets: return "chart.line.uptrend.xyaxis"
+            case .people: return "person.2"
             case .portfolio: return "briefcase"
             case .settings: return "gearshape"
             }
@@ -85,6 +87,8 @@ struct ContentView: View {
             SituationView()
         case .markets:
             MarketsView()
+        case .people:
+            PeopleView()
         case .portfolio:
             PortfolioView()
         case .settings:
@@ -186,8 +190,9 @@ private extension ContentView.AppSection {
         switch self {
         case .situation: return "1"
         case .markets: return "2"
-        case .portfolio: return "3"
-        case .settings: return "4"
+        case .people: return "3"
+        case .portfolio: return "4"
+        case .settings: return "5"
         }
     }
 }
