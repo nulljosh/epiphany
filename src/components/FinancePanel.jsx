@@ -9,7 +9,7 @@ import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
-import TradeWorkflow from './TradeWorkflow';
+// TradeWorkflow import removed — Trade tab disabled until SnapTrade sync math is fixed (phantom holdings, bad net worth).
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -954,35 +954,42 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         if (!group || group.tabs.length < 2) return null;
         return (
           <div style={{ display: 'flex', gap: 4, padding: '0 16px', marginBottom: 16, flexWrap: 'wrap' }}>
-            {group.tabs.map((tabName) => (
-              <button
-                key={tabName}
-                onClick={() => setTab(tabName)}
-                style={{
-                  padding: '4px 12px',
-                  borderRadius: 100,
-                  border: `1px solid ${tab === tabName ? t.textSecondary : t.border}`,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  fontFamily: font,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  background: 'transparent',
-                  color: tab === tabName ? t.text : t.textTertiary,
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {TAB_LABELS[tabName]}
-              </button>
-            ))}
+            {group.tabs.map((tabName) => {
+              const disabled = tabName === 'trade';
+              return (
+                <button
+                  key={tabName}
+                  onClick={() => !disabled && setTab(tabName)}
+                  disabled={disabled}
+                  title={disabled ? 'Trade is temporarily disabled — coming soon' : undefined}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: 100,
+                    border: `1px solid ${tab === tabName ? t.textSecondary : t.border}`,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    fontFamily: font,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap',
+                    background: 'transparent',
+                    color: disabled ? t.border : (tab === tabName ? t.text : t.textTertiary),
+                    opacity: disabled ? 0.6 : 1,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {TAB_LABELS[tabName]}{disabled ? ' · soon' : ''}
+                </button>
+              );
+            })}
           </div>
         );
       })()}
 
       <div style={{ padding: '0 16px 80px', maxWidth: 720, margin: '0 auto' }}>
         {tab === 'trade' && (
-          <TradeWorkflow dark={dark} t={t} holdings={holdings} cashValue={cashValue}
-            accounts={accounts} stocks={stocks} brokerSnapshot={brokerSnapshot} syncBroker={syncBroker} />
+          <Card dark={dark} t={t} style={{ padding: 20, textAlign: 'center', color: t.textTertiary }}>
+            Trade is temporarily disabled while we fix a sync issue with brokerage balances. Coming back soon.
+          </Card>
         )}
         {tab === 'portfolio' && !isEditingPortfolio && (
           <>

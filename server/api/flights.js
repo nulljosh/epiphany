@@ -1,43 +1,20 @@
-// Flights proxy — adsb.lol primary, OpenSky Network fallback
+// Flights proxy — adsb.lol only.
 // Returns live flight states within a bounding box
 // Cache: 60s in-memory keyed by bbox
-// OpenSky blocks both Vercel (AWS) and Cloudflare egress IPs, so it only
-// works from datacenters if that changes; adsb.lol (free, no auth) is the
-// reliable path and goes first to avoid burning 6s on a doomed OpenSky try.
-// (A Cloudflare Worker relay was tried 2026-06-12 and dead-ends the same way:
-// OpenSky is itself behind Cloudflare and its origin drops Worker subrequests
-// with a 522, so there is no CF-based way around the block.)
-
-const OPENSKY_BASE = 'https://opensky-network.org/api';
-const OPENSKY_TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
+// OpenSky (the original fallback) blocks both Vercel (AWS) and Cloudflare
+// egress IPs — confirmed dead end (a Cloudflare Worker relay was tried
+// 2026-06-12 and still 522s, since OpenSky's own origin is behind Cloudflare
+// and drops Worker subrequests). Keeping it as a fallback only added latency:
+// the client's 8s fetch timeout would abort before the OAuth token fetch +
+// states call (up to ~12s) ever returned, surfacing as "Flights temporarily
+// unavailable" even with valid keys. Removed 2026-06-21 — adsb.lol (free,
+// no auth, not datacenter-blocked) is the only source now.
 const MAX_LAT_SPAN = 2.0;
 const MAX_LON_SPAN = 2.0;
 const MIN_ALTITUDE_FT = 500;
 
 const cache = new Map(); // key: bbox string → { data, ts }
 const CACHE_TTL = 60_000; // 60 seconds
-
-let token = null; // { access, exp } — OAuth2 client-credentials, cached in-process
-
-// OpenSky retired Basic auth in 2025; authenticate via OAuth2 client credentials.
-async function getOpenSkyToken() {
-  const id = process.env.OPENSKY_CLIENT_ID;
-  const secret = process.env.OPENSKY_CLIENT_SECRET;
-  if (!id || !secret) return null;
-  if (token && Date.now() < token.exp) return token.access;
-
-  const res = await fetch(OPENSKY_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: secret }),
-    signal: AbortSignal.timeout(6000),
-  });
-  if (!res.ok) throw new Error(`OpenSky token ${res.status}`);
-  const json = await res.json();
-  // Refresh 30s before expiry to avoid edge-of-window 401s.
-  token = { access: json.access_token, exp: Date.now() + (json.expires_in - 30) * 1000 };
-  return token.access;
-}
 
 function buildMeta(status, bbox, extra = {}) {
   return {
@@ -60,53 +37,6 @@ function parseBbox(query) {
   if (latSpan > MAX_LAT_SPAN || lonSpan > MAX_LON_SPAN) return null;
 
   return { lamin: la1, lomin: lo1, lamax: la2, lomax: lo2 };
-}
-
-async function fetchOpenSky(bbox) {
-  const params = new URLSearchParams({
-    lamin: bbox.lamin,
-    lomin: bbox.lomin,
-    lamax: bbox.lamax,
-    lomax: bbox.lomax,
-  });
-  const headers = { 'Accept': 'application/json' };
-    const access = await getOpenSkyToken();
-    if (access) {
-      headers['Authorization'] = `Bearer ${access}`;
-    }
-    const res = await fetch(`${OPENSKY_BASE}/states/all?${params}`, {
-      signal: AbortSignal.timeout(6000),
-      headers,
-    });
-    if (!res.ok) throw new Error(`OpenSky ${res.status}`);
-    const json = await res.json();
-
-    const states = (json.states ?? []).map(s => ({
-      icao24:    s[0],
-      callsign:  (s[1] ?? '').trim(),
-      origin:    s[2],
-      lastSeen:  s[4],
-      lon:       s[5],
-      lat:       s[6],
-      altitude:  s[7] ? Math.round(s[7] * 3.28084) : null, // metres → feet
-      onGround:  s[8],
-      velocity:  s[9] ? Math.round(s[9] * 1.94384) : null, // m/s → knots
-      heading:   s[10] ? Math.round(s[10]) : null,
-      vertRate:  s[11],
-    })).filter(f =>
-      f.lat !== null &&
-      f.lon !== null &&
-      !f.onGround &&
-      (f.altitude === null || f.altitude >= MIN_ALTITUDE_FT)
-    );
-
-    return {
-      source: 'opensky',
-      states,
-      count: states.length,
-      noFlights: states.length === 0,
-      meta: buildMeta('live', bbox),
-    };
 }
 
 // adsb.lol serves the same ADS-B data with no auth and no datacenter blocking.
@@ -182,42 +112,43 @@ export default async function handler(req, res) {
     });
   }
 
+  // OpenSky is confirmed unreachable from both Vercel and Cloudflare egress
+  // (see header comment), so falling back to it just burns the client's
+  // FETCH_TIMEOUT (8s) waiting on an OAuth token fetch + states call that
+  // can never succeed in this deployment — that wait is what was surfacing
+  // as "Flights temporarily unavailable" client-side even with valid keys.
+  // Go straight to stale-cache/empty on adsb.lol failure instead.
   let result;
   try {
     result = await fetchAdsbLol(bbox);
   } catch (adsbErr) {
     console.error('adsb.lol failed:', adsbErr.message);
     res.setHeader('X-Adsb-Error', adsbErr.message.slice(0, 100).replace(/[^\x20-\x7e]/g, '?'));
-    try {
-      result = await fetchOpenSky(bbox);
-    } catch (openSkyErr) {
-      console.error('OpenSky failed:', openSkyErr.message, openSkyErr.cause ?? '');
-      if (hit) {
-        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
-        res.setHeader('X-Cache', 'STALE');
-        return res.status(200).json({
-          ...hit.data,
-          meta: buildMeta('stale', bbox, {
-            cached: true,
-            degraded: true,
-            cacheAgeMs: now - hit.ts,
-            warning: 'Flight data sources unavailable; serving stale flight data',
-          }),
-        });
-      }
-      // No cache, no fallback — return empty with error flag
+    if (hit) {
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+      res.setHeader('X-Cache', 'STALE');
       return res.status(200).json({
-        source: 'none',
-        states: [],
-        count: 0,
-        noFlights: true,
-        meta: buildMeta('error', bbox, {
+        ...hit.data,
+        meta: buildMeta('stale', bbox, {
+          cached: true,
           degraded: true,
-          warning: 'Flight data sources unavailable; no flight data',
-          detail: `adsb.lol: ${adsbErr.message}; opensky: ${openSkyErr.message}`,
+          cacheAgeMs: now - hit.ts,
+          warning: 'Flight data sources unavailable; serving stale flight data',
         }),
       });
     }
+    // No cache, no fallback — return empty with error flag
+    return res.status(200).json({
+      source: 'none',
+      states: [],
+      count: 0,
+      noFlights: true,
+      meta: buildMeta('error', bbox, {
+        degraded: true,
+        warning: 'Flight data sources unavailable; no flight data',
+        detail: `adsb.lol: ${adsbErr.message}`,
+      }),
+    });
   }
 
   cache.set(cacheKey, { data: result, ts: now });
