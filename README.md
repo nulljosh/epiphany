@@ -13,6 +13,11 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
   <img src="public/screenshots/screenshot-stocks-new.png" width="180">
 </p>
 
+<p align="center">
+  <img src="macos/fastlane/screenshots/mac/1-main.png" width="320">
+  <img src="watchos/fastlane/screenshots/watch/1-main.png" width="120">
+</p>
+
 ## Tabs
 
 | Tab | Status |

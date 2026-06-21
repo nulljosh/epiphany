@@ -1,5 +1,5 @@
 import Testing
-@testable import Monica
+@testable import Epiphany
 
 @Suite(.serialized) struct AppStateTests {
     @Test @MainActor func watchlistStocksFiltering() {

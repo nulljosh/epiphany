@@ -69,6 +69,13 @@ struct ContentView: View {
                 .environment(appState)
                 .frame(minWidth: 400, minHeight: 400)
         }
+        .task {
+            if CommandLine.arguments.contains("UITEST_SNAPSHOT"),
+               let email = ProcessInfo.processInfo.environment["SNAPSHOT_EMAIL"],
+               let password = ProcessInfo.processInfo.environment["SNAPSHOT_PASSWORD"] {
+                await appState.login(email: email, password: password)
+            }
+        }
     }
 
     @ViewBuilder
