@@ -77,7 +77,7 @@ struct PredictionsView: View {
             TextField("Search markets", text: $searchText)
                 .textFieldStyle(.roundedBorder)
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

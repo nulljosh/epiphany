@@ -26,7 +26,7 @@ struct SimulatorView: View {
                 achievementsCard
                 leaderboardCard
             }
-            .padding(16)
+            .padding(Spacing.md)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.ignoresSafeArea())
@@ -82,7 +82,7 @@ struct SimulatorView: View {
             statCell("Streak", value: "\(simulator.winStreak)")
             statCell("Drawdown", value: String(format: "%.1f%%", simulator.maxDrawdown * 100))
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -119,7 +119,7 @@ struct SimulatorView: View {
             .chartYScale(domain: .automatic(includesZero: false))
             .frame(height: 160)
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -155,7 +155,7 @@ struct SimulatorView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -193,7 +193,7 @@ struct SimulatorView: View {
             }
             .keyboardShortcut("r", modifiers: [.command, .shift])
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -227,7 +227,7 @@ struct SimulatorView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -261,7 +261,7 @@ struct SimulatorView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 

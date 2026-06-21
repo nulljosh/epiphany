@@ -80,7 +80,7 @@ struct AutopilotSection: View {
                             .foregroundStyle(.red)
                     }
                 }
-                .padding(10)
+                .padding(Spacing.xs)
                 .background(RoundedRectangle(cornerRadius: 8).fill(.thinMaterial.opacity(0.5)))
             }
 
@@ -159,7 +159,7 @@ struct AutopilotSection: View {
                             .disabled(saving)
                         }
                     }
-                    .padding(10)
+                    .padding(Spacing.xs)
                     .background(RoundedRectangle(cornerRadius: 8).fill(.thinMaterial.opacity(0.5)))
 
                     if !s.trades.isEmpty {
@@ -202,7 +202,7 @@ struct AutopilotSection: View {
                     .controlSize(.small)
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(RoundedRectangle(cornerRadius: 12).fill(.thinMaterial))
         .task { await load() }
     }

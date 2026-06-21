@@ -1237,7 +1237,7 @@ private struct SituationEventDetailView: View {
                         Divider()
                     }
                 }
-                .padding(14)
+                .padding(Spacing.smPlus)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
 
                 if let linkURL = eventURL {
@@ -1561,6 +1561,6 @@ private struct VenueDetailSheet: View {
             }
             .buttonStyle(.borderedProminent)
         }
-        .padding(20)
+        .padding(Spacing.lg)
     }
 }

@@ -60,7 +60,7 @@ struct LoginSheet: View {
                         .textContentType(.emailAddress)
                         .autocorrectionDisabled()
                         .focused($focusedField, equals: .email)
-                        .padding(12)
+                        .padding(Spacing.sm)
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                         .onSubmit { focusedField = .password }
 
@@ -86,7 +86,7 @@ struct LoginSheet: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .padding(12)
+                    .padding(Spacing.sm)
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
                 }
                 .padding(.horizontal)

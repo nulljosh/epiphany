@@ -42,7 +42,7 @@ struct PersonDetailView: View {
                 notesSection
                 deleteSection
             }
-            .padding(24)
+            .padding(Spacing.xl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Palette.bgDark)
@@ -145,7 +145,7 @@ struct PersonDetailView: View {
                 }
                 .font(.subheadline.weight(.semibold))
                 .frame(maxWidth: .infinity)
-                .padding(10)
+                .padding(Spacing.xs)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
@@ -222,7 +222,7 @@ struct PersonDetailView: View {
                     }
                 }
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
     }
@@ -308,7 +308,7 @@ struct PersonDetailView: View {
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
                         }
-                        .padding(10)
+                        .padding(Spacing.xs)
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
@@ -394,7 +394,7 @@ struct PersonDetailView: View {
                                 .foregroundStyle(.primary)
                             Spacer()
                         }
-                        .padding(10)
+                        .padding(Spacing.xs)
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
@@ -519,7 +519,7 @@ struct PersonDetailView: View {
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(Palette.dangerRed)
             .frame(maxWidth: .infinity)
-            .padding(10)
+            .padding(Spacing.xs)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)

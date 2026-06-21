@@ -80,7 +80,7 @@ struct AutopilotSection: View {
                     .controlSize(.small)
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(RoundedRectangle(cornerRadius: 12).fill(.thinMaterial))
         .task { await load() }
     }

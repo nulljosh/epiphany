@@ -37,7 +37,7 @@ struct MarketCard: View {
                 }
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }

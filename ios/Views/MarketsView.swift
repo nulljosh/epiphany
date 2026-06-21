@@ -185,7 +185,7 @@ struct MarketsView: View {
                         Image(systemName: "ellipsis.circle")
                             .font(.headline)
                             .foregroundStyle(Palette.appleBlue)
-                            .padding(12)
+                            .padding(Spacing.sm)
                     }
 
                     Button {
@@ -195,7 +195,7 @@ struct MarketsView: View {
                         Image(systemName: "magnifyingglass")
                             .font(.headline)
                             .foregroundStyle(Palette.appleBlue)
-                            .padding(12)
+                            .padding(Spacing.sm)
                     }
                 }
             }
