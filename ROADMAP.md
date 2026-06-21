@@ -36,6 +36,13 @@ Last updated: 2026-06-13
   signature (`dark`, `t`, `isAuthenticated`) matches what `App.jsx` already
   passes, build succeeds, full test suite passes (392/394, 2 pre-existing
   skips). If real use surfaces rough edges, re-hiding is a one-line revert.
+  **Cross-platform status**: web ✅ done. macOS ✅ done same day — `PeopleView.swift`
+  already existed, was just missing from `ContentView.AppSection`'s enum (not
+  merely hidden); wired in as a 5th tab (Cmd+3), `xcodebuild` BUILD SUCCEEDED.
+  iOS ⚠️ — only `PersonModels.swift` + API calls exist, no UI was ever built;
+  this is net-new SwiftUI work, not an unhide, left for its own session.
+  watchOS — out of scope by design (3 fixed glance views only, no People
+  models/API exist there either).
 - [x] TradingView MCP / account sync — DECIDED 2026-06-21: not buildable as
   asked. There's no public TradingView API for reading a user's
   watchlist/account, so "sync alerts, watchlist" from a linked TradingView

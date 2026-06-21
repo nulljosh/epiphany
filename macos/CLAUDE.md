@@ -1,13 +1,13 @@
 # Epiphany macOS
 
-v2.2.2 — Native macOS intelligence dashboard. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings).
+v2.2.2 — Native macOS intelligence dashboard. 5-tab SwiftUI app (Situation, Markets, People, Portfolio, Settings).
 
 ## Rules
 
 - Pure SwiftUI, no AppKit/UIKit
 - Bottom nav only, no sidebar
 - No haptics, no iOS-specific modifiers
-- Keyboard shortcuts Cmd+1-4 for tabs
+- Keyboard shortcuts Cmd+1-5 for tabs
 - Map stays steady -- no jumps on load or state changes
 - No emojis
 
@@ -15,8 +15,9 @@ v2.2.2 — Native macOS intelligence dashboard. 4-tab SwiftUI app (Situation, Ma
 
 1. **Situation** (Cmd+1) — MapKit map with 8 toggleable live data layers
 2. **Markets** (Cmd+2) — Sortable stocks/commodities/crypto table with search, stock detail sheets
-3. **Portfolio** (Cmd+3) — 6-subtab financial dashboard: Spending, Holdings, Budget, Debt, Goals, Statements
-4. **Settings** (Cmd+4) — Profile, subscription tier, map layer toggles, Tally integration
+3. **People** (Cmd+3) — DONE 2026-06-21: `PeopleView.swift` was already fully built, wired into `ContentView.AppSection` (was previously left out of the enum entirely, not just hidden)
+4. **Portfolio** (Cmd+4) — 6-subtab financial dashboard: Spending, Holdings, Budget, Debt, Goals, Statements
+5. **Settings** (Cmd+5) — Profile, subscription tier, map layer toggles, Tally integration
 
 ## Run
 
