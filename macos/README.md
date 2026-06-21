@@ -30,6 +30,7 @@ xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=m
 - [ ] Notification Center integration for price alerts
 - [ ] Widgets (map snapshot, portfolio summary)
 - [ ] Menu bar quick-glance ticker
+- [ ] Mac TestFlight: `fastlane mac_beta` lane added 2026-06-21, archive builds clean, but upload fails — no macOS app record exists yet in App Store Connect for `com.heyitsmejosh.epiphany-macos`. Create the app record (one-time, manual) then re-run `fastlane mac_beta` in `macos/fastlane`.
 
 ## Changelog
 
