@@ -761,7 +761,8 @@ const reset = useCallback(() => {
   const TAB_PILLS = [
     { key: 'situation', label: 'Situation' },
     { key: 'markets', label: 'Markets' },
-    // hidden - simulator: TradingView MCP integration planned; people: early dev
+    { key: 'people', label: 'People' },
+    // hidden - simulator: TradingView MCP integration planned
     { key: 'portfolio', label: 'Portfolio' },
     { key: 'settings', label: 'Settings' },
   ];
