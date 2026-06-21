@@ -37,3 +37,7 @@ Deploy: Vercel. Repo: github.com/nulljosh/epiphany
 - **Landing Page**: `src/pages/LandingPage.jsx` + `src/pages/landing.css` -- shown to unauthenticated visitors before auth flow. Fraunces serif headlines, animated node-graph canvas, scrolling ticker, feature/pricing sections. Gate in `App.jsx` via `showLanding` state.
 - **Finance/Roadmap**: `src/components/EpiphanyFinance.jsx` — spending history, tracker, and 17-year forecasts. Wired to Portfolio → Roadmap tab.
 - **Roadmap**: `ROADMAP.md`
+
+## Imported from Epiphany.pdf (2026-06-21)
+- [ ] watchOS — no ASC app record exists for `com.heyitsmejosh.epiphany.watchos`; watch apps typically bundle with iOS rather than ship standalone — needs a decision.
+- [ ] Mac screenshots to ASC App Store listing — requires creating an "App Store" version (description/keywords) in ASC first for the "Epiphany Mac" app record (id 6782703473); can't be scripted blind.
