@@ -22,6 +22,7 @@ targets:
           - "*.svg"
           - "*.md"
           - Tests
+          - UITests-mac
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos
@@ -36,4 +37,14 @@ targets:
       - target: Epiphany
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos.tests
+      GENERATE_INFOPLIST_FILE: YES
+  EpiphanyMacUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - UITests-mac
+    dependencies:
+      - target: Epiphany
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos.uitests
       GENERATE_INFOPLIST_FILE: YES

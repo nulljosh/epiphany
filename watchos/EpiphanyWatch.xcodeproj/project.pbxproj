@@ -1,0 +1,387 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1C7ED4525247250570791322 /* 1-main.png in Resources */ = {isa = PBXBuildFile; fileRef = B03B3668652B7ABCD5DEED6D /* 1-main.png */; };
+		207E9C30E7398B59A8E9D1CC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3677C73F7619C5604216695 /* ContentView.swift */; };
+		35D3A57E08C04C4E5AFCB2B4 /* WatchlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF25DB0B1B81A44CA20A707 /* WatchlistView.swift */; };
+		3BC1C9EC9193F955AA45058C /* PortfolioGlance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161A09815360F68802F7CE3C /* PortfolioGlance.swift */; };
+		460239DB1E7B030DAFC425E4 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC220DBC4759D9A806F864D7 /* WatchModels.swift */; };
+		673D9E7A853D411BD1E4F060 /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA88ABC31FB3B303257392BF /* WatchAPI.swift */; };
+		A2500869A821B6B5D596C1B9 /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCEFF8E4A8351EE3EFD8E14E /* AlertsView.swift */; };
+		AED151EF0BD203BFB56AD1CB /* MarketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ECC556D87E0451C762ED2BB /* MarketView.swift */; };
+		C07E4FC3D9D894C1DD49EB72 /* EpiphanyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */; };
+		D1B6DBF6AB0B083794E836CE /* Ontology.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63B7CAD4FB4DFE9F0235F90 /* Ontology.swift */; };
+		DB6A0D3249AD10A70388C7A0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01973E26C4F6546D2B34FA7F /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		01973E26C4F6546D2B34FA7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		161A09815360F68802F7CE3C /* PortfolioGlance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioGlance.swift; sourceTree = "<group>"; };
+		9ECC556D87E0451C762ED2BB /* MarketView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketView.swift; sourceTree = "<group>"; };
+		A3677C73F7619C5604216695 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A63B7CAD4FB4DFE9F0235F90 /* Ontology.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ontology.swift; sourceTree = "<group>"; };
+		B03B3668652B7ABCD5DEED6D /* 1-main.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "1-main.png"; sourceTree = "<group>"; };
+		BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpiphanyWatchApp.swift; sourceTree = "<group>"; };
+		BA88ABC31FB3B303257392BF /* WatchAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAPI.swift; sourceTree = "<group>"; };
+		BCEFF8E4A8351EE3EFD8E14E /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
+		C9AAE21DA6FC948D9F627AD6 /* Fastfile */ = {isa = PBXFileReference; path = Fastfile; sourceTree = "<group>"; };
+		CBF25DB0B1B81A44CA20A707 /* WatchlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistView.swift; sourceTree = "<group>"; };
+		D147F8F2B6DA68CEC014AF25 /* EpiphanyWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EpiphanyWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC220DBC4759D9A806F864D7 /* WatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModels.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		106E53F353E2B4D2B7323800 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A63B7CAD4FB4DFE9F0235F90 /* Ontology.swift */,
+				BA88ABC31FB3B303257392BF /* WatchAPI.swift */,
+				FC220DBC4759D9A806F864D7 /* WatchModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		49276B5E02728E705ECE3F06 /* watch */ = {
+			isa = PBXGroup;
+			children = (
+				B03B3668652B7ABCD5DEED6D /* 1-main.png */,
+			);
+			path = watch;
+			sourceTree = "<group>";
+		};
+		4B21E5263A1FA7294B5A0220 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				BCEFF8E4A8351EE3EFD8E14E /* AlertsView.swift */,
+				9ECC556D87E0451C762ED2BB /* MarketView.swift */,
+				161A09815360F68802F7CE3C /* PortfolioGlance.swift */,
+				CBF25DB0B1B81A44CA20A707 /* WatchlistView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5CFF922A5A407297473929F3 /* screenshots */ = {
+			isa = PBXGroup;
+			children = (
+				49276B5E02728E705ECE3F06 /* watch */,
+			);
+			path = screenshots;
+			sourceTree = "<group>";
+		};
+		B3DE59B9DDDC7B3B0C5E7EB4 = {
+			isa = PBXGroup;
+			children = (
+				DCC26338A045575DC63C5324 /* fastlane */,
+				106E53F353E2B4D2B7323800 /* Models */,
+				4B21E5263A1FA7294B5A0220 /* Views */,
+				D2A821F629F41751B8504089 /* watchos */,
+				EBEE247B42F1763899BB6AD0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D2A821F629F41751B8504089 /* watchos */ = {
+			isa = PBXGroup;
+			children = (
+				01973E26C4F6546D2B34FA7F /* Assets.xcassets */,
+				A3677C73F7619C5604216695 /* ContentView.swift */,
+				BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */,
+				DCC26338A045575DC63C5324 /* fastlane */,
+				106E53F353E2B4D2B7323800 /* Models */,
+				4B21E5263A1FA7294B5A0220 /* Views */,
+			);
+			name = watchos;
+			path = .;
+			sourceTree = "<group>";
+		};
+		DCC26338A045575DC63C5324 /* fastlane */ = {
+			isa = PBXGroup;
+			children = (
+				C9AAE21DA6FC948D9F627AD6 /* Fastfile */,
+				5CFF922A5A407297473929F3 /* screenshots */,
+			);
+			path = fastlane;
+			sourceTree = "<group>";
+		};
+		EBEE247B42F1763899BB6AD0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D147F8F2B6DA68CEC014AF25 /* EpiphanyWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8A25A73363972894D9B04550 /* EpiphanyWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 194BFE08929720575BA0A21E /* Build configuration list for PBXNativeTarget "EpiphanyWatch" */;
+			buildPhases = (
+				B4D8BC006229536B7B510648 /* Sources */,
+				E11504B1E3554BDCA995724F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EpiphanyWatch;
+			packageProductDependencies = (
+			);
+			productName = EpiphanyWatch;
+			productReference = D147F8F2B6DA68CEC014AF25 /* EpiphanyWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A4C4F18CC0ED0FEFA6D6DF07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					8A25A73363972894D9B04550 = {
+						DevelopmentTeam = QMM486NPYC;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = DDF68CA777FBBD3AC413B435 /* Build configuration list for PBXProject "EpiphanyWatch" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = B3DE59B9DDDC7B3B0C5E7EB4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = EBEE247B42F1763899BB6AD0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8A25A73363972894D9B04550 /* EpiphanyWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E11504B1E3554BDCA995724F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C7ED4525247250570791322 /* 1-main.png in Resources */,
+				DB6A0D3249AD10A70388C7A0 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B4D8BC006229536B7B510648 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A2500869A821B6B5D596C1B9 /* AlertsView.swift in Sources */,
+				207E9C30E7398B59A8E9D1CC /* ContentView.swift in Sources */,
+				C07E4FC3D9D894C1DD49EB72 /* EpiphanyWatchApp.swift in Sources */,
+				AED151EF0BD203BFB56AD1CB /* MarketView.swift in Sources */,
+				D1B6DBF6AB0B083794E836CE /* Ontology.swift in Sources */,
+				3BC1C9EC9193F955AA45058C /* PortfolioGlance.swift in Sources */,
+				673D9E7A853D411BD1E4F060 /* WatchAPI.swift in Sources */,
+				460239DB1E7B030DAFC425E4 /* WatchModels.swift in Sources */,
+				35D3A57E08C04C4E5AFCB2B4 /* WatchlistView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4C821C6AE8405BCDEE5B014C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = QMM486NPYC;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		57921847F0507AED91490713 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.heyitsmejosh.epiphany.watchos;
+				PRODUCT_NAME = Epiphany;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		5A6580D5729DF6CB8EBFBA30 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = QMM486NPYC;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		CA570C686F5FF6C7550F122C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.heyitsmejosh.epiphany.watchos;
+				PRODUCT_NAME = Epiphany;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		194BFE08929720575BA0A21E /* Build configuration list for PBXNativeTarget "EpiphanyWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA570C686F5FF6C7550F122C /* Debug */,
+				57921847F0507AED91490713 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DDF68CA777FBBD3AC413B435 /* Build configuration list for PBXProject "EpiphanyWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A6580D5729DF6CB8EBFBA30 /* Debug */,
+				4C821C6AE8405BCDEE5B014C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A4C4F18CC0ED0FEFA6D6DF07 /* Project object */;
+}

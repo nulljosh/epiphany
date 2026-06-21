@@ -1,6 +1,6 @@
 import Foundation
 
-final class WatchAPI {
+final class WatchAPI: @unchecked Sendable {
     static let shared = WatchAPI()
 
     private let baseURL = "https://epiphany.heyitsmejosh.com"

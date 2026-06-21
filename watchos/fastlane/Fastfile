@@ -1,0 +1,15 @@
+default_platform(:mac)
+
+platform :mac do
+  desc "Capture watchOS screenshot"
+  lane :watch_screenshots do
+    sh("cd .. && xcodegen generate")
+    udid = sh("xcrun simctl list devices available | grep 'Apple Watch' | head -1 | grep -oE '[0-9A-F-]{36}'").strip
+    sh("xcrun simctl boot #{udid} || true")
+    sh("cd .. && xcodebuild -project EpiphanyWatch.xcodeproj -scheme EpiphanyWatch -destination 'platform=watchOS Simulator,id=#{udid}' build")
+    sh("xcrun simctl install #{udid} $(find ~/Library/Developer/Xcode/DerivedData -name 'Epiphany*.app' -path '*watchsimulator*' | head -1)")
+    sh("xcrun simctl launch #{udid} com.heyitsmejosh.epiphany.watchos")
+    sleep(3)
+    sh("mkdir -p ../fastlane/screenshots/watch && xcrun simctl io #{udid} screenshot ../fastlane/screenshots/watch/1-main.png")
+  end
+end
