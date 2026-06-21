@@ -329,7 +329,7 @@ struct PeopleView: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
+            .padding(Spacing.smPlus)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
@@ -465,7 +465,7 @@ struct PeopleView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(10)
+            .padding(Spacing.xs)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)

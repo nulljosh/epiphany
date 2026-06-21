@@ -473,7 +473,7 @@ struct PortfolioView: View {
 
                                 Spacer()
                             }
-                            .padding(10)
+                            .padding(Spacing.xs)
                             .background(Color.white.opacity(0.03))
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
@@ -1014,7 +1014,7 @@ struct PortfolioView: View {
                 spendingChartOverlay(proxy: proxy)
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
@@ -1248,7 +1248,7 @@ struct PortfolioView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 

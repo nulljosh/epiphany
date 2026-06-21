@@ -101,7 +101,7 @@ struct SettingsView: View {
                     statPill(title: "Shell", value: "macOS")
                 }
             }
-            .padding(20)
+            .padding(Spacing.lg)
         }
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -141,7 +141,7 @@ struct SettingsView: View {
                                     .foregroundStyle(Palette.linkBlue)
                             }
                         }
-                        .padding(14)
+                        .padding(Spacing.smPlus)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -268,7 +268,7 @@ struct SettingsView: View {
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.secondary)
                 }
-                .padding(14)
+                .padding(Spacing.smPlus)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -361,7 +361,7 @@ struct SettingsView: View {
 
             content()
         }
-        .padding(18)
+        .padding(Spacing.mdPlus)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -410,7 +410,7 @@ struct SettingsView: View {
                     .lineLimit(2)
             }
             .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-            .padding(14)
+            .padding(Spacing.smPlus)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.white.opacity(0.04))
@@ -449,7 +449,7 @@ struct SettingsView: View {
                 .labelsHidden()
                 .toggleStyle(.switch)
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.white.opacity(0.04))

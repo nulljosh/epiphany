@@ -1019,7 +1019,7 @@ struct PortfolioView: View {
                 spendingChartOverlay(proxy: proxy)
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(Palette.overlay.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
@@ -1312,7 +1312,7 @@ struct PortfolioView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(Spacing.smPlus)
         .background(Palette.overlay.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
@@ -1543,7 +1543,7 @@ extension PortfolioView {
                     .foregroundStyle(Palette.warningAmber)
             }
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
