@@ -28,9 +28,26 @@ Last updated: 2026-06-13
   tabs, plus matching watchOS + macOS screenshots (README parity). Not
   started — screenshot pipeline needs the map-too-zoomed-out bug (line ~212,
   zoom-based culling) fixed first or screenshots will look broken.
-- People tab and TradingView MCP integration: see "Decide whether to also
-  unhide People" and TradingView widget embedding entries below — both
-  already tracked here, no new decision made in this pass.
+- [x] People tab — DECIDED + DONE 2026-06-21: unhidden in `App.jsx` TAB_PILLS.
+  `PeoplePanel.jsx` (2,113 lines) and its full backend (`/api/people`,
+  `/api/people-index`, `/api/people-crossref`, `/api/people-import`) were
+  already complete, just excluded behind an "early dev" comment with no
+  documented bug. Verified clean merge against the current app: prop
+  signature (`dark`, `t`, `isAuthenticated`) matches what `App.jsx` already
+  passes, build succeeds, full test suite passes (392/394, 2 pre-existing
+  skips). If real use surfaces rough edges, re-hiding is a one-line revert.
+- [x] TradingView MCP / account sync — DECIDED 2026-06-21: not buildable as
+  asked. There's no public TradingView API for reading a user's
+  watchlist/account, so "sync alerts, watchlist" from a linked TradingView
+  account isn't something to build, full stop. The MCP server in `.mcp.json`
+  (`_external/tradingview-mcp`) is a dev-tool for chart analysis/Pine Script
+  authoring and is unrelated to this ask — no change needed there. The one
+  legitimate integration path going forward: TradingView Pro+ accounts can
+  fire outbound webhook alerts, which Epiphany could receive via a new
+  `/api/tradingview/webhook` endpoint (alerts-in only, no OAuth/account
+  linking needed). Not built this pass — real new feature needing
+  auth/storage design — but the open question is now closed with a concrete
+  next step instead of re-deferred.
 - [x] Add `og:title`/`og:description`/`og:image` meta tags to `index.html` — DONE 2026-06-21 (commit `c355a33`): added og:title/description/image/type/url + twitter:card + a plain `<meta name="description">`, using LandingPage.jsx's hero copy and `screenshot-situation-new.png` as the OG image. The rest of a June design-review note's "splash page is blank" claim is stale (`LandingPage.jsx` already ships a full hero/feature/screenshot/CTA landing for unauthenticated visitors, see CLAUDE.md).
 - Stocks list redesign like iOS Stocks: inline sparkline + ticker symbol in
   list — investigated 2026-06-13: needs a backend change (bulk stocks endpoint
