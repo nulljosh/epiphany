@@ -13,6 +13,15 @@ Last updated: 2026-06-13
   animations, cross-platform (web + iOS/macOS/watchOS). Not started — needs a
   design pass on which events specifically get an enter/loading animation
   before touching `LiveMapBackdrop.jsx`.
+- **"Map too zoomed out, renders no sources" — checked 2026-06-21, root cause still unconfirmed.**
+  `LiveMapBackdrop.jsx` has no `minzoom`/`maxzoom` layer constraint, and
+  `decimateByZoom` (line ~551) never returns an empty array for non-empty
+  input (worst case is 25% at zoom<10, not 0%). So the complaint isn't a
+  simple culling-threshold bug. Likely candidates not yet checked: the
+  data-fetch bbox/radius calculation at low zoom, or a screenshot-timing
+  artifact (captured before async data loaded). Needs an actual repro
+  (reload at a specific low zoom, check network tab for empty responses
+  vs. a render-layer issue) before a fix is attempted.
 - **Landing page screenshots incomplete** — `LandingPage.jsx` currently only
   shows a map screenshot. Should also show Markets, Portfolio, and Settings
   tabs, plus matching watchOS + macOS screenshots (README parity). Not
