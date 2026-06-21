@@ -8,6 +8,19 @@ Last updated: 2026-06-13
 
 ## Open
 
+- **Map event animations** — loading/popup states for events rendering on the
+  map feel abrupt. Reference: lottiefiles.com for lightweight Lottie loading
+  animations, cross-platform (web + iOS/macOS/watchOS). Not started — needs a
+  design pass on which events specifically get an enter/loading animation
+  before touching `LiveMapBackdrop.jsx`.
+- **Landing page screenshots incomplete** — `LandingPage.jsx` currently only
+  shows a map screenshot. Should also show Markets, Portfolio, and Settings
+  tabs, plus matching watchOS + macOS screenshots (README parity). Not
+  started — screenshot pipeline needs the map-too-zoomed-out bug (line ~212,
+  zoom-based culling) fixed first or screenshots will look broken.
+- People tab and TradingView MCP integration: see "Decide whether to also
+  unhide People" and TradingView widget embedding entries below — both
+  already tracked here, no new decision made in this pass.
 - Add `og:title`/`og:description`/`og:image` meta tags to `index.html` — currently zero OG tags, so shared links (iMessage/Slack/etc.) show no preview card. Confirmed still missing 2026-06-20; the rest of a June design-review note's "splash page is blank" claim is stale (`LandingPage.jsx` already ships a full hero/feature/screenshot/CTA landing for unauthenticated visitors, see CLAUDE.md).
 - Stocks list redesign like iOS Stocks: inline sparkline + ticker symbol in
   list — investigated 2026-06-13: needs a backend change (bulk stocks endpoint
