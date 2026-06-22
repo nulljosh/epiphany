@@ -8,6 +8,13 @@ Last updated: 2026-06-13
 
 ## Open
 
+- **ASC: remove duplicate macOS platform from "Epiphany" (iPhone) app record** —
+  App Information → deactivate macOS App section. Standalone "Epiphany Mac"
+  record (id 6782703473) already covers macOS distribution. Manual ASC click,
+  not scriptable.
+- **ASC: resolve "Missing Compliance" on Epiphany Mac build** — Build Activity
+  flags export compliance as unanswered, blocking submission past "Prepare for
+  Submission." Manual ASC click, not scriptable.
 - **Map event animations** — loading/popup states for events rendering on the
   map feel abrupt. Reference: lottiefiles.com for lightweight Lottie loading
   animations, cross-platform (web + iOS/macOS/watchOS). Not started — needs a
@@ -401,3 +408,6 @@ Free tier always keeps: map + local events, headlines, basic market quotes.
 ## Shipped
 
 The full shipped list now lives in [README.md](README.md#shipped).
+
+## Stashed 2026-06-21
+- [ ] App Store Connect shows a placeholder icon for "Epiphany Mac" — the local macOS `AppIcon.appiconset` (`macos/Assets.xcassets/AppIcon.appiconset/`) is actually complete and valid (16–1024, verified via `sips`). The placeholder is just because no build has been archived/uploaded yet for that target — archive & upload via Xcode/Transporter to populate it in ASC.
