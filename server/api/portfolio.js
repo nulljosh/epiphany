@@ -47,9 +47,25 @@ function validatePortfolioPayload(data) {
 
 export default async function handler(req, res) {
   const kv = await getKv();
-  const session = await getSessionUser(req);
+  let session = await getSessionUser(req);
+  let readOnly = false;
+
+  if (!session && typeof req.query?.key === 'string' && req.query.key) {
+    if (req.method !== 'GET') {
+      return errorResponse(res, 403, 'Read-only API key cannot be used for write requests');
+    }
+    const userId = await kv.get(`readonly_api:${req.query.key}`).catch(() => null);
+    if (userId) {
+      session = { userId };
+      readOnly = true;
+    }
+  }
+
   if (!session) {
     return errorResponse(res, 401, 'Authentication required');
+  }
+  if (readOnly && req.method !== 'GET') {
+    return errorResponse(res, 403, 'Read-only API key cannot be used for write requests');
   }
 
   const { action } = req.query;

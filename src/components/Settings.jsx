@@ -41,6 +41,24 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
 
+  const [readOnlyApiSaving, setReadOnlyApiSaving] = useState(false);
+  const [readOnlyApiMsg, setReadOnlyApiMsg] = useState(null);
+  const handleToggleReadOnlyApi = async (enabled) => {
+    setReadOnlyApiSaving(true); setReadOnlyApiMsg(null);
+    try {
+      const res = await fetch('/api/auth?action=toggle-readonly-api', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const d = await res.json();
+      if (d.ok && refreshUser) await refreshUser();
+      else if (!d.ok) setReadOnlyApiMsg({ text: d.error || 'Failed to update', error: true });
+    } catch {
+      setReadOnlyApiMsg({ text: 'Network error', error: true });
+    }
+    setReadOnlyApiSaving(false);
+  };
+
   useEffect(() => {
     if (refreshUser) refreshUser();
   }, []);
@@ -313,6 +331,25 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
                 {pwMsg && <div style={msgStyle(pwMsg.error)}>{pwMsg.text}</div>}
               </div>
             )}
+
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginTop: 24, marginBottom: 12 }}>Read-only API</div>
+            <Row label="Allow read-only API access" t={t}>
+              <button
+                aria-pressed={!!user?.readOnlyApiEnabled}
+                disabled={readOnlyApiSaving}
+                onClick={() => handleToggleReadOnlyApi(!user?.readOnlyApiEnabled)}
+                style={{ width: 36, height: 20, borderRadius: 10, border: 'none', cursor: readOnlyApiSaving ? 'wait' : 'pointer', background: user?.readOnlyApiEnabled ? '#0071e3' : t.border, position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+              >
+                <span style={{ position: 'absolute', top: 2, left: user?.readOnlyApiEnabled ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', display: 'block' }} />
+              </button>
+            </Row>
+            <p style={{ fontSize: 11, color: t.textTertiary, margin: '4px 0 0' }}>Off by default. When enabled, issues a key external tools can use to read (not modify) your portfolio data via <code>/api/portfolio?action=get&amp;key=...</code>.</p>
+            {user?.readOnlyApiEnabled && user?.readOnlyApiKey && (
+              <Row label="Key" t={t}>
+                <code style={{ fontSize: 11, color: t.textSecondary }}>{user.readOnlyApiKey}</code>
+              </Row>
+            )}
+            {readOnlyApiMsg && <div style={msgStyle(readOnlyApiMsg.error)}>{readOnlyApiMsg.text}</div>}
           </>
         )}
 
