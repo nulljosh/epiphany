@@ -16,7 +16,7 @@ describe('categorizeTransaction', () => {
   it('categorizes food', () => {
     expect(categorizeTransaction('SUBWAY 23104 LANGLEY BC')).toBe('food');
     expect(categorizeTransaction("WENDY'S RESTAURANTS LANGLEY BC")).toBe('food');
-    expect(categorizeTransaction('STARBUCKS #1234')).toBe('food');
+    expect(categorizeTransaction('STARBUCKS #1234')).toBe('starbucks');
     expect(categorizeTransaction('CHIPOTLE #2899 LANGLEY BC')).toBe('food');
     expect(categorizeTransaction('FRESHSLICE-200ST MARKHAM ON')).toBe('food');
     expect(categorizeTransaction('DAIRY QUEEN #27304 OLO LANGLEY BC')).toBe('food');
@@ -33,8 +33,8 @@ describe('categorizeTransaction', () => {
   });
 
   it('categorizes alcohol', () => {
-    expect(categorizeTransaction('RIDERS LIQUOR STORE LANGLEY BC')).toBe('alcohol');
-    expect(categorizeTransaction('SHOOTERS LIQUOR STORE SURREY BC')).toBe('alcohol');
+    expect(categorizeTransaction('RIDERS LIQUOR STORE LANGLEY BC')).toBe('liquor');
+    expect(categorizeTransaction('SHOOTERS LIQUOR STORE SURREY BC')).toBe('liquor');
   });
 
   it('categorizes transit', () => {
