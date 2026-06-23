@@ -278,6 +278,8 @@ describe('Auth API', () => {
           watchlist: null,
           avatarUrl: null,
           avatarUpdatedAt: null,
+          readOnlyApiEnabled: false,
+          readOnlyApiKey: null,
         },
       });
     });
