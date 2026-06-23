@@ -2,6 +2,10 @@
 
 Target: $2.99 paid app (no IAP code), TestFlight first. Status as of 2026-06-14.
 
+## Approved 2026-06-23
+v1.0 passed App Store review, live within 24h: https://apps.apple.com/app/epiphany/id6779522175
+**SnapTrade phantom holdings/bad math bug was NOT fixed before this ship** — still needs a post-launch fix since real users will hit it.
+
 ## Ready
 - Bundle `com.heyitsmejosh.epiphany`, team `QMM486NPYC`, v2.0.5, automatic signing
 - Icons (light/dark/tinted 1024), launch screen, all privacy usage strings, no ATS exceptions
