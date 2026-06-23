@@ -2,7 +2,7 @@
 
 # Epiphany iOS
 
-![version](https://img.shields.io/badge/version-v2.2.3-blue)
+![version](https://img.shields.io/badge/version-v2.2.3-blue) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175)
 
 <p align="center">
   <img src="screenshots/appstore/1-situation.png" width="180">
