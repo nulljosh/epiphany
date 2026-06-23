@@ -66,4 +66,13 @@ export const CAT_COLORS = {
   insurance: '#AC8E68',
   subscriptions: '#5E5CE6',
   vaping: '#ff453a',
+  vape: '#ff453a',
+  alcohol: '#BF5AF2',
+  liquor: '#BF5AF2',
+  starbucks: '#AC8E68',
+  cannabis: '#30D158',
+  transfers: '#0071e3',
+  inter_account: '#0071e3',
+  etransfer_friends: '#64D2FF',
+  atm_withdrawals: '#8E8E93',
 };
