@@ -454,6 +454,104 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
           </Card>
         );
       })()}
+
+      {/* Spend Analysis: totals pie + discretionary trend + summary cards + target gauges */}
+      {spending && spending.length > 0 && (() => {
+        const totalsByCat = {};
+        for (const m of spending) {
+          for (const [cat, amt] of Object.entries(m.categories || {})) {
+            totalsByCat[cat] = (totalsByCat[cat] || 0) + (amt || 0);
+          }
+        }
+        const totalsPieData = Object.entries(totalsByCat)
+          .filter(([, v]) => v > 0)
+          .map(([name, value]) => ({ name: capitalize(name), key: name, value: Math.round(value) }));
+
+        const discretionaryCats = ['vape', 'starbucks', 'liquor', 'weed', 'cannabis'];
+        const trendData = spending.map(m => {
+          const row = { month: m.month };
+          for (const cat of discretionaryCats) row[cat] = m.categories?.[cat] || 0;
+          return row;
+        });
+
+        const totalIncomeAll = spending.reduce((s, m) => s + (m.income || 0), 0) || totalIncome || 0;
+        const totalSpendAll = spending.reduce((s, m) => s + (m.total || 0), 0);
+        const deficit = totalIncomeAll - totalSpendAll;
+        const targets = { vape: 30, starbucks: 30, liquor: 25 };
+        const monthCount = spending.length || 1;
+        const swing = Object.entries(targets).reduce((acc, [cat, target]) => {
+          const avg = (totalsByCat[cat] || 0) / monthCount;
+          return acc + Math.max(0, avg - target);
+        }, 0);
+
+        return (
+          <>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 0 }}>
+              {[
+                { label: 'Total Income', value: totalIncomeAll, color: t.green || '#30d158' },
+                { label: 'Total Spend', value: totalSpendAll, color: '#ff453a' },
+                { label: 'Deficit', value: deficit, color: deficit >= 0 ? (t.green || '#30d158') : '#ff453a' },
+                { label: 'Projected Swing', value: swing, color: '#0a84ff' },
+              ].map(c => (
+                <Card key={c.label} dark t={t} style={{ padding: 16, flex: '1 1 130px' }}>
+                  <div style={labelStyle}>{c.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: c.color, fontVariantNumeric: 'tabular-nums' }}>
+                    {formatCurrency(c.value)}
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+              <div style={labelStyle}>Category Totals (8mo)</div>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={totalsPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={95} paddingAngle={2} stroke="none">
+                    {totalsPieData.map((d, i) => (
+                      <Cell key={d.key} fill={CAT_COLORS[d.key] || DONUT_COLORS[i % DONUT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip t={t} />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+
+            <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+              <div style={labelStyle}>Discretionary Trend</div>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={trendData}>
+                  <XAxis dataKey="month" tick={axisTickStyle(t)} axisLine={{ stroke: t.border }} tickLine={false} />
+                  <YAxis tick={axisTickStyle(t)} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+                  <Tooltip content={<CustomTooltip t={t} />} />
+                  {discretionaryCats.map(cat => (
+                    <Line key={cat} type="monotone" dataKey={cat} stroke={CAT_COLORS[cat] || '#888'} strokeWidth={2} dot={false} name={capitalize(cat)} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </Card>
+
+            <Card dark t={t} style={{ padding: 20, marginBottom: 0 }}>
+              <div style={labelStyle}>Discretionary Targets</div>
+              {Object.entries(targets).map(([cat, target]) => {
+                const avg = (totalsByCat[cat] || 0) / monthCount;
+                const pct = Math.min(100, (avg / target) * 100);
+                const over = avg > target;
+                return (
+                  <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <span style={{ fontSize: 12, color: t.textSecondary, minWidth: 70 }}>{capitalize(cat)}</span>
+                    <div style={{ flex: 1, height: 8, borderRadius: 4, background: t.border || 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', borderRadius: 4, background: over ? '#ff453a' : '#30d158', width: `${pct}%` }} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, minWidth: 70, textAlign: 'right', color: over ? '#ff453a' : '#30d158' }}>
+                      {formatCurrency(avg)} / {formatCurrency(target)}
+                    </span>
+                  </div>
+                );
+              })}
+            </Card>
+          </>
+        );
+      })()}
     </div>
   );
 }
