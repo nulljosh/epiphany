@@ -426,3 +426,8 @@ The full shipped list now lives in [README.md](README.md#shipped).
 
 ## Stashed 2026-06-21
 - [ ] App Store Connect shows a placeholder icon for "Epiphany Mac" — the local macOS `AppIcon.appiconset` (`macos/Assets.xcassets/AppIcon.appiconset/`) is actually complete and valid (16–1024, verified via `sips`). The placeholder is just because no build has been archived/uploaded yet for that target — archive & upload via Xcode/Transporter to populate it in ASC.
+
+## From Epiphany.pdf (imported 2026-06-23)
+- [x] CI: latest GitHub Actions run on main is green (`Tests` workflow).
+- [x] "Situation tab moves map to NYC" glitch — already fixed in commit ca1cd29 (2026-06-21, "Fix map permanently stranding on NYC after Situation tab mount"). Verified: `useSituation.test.js` passes (15/15).
+- [x] "Flights temporarily unavailable" — already fixed in commit bfba323 (2026-06-21). OpenSky (the IP-blocked source) was removed entirely; flights now come from adsb.lol, no API key required. The PDF note predates this fix.
