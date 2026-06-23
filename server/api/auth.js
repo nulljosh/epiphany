@@ -71,6 +71,8 @@ function publicUser(user) {
     watchlist: user?.watchlist || null,
     avatarUrl: user?.avatarUrl || null,
     avatarUpdatedAt: user?.avatarUpdatedAt || null,
+    readOnlyApiEnabled: user?.readOnlyApiEnabled ?? false,
+    readOnlyApiKey: user?.readOnlyApiEnabled ? (user?.readOnlyApiKey || null) : null,
   };
 }
 
@@ -539,6 +541,32 @@ export default async function handler(req, res) {
     }
 
     user.name = name.trim();
+    await kv.set(`user:${user.email}`, user);
+    return res.status(200).json({ ok: true, user: publicUser(user) });
+  }
+
+  // POST: toggle-readonly-api — opt-in, default-off read-only key for external tools
+  if (action === 'toggle-readonly-api') {
+    const { enabled } = req.body || {};
+    const { user } = await requireAuthenticatedUser(req, kv);
+    if (!user) {
+      return errorResponse(res, 401, 'Authentication required');
+    }
+
+    if (enabled) {
+      user.readOnlyApiEnabled = true;
+      if (!user.readOnlyApiKey) {
+        user.readOnlyApiKey = crypto.randomUUID();
+        await kv.set(`readonly_api:${user.readOnlyApiKey}`, user.id);
+      }
+    } else {
+      user.readOnlyApiEnabled = false;
+      if (user.readOnlyApiKey) {
+        await kv.del(`readonly_api:${user.readOnlyApiKey}`);
+        user.readOnlyApiKey = null;
+      }
+    }
+
     await kv.set(`user:${user.email}`, user);
     return res.status(200).json({ ok: true, user: publicUser(user) });
   }
