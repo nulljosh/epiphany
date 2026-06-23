@@ -34,7 +34,17 @@ struct Portfolio: Codable {
             )
         }
 
-        let accountTotal = financeData.accounts.reduce(0.0) { $0 + $1.balance }
+        // "investment"-type broker accounts fold holdings value into their
+        // balance server-side (SnapTradeAdapter.getAccounts(): cash +
+        // holdingsValue), and those same positions are already summed via
+        // mappedHoldings above -- including the full account balance here
+        // would double-count holdings value. Only cash-type accounts (and
+        // any account with no type, e.g. manually-entered ones) are pure
+        // cash and safe to add directly.
+        let accountTotal = financeData.accounts.reduce(0.0) { partial, account in
+            if account.type == "investment" { return partial }
+            return partial + account.balance
+        }
         let totalValue = mappedHoldings.reduce(0) { $0 + $1.marketValue } + accountTotal
         let dayChange = mappedHoldings.reduce(0) { partial, holding in
             let changePercent = (stockMap[holding.symbol]?.changePercent ?? 0) / 100
