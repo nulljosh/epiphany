@@ -48,15 +48,18 @@ export function categorizeTransaction(description = '') {
 
   if (lower.includes('payment') && (lower.includes('thank you') || lower.includes('merci') || lower.includes('paiement'))) return null;
 
-  if (lower.includes('interac e-transfer')) return 'transfers';
+  if (lower.includes('e-transfer') || lower.includes('interac e-transfer')) return 'etransfer_friends';
+  if (lower.includes('abm withdrawal') || lower.includes('atm withdrawal') || lower.includes('cash withdrawal')) return 'atm_withdrawals';
   // Internal account-to-account moves (e.g. funding the prepaid card) are not
   // spending — the card's purchases already appear as their own transactions.
   if (lower.includes('transfer out')) return null;
-  if (lower.includes('subway') || lower.includes('wendy') || lower.includes('starbucks') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("tripple o") || lower.includes("a&w") || lower.includes("chachi") || lower.includes('chipotle') || lower.includes('firehouse') || lower.includes('dairy queen') || lower.includes('freshslice') || lower.includes("moreno")) return 'food';
+  if (lower.includes('transfer')) return 'inter_account';
+  if (lower.includes('starbucks')) return 'starbucks';
+  if (lower.includes('subway') || lower.includes('wendy') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("tripple o") || lower.includes("a&w") || lower.includes("chachi") || lower.includes('chipotle') || lower.includes('firehouse') || lower.includes('dairy queen') || lower.includes('freshslice') || lower.includes("moreno")) return 'food';
   if (lower.includes('apple.com') || lower.includes('mac mini') || lower.includes('macbook') || lower.includes('apple computer')) return 'tech';
   if (lower.includes('apple store') || lower.includes('london drugs') || lower.includes('dollarama') || lower.includes('marshalls') || lower.includes('homesense') || lower.includes('langley toy') || lower.includes('super fantastic') || lower.includes('costco') || lower.includes('walmart') || lower.includes('wal-mart') || lower.includes('save on') || lower.includes('nofrills') || lower.includes('no frills') || lower.includes('real cdn') || lower.includes('shoppers') || lower.includes('mcfrugal')) return 'shopping';
   if (lower.includes('vapory') || lower.includes('vape street')) return 'vape';
-  if (lower.includes('liquor') || lower.includes('shooter')) return 'alcohol';
+  if (lower.includes('liquor') || lower.includes('shooter')) return 'liquor';
   if (lower.includes('cannabis') || lower.includes('420')) return 'cannabis';
   if (lower.includes('claude') || lower.includes('anthropic') || lower.includes('openai') || lower.includes('chatgpt') || lower.includes('twilio') || lower.includes('codex')) return 'apps';
   if (lower.includes('compass') || lower.includes('chv')) return 'transit';
