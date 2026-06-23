@@ -26,6 +26,7 @@ targets:
           - Tests
           - UITests-mac
           - fastlane
+          - ".asc"
     settings:
       INFOPLIST_FILE: Info.plist
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos
