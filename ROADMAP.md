@@ -11,10 +11,25 @@ Last updated: 2026-06-13
 - **ASC: remove duplicate macOS platform from "Epiphany" (iPhone) app record** —
   App Information → deactivate macOS App section. Standalone "Epiphany Mac"
   record (id 6782703473) already covers macOS distribution. Manual ASC click,
-  not scriptable.
+  not scriptable. Decided 2026-06-22: leave it, low value, ignore going forward.
 - **ASC: resolve "Missing Compliance" on Epiphany Mac build** — Build Activity
   flags export compliance as unanswered, blocking submission past "Prepare for
   Submission." Manual ASC click, not scriptable.
+- **2026-06-22: Epiphany Mac build uploaded successfully** — fixed version mismatch
+  (2.2.4 → 1.0 to match existing ASC version record), archived, exported as .pkg,
+  uploaded build 1.0 (1). Content rights + copyright also set.
+- **2026-06-22: Epiphany Mac support URL missing** — required before submission,
+  needs a real URL decision.
+- **2026-06-22: watchOS app decision needed** — `EpiphanyWatch.xcodeproj` is set up
+  as a *standalone* watch app (`WKWatchOnly: YES`, own bundle
+  `com.heyitsmejosh.epiphany.watchos`), not an embedded WatchKit extension of the
+  iOS app. No ASC app record exists for it. Creating a new standalone ASC record
+  needs either the official API (asc CLI doesn't expose app creation) or an
+  unofficial/discouraged web-session flow requiring live Apple ID + 2FA — not run
+  unattended. Recommended fix: re-embed the watch app as a companion WatchKit
+  extension target inside `ios/project.yml` instead (standard pattern, no new ASC
+  record needed) — not yet done, needs its own build-verification pass since it
+  touches the already-submitted iOS app's project structure.
 - **Map event animations** — loading/popup states for events rendering on the
   map feel abrupt. Reference: lottiefiles.com for lightweight Lottie loading
   animations, cross-platform (web + iOS/macOS/watchOS). Not started — needs a
