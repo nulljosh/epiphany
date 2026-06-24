@@ -310,7 +310,6 @@ struct MarketsView: View {
                 }
                 NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, brief: appState.dailyBrief)
             }
-            .animation(.easeInOut(duration: 0.25), value: drawerState)
             .frame(maxWidth: .infinity)
             .frame(height: height, alignment: .top)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -335,7 +334,7 @@ struct MarketsView: View {
                             }
                     )
             }
-            .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.86), value: drawerState)
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: drawerState)
             .padding(.horizontal, 8)
             .padding(.bottom, 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
