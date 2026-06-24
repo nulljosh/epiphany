@@ -55,6 +55,15 @@ Ordered by effort (fewest tokens → most). Ship the top first. Last updated: 20
 
 ### Open
 
+- **2026-06-23: Venue photos/reviews — backend shipped, UI wiring pending.**
+  `server/api/venue-details.js` (Yelp Fusion, free, no billing) is built and
+  registered in `api/gateway.js`, but no-ops until `YELP_API_KEY` is set in
+  Vercel (Joshua: sign up free at yelp.com/developers, no credit card). Once
+  the key is set, still needs: web popup wiring in `LiveMapBackdrop.jsx`,
+  iOS `VenueDetailSheet` in `ios/Views/SituationView.swift` (~L1515-1565),
+  and the macOS equivalent in `macos/Views/SituationView.swift` — each calls
+  the new endpoint with `{name, lat, lon}` and renders photos + review
+  snippets when `available: true`. Plan: `~/.claude/plans/spicy-mapping-reddy.md`.
 - **ASC: remove duplicate macOS platform from "Epiphany" (iPhone) app record** —
   App Information → deactivate macOS App section. Standalone "Epiphany Mac"
   record (id 6782703473) already covers macOS distribution. Manual ASC click,
