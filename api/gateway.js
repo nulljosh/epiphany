@@ -45,6 +45,7 @@ const ROUTES = {
   history:              lazy(() => import('../server/api/history.js')),
   incidents:            lazy(() => import('../server/api/incidents.js')),
   'local-events':       lazy(() => import('../server/api/local-events.js')),
+  'venue-details':      lazy(() => import('../server/api/venue-details.js')),
   macro:                lazy(() => import('../server/api/macro.js')),
   news:                 lazy(() => import('../server/api/news.js')),
   prices:               lazy(() => import('../server/api/prices.js')),
@@ -101,7 +102,7 @@ const CACHE_TTL = {
   history: 3600, incidents: 600, latest: 60, 'local-events': 600, macro: 3600,
   markets: 60, news: 300, prices: 60, 'stocks-free': 60, traffic: 300,
   weather: 300, 'weather-alerts': 300, wildfires: 600, ontology: 3600, crypto: 60, reddit: 300,
-  dispatch: 60, emergency: 60,
+  dispatch: 60, emergency: 60, 'venue-details': 86400,
 };
 
 export default async function handler(req, res) {
