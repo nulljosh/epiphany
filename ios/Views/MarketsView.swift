@@ -17,7 +17,7 @@ struct MarketsView: View {
     @State private var feedDest: FeedDest? = nil
     @State private var tickerSelectedStock: Stock?
     @State private var newsArticles: [NewsArticle] = []
-    @State private var isLoadingNews = false
+    @State private var isLoadingNews = true
     @State private var selectedStockForNews: Stock?
     @State private var isSearching = false
     @FocusState private var searchFieldFocused: Bool
