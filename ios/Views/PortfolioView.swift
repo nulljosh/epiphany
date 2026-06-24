@@ -56,6 +56,7 @@ private let categoryColors: [String: Color] = [
 
 struct PortfolioView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.scenePhase) private var scenePhase
     @State private var hasLoaded = false
     @State private var selectedSpendingMonth: String?
     @State private var lastHapticMonth: String?
@@ -152,6 +153,7 @@ struct PortfolioView: View {
 
                             Spacer(minLength: 24)
                         }
+                        .padding(.bottom, 80)
                     }
                     .refreshable {
                         do {
@@ -173,6 +175,12 @@ struct PortfolioView: View {
                 async let statementsLoad: Void = appState.loadStatements()
                 async let tallyLoad: Void = appState.loadTallyData()
                 _ = await (financeLoad, statementsLoad, tallyLoad)
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active, hasLoaded else { return }
+            Task {
+                try? await appState.refreshPortfolio()
             }
         }
         .onChange(of: appState.isLoggedIn) { _, isLoggedIn in
