@@ -1,3 +1,4 @@
+import AuthenticationServices
 import LocalAuthentication
 import SwiftUI
 
@@ -90,8 +91,50 @@ struct LoginSheet: View {
                     .padding(.horizontal, 32)
                 }
 
-                // Sign in with Apple requires paid Apple Developer Program
-                // Hidden until membership is active
+                VStack(spacing: 12) {
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.email, .fullName]
+                    } onCompletion: { result in
+                        Task { await appState.handleAppleSignIn(result: result) }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 50)
+                    .padding(.horizontal)
+
+                    // ponytail: stubs — enable when OAuth credentials added to Vercel
+                    Button {
+                    } label: {
+                        HStack {
+                            Image(systemName: "globe")
+                            Text("Continue with Google")
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(true)
+                    .padding(.horizontal)
+
+                    Button {
+                    } label: {
+                        HStack {
+                            Image(systemName: "f.circle.fill")
+                            Text("Continue with Facebook")
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(true)
+                    .padding(.horizontal)
+                }
+
+                HStack {
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                    Text("or")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                }
+                .padding(.horizontal, 32)
 
                 VStack(spacing: 16) {
                     TextField("Email", text: $email)

@@ -1,5 +1,6 @@
-import SwiftUI
+import AuthenticationServices
 import LocalAuthentication
+import SwiftUI
 
 @MainActor
 @Observable
@@ -212,6 +213,30 @@ final class AppState {
 
     func register(email: String, password: String) async {
         await authenticate { try await authAPI.register(email: email, password: password) }
+    }
+
+    func handleAppleSignIn(result: Result<ASAuthorization, Error>) async {
+        switch result {
+        case .failure(let err):
+            error = err.localizedDescription
+        case .success(let auth):
+            guard let cred = auth.credential as? ASAuthorizationAppleIDCredential else { return }
+            guard let email = cred.email else {
+                error = "Please share your email with Epiphany on first sign-in."
+                return
+            }
+            // ponytail: registers via email/password flow using Apple ID email; replace with
+            // real Apple token verification endpoint once backend adds /auth/apple
+            let tempPassword = cred.user // Apple's stable user ID as one-time password
+            await authenticate {
+                // Try login first, fall back to register (Apple returns email only on first sign-in)
+                do {
+                    return try await self.authAPI.login(email: email, password: tempPassword)
+                } catch {
+                    return try await self.authAPI.register(email: email, password: tempPassword)
+                }
+            }
+        }
     }
 
     func saveBiometricCredentials(email: String, password: String) {
