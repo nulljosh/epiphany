@@ -1011,6 +1011,45 @@ struct SituationView: View {
     private var snapshotKey: String {
         "situation.snapshot.v2"
     }
+
+    private var mapSearchBar: some View {
+        HStack(spacing: 6) {
+            TextField("Search location…", text: $mapSearch)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13, design: .monospaced))
+                .foregroundStyle(.white)
+                .submitLabel(.go)
+                .onSubmit { Task { await geocodeAndFly() } }
+                .frame(width: 160)
+            Button { Task { await geocodeAndFly() } } label: {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(mapSearchError ? .red : .secondary)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .padding(.leading, 12)
+        .padding(.top, 54)
+    }
+
+    private func geocodeAndFly() async {
+        let q = mapSearch.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        let geocoder = CLGeocoder()
+        guard let placemark = try? await geocoder.geocodeAddressString(q).first,
+              let loc = placemark.location else {
+            mapSearchError = true
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            mapSearchError = false
+            return
+        }
+        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        withAnimation { mapPosition = .region(MKCoordinateRegion(center: loc.coordinate, span: span)) }
+        mapSearch = ""
+    }
+
 }
 
 // MARK: - Load Completion Actor
@@ -1132,45 +1171,7 @@ private final class LocationManager: NSObject, CLLocationManagerDelegate {
         locationUpdateCount += 1
     }
 
-    private var mapSearchBar: some View {
-        HStack(spacing: 6) {
-            TextField("Search location…", text: $mapSearch)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, design: .monospaced))
-                .foregroundStyle(.white)
-                .submitLabel(.go)
-                .onSubmit { Task { await geocodeAndFly() } }
-                .frame(width: 160)
-            Button { Task { await geocodeAndFly() } } label: {
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(mapSearchError ? .red : .secondary)
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .padding(.leading, 12)
-        .padding(.top, 54)
-    }
-
-    private func geocodeAndFly() async {
-        let q = mapSearch.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return }
-        let geocoder = CLGeocoder()
-        guard let placemark = try? await geocoder.geocodeAddressString(q).first,
-              let loc = placemark.location else {
-            mapSearchError = true
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            mapSearchError = false
-            return
-        }
-        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
-        withAnimation { mapPosition = .region(MKCoordinateRegion(center: loc.coordinate, span: span)) }
-        mapSearch = ""
-    }
-
-    private func reverseGeocode(_ location: CLLocation) {
+    func reverseGeocode(_ location: CLLocation) {
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(location) { placemarks, _ in
             Task { @MainActor [weak self] in
