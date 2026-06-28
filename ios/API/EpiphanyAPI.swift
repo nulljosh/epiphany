@@ -29,6 +29,7 @@ enum APIError: LocalizedError {
 protocol AuthAPI {
     func login(email: String, password: String) async throws -> User
     func register(email: String, password: String) async throws -> User
+    func signinApple(identityToken: String, email: String?, fullName: String?) async throws -> User
     func changeEmail(newEmail: String, password: String) async throws -> User
     func changeName(name: String) async throws -> User
     func changePassword(currentPassword: String, newPassword: String) async throws
@@ -76,6 +77,21 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
 
     func register(email: String, password: String) async throws -> User {
         try await authRequest(action: "register", email: email, password: password)
+    }
+
+    func signinApple(identityToken: String, email: String?, fullName: String?) async throws -> User {
+        let url = try makeURL("/api/auth", query: ["action": "signin-apple"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var body: [String: String] = ["identityToken": identityToken]
+        if let email { body["email"] = email }
+        if let fullName { body["fullName"] = fullName }
+        request.httpBody = try JSONEncoder().encode(body)
+        let data = try await perform(request)
+        let wrapper = try decode(AuthResponse.self, from: data)
+        guard let user = wrapper.user else { throw APIError.decodingError("No user in apple signin response") }
+        return user
     }
 
     private func authRequest(action: String, email: String, password: String) async throws -> User {

@@ -220,21 +220,20 @@ final class AppState {
         case .failure(let err):
             error = err.localizedDescription
         case .success(let auth):
-            guard let cred = auth.credential as? ASAuthorizationAppleIDCredential else { return }
-            guard let email = cred.email else {
-                error = "Please share your email with Epiphany on first sign-in."
+            guard let cred = auth.credential as? ASAuthorizationAppleIDCredential,
+                  let tokenData = cred.identityToken,
+                  let token = String(data: tokenData, encoding: .utf8) else {
+                error = "Invalid Apple credential"
                 return
             }
-            // ponytail: registers via email/password flow using Apple ID email; replace with
-            // real Apple token verification endpoint once backend adds /auth/apple
-            let tempPassword = cred.user // Apple's stable user ID as one-time password
+            let fullName = [cred.fullName?.givenName, cred.fullName?.familyName]
+                .compactMap { $0 }.joined(separator: " ")
             await authenticate {
-                // Try login first, fall back to register (Apple returns email only on first sign-in)
-                do {
-                    return try await self.authAPI.login(email: email, password: tempPassword)
-                } catch {
-                    return try await self.authAPI.register(email: email, password: tempPassword)
-                }
+                try await self.authAPI.signinApple(
+                    identityToken: token,
+                    email: cred.email,
+                    fullName: fullName.isEmpty ? nil : fullName
+                )
             }
         }
     }
