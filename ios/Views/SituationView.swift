@@ -587,7 +587,7 @@ struct SituationView: View {
         }
         .overlay(alignment: .top) { errorOverlay }
         .overlay(alignment: .topLeading) { mapSearchBar }
-        .overlay(alignment: mapGrayscale ? .top : .bottom) { venueCategoryBar }
+        .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottom) { statusOverlay }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
         .overlay(alignment: .bottomTrailing) { currentLocationButton }
