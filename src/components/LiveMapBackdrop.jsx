@@ -1001,7 +1001,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       `}</style>
       <div
         ref={mapRef}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto', filter: 'grayscale(1)' }}
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto' }}
       />
       <form onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
         <input
