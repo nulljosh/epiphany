@@ -92,6 +92,7 @@ private struct FloatingTabBar: View {
     @Binding var selectedTab: Int
 
     private let icons = ["map", "chart.line.uptrend.xyaxis", "briefcase", "gearshape"]
+    private let filledIcons = ["map.fill", "chart.line.uptrend.xyaxis", "briefcase.fill", "gearshape.fill"]
     private let identifiers = ["tab-situation", "tab-markets", "tab-portfolio", "tab-settings"]
 
     var body: some View {
@@ -113,9 +114,10 @@ private struct FloatingTabBar: View {
             selectedTab = index
             Haptics.selection()
         } label: {
-            Image(systemName: icons[index])
+            Image(systemName: selectedTab == index ? filledIcons[index] : icons[index])
                 .font(.system(size: 20, weight: .medium))
                 .foregroundStyle(selectedTab == index ? Palette.text : Palette.textSecondary)
+                .symbolEffect(.bounce, value: selectedTab == index)
                 .frame(width: 50, height: 40)
                 .background {
                     if selectedTab == index {
