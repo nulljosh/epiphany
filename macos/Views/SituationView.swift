@@ -106,6 +106,8 @@ struct SituationView: View {
     @State private var selectedVenueCategory: VenueCategory?
     @State private var venueResults: [MKMapItem] = []
     @State private var isSearchingVenues = false
+    @State private var mapSearch = ""
+    @State private var mapSearchError = false
 
     private var activeMapStyle: MapStyle {
         MapLayerStyle(rawValue: mapLayerRaw)?.mapStyle ?? .hybrid(elevation: .realistic)
@@ -322,6 +324,7 @@ struct SituationView: View {
         }
         .mapStyle(activeMapStyle)
         .grayscale(mapGrayscale ? 1.0 : 0.0)
+        .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
     }
@@ -373,6 +376,44 @@ struct SituationView: View {
     }
 
     @ViewBuilder
+    private var mapSearchBar: some View {
+        HStack(spacing: 6) {
+            TextField("Search location…", text: $mapSearch)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(.primary)
+                .onSubmit { Task { await geocodeAndFly() } }
+                .frame(width: 160)
+            Button { Task { await geocodeAndFly() } } label: {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(mapSearchError ? .red : .secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .padding(.leading, 12)
+        .padding(.top, 12)
+    }
+
+    private func geocodeAndFly() async {
+        let q = mapSearch.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        let geocoder = CLGeocoder()
+        guard let placemark = try? await geocoder.geocodeAddressString(q).first,
+              let loc = placemark.location else {
+            mapSearchError = true
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            mapSearchError = false
+            return
+        }
+        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        withAnimation { mapPosition = .region(MKCoordinateRegion(center: loc.coordinate, span: span)) }
+        mapSearch = ""
+    }
+
     private var layerPickerButton: some View {
         Menu {
             Toggle(isOn: $mapGrayscale) {
