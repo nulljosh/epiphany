@@ -119,8 +119,6 @@ struct SituationView: View {
     @AppStorage("showAQI") private var showAQI = true
     @AppStorage("showHighAltFlights") private var showHighAltFlights = false
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
-    @AppStorage("situation.mapGrayscale") private var mapGrayscale: Bool = true
-
     @State private var selectedVenueCategories: Set<VenueCategory> = Set(VenueCategory.allCases)
     @State private var venueResults: [VenueCategory: [MKMapItem]] = [:]
     @State private var isSearchingVenues = false
@@ -571,7 +569,6 @@ struct SituationView: View {
             UserAnnotation()
         }
         .mapStyle(activeMapStyle)
-        .grayscale(mapGrayscale ? 1.0 : 0.0)
         .onMapCameraChange(frequency: .onEnd) { context in
             let region = context.region
             visibleRegion = region
@@ -634,23 +631,18 @@ struct SituationView: View {
                                 lineWidth: 1
                             )
                         )
-                        .saturation(mapGrayscale ? 0 : 1)
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 10)
         }
-        .padding(mapGrayscale ? .top : .bottom, mapGrayscale ? 75 : 155)
+        .padding(.bottom, 155)
     }
 
     @ViewBuilder
     private var layerPickerButton: some View {
         Menu {
-            Toggle(isOn: $mapGrayscale) {
-                Label("Grayscale", systemImage: "circle.lefthalf.filled")
-            }
-            Divider()
             ForEach(MapLayerStyle.allCases, id: \.rawValue) { style in
                 Button {
                     mapLayerRaw = style.rawValue

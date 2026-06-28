@@ -1,6 +1,6 @@
 # Epiphany
 
-v2.5.0 -- Personal intelligence platform. Palantir for regular people. Live on the App Store as of 2026-06-23 (https://apps.apple.com/app/epiphany/id6779522175).
+v2.5.1 -- Personal intelligence platform. Palantir for regular people. Live on the App Store as of 2026-06-23 (https://apps.apple.com/app/epiphany/id6779522175).
 
 ## Known issue (post-launch)
 SnapTrade brokerage sync shows phantom holdings and bad math. Shipped unfixed — needs a fix soon since real users will hit it.

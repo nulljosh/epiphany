@@ -102,7 +102,6 @@ struct SituationView: View {
     @State private var loadTask: Task<Void, Never>?
 
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
-    @AppStorage("situation.mapGrayscale") private var mapGrayscale: Bool = true
     @State private var selectedVenueCategory: VenueCategory?
     @State private var venueResults: [MKMapItem] = []
     @State private var isSearchingVenues = false
@@ -323,7 +322,6 @@ struct SituationView: View {
             }
         }
         .mapStyle(activeMapStyle)
-        .grayscale(mapGrayscale ? 1.0 : 0.0)
         .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
@@ -416,10 +414,6 @@ struct SituationView: View {
 
     private var layerPickerButton: some View {
         Menu {
-            Toggle(isOn: $mapGrayscale) {
-                Label("Grayscale", systemImage: "circle.lefthalf.filled")
-            }
-            Divider()
             ForEach(MapLayerStyle.allCases, id: \.rawValue) { style in
                 Button {
                     mapLayerRaw = style.rawValue
