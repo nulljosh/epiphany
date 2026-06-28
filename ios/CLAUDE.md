@@ -53,3 +53,4 @@ Version lives in `project.yml` (`MARKETING_VERSION`). On every release, sync the
 
 - Wealthsimple unofficial API exists in `src/utils/brokers/wealthsimple.js` — not yet wired to portfolio sync
 - 500 error intermittent on app startup (~30-45 min window 06-16) — likely Yahoo Finance IP block or crumb fetch failure; monitor after deploy
+- Changelog v2.5.1 (2026-06-28): FloatingTabBar now uses fill variants for selected state (map.fill, briefcase.fill, gearshape.fill). Added symbolEffect(.bounce) on tab selection.
