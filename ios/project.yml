@@ -39,6 +39,7 @@ targets:
           - "Tests"
           - "UITests"
           - "EpiphanyTests"
+          - ".asc"
           - "build-archive"
           - "Info.plist"
     settings:
