@@ -126,6 +126,8 @@ struct SituationView: View {
     @State private var isSearchingVenues = false
     @State private var selectedVenue: MKMapItem?
     @State private var visibleRegion: MKCoordinateRegion?
+    @State private var mapSearch = ""
+    @State private var mapSearchError = false
 
     private var activeMapStyle: MapStyle {
         MapLayerStyle(rawValue: mapLayerRaw)?.mapStyle ?? .hybrid(elevation: .realistic)
@@ -587,6 +589,7 @@ struct SituationView: View {
                 .presentationDetents([.fraction(0.4), .medium])
         }
         .overlay(alignment: .top) { errorOverlay }
+        .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: mapGrayscale ? .top : .bottom) { venueCategoryBar }
         .overlay(alignment: .bottom) { statusOverlay }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
@@ -1135,6 +1138,44 @@ private final class LocationManager: NSObject, CLLocationManagerDelegate {
         region = Self.fallbackRegion
         placeName = "New York"
         locationUpdateCount += 1
+    }
+
+    private var mapSearchBar: some View {
+        HStack(spacing: 6) {
+            TextField("Search location…", text: $mapSearch)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13, design: .monospaced))
+                .foregroundStyle(.white)
+                .submitLabel(.go)
+                .onSubmit { Task { await geocodeAndFly() } }
+                .frame(width: 160)
+            Button { Task { await geocodeAndFly() } } label: {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(mapSearchError ? .red : .secondary)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .padding(.leading, 12)
+        .padding(.top, 54)
+    }
+
+    private func geocodeAndFly() async {
+        let q = mapSearch.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        let geocoder = CLGeocoder()
+        guard let placemark = try? await geocoder.geocodeAddressString(q).first,
+              let loc = placemark.location else {
+            mapSearchError = true
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            mapSearchError = false
+            return
+        }
+        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        withAnimation { mapPosition = .region(MKCoordinateRegion(center: loc.coordinate, span: span)) }
+        mapSearch = ""
     }
 
     private func reverseGeocode(_ location: CLLocation) {
