@@ -178,6 +178,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const [search, setSearch] = useState('');
+  const [searchError, setSearchError] = useState(false);
   const autoRetriedRef = useRef(false);
   const visibilityHandlerRef = useRef(null);
   // Grayscale basemap is the permanent Gotham look — colored data markers ride
@@ -198,6 +200,19 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     if (mapInstanceRef.current) mapInstanceRef.current.flyTo(params);
     else pendingFlyRef.current = params;
   }, []);
+
+  async function handleSearch(e) {
+    e.preventDefault();
+    const q = search.trim();
+    if (!q) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`);
+      const [hit] = await res.json();
+      if (!hit) { setSearchError(true); setTimeout(() => setSearchError(false), 2000); return; }
+      mapInstanceRef.current?.flyTo({ center: [+hit.lon, +hit.lat], zoom: 11, duration: 900 });
+      setSearch('');
+    } catch { setSearchError(true); setTimeout(() => setSearchError(false), 2000); }
+  }
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -988,6 +1003,16 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         ref={mapRef}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto', filter: 'grayscale(1)' }}
       />
+      <form onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search location…"
+          aria-label="Search map location"
+          style={{ height: 34, padding: '0 10px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#fff', font: '12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', outline: 'none', width: 180, backdropFilter: 'blur(8px)', transition: 'border-color 0.2s' }}
+        />
+        <button type="submit" aria-label="Go" style={{ height: 34, width: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#94a3b8', font: '700 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>→</button>
+      </form>
       <button
         onClick={() => {
           if (isLocating) return;
