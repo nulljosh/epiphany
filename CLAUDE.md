@@ -489,3 +489,10 @@ Status legend: Untested | Pass | Fail | Blocked
 | Landing page (web, unauthenticated) | As a visitor, I see a marketing landing page before signing in. | Untested |
 
 This is a seed list only — a full feature audit, per-story testing pass, and UX/logistics fix loop was explicitly deferred by the user to a future session. Do not expand this without that go-ahead.
+
+## Roadmap (from 2026-06-28 PDF)
+- [ ] Map results: show photos + reviews, tighten layout
+- [ ] iOS login: use Epiphany branding; add Sign in with Apple on both login + register screens
+- [ ] All iOS apps: add "What's New" screen shown on first launch after update
+- [ ] Maps: copy Google Maps local-vibe drawer style (photos, local info, vibe)
+- [ ] Maps: let users save locations + add custom labels
