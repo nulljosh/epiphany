@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     const data = await kv.get(kvKey);
     if (!data) return res.status(200).json({ empty: true });
 
-    const stocksValue = (data.holdings || []).reduce((sum, h) => sum + (h.shares * (h.costBasis || 0)), 0);
+    const stocksValue = (data.holdings || []).reduce((sum, h) => sum + (h.marketValue ?? (h.shares * (h.costBasis || 0))), 0);
     const cashValue = (data.accounts || []).reduce((sum, a) => sum + (a.balance || 0), 0);
     const totalDebt = (data.debt || []).reduce((sum, d) => sum + (d.balance || 0), 0);
     const netWorth = stocksValue + cashValue - totalDebt;
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
       surplus: totalIncome - totalExpenses,
       holdingsCount: (data.holdings || []).length,
       topHoldings: (data.holdings || [])
-        .map(h => ({ symbol: h.symbol, value: Math.round(h.shares * (h.costBasis || 0) * 100) / 100 }))
+        .map(h => ({ symbol: h.symbol, value: Math.round((h.marketValue ?? (h.shares * (h.costBasis || 0))) * 100) / 100 }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5),
       debtItems: (data.debt || []).map(d => ({ name: d.name, balance: d.balance })),
