@@ -1,0 +1,15 @@
+{
+  "appId": "6779522175",
+  "bundleId": "com.heyitsmejosh.epiphany",
+  "scheme": "Epiphany",
+  "platforms": ["ios", "web"],
+  "simulator": "iPhone 11 Pro Max",
+  "iosDir": "ios",
+  "xcodeProject": "ios/Epiphany.xcodeproj",
+  "exportOptions": "ios/.asc/artifacts/ExportOptions.plist",
+  "archivePath": "ios/.asc/artifacts/Epiphany.xcarchive",
+  "ipaPath": "ios/.asc/artifacts/Epiphany.ipa",
+  "screenshots": {
+    "situation": "public/screenshots/screenshot-situation-new.png"
+  }
+}
