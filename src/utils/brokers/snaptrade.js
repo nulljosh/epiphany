@@ -142,6 +142,7 @@ export class SnapTradeAdapter {
         // treat 0 as missing so the client-side quote fallback kicks in.
         const price = Number(pos.price) > 0 ? Number(pos.price) : null;
         const units = Number(pos.units ?? 0);
+        if (units <= 0) continue;
         holdings.push({
           symbol,
           shares: units,
