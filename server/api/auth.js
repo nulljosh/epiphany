@@ -131,6 +131,73 @@ export default async function handler(req, res) {
     }
     const { action } = req.query;
 
+  // GET: GitHub OAuth redirect
+  if (req.method === 'GET' && action === 'github') {
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    if (!clientId) return errorResponse(res, 501, 'GitHub OAuth not configured');
+    const base = getBaseUrl();
+    const params = new URLSearchParams({ client_id: clientId, scope: 'user:email', redirect_uri: `${base}/api/auth?action=github-callback` });
+    res.writeHead(302, { Location: `https://github.com/login/oauth/authorize?${params}` });
+    return res.end();
+  }
+
+  // GET: GitHub OAuth callback
+  if (req.method === 'GET' && action === 'github-callback') {
+    const { code, error: ghError } = req.query;
+    const base = getBaseUrl();
+    if (ghError || !code) { res.writeHead(302, { Location: `${base}/?auth_error=github_denied` }); return res.end(); }
+    if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
+      res.writeHead(302, { Location: `${base}/?auth_error=github_config` }); return res.end();
+    }
+    try {
+      const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code }),
+      });
+      const { access_token } = await tokenRes.json();
+      if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=github_token` }); return res.end(); }
+
+      const [ghUserRes, ghEmailRes] = await Promise.all([
+        fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${access_token}`, 'User-Agent': 'Epiphany' } }),
+        fetch('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${access_token}`, 'User-Agent': 'Epiphany' } }),
+      ]);
+      const ghUser = await ghUserRes.json();
+      const ghEmails = await ghEmailRes.json();
+      const primaryEmail = (Array.isArray(ghEmails) ? (ghEmails.find(e => e.primary && e.verified) || ghEmails[0]) : null)?.email || ghUser.email;
+      if (!primaryEmail) { res.writeHead(302, { Location: `${base}/?auth_error=github_email` }); return res.end(); }
+
+      const githubId = String(ghUser.id);
+      const normalizedEmail = primaryEmail.toLowerCase();
+
+      let user = await kv.get(`github:${githubId}`);
+      if (!user) {
+        user = await kv.get(`user:${normalizedEmail}`);
+        if (user) {
+          user.githubId = githubId;
+          user.avatarUrl = user.avatarUrl || ghUser.avatar_url || null;
+          await kv.set(`user:${normalizedEmail}`, user);
+          await kv.set(`github:${githubId}`, user);
+        }
+      }
+      if (!user) {
+        const id = crypto.randomUUID();
+        user = { id, email: normalizedEmail, passwordHash: null, verified: true, tier: 'free', githubId, avatarUrl: ghUser.avatar_url || null, name: ghUser.name || ghUser.login || null, createdAt: new Date().toISOString() };
+        await kv.set(`user:${normalizedEmail}`, user);
+        await kv.set(`github:${githubId}`, user);
+      }
+
+      const sessionToken = generateToken();
+      await kv.set(`session:${sessionToken}`, { userId: user.id, email: user.email, tier: user.tier || 'free', expiresAt: Date.now() + SESSION_TTL * 1000 }, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+      res.writeHead(302, { Location: base });
+      return res.end();
+    } catch (err) {
+      console.error('[AUTH] GitHub callback error:', err.message);
+      res.writeHead(302, { Location: `${base}/?auth_error=github_error` });
+      return res.end();
+    }
+  }
+
   // GET: check current session
   if (req.method === 'GET' && action === 'me') {
     try {

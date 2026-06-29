@@ -19,6 +19,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [tosChecked, setTosChecked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -29,6 +30,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
     e.preventDefault();
     setLocalError(null);
     if (password !== confirmPassword) { setLocalError('Passwords do not match'); return; }
+    if (!tosChecked) { setLocalError('You must agree to the Terms of Service'); return; }
     setSubmitting(true);
     await onRegister(email, password);
     setSubmitting(false);
@@ -65,6 +67,10 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
 
         {/* Form */}
         <div style={{ maxWidth: 420, margin: '0 auto', ...card, ...fadeStyle(mounted, 0.18) }}>
+          <div style={{ marginBottom: 20 }}>
+            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Sign up with GitHub</a>
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)', margin: '14px 0' }}>or</div>
+          </div>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 18 }}>
               <label style={label}>Email</label>
@@ -77,6 +83,12 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
             <div style={{ marginBottom: 24 }}>
               <label style={label}>Confirm Password</label>
               <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Repeat password" />
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.35)', cursor: 'pointer' }}>
+                <input type="checkbox" checked={tosChecked} onChange={e => setTosChecked(e.target.checked)} />
+                I agree to the <a href="/tos" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }}>Terms of Service</a>
+              </label>
             </div>
             {displayError && <div style={errorBox}>{displayError}</div>}
             <button type="submit" disabled={submitting} className="auth-btn">{submitting ? 'Creating account...' : 'Create Account'}</button>
