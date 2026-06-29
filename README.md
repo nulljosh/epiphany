@@ -1,4 +1,4 @@
-<img src="icon.svg" width="80" style="border-radius:16px">
+<img src="icon.svg" width="80" style="border-radius:18px">
 
 # Epiphany.
 ![web](https://img.shields.io/badge/web-v2.6.0-blue) ![ios](https://img.shields.io/badge/iOS-v2.5.1-blue) ![macos](https://img.shields.io/badge/macOS-v2.2.4-blue) ![watchos](https://img.shields.io/badge/watchOS-v1.0.0-blue) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175) ![license](https://img.shields.io/badge/license-Apache%202.0-green) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany)
