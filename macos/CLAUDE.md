@@ -1,6 +1,6 @@
 # Epiphany macOS
 
-v2.5.1 — Native macOS intelligence dashboard. 5-tab SwiftUI app (Situation, Markets, People, Portfolio, Settings).
+v2.5.2 — Native macOS intelligence dashboard. 5-tab SwiftUI app (Situation, Markets, People, Portfolio, Settings).
 
 ## Rules
 

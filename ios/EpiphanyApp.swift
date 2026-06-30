@@ -5,6 +5,7 @@ struct EpiphanyApp: App {
     @State private var appState = AppState()
     @State private var showSplash = true
     @State private var hasStartedLaunchFlow = false
+    @AppStorage("app_theme") private var rawTheme = "system"
 
     var body: some Scene {
         WindowGroup {
@@ -17,6 +18,7 @@ struct EpiphanyApp: App {
                         .environment(appState)
                 }
             }
+            .preferredColorScheme(rawTheme == "dark" ? .dark : rawTheme == "light" ? .light : nil)
             .task {
                 guard !hasStartedLaunchFlow else { return }
                 hasStartedLaunchFlow = true

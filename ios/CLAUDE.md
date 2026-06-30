@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v2.5.1 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.heyitsmejosh.com
+v2.5.2 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.heyitsmejosh.com
 
 ## Rules
 
