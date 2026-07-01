@@ -46,6 +46,17 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
 - **PWA** — offline service worker
 - **Native** — iOS, macOS, watchOS companions
 
+## This Week / This Month
+
+**This week**
+- [ ] Fix SnapTrade phantom holdings + bad math (shipped unfixed, real users hitting it)
+- [ ] Watch v2.5.1 (build 6) clear App Store review
+
+**This month**
+- [ ] Statement upload UI bug — button not persisting file
+- [ ] News-not-loading investigation
+- [ ] Mac/watchOS App Store submission checklist items (compliance answers, support URL)
+
 ## Weekend Roadmap
 
 - [ ] Watch first live Autopilot BTC probe fill (capped at 3 fractional trades, auto-reverts to paper)
