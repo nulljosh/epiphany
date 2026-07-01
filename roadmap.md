@@ -1,5 +1,13 @@
 # Epiphany Roadmap
 
+## iOS 2.5.2 pass (from 2026-07-01 feedback)
+- [ ] Map search bar restyle (cleaner UI) + location button cycles 3 zoom levels — `ios/Views/SituationView.swift`
+- [ ] Version bump (project.yml at 2.5.2) + rewrite corny What's New via asc
+- [ ] ASC marketing URL → heyitsmejosh.com (developer website link broken)
+- [ ] Fresh App Store + splash screenshots
+- [x] Portfolio staleness — broker re-sync on refresh (4de273f, 2026-07-01)
+- [x] Duplicate ticker in markets drawer removed (4de273f)
+
 ## From epiphany-notes.pdf (imported 2026-06-30)
 - [ ] Create a skill/shortcut for generating SVG architecture maps.
 - [ ] **Needs dedicated session:** src/App.jsx `ASSETS` const (line ~36, ~180 tickers) — already documented as fallback-only ("live prices auto-loaded from Yahoo Finance via useStocks", replaced on load), used in 6+ places across the 978-line file, tightly coupled to the trading simulator. Original PDF itself flagged this under "Bigger Builds (plan before starting)" — not safe to blind-edit in a lean pass; risks breaking the simulator.
