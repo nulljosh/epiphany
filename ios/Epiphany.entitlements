@@ -12,5 +12,9 @@
 	<string>We need your location to show nearby events, stocks, and map data.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We use your camera to let you take a profile photo.</string>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.heyitsmejosh.epiphany</string>
+	</array>
 </dict>
 </plist>

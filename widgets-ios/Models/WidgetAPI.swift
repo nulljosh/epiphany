@@ -1,8 +1,8 @@
 import Foundation
 
 struct WidgetAPI {
-    static let baseURL = "https://monica.heyitsmejosh.com"
-    private static var defaults: UserDefaults? { UserDefaults(suiteName: "group.com.jt.monica") }
+    static let baseURL = "https://epiphany.heyitsmejosh.com"
+    private static var defaults: UserDefaults? { UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany") }
 
     private static var session: URLSession {
         let config = URLSessionConfiguration.default
