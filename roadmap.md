@@ -1,10 +1,11 @@
 # Epiphany Roadmap
 
 ## iOS 2.5.2 pass (from 2026-07-01 feedback)
-- [ ] Map search bar restyle (cleaner UI) + location button cycles 3 zoom levels — `ios/Views/SituationView.swift`
-- [ ] Version bump (project.yml at 2.5.2) + rewrite corny What's New via asc
-- [ ] ASC marketing URL → heyitsmejosh.com (developer website link broken)
+- [x] Map search bar restyle + location button cycles 3 zoom levels (2026-07-01)
+- [x] ASC version 2.5.2 created (PREPARE_FOR_SUBMISSION), clean What's New set (2026-07-01)
+- [x] ASC marketing URL → heyitsmejosh.com (2026-07-01)
 - [ ] Fresh App Store + splash screenshots
+- [ ] Archive + upload build 2.5.2, then submit (needs screenshots first)
 - [x] Portfolio staleness — broker re-sync on refresh (4de273f, 2026-07-01)
 - [x] Duplicate ticker in markets drawer removed (4de273f)
 
