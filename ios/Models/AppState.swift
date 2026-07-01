@@ -602,6 +602,8 @@ final class AppState {
     // MARK: - Refresh Operations (throwing for .refreshable)
 
     func refreshPortfolio() async throws {
+        // Trigger a broker re-sync so holdings aren't weeks stale (server caches 25 min)
+        if isLoggedIn { _ = try? await EpiphanyAPI.shared.syncBroker() }
         async let f: Void = _loadFinanceDataThrowing()
         async let s: Void = _loadStatementsThrowing()
         _ = try await (f, s)
