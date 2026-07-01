@@ -304,10 +304,6 @@ struct MarketsView: View {
             let target = drawerState.height(in: geo.size.height) - dragTranslation
             let height = min(max(64, target), geo.size.height - 80)
             VStack(spacing: 0) {
-                if drawerState == .large {
-                    TickerBarView(appState: appState, onSelectStock: { tickerSelectedStock = $0 }, showSparklines: true, height: 36)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
                 NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, brief: appState.dailyBrief)
             }
             .frame(maxWidth: .infinity)
