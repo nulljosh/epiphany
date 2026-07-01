@@ -16,6 +16,7 @@ struct EpiphanyApp: App {
                 } else {
                     ContentView()
                         .environment(appState)
+                        .overlay { WhatsNewSheet() }
                 }
             }
             .preferredColorScheme(rawTheme == "dark" ? .dark : rawTheme == "light" ? .light : nil)
