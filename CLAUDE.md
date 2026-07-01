@@ -1,6 +1,9 @@
 # Epiphany
 
-v2.6.0 -- Personal intelligence platform. Palantir for regular people. Live on the App Store as of 2026-06-23 (https://apps.apple.com/app/epiphany/id6779522175).
+v2.6.0 -- Personal intelligence platform. Palantir for regular people. App Store: v1.0 live (READY_FOR_SALE) since 2026-06-23; v2.5.1 (build 6) submitted for review 2026-06-30, WAITING_FOR_REVIEW — not yet live (https://apps.apple.com/app/epiphany/id6779522175).
+
+## Shipped (2026-06-30)
+- [x] iOS v2.5.1 (build 6) submitted to App Store — export compliance answered, What's New (en-CA) filled, WAITING_FOR_REVIEW
 
 ## Shipped (2026-06-28)
 - [x] ToS checkbox required on register — `src/components/RegisterPage.jsx`, `public/tos.html`
