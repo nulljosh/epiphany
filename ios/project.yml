@@ -49,7 +49,33 @@ targets:
       PRODUCT_NAME: Epiphany
       PRODUCT_MODULE_NAME: Epiphany
       TARGETED_DEVICE_FAMILY: "1"
-      # CODE_SIGN_ENTITLEMENTS: Epiphany.entitlements  # Requires paid Apple Developer Program
+    entitlements:
+      path: Epiphany.entitlements
+    dependencies:
+      - target: MonicaWidgetsExtension
+  MonicaWidgetsExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ../widgets-ios
+        excludes:
+          - "*.xcodeproj"
+          - "*.yml"
+          - "*.md"
+          - "*.svg"
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_CFBundleDisplayName: Monica Widgets
+      INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright 2026 Joshua Trommel"
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.widgets
+      ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+      PRODUCT_NAME: MonicaWidgets
+      CODE_SIGN_STYLE: Automatic
+    entitlements:
+      path: ../widgets-ios/EpiphanyWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.heyitsmejosh.epiphany
   EpiphanyTests:
     type: bundle.unit-test
     platform: iOS

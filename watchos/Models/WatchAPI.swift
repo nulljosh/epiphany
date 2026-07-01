@@ -6,7 +6,7 @@ final class WatchAPI: @unchecked Sendable {
     private let baseURL = "https://epiphany.heyitsmejosh.com"
     private let session: URLSession
     private let decoder = JSONDecoder()
-    private let defaults = UserDefaults(suiteName: "group.com.jt.monica")
+    private let defaults = UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany")
 
     private init() {
         let config = URLSessionConfiguration.default
