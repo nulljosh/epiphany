@@ -126,6 +126,7 @@ struct SituationView: View {
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var mapSearch = ""
     @State private var mapSearchError = false
+    @State private var locationZoomLevel = 0
 
     private var activeMapStyle: MapStyle {
         MapLayerStyle(rawValue: mapLayerRaw)?.mapStyle ?? .hybrid(elevation: .realistic)
@@ -666,7 +667,15 @@ struct SituationView: View {
         Button {
             Haptics.impact(.light)
             if let region = locationManager.region {
-                withAnimation { mapPosition = .region(region) }
+                // Cycle 3 zoom levels: region -> city -> street
+                let spans: [Double] = [2.0, 0.2, 0.02]
+                let span = spans[locationZoomLevel % spans.count]
+                locationZoomLevel += 1
+                withAnimation {
+                    mapPosition = .region(MKCoordinateRegion(
+                        center: region.center,
+                        span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)))
+                }
             } else {
                 withAnimation { mapPosition = .userLocation(fallback: .automatic) }
             }
@@ -1013,23 +1022,29 @@ struct SituationView: View {
     }
 
     private var mapSearchBar: some View {
-        HStack(spacing: 6) {
-            TextField("Search location…", text: $mapSearch)
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(mapSearchError ? .red : .secondary)
+            TextField("Search", text: $mapSearch)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13, design: .monospaced))
+                .font(.system(size: 15))
                 .foregroundStyle(.white)
-                .submitLabel(.go)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
                 .onSubmit { Task { await geocodeAndFly() } }
-                .frame(width: 160)
-            Button { Task { await geocodeAndFly() } } label: {
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(mapSearchError ? .red : .secondary)
+                .frame(width: 150)
+            if !mapSearch.isEmpty {
+                Button { mapSearch = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(.ultraThinMaterial, in: Capsule())
         .padding(.leading, 12)
         .padding(.top, 54)
     }
