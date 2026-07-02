@@ -4,7 +4,7 @@
 - [x] Map search bar restyle + location button cycles 3 zoom levels (2026-07-01)
 - [x] ASC version 2.5.2 created (PREPARE_FOR_SUBMISSION), clean What's New set (2026-07-01)
 - [x] ASC marketing URL → heyitsmejosh.com (2026-07-01)
-- [ ] Upload build 7 FAILED: MonicaWidgets.appex Info.plist missing NSExtensionPointIdentifier (fix in ios/project.yml widget target info props), re-run `fastlane beta`, attach to 2.5.2, submit
+- [x] Build 7 (2.5.2) uploaded to ASC 2026-07-01 after 2 widget-plist fixes. Remaining: wait for processing, attach to 2.5.2, submit via asc.
 - [ ] Fresh screenshots (fastlane snapshot erroring, exit 75) — optional, 2.5.1 shots carry over
 - [x] Portfolio staleness — broker re-sync on refresh (4de273f, 2026-07-01)
 - [x] Duplicate ticker in markets drawer removed (4de273f)
