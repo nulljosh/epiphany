@@ -28,7 +28,6 @@ import AuthPage from './pages/AuthPage';
 import LandingPage from './pages/LandingPage';
 import DesktopLayout from './layouts/DesktopLayout';
 import MobileLayout from './layouts/MobileLayout';
-import WhatsNew from './components/WhatsNew';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -972,7 +971,6 @@ const reset = useCallback(() => {
           </div>
         </div>
       )}
-      <WhatsNew t={t} />
     </div>
   );
 }
