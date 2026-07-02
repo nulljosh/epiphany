@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>com.apple.security.network.client</key>
-	<true/>
-	<key>com.apple.security.keychain.access-group</key>
-	<array>
-		<string>$(AppIdentifierPrefix)com.heyitsmejosh.opticon.pro</string>
-	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to show nearby events, stocks, and map data.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We use your camera to let you take a profile photo.</string>
-	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>group.com.heyitsmejosh.epiphany</string>
-	</array>
-</dict>
+<dict/>
 </plist>
