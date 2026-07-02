@@ -12,7 +12,7 @@ v2.6.0 -- Personal intelligence platform. Palantir for regular people. App Store
 - [x] GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET set in Vercel production
 
 ## Known issue (post-launch)
-SnapTrade brokerage sync shows phantom holdings and bad math. Shipped unfixed — needs a fix soon since real users will hit it.
+SnapTrade phantom holdings: FIXED 2026-07-02 — `listAccounts()` now dedupes accounts by id (SnapTrade returned duplicates, doubling every position); holdings merge keys on account id, not name. Trade tab in `FinancePanel.jsx` still disabled — re-enable after Josh eyeballs a real force-sync.
 
 ## Rules
 
