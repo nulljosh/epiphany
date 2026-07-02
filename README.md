@@ -80,3 +80,13 @@ Deploy: Vercel (`npx vercel --prod`)
 ## License
 
 MIT 2026, Joshua Trommel
+
+## Autopilot via Alpaca (in progress 2026-07-02)
+
+SnapTrade/Wealthsimple is **read-only by design** (403 code 1020) — it can never place orders; it stays connected for portfolio sync only. Trade execution runs on Alpaca (already wired: `server/api/broker/{alpaca,signal,positions,webhook,morning-run}.js`, defaults to paper mode).
+
+Remaining manual steps:
+1. Josh: sign up at alpaca.markets (free), dashboard → Generate API Keys (paper).
+2. Add `ALPACA_API_KEY` + `ALPACA_API_SECRET` to Vercel production, redeploy.
+3. Verify `/api/broker/positions` returns account JSON, place one paper order via signal endpoint.
+4. Later: switch `ALPACA_BASE_URL` to live once paper autopilot proves out.
