@@ -81,7 +81,15 @@ Deploy: Vercel (`npx vercel --prod`)
 
 MIT 2026, Joshua Trommel
 
-## Autopilot via Alpaca (in progress 2026-07-02)
+## Autopilot — broker decision (2026-07-02)
+
+Wealthsimple has NO trading API (read-only via SnapTrade, by WS policy — not fixable). Alpaca is US-only for live. Decision:
+1. **IBKR Canada** = the stocks path. Josh: open account (~1 day approval), connect via existing SnapTrade flow with trade permission, impact-test should pass, autopilot engine already built.
+2. Wealthsimple stays connected read-only for portfolio sync.
+3. Kraken (crypto micro-trades) = optional, account created but parked — Josh doesn't want it for now.
+4. US customers already get full autopilot via SnapTrade trade-enabled brokers — Canada is the restrictive market, not the product.
+
+## Autopilot via Alpaca (superseded — US-only for live; paper still usable for testing)
 
 SnapTrade/Wealthsimple is **read-only by design** (403 code 1020) — it can never place orders; it stays connected for portfolio sync only. Trade execution runs on Alpaca (already wired: `server/api/broker/{alpaca,signal,positions,webhook,morning-run}.js`, defaults to paper mode).
 
