@@ -63,9 +63,14 @@ targets:
           - "*.yml"
           - "*.md"
           - "*.svg"
+    info:
+      path: ../widgets-ios/Info.plist
+      properties:
+        CFBundleDisplayName: Epiphany Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
-      GENERATE_INFOPLIST_FILE: YES
-      INFOPLIST_KEY_CFBundleDisplayName: Monica Widgets
+      INFOPLIST_KEY_CFBundleDisplayName: Epiphany Widgets
       INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright 2026 Joshua Trommel"
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.widgets
       ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
