@@ -101,8 +101,17 @@ export class SnapTradeAdapter {
 
   async listAccounts() {
     this._requireUser();
-    return this._request('GET', '/accounts', {
+    const accounts = await this._request('GET', '/accounts', {
       query: { userId: this.userId, userSecret: this.userSecret },
+    });
+    // SnapTrade can return the same account twice (pagination/connection
+    // overlap). Dedupe by id here so every caller (holdings, balances,
+    // accounts) stops double-counting — this was the phantom-holdings bug.
+    const seen = new Set();
+    return (accounts ?? []).filter((a) => {
+      if (!a?.id || seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
     });
   }
 
@@ -148,14 +157,15 @@ export class SnapTradeAdapter {
           shares: units,
           marketValue: price != null ? price * units : null,
           account: acct.name || acct.id,
+          accountId: acct.id,
         });
       }
     }
-    // Merge duplicate (symbol, account) rows -- SnapTrade can return the same
-    // position twice across paginated/duplicated account entries.
+    // Merge duplicate rows within one account, keyed by account ID (names can
+    // collide across accounts and would wrongly sum).
     const merged = new Map();
     for (const h of holdings) {
-      const key = `${h.symbol}::${h.account}`;
+      const key = `${h.symbol}::${h.accountId}`;
       const prev = merged.get(key);
       if (!prev) { merged.set(key, { ...h }); continue; }
       prev.shares += h.shares;
