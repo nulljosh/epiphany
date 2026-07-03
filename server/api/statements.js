@@ -53,9 +53,11 @@ export default async function handler(req, res) {
     const action = req.query?.action || 'list';
 
     if (req.method === 'GET' && action === 'scan-local') {
+      if (process.env.VERCEL) {
+        return errorResponse(res, 404, 'Not found');
+      }
       const requested = typeof req.query?.filename === 'string' ? req.query.filename : '';
-      const requestedDir = typeof req.query?.dir === 'string' ? req.query.dir : undefined;
-      const payload = await getStatementsPayload({ filename: requested, statementsDir: requestedDir });
+      const payload = await getStatementsPayload({ filename: requested });
       return res.status(200).json(payload);
     }
 
