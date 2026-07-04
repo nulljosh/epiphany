@@ -13,8 +13,8 @@ final class PreviewScreenshot: XCTestCase {
         app.launchArguments.append("UITEST_SNAPSHOT")
         // Public demo account seeded specifically for App Store review/screenshots
         // (see .env.accounts.local DEMO_EMAIL/DEMO_PASSWORD) -- not a real user's data.
-        app.launchEnvironment["SNAPSHOT_EMAIL"] = "demo@heyitsmejosh.com"
-        app.launchEnvironment["SNAPSHOT_PASSWORD"] = "EpiphanyDemo2026!"
+        app.launchEnvironment["SNAPSHOT_EMAIL"] = ProcessInfo.processInfo.environment["SNAPSHOT_EMAIL"] ?? "demo@heyitsmejosh.com"
+        app.launchEnvironment["SNAPSHOT_PASSWORD"] = ProcessInfo.processInfo.environment["SNAPSHOT_PASSWORD"] ?? "EpiphanyDemo2026!"
         app.launch()
 
         // Wait for UI to settle: location fix arrives, map re-centers, tiles fetch.
@@ -26,6 +26,11 @@ final class PreviewScreenshot: XCTestCase {
         for _ in 0..<20 {
             if !signInButton.exists { break }
             sleep(1)
+        }
+
+        let gotIt = app.buttons["Got it"]
+        if gotIt.waitForExistence(timeout: 3) {
+            gotIt.tap()
         }
         return app
     }

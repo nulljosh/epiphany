@@ -157,3 +157,4 @@ ds-bundle/
 .design-sync/learnings/
 .design-sync/node_modules
 macos/.asc/
+.env.accounts.local
