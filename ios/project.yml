@@ -120,3 +120,10 @@ schemes:
       targets:
         - EpiphanyTests
         - EpiphanyUITests
+      # Forwards the shell's SNAPSHOT_EMAIL/SNAPSHOT_PASSWORD (see .env.accounts.local)
+      # into the UI test runner process -- xcodebuild test does NOT pass through
+      # arbitrary shell env by default, only vars declared here get resolved
+      # against the invoking process's environment.
+      environmentVariables:
+        SNAPSHOT_EMAIL: $(SNAPSHOT_EMAIL)
+        SNAPSHOT_PASSWORD: $(SNAPSHOT_PASSWORD)
