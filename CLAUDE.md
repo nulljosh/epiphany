@@ -2,6 +2,20 @@
 
 v2.6.0 -- Personal intelligence platform. Palantir for regular people. App Store: v1.0 live (READY_FOR_SALE) since 2026-06-23; v2.5.1 (build 6) submitted for review 2026-06-30, WAITING_FOR_REVIEW — not yet live (https://apps.apple.com/app/epiphany/id6779522175).
 
+## Screenshot pipeline status (2026-07-04)
+Fixed real bugs in `ios/scripts/update_screenshots.sh` + UI test: What's New sheet
+now dismissed before capture, device-name mismatch in copy step fixed, and
+`SNAPSHOT_EMAIL`/`SNAPSHOT_PASSWORD` now correctly forward from
+`.env.accounts.local` into the UI test runner (Xcode schemes don't pass shell env
+into Test actions unless declared — added to `ios/project.yml`
+`schemes.Epiphany.test.environmentVariables`). Still unresolved: logging into a
+real account (jatrommel@gmail.com, Wealthsimple-linked) in the UI test failed
+outright (landed on "Sign In" screen, not authenticated) — root cause not yet
+diagnosed, could be wrong password, 2FA, or the 10s post-launch wait being too
+short for a real login vs the seeded demo account. Last screenshot commit
+(`4283091`) has this logged-out state — needs a fix-forward or revert next
+session before shipping to the App Store listing.
+
 ## Shipped (2026-06-30)
 - [x] iOS v2.5.1 (build 6) submitted to App Store — export compliance answered, What's New (en-CA) filled, WAITING_FOR_REVIEW
 
