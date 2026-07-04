@@ -15,7 +15,7 @@ fi
 echo "==> Running fastlane snapshot"
 fastlane snapshot
 
-DEVICE="iPhone 17 Pro"
+DEVICE="iPhone 11 Pro Max"
 SHOTS=("1-situation" "2-markets" "3-stock-detail" "4-portfolio" "5-settings")
 
 echo "==> Copying screenshots into screenshots/appstore"

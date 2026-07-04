@@ -396,6 +396,16 @@ class MockEpiphanyAPI: AuthAPI {
         return user
     }
 
+    func signinApple(identityToken: String, email: String?, fullName: String?) async throws -> User {
+        if let error = mockLoginError {
+            throw error
+        }
+        guard let user = mockLoginResult else {
+            throw APIError.unauthorized
+        }
+        return user
+    }
+
     func changeEmail(newEmail: String, password: String) async throws -> User {
         if let error = mockChangeEmailError {
             throw error
