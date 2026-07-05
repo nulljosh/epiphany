@@ -83,9 +83,15 @@ async function runPaper(kv, userId, signals, maxNotional) {
   const trades = [];
   const ts = new Date().toISOString();
   for (const sig of signals) {
-    let qty = Math.floor(maxNotional / sig.price);
-    if (sig.signal === 'sell') qty = Math.min(qty, Math.floor(pos[sig.symbol] || 0));
-    if (qty < 1) continue;
+    const isCrypto = sig.symbol === LIVE_PROBE_ORDER_SYMBOL;
+    let qty = isCrypto
+      ? Number((maxNotional / sig.price).toFixed(8))
+      : Math.floor(maxNotional / sig.price);
+    if (sig.signal === 'sell') {
+      const held = pos[sig.symbol] || 0;
+      qty = isCrypto ? Math.min(qty, held) : Math.min(qty, Math.floor(held));
+    }
+    if (qty <= 0 || (!isCrypto && qty < 1)) continue;
     pos[sig.symbol] = (pos[sig.symbol] || 0) + (sig.signal === 'buy' ? qty : -qty);
     trades.push({ ts, symbol: sig.symbol, side: sig.signal, qty, price: sig.price, mode: 'paper' });
   }
@@ -221,6 +227,12 @@ export default async function handler(req, res) {
   }
 
   const actionable = signals.filter((s) => s.signal && s.price);
+  // Paper mode also trades BTC (fractional-qty friendly, matches the live probe
+  // symbol) so a sub-$1 cap has something to actually buy -- whole-share stocks
+  // never clear the floor() at penny notional caps.
+  const btcSignal = await getLiveProbeSignal();
+  if (btcSignal?.signal) actionable.push(btcSignal);
+
   const enrolled = (await kv.get('autopilot:users')) || [];
   const results = [];
   for (const userId of enrolled) {

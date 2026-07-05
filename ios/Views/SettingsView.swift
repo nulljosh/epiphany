@@ -212,6 +212,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
         .sheet(isPresented: $showChangeName) {
             ChangeNameSheet()
                 .environment(appState)

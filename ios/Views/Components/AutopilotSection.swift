@@ -135,11 +135,11 @@ struct AutopilotSection: View {
                             Text("Max per trade")
                                 .font(.caption.weight(.semibold))
                             Spacer()
-                            Text("$\(Int(maxNotional))")
+                            Text(maxNotional < 1 ? "$\(maxNotional, specifier: "%.2f")" : "$\(Int(maxNotional))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        Slider(value: $maxNotional, in: 1000...50000, step: 1000)
+                        Slider(value: $maxNotional, in: 0.01...50000, step: 0.01)
                             .onChange(of: maxNotional) { _, _ in hasChanges = true }
 
                         if hasChanges {

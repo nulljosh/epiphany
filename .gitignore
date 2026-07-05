@@ -158,3 +158,4 @@ ds-bundle/
 .design-sync/node_modules
 macos/.asc/
 .env.accounts.local
+ios/Configs/Secrets.xcconfig

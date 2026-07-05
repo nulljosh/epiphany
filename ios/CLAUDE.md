@@ -2,6 +2,26 @@
 
 v2.5.2 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.heyitsmejosh.com
 
+## Dev auto-login (2026-07-05)
+Run scheme signs in automatically as the admin/pro account via `DEV_EMAIL`/`DEV_PASSWORD`
+build settings, sourced from `Configs/Secrets.xcconfig` (gitignored, real values also in
+repo-root `.env.accounts.local`) and wired into the Debug config via `project.yml`'s
+`configFiles`. Triggers `AppState.autoLoginIfNeeded()` (DEBUG-only). If someone clones
+fresh, `xcodegen generate` will fail without `Configs/Secrets.xcconfig` existing --
+create it with `DEV_EMAIL = ...` / `DEV_PASSWORD = ...` (escape `$` as `$$`).
+Do NOT put real credentials in `project.yml`, the shared `.xcscheme`, or any
+git-tracked file -- only in the gitignored xcconfig.
+
+## Known bugs (2026-07-05)
+- Markets drawer drag gesture is choppy/non-smooth when pulled up -- not yet
+  investigated, likely gesture/animation tuning in the drawer's DragGesture handler.
+- Autopilot paper-mode trading was silently a no-op below ~$150 notional cap
+  (whole-share floor() on stock-only watchlist). Fixed: paper mode now also
+  trades fractional BTC (`server/api/broker/morning-run.js`), and the iOS
+  max-per-trade slider goes down to $0.01. Still fundamentally paper/simulated --
+  actual live trading needs a real brokerage with trade permission (Alpaca/IBKR),
+  SnapTrade/Wealthsimple stays read-only by design.
+
 ## Rules
 
 - iPhone only, portrait-only, UIRequiresFullScreen
