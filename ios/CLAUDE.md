@@ -27,6 +27,19 @@ git-tracked file -- only in the gitignored xcconfig.
   actual live trading needs a real brokerage with trade permission (Alpaca/IBKR),
   SnapTrade/Wealthsimple stays read-only by design.
 
+## Session fixes (2026-07-05, late)
+- Portfolio net worth was dropping uninvested cash inside investment accounts
+  (showed $229 vs real $415.78); now sums all account balances. Subtitle "Cash"
+  now = total - holdings. Account rows show nickname only (`Account.displayName`
+  strips "Wealthsimple Trade " etc).
+- Markets news drawer: pop-free settle (@State drag reset inside the release
+  spring), list clears the peek drawer, and at `.large` the Fear & Greed row
+  hides so the top ~10% is purely the ticker strip (Yahoo-style).
+- Commodity/crypto detail sparseness is a data gap, not UI -- see roadmap.md
+  "commodity/crypto detail parity". News/chart/ranges already work.
+- Autopilot simulator: works but market-hours gated; stale "live failed" rows
+  are old read-only-Wealthsimple probes. See roadmap.md.
+
 ## Rules
 
 - iPhone only, portrait-only, UIRequiresFullScreen
