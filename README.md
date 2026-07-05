@@ -49,7 +49,7 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
 ## This Week / This Month
 
 **This week**
-- [ ] Fix SnapTrade phantom holdings + bad math (shipped unfixed, real users hitting it)
+- [x] Fix SnapTrade phantom holdings + bad math (dedupe accounts by id, 2026-07-02)
 - [ ] Watch v2.5.1 (build 6) clear App Store review
 
 **This month**
