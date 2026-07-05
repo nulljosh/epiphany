@@ -398,6 +398,7 @@ struct MarketsView: View {
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
         .refreshable {
             do {
                 try await appState.refreshMarkets()

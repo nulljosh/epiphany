@@ -176,11 +176,19 @@ final class AppState {
 
     #if DEBUG
     func autoLoginIfNeeded() {
+        print("[DEV-AUTOLOGIN] isLoggedIn=\(isLoggedIn) DEV_EMAIL=\(ProcessInfo.processInfo.environment["DEV_EMAIL"] ?? "<missing>")")
         guard !isLoggedIn,
               let email = ProcessInfo.processInfo.environment["DEV_EMAIL"],
               let password = ProcessInfo.processInfo.environment["DEV_PASSWORD"]
-        else { return }
-        Task { await login(email: email, password: password) }
+        else {
+            print("[DEV-AUTOLOGIN] skipped (already logged in or env vars missing)")
+            return
+        }
+        print("[DEV-AUTOLOGIN] attempting login as \(email)")
+        Task {
+            await login(email: email, password: password)
+            print("[DEV-AUTOLOGIN] result: isLoggedIn=\(isLoggedIn) error=\(error ?? "none")")
+        }
     }
     #endif
 
