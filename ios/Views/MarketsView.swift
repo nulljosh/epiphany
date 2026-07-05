@@ -286,7 +286,9 @@ struct MarketsView: View {
     }
 
     @State private var drawerState: DrawerState = .peek
-    @GestureState private var dragTranslation: CGFloat = 0
+    // Plain @State (not @GestureState) so we can reset it to 0 *inside* the
+    // release animation -- @GestureState resets instantly and pops the height.
+    @State private var dragTranslation: CGFloat = 0
 
     private enum DrawerState: CaseIterable {
         case peek, medium, large
@@ -294,7 +296,9 @@ struct MarketsView: View {
             switch self {
             case .peek: return 64
             case .medium: return totalHeight * 0.45
-            case .large: return totalHeight * 0.85
+            // Fills up to just under the top ticker strip (~top 10%) so a fully
+            // open drawer reads as "ticker bar + drawer", nothing in between.
+            case .large: return totalHeight * 0.90
             }
         }
     }
@@ -322,8 +326,8 @@ struct MarketsView: View {
                     .contentShape(Rectangle())
                     .gesture(
                         DragGesture()
-                            .updating($dragTranslation) { value, state, _ in
-                                state = value.translation.height
+                            .onChanged { value in
+                                dragTranslation = value.translation.height
                             }
                             .onEnded { value in
                                 let totalHeight = geo.size.height
@@ -333,10 +337,11 @@ struct MarketsView: View {
                                 let settled = DrawerState.allCases.min(
                                     by: { abs($0.height(in: totalHeight) - predicted) < abs($1.height(in: totalHeight) - predicted) }
                                 ) ?? .peek
-                                // Explicit spring only on release; the live drag tracks
-                                // the finger 1:1 with no implicit animation fighting it.
+                                // Reset drag AND snap the detent in one animation so the
+                                // height interpolates continuously -- no instant pop.
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                                     drawerState = settled
+                                    dragTranslation = 0
                                 }
                             }
                     )
@@ -367,9 +372,13 @@ struct MarketsView: View {
 
     private var marketsList: some View {
         List {
-            Section { fearGreedView }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+            // Hidden when the drawer is fully open so the top strip is purely the
+            // ticker bar -- no half-obscured Fear & Greed row behind the drawer.
+            if drawerState != .large {
+                Section { fearGreedView }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
 
             if !appState.watchlistStocks.isEmpty {
                 Section("Watchlist") {
@@ -408,7 +417,9 @@ struct MarketsView: View {
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
+        // Clear the floating tab bar AND the news drawer's peek (which floats over
+        // the list bottom) so the last stock rows scroll fully into view.
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 156) }
         .refreshable {
             do {
                 try await appState.refreshMarkets()
