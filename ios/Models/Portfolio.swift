@@ -34,18 +34,19 @@ struct Portfolio: Codable {
             )
         }
 
-        // "investment"-type broker accounts fold holdings value into their
-        // balance server-side (SnapTradeAdapter.getAccounts(): cash +
-        // holdingsValue), and those same positions are already summed via
-        // mappedHoldings above -- including the full account balance here
-        // would double-count holdings value. Only cash-type accounts (and
-        // any account with no type, e.g. manually-entered ones) are pure
-        // cash and safe to add directly.
-        let accountTotal = financeData.accounts.reduce(0.0) { partial, account in
-            if account.type == "investment" { return partial }
-            return partial + account.balance
-        }
-        let totalValue = mappedHoldings.reduce(0) { $0 + $1.marketValue } + accountTotal
+        // Each account's balance is its FULL value: investment accounts already
+        // fold cash + holdingsValue server-side (SnapTradeAdapter.getAccounts()),
+        // cash accounts are pure cash. So net worth is simply the sum of all
+        // balances -- adding mappedHoldings on top double-counted the holdings AND
+        // dropped the uninvested cash sitting inside investment accounts (the old
+        // code skipped the whole investment balance, losing its cash portion).
+        // Fall back to holdings value only when there are no accounts (manual-entry
+        // portfolios) so those still total correctly.
+        // ponytail: assumes every holding lives inside an account; a manual holding
+        // added alongside real accounts wouldn't be added. Revisit if that appears.
+        let holdingsValue = mappedHoldings.reduce(0) { $0 + $1.marketValue }
+        let accountTotal = financeData.accounts.reduce(0.0) { $0 + $1.balance }
+        let totalValue = financeData.accounts.isEmpty ? holdingsValue : accountTotal
         let dayChange = mappedHoldings.reduce(0) { partial, holding in
             let changePercent = (stockMap[holding.symbol]?.changePercent ?? 0) / 100
             let previousPrice = changePercent > -1 ? holding.currentPrice / (1 + changePercent) : holding.currentPrice
