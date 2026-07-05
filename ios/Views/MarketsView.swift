@@ -308,8 +308,12 @@ struct MarketsView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: height, alignment: .top)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
+            )
             .shadow(radius: 8, y: -2)
             .padding(.bottom, 80)
             .overlay(alignment: .top) {
@@ -323,14 +327,20 @@ struct MarketsView: View {
                             }
                             .onEnded { value in
                                 let totalHeight = geo.size.height
-                                let predicted = drawerState.height(in: totalHeight) - value.translation.height
-                                drawerState = DrawerState.allCases.min(
+                                // Project momentum so a flick settles past the nearest detent.
+                                let predicted = drawerState.height(in: totalHeight)
+                                    - value.predictedEndTranslation.height
+                                let settled = DrawerState.allCases.min(
                                     by: { abs($0.height(in: totalHeight) - predicted) < abs($1.height(in: totalHeight) - predicted) }
                                 ) ?? .peek
+                                // Explicit spring only on release; the live drag tracks
+                                // the finger 1:1 with no implicit animation fighting it.
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                    drawerState = settled
+                                }
                             }
                     )
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: drawerState)
             .padding(.horizontal, 8)
             .padding(.bottom, 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -413,7 +423,7 @@ struct MarketsView: View {
         Button {
             selectedStock = stock
             selectedStockForNews = stock
-            drawerState = .medium
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { drawerState = .medium }
         } label: {
             StockRow(
                 stock: stock,

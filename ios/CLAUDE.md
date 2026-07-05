@@ -13,8 +13,13 @@ Do NOT put real credentials in `project.yml`, the shared `.xcscheme`, or any
 git-tracked file -- only in the gitignored xcconfig.
 
 ## Known bugs (2026-07-05)
-- Markets drawer drag gesture is choppy/non-smooth when pulled up -- not yet
-  investigated, likely gesture/animation tuning in the drawer's DragGesture handler.
+- Markets drawer drag: FIXED 2026-07-05. Choppiness was the declarative
+  `.animation(_:value: drawerState)` fighting the live `@GestureState` drag each
+  frame. Removed it; the drag now tracks the finger 1:1 and only the settle-to-
+  detent animates via explicit `withAnimation` in `.onEnded` (with momentum
+  projection via `predictedEndTranslation` so flicks carry). Also switched the
+  drawer to a semi-transparent liquid-glass look (`.ultraThinMaterial` + hairline
+  rim) so content shows through.
 - Autopilot paper-mode trading was silently a no-op below ~$150 notional cap
   (whole-share floor() on stock-only watchlist). Fixed: paper mode now also
   trades fractional BTC (`server/api/broker/morning-run.js`), and the iOS
