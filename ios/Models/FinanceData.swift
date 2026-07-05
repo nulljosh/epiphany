@@ -123,6 +123,16 @@ struct FinanceData: Codable {
             default: return (type ?? "Account").capitalized
             }
         }
+
+        // Strip the redundant brokerage prefix -- "Wealthsimple Trade TFSA" -> "TFSA".
+        // The brokerage is obvious from context; only the account nickname matters.
+        var displayName: String {
+            let prefixes = ["Wealthsimple Trade ", "Wealthsimple ", "Questrade ", "Interactive Brokers "]
+            for p in prefixes where name.hasPrefix(p) {
+                return String(name.dropFirst(p.count))
+            }
+            return name
+        }
     }
 
     struct Budget: Codable {

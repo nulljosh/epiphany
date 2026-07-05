@@ -570,8 +570,10 @@ struct PortfolioView: View {
                     Text(String(format: "$%.2f", portfolio.totalValue))
                         .font(.system(size: 32, weight: .heavy))
                         .foregroundStyle(Palette.text)
-                    let cashTotal = appState.financeData?.accounts.reduce(0.0) { $0 + $1.balance } ?? 0
+                    // Holdings are already inside totalValue (investment balances
+                    // fold them in); cash is the remainder, not the raw balance sum.
                     let holdingsTotal = portfolio.holdings.reduce(0.0) { $0 + $1.marketValue }
+                    let cashTotal = max(portfolio.totalValue - holdingsTotal, 0)
                     if holdingsTotal > 0 {
                         Text("Cash \(CurrencyFormatter.formatPrice(cashTotal)) \u{00B7} Holdings \(CurrencyFormatter.formatPrice(holdingsTotal))")
                             .font(.caption2)
@@ -617,7 +619,7 @@ struct PortfolioView: View {
                 ForEach(nonEmpty) { account in
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(account.name)
+                            Text(account.displayName)
                                 .font(.callout.weight(.semibold))
                                 .foregroundStyle(Palette.text)
                             if account.type != nil {
