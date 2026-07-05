@@ -1,16 +1,9 @@
 # Epiphany Roadmap
 
 ## iOS 2.5.2 pass (from 2026-07-01 feedback)
-- [x] Map search bar restyle + location button cycles 3 zoom levels (2026-07-01)
-- [x] ASC version 2.5.2 created (PREPARE_FOR_SUBMISSION), clean What's New set (2026-07-01)
-- [x] ASC marketing URL → heyitsmejosh.com (2026-07-01)
-- [x] Build 7 (2.5.2) uploaded to ASC 2026-07-01 after 2 widget-plist fixes. Remaining: wait for processing, attach to 2.5.2, submit via asc.
 - [ ] Fresh screenshots (fastlane snapshot erroring, exit 75) — optional, 2.5.1 shots carry over
-- [x] Portfolio staleness — broker re-sync on refresh (4de273f, 2026-07-01)
-- [x] Duplicate ticker in markets drawer removed (4de273f)
 
 ## iOS Markets drawer polish (2026-07-05)
-- [x] Drawer drag smoothness + liquid-glass (.ultraThinMaterial) — 9004318
 - [ ] Mirror Yahoo Finance layout: when the news drawer is at `.large`, the
   top horizontal-scrolling ticker (`TickerBarView`, already pinned via
   `.safeAreaInset(.top)` in `MarketsView.swift`) should own ~top 10% of the
@@ -31,13 +24,17 @@
   computes these client-side -- reuse). Deferred, needs a chart refactor pass.
 
 ## Autopilot simulator visibility (2026-07-05)
-- Works but confusing: paper runs only fire hourly DURING market hours, and the
-  Recent-trades log still shows stale "live failed" rows from old read-only
-  Wealthsimple live-probe attempts (403). Paper-mode BTC fix deployed 2026-07-05.
-- [ ] Clear/segregate stale live-failed trades from the paper log, or label the
-  log by mode so "simulator" only shows paper fills.
+- Works but confusing: paper runs only fire hourly DURING market hours.
+  Paper-mode BTC fix deployed 2026-07-05.
+- [x] Stale live-failed rows hidden from paper log — `AutopilotSection`
+  now filters the trade list to the active mode (2026-07-05).
 - [ ] Live trading remains blocked on a trade-permissioned brokerage (Alpaca
   easiest) -- SnapTrade/Wealthsimple is read-only by design.
+
+## SnapTrade Trade tab (2026-07-05)
+- [ ] **Needs Joshua:** phantom-holdings dedupe shipped 2026-07-02; re-enable
+  the disabled Trade tab in `FinancePanel.jsx` after Josh eyeballs a real
+  force-sync to confirm holdings/math are clean.
 
 ## From epiphany-notes.pdf (imported 2026-06-30)
 - [ ] Create a skill/shortcut for generating SVG architecture maps.

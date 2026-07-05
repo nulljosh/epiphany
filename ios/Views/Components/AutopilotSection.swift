@@ -162,13 +162,18 @@ struct AutopilotSection: View {
                     .padding(Spacing.xs)
                     .background(RoundedRectangle(cornerRadius: 8).fill(.thinMaterial.opacity(0.5)))
 
-                    if !s.trades.isEmpty {
+                    // Only show trades for the active mode -- hides stale
+                    // "live failed" rows from old read-only broker probes when
+                    // running the paper simulator.
+                    let modeTrades = s.trades.filter { $0.mode == s.settings.mode }
+
+                    if !modeTrades.isEmpty {
                         Text("Recent trades")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
 
-                    ForEach(Array(s.trades.prefix(5))) { trade in
+                    ForEach(Array(modeTrades.prefix(5))) { trade in
                         HStack {
                             Text(trade.side.uppercased())
                                 .font(.caption.weight(.bold))
