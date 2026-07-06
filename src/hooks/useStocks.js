@@ -36,6 +36,8 @@ const DEFAULT_SYMBOLS = [
   'AMT', 'PLD', 'CME', 'WM', 'XYZ',
   // Popular / high-vol
   'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP',
+  // AI / memory & infra
+  'DELL', 'PENG', 'DRAM', 'SNDK', 'IREN', 'MU', 'NBIS', 'CRDO',
   // Commodity futures
   'GC=F', 'SI=F', 'CL=F',
   // Cramer tracker ETFs + benchmark
@@ -49,6 +51,7 @@ export const SECTOR_MAP = {
   AVGO: 'Tech', AMD: 'Tech', ADBE: 'Tech', CRM: 'Tech', NFLX: 'Tech', CSCO: 'Tech', ORCL: 'Tech',
   ACN: 'Tech', INTC: 'Tech', TXN: 'Tech', QCOM: 'Tech', INTU: 'Tech', IBM: 'Tech', PLTR: 'Tech',
   COIN: 'Tech', HOOD: 'Tech', HIMS: 'Tech', SHOP: 'Tech', RKLB: 'Tech', SOFI: 'Tech', XYZ: 'Tech', APP: 'Tech', SHOO: 'Consumer',
+  DELL: 'Tech', PENG: 'Tech', SNDK: 'Tech', IREN: 'Tech', MU: 'Tech', NBIS: 'Tech', CRDO: 'Tech', DRAM: 'ETFs',
   // Financials
   'BRK-B': 'Financials', V: 'Financials', JPM: 'Financials', MA: 'Financials', BAC: 'Financials',
   GS: 'Financials', MS: 'Financials', C: 'Financials', WFC: 'Financials', BLK: 'Financials',
