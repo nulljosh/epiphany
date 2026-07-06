@@ -15,7 +15,7 @@ const ALL_SYMBOLS = [
   'CRM', 'NFLX', 'CSCO', 'TMO', 'ORCL', 'ACN', 'INTC', 'NKE', 'TXN',
   'QCOM', 'PM', 'DHR', 'INTU', 'UNP', 'RTX', 'HON', 'SPGI',
   'BAC', 'GS', 'MS', 'C', 'WFC', 'BLK', 'SCHW', 'AXP',
-  'PFE', 'AMGN', 'BMY', 'MDT', 'BSX', 'ELV', 'CVS',
+  'PFE', 'MRNA', 'AMGN', 'BMY', 'MDT', 'BSX', 'ELV', 'CVS',
   'UPS', 'FDX', 'BA', 'CAT', 'DE', 'LMT', 'GE',
   'DIS', 'CMCSA', 'VZ', 'T', 'TMUS',
   'NEE', 'DUK', 'SO',

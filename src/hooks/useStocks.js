@@ -23,7 +23,7 @@ const DEFAULT_SYMBOLS = [
   // Financials
   'BAC', 'GS', 'MS', 'C', 'WFC', 'BLK', 'SCHW', 'AXP',
   // Healthcare
-  'PFE', 'AMGN', 'BMY', 'MDT', 'BSX', 'ELV', 'CVS',
+  'PFE', 'MRNA', 'AMGN', 'BMY', 'MDT', 'BSX', 'ELV', 'CVS',
   // Industrials
   'UPS', 'FDX', 'BA', 'CAT', 'DE', 'LMT', 'GE',
   // Media & Telecom
@@ -59,7 +59,7 @@ export const SECTOR_MAP = {
   // Healthcare
   LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare', MRK: 'Healthcare', ABBV: 'Healthcare',
   TMO: 'Healthcare', DHR: 'Healthcare', PFE: 'Healthcare', AMGN: 'Healthcare', BMY: 'Healthcare',
-  MDT: 'Healthcare', BSX: 'Healthcare', ELV: 'Healthcare', CVS: 'Healthcare',
+  MDT: 'Healthcare', BSX: 'Healthcare', ELV: 'Healthcare', CVS: 'Healthcare', MRNA: 'Healthcare',
   // Energy
   XOM: 'Energy', CVX: 'Energy', 'CL=F': 'Commodities',
   // Industrials
@@ -190,6 +190,7 @@ const FALLBACK_DATA = {
   AXP:    { symbol: 'AXP',    price: 320.80, changePercent:  0.06 },
   // Healthcare
   PFE:    { symbol: 'PFE',    price: 28.40,  changePercent: -0.31 },
+  MRNA:   { symbol: 'MRNA',   price: 32.50,  changePercent: 0.00 },
   AMGN:   { symbol: 'AMGN',   price: 305.60, changePercent: -0.50 },
   BMY:    { symbol: 'BMY',    price: 60.20,  changePercent:  0.13 },
   MDT:    { symbol: 'MDT',    price: 90.80,  changePercent:  0.19 },
