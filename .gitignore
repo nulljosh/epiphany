@@ -159,3 +159,5 @@ ds-bundle/
 macos/.asc/
 .env.accounts.local
 ios/Configs/Secrets.xcconfig
+.asc/artifacts/
+.asc/release/
