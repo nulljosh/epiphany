@@ -19,6 +19,8 @@ export const DEFAULT_SYMBOLS = [
   'DIS', 'T', 'IBM', 'SHOO', 'APP',
   // Space -- SPCX = SpaceX (Nasdaq IPO 2026-06-12), RKLB = Rocket Lab
   'SPCX', 'RKLB',
+  // AI / memory & infra
+  'DELL', 'PENG', 'DRAM', 'SNDK', 'IREN', 'MU', 'NBIS', 'CRDO',
 ].join(',');
 
 export const YAHOO_HEADERS = {
