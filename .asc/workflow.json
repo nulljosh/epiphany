@@ -1,0 +1,19 @@
+{
+  // Release automation. Run: asc workflow run ship-ios VERSION:x.y.z
+  "env": { "IOS_APP_ID": "6779522175", "MAC_APP_ID": "6782703473", "VERSION": "", "SUBMIT": "true" },
+  "before_all": "asc auth status",
+  "workflows": {
+    "ship-ios": { "description": "Bump, archive, upload, submit iOS", "steps": [
+      { "name": "bump", "run": "cd ios && asc xcode version edit --version \"$VERSION\" --build-number \"$(date +%Y%m%d%H%M)\"" },
+      { "name": "archive", "run": "cd ios && asc xcode archive --project Epiphany.xcodeproj --scheme Epiphany --archive-path ../.asc/artifacts/Epiphany.xcarchive --output json" },
+      { "name": "export", "run": "cd ios && asc xcode export --archive-path ../.asc/artifacts/Epiphany.xcarchive --export-options ExportOptions.plist --ipa-path ../.asc/artifacts/Epiphany.ipa --output json" },
+      { "name": "publish", "if": "SUBMIT", "run": "asc publish appstore --app $IOS_APP_ID --ipa .asc/artifacts/Epiphany.ipa --version $VERSION --wait --submit --confirm --output json" }
+    ] },
+    "ship-mac": { "description": "Bump, archive, upload, submit Mac", "steps": [
+      { "name": "bump_mac", "run": "cd macos && asc xcode version edit --version \"$VERSION\" --build-number \"$(date +%Y%m%d%H%M)\"" },
+      { "name": "archive_mac", "run": "cd macos && asc xcode archive --project Epiphany.xcodeproj --scheme Epiphany --archive-path ../.asc/artifacts/Epiphany-mac.xcarchive --output json" },
+      { "name": "export_mac", "run": "cd macos && asc xcode export --archive-path ../.asc/artifacts/Epiphany-mac.xcarchive --export-options ExportOptions.plist --pkg-path ../.asc/artifacts/Epiphany-mac.pkg --output json" },
+      { "name": "publish_mac", "if": "SUBMIT", "run": "asc publish appstore --app $MAC_APP_ID --pkg .asc/artifacts/Epiphany-mac.pkg --version $VERSION --wait --submit --confirm --output json" }
+    ] }
+  }
+}
