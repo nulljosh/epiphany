@@ -23,6 +23,18 @@ export const defaultAssets = {
   nvda: { name: 'NVDA', full: 'NVIDIA', notes: 'AI chip monopoly. H100/H200 demand. Blackwell ramp.', spot: 145, vol: 0.45, targets: [180, 220, 260], hi52: 200, lo52: 105 },
   pltr: { name: 'PLTR', full: 'Palantir', notes: 'AI platform. Government contracts. AIP growth.', spot: 70, vol: 0.55, targets: [90, 110, 130], hi52: 80, lo52: 15 },
   hood: { name: 'HOOD', full: 'Robinhood', notes: 'Crypto trading. Options growth. New users.', spot: 38, vol: 0.50, targets: [45, 55, 70], hi52: 45, lo52: 10 },
+  // BANKS — CANADA
+  ry: { name: 'RY', full: 'Royal Bank of Canada', notes: 'Largest CA bank. HSBC Canada integration. Dividend aristocrat.', spot: 170, vol: 0.18, targets: [180, 190, 205], hi52: 180, lo52: 125 },
+  td: { name: 'TD', full: 'TD Bank', notes: 'AML penalty overhang clearing. US retail footprint. Cheap vs peers.', spot: 78, vol: 0.20, targets: [85, 92, 100], hi52: 87, lo52: 55 },
+  bmo: { name: 'BMO', full: 'Bank of Montreal', notes: 'Bank of the West integration. US commercial exposure.', spot: 140, vol: 0.20, targets: [150, 160, 175], hi52: 147, lo52: 100 },
+  bns: { name: 'BNS', full: 'Scotiabank', notes: 'LatAm exposure. Highest yield of Big 5. Turnaround story.', spot: 78, vol: 0.20, targets: [82, 88, 95], hi52: 80, lo52: 55 },
+  cm: { name: 'CM', full: 'CIBC', notes: 'Canadian mortgage heavy. Rate-cut beneficiary.', spot: 90, vol: 0.20, targets: [95, 100, 110], hi52: 93, lo52: 60 },
+  // BANKS — US
+  jpm: { name: 'JPM', full: 'JPMorgan Chase', notes: 'Fortress balance sheet. NII strength. Best-in-class bank.', spot: 240, vol: 0.22, targets: [260, 280, 300], hi52: 250, lo52: 165 },
+  bac: { name: 'BAC', full: 'Bank of America', notes: 'Rate-sensitive. Held-to-maturity book recovering.', spot: 46, vol: 0.24, targets: [50, 55, 60], hi52: 48, lo52: 32 },
+  wfc: { name: 'WFC', full: 'Wells Fargo', notes: 'Asset cap lifted 2025. Buyback capacity unlocked.', spot: 75, vol: 0.24, targets: [82, 90, 100], hi52: 78, lo52: 50 },
+  gs: { name: 'GS', full: 'Goldman Sachs', notes: 'IB/M&A cycle recovery. Trading revenue strength.', spot: 580, vol: 0.26, targets: [620, 680, 750], hi52: 610, lo52: 380 },
+  ms: { name: 'MS', full: 'Morgan Stanley', notes: 'Wealth management flywheel. Fee-based stability.', spot: 130, vol: 0.24, targets: [140, 155, 170], hi52: 135, lo52: 85 },
   dxy: { name: 'DXY', full: 'US Dollar Index', notes: 'De-dollarization watch. Twin deficits.', spot: 108, vol: 0.08, targets: [110, 112, 115], hi52: 110, lo52: 100 },
 };
 
