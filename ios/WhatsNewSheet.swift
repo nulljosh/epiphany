@@ -8,6 +8,7 @@ private let whatsNewBullets = [
 struct WhatsNewSheet: View {
     @AppStorage("whats_new_seen_version") private var seenVersion = ""
     @State private var isPresented = false
+    @State private var sheetHeight: CGFloat = 200
 
     var body: some View {
         Color.clear
@@ -38,7 +39,13 @@ struct WhatsNewSheet: View {
                     .buttonStyle(.borderedProminent)
                 }
                 .padding(24)
-                .presentationDetents([.medium])
+                .background {
+                    GeometryReader { geo in
+                        Color.clear.onAppear { sheetHeight = geo.size.height }
+                    }
+                }
+                .presentationDetents([.height(sheetHeight)])
+                .presentationDragIndicator(.visible)
             }
     }
 }
