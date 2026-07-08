@@ -177,7 +177,8 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
         {/* Step 1: Email */}
         {step === 'email' && (
           <div style={{ ...card, ...fadeStyle(mounted, 0.12) }}>
-            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 20 }}>Sign in with GitHub</a>
+            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with GitHub</a>
+            <a href="/api/auth?action=google" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#fff', color: '#1f1f1f', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 20 }}>Sign in with Google</a>
             <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)', marginBottom: 20 }}>or</div>
             <form onSubmit={handleEmailSubmit}>
               <div style={{ marginBottom: 24 }}>
