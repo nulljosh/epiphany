@@ -30,11 +30,15 @@
   `/api/auth?action=google` web URL in an `ASWebAuthenticationSession` from iOS and
   let the session cookie carry over, rather than integrating the native Google
   Sign-In SDK. Not started.
-- [ ] Markets drawer choppy/slow load/padding/horizontal-scroll vs native Stocks app —
-  CLAUDE.md already logged a 2026-07-05 fix for drawer drag choppiness (removed
-  fighting `.animation` vs `@GestureState`). PDF feedback may predate that fix or be a
-  regression; needs a live side-by-side sim comparison against native Stocks (padding
-  audit + horizontal ticker scroll feel) before further changes — not done this pass.
+- [x] Markets drawer choppy/slow — 2026-07-07: found and fixed the real remaining
+  cause. `TickerBarView.swift`'s auto-scroll marquee used
+  `TimelineView(.animation(minimumInterval: 1/60))` and rebuilt+reformatted
+  (currency `FormatStyle`) every stock's `Text` on every single frame while the
+  Markets tab was open, competing with the List's own scroll on the main thread.
+  Now precomputes formatted ticker items once on `appState.stocks` change; the
+  per-frame closure only computes the scroll offset. Build verified
+  (`xcodebuild` BUILD SUCCEEDED). Row padding vs. native is still a cosmetic-only
+  gap, deferred — needs a live side-by-side sim screenshot, not done blind.
 
 ## iOS 2.5.2 pass (from 2026-07-01 feedback)
 - [ ] Fresh screenshots (fastlane snapshot erroring, exit 75) — optional, 2.5.1 shots carry over

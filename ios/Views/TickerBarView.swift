@@ -1,5 +1,13 @@
 import SwiftUI
 
+private struct TickerDisplayItem: Identifiable {
+    let id: Int
+    let symbol: String
+    let priceText: String
+    let changeColor: Color
+    let sparklineData: [Double]?
+}
+
 struct TickerBarView: View {
     let appState: AppState
     var onSelectStock: ((Stock) -> Void)? = nil
@@ -7,29 +15,38 @@ struct TickerBarView: View {
     var height: CGFloat = 32
 
     @State private var contentWidth: CGFloat = 0
+    // Precomputed once per data change, not per animation frame -- formatting
+    // currency + rebuilding this array at 60fps inside TimelineView was the
+    // real cause of Markets-tab choppiness (competed with List scrolling).
+    @State private var items: [TickerDisplayItem] = []
 
     private let itemSpacing: CGFloat = 18
     private var scrollSpeed: CGFloat { showSparklines ? 14 : 30 }
 
+    private static let priceFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "USD"
+        f.minimumFractionDigits = 2
+        f.maximumFractionDigits = 2
+        return f
+    }()
+
     var body: some View {
-        // Read appState.stocks directly -- the old onAppear/onChange cache
-        // raced the data load and could leave the bar empty or frozen.
-        let loopingStocks = appState.stocks + appState.stocks
         Group {
-            if loopingStocks.isEmpty {
+            if items.isEmpty {
                 EmptyView()
             } else {
                 TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
                     let offset = scrollOffset(at: context.date)
                     HStack(spacing: itemSpacing) {
-                        ForEach(Array(loopingStocks.enumerated()), id: \.offset) { _, stock in
+                        ForEach(items) { item in
                             Button {
-                                onSelectStock?(stock)
+                                if let stock = appState.stocks.first(where: { $0.symbol == item.symbol }) {
+                                    onSelectStock?(stock)
+                                }
                             } label: {
-                                TickerItemView(
-                                    stock: stock,
-                                    sparklineData: showSparklines ? appState.sparklineCache[stock.symbol] : nil
-                                )
+                                TickerItemView(item: item)
                             }
                             .buttonStyle(.plain)
                         }
@@ -56,6 +73,23 @@ struct TickerBarView: View {
                 }
             }
         }
+        .onAppear { rebuildItems() }
+        .onChange(of: appState.stocks.map(\.symbol)) { _, _ in rebuildItems() }
+        .onChange(of: appState.stocks.map(\.price)) { _, _ in rebuildItems() }
+    }
+
+    private func rebuildItems() {
+        let stocks = appState.stocks
+        let looped = stocks + stocks
+        items = looped.enumerated().map { index, stock in
+            TickerDisplayItem(
+                id: index,
+                symbol: stock.symbol,
+                priceText: Self.priceFormatter.string(from: NSNumber(value: stock.price)) ?? "$0.00",
+                changeColor: stock.change >= 0 ? Palette.successGreen : Palette.dangerRed,
+                sparklineData: showSparklines ? appState.sparklineCache[stock.symbol] : nil
+            )
+        }
     }
 
     private func scrollOffset(at date: Date) -> CGFloat {
@@ -66,27 +100,22 @@ struct TickerBarView: View {
 }
 
 private struct TickerItemView: View {
-    let stock: Stock
-    var sparklineData: [Double]? = nil
-
-    private var changeColor: Color {
-        stock.change >= 0 ? Palette.successGreen : Palette.dangerRed
-    }
+    let item: TickerDisplayItem
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(stock.symbol)
+            Text(item.symbol)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Palette.text)
 
-            if let data = sparklineData, !data.isEmpty {
-                SparklinePath(data: data, color: changeColor)
+            if let data = item.sparklineData, !data.isEmpty {
+                SparklinePath(data: data, color: item.changeColor)
                     .frame(width: 32, height: 16)
             }
 
-            Text(stock.price, format: .currency(code: "USD").precision(.fractionLength(2)))
+            Text(item.priceText)
                 .font(.caption.weight(.semibold).monospacedDigit())
-                .foregroundStyle(changeColor)
+                .foregroundStyle(item.changeColor)
         }
         .lineLimit(1)
     }
