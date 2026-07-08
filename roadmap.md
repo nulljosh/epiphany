@@ -1,5 +1,31 @@
 # Epiphany Roadmap
 
+## From Epiphany.pdf (imported 2026-07-07)
+- [x] Portfolio duplicate accounts — root cause: `server/api/portfolio.js` broker-account
+  overlay only filtered out accounts already tagged `source: 'broker'`; legacy rows
+  saved to KV before that tag existed had no `source` field, so they were kept as
+  "manual" forever while a fresh broker copy got layered on top every GET. Now also
+  filters manual accounts by name-collision with the current broker snapshot.
+- [x] News drawer thumbnails — `NewsDrawerView.swift` now renders `article.imageUrl`
+  (field already existed on `NewsArticle`, was just unused) as a 60x60 AsyncImage.
+- [x] Stocks list gains filter — added `gainersOnly` toggle to the Markets `ellipsis.circle`
+  menu (`MarketsView.swift`), filters to `changePercent > 0`.
+- [ ] Login SSO buttons "not set up" — Google/Facebook buttons in `LoginSheet.swift`
+  are `.disabled(true)` stubs. Root cause: `server/api/auth.js` has zero Google/Facebook
+  OAuth handlers (only `github`/`github-callback` exist, fully working — same pattern
+  to copy). **Needs Joshua**: register a Google Cloud OAuth client (console.cloud.google.com
+  → APIs & Services → Credentials) and/or a Facebook Developer app
+  (developers.facebook.com/apps), get client ID + secret for each, add as Vercel env
+  vars (`GOOGLE_CLIENT_ID`/`SECRET`, `FACEBOOK_CLIENT_ID`/`SECRET`). Once provided,
+  backend wiring is a direct copy of the existing `github`/`github-callback` actions
+  (~30min each) plus enabling the matching iOS buttons. Apple Sign In already works,
+  no blocker there.
+- [ ] Markets drawer choppy/slow load/padding/horizontal-scroll vs native Stocks app —
+  CLAUDE.md already logged a 2026-07-05 fix for drawer drag choppiness (removed
+  fighting `.animation` vs `@GestureState`). PDF feedback may predate that fix or be a
+  regression; needs a live side-by-side sim comparison against native Stocks (padding
+  audit + horizontal ticker scroll feel) before further changes — not done this pass.
+
 ## iOS 2.5.2 pass (from 2026-07-01 feedback)
 - [ ] Fresh screenshots (fastlane snapshot erroring, exit 75) — optional, 2.5.1 shots carry over
 

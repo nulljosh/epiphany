@@ -49,21 +49,35 @@ struct NewsDrawerView: View {
                             guard let url = URL(string: article.url) else { return }
                             selectedNewsURL = url
                         } label: {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(article.title)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                HStack(spacing: 8) {
-                                    Text(article.source)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text(article.publishedAt)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                            HStack(alignment: .top, spacing: 10) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(article.title)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    HStack(spacing: 8) {
+                                        Text(article.source)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        Spacer()
+                                        Text(article.publishedAt)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                                if let imageUrlString = article.imageUrl, let imageUrl = URL(string: imageUrlString) {
+                                    AsyncImage(url: imageUrl) { phase in
+                                        if let image = phase.image {
+                                            image.resizable().aspectRatio(contentMode: .fill)
+                                        } else {
+                                            Color.secondary.opacity(0.15)
+                                        }
+                                    }
+                                    .frame(width: 60, height: 60)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(PlainButtonStyle())
                         .listRowBackground(

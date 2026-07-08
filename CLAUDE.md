@@ -2,6 +2,19 @@
 
 v2.6.0 -- Personal intelligence platform. Palantir for regular people. App Store: v1.0 live (READY_FOR_SALE) since 2026-06-23; v2.5.1 (build 6) submitted for review 2026-06-30, WAITING_FOR_REVIEW — not yet live (https://apps.apple.com/app/epiphany/id6779522175).
 
+## TestFlight/screenshots (2026-07-07)
+TestFlight beta description updated (was internal QA notes, now real tester-facing
+copy). App Store screenshots for 2.5.2 are still stale (old generic set:
+stocks.png/situation.png/etc, portfolio balance looked broken at $0.01). New
+correctly-named set ready at `ios/fastlane/screenshots/en-US/` (iPhone 11 Pro Max
++ 14 Plus, 5 screens each). Upload command already tested via --dry-run and
+works — blocked only because 2.5.2 is WAITING_FOR_REVIEW and ASC locks
+screenshot edits mid-review. Next: `asc submit cancel --version-id
+0491629d-fcf0-433b-9de4-dedd76d1203b` to unlock it, then
+`asc screenshots upload --version-localization 2ee82069-d8d0-45ac-998f-0e15e7d5805c --path /tmp/ss_65 --device-type IPHONE_65 --replace`
+and the IPHONE_67 equivalent with `/tmp/ss_67` (regenerate those tmp dirs from
+`ios/fastlane/screenshots/en-US/` if cleared), then resubmit for review.
+
 ## Screenshot pipeline status (2026-07-04)
 Fixed real bugs in `ios/scripts/update_screenshots.sh` + UI test: What's New sheet
 now dismissed before capture, device-name mismatch in copy step fixed, and

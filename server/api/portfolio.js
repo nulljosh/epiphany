@@ -89,7 +89,12 @@ export default async function handler(req, res) {
     }
     if (Array.isArray(snapshot?.accounts) && snapshot.accounts.length > 0
         && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
-      const manualAccounts = (data.accounts || []).filter(a => a.source !== 'broker');
+      const brokerNames = new Set(snapshot.accounts.map(a => a.name));
+      // Filter both the explicit `source: 'broker'` tag AND legacy untagged
+      // rows that share a broker account's name -- pre-dedup KV saves never
+      // set `source`, so those stale rows survived every overlay since and
+      // kept duplicating alongside the fresh broker copy.
+      const manualAccounts = (data.accounts || []).filter(a => a.source !== 'broker' && !brokerNames.has(a.name));
       const brokerAccounts = snapshot.accounts.map(a => ({
         name: a.name, type: a.type, balance: a.balance, source: 'broker',
       }));

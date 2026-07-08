@@ -11,6 +11,7 @@ struct MarketsView: View {
     @State private var sortField: MarketSortField = .changePercent
     @State private var sortAscending = false
     @State private var marketFilter: MarketFilter = .all
+    @State private var gainersOnly = false
     @State private var selectedMarketItem: MarketItem?
     @State private var selectedNewsURL: URL?
     @State private var cachedItems: [MarketItem] = []
@@ -92,6 +93,7 @@ struct MarketsView: View {
         case .commodities: items = items.filter { if case .commodity = $0.kind { return true }; return false }
         case .crypto: items = items.filter { if case .crypto = $0.kind { return true }; return false }
         }
+        if gainersOnly { items = items.filter { $0.changePercent > 0 } }
         if searchText.isEmpty { return items }
         let query = searchText.lowercased()
         return items.filter {
@@ -180,6 +182,11 @@ struct MarketsView: View {
                             sortAscending.toggle()
                         } label: {
                             Label(sortAscending ? "Ascending" : "Descending", systemImage: sortAscending ? "arrow.up" : "arrow.down")
+                        }
+                        Button {
+                            gainersOnly.toggle()
+                        } label: {
+                            Label("Gainers Only", systemImage: gainersOnly ? "checkmark" : "arrow.up.right")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
