@@ -1564,9 +1564,12 @@ extension MKMapItem: @retroactive Identifiable {}
 private struct VenueDetailSheet: View {
     let item: MKMapItem
     @Environment(\.dismiss) private var dismiss
+    @State private var scene: MKLookAroundScene?
+    @State private var loadingScene = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            lookAroundPreview
             HStack {
                 Text(item.name ?? "Place")
                     .font(.title3.weight(.semibold))
@@ -1611,5 +1614,24 @@ private struct VenueDetailSheet: View {
             .buttonStyle(.borderedProminent)
         }
         .padding(Spacing.lg)
+        .task {
+            // Native Apple imagery — no API key. Nil in areas without coverage.
+            scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
+            loadingScene = false
+        }
+    }
+
+    @ViewBuilder
+    private var lookAroundPreview: some View {
+        if let scene {
+            LookAroundPreview(initialScene: scene)
+                .frame(height: 160)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else if loadingScene {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .frame(height: 160)
+                .overlay { ProgressView() }
+        }
     }
 }
