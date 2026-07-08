@@ -10,16 +10,26 @@
   (field already existed on `NewsArticle`, was just unused) as a 60x60 AsyncImage.
 - [x] Stocks list gains filter — added `gainersOnly` toggle to the Markets `ellipsis.circle`
   menu (`MarketsView.swift`), filters to `changePercent > 0`.
-- [ ] Login SSO buttons "not set up" — Google/Facebook buttons in `LoginSheet.swift`
-  are `.disabled(true)` stubs. Root cause: `server/api/auth.js` has zero Google/Facebook
-  OAuth handlers (only `github`/`github-callback` exist, fully working — same pattern
-  to copy). **Needs Joshua**: register a Google Cloud OAuth client (console.cloud.google.com
-  → APIs & Services → Credentials) and/or a Facebook Developer app
-  (developers.facebook.com/apps), get client ID + secret for each, add as Vercel env
-  vars (`GOOGLE_CLIENT_ID`/`SECRET`, `FACEBOOK_CLIENT_ID`/`SECRET`). Once provided,
-  backend wiring is a direct copy of the existing `github`/`github-callback` actions
-  (~30min each) plus enabling the matching iOS buttons. Apple Sign In already works,
-  no blocker there.
+- [x] Google login (web) — DONE 2026-07-07. `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
+  set in Vercel production. `server/api/auth.js` has `google`/`google-callback`
+  actions, mirrors the GitHub OAuth flow (redirect_uri `/api/auth?action=google-callback`).
+  "Sign in/up with Google" buttons live in `LoginPage.jsx` + `RegisterPage.jsx`.
+  Verified via `npm run build` — succeeds.
+- [ ] Facebook login (web) — same pattern as Google, blocked on **Joshua**: create a
+  Meta for Developers app (developers.facebook.com/apps → Create App → Consumer →
+  Facebook Login product), copy App ID + secret from Settings → Basic, send over.
+  Then: add `FACEBOOK_CLIENT_ID`/`FACEBOOK_CLIENT_SECRET` to Vercel, add
+  `facebook`/`facebook-callback` actions to `auth.js` (Graph API OAuth,
+  `https://www.facebook.com/v19.0/dialog/oauth` + `https://graph.facebook.com/v19.0/oauth/access_token`),
+  add "Sign in with Facebook" buttons. ~30min once credentials exist. Note: Meta
+  keeps new apps in "Development mode" (only you + added testers can log in)
+  until App Review is submitted for public use.
+- [ ] iOS Google/Facebook buttons — `LoginSheet.swift` still has them `.disabled(true)`.
+  iOS has no GitHub login either (Apple Sign In is the only working iOS SSO) — the
+  web OAuth flow above doesn't cover native. Cheapest path: open the same
+  `/api/auth?action=google` web URL in an `ASWebAuthenticationSession` from iOS and
+  let the session cookie carry over, rather than integrating the native Google
+  Sign-In SDK. Not started.
 - [ ] Markets drawer choppy/slow load/padding/horizontal-scroll vs native Stocks app —
   CLAUDE.md already logged a 2026-07-05 fix for drawer drag choppiness (removed
   fighting `.animation` vs `@GestureState`). PDF feedback may predate that fix or be a

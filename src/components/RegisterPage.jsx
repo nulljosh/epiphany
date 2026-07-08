@@ -68,7 +68,8 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
         {/* Form */}
         <div style={{ maxWidth: 420, margin: '0 auto', ...card, ...fadeStyle(mounted, 0.18) }}>
           <div style={{ marginBottom: 20 }}>
-            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Sign up with GitHub</a>
+            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with GitHub</a>
+            <a href="/api/auth?action=google" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#fff', color: '#1f1f1f', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Sign up with Google</a>
             <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)', margin: '14px 0' }}>or</div>
           </div>
           <form onSubmit={handleSubmit}>

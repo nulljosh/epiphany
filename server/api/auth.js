@@ -198,6 +198,76 @@ export default async function handler(req, res) {
     }
   }
 
+  // GET: Google OAuth redirect
+  if (req.method === 'GET' && action === 'google') {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) return errorResponse(res, 501, 'Google OAuth not configured');
+    const base = getBaseUrl();
+    const params = new URLSearchParams({
+      client_id: clientId, response_type: 'code', scope: 'openid email profile',
+      redirect_uri: `${base}/api/auth?action=google-callback`,
+    });
+    res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
+    return res.end();
+  }
+
+  // GET: Google OAuth callback
+  if (req.method === 'GET' && action === 'google-callback') {
+    const { code, error: googleError } = req.query;
+    const base = getBaseUrl();
+    if (googleError || !code) { res.writeHead(302, { Location: `${base}/?auth_error=google_denied` }); return res.end(); }
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      res.writeHead(302, { Location: `${base}/?auth_error=google_config` }); return res.end();
+    }
+    try {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.GOOGLE_CLIENT_ID, client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          code, redirect_uri: `${base}/api/auth?action=google-callback`, grant_type: 'authorization_code',
+        }),
+      });
+      const { access_token } = await tokenRes.json();
+      if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=google_token` }); return res.end(); }
+
+      const guRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      const gUser = await guRes.json();
+      if (!gUser.email || !gUser.email_verified) { res.writeHead(302, { Location: `${base}/?auth_error=google_email` }); return res.end(); }
+
+      const googleId = String(gUser.sub);
+      const normalizedEmail = gUser.email.toLowerCase();
+
+      let user = await kv.get(`google:${googleId}`);
+      if (!user) {
+        user = await kv.get(`user:${normalizedEmail}`);
+        if (user) {
+          user.googleId = googleId;
+          user.avatarUrl = user.avatarUrl || gUser.picture || null;
+          await kv.set(`user:${normalizedEmail}`, user);
+          await kv.set(`google:${googleId}`, user);
+        }
+      }
+      if (!user) {
+        const id = crypto.randomUUID();
+        user = { id, email: normalizedEmail, passwordHash: null, verified: true, tier: 'free', googleId, avatarUrl: gUser.picture || null, name: gUser.name || null, createdAt: new Date().toISOString() };
+        await kv.set(`user:${normalizedEmail}`, user);
+        await kv.set(`google:${googleId}`, user);
+      }
+
+      const sessionToken = generateToken();
+      await kv.set(`session:${sessionToken}`, { userId: user.id, email: user.email, tier: user.tier || 'free', expiresAt: Date.now() + SESSION_TTL * 1000 }, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+      res.writeHead(302, { Location: base });
+      return res.end();
+    } catch (err) {
+      console.error('[AUTH] Google callback error:', err.message);
+      res.writeHead(302, { Location: `${base}/?auth_error=google_error` });
+      return res.end();
+    }
+  }
+
   // GET: check current session
   if (req.method === 'GET' && action === 'me') {
     try {
