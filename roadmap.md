@@ -30,15 +30,33 @@
   `/api/auth?action=google` web URL in an `ASWebAuthenticationSession` from iOS and
   let the session cookie carry over, rather than integrating the native Google
   Sign-In SDK. Not started.
-- [x] Markets drawer choppy/slow — 2026-07-07: found and fixed the real remaining
-  cause. `TickerBarView.swift`'s auto-scroll marquee used
-  `TimelineView(.animation(minimumInterval: 1/60))` and rebuilt+reformatted
-  (currency `FormatStyle`) every stock's `Text` on every single frame while the
-  Markets tab was open, competing with the List's own scroll on the main thread.
-  Now precomputes formatted ticker items once on `appState.stocks` change; the
-  per-frame closure only computes the scroll offset. Build verified
-  (`xcodebuild` BUILD SUCCEEDED). Row padding vs. native is still a cosmetic-only
-  gap, deferred — needs a live side-by-side sim screenshot, not done blind.
+- [x] Ticker bar choppy/slow — 2026-07-07: fixed. `TickerBarView.swift`'s
+  auto-scroll marquee used `TimelineView(.animation(minimumInterval: 1/60))`
+  and rebuilt+reformatted (currency `FormatStyle`) every stock's `Text` on
+  every single frame while the Markets tab was open, competing with the
+  List's own scroll on the main thread. Now precomputes formatted ticker
+  items once on `appState.stocks` change. Also fixed a regression this
+  introduced (ticker went blank — EmptyView blocked onAppear from ever
+  populating items; seeded synchronously in init instead). Verified live via
+  AXe in simulator (ticker content visibly changes frame-to-frame).
+- [ ] **Markets news drawer drag still choppy — NOT actually fixed despite two
+  attempted fixes 2026-07-07.** User confirmed live on-device 2026-07-07 late:
+  still not as fluid as native iOS Stocks. Attempt 1 (build-verified only, never
+  tested live): moved the drawer's `.frame(height:)` off directly resizing the
+  `List` inside `NewsDrawerView` every drag pixel — content now fixed at max
+  height, only an outer clip animates (`MarketsView.swift` `newsDrawerOverlay`).
+  This was a real perf issue but apparently not the (or not the only) cause of
+  the felt choppiness. Next session: do NOT guess again — get the user to
+  describe *specifically* what feels wrong (lag following the finger? jank on
+  release/spring settle? stutter only during momentum flicks? frame drops only
+  with news images loading?) before touching code. Consider also: `.ultraThinMaterial`
+  background + `.shadow` recomposited every drag frame (still true even after
+  the List fix), the `.spring(response: 0.35, dampingFraction: 0.82)` settle
+  animation itself, or main-thread contention from the 30s refresh timer /
+  concurrent data loads while dragging. Test with Instruments Time Profiler on
+  a real device, not just xcodebuild success, before claiming fixed again.
+  Row padding vs. native is a separate cosmetic-only gap, already addressed
+  2026-07-07 (star gutter 18→14pt, row padding 6→4pt) but not re-verified live.
 
 ## iOS 2.5.2 pass (from 2026-07-01 feedback)
 - [ ] Fresh screenshots (fastlane snapshot erroring, exit 75) — optional, 2.5.1 shots carry over
