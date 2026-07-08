@@ -66,17 +66,21 @@ struct NewsDrawerView: View {
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                                if let imageUrlString = article.imageUrl, let imageUrl = URL(string: imageUrlString) {
-                                    AsyncImage(url: imageUrl) { phase in
-                                        if let image = phase.image {
-                                            image.resizable().aspectRatio(contentMode: .fill)
-                                        } else {
-                                            Color.secondary.opacity(0.15)
+                                Group {
+                                    if let imageUrlString = article.imageUrl, let imageUrl = URL(string: imageUrlString) {
+                                        AsyncImage(url: imageUrl) { phase in
+                                            if let image = phase.image {
+                                                image.resizable().aspectRatio(contentMode: .fill)
+                                            } else {
+                                                newsPlaceholder
+                                            }
                                         }
+                                    } else {
+                                        newsPlaceholder
                                     }
-                                    .frame(width: 60, height: 60)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
+                                .frame(width: 60, height: 60)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -92,6 +96,14 @@ struct NewsDrawerView: View {
         .sheet(item: $selectedNewsURL) { url in
             SafariView(url: url)
                 .ignoresSafeArea()
+        }
+    }
+
+    private var newsPlaceholder: some View {
+        ZStack {
+            Color.secondary.opacity(0.15)
+            Image(systemName: "newspaper")
+                .foregroundStyle(.secondary)
         }
     }
 }
