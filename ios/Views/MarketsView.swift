@@ -312,13 +312,22 @@ struct MarketsView: View {
 
     private var newsDrawerOverlay: some View {
         GeometryReader { geo in
+            let maxHeight = geo.size.height - 80
             let target = drawerState.height(in: geo.size.height) - dragTranslation
-            let height = min(max(64, target), geo.size.height - 80)
+            let height = min(max(64, target), maxHeight)
             VStack(spacing: 0) {
                 NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, brief: appState.dailyBrief)
             }
             .frame(maxWidth: .infinity)
+            // Fixed at max height -- the inner List never gets a new size
+            // proposal during drag, so it never re-measures/re-lays-out its
+            // lazy content. The second .frame below only clips the visible
+            // viewport; that's cheap, resizing the List every drag pixel
+            // was the actual cause of the choppiness (heavier than the
+            // border/shadow repaint around it).
+            .frame(height: maxHeight, alignment: .top)
             .frame(height: height, alignment: .top)
+            .clipped()
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
