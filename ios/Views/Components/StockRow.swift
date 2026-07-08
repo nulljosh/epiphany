@@ -52,13 +52,13 @@ struct StockRow: View {
                     } label: {
                         Image(systemName: isWatchlisted ? "star.fill" : "star")
                             .foregroundStyle(isWatchlisted ? Palette.warningAmber : .secondary)
-                            .font(.caption)
-                            .frame(width: 18, height: 18)
+                            .font(.caption2)
+                            .frame(width: 14, height: 14)
                     }
                     .buttonStyle(BounceButtonStyle())
                 } else {
                     Color.clear
-                        .frame(width: 18, height: 18)
+                        .frame(width: 14, height: 14)
                 }
             }
 
@@ -87,7 +87,7 @@ struct StockRow: View {
                 ChangePill(text: String(format: "%@%.2f%%", changeSign, stock.changePercent), color: changeColor)
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
 }

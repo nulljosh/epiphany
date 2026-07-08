@@ -690,7 +690,7 @@ private struct MarketRow: View {
                     Image(systemName: isFavorited ? "star.fill" : "star")
                         .foregroundStyle(isFavorited ? Palette.warningAmber : .secondary)
                         .font(.caption2)
-                        .frame(width: 16, height: 16)
+                        .frame(width: 14, height: 14)
                 }
                 .buttonStyle(BounceButtonStyle())
             }
