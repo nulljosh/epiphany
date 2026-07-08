@@ -18,7 +18,10 @@ struct TickerBarView: View {
     // Precomputed once per data change, not per animation frame -- formatting
     // currency + rebuilding this array at 60fps inside TimelineView was the
     // real cause of Markets-tab choppiness (competed with List scrolling).
-    @State private var items: [TickerDisplayItem] = []
+    // Seeded synchronously in init (not just onAppear) -- a view whose first
+    // render is EmptyView (items == []) can have SwiftUI skip onAppear
+    // entirely, which left the ticker permanently blank.
+    @State private var items: [TickerDisplayItem]
 
     private let itemSpacing: CGFloat = 18
     private var scrollSpeed: CGFloat { showSparklines ? 14 : 30 }
@@ -31,6 +34,14 @@ struct TickerBarView: View {
         f.maximumFractionDigits = 2
         return f
     }()
+
+    init(appState: AppState, onSelectStock: ((Stock) -> Void)? = nil, showSparklines: Bool = false, height: CGFloat = 32) {
+        self.appState = appState
+        self.onSelectStock = onSelectStock
+        self.showSparklines = showSparklines
+        self.height = height
+        _items = State(initialValue: Self.buildItems(from: appState, showSparklines: showSparklines))
+    }
 
     var body: some View {
         Group {
@@ -73,19 +84,18 @@ struct TickerBarView: View {
                 }
             }
         }
-        .onAppear { rebuildItems() }
-        .onChange(of: appState.stocks.map(\.symbol)) { _, _ in rebuildItems() }
-        .onChange(of: appState.stocks.map(\.price)) { _, _ in rebuildItems() }
+        .onChange(of: appState.stocks.map(\.symbol)) { _, _ in items = Self.buildItems(from: appState, showSparklines: showSparklines) }
+        .onChange(of: appState.stocks.map(\.price)) { _, _ in items = Self.buildItems(from: appState, showSparklines: showSparklines) }
     }
 
-    private func rebuildItems() {
+    private static func buildItems(from appState: AppState, showSparklines: Bool) -> [TickerDisplayItem] {
         let stocks = appState.stocks
         let looped = stocks + stocks
-        items = looped.enumerated().map { index, stock in
+        return looped.enumerated().map { index, stock in
             TickerDisplayItem(
                 id: index,
                 symbol: stock.symbol,
-                priceText: Self.priceFormatter.string(from: NSNumber(value: stock.price)) ?? "$0.00",
+                priceText: priceFormatter.string(from: NSNumber(value: stock.price)) ?? "$0.00",
                 changeColor: stock.change >= 0 ? Palette.successGreen : Palette.dangerRed,
                 sparklineData: showSparklines ? appState.sparklineCache[stock.symbol] : nil
             )
