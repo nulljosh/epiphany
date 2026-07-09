@@ -28,6 +28,26 @@ private enum IncomeScenario: String, CaseIterable, Identifiable {
     }
 }
 
+enum HoldingSort: String, CaseIterable, Identifiable {
+    case valueHighLow = "High to low"
+    case valueLowHigh = "Low to high"
+    case gainHighLow = "Gainers first"
+    case gainLowHigh = "Losers first"
+    case alphabetical = "Alphabetical"
+
+    var id: String { rawValue }
+
+    func sorted(_ holdings: [Portfolio.Holding]) -> [Portfolio.Holding] {
+        switch self {
+        case .valueHighLow: return holdings.sorted { $0.marketValue > $1.marketValue }
+        case .valueLowHigh: return holdings.sorted { $0.marketValue < $1.marketValue }
+        case .gainHighLow: return holdings.sorted { $0.gainLoss > $1.gainLoss }
+        case .gainLowHigh: return holdings.sorted { $0.gainLoss < $1.gainLoss }
+        case .alphabetical: return holdings.sorted { $0.symbol < $1.symbol }
+        }
+    }
+}
+
 private let categoryColors: [String: Color] = [
     "housing": Palette.appleBlue,
     "food": Palette.successGreen,
@@ -75,6 +95,7 @@ struct PortfolioView: View {
     @State private var cachedPredictions: [(month: String, total: Double)] = []
     @State private var lastPredictionKey: String = ""
     @State private var showStatementManager = false
+    @AppStorage("holdingSort") private var holdingSort: HoldingSort = .valueHighLow
 
 
     private var currencyCode: String {
@@ -213,15 +234,28 @@ struct PortfolioView: View {
 
     private func holdingsContent(_ portfolio: Portfolio) -> some View {
         VStack(spacing: 24) {
-            sectionCard("Holdings") {
+            sectionCardWithAccessory("Holdings", accessory: {
+                Menu {
+                    Picker("Sort by", selection: $holdingSort) {
+                        ForEach(HoldingSort.allCases) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                } label: {
+                    Label(holdingSort.rawValue, systemImage: "arrow.up.arrow.down")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Palette.appleBlue)
+                }
+            }) {
                 if portfolio.holdings.isEmpty {
                     emptyState("No holdings in portfolio")
                 } else {
-                    ForEach(portfolio.holdings) { holding in
+                    let sorted = holdingSort.sorted(portfolio.holdings)
+                    ForEach(sorted) { holding in
                         HoldingRow(holding: holding)
                             .padding(.horizontal)
                             .padding(.vertical, 10)
-                        if holding.id != portfolio.holdings.last?.id {
+                        if holding.id != sorted.last?.id {
                             Divider().padding(.horizontal)
                         }
                     }
@@ -911,6 +945,36 @@ struct PortfolioView: View {
             ProgressView(value: max(min(progress, 1), 0))
                 .tint(color)
         }
+    }
+
+    private func sectionCardWithAccessory<Accessory: View, Content: View>(
+        _ title: String,
+        @ViewBuilder accessory: () -> Accessory,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(title.uppercased())
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Palette.textSecondary)
+                    .tracking(0.8)
+                Spacer()
+                accessory()
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 10)
+            content()
+        }
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Palette.overlay.opacity(0.06), lineWidth: 1)
+                )
+        )
+        .padding(.horizontal)
     }
 
     private func sectionCard<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

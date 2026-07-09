@@ -268,6 +268,80 @@ export default async function handler(req, res) {
     }
   }
 
+  // GET: X (Twitter) OAuth redirect — OAuth 2.0 + PKCE
+  if (req.method === 'GET' && action === 'twitter') {
+    const clientId = process.env.TWITTER_CLIENT_ID;
+    if (!clientId) return errorResponse(res, 501, 'X OAuth not configured');
+    const base = getBaseUrl();
+    const state = generateToken();
+    const codeVerifier = generateToken();
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    await kv.set(`twitter_oauth:${state}`, { codeVerifier }, { ex: 600 });
+    const params = new URLSearchParams({
+      response_type: 'code', client_id: clientId,
+      redirect_uri: `${base}/api/auth?action=twitter-callback`,
+      scope: 'tweet.read users.read', state,
+      code_challenge: codeChallenge, code_challenge_method: 'S256',
+    });
+    res.writeHead(302, { Location: `https://x.com/i/oauth2/authorize?${params}` });
+    return res.end();
+  }
+
+  // GET: X (Twitter) OAuth callback
+  if (req.method === 'GET' && action === 'twitter-callback') {
+    const { code, state, error: xError } = req.query;
+    const base = getBaseUrl();
+    if (xError || !code || !state) { res.writeHead(302, { Location: `${base}/?auth_error=twitter_denied` }); return res.end(); }
+    if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
+      res.writeHead(302, { Location: `${base}/?auth_error=twitter_config` }); return res.end();
+    }
+    const stored = await kv.get(`twitter_oauth:${state}`);
+    if (!stored?.codeVerifier) { res.writeHead(302, { Location: `${base}/?auth_error=twitter_state` }); return res.end(); }
+    await kv.del(`twitter_oauth:${state}`);
+    try {
+      const basic = Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString('base64');
+      const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: `Basic ${basic}` },
+        body: new URLSearchParams({
+          code, grant_type: 'authorization_code', client_id: process.env.TWITTER_CLIENT_ID,
+          redirect_uri: `${base}/api/auth?action=twitter-callback`, code_verifier: stored.codeVerifier,
+        }),
+      });
+      const { access_token } = await tokenRes.json();
+      if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=twitter_token` }); return res.end(); }
+
+      const xuRes = await fetch('https://api.twitter.com/2/users/me?user.fields=profile_image_url,name,username', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      const { data: xUser } = await xuRes.json();
+      if (!xUser?.id) { res.writeHead(302, { Location: `${base}/?auth_error=twitter_user` }); return res.end(); }
+
+      const twitterId = String(xUser.id);
+      // ponytail: X's API doesn't expose email, so we can't link to an existing
+      // email account like GitHub/Google do — key solely on twitterId + a stable
+      // synthesized address (same fallback pattern as Sign in with Apple).
+      let user = await kv.get(`twitter:${twitterId}`);
+      if (!user) {
+        const id = crypto.randomUUID();
+        const email = `${twitterId}@twitter.local`;
+        user = { id, email, passwordHash: null, verified: true, tier: 'free', twitterId, avatarUrl: xUser.profile_image_url || null, name: xUser.name || xUser.username || null, createdAt: new Date().toISOString() };
+        await kv.set(`user:${email}`, user);
+        await kv.set(`twitter:${twitterId}`, user);
+      }
+
+      const sessionToken = generateToken();
+      await kv.set(`session:${sessionToken}`, { userId: user.id, email: user.email, tier: user.tier || 'free', expiresAt: Date.now() + SESSION_TTL * 1000 }, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+      res.writeHead(302, { Location: base });
+      return res.end();
+    } catch (err) {
+      console.error('[AUTH] X callback error:', err.message);
+      res.writeHead(302, { Location: `${base}/?auth_error=twitter_error` });
+      return res.end();
+    }
+  }
+
   // GET: check current session
   if (req.method === 'GET' && action === 'me') {
     try {
