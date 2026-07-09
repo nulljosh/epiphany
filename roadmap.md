@@ -100,3 +100,10 @@
 - [ ] **Needs dedicated session:** Watchlist dynamic — same file/coupling risk as above, do together with the ASSETS refactor.
 - [ ] **BLOCKED (Joshua):** Add "Login with TradingView" to sync watchlist — no public TradingView API for reading a user's watchlist/account (already investigated 2026-06-21 in CLAUDE.md). Only real path: TradingView Pro+ outbound webhook alerts via a new `/api/tradingview/webhook` endpoint — needs Joshua's TradingView Pro+ account to configure webhooks, can't self-provision.
 - [ ] **BLOCKED (Joshua):** Migrate trade execution to IBKR or Alpaca — needs live brokerage API keys/account credentials from Joshua; Alpaca = easier start, IBKR = more powerful/complex. SnapTrade stays optional for aggregation only.
+
+## iOS landscape support (deferred 2026-07-09)
+Orientation flag enable is one line, but map/markets/portfolio are portrait-first —
+enabling without adapting layouts looks broken. Needs a per-screen pass (split
+layouts, wider charts, map controls) before flipping. Same applies to other iOS apps.
+Also: Holdings "Display metric" row (All time / Today's / Total value) needs
+per-holding day-change data from backend — model only has marketValue + gainLoss.
