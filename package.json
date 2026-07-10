@@ -1,9 +1,13 @@
 {
   "name": "epiphany",
   "private": true,
-  "version": "2.6.0",
+  "version": "2.6.1",
   "type": "module",
+  "bin": {
+    "epiphany-tui": "cli/epiphany-tui.mjs"
+  },
   "scripts": {
+    "tui": "node cli/epiphany-tui.mjs",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -23,6 +27,7 @@
     "better-sqlite3": "^12.6.2",
     "dotenv": "^17.3.1",
     "es-abstract": "^1.23.10",
+    "ink": "^7.1.0",
     "jsdom": "^27.4.0",
     "lightweight-charts": "^5.1.0",
     "maplibre-gl": "^5.18.0",
