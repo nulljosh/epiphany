@@ -1,6 +1,9 @@
 # Epiphany
 
-v2.6.0 -- Personal intelligence platform. Palantir for regular people. App Store: v1.0 live (READY_FOR_SALE) since 2026-06-23; v2.5.1 (build 6) submitted for review 2026-06-30, WAITING_FOR_REVIEW — not yet live (https://apps.apple.com/app/epiphany/id6779522175).
+v2.6.1 -- Personal intelligence platform.
+
+## Terminal dashboard (2026-07-09)
+`cli/epiphany-tui.mjs` (ink + React, `npm run tui -- <email>`) — live-refreshing portfolio TUI, polls Upstash KV directly every 15s (reuses `scripts/kv-portfolio-edit.sh`'s pull-and-cache pattern into `.env.tui.local`, gitignored). Pilot for the cross-app TUI rollout (plan: `~/.claude/plans/check-our-codebase-tuis-enumerated-sunset.md`) — Talli and Healstack next, reusing this KV/polling/keybind pattern. Requires ink 7 (not 5) for React 19 compat — ink 5's bundled react-reconciler crashes with `ReactCurrentOwner` undefined against React 19. Palantir for regular people. App Store: v1.0 live (READY_FOR_SALE) since 2026-06-23; v2.5.1 (build 6) submitted for review 2026-06-30, WAITING_FOR_REVIEW — not yet live (https://apps.apple.com/app/epiphany/id6779522175).
 
 ## TestFlight/screenshots (2026-07-07)
 TestFlight beta description updated (was internal QA notes, now real tester-facing
