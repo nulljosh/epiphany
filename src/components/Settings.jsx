@@ -356,7 +356,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
         {section === 'brokerage' && (
           <>
             <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>Read-only sync</div>
-            <p style={{ fontSize: 12, color: t.textSecondary, margin: '0 0 12px' }}>Link a brokerage through SnapTrade — you pick which one (Wealthsimple, Questrade, and more) in the connection portal. Holdings auto-refresh every few minutes while the app is open; Autopilot places orders through the linked account when enabled.</p>
+            <p style={{ fontSize: 12, color: t.textSecondary, margin: '0 0 12px' }}>Link a brokerage through SnapTrade — you pick which one (Wealthsimple, Questrade, Interactive Brokers, and more) in the connection portal. Holdings auto-refresh every few minutes while the app is open; Autopilot places orders through the linked account when enabled.</p>
             <button onClick={() => handleBrokerSync({ force: brokerSnapshot?.linked === true })} disabled={brokerSyncing} style={btnStyle(true)}>{brokerSyncing ? '...' : brokerSnapshot?.linked ? 'Sync now' : 'Connect brokerage'}</button>
             {brokerMsg && <div style={msgStyle(brokerMsg.error)}>{brokerMsg.text}</div>}
             {brokerSnapshot?.linked && (
