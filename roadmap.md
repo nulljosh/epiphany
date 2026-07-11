@@ -107,3 +107,6 @@ enabling without adapting layouts looks broken. Needs a per-screen pass (split
 layouts, wider charts, map controls) before flipping. Same applies to other iOS apps.
 Also: Holdings "Display metric" row (All time / Today's / Total value) needs
 per-holding day-change data from backend — model only has marketValue + gainLoss.
+
+## Stashed 2026-07-10
+- [ ] Autopilot copy ("Pilots"): curated famous-investor model portfolios (congress trades + 13F trackers, read-only vs SnapTrade) with performance-vs-you + new-trade alerts; web first, mirror iOS. Feature notes in wiki pages/epiphany.md
