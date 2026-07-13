@@ -110,3 +110,6 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 
 ## Stashed 2026-07-10
 - [ ] Autopilot copy ("Pilots"): curated famous-investor model portfolios (congress trades + 13F trackers, read-only vs SnapTrade) with performance-vs-you + new-trade alerts; web first, mirror iOS. Feature notes in wiki pages/epiphany.md
+
+## From Icons.pdf / Asc.pdf (imported 2026-07-12)
+- [ ] Epiphany Mac 1.0 PREPARE_FOR_SUBMISSION — build, screenshots, metadata, submit
