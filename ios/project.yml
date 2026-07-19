@@ -6,6 +6,10 @@ options:
     iOS: "17.0"
 configFiles:
   Debug: Configs/Secrets.xcconfig
+packages:
+  SwiftLint:
+    url: https://github.com/realm/SwiftLint
+    from: 0.59.1
 settings:
   DEVELOPMENT_TEAM: QMM486NPYC
   SWIFT_VERSION: "6.0"
@@ -59,6 +63,9 @@ targets:
       path: Epiphany.entitlements
     dependencies:
       - target: EpiphanyWidgetsExtension
+    buildToolPlugins:
+      - plugin: SwiftLintBuildToolPlugin
+        package: SwiftLint
   EpiphanyWidgetsExtension:
     type: app-extension
     platform: iOS
