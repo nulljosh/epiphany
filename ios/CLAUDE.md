@@ -60,9 +60,11 @@ git-tracked file -- only in the gitignored xcconfig.
 
 ```bash
 xcodegen generate
-xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
-xcodebuild test -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -skipPackagePluginValidation build
+xcodebuild test -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -skipPackagePluginValidation
 ```
+
+`-skipPackagePluginValidation` is required on every CLI/CI build now — SwiftLint runs as an SPM build-tool plugin (2026-07-18), and `xcodebuild` can't grant its interactive trust prompt headlessly without that flag.
 
 Version lives in `project.yml` (`MARKETING_VERSION`). On every release, sync the README badge and the CLAUDE.md header line to it -- all three must match the build.
 
