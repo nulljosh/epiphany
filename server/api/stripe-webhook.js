@@ -48,12 +48,16 @@ export default async function handler(req, res) {
         const customerId = session.customer;
         const subscriptionId = session.subscription;
 
+        // session.line_items is not populated on webhook events unless expanded
+        // at checkout-session-create time; fetch the subscription instead.
+        const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+
         // Store subscription in KV
         await kv.set(`sub:${customerId}`, {
           status: 'active',
           subscriptionId,
           customerId,
-          priceId: session.line_items?.data?.[0]?.price?.id,
+          priceId: subscription.items.data[0]?.price?.id,
           createdAt: new Date().toISOString(),
         });
 
@@ -89,6 +93,22 @@ export default async function handler(req, res) {
         });
 
         console.log('[WEBHOOK] Subscription canceled:', customerId);
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+        const existing = await kv.get(`sub:${customerId}`);
+
+        await kv.set(`sub:${customerId}`, {
+          ...(existing || {}),
+          status: 'past_due',
+          customerId,
+          updatedAt: new Date().toISOString(),
+        });
+
+        console.log('[WEBHOOK] Payment failed:', customerId);
         break;
       }
 
