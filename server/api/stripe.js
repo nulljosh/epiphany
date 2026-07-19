@@ -7,10 +7,10 @@ function getStripe() {
   return stripe;
 }
 
-function getTierFromPriceId(priceId) {
-  if (priceId === process.env.STRIPE_PRICE_ID_STARTER) return 'starter';
-  if (priceId === process.env.STRIPE_PRICE_ID_PRO) return 'pro';
-  return 'pro'; // backward compat default
+// Single paid tier ($1/wk) — see CLAUDE.md monetization table. Any active
+// subscription counts as 'starter'; there is no separate purchasable 'pro' tier.
+function getTierFromPriceId() {
+  return 'starter';
 }
 
 // Helper: extract session token from cookie header
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
   const kv = await getKv();
   const { action, customerId } = req.query;
   const allowedPriceIds = new Set(
-    [process.env.STRIPE_PRICE_ID_STARTER, process.env.STRIPE_PRICE_ID_PRO].filter(Boolean)
+    [process.env.STRIPE_PRICE_ID_STARTER].filter(Boolean)
   );
 
   // GET: subscription status
@@ -43,9 +43,7 @@ export default async function handler(req, res) {
       if (!subscription) {
         return res.status(200).json({ status: null, tier: 'free' });
       }
-      const tier = subscription.status === 'active'
-        ? getTierFromPriceId(subscription.priceId)
-        : 'free';
+      const tier = subscription.status === 'active' ? getTierFromPriceId() : 'free';
       return res.status(200).json({ ...subscription, tier });
     } catch (err) {
       console.error('[STRIPE/status] Error:', err.message);

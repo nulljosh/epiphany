@@ -1,8 +1,10 @@
 #!/bin/bash
-# Edit a user's portfolio data directly in Upstash KV, bypassing login/UI.
+# Edit a user's portfolio or account record directly in Upstash KV, bypassing login/UI.
 # Usage:
 #   ./scripts/kv-portfolio-edit.sh get <email>                 # dump current portfolio JSON
-#   ./scripts/kv-portfolio-edit.sh set <email> <file.json>     # overwrite with file contents
+#   ./scripts/kv-portfolio-edit.sh set <email> <file.json>     # overwrite portfolio with file contents
+#   ./scripts/kv-portfolio-edit.sh user <email>                # dump the user:<email> record (plan, flags, id...)
+#   ./scripts/kv-portfolio-edit.sh set-user <email> <file.json> # overwrite user record with file contents
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -26,6 +28,15 @@ case "$ACTION" in
   set)
     FILE="${3:?file.json required for set}"
     curl -s -X POST "$KV_URL/set/portfolio:$USER_ID" -H "Authorization: Bearer $KV_TOKEN" \
+      -H "Content-Type: application/json" --data-binary "@$FILE"
+    echo
+    ;;
+  user)
+    python3 -c "import json,sys; print(json.dumps(json.loads(json.loads(sys.stdin.read())['result']), indent=2))" <<< "$USER_JSON"
+    ;;
+  set-user)
+    FILE="${3:?file.json required for set-user}"
+    curl -s -X POST "$KV_URL/set/user:$EMAIL" -H "Authorization: Bearer $KV_TOKEN" \
       -H "Content-Type: application/json" --data-binary "@$FILE"
     echo
     ;;
