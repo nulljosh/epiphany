@@ -1506,7 +1506,7 @@ function IndexView({ dark, t, peopleIndex, ontology, glass, font }) {
 }
 
 
-export default function PeoplePanel({ dark, t, isAuthenticated }) {
+export default function PeoplePanel({ dark, t, isAuthenticated, isPro = false }) {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1671,6 +1671,21 @@ export default function PeoplePanel({ dark, t, isAuthenticated }) {
     border: `1px solid ${t.cardBorder || t.border}`,
     borderRadius: 12,
   };
+
+  if (isAuthenticated && !isPro) {
+    return (
+      <div style={{ padding: 16, fontFamily: font, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 240, textAlign: 'center' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary }}>People — Pro feature</div>
+        <div style={{ fontSize: 11, color: t.textSecondary, maxWidth: 280 }}>Search and track people, cross-referenced with live news mentions.</div>
+        <button
+          onClick={() => window.dispatchEvent(new Event('epiphany:show-pricing'))}
+          style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: 6, color: t.textSecondary, cursor: 'pointer', fontSize: 11, padding: '6px 14px', fontFamily: font }}
+        >
+          Upgrade
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 16, fontFamily: font, maxHeight: '100%', overflow: 'auto' }}>

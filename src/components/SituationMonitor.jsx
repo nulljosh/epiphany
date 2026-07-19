@@ -99,6 +99,7 @@ export default function SituationMonitor({
   mapFlyTo,
   mapLayers,
   alerts = [],
+  isPro = false,
 }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   useEffect(() => {
@@ -285,7 +286,7 @@ export default function SituationMonitor({
         )}
       </div>
 
-      <DailyBrief t={t} font={font} dark={dark} />
+      <DailyBrief t={t} font={font} dark={dark} isPro={isPro} />
 
       {/* Source health strip — hidden on mobile */}
       {!isMobile && (

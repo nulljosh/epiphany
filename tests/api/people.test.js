@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('../../server/api/gates.js', () => ({ isPro: async () => true }));
+
 import handler from '../../server/api/people.js';
 
 global.fetch = vi.fn();

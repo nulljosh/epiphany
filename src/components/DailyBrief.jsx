@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 
-export default function DailyBrief({ t, font, dark }) {
+export default function DailyBrief({ t, font, dark, isPro }) {
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(true);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
+    if (!isPro) { setLoading(false); setLocked(true); return; }
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch('/api/daily-brief', { credentials: 'include' });
+        if (res.status === 402) { if (!cancelled) setLocked(true); return; }
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) setBrief(data);
@@ -18,9 +21,35 @@ export default function DailyBrief({ t, font, dark }) {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [isPro]);
 
   if (loading) return null;
+
+  if (locked) {
+    return (
+      <div style={{
+        background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+        border: `1px solid ${t.border}`,
+        borderRadius: 10,
+        padding: '10px 12px',
+        marginBottom: 12,
+        fontFamily: font,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
+      }}>
+        <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.textSecondary }}>Daily Brief · Pro</span>
+        <button
+          onClick={() => window.dispatchEvent(new Event('epiphany:show-pricing'))}
+          style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: 6, color: t.textSecondary, cursor: 'pointer', fontSize: 10, padding: '3px 8px', fontFamily: font }}
+        >
+          Upgrade
+        </button>
+      </div>
+    );
+  }
+
   if (!brief) return null;
 
   const ts = brief.generatedAt ? new Date(brief.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;

@@ -1,4 +1,6 @@
 import { applyCors } from './_cors.js';
+import { getSessionUser, errorResponse } from './auth-helpers.js';
+import { isPro } from './gates.js';
 
 const CACHE_TTL = 10 * 60 * 1000;
 const GOOGLE_TIMEOUT = 5000;
@@ -192,6 +194,9 @@ async function wikiSearch(query) {
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const session = await getSessionUser(req);
+  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
 
   const q = (req.query.q || '').trim();
   if (!q) {

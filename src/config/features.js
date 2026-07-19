@@ -13,11 +13,12 @@ export const FEATURES = {
   // Premium — enforced server-side in server/api/broker/autopilot.js
   autopilot: 'premium',
 
+  dailyBrief: 'premium',
+  peopleGraph: 'premium',
+
   // Phase 2 candidates (still free today)
-  dailyBrief: 'free',
   brokerSync: 'free',
   recommendations: 'free',
-  peopleGraph: 'free',
 };
 
 export const isPremiumFeature = (key) => FEATURES[key] === 'premium';
