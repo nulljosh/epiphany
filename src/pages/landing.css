@@ -551,7 +551,7 @@ html:has(.lp) { scroll-behavior: smooth; }
 }
 .lp .ai-icon {
   width: 32px; height: 32px;
-  background: linear-gradient(145deg, #1a8cff, #0055cc);
+  background: #0071e3;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; font-weight: 800; color: #fff;
@@ -576,7 +576,7 @@ html:has(.lp) { scroll-behavior: smooth; }
   font-size: 12px; font-weight: 400; color: #fff;
   max-width: 82%;
   line-height: 1.45;
-  background: linear-gradient(145deg, #1a8cff, #0055cc);
+  background: #0071e3;
   box-shadow: 0 2px 12px rgba(0,113,227,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 .lp .bubble-ai {
@@ -618,7 +618,7 @@ html:has(.lp) { scroll-behavior: smooth; }
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
 }
 .lp .ai-send {
-  background: linear-gradient(145deg, #1a8cff, #0055cc);
+  background: #0071e3;
   border-radius: 12px;
   padding: 10px 16px;
   font-size: 12px; font-weight: 700; color: #fff;
@@ -653,7 +653,7 @@ html:has(.lp) { scroll-behavior: smooth; }
 }
 .lp .avatar {
   width: 48px; height: 48px; border-radius: 50%;
-  background: linear-gradient(145deg, #0a4a8a, #0071e3);
+  background: #0071e3;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700; color: #fff;
   box-shadow: 0 2px 12px rgba(0,113,227,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
