@@ -203,6 +203,15 @@ final class EpiphanyAPI {
         return try decode([MacroIndicator].self, from: data)
     }
 
+    func fetchVenueDetails(name: String, lat: Double, lon: Double) async throws -> VenueDetails {
+        let url = try makeURL("/api/venue-details", query: [
+            "name": name, "lat": String(lat), "lon": String(lon),
+        ])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        return try decode(VenueDetails.self, from: data)
+    }
+
     // MARK: - Autopilot
 
     func fetchAutopilot() async throws -> AutopilotState {

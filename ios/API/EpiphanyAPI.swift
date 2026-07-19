@@ -300,6 +300,19 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return wrapper.articles
     }
 
+    func fetchVenueDetails(name: String, lat: Double, lon: Double) async throws -> VenueDetails {
+        let cacheKey = "venue:\(name.lowercased()):\(String(format: "%.4f", lat)):\(String(format: "%.4f", lon))"
+        if let cached: VenueDetails = cached(cacheKey) { return cached }
+        let url = try makeURL("/api/venue-details", query: [
+            "name": name, "lat": String(lat), "lon": String(lon),
+        ])
+        let request = URLRequest(url: url)
+        let data = try await perform(request)
+        let details = try decode(VenueDetails.self, from: data)
+        setCache(cacheKey, details)
+        return details
+    }
+
     func fetchMacro() async throws -> [MacroIndicator] {
         let url = try makeURL("/api/macro")
         let request = URLRequest(url: url)
