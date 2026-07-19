@@ -1566,6 +1566,7 @@ private struct VenueDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var scene: MKLookAroundScene?
     @State private var loadingScene = true
+    @State private var venueDetails: VenueDetails?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1600,6 +1601,7 @@ private struct VenueDetailSheet: View {
                         .font(.subheadline)
                 }
             }
+            venueReviewsSection
             Spacer()
             Button {
                 item.openInMaps(launchOptions: [
@@ -1618,6 +1620,55 @@ private struct VenueDetailSheet: View {
             // Native Apple imagery — no API key. Nil in areas without coverage.
             scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
             loadingScene = false
+        }
+        .task {
+            guard let name = item.name else { return }
+            let coord = item.placemark.coordinate
+            let details = try? await EpiphanyAPI.shared.fetchVenueDetails(
+                name: name, lat: coord.latitude, lon: coord.longitude
+            )
+            if let details, details.available { venueDetails = details }
+        }
+    }
+
+    @ViewBuilder
+    private var venueReviewsSection: some View {
+        if let details = venueDetails {
+            if !details.photos.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(details.photos.prefix(5), id: \.self) { photoUrl in
+                            AsyncImage(url: URL(string: photoUrl)) { image in
+                                image.resizable().aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Rectangle().fill(.ultraThinMaterial)
+                            }
+                            .frame(width: 120, height: 90)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+                    }
+                }
+            }
+            if let rating = details.rating {
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill").foregroundStyle(.yellow)
+                    Text(String(format: "%.1f", rating)).font(.subheadline.weight(.semibold))
+                    Text("(\(details.reviewCount) reviews)").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            ForEach(details.reviews) { review in
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(review.user).font(.caption.weight(.semibold))
+                        Spacer()
+                        Text(String(repeating: "★", count: review.rating))
+                            .font(.caption2)
+                            .foregroundStyle(.yellow)
+                    }
+                    Text(review.text).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                }
+                .padding(.vertical, 2)
+            }
         }
     }
 

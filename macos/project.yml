@@ -35,8 +35,8 @@ targets:
       INFOPLIST_KEY_CFBundleDisplayName: Epiphany
       INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
     dependencies:
-      - target: MonicaWidgets
-  MonicaWidgets:
+      - target: EpiphanyWidgets
+  EpiphanyWidgets:
     type: app-extension
     platform: macOS
     sources:
@@ -44,12 +44,12 @@ targets:
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos.widgets
       GENERATE_INFOPLIST_FILE: YES
-      INFOPLIST_KEY_CFBundleDisplayName: Monica Widgets
+      INFOPLIST_KEY_CFBundleDisplayName: Epiphany Widgets
       MACOSX_DEPLOYMENT_TARGET: "14.0"
       CODE_SIGN_STYLE: Automatic
       LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     entitlements:
-      path: MonicaWidgets.entitlements
+      path: EpiphanyWidgets.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:

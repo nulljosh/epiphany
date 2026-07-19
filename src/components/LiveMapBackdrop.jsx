@@ -130,6 +130,23 @@ function buildPopupHTML(data) {
   </div>`;
 }
 
+function venueExtrasHTML(details) {
+  const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const photos = (details.photos || []).slice(0, 5).map((url) =>
+    `<img src="${esc(url)}" alt="" style="width:80px;height:60px;object-fit:cover;border-radius:6px;flex-shrink:0" />`
+  ).join('');
+  const rating = details.rating != null
+    ? `<div style="margin-top:6px;font-size:11px;color:#facc15">★ ${details.rating.toFixed(1)} <span style="color:#93c5fd">(${details.reviewCount || 0} reviews)</span></div>`
+    : '';
+  const reviews = (details.reviews || []).map((r) =>
+    `<div style="margin-top:6px;font-size:10px;color:#cbd5e1"><b>${esc(r.user)}</b> ${'★'.repeat(r.rating)}<br/>${esc(r.text)}</div>`
+  ).join('');
+  return `<div style="margin-top:8px">
+    ${photos ? `<div style="display:flex;gap:6px;overflow-x:auto">${photos}</div>` : ''}
+    ${rating}${reviews}
+  </div>`;
+}
+
 function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat, layerType, activePopupRef, content = '') {
   if (lon == null || lat == null || isNaN(lon) || isNaN(lat)) return;
   const el = document.createElement('div');
@@ -144,6 +161,16 @@ function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat,
       .setHTML(buildPopupHTML(data))
       .addTo(map);
     activePopupRef.current = popup;
+    if (data.level === 'place' && data.title) {
+      fetch(`/api/venue-details?name=${encodeURIComponent(data.title)}&lat=${lat}&lon=${lon}`)
+        .then((res) => res.json())
+        .then((details) => {
+          if (details.available && activePopupRef?.current === popup) {
+            popup.setHTML(buildPopupHTML(data) + venueExtrasHTML(details));
+          }
+        })
+        .catch(() => {});
+    }
   };
   el.addEventListener('click', (e) => { e.stopPropagation(); showPopup(); });
   markersArray.push(

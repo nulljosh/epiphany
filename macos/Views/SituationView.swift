@@ -104,6 +104,7 @@ struct SituationView: View {
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
     @State private var selectedVenueCategory: VenueCategory?
     @State private var venueResults: [MKMapItem] = []
+    @State private var selectedVenue: MKMapItem?
     @State private var isSearchingVenues = false
     @State private var mapSearch = ""
     @State private var mapSearchError = false
@@ -311,11 +312,16 @@ struct SituationView: View {
                 ForEach(venueResults, id: \.self) { item in
                     if let coord = item.placemark.location?.coordinate {
                         Annotation(item.name ?? cat.label, coordinate: coord) {
-                            Image(systemName: cat.icon)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(6)
-                                .background(cat.tint, in: Circle())
+                            Button {
+                                selectedVenue = item
+                            } label: {
+                                Image(systemName: cat.icon)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(6)
+                                    .background(cat.tint, in: Circle())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -325,6 +331,9 @@ struct SituationView: View {
         .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
+        .sheet(item: $selectedVenue) { item in
+            VenueDetailSheet(item: item)
+        }
     }
 
     @ViewBuilder
@@ -971,5 +980,118 @@ private struct SnapshotWeatherAlert: Codable {
     var model: WeatherAlert {
         WeatherAlert(id: id, title: title, severity: severity, summary: summary,
                      effectiveAt: effectiveAt, expiresAt: expiresAt)
+    }
+}
+
+extension MKMapItem: @retroactive Identifiable {}
+
+private struct VenueDetailSheet: View {
+    let item: MKMapItem
+    @Environment(\.dismiss) private var dismiss
+    @State private var scene: MKLookAroundScene?
+    @State private var loadingScene = true
+    @State private var venueDetails: VenueDetails?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                lookAroundPreview
+                HStack {
+                    Text(item.name ?? "Place")
+                        .font(.title3.weight(.semibold))
+                    Spacer()
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                if let address = item.placemark.title {
+                    Label(address, systemImage: "mappin.and.ellipse")
+                        .font(.subheadline)
+                }
+                if let phone = item.phoneNumber {
+                    Label(phone, systemImage: "phone.fill")
+                        .font(.subheadline)
+                }
+                if let url = item.url {
+                    Link(destination: url) {
+                        Label(url.host ?? "Website", systemImage: "globe")
+                            .font(.subheadline)
+                    }
+                }
+                venueReviewsSection
+            }
+            .padding(Spacing.lg)
+        }
+        .frame(minWidth: 360, minHeight: 420)
+        .task {
+            scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
+            loadingScene = false
+        }
+        .task {
+            guard let name = item.name else { return }
+            let coord = item.placemark.coordinate
+            let details = try? await EpiphanyAPI.shared.fetchVenueDetails(
+                name: name, lat: coord.latitude, lon: coord.longitude
+            )
+            if let details, details.available { venueDetails = details }
+        }
+    }
+
+    @ViewBuilder
+    private var lookAroundPreview: some View {
+        if let scene {
+            LookAroundPreview(initialScene: scene)
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else if loadingScene {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .frame(height: 180)
+                .overlay { ProgressView() }
+        }
+    }
+
+    @ViewBuilder
+    private var venueReviewsSection: some View {
+        if let details = venueDetails {
+            if !details.photos.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(details.photos.prefix(5), id: \.self) { photoUrl in
+                            AsyncImage(url: URL(string: photoUrl)) { image in
+                                image.resizable().aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Rectangle().fill(.ultraThinMaterial)
+                            }
+                            .frame(width: 120, height: 90)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+                    }
+                }
+            }
+            if let rating = details.rating {
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill").foregroundStyle(.yellow)
+                    Text(String(format: "%.1f", rating)).font(.subheadline.weight(.semibold))
+                    Text("(\(details.reviewCount) reviews)").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            ForEach(details.reviews) { review in
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(review.user).font(.caption.weight(.semibold))
+                        Spacer()
+                        Text(String(repeating: "★", count: review.rating))
+                            .font(.caption2)
+                            .foregroundStyle(.yellow)
+                    }
+                    Text(review.text).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                }
+                .padding(.vertical, 2)
+            }
+        }
     }
 }
