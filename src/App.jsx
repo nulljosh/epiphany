@@ -789,6 +789,7 @@ const reset = useCallback(() => {
           pmWhales={whales}
           mapFlyTo={(params) => mapInstanceRef.current?.flyTo(params)}
           mapLayers={mapLayers}
+          isPro={isPro}
         />
       )}
       {activeTab === 'markets' && (
@@ -804,7 +805,7 @@ const reset = useCallback(() => {
         <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
       )}
       {activeTab === 'people' && (
-        <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} />
+        <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} isPro={isPro} />
       )}
       {activeTab === 'settings' && (
         <Settings {...settingsProps} />

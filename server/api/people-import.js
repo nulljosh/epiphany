@@ -1,5 +1,6 @@
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
+import { isPro } from './gates.js';
 
 const KV_PREFIX = 'people-index';
 const MAX_IMPORT = 500;
@@ -62,6 +63,7 @@ export default async function handler(req, res) {
 
   const session = await getSessionUser(req);
   if (!session) return errorResponse(res, 401, 'Authentication required');
+  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
 
   // Rate limiting
   const rateKey = `${RATE_KEY}:${session.userId}`;

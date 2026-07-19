@@ -1,5 +1,7 @@
 import { applyCors } from './_cors.js';
 import { getYahooCrumb, YAHOO_HEADERS, DEFAULT_SYMBOLS, isMarketHours } from './stocks-shared.js';
+import { getSessionUser, errorResponse } from './auth-helpers.js';
+import { isPro } from './gates.js';
 
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 let cache = { ts: 0, data: null };
@@ -103,6 +105,9 @@ export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const session = await getSessionUser(req);
+  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
 
   const now = Date.now();
   if (cache.data && (now - cache.ts) < CACHE_TTL) {
