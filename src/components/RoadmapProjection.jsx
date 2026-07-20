@@ -129,9 +129,9 @@ export default function RoadmapProjection({ t }) {
         <div style={{ width: '100%', height: 360 }}>
           <ResponsiveContainer>
             {view === 'netWorth' ? (
-              <LineChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
+              <LineChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 16 }}>
                 <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-                <XAxis dataKey="date" stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} interval={xInterval} />
+                <XAxis dataKey="date" stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} interval={xInterval} tickMargin={8} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} tickFormatter={yTickFormatter} />
                 <Tooltip content={<CustomTooltip t={t} />} />
                 <ReferenceLine y={100000} stroke={axisColor} strokeDasharray="4 4" label={{ value: '$100k', fill: axisColor, fontSize: 10 }} />
@@ -140,9 +140,9 @@ export default function RoadmapProjection({ t }) {
                 <Line type="monotone" dataKey="netWorth" name="Net Worth" stroke={lineColor} strokeWidth={2} dot={false} />
               </LineChart>
             ) : view === 'accounts' ? (
-              <AreaChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
+              <AreaChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 16 }}>
                 <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-                <XAxis dataKey="date" stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} interval={xInterval} />
+                <XAxis dataKey="date" stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} interval={xInterval} tickMargin={8} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} tickFormatter={yTickFormatter} />
                 <Tooltip content={<CustomTooltip t={t} />} />
                 <Area type="monotone" dataKey="rdsp" name="RDSP" stackId="1" stroke={t.yellow} fill={t.yellow} fillOpacity={0.3} strokeWidth={2} />
@@ -150,9 +150,9 @@ export default function RoadmapProjection({ t }) {
                 <Area type="monotone" dataKey="debtNeg" name="Debt" stackId="2" stroke={t.red} fill={t.red} fillOpacity={0.3} strokeWidth={2} />
               </AreaChart>
             ) : (
-              <LineChart data={chartData} margin={{ top: 24, right: 16, left: 0, bottom: 8 }}>
+              <LineChart data={chartData} margin={{ top: 24, right: 16, left: 0, bottom: 16 }}>
                 <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-                <XAxis dataKey="date" stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} interval={xInterval} />
+                <XAxis dataKey="date" stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} interval={xInterval} tickMargin={8} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 10, fill: t.textTertiary }} tickFormatter={yTickFormatter} />
                 <Tooltip content={<CustomTooltip t={t} />} />
                 <Line type="monotone" dataKey="netWorth" name="Net Worth" stroke={lineColor} strokeWidth={2} dot={false} />

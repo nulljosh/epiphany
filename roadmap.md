@@ -120,6 +120,6 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 - [ ] News drawer slide up/down animation is choppy/glitchy — needs smoothing (likely animation curve/frame drop issue, not a data issue).
 - [ ] Stocks not syncing properly — "we have no stocks", screenshot displays stale data. May be same root cause as `project_epiphany_stale_holdings` (dup Wealthsimple reconnects) — verify against that fix before treating as new.
 - [ ] Portfolio/Settings tab audit: getting cluttered, decide what stays. Specifically called out: calendar view feels unnecessary — consider removing.
-- [ ] Portfolio tab: X-axis value/month labels need better spacing/padding/margin (small CSS/SwiftUI layout fix, low risk to bang out once picked up).
+- [x] Portfolio tab: X-axis value/month labels need better spacing/padding/margin — bumped chart bottom margin 8→16 and added `tickMargin={8}` to XAxis across all 3 chart views in `RoadmapProjection.jsx`, build verified.
 - [ ] Landing page screenshots must use a real populated account, not a created-on-the-fly demo account — demo account currently renders an empty portfolio, which looks broken on the marketing site.
 - [ ] Autopilot trading feature isn't implemented yet — hide/gate it in the UI until it ships (currently visible but non-functional).
