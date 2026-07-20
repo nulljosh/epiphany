@@ -116,10 +116,10 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 - [ ] Epiphany Mac 1.0 PREPARE_FOR_SUBMISSION — build, screenshots, metadata, submit
 
 ## From Epiphany.pdf (imported 2026-07-19)
-- [ ] Business news drawer: lazy-load on app startup instead of blocking (currently taking upwards of 30s to load) — investigate the drawer's data-fetch trigger, defer until first opened or make async/non-blocking.
+- [x] Business news drawer: lazy-load on app startup instead of blocking (currently taking upwards of 30s to load) — `ios/Views/MarketsView.swift`: news fetch was firing unconditionally in `setupOnAppear`'s Task even though the drawer only peeks at bottom. Now deferred to `loadNewsIfNeeded()`, triggered via `.onChange(of: drawerState)` only once the user expands the drawer past `.peek`. Build-verified (`xcodebuild ... build` succeeded); not yet manually verified live in sim.
 - [ ] News drawer slide up/down animation is choppy/glitchy — needs smoothing (likely animation curve/frame drop issue, not a data issue).
 - [ ] Stocks not syncing properly — "we have no stocks", screenshot displays stale data. May be same root cause as `project_epiphany_stale_holdings` (dup Wealthsimple reconnects) — verify against that fix before treating as new.
 - [ ] Portfolio/Settings tab audit: getting cluttered, decide what stays. Specifically called out: calendar view feels unnecessary — consider removing.
 - [x] Portfolio tab: X-axis value/month labels need better spacing/padding/margin — bumped chart bottom margin 8→16 and added `tickMargin={8}` to XAxis across all 3 chart views in `RoadmapProjection.jsx`, build verified.
 - [ ] Landing page screenshots must use a real populated account, not a created-on-the-fly demo account — demo account currently renders an empty portfolio, which looks broken on the marketing site.
-- [ ] Autopilot trading feature isn't implemented yet — hide/gate it in the UI until it ships (currently visible but non-functional).
+- [ ] Autopilot trading feature isn't implemented yet — hide/gate it in the UI until it ships (currently visible but non-functional). NOTE 2026-07-20: ambiguous against other roadmap sections describing a working paper-trading autopilot (`server/api/broker/morning-run.js`, `AutopilotSection`) — unclear which specific UI surface this refers to (a "live" toggle? a separate unshipped feature?). Needs Joshua to clarify which control is misleadingly visible before hiding anything.
