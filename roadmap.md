@@ -76,7 +76,7 @@
   only symbol/spot/chgPct -- there are no stats to show (no volume/range/mktcap).
 - [ ] Backend DONE 2026-07-19: commodities now return dayHigh/dayLow/prevClose
   (52w already there); crypto returns high24h/low24h (volume + market cap already
-  there). Remaining: surface new fields in the detail stats grid (web + iOS/macOS).
+  there). Web stats grid surfaced 2026-07-19 (StockDetail fallbacks). Remaining: iOS/macOS mirror.
   No-fake-data: only show fields the API actually returns.
 - [ ] Derivable now without backend: Period High/Low from the already-loaded
   price history; SMA20/EMA50 overlays on the commodity chart (StockDetailView
