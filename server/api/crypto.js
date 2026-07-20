@@ -30,6 +30,8 @@ export default async function handler(req, res) {
       change24h: c.price_change_percentage_24h ?? 0,
       marketCap: c.market_cap,
       volume: c.total_volume,
+      high24h: c.high_24h ?? null,
+      low24h: c.low_24h ?? null,
       image: c.image,
     }));
 
