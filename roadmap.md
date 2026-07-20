@@ -74,9 +74,10 @@
   (`MarketItemDetailView`). The sparse "little data" look is a DATA gap, not UI:
   `CommodityData` carries only name/price/change/changePercent and `CryptoData`
   only symbol/spot/chgPct -- there are no stats to show (no volume/range/mktcap).
-- [ ] Backend: enrich commodity/crypto endpoints to return day range, prev
-  close, 52w range, and (crypto) volume + market cap, then surface in the detail
-  stats grid. No-fake-data: only show fields the API actually returns.
+- [ ] Backend DONE 2026-07-19: commodities now return dayHigh/dayLow/prevClose
+  (52w already there); crypto returns high24h/low24h (volume + market cap already
+  there). Remaining: surface new fields in the detail stats grid (web + iOS/macOS).
+  No-fake-data: only show fields the API actually returns.
 - [ ] Derivable now without backend: Period High/Low from the already-loaded
   price history; SMA20/EMA50 overlays on the commodity chart (StockDetailView
   computes these client-side -- reuse). Deferred, needs a chart refactor pass.

@@ -54,6 +54,9 @@ async function fetchFmpCommodities() {
           changePercent: q.changesPercentage ?? 0,
           high52: q.yearHigh ?? null,
           low52: q.yearLow ?? null,
+          dayHigh: q.dayHigh ?? null,
+          dayLow: q.dayLow ?? null,
+          prevClose: q.previousClose ?? null,
           source: 'fmp',
         };
       }
@@ -104,6 +107,9 @@ async function fetchYahooCommodity(key, symbol) {
       changePercent,
       high52: meta.fiftyTwoWeekHigh ?? null,
       low52: meta.fiftyTwoWeekLow ?? null,
+      dayHigh: meta.regularMarketDayHigh ?? null,
+      dayLow: meta.regularMarketDayLow ?? null,
+      prevClose: typeof prevClose === 'number' ? prevClose : null,
       source: 'yahoo',
     };
   } catch (err) {
