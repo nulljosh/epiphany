@@ -7,6 +7,7 @@ struct MarketsView: View {
     @State private var searchText = ""
     @State private var isVisible = false
     @State private var hasLoaded = false
+    @State private var hasLoadedNews = false
     @State private var selectedStock: Stock?
     @State private var sortField: MarketSortField = .changePercent
     @State private var sortAscending = false
@@ -134,6 +135,13 @@ struct MarketsView: View {
         Task {
             if appState.dailyBrief == nil { await appState.loadDailyBrief() }
             if appState.statements.isEmpty { await appState.loadStatements() }
+        }
+    }
+
+    private func loadNewsIfNeeded() {
+        guard !hasLoadedNews, selectedStockForNews == nil else { return }
+        hasLoadedNews = true
+        Task {
             isLoadingNews = true
             do {
                 newsArticles = try await EpiphanyAPI.shared.fetchNews()
@@ -254,6 +262,9 @@ struct MarketsView: View {
             }
         }
         .overlay(alignment: .bottom) { if !isSearching { newsDrawerOverlay } }
+        .onChange(of: drawerState) { _, state in
+            if state != .peek { loadNewsIfNeeded() }
+        }
         .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
         .safeAreaInset(edge: .bottom, spacing: 0) { if isSearching { bottomSearchBar } }
         .onChange(of: isSearching) { _, active in appState.hideFloatingTabBar = active }
