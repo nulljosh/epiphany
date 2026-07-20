@@ -25,10 +25,11 @@ export const USER_BUDGET = {
 };
 
 export const USER_DEBT = [
-  // Visa removed 2026-06-12: in collections, lump-sum payoff in a year+ (same treatment as Bell bill)
   { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
   { name: 'Telus (current month)', balance: 300, rate: 0, minPayment: 0, note: 'Paid $310 on 2026-05-26, ~$300 remaining' },
-  { name: 'Mom/Dad', balance: 265, rate: 0, minPayment: 0 },
+  { name: 'Mom/Dad', balance: 450, rate: 0, minPayment: 0, note: '$275 + $175 passport' },
+  { name: 'Bell', balance: 1000, rate: 0, minPayment: 0 },
+  { name: 'Visa', balance: 5000, rate: 0, minPayment: 0, note: 'In collections, lump-sum payoff in a year+' },
 ];
 
 // One-off received credits (not recurring income).
