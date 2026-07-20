@@ -113,3 +113,12 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 
 ## From Icons.pdf / Asc.pdf (imported 2026-07-12)
 - [ ] Epiphany Mac 1.0 PREPARE_FOR_SUBMISSION — build, screenshots, metadata, submit
+
+## From Epiphany.pdf (imported 2026-07-19)
+- [ ] Business news drawer: lazy-load on app startup instead of blocking (currently taking upwards of 30s to load) — investigate the drawer's data-fetch trigger, defer until first opened or make async/non-blocking.
+- [ ] News drawer slide up/down animation is choppy/glitchy — needs smoothing (likely animation curve/frame drop issue, not a data issue).
+- [ ] Stocks not syncing properly — "we have no stocks", screenshot displays stale data. May be same root cause as `project_epiphany_stale_holdings` (dup Wealthsimple reconnects) — verify against that fix before treating as new.
+- [ ] Portfolio/Settings tab audit: getting cluttered, decide what stays. Specifically called out: calendar view feels unnecessary — consider removing.
+- [ ] Portfolio tab: X-axis value/month labels need better spacing/padding/margin (small CSS/SwiftUI layout fix, low risk to bang out once picked up).
+- [ ] Landing page screenshots must use a real populated account, not a created-on-the-fly demo account — demo account currently renders an empty portfolio, which looks broken on the marketing site.
+- [ ] Autopilot trading feature isn't implemented yet — hide/gate it in the UI until it ships (currently visible but non-functional).
