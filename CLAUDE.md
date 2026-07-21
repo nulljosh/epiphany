@@ -103,10 +103,30 @@ Ordered by effort (fewest tokens → most). Ship the top first. Last updated: 20
   and the macOS equivalent in `macos/Views/SituationView.swift` — each calls
   the new endpoint with `{name, lat, lon}` and renders photos + review
   snippets when `available: true`. Plan: `~/.claude/plans/spicy-mapping-reddy.md`.
-- **ASC: remove duplicate macOS platform from "Epiphany" (iPhone) app record** —
-  App Information → deactivate macOS App section. Standalone "Epiphany Mac"
-  record (id 6782703473) already covers macOS distribution. Manual ASC click,
-  not scriptable. Decided 2026-06-22: leave it, low value, ignore going forward.
+- **ASC merge: Epiphany Mac → Epiphany iOS app record** — REOPENED 2026-07-21, Joshua
+  wants the actual merge (standing rule: one app record per product). Fixed
+  `macos/project.yml` bundle ID (`com.heyitsmejosh.epiphany-macos` → `com.heyitsmejosh.epiphany`,
+  matching Echo's proven fix pattern from earlier tonight). Archive attempt surfaced 3
+  pre-existing compile bugs in `widgets-macos/` (never fixed because this target has
+  apparently never been successfully archived before — consistent with the old
+  "Epiphany Mac shows placeholder icon" note below, since no build ever completed to
+  populate it):
+  1. FIXED: `MarketsWidget.swift` referenced `Color.widgetGain`/`.widgetLoss` (the iOS
+     names) instead of the locally-defined `Color.macGain`/`.macLoss`.
+  2. FIXED: `.accessoryInline` in `supportedFamilies` + its switch case — that
+     WidgetFamily case is unavailable on macOS entirely (lock-screen/iOS-only), not
+     just unsupported at runtime. Removed both the family declaration and the switch
+     case (falls through to `default`).
+  3. **NOT FIXED** — blocking: `MarketsProvider.swift:50` and `PortfolioProvider.swift:44`
+     both fail with "passing closure as a 'sending' parameter risks causing data races"
+     (Swift 6 strict concurrency). Needs a real look at the actual closure/completion
+     handler pattern in those two files, not a quick patch — deferred to its own session.
+  Once building: archive `Epiphany` scheme, export, `asc builds upload --app 6779522175
+  --pkg ...` (the **iOS** app ID, not 6782703473), verify via `asc versions create
+  --app 6779522175 --platform MAC_OS` attaches under the same record as iOS (same
+  verification used for Echo). Old standalone "Epiphany Mac" record (6782703473)
+  becomes orphaned once this lands — needs Joshua's manual ASC dashboard deletion (no
+  public API to delete an app record).
 - **ASC: resolve "Missing Compliance" on Epiphany Mac build** — Build Activity
   flags export compliance as unanswered, blocking submission past "Prepare for
   Submission." Manual ASC click, not scriptable.
