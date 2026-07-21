@@ -7,7 +7,7 @@ settings:
   DEVELOPMENT_TEAM: QMM486NPYC
   SWIFT_VERSION: "6.0"
   MARKETING_VERSION: 2.5.2
-  CURRENT_PROJECT_VERSION: "1"
+  CURRENT_PROJECT_VERSION: "202607211614"
 targets:
   Epiphany:
     type: application
@@ -29,7 +29,7 @@ targets:
           - ".asc"
     settings:
       INFOPLIST_FILE: Info.plist
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       CODE_SIGN_ENTITLEMENTS: Epiphany.entitlements
       INFOPLIST_KEY_CFBundleDisplayName: Epiphany
@@ -42,7 +42,7 @@ targets:
     sources:
       - path: ../widgets-macos
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos.widgets
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.widgets
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_CFBundleDisplayName: Epiphany Widgets
       MACOSX_DEPLOYMENT_TARGET: "14.0"
@@ -62,7 +62,7 @@ targets:
     dependencies:
       - target: Epiphany
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos.tests
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.tests
       GENERATE_INFOPLIST_FILE: YES
   EpiphanyMacUITests:
     type: bundle.ui-testing
@@ -72,5 +72,5 @@ targets:
     dependencies:
       - target: Epiphany
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany-macos.uitests
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.uitests
       GENERATE_INFOPLIST_FILE: YES
