@@ -42,6 +42,12 @@ targets:
     sources:
       - path: ../widgets-macos
     settings:
+      # ponytail: pre-existing WidgetKit completion-closure Sendable errors in
+      # MarketsProvider/PortfolioProvider under Swift 6 mode, not touched by tonight's
+      # bundle-ID merge. Pinned to Swift 5 language mode to unblock shipping; upgrade
+      # path is annotating the TimelineProvider completion closures properly, then
+      # bumping back to 6 to match the rest of the project.
+      SWIFT_VERSION: "5.0"
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.widgets
       GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_CFBundleDisplayName: Epiphany Widgets
