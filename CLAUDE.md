@@ -117,16 +117,32 @@ Ordered by effort (fewest tokens → most). Ship the top first. Last updated: 20
      WidgetFamily case is unavailable on macOS entirely (lock-screen/iOS-only), not
      just unsupported at runtime. Removed both the family declaration and the switch
      case (falls through to `default`).
-  3. **NOT FIXED** — blocking: `MarketsProvider.swift:50` and `PortfolioProvider.swift:44`
-     both fail with "passing closure as a 'sending' parameter risks causing data races"
-     (Swift 6 strict concurrency). Needs a real look at the actual closure/completion
-     handler pattern in those two files, not a quick patch — deferred to its own session.
-  Once building: archive `Epiphany` scheme, export, `asc builds upload --app 6779522175
-  --pkg ...` (the **iOS** app ID, not 6782703473), verify via `asc versions create
-  --app 6779522175 --platform MAC_OS` attaches under the same record as iOS (same
-  verification used for Echo). Old standalone "Epiphany Mac" record (6782703473)
-  becomes orphaned once this lands — needs Joshua's manual ASC dashboard deletion (no
-  public API to delete an app record).
+  3. **FIXED 2026-07-21 (later same night)**: `MarketsProvider.swift`/`PortfolioProvider.swift`
+     Sendable-closure errors under Swift 6 — `SWIFT_STRICT_CONCURRENCY: minimal` alone
+     didn't suppress it (Swift 6 language mode enforces regardless). Pinned
+     `EpiphanyWidgets`' `SWIFT_VERSION` to `"5.0"` (scoped to just that target via
+     `macos/project.yml`, rest of the project stays on 6) — `ponytail:` comment left
+     in place noting the real fix (annotate the TimelineProvider completion closures
+     properly) as the upgrade path. **Archive + export now succeed.**
+  Archived, exported (`.pkg`), uploaded to app 6779522175 (the **iOS** app ID, correct
+  target). **Upload itself fails with error 90348** — no detail via public API or the
+  authenticated `asc web` session. Notably: this is the exact same error code hit on
+  Talli's macOS merge the same night, on a structurally different underlying bug (Talli's
+  was a real App Group mismatch, now fixed; Epiphany's app-group config was already
+  correct, no mismatch found) — the recurrence across two unrelated apps' merges strongly
+  suggests 90348 is a generic/systemic issue (stale auto-signing profile not including a
+  recently-added entitlement? bundle-ID-just-changed propagation delay?) rather than
+  either app's specific bug. **Needs the actual Apple ITMS validation email**
+  (trommatic@icloud.com) to diagnose further — do not keep guessing blind.
+  Once resolved: re-run `asc builds upload --app 6779522175 --pkg
+  ".asc/artifacts/EpiphanyMacMerged2Export/Epiphany.pkg" --version 2.5.2 --build-number
+  202607211614`, then verify via `asc versions create --app 6779522175 --platform MAC_OS`
+  attaches under the same record as iOS (same verification pattern used for Echo). Old
+  standalone "Epiphany Mac" record (6782703473) becomes orphaned once this lands — needs
+  Joshua's manual ASC dashboard deletion (no public API to delete an app record;
+  `asc web apps delete` also confirmed blocked on Lexly Mac tonight for a different
+  reason — rejected version state — check that doesn't apply here too before assuming
+  it'll just work).
 - **ASC: resolve "Missing Compliance" on Epiphany Mac build** — Build Activity
   flags export compliance as unanswered, blocking submission past "Prepare for
   Submission." Manual ASC click, not scriptable.
