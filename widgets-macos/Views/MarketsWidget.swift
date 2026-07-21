@@ -11,7 +11,7 @@ struct MarketsWidget: Widget {
         }
         .configurationDisplayName("Markets")
         .description("Major indices, commodities, and crypto at a glance.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryInline])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
@@ -21,8 +21,6 @@ struct MarketsWidgetView: View {
 
     var body: some View {
         switch family {
-        case .accessoryInline:
-            accessoryInlineView
         case .systemSmall:
             smallView
         case .systemMedium:
@@ -134,7 +132,7 @@ struct MarketsWidgetView: View {
                         .font(.subheadline.monospacedDigit())
                     Text(String(format: "%@%.2f%%", market.changePercent >= 0 ? "+" : "", market.changePercent))
                         .font(.caption.bold())
-                        .foregroundStyle(market.changePercent >= 0 ? Color.widgetGain : Color.widgetLoss)
+                        .foregroundStyle(market.changePercent >= 0 ? Color.macGain : Color.macLoss)
                         .frame(width: 70, alignment: .trailing)
                 }
                 .padding(.vertical, 2)
@@ -157,7 +155,7 @@ struct MarketsWidgetView: View {
                     .font(.caption.bold().monospacedDigit())
                 Text(String(format: "%@%.1f%%", market.changePercent >= 0 ? "+" : "", market.changePercent))
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(market.changePercent >= 0 ? Color.widgetGain : Color.widgetLoss)
+                    .foregroundStyle(market.changePercent >= 0 ? Color.macGain : Color.macLoss)
             }
         }
     }
