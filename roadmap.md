@@ -78,6 +78,11 @@
   (52w already there); crypto returns high24h/low24h (volume + market cap already
   there). Web stats grid surfaced 2026-07-19 (StockDetail fallbacks). Remaining: iOS/macOS mirror.
   No-fake-data: only show fields the API actually returns.
+  Checked 2026-07-21: bigger than a mirror pass — no iOS/macOS view currently
+  renders `CommodityData`/`CryptoData` at all (`ios/Views/StockDetailView.swift`
+  is equity-only, no NavigationLink from Markets rows to a commodity/crypto
+  detail found). Needs a dedicated session: build the detail view first, then
+  add the stats fields.
 - [ ] Derivable now without backend: Period High/Low from the already-loaded
   price history; SMA20/EMA50 overlays on the commodity chart (StockDetailView
   computes these client-side -- reuse). Deferred, needs a chart refactor pass.
@@ -118,7 +123,7 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 ## From Epiphany.pdf (imported 2026-07-19)
 - [x] Business news drawer: lazy-load on app startup instead of blocking (currently taking upwards of 30s to load) — `ios/Views/MarketsView.swift`: news fetch was firing unconditionally in `setupOnAppear`'s Task even though the drawer only peeks at bottom. Now deferred to `loadNewsIfNeeded()`, triggered via `.onChange(of: drawerState)` only once the user expands the drawer past `.peek`. Build-verified (`xcodebuild ... build` succeeded); not yet manually verified live in sim.
 - [ ] News drawer slide up/down animation is choppy/glitchy — needs smoothing (likely animation curve/frame drop issue, not a data issue).
-- [ ] Stocks not syncing properly — "we have no stocks", screenshot displays stale data. May be same root cause as `project_epiphany_stale_holdings` (dup Wealthsimple reconnects) — verify against that fix before treating as new.
+- [ ] Stocks not syncing properly — "we have no stocks", screenshot displays stale data. Verified 2026-07-21: the manual/broker dedupe fix (`server/api/portfolio.js` line ~97) is still in place and correct, so this is NOT that same bug — needs fresh investigation (check SnapTrade sync status/logs for the affected account).
 - [ ] Portfolio/Settings tab audit: getting cluttered, decide what stays. Specifically called out: calendar view feels unnecessary — consider removing.
 - [x] Portfolio tab: X-axis value/month labels need better spacing/padding/margin — bumped chart bottom margin 8→16 and added `tickMargin={8}` to XAxis across all 3 chart views in `RoadmapProjection.jsx`, build verified.
 - [ ] Landing page screenshots must use a real populated account, not a created-on-the-fly demo account — demo account currently renders an empty portfolio, which looks broken on the marketing site.
