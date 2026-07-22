@@ -85,6 +85,7 @@ Deploy: Vercel. Repo: github.com/nulljosh/epiphany
 - [ ] Mac screenshots to ASC App Store listing — requires creating an "App Store" version (description/keywords) in ASC first for the "Epiphany Mac" app record (id 6782703473); can't be scripted blind.
 
 ## Recent changes
+- 2026-07-22: Landing page paid tier now routes to real Stripe checkout (was a no-op). Venue detail modal (Yelp photos/reviews) no longer clips content -- added ScrollView. Map pins made consistent: Apple's native POI pins excluded on iOS+macOS, schools added to our own OSM query (`education` category, graduation-cap icon) so nothing silently disappeared. Portfolio tab now hidden until signed in; Settings gained a Register button. Sign in with Apple fixed (entitlement + ASC capability were both missing; backend was already built). Markets news drawer choppiness attempt #3 failed (offset-transform broke drag hit-testing) and was reverted -- still open, see roadmap.md.
 - Spending categories split into starbucks/liquor/transfer subtypes (coarser categories before)
 - Confirmed Epiphany.pdf bug reports (NYC map glitch, flights unavailable) already fixed
 
