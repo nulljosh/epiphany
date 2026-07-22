@@ -85,20 +85,25 @@ Deploy: Vercel (`npx vercel --prod`)
 
 MIT 2026, Joshua Trommel
 
-## Autopilot — broker decision (2026-07-02)
+## Autopilot — broker decision (updated 2026-07-22)
 
-Wealthsimple has NO trading API (read-only via SnapTrade, by WS policy — not fixable). Alpaca is US-only for live. Decision:
-1. **IBKR Canada** = the stocks path. Josh: open account (~1 day approval), connect via existing SnapTrade flow with trade permission, impact-test should pass, autopilot engine already built.
-2. Wealthsimple stays connected read-only for portfolio sync.
-3. Kraken (crypto micro-trades) = optional, account created but parked — Josh doesn't want it for now.
-4. US customers already get full autopilot via SnapTrade trade-enabled brokers — Canada is the restrictive market, not the product.
+Neither Wealthsimple nor RBC has a public trading API — both are confirmed dead
+ends for execution (SnapTrade/WS connection is read-only by design, 403 code
+1020/3007; it stays connected for portfolio sync only, never order placement).
+Trade execution needs a separate brokerage account, funded independently:
 
-## Autopilot via Alpaca (superseded — US-only for live; paper still usable for testing)
+1. **Alpaca = the path.** Free signup, paper trading out of the box, simplest
+   REST API (already wired: `server/api/broker/{alpaca,signal,positions,webhook,morning-run}.js`,
+   defaults to paper mode). US-listed stocks/crypto only. Money to be traded
+   lives in Alpaca, not Wealthsimple/RBC — fund it separately, it's not a bridge
+   into your existing accounts.
+2. **IBKR** only if Canadian/TSX equities are needed later — supports both
+   markets but heavier KYC/setup. Not the default path.
+3. Kraken (crypto micro-trades) — optional, account created but parked.
+4. Wealthsimple + RBC stay connected read-only for portfolio display/aggregation only.
 
-SnapTrade/Wealthsimple is **read-only by design** (403 code 1020) — it can never place orders; it stays connected for portfolio sync only. Trade execution runs on Alpaca (already wired: `server/api/broker/{alpaca,signal,positions,webhook,morning-run}.js`, defaults to paper mode).
-
-Remaining manual steps:
-1. Josh: sign up at alpaca.markets (free), dashboard → Generate API Keys (paper).
+Remaining manual steps (needs Joshua — identity verification, can't be automated):
+1. Sign up at alpaca.markets (free), dashboard → Generate API Keys (paper).
 2. Add `ALPACA_API_KEY` + `ALPACA_API_SECRET` to Vercel production, redeploy.
 3. Verify `/api/broker/positions` returns account JSON, place one paper order via signal endpoint.
 4. Later: switch `ALPACA_BASE_URL` to live once paper autopilot proves out.
