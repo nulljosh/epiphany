@@ -332,13 +332,8 @@ struct MarketsView: View {
             .frame(maxWidth: .infinity)
             // Fixed at max height -- the inner List never gets a new size
             // proposal during drag, so it never re-measures/re-lays-out its
-            // lazy content. The second .frame below only clips the visible
-            // viewport; that's cheap, resizing the List every drag pixel
-            // was the actual cause of the choppiness (heavier than the
-            // border/shadow repaint around it).
+            // lazy content.
             .frame(height: maxHeight, alignment: .top)
-            .frame(height: height, alignment: .top)
-            .clipped()
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
@@ -346,6 +341,10 @@ struct MarketsView: View {
                     .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
             )
             .shadow(radius: 8, y: -2)
+            // Slide the whole (constant-size) card via a transform instead of
+            // resizing its frame every drag pixel -- an offset is a compositor
+            // transform (no relayout), which is what was actually choppy before.
+            .offset(y: maxHeight - height)
             .padding(.bottom, 80)
             .overlay(alignment: .top) {
                 Color.clear
@@ -376,6 +375,9 @@ struct MarketsView: View {
             .padding(.horizontal, 8)
             .padding(.bottom, 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            // The card's own frame no longer shrinks, so clip the part that
+            // slides below the visible drawer area.
+            .clipped()
         }
     }
 

@@ -173,6 +173,15 @@ export default function App() {
     window.addEventListener('epiphany:show-pricing', open);
     return () => window.removeEventListener('epiphany:show-pricing', open);
   }, []);
+  // Landing page's paid tier sets this before sending the visitor into
+  // registration; once they're authenticated, drop them straight into
+  // checkout instead of the free app.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (sessionStorage.getItem('epiphany_pending_plan') !== 'starter') return;
+    sessionStorage.removeItem('epiphany_pending_plan');
+    window.dispatchEvent(new Event('epiphany:show-pricing'));
+  }, [isAuthenticated]);
   const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(false);
@@ -731,6 +740,11 @@ const reset = useCallback(() => {
     return (
       <LandingPage
         onRegister={() => { setShowLanding(false); setAuthView('register'); }}
+        onRegisterPaid={() => {
+          sessionStorage.setItem('epiphany_pending_plan', 'starter');
+          setShowLanding(false);
+          setAuthView('register');
+        }}
         onLogin={() => { setShowLanding(false); setAuthView('login'); }}
       />
     );
