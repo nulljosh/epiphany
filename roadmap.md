@@ -93,6 +93,12 @@
   Wealthsimple execution gap — TradingView has no public API to read a user's
   watchlist either, only outbound Pro+ webhook alerts (already logged as blocked
   above). Bottleneck is brokerage choice + funded account, not integration code.
+  **Needs Joshua 2026-07-22:** sign up for Alpaca (paper trading account, free,
+  fastest path — do this first) at alpaca.markets. IBKR only if TSX/Canadian
+  equities are needed later (heavier KYC/setup). RBC confirmed no public trading
+  API, not viable regardless. Can't be automated — requires identity verification,
+  can't reuse a password across sites. Once Alpaca API keys exist, wire into
+  epiphany's autopilot execution leg (see `broker/morning-run.js`).
 
 ## iOS landscape support (deferred 2026-07-09)
 Orientation flag enable is one line, but map/markets/portfolio are portrait-first —
