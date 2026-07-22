@@ -32,12 +32,15 @@ private enum MapLayerStyle: String, CaseIterable {
         }
     }
 
+    // Points of interest are excluded everywhere: Apple's own POI pins (e.g. a
+    // plain red marker for a school) mixed inconsistently with our custom
+    // category icons for the same places. Only our own data layers draw pins now.
     var mapStyle: MapStyle {
         switch self {
-        case .hybrid:    return .hybrid(elevation: .realistic)
+        case .hybrid:    return .hybrid(elevation: .realistic, pointsOfInterest: .excludingAll)
         case .satellite: return .imagery(elevation: .realistic)
-        case .standard:  return .standard(elevation: .realistic)
-        case .terrain:   return .standard(elevation: .realistic, pointsOfInterest: .all)
+        case .standard:  return .standard(elevation: .realistic, pointsOfInterest: .excludingAll)
+        case .terrain:   return .standard(elevation: .realistic, pointsOfInterest: .excludingAll)
         }
     }
 }
@@ -382,6 +385,7 @@ struct SituationView: View {
         case "attraction": return "star.fill"
         case "recreation": return "leaf.fill"
         case "community": return "megaphone.fill"
+        case "education": return "graduationcap.fill"
         default: return "mappin"
         }
     }
@@ -392,6 +396,7 @@ struct SituationView: View {
         case "attraction": return .purple
         case "recreation": return .mint
         case "community": return .indigo
+        case "education": return .blue
         default: return .blue
         }
     }
