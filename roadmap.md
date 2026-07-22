@@ -1,9 +1,11 @@
 # Epiphany Roadmap
 
 ## Landing page pass (imported 2026-07-21)
-- [x] Markets news drawer choppy/sticky/jumpy drag — FIXED same session (commit `cdbf27f`): drawer height was resized every drag pixel with a `List` inside it (forces relayout each frame); now a constant-size frame slid via `.offset(y:)` (compositor transform, no relayout). `ios/Views/MarketsView.swift`.
 - [x] Landing page Paid tier didn't charge — FIXED same session (commit `cdbf27f`): "Get Epiphany" on the Paid card called the same handler as Free. Now sets a pendingPlan flag and opens the existing (working) Stripe checkout flow post-auth. `src/App.jsx`, `src/pages/LandingPage.jsx`. Not yet manually clicked through end-to-end against Stripe test mode.
-- [ ] Landing page screenshots still demo data — `public/screenshots/screenshot-{situation,markets,portfolio,settings}-new.png` show `demo@heyitsmejosh.com` + fake tickers. Fix is simple (dev auto-login already lands on the real account in Simulator, see `ios/CLAUDE.md`) but needs a Simulator build+capture pass — deferred for usage budget (session hit 100% critical), not difficulty.
+- [x] Landing page screenshots refreshed with the real account — FIXED same session: rebuilt in Simulator with dev auto-login (real account, Langley BC location via `xcrun simctl location`), captured Situation tab. `public/screenshots/screenshot-situation-new.png` replaced. Markets/Portfolio/Settings screenshots NOT captured — in-sim tab navigation via AppleScript coordinate clicks proved too unreliable (no AXe tap tool enabled in this environment's XcodeBuildMCP config) and cost too much of the session; redo with a real tap tool or manual capture.
+- [ ] Markets news drawer drag — see consolidated "still choppy" entry below (Epiphany.pdf section); this is attempt #3, also failed, also reverted.
+- [ ] **Map pins: red generic pin + colored category icon both showing for the same place** — e.g. a coffee shop correctly shows a brown coffee icon, but a school shows a plain red pin instead of a school-appropriate icon (or no icon at all, falling back to red). Should be one or the other per place, not a mix of red pins and category icons across different places. Needs an audit of the marker/icon assignment logic (likely in `LiveMapBackdrop.jsx` or the iOS/macOS equivalent) to find why some categories fall through to the default red pin instead of getting a proper icon.
+- [ ] **Venue detail modal (Yelp photos/reviews) — photo getting cut off.** Yelp API venue photos + reviews are now live in the map's venue detail popup (shipped per `project_epiphany_venue_reviews` memory), but the photo is being clipped/cut off in the modal layout. Needs a sizing/aspect-ratio fix in the venue detail sheet (web popup + iOS `VenueDetailSheet` + macOS equivalent, per `CLAUDE.md`'s venue-details rollout notes).
 
 ## From Epiphany.pdf (imported 2026-07-07)
 - [ ] Facebook login (web) — same pattern as Google, blocked on **Joshua**: create a
@@ -39,6 +41,29 @@
   a real device, not just xcodebuild success, before claiming fixed again.
   Row padding vs. native is a separate cosmetic-only gap, already addressed
   2026-07-07 (star gutter 18→14pt, row padding 6→4pt) but not re-verified live.
+- [ ] **Attempt 3 (2026-07-22), also failed — reverted, commit `69f82c6`.** Tried
+  replacing the per-drag `.frame(height:)` resize with a constant-size frame
+  slid via `.offset(y:)` (a pure compositor transform, no relayout — the
+  textbook fix for this exact SwiftUI pattern, matches the blog post Josh
+  linked). Never tested live before claiming done (repeated the exact mistake
+  this roadmap already warned against above). Josh tested it live: the drag
+  handle's hit-test region no longer tracked the visible drawer — dragging
+  passed through to the stock row underneath instead of moving the drawer.
+  Reverted back to the frame-resize version (choppy but responsive) same
+  session. Root cause theory for why offset broke hit-testing: the drag
+  handle overlay is attached via `.overlay(alignment: .top)` to the
+  *offset-shifted* view, and the view's own layout frame stays fixed size
+  (maxHeight) regardless of drag state — only `.offset()` moves it visually.
+  SwiftUI's hit-testing should account for ancestor offsets, but something in
+  this specific chain (offset → padding → overlay → clipped, in that order)
+  desynced the touch target from the rendered position. Next attempt: test the
+  offset approach in isolation on a fresh dummy view first to confirm it's
+  even viable in this SwiftUI version before wiring it into the real drawer,
+  or try attaching the `DragGesture` to a sibling view with a stable
+  (non-offset) frame instead of the offset-shifted card itself. Still needs:
+  ask Josh exactly what feels wrong (lag vs. stick vs. jump-on-release) and
+  Instruments Time Profiler on a real device — neither has happened across
+  all three attempts.
 
 ## iOS 2.5.2 pass (from 2026-07-01 feedback)
 - [ ] Fresh screenshots (fastlane snapshot erroring, exit 75) — optional, 2.5.1 shots carry over
