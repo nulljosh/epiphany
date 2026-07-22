@@ -1,5 +1,10 @@
 # Epiphany Roadmap
 
+## Landing page pass (imported 2026-07-21)
+- [x] Markets news drawer choppy/sticky/jumpy drag — FIXED same session (commit `cdbf27f`): drawer height was resized every drag pixel with a `List` inside it (forces relayout each frame); now a constant-size frame slid via `.offset(y:)` (compositor transform, no relayout). `ios/Views/MarketsView.swift`.
+- [x] Landing page Paid tier didn't charge — FIXED same session (commit `cdbf27f`): "Get Epiphany" on the Paid card called the same handler as Free. Now sets a pendingPlan flag and opens the existing (working) Stripe checkout flow post-auth. `src/App.jsx`, `src/pages/LandingPage.jsx`. Not yet manually clicked through end-to-end against Stripe test mode.
+- [ ] Landing page screenshots still demo data — `public/screenshots/screenshot-{situation,markets,portfolio,settings}-new.png` show `demo@heyitsmejosh.com` + fake tickers. Fix is simple (dev auto-login already lands on the real account in Simulator, see `ios/CLAUDE.md`) but needs a Simulator build+capture pass — deferred for usage budget (session hit 100% critical), not difficulty.
+
 ## From Epiphany.pdf (imported 2026-07-07)
 - [ ] Facebook login (web) — same pattern as Google, blocked on **Joshua**: create a
   Meta for Developers app (developers.facebook.com/apps → Create App → Consumer →
