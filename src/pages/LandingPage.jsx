@@ -335,7 +335,7 @@ function PeopleScreen() {
   );
 }
 
-export default function LandingPage({ onRegister, onLogin }) {
+export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
   // scroll reveal — same behavior as the prototype: reveal once on intersect,
   // 3s safety net so content never stays hidden
   useEffect(() => {
@@ -353,6 +353,7 @@ export default function LandingPage({ onRegister, onLogin }) {
   }, []);
 
   const register = (e) => { e.preventDefault(); onRegister(); };
+  const registerPaid = (e) => { e.preventDefault(); onRegisterPaid(); };
   const login = (e) => { e.preventDefault(); onLogin(); };
 
   return (
@@ -515,7 +516,7 @@ export default function LandingPage({ onRegister, onLogin }) {
               <li>Brokerage sync</li>
               <li>Alerts</li>
             </ul>
-            <button className="lp-price-btn solid" onClick={register}>Get Epiphany</button>
+            <button className="lp-price-btn solid" onClick={registerPaid}>Get Epiphany</button>
           </div>
         </div>
       </section>
