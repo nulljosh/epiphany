@@ -1,20 +1,6 @@
 # Epiphany Roadmap
 
 ## From Epiphany.pdf (imported 2026-07-07)
-- [x] Portfolio duplicate accounts — root cause: `server/api/portfolio.js` broker-account
-  overlay only filtered out accounts already tagged `source: 'broker'`; legacy rows
-  saved to KV before that tag existed had no `source` field, so they were kept as
-  "manual" forever while a fresh broker copy got layered on top every GET. Now also
-  filters manual accounts by name-collision with the current broker snapshot.
-- [x] News drawer thumbnails — `NewsDrawerView.swift` now renders `article.imageUrl`
-  (field already existed on `NewsArticle`, was just unused) as a 60x60 AsyncImage.
-- [x] Stocks list gains filter — added `gainersOnly` toggle to the Markets `ellipsis.circle`
-  menu (`MarketsView.swift`), filters to `changePercent > 0`.
-- [x] Google login (web) — DONE 2026-07-07. `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
-  set in Vercel production. `server/api/auth.js` has `google`/`google-callback`
-  actions, mirrors the GitHub OAuth flow (redirect_uri `/api/auth?action=google-callback`).
-  "Sign in/up with Google" buttons live in `LoginPage.jsx` + `RegisterPage.jsx`.
-  Verified via `npm run build` — succeeds.
 - [ ] Facebook login (web) — same pattern as Google, blocked on **Joshua**: create a
   Meta for Developers app (developers.facebook.com/apps → Create App → Consumer →
   Facebook Login product), copy App ID + secret from Settings → Basic, send over.
@@ -30,15 +16,6 @@
   `/api/auth?action=google` web URL in an `ASWebAuthenticationSession` from iOS and
   let the session cookie carry over, rather than integrating the native Google
   Sign-In SDK. Not started.
-- [x] Ticker bar choppy/slow — 2026-07-07: fixed. `TickerBarView.swift`'s
-  auto-scroll marquee used `TimelineView(.animation(minimumInterval: 1/60))`
-  and rebuilt+reformatted (currency `FormatStyle`) every stock's `Text` on
-  every single frame while the Markets tab was open, competing with the
-  List's own scroll on the main thread. Now precomputes formatted ticker
-  items once on `appState.stocks` change. Also fixed a regression this
-  introduced (ticker went blank — EmptyView blocked onAppear from ever
-  populating items; seeded synchronously in init instead). Verified live via
-  AXe in simulator (ticker content visibly changes frame-to-frame).
 - [ ] **Markets news drawer drag still choppy — NOT actually fixed despite two
   attempted fixes 2026-07-07.** User confirmed live on-device 2026-07-07 late:
   still not as fluid as native iOS Stocks. Attempt 1 (build-verified only, never
@@ -90,8 +67,6 @@
 ## Autopilot simulator visibility (2026-07-05)
 - Works but confusing: paper runs only fire hourly DURING market hours.
   Paper-mode BTC fix deployed 2026-07-05.
-- [x] Stale live-failed rows hidden from paper log — `AutopilotSection`
-  now filters the trade list to the active mode (2026-07-05).
 - [ ] Live trading remains blocked on a trade-permissioned brokerage (Alpaca
   easiest) -- SnapTrade/Wealthsimple is read-only by design.
 
@@ -115,7 +90,6 @@ Also: Holdings "Display metric" row (All time / Today's / Total value) needs
 per-holding day-change data from backend — model only has marketValue + gainLoss.
 
 ## From Merge status.pdf (imported 2026-07-21)
-- [x] Mac merge: root cause of the shared 90348 upload error found from Apple's validation email — same as Talli's, `EpiphanyWidgets` macOS target's Info.plist was missing `NSExtension.NSExtensionPointIdentifier` (present on iOS target, dropped on Mac's xcodegen config) plus a version-string mismatch. Fixed in `macos/project.yml`'s `EpiphanyWidgets.info` block, archived (build 202607211733), exported, uploaded (`Epiphany.pkg`, uploadId 79fdd8e0). **DONE 2026-07-21 night**: build went VALID under the unified app (6779522175), created MAC_OS version 2.5.2, fixed blockers (`asc builds update --uses-non-exempt-encryption=false`, `asc age-rating edit --social-media false --social-media-age-restricted false`, copied description from iOS localization, uploaded `macos/fastlane/screenshots/mac/1-main.png` resized to 1280x800 via `sips -z 800 1280` — original 1865x1050 wasn't an allowed App Store size), submitted for review (submission `b6735995`). One app record, two platforms — merge complete.
 - [ ] Old orphaned "Epiphany Mac" app record (6782703473, bundle `com.heyitsmejosh.epiphany-macos`) needs Joshua's manual ASC dashboard deletion (no public API to delete an app record — confirmed again tonight on Talli's/Echo's equivalent orphaned records). Do not upload anything further to it.
 
 ## Stashed 2026-07-10
@@ -125,10 +99,8 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 - [ ] Epiphany Mac 1.0 PREPARE_FOR_SUBMISSION — build, screenshots, metadata, submit
 
 ## From Epiphany.pdf (imported 2026-07-19)
-- [x] Business news drawer: lazy-load on app startup instead of blocking (currently taking upwards of 30s to load) — `ios/Views/MarketsView.swift`: news fetch was firing unconditionally in `setupOnAppear`'s Task even though the drawer only peeks at bottom. Now deferred to `loadNewsIfNeeded()`, triggered via `.onChange(of: drawerState)` only once the user expands the drawer past `.peek`. Build-verified (`xcodebuild ... build` succeeded); not yet manually verified live in sim.
 - [ ] News drawer slide up/down animation is choppy/glitchy — needs smoothing (likely animation curve/frame drop issue, not a data issue).
 - [ ] Stocks not syncing properly — "we have no stocks", screenshot displays stale data. Verified 2026-07-21: the manual/broker dedupe fix (`server/api/portfolio.js` line ~97) is still in place and correct, so this is NOT that same bug — needs fresh investigation (check SnapTrade sync status/logs for the affected account).
 - [ ] Portfolio/Settings tab audit: getting cluttered, decide what stays. Specifically called out: calendar view feels unnecessary — consider removing.
-- [x] Portfolio tab: X-axis value/month labels need better spacing/padding/margin — bumped chart bottom margin 8→16 and added `tickMargin={8}` to XAxis across all 3 chart views in `RoadmapProjection.jsx`, build verified.
 - [ ] Landing page screenshots must use a real populated account, not a created-on-the-fly demo account — demo account currently renders an empty portfolio, which looks broken on the marketing site.
 - [ ] Autopilot trading feature isn't implemented yet — hide/gate it in the UI until it ships (currently visible but non-functional). NOTE 2026-07-20: ambiguous against other roadmap sections describing a working paper-trading autopilot (`server/api/broker/morning-run.js`, `AutopilotSection`) — unclear which specific UI surface this refers to (a "live" toggle? a separate unshipped feature?). Needs Joshua to clarify which control is misleadingly visible before hiding anything.
