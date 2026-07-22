@@ -22,12 +22,14 @@ struct ContentView: View {
                 .tag(1)
                 .toolbar(.hidden, for: .tabBar)
 
-            PortfolioView()
-                .tabItem {
-                    Image(systemName: "briefcase")
-                }
-                .tag(2)
-                .toolbar(.hidden, for: .tabBar)
+            if appState.isLoggedIn {
+                PortfolioView()
+                    .tabItem {
+                        Image(systemName: "briefcase")
+                    }
+                    .tag(2)
+                    .toolbar(.hidden, for: .tabBar)
+            }
 
             SettingsView()
                 .tabItem {
@@ -40,10 +42,15 @@ struct ContentView: View {
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()
         }
+        .onChange(of: appState.isLoggedIn) { _, loggedIn in
+            // Portfolio (tag 2) disappears from the TabView when signed out --
+            // bounce off it back to Situation instead of landing on a blank tab.
+            if !loggedIn, selectedTab == 2 { selectedTab = 0 }
+        }
         .tint(Palette.appleBlue)
         .overlay(alignment: .bottom) {
             if !appState.hideFloatingTabBar {
-                FloatingTabBar(selectedTab: $selectedTab)
+                FloatingTabBar(selectedTab: $selectedTab, showPortfolio: appState.isLoggedIn)
                     .padding(.bottom, 8)
             }
         }
@@ -63,8 +70,8 @@ struct ContentView: View {
             }
             await preloadMarketData()
         }
-        .sheet(isPresented: $appState.showLogin) {
-            LoginSheet()
+        .sheet(isPresented: $appState.showLogin, onDismiss: { appState.showLoginInRegisterMode = false }) {
+            LoginSheet(startInRegisterMode: appState.showLoginInRegisterMode)
                 .environment(appState)
         }
     }
@@ -90,6 +97,7 @@ struct ContentView: View {
 
 private struct FloatingTabBar: View {
     @Binding var selectedTab: Int
+    var showPortfolio: Bool
 
     private let icons = ["map", "chart.line.uptrend.xyaxis", "briefcase", "gearshape"]
     private let filledIcons = ["map.fill", "chart.line.uptrend.xyaxis", "briefcase.fill", "gearshape.fill"]
@@ -98,7 +106,9 @@ private struct FloatingTabBar: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(icons.indices, id: \.self) { index in
-                tabButton(index)
+                if index != 2 || showPortfolio {
+                    tabButton(index)
+                }
             }
         }
         .padding(.horizontal, 10)

@@ -7,12 +7,16 @@ struct LoginSheet: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showPassword = false
-    @State private var isRegistering = false
+    @State private var isRegistering: Bool
     @State private var error: String?
     @State private var biometryType: LABiometryType = .none
     @FocusState private var focusedField: Field?
 
     private enum Field { case email, password }
+
+    init(startInRegisterMode: Bool = false) {
+        _isRegistering = State(initialValue: startInRegisterMode)
+    }
 
     private var canUseBiometrics: Bool {
         biometryType != .none
