@@ -54,6 +54,13 @@ targets:
       MACOSX_DEPLOYMENT_TARGET: "14.0"
       CODE_SIGN_STYLE: Automatic
       LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+    info:
+      path: EpiphanyWidgets-Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: EpiphanyWidgets.entitlements
       properties:

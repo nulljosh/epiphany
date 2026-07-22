@@ -115,7 +115,7 @@ Also: Holdings "Display metric" row (All time / Today's / Total value) needs
 per-holding day-change data from backend — model only has marketValue + gainLoss.
 
 ## From Merge status.pdf (imported 2026-07-21)
-- [ ] Mac merge: code fixed (bundle ID), but archive blocked by 3 pre-existing widget compile bugs found along the way. Fixed 2 (wrong color names, macOS-unavailable widget family); 3rd is a real Swift 6 concurrency issue needing its own session — documented in epiphany CLAUDE.md.
+- [x] Mac merge: root cause of the shared 90348 upload error found from Apple's validation email — same as Talli's, `EpiphanyWidgets` macOS target's Info.plist was missing `NSExtension.NSExtensionPointIdentifier` (present on iOS target, dropped on Mac's xcodegen config) plus a version-string mismatch. Fixed in `macos/project.yml`'s `EpiphanyWidgets.info` block, archived (build 202607211733), exported, uploaded (`Epiphany.pkg`, uploadId 79fdd8e0) — awaiting Apple processing.
 - [ ] Mac app-record deletion needed — needs Joshua's asc web auth login.
 
 ## Stashed 2026-07-10
