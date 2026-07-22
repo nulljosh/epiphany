@@ -375,7 +375,7 @@ export default function LandingPage({ onRegister, onLogin }) {
       <header className="lp-hero">
         <div className="lp-hero-glow" />
         <div className="lp-eyebrow" style={{ position: 'relative', zIndex: 2 }}>Portfolio Intelligence</div>
-        <h1 className="lp-hero-headline" style={{ position: 'relative', zIndex: 2 }}>What&rsquo;s<br /><em>going on.</em></h1>
+        <h1 className="lp-hero-headline" style={{ position: 'relative', zIndex: 2 }}>Know before<br /><em>the market moves.</em></h1>
         <p className="lp-hero-sub" style={{ position: 'relative', zIndex: 2 }}>Live signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
         <div className="lp-hero-actions" style={{ position: 'relative', zIndex: 2 }}>
           <button className="lp-btn-primary" onClick={register}>Get Epiphany</button>
