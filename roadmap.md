@@ -81,6 +81,18 @@
 - [ ] **Needs dedicated session:** Watchlist dynamic — same file/coupling risk as above, do together with the ASSETS refactor.
 - [ ] **BLOCKED (Joshua):** Add "Login with TradingView" to sync watchlist — no public TradingView API for reading a user's watchlist/account (already investigated 2026-06-21 in CLAUDE.md). Only real path: TradingView Pro+ outbound webhook alerts via a new `/api/tradingview/webhook` endpoint — needs Joshua's TradingView Pro+ account to configure webhooks, can't self-provision.
 - [ ] **BLOCKED (Joshua):** Migrate trade execution to IBKR or Alpaca — needs live brokerage API keys/account credentials from Joshua; Alpaca = easier start, IBKR = more powerful/complex. SnapTrade stays optional for aggregation only.
+  Researched 2026-07-22: IBKR does NOT bridge to Wealthsimple — SnapTrade/Wealthsimple
+  is read-only by design (confirmed, no official trade API), and the only way to
+  execute trades *in a Wealthsimple account* is via unofficial reverse-engineered
+  wrappers (github.com/ahmedsakr/wstrade-api, github.com/mdy405/ws-auto-trade) that
+  violate WS's ToS (risk of account ban) — not viable for a real product. Real path:
+  trade execution happens in a separate IBKR or Alpaca account (not Wealthsimple),
+  with SnapTrade/WS staying read-only for portfolio display. Alpaca has the simplest
+  REST API for this. Claude/TradingView-MCP repos exist for chart analysis + signal
+  generation (e.g. github.com/tradesdontlie/tradingview-mcp) but don't solve the
+  Wealthsimple execution gap — TradingView has no public API to read a user's
+  watchlist either, only outbound Pro+ webhook alerts (already logged as blocked
+  above). Bottleneck is brokerage choice + funded account, not integration code.
 
 ## iOS landscape support (deferred 2026-07-09)
 Orientation flag enable is one line, but map/markets/portfolio are portrait-first —
