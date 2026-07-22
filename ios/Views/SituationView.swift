@@ -361,13 +361,38 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .localEvent(event)
                         } label: {
-                            Text("📍")
-                                .font(.caption)
+                            Image(systemName: localEventIcon(event))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(6)
+                                .background(localEventTint(event), in: Circle())
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
+        }
+    }
+
+    // Category-driven icon/tint so local events/places read the same as the
+    // venue chips (colored icon in a circle) instead of a generic red pin.
+    private func localEventIcon(_ event: LocalEvent) -> String {
+        switch event.category {
+        case "place": return "building.2.fill"
+        case "attraction": return "star.fill"
+        case "recreation": return "leaf.fill"
+        case "community": return "megaphone.fill"
+        default: return "mappin"
+        }
+    }
+
+    private func localEventTint(_ event: LocalEvent) -> Color {
+        switch event.category {
+        case "place": return .gray
+        case "attraction": return .purple
+        case "recreation": return .mint
+        case "community": return .indigo
+        default: return .blue
         }
     }
 
@@ -1569,40 +1594,44 @@ private struct VenueDetailSheet: View {
     @State private var venueDetails: VenueDetails?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            lookAroundPreview
-            HStack {
-                Text(item.name ?? "Place")
-                    .font(.title3.weight(.semibold))
-                Spacer()
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    lookAroundPreview
+                    HStack {
+                        Text(item.name ?? "Place")
+                            .font(.title3.weight(.semibold))
+                        Spacer()
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if let category = item.pointOfInterestCategory?.rawValue {
+                        Text(category.replacingOccurrences(of: "MKPOICategory", with: ""))
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    if let address = item.placemark.title {
+                        Label(address, systemImage: "mappin.and.ellipse")
+                            .font(.subheadline)
+                    }
+                    if let phone = item.phoneNumber {
+                        Label(phone, systemImage: "phone.fill")
+                            .font(.subheadline)
+                    }
+                    if let url = item.url {
+                        Link(destination: url) {
+                            Label(url.host ?? "Website", systemImage: "globe")
+                                .font(.subheadline)
+                        }
+                    }
+                    venueReviewsSection
                 }
-                .buttonStyle(.plain)
+                .padding(Spacing.lg)
             }
-            if let category = item.pointOfInterestCategory?.rawValue {
-                Text(category.replacingOccurrences(of: "MKPOICategory", with: ""))
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-            }
-            if let address = item.placemark.title {
-                Label(address, systemImage: "mappin.and.ellipse")
-                    .font(.subheadline)
-            }
-            if let phone = item.phoneNumber {
-                Label(phone, systemImage: "phone.fill")
-                    .font(.subheadline)
-            }
-            if let url = item.url {
-                Link(destination: url) {
-                    Label(url.host ?? "Website", systemImage: "globe")
-                        .font(.subheadline)
-                }
-            }
-            venueReviewsSection
-            Spacer()
             Button {
                 item.openInMaps(launchOptions: [
                     MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDefault,
@@ -1614,8 +1643,8 @@ private struct VenueDetailSheet: View {
                     .padding(.vertical, 10)
             }
             .buttonStyle(.borderedProminent)
+            .padding(Spacing.lg)
         }
-        .padding(Spacing.lg)
         .task {
             // Native Apple imagery — no API key. Nil in areas without coverage.
             scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
