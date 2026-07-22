@@ -22,12 +22,15 @@ private enum MapLayerStyle: String, CaseIterable {
         }
     }
 
+    // Points of interest are excluded everywhere: Apple's own POI pins (e.g. a
+    // plain red marker for a school) mixed inconsistently with our custom
+    // category icons for the same places. Only our own data layers draw pins now.
     var mapStyle: MapStyle {
         switch self {
-        case .hybrid:    return .hybrid(elevation: .realistic)
+        case .hybrid:    return .hybrid(elevation: .realistic, pointsOfInterest: .excludingAll)
         case .satellite: return .imagery(elevation: .realistic)
-        case .standard:  return .standard(elevation: .realistic)
-        case .terrain:   return .standard(elevation: .realistic, pointsOfInterest: .all)
+        case .standard:  return .standard(elevation: .realistic, pointsOfInterest: .excludingAll)
+        case .terrain:   return .standard(elevation: .realistic, pointsOfInterest: .excludingAll)
         }
     }
 }
@@ -257,7 +260,7 @@ struct SituationView: View {
                         Button {
                             selectedEvent = .localEvent(event)
                         } label: {
-                            mapPin(color: Palette.purple, emoji: "\u{1F4CD}", size: 15)
+                            mapPin(color: Palette.purple, emoji: localEventEmoji(event), size: 15)
                         }
                         .buttonStyle(.plain)
                     }
@@ -468,6 +471,18 @@ struct SituationView: View {
     private var trafficIncidentAnnotations: [TrafficData.TrafficIncident] {
         guard appState.situationTrafficEnabled, let data = trafficData else { return [] }
         return (data.incidents ?? []).filter { $0.coordinate != nil }
+    }
+
+    // Category-driven emoji so local events/places aren't a single flat pin.
+    private func localEventEmoji(_ event: LocalEvent) -> String {
+        switch event.category {
+        case "place": return "\u{1F3DB}\u{FE0F}" // building
+        case "attraction": return "\u{2B50}\u{FE0F}" // star
+        case "recreation": return "\u{1F333}" // tree
+        case "community": return "\u{1F4E3}" // megaphone
+        case "education": return "\u{1F393}" // graduation cap
+        default: return "\u{1F4CD}" // pin
+        }
     }
 
     private func mapPin(

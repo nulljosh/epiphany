@@ -205,10 +205,17 @@ struct SettingsView: View {
             } else {
                 Section {
                     Button("Sign In") {
+                        appState.showLoginInRegisterMode = false
                         appState.showLogin = true
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                     .tint(Palette.appleBlue)
+
+                    Button("Register") {
+                        appState.showLoginInRegisterMode = true
+                        appState.showLogin = true
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
         }
