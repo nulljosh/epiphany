@@ -169,7 +169,7 @@ async function fetchOSMVenues(lat, lon) {
   const delta = 0.08;
   const bb = `${lat - delta},${lon - delta},${lat + delta},${lon + delta}`;
   const query = `[out:json][timeout:8];(` +
-    `node["amenity"~"^(community_centre|theatre|cinema|library|arts_centre|marketplace)$"](${bb});` +
+    `node["amenity"~"^(community_centre|theatre|cinema|library|arts_centre|marketplace|school|university|college)$"](${bb});` +
     `node["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|aquarium)$"](${bb});` +
     `node["leisure"~"^(park|sports_centre|stadium|swimming_pool|ice_rink)$"](${bb});` +
     `way["leisure"="park"](${bb});` +
@@ -196,9 +196,10 @@ async function fetchOSMVenues(lat, lon) {
       if (!name) continue;
 
       const amenity = el.tags?.amenity || el.tags?.tourism || el.tags?.leisure || '';
+      const isSchool = ['school', 'university', 'college'].includes(el.tags?.amenity);
       events.push({
         lat: elLat, lng: elLon, type: 'local-event', kind: 'place',
-        category: el.tags?.tourism ? 'attraction' : el.tags?.leisure ? 'recreation' : 'venue',
+        category: isSchool ? 'education' : el.tags?.tourism ? 'attraction' : el.tags?.leisure ? 'recreation' : 'venue',
         title: name,
         venue: name,
         severity: 'low',
