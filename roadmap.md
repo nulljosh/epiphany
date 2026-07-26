@@ -154,5 +154,4 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 - [ ] Uploading statements in portfolio is glitchy / doesn't work.
 - [ ] Add a "buy/sell/hold" badge on each stock in Markets as a tappable button opening a sources modal — every claim in the app should be traceable back to why (ontological traceability).
 - [ ] "What's New" modal too big — check if already fixed or if TestFlight is just showing a stale build; audit other projects too (feels like the 5th time fixing this).
-- [x] Landing page/splash: remove the "live" badge/language entirely (never use it), remove button shine/3D/shadow effects. DONE 2026-07-25: dropped both LIVE badges (hero pill + phone-mock overlay) and all "live" copy in `LandingPage.jsx` + `index.html` meta; removed `.lp-live-pill`/`.lp-pulse` CSS and the inset-highlight/drop-shadow/hover-lift on `.lp-nav-get`, `.lp-btn-primary`, `.lp-price-btn.solid`, `.glass-pill`. Web-only — no native landing/splash carries "live" (checked `ios/macos`). Build + eslint clean.
 - [ ] Screenshots need refreshing (App Store).
