@@ -149,3 +149,10 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 - [ ] Portfolio/Settings tab audit: getting cluttered, decide what stays. Specifically called out: calendar view feels unnecessary — consider removing.
 - [ ] Landing page screenshots must use a real populated account, not a created-on-the-fly demo account — demo account currently renders an empty portfolio, which looks broken on the marketing site.
 - [ ] Autopilot trading feature isn't implemented yet — hide/gate it in the UI until it ships (currently visible but non-functional). NOTE 2026-07-20: ambiguous against other roadmap sections describing a working paper-trading autopilot (`server/api/broker/morning-run.js`, `AutopilotSection`) — unclear which specific UI surface this refers to (a "live" toggle? a separate unshipped feature?). Needs Joshua to clarify which control is misleadingly visible before hiding anything.
+
+## Ingested 2026-07-25
+- [ ] Uploading statements in portfolio is glitchy / doesn't work.
+- [ ] Add a "buy/sell/hold" badge on each stock in Markets as a tappable button opening a sources modal — every claim in the app should be traceable back to why (ontological traceability).
+- [ ] "What's New" modal too big — check if already fixed or if TestFlight is just showing a stale build; audit other projects too (feels like the 5th time fixing this).
+- [ ] Landing page/splash: remove the "live" badge/language entirely (never use it), remove button shine/3D/shadow effects.
+- [ ] Screenshots need refreshing (App Store).
