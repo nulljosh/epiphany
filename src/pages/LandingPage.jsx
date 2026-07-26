@@ -153,11 +153,6 @@ function MapScreen() {
         <div className="layer-chip" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.2)' }}>◆ Crime</div>
       </div>
 
-      <div style={{ position: 'absolute', top: 106, right: 14, zIndex: 11, display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.8)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(16px)', border: '1px solid rgba(48,209,88,0.2)', borderRadius: 100 }}>
-        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#30D158' }} />
-        LIVE
-      </div>
-
       <div className="map-card">
         <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Nearby now</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -248,7 +243,7 @@ function AiScreen() {
         <div className="ai-icon">E</div>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Epiphany AI</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Powered by Claude · 10 live tools</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Powered by Claude · 10 tools</div>
         </div>
       </div>
       <div className="ai-msgs">
@@ -377,12 +372,11 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
         <div className="lp-hero-glow" />
         <div className="lp-eyebrow" style={{ position: 'relative', zIndex: 2 }}>Portfolio Intelligence</div>
         <h1 className="lp-hero-headline" style={{ position: 'relative', zIndex: 2 }}>Know before<br /><em>the market moves.</em></h1>
-        <p className="lp-hero-sub" style={{ position: 'relative', zIndex: 2 }}>Live signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
+        <p className="lp-hero-sub" style={{ position: 'relative', zIndex: 2 }}>Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
         <div className="lp-hero-actions" style={{ position: 'relative', zIndex: 2 }}>
           <button className="lp-btn-primary" onClick={register}>Get Epiphany</button>
           <a className="lp-btn-glass glass-pill" href="#markets">See what&rsquo;s inside</a>
         </div>
-        <div className="lp-live-pill glass-pill" style={{ position: 'relative', zIndex: 2 }}><span className="lp-pulse" />LIVE · UPDATING EVERY 30 SECONDS</div>
 
         <div className="lp-hero-phone">
           <Phone wifi>
@@ -411,7 +405,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
           <div className="lp-showcase-copy lp-reveal">
             <div className="lp-eyebrow">Markets</div>
             <h2 className="lp-showcase-headline">Your portfolio, intelligently.</h2>
-            <p className="lp-showcase-sub">Net worth tracking, live quotes, and a signal on every position.</p>
+            <p className="lp-showcase-sub">Net worth tracking, market quotes, and a signal on every position.</p>
             <ul className="lp-showcase-points">
               <li>Fear &amp; Greed, macro pulse, and anomaly detection</li>
               <li>RSI, MACD, Bollinger — the full indicator suite</li>
