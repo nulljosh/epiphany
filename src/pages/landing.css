@@ -53,7 +53,6 @@ html:has(.lp) { scroll-behavior: smooth; }
   color: #fff; text-decoration: none; white-space: nowrap; border: none;
   font-size: 13px; font-weight: 600; padding: 8px 16px;
   background: var(--accent); border-radius: 100px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
   transition: filter 0.2s;
 }
 .lp .lp-nav-get:hover { filter: brightness(1.12); }
@@ -91,10 +90,9 @@ html:has(.lp) { scroll-behavior: smooth; }
   background: var(--accent); color: #fff; text-decoration: none; border: none;
   font-size: 15px; font-weight: 600;
   padding: 14px 28px; border-radius: 100px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
-  transition: filter 0.2s, transform 0.2s;
+  transition: filter 0.2s;
 }
-.lp .lp-btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.lp .lp-btn-primary:hover { filter: brightness(1.12); }
 .lp .lp-btn-glass {
   display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
   color: rgba(255,255,255,0.85); text-decoration: none;
@@ -103,24 +101,6 @@ html:has(.lp) { scroll-behavior: smooth; }
   transition: background 0.2s;
 }
 .lp .lp-btn-glass:hover { background: rgba(255,255,255,0.14); }
-
-.lp .lp-live-pill {
-  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
-  margin-top: 36px;
-  padding: 6px 14px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
-  color: rgba(255,255,255,0.55);
-}
-.lp .lp-pulse {
-  width: 6px; height: 6px; border-radius: 50%; background: #30D158; flex-shrink: 0;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .lp .lp-pulse { animation: lp-pulse 2s ease-in-out infinite; }
-}
-@keyframes lp-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.75); }
-}
 
 /* hero phone */
 .lp .lp-hero-phone {
@@ -277,7 +257,6 @@ html:has(.lp) { scroll-behavior: smooth; }
 }
 .lp .lp-price-btn.solid {
   background: var(--accent);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
   transition: filter 0.2s;
 }
 .lp .lp-price-btn.solid:hover { filter: brightness(1.12); }
@@ -409,7 +388,6 @@ html:has(.lp) { scroll-behavior: smooth; }
   border: 1px solid rgba(255,255,255,0.15);
   border-top: 1px solid rgba(255,255,255,0.25);
   border-radius: 100px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 /* in-phone tab bar */
