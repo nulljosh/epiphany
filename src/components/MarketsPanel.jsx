@@ -615,7 +615,8 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
             borderTop: `1px solid ${t.border}`, borderRadius: '12px 12px 0 0',
             maxHeight: '70vh', overflow: 'auto', zIndex: 5,
             boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
-            animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            animation: 'slideUp 0.25s ease-out',
+            willChange: 'transform',
           }}>
             <div style={{ position: 'sticky', top: 0, padding: '12px 16px', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'inherit', zIndex: 1 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>News — {selectedStock?.symbol}</span>
