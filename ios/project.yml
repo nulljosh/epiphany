@@ -60,7 +60,13 @@ targets:
       INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
       TARGETED_DEVICE_FAMILY: "1"
     entitlements:
+      # `properties` must be declared here: xcodegen REWRITES this file on every
+      # `xcodegen generate`, so a path with no properties silently regenerates it
+      # as an empty <dict/> -- which is how Sign in with Apple kept disappearing.
       path: Epiphany.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
     dependencies:
       - target: EpiphanyWidgetsExtension
     buildToolPlugins:
