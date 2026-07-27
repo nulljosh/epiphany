@@ -100,12 +100,18 @@ export default async function handler(req, res) {
         .concat(nextRecord)
         .sort((a, b) => String(a?.spendingMonth?.sortKey || a?.spendingMonth?.month || '').localeCompare(String(b?.spendingMonth?.sortKey || b?.spendingMonth?.month || '')));
 
-      await kv.set(`statement-file:${nextRecord.id}`, {
-        filename,
-        contentBase64,
-        uploadedAt: nextRecord.uploadedAt,
-      });
-      await kv.set(statementsKey, nextStatements);
+      try {
+        await kv.set(`statement-file:${nextRecord.id}`, {
+          filename,
+          contentBase64,
+          uploadedAt: nextRecord.uploadedAt,
+        });
+        await kv.set(statementsKey, nextStatements);
+      } catch (kvErr) {
+        // ponytail: KV write can fail on oversized values; surface a real reason
+        // instead of a bare 500 the client can't act on.
+        return errorResponse(res, 502, `Could not store statement (storage limit likely exceeded): ${kvErr?.message || 'unknown error'}`);
+      }
 
       return res.status(200).json({ ok: true, statement: nextRecord, statements: nextStatements });
     }
