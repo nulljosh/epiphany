@@ -109,6 +109,17 @@ describe('useSituation', () => {
     expect(result.current.flights[0].callsign).toBe('AC123');
   });
 
+  // /api/flights rejects any bbox wider than 2° lat/lon with a 400. The client
+  // asked for 4° since inception, so this panel never once loaded.
+  it('requests a flights bbox within the API 2° span limit', async () => {
+    renderHook(() => useSituation());
+    await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    const url = global.fetch.mock.calls.map(c => String(c[0])).find(u => u.includes('/api/flights'));
+    const p = new URLSearchParams(url.split('?')[1]);
+    expect(+p.get('lamax') - +p.get('lamin')).toBeLessThanOrEqual(2);
+    expect(+p.get('lomax') - +p.get('lomin')).toBeLessThanOrEqual(2);
+  });
+
   it('loads traffic on mount', async () => {
     const { result } = renderHook(() => useSituation());
     await act(async () => { await new Promise(r => setTimeout(r, 0)); });

@@ -787,6 +787,14 @@ struct SituationView: View {
         let lamax = center.latitude + span.latitudeDelta / 2
         let lomin = center.longitude - span.longitudeDelta / 2
         let lomax = center.longitude + span.longitudeDelta / 2
+        // /api/flights (unlike incidents/traffic) rejects a bbox wider than 2 deg
+        // lat/lon with a 400, so it gets its own box clamped around the centre.
+        let flightLatHalf = min(span.latitudeDelta / 2, 1.0)
+        let flightLonHalf = min(span.longitudeDelta / 2, 1.0)
+        let flightLamin = center.latitude - flightLatHalf
+        let flightLamax = center.latitude + flightLatHalf
+        let flightLomin = center.longitude - flightLonHalf
+        let flightLomax = center.longitude + flightLonHalf
 
         let completion = LoadCompletion(total: 9)
 
@@ -805,7 +813,7 @@ struct SituationView: View {
         Task { @MainActor in
             defer { Task { await completion.done() } }
             guard showFlights else { flights = []; return }
-            let r = await loadFlights(lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
+            let r = await loadFlights(lamin: flightLamin, lomin: flightLomin, lamax: flightLamax, lomax: flightLomax)
             guard loadRegionId == regionId else { return }
             if r.error == nil || !r.value.isEmpty { flights = r.value }
             flightStatusMessage = r.error

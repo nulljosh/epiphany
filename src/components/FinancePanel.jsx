@@ -661,6 +661,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
     importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
 
+  // ponytail: syncSpendingMonths is re-created on every portfolio change. Depending
+  // on it made refreshStatements re-fire in a loop (sync -> new callback -> refetch),
+  // and importError was never cleared, so one transient failure stuck forever.
+  const syncSpendingMonthsRef = useRef(syncSpendingMonths);
+  syncSpendingMonthsRef.current = syncSpendingMonths;
+
   // Keep brokerage holdings/cash in sync automatically while the tab is visible.
   // Server throttles real SnapTrade calls to every 25 min.
   useVisibilityPolling(() => syncBroker(), 5 * 60 * 1000, [isAuthenticated, syncBroker]);
@@ -759,19 +765,19 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         console.warn(`[STATEMENTS] Dropped ${allStatements.length - files.length}/${allStatements.length} statements missing spendingMonth.month`);
       }
       setStatementFiles(files);
-      const result = syncSpendingMonths(files.map((item) => item.spendingMonth));
-      if (!result.success) setImportError(result.error);
+      const result = syncSpendingMonthsRef.current(files.map((item) => item.spendingMonth));
+      setImportError(result.success ? null : result.error);
     } catch (err) {
       setStatementFiles([]);
       if (err?.message?.includes('401')) {
         setImportError('Sign in to view saved statements');
       } else {
-        setImportError('Could not load saved statements');
+        setImportError(`Could not load saved statements (${err?.message || 'unknown error'})`);
       }
     } finally {
       setStatementLoading(false);
     }
-  }, [syncSpendingMonths]);
+  }, []);
 
   useEffect(() => {
     if (tab !== 'spending') return;

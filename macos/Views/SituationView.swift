@@ -503,10 +503,14 @@ struct SituationView: View {
 
         let center = region.center
         let span = region.span
-        let lamin = center.latitude - span.latitudeDelta / 2
-        let lamax = center.latitude + span.latitudeDelta / 2
-        let lomin = center.longitude - span.longitudeDelta / 2
-        let lomax = center.longitude + span.longitudeDelta / 2
+        // /api/flights rejects a bbox wider than 2 deg lat/lon with a 400, so clamp
+        // the requested box around the map centre rather than sending the raw span.
+        let latHalf = min(span.latitudeDelta / 2, 1.0)
+        let lonHalf = min(span.longitudeDelta / 2, 1.0)
+        let lamin = center.latitude - latHalf
+        let lamax = center.latitude + latHalf
+        let lomin = center.longitude - lonHalf
+        let lomax = center.longitude + lonHalf
 
         async let earthquakeLoad = loadEarthquakesIfEnabled(lat: center.latitude, lon: center.longitude)
         async let flightLoad = loadFlightsIfEnabled(lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
