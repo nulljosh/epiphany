@@ -546,7 +546,7 @@ The full shipped list now lives in [README.md](README.md#shipped).
 ### From Epiphany.pdf (imported 2026-06-23)
 - [x] CI: latest GitHub Actions run on main is green (`Tests` workflow).
 - [x] "Situation tab moves map to NYC" glitch — already fixed in commit ca1cd29 (2026-06-21, "Fix map permanently stranding on NYC after Situation tab mount"). Verified: `useSituation.test.js` passes (15/15).
-- [x] "Flights temporarily unavailable" — already fixed in commit bfba323 (2026-06-21). OpenSky (the IP-blocked source) was removed entirely; flights now come from adsb.lol, no API key required. The PDF note predates this fix.
+- [x] "Flights temporarily unavailable" — ROOT CAUSE FOUND AND FIXED 2026-07-27. The real bug was client-side: `bboxFromCenter`'s default `deg` parameter of 2 was being used as a full span instead of a half-span, building 4-degree boxes that the flights API rejects with a 400 error. Previous commit bfba323 (2026-06-21) only swapped the data source to adsb.lol (from OpenSky), but the bbox bug remained, leaving flights broken. iOS/macOS had the same bug — sending the raw map-region span directly instead of clamping to 2 degrees. Fixed across web + iOS/macOS in commit 80fb055; flights layer now returns ~49 flights for a 2-degree Vancouver box. Verified live in production.
 
 ## Feature Tracker (seed — 2026-06-21)
 
