@@ -41,24 +41,6 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
 
-  const [readOnlyApiSaving, setReadOnlyApiSaving] = useState(false);
-  const [readOnlyApiMsg, setReadOnlyApiMsg] = useState(null);
-  const handleToggleReadOnlyApi = async (enabled) => {
-    setReadOnlyApiSaving(true); setReadOnlyApiMsg(null);
-    try {
-      const res = await fetch('/api/auth?action=toggle-readonly-api', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled }),
-      });
-      const d = await res.json();
-      if (d.ok && refreshUser) await refreshUser();
-      else if (!d.ok) setReadOnlyApiMsg({ text: d.error || 'Failed to update', error: true });
-    } catch {
-      setReadOnlyApiMsg({ text: 'Network error', error: true });
-    }
-    setReadOnlyApiSaving(false);
-  };
-
   useEffect(() => {
     if (refreshUser) refreshUser();
   }, []);
@@ -332,24 +314,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
               </div>
             )}
 
-            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginTop: 24, marginBottom: 12 }}>Read-only API</div>
-            <Row label="Allow read-only API access" t={t}>
-              <button
-                aria-pressed={!!user?.readOnlyApiEnabled}
-                disabled={readOnlyApiSaving}
-                onClick={() => handleToggleReadOnlyApi(!user?.readOnlyApiEnabled)}
-                style={{ width: 36, height: 20, borderRadius: 10, border: 'none', cursor: readOnlyApiSaving ? 'wait' : 'pointer', background: user?.readOnlyApiEnabled ? '#0071e3' : t.border, position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
-              >
-                <span style={{ position: 'absolute', top: 2, left: user?.readOnlyApiEnabled ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', display: 'block' }} />
-              </button>
-            </Row>
-            <p style={{ fontSize: 11, color: t.textTertiary, margin: '4px 0 0' }}>Off by default. When enabled, issues a key external tools can use to read (not modify) your portfolio data via <code>/api/portfolio?action=get&amp;key=...</code>.</p>
-            {user?.readOnlyApiEnabled && user?.readOnlyApiKey && (
-              <Row label="Key" t={t}>
-                <code style={{ fontSize: 11, color: t.textSecondary }}>{user.readOnlyApiKey}</code>
-              </Row>
-            )}
-            {readOnlyApiMsg && <div style={msgStyle(readOnlyApiMsg.error)}>{readOnlyApiMsg.text}</div>}
+            {/* Read-only API toggle hidden from Settings -- the endpoint still
+                honours user.readOnlyApiEnabled, it's just not user-facing. */}
           </>
         )}
 
@@ -357,7 +323,11 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
           <>
             <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>Read-only sync</div>
             <p style={{ fontSize: 12, color: t.textSecondary, margin: '0 0 12px' }}>Link a brokerage through SnapTrade — you pick which one (Wealthsimple, Questrade, Interactive Brokers, and more) in the connection portal. Holdings auto-refresh every few minutes while the app is open; Autopilot places orders through the linked account when enabled.</p>
-            <button onClick={() => handleBrokerSync({ force: brokerSnapshot?.linked === true })} disabled={brokerSyncing} style={btnStyle(true)}>{brokerSyncing ? '...' : brokerSnapshot?.linked ? 'Sync now' : 'Connect brokerage'}</button>
+            {/* No manual "Sync now": the tab auto-syncs on open and FinancePanel
+                polls every 5 min while visible. Only the connect action is manual. */}
+            {!brokerSnapshot?.linked && (
+              <button onClick={() => handleBrokerSync()} disabled={brokerSyncing} style={btnStyle(true)}>{brokerSyncing ? '...' : 'Connect brokerage'}</button>
+            )}
             {brokerMsg && <div style={msgStyle(brokerMsg.error)}>{brokerMsg.text}</div>}
             {brokerSnapshot?.linked && (
               <div style={{ marginTop: 16 }}>
@@ -366,13 +336,10 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
                     <button onClick={() => handleBrokerDisconnect(c.id)} disabled={brokerDisconnecting} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>{brokerDisconnecting ? '...' : 'Disconnect'}</button>
                   </Row>
                 ))}
-                <Row label="Cash" t={t}><span style={{ fontSize: 12, color: t.text, fontFamily: font }}>${(brokerSnapshot.balance?.total ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></Row>
-                {(brokerSnapshot.holdings ?? []).map((h, i) => (
-                  <Row key={`${h.symbol}-${i}`} label={`${h.symbol} · ${h.shares}`} t={t}>
-                    <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{h.marketValue != null ? `$${h.marketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}</span>
-                  </Row>
-                ))}
-                {(brokerSnapshot.holdings ?? []).length === 0 && <p style={{ fontSize: 12, color: t.textTertiary, margin: '8px 0 0' }}>No holdings in linked accounts.</p>}
+                {/* Holdings live in Portfolio, not Settings. Connection state only here. */}
+                <Row label="Last synced" t={t}>
+                  <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{brokerSnapshot.syncedAt ? new Date(brokerSnapshot.syncedAt).toLocaleString() : '—'}</span>
+                </Row>
               </div>
             )}
           </>

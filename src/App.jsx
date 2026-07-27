@@ -261,7 +261,7 @@ export default function App() {
     document.addEventListener('pointerdown', handleOutside);
     return () => document.removeEventListener('pointerdown', handleOutside);
   }, [desktopPanelOpen, isMobileNav]);
-  const { isPro, isStarter, isFree, subscription, refetch: refetchSubscription } = useSubscription();
+  const { isPro, isStarter, isFree, subscription, refetch: refetchSubscription } = useSubscription(user);
 
   // Capture session_id from Stripe checkout redirect
   useEffect(() => {
@@ -775,7 +775,9 @@ const reset = useCallback(() => {
   const TAB_PILLS = [
     { key: 'situation', label: 'Situation' },
     { key: 'markets', label: 'Markets' },
-    { key: 'people', label: 'People' },
+    // People is Pro-only (PeoplePanel shows a paywall for free users) -- don't
+    // advertise the tab at all unless the plan actually includes it.
+    ...(isPro ? [{ key: 'people', label: 'People' }] : []),
     // hidden - simulator: TradingView MCP integration planned
     { key: 'portfolio', label: 'Portfolio' },
     { key: 'settings', label: 'Settings' },
@@ -818,7 +820,7 @@ const reset = useCallback(() => {
       {activeTab === 'portfolio' && (
         <FinancePanel dark={dark} t={t} stocks={stocks} isAuthenticated={isAuthenticated} />
       )}
-      {activeTab === 'people' && (
+      {activeTab === 'people' && isPro && (
         <PeoplePanel dark={dark} t={t} isAuthenticated={isAuthenticated} isPro={isPro} />
       )}
       {activeTab === 'settings' && (

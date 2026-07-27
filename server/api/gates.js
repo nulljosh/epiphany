@@ -15,6 +15,9 @@ export async function isProByEmail(email) {
   if (!kv) return false;
 
   const user = await kv.get(`user:${email}`);
+  // A paid `tier` on the account record grants Pro directly (comped/grandfathered
+  // accounts have no Stripe customer). Stripe is the fallback path.
+  if (user?.tier === 'pro' || user?.tier === 'premium') return true;
   if (!user?.stripe_customer_id) return false;
 
   const sub = await kv.get(`sub:${user.stripe_customer_id}`);

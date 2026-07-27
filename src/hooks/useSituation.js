@@ -44,7 +44,10 @@ function getStoredGeo() {
   }
 }
 
-function bboxFromCenter(lat, lon, deg = 2) {
+// ponytail: `deg` is the HALF-span. /api/flights rejects spans > 2° lat/lon, so
+// the default must stay at 1 (= 2° span). It was 2 (= 4° span) since inception,
+// which made every flights fetch 400 while the map layer (own bbox) worked fine.
+function bboxFromCenter(lat, lon, deg = 1) {
   return { lamin: lat - deg, lomin: lon - deg, lamax: lat + deg, lomax: lon + deg };
 }
 

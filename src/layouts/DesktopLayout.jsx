@@ -1,4 +1,3 @@
-import { StatusBar } from '../components/ui';
 import { MobileMenu, MobileMenuItem, MobileMenuDivider } from '../components/ui';
 import { formatLastUpdated } from '../hooks/useLivePrices';
 import Ticker from '../components/Ticker';
@@ -38,8 +37,6 @@ export default function DesktopLayout({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>epiphany</span>
           <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
-          <StatusBar t={t} reliability={stocksReliability} />
-          <span style={{ width: 1, height: 14, background: t.border }} />
           <span style={{ fontSize: 10, color: t.textTertiary, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
             updated {formatLastUpdated(stocksReliability?.lastSuccessAt ? new Date(stocksReliability.lastSuccessAt) : lastUpdated)}
           </span>

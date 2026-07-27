@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { SYSTEM_FONT } from '../utils/formatting';
 
 // Brookswood/Langley, BC -- home base. Used while geolocation resolves and
 // as the fallback if IP geolocation fails or returns junk.
@@ -207,6 +208,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
   const [retryKey, setRetryKey] = useState(0);
   const [search, setSearch] = useState('');
   const [searchError, setSearchError] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
   const autoRetriedRef = useRef(false);
   const visibilityHandlerRef = useRef(null);
   // Grayscale basemap is the permanent Gotham look — colored data markers ride
@@ -228,10 +230,39 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     else pendingFlyRef.current = params;
   }, []);
 
+  // Autocomplete: debounced Nominatim lookup biased to the bbox the user is
+  // currently looking at, rendered through a native <datalist> (no popup code,
+  // no dependency, correct keyboard behaviour for free).
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 3) { setSuggestions([]); return undefined; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const b = mapInstanceRef.current?.getBounds();
+        const viewbox = b ? `&viewbox=${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}` : '';
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6${viewbox}`,
+          { signal: ctrl.signal },
+        );
+        const hits = await res.json();
+        setSuggestions(Array.isArray(hits) ? hits : []);
+      } catch { /* keep whatever we had; search still works without hints */ }
+    }, 300);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [search]);
+
   async function handleSearch(e) {
     e.preventDefault();
     const q = search.trim();
     if (!q) return;
+    // Picking a suggestion gives us coords already -- skip the round trip.
+    const picked = suggestions.find((s) => s.display_name === q);
+    if (picked) {
+      mapInstanceRef.current?.flyTo({ center: [+picked.lon, +picked.lat], zoom: 11, duration: 900 });
+      setSearch('');
+      return;
+    }
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`);
       const [hit] = await res.json();
@@ -1036,9 +1067,14 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           onChange={e => setSearch(e.target.value)}
           placeholder="Search location…"
           aria-label="Search map location"
-          style={{ height: 34, padding: '0 10px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#fff', font: '12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', outline: 'none', width: 180, backdropFilter: 'blur(8px)', transition: 'border-color 0.2s' }}
+          list="epiphany-map-search-options"
+          autoComplete="off"
+          style={{ height: 34, padding: '0 10px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#fff', font: `13px ${SYSTEM_FONT}`, outline: 'none', width: 180, backdropFilter: 'blur(8px)', transition: 'border-color 0.2s' }}
         />
-        <button type="submit" aria-label="Go" style={{ height: 34, width: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#94a3b8', font: '700 13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>→</button>
+        <datalist id="epiphany-map-search-options">
+          {suggestions.map((s) => <option key={s.place_id} value={s.display_name} />)}
+        </datalist>
+        <button type="submit" aria-label="Go" style={{ height: 34, width: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#94a3b8', font: `700 14px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>→</button>
       </form>
       <button
         onClick={() => {

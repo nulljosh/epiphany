@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 
-export function useSubscription() {
+// `user` is the authenticated account record from /api/auth?action=me. Its `tier`
+// is the source of truth when it's a paid tier -- Stripe is only consulted for
+// accounts that don't already carry one (e.g. grandfathered/comped accounts).
+export function useSubscription(user) {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,11 +34,14 @@ export function useSubscription() {
     fetchStatus();
   }, [fetchStatus]);
 
+  const accountTier = user?.tier && user.tier !== 'free' ? user.tier : null;
+  const tier = accountTier || subscription?.tier;
+
   return {
-    isPro: subscription?.tier === 'pro',
-    isStarter: subscription?.tier === 'starter',
-    isFree: subscription?.tier === 'free' || !subscription,
-    subscription,
+    isPro: tier === 'pro' || tier === 'premium',
+    isStarter: tier === 'starter',
+    isFree: !tier || tier === 'free',
+    subscription: accountTier ? { ...subscription, tier: accountTier } : subscription,
     loading,
     refetch: fetchStatus,
   };
