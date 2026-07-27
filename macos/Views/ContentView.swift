@@ -14,6 +14,12 @@ struct ContentView: View {
 
         var id: String { rawValue }
 
+        // People is Pro-only -- keep it out of the nav entirely for free accounts,
+        // matching the web build.
+        static func visibleCases(isPro: Bool) -> [AppSection] {
+            allCases.filter { isPro || $0 != .people }
+        }
+
         var icon: String {
             switch self {
             case .situation: return "map"
@@ -46,7 +52,7 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            BottomTabBar(selectedSection: $selectedSection)
+            BottomTabBar(selectedSection: $selectedSection, isPro: ["pro", "premium"].contains(appState.user?.tier ?? "free"))
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
                 .padding(.bottom, 12)
@@ -99,10 +105,11 @@ struct ContentView: View {
 
 private struct BottomTabBar: View {
     @Binding var selectedSection: ContentView.AppSection
+    let isPro: Bool
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(ContentView.AppSection.allCases) { section in
+            ForEach(ContentView.AppSection.visibleCases(isPro: isPro)) { section in
                 tabCell(for: section)
             }
         }
