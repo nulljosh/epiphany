@@ -1784,46 +1784,53 @@ private struct StatementManagerSheet: View {
     @State private var statements: [Statement] = []
     @State private var selectedStatement: Statement?
 
-    private var months: [FinanceData.SpendingMonth] {
-        (appState.financeData?.spending ?? []).sorted { $0.sortKey > $1.sortKey }
-    }
-
-    private func statement(forMonth month: FinanceData.SpendingMonth) -> Statement? {
-        statements.first { $0.spendingMonth?.month == month.month }
+    // ponytail: rows come from `statements` (the API's source of truth), not from
+    // appState.financeData.spending — a freshly uploaded statement is always in the
+    // former and only sometimes in the latter, which is why uploads looked like no-ops.
+    private var sortedStatements: [Statement] {
+        statements.sorted { ($0.spendingMonth?.sortKey ?? "") > ($1.spendingMonth?.sortKey ?? "") }
     }
 
     var body: some View {
         NavigationStack {
             List {
-                if months.isEmpty {
-                    Text("No statements imported yet.")
-                        .foregroundStyle(.secondary)
+                if isUploading {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("Uploading statement…")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if sortedStatements.isEmpty {
+                    if !isUploading {
+                        Text("No statements imported yet.")
+                            .foregroundStyle(.secondary)
+                    }
                 } else {
-                    ForEach(months) { month in
+                    ForEach(sortedStatements) { statement in
                         Button {
-                            selectedStatement = statement(forMonth: month)
+                            selectedStatement = statement
                         } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(month.month)
+                                    Text(statement.spendingMonth?.month ?? statement.filename)
                                         .font(.body.weight(.medium))
                                         .foregroundStyle(.primary)
-                                    Text("\(month.sortedCategories.count) categories")
+                                    Text("\(statement.spendingMonth?.sortedCategories.count ?? 0) categories")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Text(month.total, format: .currency(code: Locale.current.currency?.identifier ?? "USD").precision(.fractionLength(0)))
+                                Text(statement.spendingMonth?.total ?? 0, format: .currency(code: Locale.current.currency?.identifier ?? "USD").precision(.fractionLength(0)))
                                     .font(.body.weight(.semibold))
                                     .monospacedDigit()
                                     .foregroundStyle(.primary)
                             }
                             .padding(.vertical, 4)
                         }
-                        .disabled(statement(forMonth: month) == nil)
                     }
                     .onDelete { offsets in
-                        let toDelete = offsets.compactMap { statement(forMonth: months[$0]) }
+                        let toDelete = offsets.map { sortedStatements[$0] }
                         for statement in toDelete {
                             Task { await deleteStatement(statement) }
                         }
@@ -1842,7 +1849,7 @@ private struct StatementManagerSheet: View {
                     }
                     .disabled(isUploading)
                 }
-                if !months.isEmpty {
+                if !statements.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
                         EditButton()
                     }
@@ -1851,7 +1858,12 @@ private struct StatementManagerSheet: View {
             .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf], onCompletion: { result in
                 handleFileSelection(result)
             })
-            .alert("Upload Error", isPresented: .constant(uploadError != nil), actions: {
+            // ponytail: a real two-way binding — `.constant(uploadError != nil)` swallowed
+            // SwiftUI's dismissal write, so every upload failure was invisible.
+            .alert("Upload Error", isPresented: Binding(
+                get: { uploadError != nil },
+                set: { if !$0 { uploadError = nil } }
+            ), actions: {
                 Button("OK") { uploadError = nil }
             }, message: {
                 if let error = uploadError {
@@ -1864,7 +1876,11 @@ private struct StatementManagerSheet: View {
                 }
             }
             .task {
-                statements = (try? await EpiphanyAPI.shared.fetchStatements()) ?? []
+                do {
+                    statements = try await EpiphanyAPI.shared.fetchStatements()
+                } catch {
+                    uploadError = error.localizedDescription
+                }
             }
         }
     }
@@ -1878,49 +1894,66 @@ private struct StatementManagerSheet: View {
         await appState.deleteSpendingMonth(statement.spendingMonth?.month ?? "")
     }
 
+    // ponytail: matches the web client's 4MB guard — KV rejects oversized values, and a
+    // server-side 502 is a worse place to learn the PDF was too big.
+    private static let maxStatementBytes = 4 * 1024 * 1024
+
     private func handleFileSelection(_ result: Result<URL, Error>) {
-        guard case .success(let url) = result else {
-            uploadError = "Failed to select file"
+        switch result {
+        case .failure(let error):
+            uploadError = "Failed to select file: \(error.localizedDescription)"
             return
+        case .success(let url):
+            // ponytail: a false return just means the URL isn't security-scoped (already
+            // readable); only balance stopAccessing when we actually started it.
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+            do {
+                let data = try Data(contentsOf: url)
+                guard data.count <= Self.maxStatementBytes else {
+                    let mb = Double(data.count) / 1024 / 1024
+                    uploadError = String(format: "%@ is too large (%.1fMB) — statements must be under 4MB", url.lastPathComponent, mb)
+                    return
+                }
+                upload(data: data, filename: url.lastPathComponent)
+            } catch {
+                uploadError = "Failed to read file: \(error.localizedDescription)"
+            }
         }
+    }
 
-        guard url.startAccessingSecurityScopedResource() else {
-            uploadError = "Cannot access file"
-            return
-        }
-
-        defer { url.stopAccessingSecurityScopedResource() }
-
-        do {
-            let data = try Data(contentsOf: url)
-            let contentBase64 = data.base64EncodedString()
-            let filename = url.lastPathComponent
-
-            isUploading = true
-            Task {
-                do {
-                    let updatedStatements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64)
-                    await MainActor.run {
-                        isUploading = false
-                        statements = updatedStatements
-                        let newMonth = updatedStatements.first { $0.filename == filename }?.spendingMonth
-                            ?? updatedStatements.last?.spendingMonth
-                        if let newMonth {
-                            var spending = appState.financeData?.spending ?? []
-                            spending.removeAll { $0.month == newMonth.month }
-                            spending.append(newMonth)
+    private func upload(data: Data, filename: String) {
+        let contentBase64 = data.base64EncodedString()
+        isUploading = true
+        Task {
+            do {
+                let updatedStatements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64)
+                await MainActor.run {
+                    isUploading = false
+                    statements = updatedStatements
+                    let newMonth = updatedStatements.first { $0.filename == filename }?.spendingMonth
+                        ?? updatedStatements.last?.spendingMonth
+                    if let newMonth {
+                        // ponytail: financeData can be nil here (statements sheet is reachable
+                        // before finance loads); optional-chained assignment used to drop the
+                        // month silently, so seed the container instead.
+                        var spending = appState.financeData?.spending ?? []
+                        spending.removeAll { $0.month == newMonth.month }
+                        spending.append(newMonth)
+                        if appState.financeData != nil {
                             appState.financeData?.spending = spending
+                        } else {
+                            appState.financeData = FinanceData(spending: spending)
                         }
                     }
-                } catch {
-                    await MainActor.run {
-                        isUploading = false
-                        uploadError = error.localizedDescription
-                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isUploading = false
+                    uploadError = error.localizedDescription
                 }
             }
-        } catch {
-            uploadError = "Failed to read file: \(error.localizedDescription)"
         }
     }
 }
