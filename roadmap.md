@@ -153,3 +153,20 @@ per-holding day-change data from backend — model only has marketValue + gainLo
 ## From Epiphany.pdf (imported 2026-07-28)
 - [ ] macOS has no statement upload UI at all — `macos/` contains `Models/Statement.swift` and the `EpiphanyAPI` client methods, but no `NSOpenPanel`/`fileImporter`, no StatementManager view, nothing wired into `macos/Views/PortfolioView.swift`. Web and iOS both upload; Mac can only read whatever the other two uploaded. Port `StatementManagerSheet` from `ios/Views/PortfolioView.swift` (the 2026-07-28 fixed version) — same 4MB guard, statement-driven list, real alert binding. Cross-platform-parity gap, not a regression.
 - [ ] Statement storage still lives in Upstash KV as base64 in `server/api/statements.js`, guarded only by a 4MB client-side pre-check on web + iOS. Real fix is migrating to Vercel Blob (same pattern as `server/api/avatar.js`) so large multi-page bank statements stop being a size-limit problem at all.
+
+## Ship 2.5.4 — finish (stopped at usage cap 2026-07-28)
+Build `202607281341` (v2.5.4) was archived, exported and **uploaded to ASC** — it was still
+processing on Apple's side when this session hit the usage cap. Nothing is submitted yet.
+Contains the iOS statement-upload fix (97e612e).
+
+- [ ] Confirm the build finished processing:
+      `asc builds list --app 6779522175` → look for build `202607281341`, state VALID
+- [ ] Set What's New (no version numbers/emojis):
+      `asc versions localizations update --app 6779522175 --version 2.5.4 --locale en-US --whats-new "Uploading a bank or credit card statement now works properly. Previously you could pick a file and nothing would happen, with no error shown."`
+- [ ] Attach build + mark encryption + submit:
+      `asc builds update --build-id <BUILD_ID> --uses-non-exempt-encryption false`
+      `asc review submit --app 6779522175 --version 2.5.4 --build <BUILD_ID> --confirm`
+
+Note: `.asc/workflow.json` needed three flag fixes to archive headlessly at all — see the
+commit. macOS was deliberately NOT bumped (still 2.5.2); the statement-upload fix is iOS-only
+and macOS has no statement upload UI.
