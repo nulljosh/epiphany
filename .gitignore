@@ -68,7 +68,8 @@ wandb/
 *.sublime-project
 *.sublime-workspace
 .cursor/
-.claude/
+.claude/*
+!.claude/skills/
 .rightnow/
 
 # Node / Frontend

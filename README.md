@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
 # Epiphany.
-[![web](https://img.shields.io/badge/web-v2.6.1-blue)](https://epiphany.heyitsmejosh.com) [![ios](https://img.shields.io/badge/iOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![watchos](https://img.shields.io/badge/watchOS-v1.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany)
+[![web](https://img.shields.io/badge/web-v2.6.1-blue)](https://epiphany.heyitsmejosh.com) [![ios](https://img.shields.io/badge/iOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![watchos](https://img.shields.io/badge/watchOS-v1.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany) [![Claude Skill](https://img.shields.io/badge/Claude%20Skill-epiphany-CC785C?logo=claude)](.claude/skills/epiphany/SKILL.md)
 
 Personal intelligence platform. Map, markets, and people. Palantir for regular people.
 
@@ -18,6 +18,15 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
   <img src="macos/fastlane/screenshots/mac/1-main.png" width="320">
   <img src="watchos/fastlane/screenshots/watch/1-main.png" width="120">
 </p>
+
+## Claude Skill
+
+[`.claude/skills/epiphany`](.claude/skills/epiphany/SKILL.md) — admin access to your Epiphany portfolio data (holdings, debt, budget) directly in Upstash KV via Claude Code, no app login needed:
+
+```bash
+scripts/kv-portfolio-edit.sh get <email>            # dump current portfolio JSON
+scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with merged JSON
+```
 
 ## Tabs
 
@@ -47,22 +56,7 @@ Personal intelligence platform. Map, markets, and people. Palantir for regular p
 - **PWA** — offline service worker
 - **Native** — iOS, macOS, watchOS companions
 
-## Roadmap
-
-**Now**
-- Statement upload UI — file not persisting on upload
-- News not loading (`fetchNews()` / backend news endpoint)
-- Per-stock news drawer on `StockDetailView`
-
-**Next**
-- Mac + watchOS App Store submission checklist (compliance answers, support URL)
-- Autopilot: first live BTC probe fill (capped at 3 fractional trades, auto-reverts to paper)
-
-Autopilot execution runs on Alpaca (paper by default) — Wealthsimple and RBC
-have no public trading API and stay read-only for portfolio sync. Needs
-`ALPACA_API_KEY` + `ALPACA_API_SECRET` in Vercel to go live.
-
-Full backlog: [ROADMAP.md](ROADMAP.md).
+Roadmap: [ROADMAP.md](ROADMAP.md).
 
 ## Setup
 

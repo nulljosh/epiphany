@@ -1,5 +1,14 @@
 # Epiphany Roadmap
 
+## Now (from README)
+- Statement upload UI — file not persisting on upload
+- News not loading (`fetchNews()` / backend news endpoint)
+- Per-stock news drawer on `StockDetailView`
+
+## Next (from README)
+- Mac + watchOS App Store submission checklist (compliance answers, support URL)
+- Autopilot: first live BTC probe fill (capped at 3 fractional trades, auto-reverts to paper) — runs on Alpaca (paper by default); Wealthsimple/RBC stay read-only (no public trading API). Needs `ALPACA_API_KEY` + `ALPACA_API_SECRET` in Vercel to go live.
+
 ## Landing page pass (imported 2026-07-21)
 - [ ] Markets news drawer drag — see consolidated "still choppy" entry below (Epiphany.pdf section); this is attempt #3, also failed, also reverted.
 - [ ] **Brand identity pass (raised by Josh, not started)** — iOS/macOS/web all lean entirely on default Apple styling: `Palette.appleBlue` tint everywhere, SF Symbols only, no signature color or typography distinct from any other SwiftUI app. The landing page's Fraunces serif headline is the only existing brand asset and doesn't extend into the apps themselves. Cheap high-impact ideas floated: (1) one signature accent color to replace `.appleBlue` app-wide (no gradients/purple per standing UI rules); (2) reuse Fraunces for in-app section headers, not just marketing copy; (3) a custom map style/pin set — now that native Apple POI pins are off (see map pins fix above), the map (home screen on both iOS/macOS) is the biggest available differentiation surface. Needs its own dedicated design session, not a rushed pass.
