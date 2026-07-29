@@ -23,13 +23,16 @@ html:has(.lp) { scroll-behavior: smooth; }
 
 /* ─── NAV ─── */
 .lp .lp-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  position: fixed; top: 16px; left: 50%; z-index: 100;
+  transform: translateX(-50%);
+  width: 80%;
   display: flex; align-items: center; justify-content: space-between;
   height: 60px; padding: 0 28px;
-  background: rgba(6,6,10,0.6);
+  background: rgba(20,20,26,0.72);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 100px;
 }
 .lp .lp-logo {
   display: flex; align-items: center; gap: 10px;
@@ -60,9 +63,10 @@ html:has(.lp) { scroll-behavior: smooth; }
 /* ─── HERO ─── */
 .lp .lp-hero {
   position: relative;
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center;
-  padding: 150px 24px 0;
+  min-height: 100vh;
+  padding: 150px 24px 140px;
   overflow: hidden;
 }
 .lp .lp-eyebrow {
@@ -84,6 +88,10 @@ html:has(.lp) { scroll-behavior: smooth; }
   max-width: 480px; line-height: 1.7; margin-bottom: 40px;
   text-wrap: pretty;
 }
+.lp .lp-hero .lp-eyebrow,
+.lp .lp-hero-headline,
+.lp .lp-hero-sub,
+.lp .lp-hero-actions { position: relative; z-index: 2; }
 .lp .lp-hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
 .lp .lp-btn-primary {
   display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
@@ -102,12 +110,24 @@ html:has(.lp) { scroll-behavior: smooth; }
 }
 .lp .lp-btn-glass:hover { background: rgba(255,255,255,0.14); }
 
-/* hero phone */
-.lp .lp-hero-phone {
-  position: relative;
-  margin-top: 64px;
-  margin-bottom: -120px;
-  z-index: 2;
+/* hero animated background scene */
+.lp .lp-hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  overflow: hidden;
+}
+.lp .lp-hero-bg svg {
+  position: absolute; top: 50%; left: 50%;
+  width: 140%; height: 140%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0.4;
+  animation: lp-hero-drift 50s ease-in-out infinite alternate;
+}
+@keyframes lp-hero-drift {
+  0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { transform: translate(-52%, -48%) scale(1.08) rotate(1deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp .lp-hero-bg svg { animation: none; }
 }
 .lp .lp-hero-glow {
   position: absolute;
@@ -119,13 +139,19 @@ html:has(.lp) { scroll-behavior: smooth; }
   pointer-events: none;
   z-index: 1;
 }
-.lp .lp-hero-phone .iphone-wrap { transform: scale(1.08); transform-origin: top center; }
+.lp .lp-hero-cta-bottom {
+  position: absolute;
+  left: 50%; bottom: 6%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
 .lp .lp-hero-fade {
   position: relative;
   height: 280px;
   background: linear-gradient(to bottom, transparent, #000 78%);
   z-index: 3;
   pointer-events: none;
+  margin-top: -140px;
 }
 
 /* ─── TICKER ─── */
