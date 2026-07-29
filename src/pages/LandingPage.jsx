@@ -83,12 +83,10 @@ function TabBar({ active }) {
   );
 }
 
-function MapScreen() {
+function MapSceneSVG() {
   return (
-    <>
-      <div className="map-screen">
-        <svg viewBox="0 0 310 680" xmlns="http://www.w3.org/2000/svg">
-          <rect width="310" height="680" fill="#060a10" />
+    <svg viewBox="0 0 310 680" xmlns="http://www.w3.org/2000/svg">
+      <rect width="310" height="680" fill="#060a10" />
           {/* Road grid with blue tint */}
           <line x1="0" y1="300" x2="310" y2="300" stroke="#0d1e36" strokeWidth="12" />
           <line x1="0" y1="385" x2="310" y2="385" stroke="#0d1e36" strokeWidth="6" />
@@ -135,9 +133,17 @@ function MapScreen() {
           <circle cx="120" cy="366" r="4" fill="#FF453A" opacity="0.7" />
           <circle cx="190" cy="185" r="3.5" fill="#FF453A" opacity="0.6" />
           {/* Labels */}
-          <text x="62" y="200" fontSize="7" fill="rgba(255,255,255,0.38)" textAnchor="middle">DAL 442</text>
-          <text x="104" y="200" fontSize="7" fill="rgba(255,255,255,0.38)" textAnchor="middle">Stadium</text>
-        </svg>
+      <text x="62" y="200" fontSize="7" fill="rgba(255,255,255,0.38)" textAnchor="middle">DAL 442</text>
+      <text x="104" y="200" fontSize="7" fill="rgba(255,255,255,0.38)" textAnchor="middle">Stadium</text>
+    </svg>
+  );
+}
+
+function MapScreen() {
+  return (
+    <>
+      <div className="map-screen">
+        <MapSceneSVG />
       </div>
 
       <div className="map-top-bar" style={{ paddingTop: 56 }}>
@@ -369,19 +375,19 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
 
       {/* ─── HERO ─── */}
       <header className="lp-hero">
+        <div className="lp-hero-bg" aria-hidden="true">
+          <MapSceneSVG />
+        </div>
         <div className="lp-hero-glow" />
-        <div className="lp-eyebrow" style={{ position: 'relative', zIndex: 2 }}>Portfolio Intelligence</div>
-        <h1 className="lp-hero-headline" style={{ position: 'relative', zIndex: 2 }}>Know before<br /><em>the market moves.</em></h1>
-        <p className="lp-hero-sub" style={{ position: 'relative', zIndex: 2 }}>Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
-        <div className="lp-hero-actions" style={{ position: 'relative', zIndex: 2 }}>
-          <button className="lp-btn-primary" onClick={register}>Get Epiphany</button>
+        <div className="lp-eyebrow">Portfolio Intelligence</div>
+        <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
+        <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
+        <div className="lp-hero-actions">
           <a className="lp-btn-glass glass-pill" href="#markets">See what&rsquo;s inside</a>
         </div>
 
-        <div className="lp-hero-phone">
-          <Phone wifi>
-            <img src="/screenshots/screenshot-situation-new.png" alt="Situation map" style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} />
-          </Phone>
+        <div className="lp-hero-cta-bottom">
+          <button className="lp-btn-primary" onClick={register}>Get started</button>
         </div>
       </header>
       <div className="lp-hero-fade" />
