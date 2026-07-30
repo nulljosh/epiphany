@@ -179,3 +179,6 @@ Contains the iOS statement-upload fix (97e612e).
 Note: `.asc/workflow.json` needed three flag fixes to archive headlessly at all — see the
 commit. macOS was deliberately NOT bumped (still 2.5.2); the statement-upload fix is iOS-only
 and macOS has no statement upload UI.
+
+## From App Store.pdf (imported 2026-07-29)
+- [ ] Icon still reads generic/weak on ASC — do the promised personality refresh (repeatedly deferred, do it this pass).
