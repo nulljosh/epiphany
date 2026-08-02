@@ -1,5 +1,8 @@
 # Epiphany Roadmap
 
+## From Notes PDF (imported 2026-08-02)
+- [ ] "Coolest app ever" — explore an unnamed app/website's idea and integrate it into Epiphany (from Coolest app ever.pdf note). Note is underspecified — no site name or screenshot came through in the export; ask Joshua which app/site this refers to before scoping.
+
 ## Now (from README)
 - Statement upload UI — file not persisting on upload
 - News not loading (`fetchNews()` / backend news endpoint)
