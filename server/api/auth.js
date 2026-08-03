@@ -268,6 +268,72 @@ export default async function handler(req, res) {
     }
   }
 
+  // GET: Facebook OAuth redirect
+  if (req.method === 'GET' && action === 'facebook') {
+    const clientId = process.env.FACEBOOK_CLIENT_ID;
+    if (!clientId) return errorResponse(res, 501, 'Facebook OAuth not configured');
+    const base = getBaseUrl();
+    const params = new URLSearchParams({
+      client_id: clientId, response_type: 'code', scope: 'email public_profile',
+      redirect_uri: `${base}/api/auth?action=facebook-callback`,
+    });
+    res.writeHead(302, { Location: `https://www.facebook.com/v19.0/dialog/oauth?${params}` });
+    return res.end();
+  }
+
+  // GET: Facebook OAuth callback
+  if (req.method === 'GET' && action === 'facebook-callback') {
+    const { code, error: fbError } = req.query;
+    const base = getBaseUrl();
+    if (fbError || !code) { res.writeHead(302, { Location: `${base}/?auth_error=facebook_denied` }); return res.end(); }
+    if (!process.env.FACEBOOK_CLIENT_ID || !process.env.FACEBOOK_CLIENT_SECRET) {
+      res.writeHead(302, { Location: `${base}/?auth_error=facebook_config` }); return res.end();
+    }
+    try {
+      const tokenParams = new URLSearchParams({
+        client_id: process.env.FACEBOOK_CLIENT_ID, client_secret: process.env.FACEBOOK_CLIENT_SECRET,
+        code, redirect_uri: `${base}/api/auth?action=facebook-callback`,
+      });
+      const tokenRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?${tokenParams}`);
+      const { access_token } = await tokenRes.json();
+      if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=facebook_token` }); return res.end(); }
+
+      const fbRes = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name,email,picture&access_token=${access_token}`);
+      const fbUser = await fbRes.json();
+      if (!fbUser.email) { res.writeHead(302, { Location: `${base}/?auth_error=facebook_email` }); return res.end(); }
+
+      const facebookId = String(fbUser.id);
+      const normalizedEmail = fbUser.email.toLowerCase();
+
+      let user = await kv.get(`facebook:${facebookId}`);
+      if (!user) {
+        user = await kv.get(`user:${normalizedEmail}`);
+        if (user) {
+          user.facebookId = facebookId;
+          user.avatarUrl = user.avatarUrl || fbUser.picture?.data?.url || null;
+          await kv.set(`user:${normalizedEmail}`, user);
+          await kv.set(`facebook:${facebookId}`, user);
+        }
+      }
+      if (!user) {
+        const id = crypto.randomUUID();
+        user = { id, email: normalizedEmail, passwordHash: null, verified: true, tier: 'free', facebookId, avatarUrl: fbUser.picture?.data?.url || null, name: fbUser.name || null, createdAt: new Date().toISOString() };
+        await kv.set(`user:${normalizedEmail}`, user);
+        await kv.set(`facebook:${facebookId}`, user);
+      }
+
+      const sessionToken = generateToken();
+      await kv.set(`session:${sessionToken}`, { userId: user.id, email: user.email, tier: user.tier || 'free', expiresAt: Date.now() + SESSION_TTL * 1000 }, { ex: SESSION_TTL });
+      setSessionCookie(res, sessionToken);
+      res.writeHead(302, { Location: base });
+      return res.end();
+    } catch (err) {
+      console.error('[AUTH] Facebook callback error:', err.message);
+      res.writeHead(302, { Location: `${base}/?auth_error=facebook_error` });
+      return res.end();
+    }
+  }
+
   // GET: X (Twitter) OAuth redirect — OAuth 2.0 + PKCE
   if (req.method === 'GET' && action === 'twitter') {
     const clientId = process.env.TWITTER_CLIENT_ID;

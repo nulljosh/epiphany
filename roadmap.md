@@ -17,16 +17,8 @@
 - [ ] **Brand identity pass (raised by Josh, not started)** — iOS/macOS/web all lean entirely on default Apple styling: `Palette.appleBlue` tint everywhere, SF Symbols only, no signature color or typography distinct from any other SwiftUI app. The landing page's Fraunces serif headline is the only existing brand asset and doesn't extend into the apps themselves. Cheap high-impact ideas floated: (1) one signature accent color to replace `.appleBlue` app-wide (no gradients/purple per standing UI rules); (2) reuse Fraunces for in-app section headers, not just marketing copy; (3) a custom map style/pin set — now that native Apple POI pins are off (see map pins fix above), the map (home screen on both iOS/macOS) is the biggest available differentiation surface. Needs its own dedicated design session, not a rushed pass.
 
 ## From Epiphany.pdf (imported 2026-07-07)
-- [ ] Facebook login (web) — same pattern as Google, blocked on **Joshua**: create a
-  Meta for Developers app (developers.facebook.com/apps → Create App → Consumer →
-  Facebook Login product), copy App ID + secret from Settings → Basic, send over.
-  Then: add `FACEBOOK_CLIENT_ID`/`FACEBOOK_CLIENT_SECRET` to Vercel, add
-  `facebook`/`facebook-callback` actions to `auth.js` (Graph API OAuth,
-  `https://www.facebook.com/v19.0/dialog/oauth` + `https://graph.facebook.com/v19.0/oauth/access_token`),
-  add "Sign in with Facebook" buttons. ~30min once credentials exist. Note: Meta
-  keeps new apps in "Development mode" (only you + added testers can log in)
-  until App Review is submitted for public use.
-- [ ] iOS Google/Facebook buttons — `LoginSheet.swift` still has them `.disabled(true)`.
+- [x] Facebook login (web) — code done 2026-08-03: `facebook`/`facebook-callback` actions added to `auth.js` (Graph API OAuth), "Sign in/up with Facebook" buttons added to LoginPage/RegisterPage (commented out, matching the disabled-X pattern) until credentials exist. Still **blocked on Joshua**: create a Meta for Developers app (developers.facebook.com/apps → Create App → Consumer → Facebook Login product), copy App ID + secret from Settings → Basic, add `FACEBOOK_CLIENT_ID`/`FACEBOOK_CLIENT_SECRET` to Vercel, then uncomment the two buttons. Note: Meta keeps new apps in "Development mode" (only you + added testers can log in) until App Review is submitted for public use.
+- [x] iOS Google/Facebook buttons — `LoginSheet.swift` already had both wired + `.disabled(true)`, consistent with the web pattern above; nothing further until credentials exist for either.
   iOS has no GitHub login either (Apple Sign In is the only working iOS SSO) — the
   web OAuth flow above doesn't cover native. Cheapest path: open the same
   `/api/auth?action=google` web URL in an `ASWebAuthenticationSession` from iOS and
@@ -115,10 +107,10 @@
   force-sync to confirm holdings/math are clean.
 
 ## From epiphany-notes.pdf (imported 2026-06-30)
-- [ ] Create a skill/shortcut for generating SVG architecture maps.
+- [x] Create a skill/shortcut for generating SVG architecture maps — `~/.claude/skills/architecture-svg` (template + per-repo manual-fill process, house Apple node-and-line style, deliberately not full codegen).
 - [ ] **Needs dedicated session:** src/App.jsx `ASSETS` const (line ~36, ~180 tickers) — already documented as fallback-only ("live prices auto-loaded from Yahoo Finance via useStocks", replaced on load), used in 6+ places across the 978-line file, tightly coupled to the trading simulator. Original PDF itself flagged this under "Bigger Builds (plan before starting)" — not safe to blind-edit in a lean pass; risks breaking the simulator.
 - [ ] **Needs dedicated session:** Watchlist dynamic — same file/coupling risk as above, do together with the ASSETS refactor.
-- [ ] **BLOCKED (Joshua):** Add "Login with TradingView" to sync watchlist — no public TradingView API for reading a user's watchlist/account (already investigated 2026-06-21 in CLAUDE.md). Only real path: TradingView Pro+ outbound webhook alerts via a new `/api/tradingview/webhook` endpoint — needs Joshua's TradingView Pro+ account to configure webhooks, can't self-provision.
+- [ ] **BLOCKED (Joshua):** Add "Login with TradingView" to sync watchlist — no public TradingView API for reading a user's watchlist/account (already investigated 2026-06-21 in CLAUDE.md). The receiving endpoint already exists — `server/api/broker/webhook.js` (registered as `broker/webhook` in `api/gateway.js`) accepts `{ticker, action, qty}` and places an Alpaca paper order, logging when `ALPACA_API_KEY` isn't set. Only remaining step needs Joshua's TradingView Pro+ account to configure an outbound webhook alert pointing at it — can't self-provision.
 - [ ] **BLOCKED (Joshua):** Migrate trade execution to IBKR or Alpaca — needs live brokerage API keys/account credentials from Joshua; Alpaca = easier start, IBKR = more powerful/complex. SnapTrade stays optional for aggregation only.
   Researched 2026-07-22: IBKR does NOT bridge to Wealthsimple — SnapTrade/Wealthsimple
   is read-only by design (confirmed, no official trade API), and the only way to
