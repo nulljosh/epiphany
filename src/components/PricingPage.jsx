@@ -51,23 +51,6 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
     }
   };
 
-  const handleManageSubscription = async () => {
-    const customerId = localStorage.getItem('stripe_customer_id');
-    if (!customerId) return;
-    try {
-      const response = await fetch('/api/stripe?action=portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId }),
-      });
-      const { url } = await response.json();
-      if (url) window.location.href = url;
-    } catch (err) {
-      console.error('Portal error:', err);
-      alert('Failed to open subscription portal. Please try again.');
-    }
-  };
-
   const tierRank = { free: 0, starter: 1, weekly: 1 };
   const isCurrentOrLower = (plan) => tierRank[plan] <= tierRank[currentTier];
 
@@ -196,7 +179,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
           {[
             { key: 'free', name: 'Free', price: '$0', period: 'forever', plan: null, features: ['Map + all data layers', 'Situation monitor (read)', 'Stock data + ticker', 'Weather/quakes/traffic'] },
-            { key: 'starter', name: 'Premium', price: '$9.99', period: 'per month', plan: 'starter', label: 'Get Premium -- $9.99/mo', recommended: true, features: ['Everything in Free', 'Portfolio + watchlist', 'Ontology writes + batch', 'Deep news + crime data', 'Situation monitor'] },
+            { key: 'starter', name: 'Premium', price: '$1', period: 'one-time', plan: 'starter', label: 'Get Premium -- $1 one-time', recommended: true, features: ['Everything in Free', 'Portfolio + watchlist', 'Ontology writes + batch', 'Deep news + crime data', 'Situation monitor'] },
           ].map(tier => (
             <div key={tier.key} style={{
               ...glassCard,
@@ -246,33 +229,10 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
             lineHeight: 1.6,
             fontFamily: font,
           }}>
-            Cancel anytime. No contracts. Secure payments via Stripe.
+            One-time payment. No subscription, no renewal. Secure payments via Stripe.
             <br />
             Apple Pay available on compatible devices.
           </p>
-          {currentTier !== 'free' && (
-            <button
-              onClick={handleManageSubscription}
-              style={{
-                padding: '8px 20px',
-                background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                color: t.textSecondary,
-                border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-                borderRadius: 100,
-                fontSize: 13,
-                fontFamily: font,
-                fontWeight: 500,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                backdropFilter: 'blur(8px)',
-                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-              onMouseEnter={(e) => { e.target.style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; }}
-            >
-              Manage Subscription
-            </button>
-          )}
         </div>
       </div>
     </div>

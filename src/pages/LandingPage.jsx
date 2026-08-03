@@ -509,7 +509,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
           </div>
           <div className="lp-price-card glass premium">
             <div className="lp-price-tier">Paid</div>
-            <div className="lp-price-num">$9.99<span>/mo</span></div>
+            <div className="lp-price-num">$1<span> one-time</span></div>
             <ul className="lp-price-feats">
               <li>Real-time data</li>
               <li>Full indicator suite</li>
