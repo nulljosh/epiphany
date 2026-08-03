@@ -46,69 +46,16 @@ export default async function handler(req, res) {
       case 'checkout.session.completed': {
         const session = event.data.object;
         const customerId = session.customer;
-        const subscriptionId = session.subscription;
 
-        // session.line_items is not populated on webhook events unless expanded
-        // at checkout-session-create time; fetch the subscription instead.
-        const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
-
-        // Store subscription in KV
+        // One-time payment ($1) — access is permanent, no subscription to track.
         await kv.set(`sub:${customerId}`, {
           status: 'active',
-          subscriptionId,
           customerId,
-          priceId: subscription.items.data[0]?.price?.id,
+          priceId: session.line_items?.data?.[0]?.price?.id || process.env.STRIPE_PRICE_ID_STARTER,
           createdAt: new Date().toISOString(),
         });
 
-        console.log('[WEBHOOK] Subscription created:', customerId);
-        break;
-      }
-
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object;
-        const customerId = subscription.customer;
-
-        await kv.set(`sub:${customerId}`, {
-          status: subscription.status,
-          subscriptionId: subscription.id,
-          customerId,
-          priceId: subscription.items.data[0].price.id,
-          updatedAt: new Date().toISOString(),
-        });
-
-        console.log('[WEBHOOK] Subscription updated:', customerId, subscription.status);
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        const customerId = subscription.customer;
-
-        await kv.set(`sub:${customerId}`, {
-          status: 'canceled',
-          subscriptionId: subscription.id,
-          customerId,
-          canceledAt: new Date().toISOString(),
-        });
-
-        console.log('[WEBHOOK] Subscription canceled:', customerId);
-        break;
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        const customerId = invoice.customer;
-        const existing = await kv.get(`sub:${customerId}`);
-
-        await kv.set(`sub:${customerId}`, {
-          ...(existing || {}),
-          status: 'past_due',
-          customerId,
-          updatedAt: new Date().toISOString(),
-        });
-
-        console.log('[WEBHOOK] Payment failed:', customerId);
+        console.log('[WEBHOOK] One-time purchase completed:', customerId);
         break;
       }
 

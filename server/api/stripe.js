@@ -7,8 +7,7 @@ function getStripe() {
   return stripe;
 }
 
-// Single paid tier ($1/wk) — see CLAUDE.md monetization table. Any active
-// subscription counts as 'starter'; there is no separate purchasable 'pro' tier.
+// Single paid tier — $1 one-time purchase. Any completed purchase counts as 'starter'.
 function getTierFromPriceId() {
   return 'starter';
 }
@@ -78,7 +77,7 @@ export default async function handler(req, res) {
       }
 
       const sessionParams = {
-        mode: 'subscription',
+        mode: 'payment',
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: `${baseUrl}?session_id={CHECKOUT_SESSION_ID}`,
