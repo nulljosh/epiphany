@@ -1,5 +1,6 @@
 import Charts
 import SwiftUI
+import UniformTypeIdentifiers
 
 private enum IncomeScenario: String, CaseIterable, Identifiable {
     case plus500 = "+$500"
@@ -59,6 +60,9 @@ struct PortfolioView: View {
     @State private var isEditingGoals = false
     @State private var editingDebtItems: [FinanceData.DebtItem] = []
     @State private var editingGoalItems: [FinanceData.Goal] = []
+    @State private var showStatementImporter = false
+    @State private var isUploadingStatement = false
+    @State private var statementUploadError: String?
 
     private enum FinanceTab: String, CaseIterable, Identifiable {
         case spending = "Spending"
@@ -672,6 +676,7 @@ struct PortfolioView: View {
 
     private var statementsContent: some View {
         sectionCard("Statements") {
+            statementImportRow
             if appState.statements.isEmpty {
                 emptyState("No statements available")
             } else {
@@ -763,6 +768,102 @@ struct PortfolioView: View {
                             Divider().padding(.horizontal)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // ponytail: extracted to its own property — inlining the button + progress +
+    // fileImporter + alert into statementsContent pushed the type-checker over.
+    private var statementImportRow: some View {
+        HStack(spacing: 10) {
+            Button {
+                showStatementImporter = true
+            } label: {
+                Label("Import Statement", systemImage: "arrow.up.doc")
+            }
+            .disabled(isUploadingStatement)
+
+            if isUploadingStatement {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Uploading…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 10)
+        .fileImporter(
+            isPresented: $showStatementImporter,
+            allowedContentTypes: [.pdf],
+            onCompletion: handleStatementSelection
+        )
+        .alert("Upload Error", isPresented: Binding(
+            get: { statementUploadError != nil },
+            set: { if !$0 { statementUploadError = nil } }
+        ), actions: {
+            Button("OK") { statementUploadError = nil }
+        }, message: {
+            if let statementUploadError {
+                Text(statementUploadError)
+            }
+        })
+    }
+
+    // ponytail: mirrors iOS's 4MB guard — KV rejects oversized values and a
+    // server-side 502 is a worse place to learn the PDF was too big.
+    private static let maxStatementBytes = 4 * 1024 * 1024
+
+    private func handleStatementSelection(_ result: Result<URL, Error>) {
+        switch result {
+        case .failure(let error):
+            statementUploadError = "Failed to select file: \(error.localizedDescription)"
+        case .success(let url):
+            // ponytail: a false return just means the URL isn't security-scoped
+            // (already readable); only balance stopAccessing when we started it.
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+            do {
+                let data = try Data(contentsOf: url)
+                guard data.count <= Self.maxStatementBytes else {
+                    let mb = Double(data.count) / 1024 / 1024
+                    statementUploadError = String(
+                        format: "%@ is too large (%.1fMB) — statements must be under 4MB",
+                        url.lastPathComponent, mb
+                    )
+                    return
+                }
+                uploadStatement(data: data, filename: url.lastPathComponent)
+            } catch {
+                statementUploadError = "Failed to read file: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func uploadStatement(data: Data, filename: String) {
+        let contentBase64 = data.base64EncodedString()
+        isUploadingStatement = true
+        Task {
+            do {
+                let updated = try await EpiphanyAPI.shared.uploadStatement(
+                    filename: filename,
+                    contentBase64: contentBase64
+                )
+                await MainActor.run {
+                    isUploadingStatement = false
+                    appState.statements = updated
+                }
+                // ponytail: macOS's Statement model has no `spendingMonth` (iOS's does),
+                // so rather than port that field just to merge locally, re-pull finance
+                // from the server — it's the source of truth and this is one call.
+                await appState.loadFinanceData()
+            } catch {
+                await MainActor.run {
+                    isUploadingStatement = false
+                    statementUploadError = error.localizedDescription
                 }
             }
         }
