@@ -154,11 +154,16 @@ struct SettingsView: View {
                     }
                 }
 
-                Section {
-                    AutopilotSection()
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
+                // ponytail: Autopilot is paper-trading only and does nothing a
+                // user can act on (SnapTrade/Wealthsimple is read-only by
+                // design). Hidden until a brokerage with real trade permission
+                // is wired up -- matches web, where the Trade tab is already
+                // disabled in FinancePanel.jsx. Re-enable by uncommenting.
+                // Section {
+                //     AutopilotSection()
+                //         .listRowInsets(EdgeInsets())
+                //         .listRowBackground(Color.clear)
+                // }
 
                 Section("Appearance") {
                     AppearancePicker(rawTheme: $rawTheme)

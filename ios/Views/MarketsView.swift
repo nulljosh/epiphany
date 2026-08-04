@@ -327,7 +327,7 @@ struct MarketsView: View {
             let target = drawerState.height(in: geo.size.height) - dragTranslation
             let height = min(max(64, target), maxHeight)
             VStack(spacing: 0) {
-                NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, brief: appState.dailyBrief)
+                NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, isExpanded: drawerState != .peek, brief: appState.dailyBrief)
             }
             .frame(maxWidth: .infinity)
             // Fixed at max height -- the inner List never gets a new size
