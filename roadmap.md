@@ -179,4 +179,4 @@ and macOS has no statement upload UI.
 
 ## From Apple Notes (imported 2026-08-04)
 - [ ] **URGENT — SnapTrade production key billing failed, disabled 2026-08-06.** SnapTrade emailed 2026-08-03: payment for July 31 2026 did not process. Organization **Maybulb**, production key **MAYBULB-LKHSV**, amount due **1.00 USD**. If unpaid by **August 06 2026** access to that production key is disabled — which kills all live holdings/account sync in Epiphany. Needs Joshua: pay or update billing via the SnapTrade dashboard link in the email (billing@snaptrade.com). Two days out as of import.
-- [ ] Note: the IBKR-vs-SnapTrade question above (see entry above) is partly driven by this — a billing outage on a read-only aggregator is a good moment to reconsider the dependency.
+- NOTE (not a task): the IBKR-vs-SnapTrade evaluation above is partly driven by this billing failure — an outage on a read-only aggregator is a good moment to reconsider the dependency.
