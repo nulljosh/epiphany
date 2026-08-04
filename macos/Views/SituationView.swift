@@ -111,6 +111,7 @@ struct SituationView: View {
     @State private var isSearchingVenues = false
     @State private var mapSearch = ""
     @State private var mapSearchError = false
+    @State private var searchCompleter = MapSearchCompleter()
 
     private var activeMapStyle: MapStyle {
         MapLayerStyle(rawValue: mapLayerRaw)?.mapStyle ?? .hybrid(elevation: .realistic)
@@ -387,12 +388,26 @@ struct SituationView: View {
 
     @ViewBuilder
     private var mapSearchBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            searchField
+            if !searchCompleter.results.isEmpty {
+                searchSuggestions
+            }
+        }
+        .padding(.leading, 12)
+        .padding(.top, 12)
+    }
+
+    private var searchField: some View {
         HStack(spacing: 6) {
             TextField("Search location…", text: $mapSearch)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(.primary)
                 .onSubmit { Task { await geocodeAndFly() } }
+                .onChange(of: mapSearch) { _, query in
+                    searchCompleter.update(query: query, region: visibleRegion)
+                }
                 .frame(width: 160)
             Button { Task { await geocodeAndFly() } } label: {
                 Image(systemName: "arrow.right")
@@ -404,8 +419,50 @@ struct SituationView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-        .padding(.leading, 12)
-        .padding(.top, 12)
+    }
+
+    private var searchSuggestions: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(searchCompleter.results.prefix(6).enumerated()), id: \.offset) { index, completion in
+                Button {
+                    Task { await flyTo(completion) }
+                } label: {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(completion.title)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.primary)
+                        if !completion.subtitle.isEmpty {
+                            Text(completion.subtitle)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                if index < min(searchCompleter.results.count, 6) - 1 {
+                    Divider().opacity(0.3)
+                }
+            }
+        }
+        .frame(width: 220, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func flyTo(_ completion: MKLocalSearchCompletion) async {
+        guard let coordinate = await searchCompleter.coordinate(for: completion) else {
+            mapSearchError = true
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            mapSearchError = false
+            return
+        }
+        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        withAnimation { mapPosition = .region(MKCoordinateRegion(center: coordinate, span: span)) }
+        mapSearch = ""
+        searchCompleter.clear()
     }
 
     private func geocodeAndFly() async {
@@ -422,6 +479,7 @@ struct SituationView: View {
         let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
         withAnimation { mapPosition = .region(MKCoordinateRegion(center: loc.coordinate, span: span)) }
         mapSearch = ""
+        searchCompleter.clear()
     }
 
     private var layerPickerButton: some View {

@@ -290,6 +290,17 @@ final class EpiphanyAPI {
         return wrapper.statements
     }
 
+    func uploadStatement(filename: String, contentBase64: String) async throws -> [Statement] {
+        let url = try makeURL("/api/statements", query: ["action": "upload"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["filename": filename, "contentBase64": contentBase64])
+        let data = try await perform(request)
+        let wrapper = try decode(StatementsWrapper.self, from: data)
+        return wrapper.statements
+    }
+
     func deleteStatement(id: String) async throws -> [Statement] {
         let url = try makeURL("/api/statements", query: ["action": "delete", "id": id])
         var request = URLRequest(url: url)

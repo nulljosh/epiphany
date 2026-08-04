@@ -129,6 +129,7 @@ struct SituationView: View {
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var mapSearch = ""
     @State private var mapSearchError = false
+    @State private var searchCompleter = MapSearchCompleter()
     @State private var locationZoomLevel = 0
 
     private var activeMapStyle: MapStyle {
@@ -1060,6 +1061,17 @@ struct SituationView: View {
     }
 
     private var mapSearchBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            searchField
+            if !searchCompleter.results.isEmpty {
+                searchSuggestions
+            }
+        }
+        .padding(.leading, 12)
+        .padding(.top, 54)
+    }
+
+    private var searchField: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 13, weight: .medium))
@@ -1071,9 +1083,15 @@ struct SituationView: View {
                 .submitLabel(.search)
                 .autocorrectionDisabled()
                 .onSubmit { Task { await geocodeAndFly() } }
+                .onChange(of: mapSearch) { _, query in
+                    searchCompleter.update(query: query, region: visibleRegion ?? currentRegion)
+                }
                 .frame(width: 150)
             if !mapSearch.isEmpty {
-                Button { mapSearch = "" } label: {
+                Button {
+                    mapSearch = ""
+                    searchCompleter.clear()
+                } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
@@ -1083,8 +1101,50 @@ struct SituationView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
         .background(.ultraThinMaterial, in: Capsule())
-        .padding(.leading, 12)
-        .padding(.top, 54)
+    }
+
+    private var searchSuggestions: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(searchCompleter.results.prefix(6).enumerated()), id: \.offset) { index, completion in
+                Button {
+                    Task { await flyTo(completion) }
+                } label: {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(completion.title)
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white)
+                        if !completion.subtitle.isEmpty {
+                            Text(completion.subtitle)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                if index < min(searchCompleter.results.count, 6) - 1 {
+                    Divider().opacity(0.3)
+                }
+            }
+        }
+        .frame(width: 230, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func flyTo(_ completion: MKLocalSearchCompletion) async {
+        guard let coordinate = await searchCompleter.coordinate(for: completion) else {
+            mapSearchError = true
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            mapSearchError = false
+            return
+        }
+        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        withAnimation { mapPosition = .region(MKCoordinateRegion(center: coordinate, span: span)) }
+        mapSearch = ""
+        searchCompleter.clear()
     }
 
     private func geocodeAndFly() async {
@@ -1101,6 +1161,7 @@ struct SituationView: View {
         let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
         withAnimation { mapPosition = .region(MKCoordinateRegion(center: loc.coordinate, span: span)) }
         mapSearch = ""
+        searchCompleter.clear()
     }
 
 }
