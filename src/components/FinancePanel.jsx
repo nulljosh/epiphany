@@ -791,10 +791,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
     // ponytail: KV (Redis) rejects large values silently-ish; block oversized PDFs client-side
     // with a clear message instead of letting the upload fail deep in the KV write.
-    const MAX_STATEMENT_BYTES = 4 * 1024 * 1024;
+    // Was 4MB when statements lived in KV; they're in Vercel Blob now.
+    const MAX_STATEMENT_BYTES = 25 * 1024 * 1024;
     const oversized = files.find((file) => file.size > MAX_STATEMENT_BYTES);
     if (oversized) {
-      setImportError(`${oversized.name} is too large (${(oversized.size / 1024 / 1024).toFixed(1)}MB) — statements must be under 4MB`);
+      setImportError(`${oversized.name} is too large (${(oversized.size / 1024 / 1024).toFixed(1)}MB) — statements must be under 25MB`);
       return;
     }
 

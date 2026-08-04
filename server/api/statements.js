@@ -1,3 +1,4 @@
+import { put, del, get as getBlob } from '@vercel/blob';
 import { applyCors } from './_cors.js';
 import { getStatementsPayload, summarizeStatementBuffer } from './statements-data.js';
 import { getKv } from './_kv.js';
@@ -13,6 +14,41 @@ function safeName(name = 'statement.pdf') {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-');
 }
 
+// Was 4MB, forced by KV's value ceiling. Blob's practical limit is far higher;
+// 25MB is a sanity bound on a scanned PDF, not a storage constraint.
+const MAX_STATEMENT_BYTES = 25 * 1024 * 1024;
+
+// ponytail: statements live in Blob, not KV. KV rejected values over ~4MB, which
+// is why both the web and native clients carried a hard 4MB guard and why a
+// perfectly ordinary bank PDF could fail with a 502. Blob has no such cliff.
+//
+// access:'private' is NOT optional here — these are bank statements. Avatars use
+// access:'public' because a public avatar URL is harmless; a public statement URL
+// is a data breach. Reading one back requires the store token (see readStatementBuffer).
+async function putStatementBlob(userId, recordId, buffer) {
+  const blob = await put(`statements/${userId}/${recordId}.pdf`, buffer, {
+    access: 'private',
+    contentType: 'application/pdf',
+    addRandomSuffix: false,
+  });
+  return blob.url;
+}
+
+// Reads a stored statement back for re-parsing. Falls back to the legacy
+// KV base64 copy so statements uploaded before this migration still open.
+async function readStatementBuffer(kv, statement) {
+  if (statement?.blobUrl) {
+    const result = await getBlob(statement.blobUrl, { access: 'private' });
+    if (!result?.stream) return null;
+    const chunks = [];
+    for await (const chunk of result.stream) chunks.push(chunk);
+    return Buffer.concat(chunks);
+  }
+  const storedFile = await kv.get(`statement-file:${statement.id}`);
+  if (!storedFile?.contentBase64) return null;
+  return Buffer.from(storedFile.contentBase64, 'base64');
+}
+
 async function refreshStoredStatements(kv, statements) {
   if (!Array.isArray(statements) || statements.length === 0) return [];
 
@@ -23,10 +59,9 @@ async function refreshStoredStatements(kv, statements) {
         return statement;
       }
       try {
-        const storedFile = await kv.get(`statement-file:${statement.id}`);
-        if (!storedFile?.contentBase64) return statement;
+        const buffer = await readStatementBuffer(kv, statement);
+        if (!buffer) return statement;
 
-        const buffer = Buffer.from(storedFile.contentBase64, 'base64');
         const { spendingMonth, transactions } = await summarizeStatementBuffer(buffer, statement.filename);
         return { ...statement, spendingMonth, transactions: transactions || [] };
       } catch {
@@ -86,12 +121,25 @@ export default async function handler(req, res) {
       }
 
       const buffer = Buffer.from(contentBase64, 'base64');
+      if (buffer.length > MAX_STATEMENT_BYTES) {
+        return errorResponse(res, 400, 'Statement too large (max 25MB)');
+      }
       const { spendingMonth, transactions } = await summarizeStatementBuffer(buffer, filename);
       const statements = await kv.get(statementsKey);
+      const recordId = `${session.userId}:${Date.now()}:${safeName(filename)}`;
+
+      let blobUrl;
+      try {
+        blobUrl = await putStatementBlob(session.userId, safeName(recordId), buffer);
+      } catch (blobErr) {
+        return errorResponse(res, 502, `Could not store statement: ${blobErr?.message || 'unknown error'}`);
+      }
+
       const nextRecord = {
-        id: `${session.userId}:${Date.now()}:${safeName(filename)}`,
+        id: recordId,
         filename,
         uploadedAt: new Date().toISOString(),
+        blobUrl,
         spendingMonth,
         transactions: transactions || [],
       };
@@ -100,18 +148,8 @@ export default async function handler(req, res) {
         .concat(nextRecord)
         .sort((a, b) => String(a?.spendingMonth?.sortKey || a?.spendingMonth?.month || '').localeCompare(String(b?.spendingMonth?.sortKey || b?.spendingMonth?.month || '')));
 
-      try {
-        await kv.set(`statement-file:${nextRecord.id}`, {
-          filename,
-          contentBase64,
-          uploadedAt: nextRecord.uploadedAt,
-        });
-        await kv.set(statementsKey, nextStatements);
-      } catch (kvErr) {
-        // ponytail: KV write can fail on oversized values; surface a real reason
-        // instead of a bare 500 the client can't act on.
-        return errorResponse(res, 502, `Could not store statement (storage limit likely exceeded): ${kvErr?.message || 'unknown error'}`);
-      }
+      // Only the metadata list goes to KV now — small, well under any limit.
+      await kv.set(statementsKey, nextStatements);
 
       return res.status(200).json({ ok: true, statement: nextRecord, statements: nextStatements });
     }
@@ -121,8 +159,13 @@ export default async function handler(req, res) {
       if (!id) return errorResponse(res, 400, 'id is required');
 
       const statements = await kv.get(statementsKey);
+      const existing = (Array.isArray(statements) ? statements : []).find((item) => item?.id === id);
       const nextStatements = (Array.isArray(statements) ? statements : []).filter((item) => item?.id !== id);
       await kv.set(statementsKey, nextStatements);
+      // Both paths run: new records have a blob, pre-migration ones a KV copy.
+      if (existing?.blobUrl) {
+        try { await del(existing.blobUrl); } catch { /* orphan blob beats a failed delete */ }
+      }
       await kv.del(`statement-file:${id}`);
 
       return res.status(200).json({ ok: true, statements: nextStatements });

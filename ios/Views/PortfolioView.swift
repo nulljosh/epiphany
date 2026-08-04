@@ -1907,9 +1907,9 @@ private struct StatementManagerSheet: View {
         await appState.deleteSpendingMonth(statement.spendingMonth?.month ?? "")
     }
 
-    // ponytail: matches the web client's 4MB guard — KV rejects oversized values, and a
-    // server-side 502 is a worse place to learn the PDF was too big.
-    private static let maxStatementBytes = 4 * 1024 * 1024
+    // ponytail: mirrors the server's cap. Was 4MB when statements lived in KV;
+    // they're in Vercel Blob now, so this is a sanity bound, not a storage limit.
+    private static let maxStatementBytes = 25 * 1024 * 1024
 
     private func handleFileSelection(_ result: Result<URL, Error>) {
         switch result {
@@ -1926,7 +1926,7 @@ private struct StatementManagerSheet: View {
                 let data = try Data(contentsOf: url)
                 guard data.count <= Self.maxStatementBytes else {
                     let mb = Double(data.count) / 1024 / 1024
-                    uploadError = String(format: "%@ is too large (%.1fMB) — statements must be under 4MB", url.lastPathComponent, mb)
+                    uploadError = String(format: "%@ is too large (%.1fMB) — statements must be under 25MB", url.lastPathComponent, mb)
                     return
                 }
                 upload(data: data, filename: url.lastPathComponent)

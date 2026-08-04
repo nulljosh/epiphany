@@ -15,6 +15,26 @@ const kvMock = {
 };
 vi.mock('../../server/api/_kv.js', () => ({ getKv: vi.fn().mockResolvedValue(kvMock) }));
 
+// Statement PDFs live in Vercel Blob (private), not KV — KV only holds the
+// metadata list now. Blob is stubbed in-memory so the handler's put/get/del
+// round-trip is exercised without network.
+const blobStore = new Map();
+vi.mock('@vercel/blob', () => ({
+  put: vi.fn((pathname, buffer) => {
+    const url = `https://blob.test/${pathname}`;
+    blobStore.set(url, Buffer.from(buffer));
+    return Promise.resolve({ url, pathname });
+  }),
+  del: vi.fn((url) => { blobStore.delete(url); return Promise.resolve(); }),
+  get: vi.fn((url) => {
+    const buffer = blobStore.get(url);
+    if (!buffer) return Promise.resolve(null);
+    return Promise.resolve({
+      stream: (async function* stream() { yield buffer; })(),
+    });
+  }),
+}));
+
 vi.mock('../../server/api/statements-data.js', () => ({
   getStatementsPayload: vi.fn(),
   summarizeStatementBuffer: vi.fn().mockResolvedValue({
@@ -66,6 +86,26 @@ describe('statements upload handler', () => {
     expect(res.body.ok).toBe(true);
     expect(res.body.statement.filename).toBe('feb.pdf');
     expect(res.body.statements).toHaveLength(1);
+  });
+
+  // The one that actually matters: these are bank statements. A public blob URL
+  // is a data breach, and 'public' is the value the avatar endpoint uses, so
+  // it's exactly the wrong thing to copy-paste. Fail loudly if it regresses.
+  it('stores the PDF as a private blob, never public', async () => {
+    const { put } = await import('@vercel/blob');
+    await handler(
+      mockReq({
+        method: 'POST',
+        query: { action: 'upload' },
+        body: { filename: 'feb.pdf', contentBase64: Buffer.from('pdf-bytes').toString('base64') },
+      }),
+      mockRes()
+    );
+
+    expect(put).toHaveBeenCalledTimes(1);
+    expect(put.mock.calls[0][2]).toMatchObject({ access: 'private' });
+    // And the raw PDF must not have been written into KV alongside it.
+    expect([...store.keys()].some((k) => k.startsWith('statement-file:'))).toBe(false);
   });
 
   it('replaces the existing statement for the same month (dedup)', async () => {
