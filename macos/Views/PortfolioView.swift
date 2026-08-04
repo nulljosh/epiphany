@@ -812,9 +812,9 @@ struct PortfolioView: View {
         })
     }
 
-    // ponytail: mirrors iOS's 4MB guard — KV rejects oversized values and a
-    // server-side 502 is a worse place to learn the PDF was too big.
-    private static let maxStatementBytes = 4 * 1024 * 1024
+    // ponytail: mirrors the server's cap. Was 4MB when statements lived in KV;
+    // they're in Vercel Blob now, so this is a sanity bound, not a storage limit.
+    private static let maxStatementBytes = 25 * 1024 * 1024
 
     private func handleStatementSelection(_ result: Result<URL, Error>) {
         switch result {
@@ -831,7 +831,7 @@ struct PortfolioView: View {
                 guard data.count <= Self.maxStatementBytes else {
                     let mb = Double(data.count) / 1024 / 1024
                     statementUploadError = String(
-                        format: "%@ is too large (%.1fMB) — statements must be under 4MB",
+                        format: "%@ is too large (%.1fMB) — statements must be under 25MB",
                         url.lastPathComponent, mb
                     )
                     return
