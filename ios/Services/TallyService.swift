@@ -30,7 +30,7 @@ struct TallyPaymentInfo: Codable, Sendable {
 }
 
 enum TallyService {
-    private static let baseURL = "https://tally.heyitsmejosh.com"
+    private static let baseURL = "https://talli.heyitsmejosh.com"
     private static let keychainService = "com.heyitsmejosh.monica.tally"
     private static let keychainAccount = "tally-credentials"
 
