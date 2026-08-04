@@ -3,6 +3,9 @@ import SwiftUI
 struct NewsDrawerView: View {
     @Binding var articles: [NewsArticle]
     @Binding var isLoading: Bool
+    // ponytail: at peek height the drawer is clipped to 64pt, so a centered
+    // spinner reads as a stray circle poking out. Only show it once open.
+    var isExpanded: Bool = true
     var brief: DailyBrief? = nil
     @State private var selectedNewsURL: URL?
 
@@ -35,7 +38,9 @@ struct NewsDrawerView: View {
                 .padding(.horizontal)
 
             if isLoading {
-                ProgressView()
+                if isExpanded {
+                    ProgressView()
+                }
             } else if articles.isEmpty {
                 ContentUnavailableView(
                     "No News",

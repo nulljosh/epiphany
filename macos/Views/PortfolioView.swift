@@ -150,7 +150,9 @@ struct PortfolioView: View {
                             tabSelector
                                 .padding(.top, 12)
 
-                            AutopilotSection()
+                            // ponytail: paper-trading only, hidden to match
+                            // iOS + web (Trade tab already disabled there).
+                            // AutopilotSection()
 
                             tabContent
 

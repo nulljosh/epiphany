@@ -89,6 +89,7 @@ struct PortfolioView: View {
     @State private var isEditingGoals = false
     @State private var editingDebtItems: [FinanceData.DebtItem] = []
     @State private var editingGoalItems: [FinanceData.Goal] = []
+    @State private var showDebtCalendar = false
     @State private var calendarMonth = Date()
     @State private var selectedCalendarDay: Date?
     // Tally payday data comes from appState.tallyPayment
@@ -168,9 +169,9 @@ struct PortfolioView: View {
 
                             planningCard
 
-                            debtBreakdownSection
-
                             subscriptionsSection
+
+                            debtAndCalendarSection
 
                             Spacer(minLength: 24)
                         }
@@ -697,10 +698,22 @@ struct PortfolioView: View {
     }
 
     private var planningCard: some View {
-        VStack(spacing: 16) {
-            budgetContent
-            financialCalendarContent
+        budgetContent
+    }
+
+    // ponytail: debt breakdown + the payment calendar aren't core to the
+    // Portfolio glance, so they sit collapsed at the bottom instead of
+    // interrupting balance -> accounts -> spending -> holdings.
+    private var debtAndCalendarSection: some View {
+        DisclosureGroup("Debt & Calendar", isExpanded: $showDebtCalendar) {
+            VStack(spacing: 16) {
+                debtBreakdownSection
+                financialCalendarContent
+            }
+            .padding(.top, 8)
         }
+        .font(.subheadline.weight(.semibold))
+        .padding(.horizontal)
     }
 
 
