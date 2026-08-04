@@ -41,13 +41,13 @@ struct SettingsView: View {
         }
         .alert("Upgrade to \(upgradeTarget?.title ?? "")", isPresented: $showUpgradeAlert) {
             Button("Open Web Upgrade") {
-                if let url = URL(string: "https://monica.heyitsmejosh.com/settings") {
+                if let url = URL(string: "https://epiphany.heyitsmejosh.com") {
                     openURL(url)
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Subscription upgrades are handled on the web. You will be redirected to Monica on the web to complete the upgrade.")
+            Text("Subscription upgrades are handled on the web. You will be redirected to Epiphany on the web to complete the upgrade.")
         }
         .sheet(isPresented: $showChangeEmail) {
             ChangeEmailSheet()
