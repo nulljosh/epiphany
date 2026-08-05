@@ -4,6 +4,10 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>.swiftlint.yml</key>
+		<data>
+		tPCa0a9Al1S/9xXMVHpj8GShdhU=
+		</data>
 		<key>.xcloud-config.yml</key>
 		<data>
 		lLrcHwUPIHF+Hn8UBXVB1kAHM/E=
@@ -14,23 +18,55 @@
 		</data>
 		<key>AppIcon60x60@2x.png</key>
 		<data>
-		xV5OOMp1ycfTzawmY0NTVmWos/0=
+		gU443VvD7o9jEYMDGxCgkgSWeBQ=
 		</data>
 		<key>AppIcon76x76@2x~ipad.png</key>
 		<data>
-		krO7wFGvOErE0jd0qxD2sZ2R/Gw=
+		Ogx4WUN08vFuPb6tKDF/MMAfmFM=
 		</data>
 		<key>Assets.car</key>
 		<data>
-		foBOHfLc0yg9n0x/Ko0xRTDQ6M8=
+		fshyOOgTEptLRayLFkc6YYrHttI=
+		</data>
+		<key>Epiphany.app.dSYM.zip</key>
+		<data>
+		hVWBw2cLzpXJbjpghzGIXvzfgHU=
+		</data>
+		<key>Epiphany.ipa</key>
+		<data>
+		obMYU+oE1PcEXxy76jd/L6DPn6Y=
+		</data>
+		<key>ExportOptions.plist</key>
+		<data>
+		HPxNa4grDYmUWC3ZPi5ktUETexM=
 		</data>
 		<key>Info.plist</key>
 		<data>
-		6o+hnRXRPCkSG1yAXJmpd2fGVRI=
+		eoZQ39/RLxqfpFdTKZbZnOM4lQM=
 		</data>
 		<key>PkgInfo</key>
 		<data>
 		n57qDP4tZfLD1rCS43W0B4LQjzE=
+		</data>
+		<key>PlugIns/EpiphanyWidgets.appex/Assets.car</key>
+		<data>
+		T5/PLyetoV/LEZk04mdvPZNxDMA=
+		</data>
+		<key>PlugIns/EpiphanyWidgets.appex/EpiphanyWidgets</key>
+		<data>
+		YX7BhyJNx4QAbdJ7jMW3ZLdX6MQ=
+		</data>
+		<key>PlugIns/EpiphanyWidgets.appex/Info.plist</key>
+		<data>
+		RngfAKwAS2WRwUodIIOrTSck5DQ=
+		</data>
+		<key>PlugIns/EpiphanyWidgets.appex/_CodeSignature/CodeResources</key>
+		<data>
+		85XRJQdVoeIIjqr41LvtiAqPLuE=
+		</data>
+		<key>PlugIns/EpiphanyWidgets.appex/embedded.mobileprovision</key>
+		<data>
+		yvSyPiKgmBHknZWsasJ+7K2ejco=
 		</data>
 		<key>add-device-frame.py</key>
 		<data>
@@ -42,11 +78,18 @@
 		</data>
 		<key>embedded.mobileprovision</key>
 		<data>
-		A5TpOlbEuqyC3TOWvId2yP2M+To=
+		FkL6VkD3MC7EonbE/3+Iba9ZLqU=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>.swiftlint.yml</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			qKUgTcuCiOa0JgfRiKmduKU+SZNW3/FNJwQuwy5gcOo=
+			</data>
+		</dict>
 		<key>.xcloud-config.yml</key>
 		<dict>
 			<key>hash2</key>
@@ -65,21 +108,77 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			5i7jUU2ICEOys9F6LgvnxDcCIsWcrCpj3YvOWCbftZE=
+			vaXNxOE9LTC87at0Mytmr1k4WTIO1HAI4ug47/VbIoU=
 			</data>
 		</dict>
 		<key>AppIcon76x76@2x~ipad.png</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			cbvDdjLvh7Vg2dmfB+jcQRvfpEjeaiZYwVOlHhtXMfE=
+			y316aLNISwj864ic99m1+6jJ2b0e+5vDpsqpx97T3Ts=
 			</data>
 		</dict>
 		<key>Assets.car</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			lpoLBR+Ty1IqJ2r74Sxh11xgq8KcBoFWUTPUIIkL1BI=
+			Hgmqt+MR0pW8uDWknrTwHHWNUUlGtquQ1OipcEeQBrk=
+			</data>
+		</dict>
+		<key>Epiphany.app.dSYM.zip</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			cYMscGyCXhen74oBCCwlRo6PjDQbrvEukVbkceyBCGc=
+			</data>
+		</dict>
+		<key>Epiphany.ipa</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			nYxMhaTYr8B1wg5FT9xHKQ45rfWQZf36JVLCaUs9MXc=
+			</data>
+		</dict>
+		<key>ExportOptions.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			uFc9i+dRFrF/PUioUdtDfKVNweYzRUJWn0ru9RJ5qww=
+			</data>
+		</dict>
+		<key>PlugIns/EpiphanyWidgets.appex/Assets.car</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ZFmF5zVf+spCv3IzQea8Jm29GVs4jBZR7Yns1MRRLe4=
+			</data>
+		</dict>
+		<key>PlugIns/EpiphanyWidgets.appex/EpiphanyWidgets</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			NGgeeaVecUB5XP59dSmhXJPcezKcp+uXlMyZ2qQuxzc=
+			</data>
+		</dict>
+		<key>PlugIns/EpiphanyWidgets.appex/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Wkb+l1uAVIIs6xJxPPGu2Cutknqwl7//kyTLDSq4G9k=
+			</data>
+		</dict>
+		<key>PlugIns/EpiphanyWidgets.appex/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			3UDNlIK3reO5IxPl/JVFMF4HfzJ25n4QOVW4zCzSLx8=
+			</data>
+		</dict>
+		<key>PlugIns/EpiphanyWidgets.appex/embedded.mobileprovision</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			i1leGYicd+PO3tOPLWGUpH4ZORg+MjqC9p3DPGR2TrA=
 			</data>
 		</dict>
 		<key>add-device-frame.py</key>
@@ -100,7 +199,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			VFMJ/LcHGiOnjH11izqVycuZSL1H2sOkfbuqMWa+i10=
+			69ftJ+vJLNG1yRjJTAodQbMp35aHN7BkPzc13+qrCP8=
 			</data>
 		</dict>
 	</dict>
