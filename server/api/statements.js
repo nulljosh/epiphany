@@ -30,6 +30,11 @@ async function putStatementBlob(userId, recordId, buffer) {
     access: 'private',
     contentType: 'application/pdf',
     addRandomSuffix: false,
+    // ponytail: the project's default BLOB_READ_WRITE_TOKEN still points at the
+    // legacy public store (arthur-models), which can't be changed after creation.
+    // EPIPHANY2_READ_WRITE_TOKEN is the new private store's token. Upgrade path:
+    // once BLOB_READ_WRITE_TOKEN itself is repointed at a private store, drop this.
+    token: process.env.EPIPHANY2_READ_WRITE_TOKEN,
   });
   return blob.url;
 }
@@ -38,7 +43,10 @@ async function putStatementBlob(userId, recordId, buffer) {
 // KV base64 copy so statements uploaded before this migration still open.
 async function readStatementBuffer(kv, statement) {
   if (statement?.blobUrl) {
-    const result = await getBlob(statement.blobUrl, { access: 'private' });
+    const result = await getBlob(statement.blobUrl, {
+      access: 'private',
+      token: process.env.EPIPHANY2_READ_WRITE_TOKEN,
+    });
     if (!result?.stream) return null;
     const chunks = [];
     for await (const chunk of result.stream) chunks.push(chunk);
@@ -164,7 +172,7 @@ export default async function handler(req, res) {
       await kv.set(statementsKey, nextStatements);
       // Both paths run: new records have a blob, pre-migration ones a KV copy.
       if (existing?.blobUrl) {
-        try { await del(existing.blobUrl); } catch { /* orphan blob beats a failed delete */ }
+        try { await del(existing.blobUrl, { token: process.env.EPIPHANY2_READ_WRITE_TOKEN }); } catch { /* orphan blob beats a failed delete */ }
       }
       await kv.del(`statement-file:${id}`);
 
