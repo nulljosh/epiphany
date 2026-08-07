@@ -22,6 +22,7 @@ export async function getKv() {
         get: wrap('get', (...args) => redis.get(...args)),
         set: wrap('set', (...args) => redis.set(...args)),
         del: wrap('del', (...args) => redis.del(...args)),
+        keys: wrap('keys', (...args) => redis.keys(...args)),
       };
     } catch (err) {
       console.warn('[KV] failed to init:', err.message);

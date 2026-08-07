@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 async function findUserById(kv, userId) {
   // KV is keyed by email, so we scan -- this is only used for GET by userId
   // For production scale, maintain an index. For now, iterate.
-  const keys = await kv.keys('user:*');
+  const keys = (await kv.keys('user:*')) || [];
   for (const key of keys) {
     const user = await kv.get(key);
     if (user?.id === userId) return user;

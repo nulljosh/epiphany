@@ -1131,7 +1131,7 @@ struct SituationView: View {
             }
         }
         .frame(width: 230, alignment: .leading)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func flyTo(_ completion: MKLocalSearchCompletion) async {
