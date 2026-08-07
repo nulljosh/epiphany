@@ -3,15 +3,7 @@
 ## Urgent
 - [ ] **SnapTrade production key billing failed — deadline 2026-08-06 (today).** SnapTrade emailed 2026-08-03: payment for July 31 did not process (org Maybulb, key MAYBULB-LKHSV, $1.00 USD due). If unpaid, the key is disabled, killing all live holdings/account sync. Pay/update billing via the SnapTrade dashboard link in the email (billing@snaptrade.com). **Check current status — deadline may have already passed.**
 
-## Statement upload (current state, consolidated 2026-08-07)
-- [x] iOS statement-upload bug — fixed 2026-07-28 (`97e612e`, 4 converging bugs: wrong state array read, no-op success path, `.constant()` error binding swallowing the alert, hard-bail on security-scoped resource access).
-- [x] macOS statement upload UI added 2026-08-04 (`a013c90`) — was previously missing entirely (web/iOS could upload, Mac could only read).
-- [x] Storage migrated off Upstash KV base64 to Vercel Blob (private access) 2026-08-04 (`0fec55c`) — size guard raised 4MB→25MB across all platforms, legacy KV statements still readable via fallback.
-- [x] **Deploy wiring verified 2026-08-07** — push-to-deploy IS working despite the missing `.vercel/project.json`: every commit including current HEAD has a matching Vercel production deployment (checked via Vercel API), and `0fec55c` is an ancestor of the deployed HEAD. Not the cause of "still broken."
-- [x] **Root cause found + fixed 2026-08-07** — the Vercel Blob store was provisioned **public** by default (access mode is immutable at creation, no API/CLI to flip it) — `putStatementBlob` correctly requires `access:'private'`, so all uploads failed with "Cannot use private access on a public store." Created a new private Blob store and repointed code to use `EPIPHANY2_READ_WRITE_TOKEN` (commit `75df240`). All platform uploads now working.
-
 ## App icon
-- [x] Transparency bug fixed 2026-08-04 — `AppIcon.png`/`AppIcon-dark.png` had real alpha in the rounded-corner cutouts, which silently fails ASC uploads (ITMS 90717, `asc builds upload` reports success anyway — verify with `asc builds uploads list`). Flattened onto the design's own `#111814` background. **Check other repos' icons for the same defect — whole class of silent ship failure.**
 - [ ] `AppIcon-dark.png`/`AppIcon-tinted.png` are byte-identical copies of the light icon, not actually designed — cosmetic, tinted variant won't tint meaningfully.
 - [ ] Icon still reads generic/weak overall — a real personality refresh has been repeatedly deferred (imported from App Store.pdf 07-29, reconfirmed 08-04).
 
@@ -52,4 +44,3 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Markets-row buy/sell/hold badge on the list view — the "why" panel itself already ships (tap BUY/SELL/HOLD pill on `StockDetail.jsx` for reasons + math rationale). Putting it on each Markets-list row is blocked: `MarketRow` only gets symbol/name/price/changePercent, but `signal()` needs 35+ price points — needs either N per-row history calls or the bulk price-history endpoint already deferred for sparklines. Same blocker, fix together.
 - [ ] Portfolio/Settings tab audit — getting cluttered, decide what stays. Calendar view specifically flagged as possibly unnecessary.
 - [ ] iOS landscape support — one-line flag, but map/markets/portfolio are portrait-first; enabling without adapting layouts looks broken. Needs a per-screen pass (split layouts, wider charts, map controls). Same applies to other iOS apps. Also: Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss).
-- [x] Map search bar autocomplete — DONE 2026-08-04 (`a013c90`): `MapSearchCompleter` (MKLocalSearchCompleter) added to iOS + macOS, suggestions biased to visible region, tap-to-fly. Web already had this via debounced Nominatim.
