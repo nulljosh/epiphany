@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import Supercluster from 'supercluster';
 import { SYSTEM_FONT } from '../utils/formatting';
 
 // Brookswood/Langley, BC -- home base. Used while geolocation resolves and
@@ -117,6 +118,48 @@ function extractCoords(item) {
   const lat = item.lat ?? item.latitude ?? null;
   const lon = item.lng ?? item.lon ?? item.longitude ?? null;
   return (lat != null && lon != null) ? { lat, lon } : null;
+}
+
+// Groups nearby points into count badges so dense layers (POIs, crime, etc.)
+// don't render as an unreadable pile of overlapping pins. Points too far
+// apart to cluster at the given zoom pass through unchanged.
+function clusterPoints(items, zoom, coordsFn, radiusPx = 60) {
+  const raw = [];
+  const points = items.reduce((acc, item) => {
+    const c = coordsFn(item);
+    if (!c) return acc;
+    acc.push({ type: 'Feature', properties: { idx: raw.length }, geometry: { type: 'Point', coordinates: [c.lon, c.lat] } });
+    raw.push(item);
+    return acc;
+  }, []);
+  if (points.length === 0) return [];
+  const index = new Supercluster({ radius: radiusPx, maxZoom: 16 }).load(points);
+  const z = Math.round(Math.min(Math.max(zoom, 0), 16));
+  return index.getClusters([-180, -85, 180, 85], z).map((c) => {
+    if (c.properties.cluster) {
+      return {
+        cluster: true,
+        count: c.properties.point_count,
+        lon: c.geometry.coordinates[0],
+        lat: c.geometry.coordinates[1],
+        clusterId: c.properties.cluster_id,
+        index,
+      };
+    }
+    return { cluster: false, item: raw[c.properties.idx], lon: c.geometry.coordinates[0], lat: c.geometry.coordinates[1] };
+  });
+}
+
+function addClusterMarker(maplibregl, map, markersArray, lon, lat, count, color) {
+  const el = document.createElement('div');
+  const size = Math.min(50, 22 + Math.sqrt(count) * 6);
+  el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color}dd;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${size > 34 ? 13 : 11}px;font-family:${SYSTEM_FONT};cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.35);`;
+  el.textContent = count > 99 ? '99+' : String(count);
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    map.easeTo({ center: [lon, lat], zoom: Math.min(map.getZoom() + 2.5, 18), duration: 300 });
+  });
+  markersArray.push(new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map));
 }
 
 function buildPopupHTML(data) {
@@ -620,6 +663,23 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     return () => { userMarkersRef.current.forEach(m => m.remove()); userMarkersRef.current = []; };
   }, [userPosition, locLabel, geoState, mapLoaded]);
 
+  // Cluster granularity must track zoom, but zoom alone previously never
+  // re-triggered the marker-build effect below (only payload/center/layer
+  // toggles did). Bump this on zoomend (debounced) so clusters re-split as
+  // the user zooms in, even with no other change.
+  const [zoomTick, setZoomTick] = useState(0);
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    let t;
+    const onZoomEnd = () => {
+      clearTimeout(t);
+      t = setTimeout(() => setZoomTick((z) => z + 1), 200);
+    };
+    map.on('zoomend', onZoomEnd);
+    return () => { clearTimeout(t); map.off('zoomend', onZoomEnd); };
+  }, [mapLoaded]);
+
   // Smart zoom-based decimation helper
   const decimateByZoom = useCallback((array, maxCount, zoom) => {
     if (!array || array.length === 0) return array;
@@ -648,6 +708,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       em: payload.emergencyIncidents.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
       ml: Object.keys(mapLayers).filter(k => mapLayers[k] !== false).join(','),
+      z: zoomTick,
     });
 
     if (prevPayloadRef.current === payloadKey) return;
@@ -664,8 +725,21 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     const addMarker = (css, title, data, lon, lat, layerType, content = '') =>
       createMarker(maplibregl, mapInstanceRef.current, markersRef.current, css, title, data, lon, lat, layerType, activePopupRef, content);
 
+    // Clusters nearby points of a layer into count badges, returns only the
+    // unclustered items (for the caller to render individually as before).
+    const clusterLayer = (items, maxCount, coordsFn, color) =>
+      clusterPoints(decimateByZoom(items, maxCount, currentZoom), currentZoom, coordsFn)
+        .map((c) => {
+          if (c.cluster) {
+            addClusterMarker(maplibregl, mapInstanceRef.current, markersRef.current, c.lon, c.lat, c.count, color);
+            return null;
+          }
+          return c.item;
+        })
+        .filter(Boolean);
+
     if (mapLayers.incidents !== false)
-    decimateByZoom(payload.incidents, 80, currentZoom).forEach((inc) => {
+    clusterLayer(payload.incidents, 80, (inc) => extractCoords(inc), '#f59e0b').forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
       const t = inc.type || 'incident';
       const cat = inc.category || 'infrastructure';
@@ -706,7 +780,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     if (mapLayers.traffic !== false)
-    decimateByZoom(payload.trafficIncidents, 60, currentZoom).forEach((inc) => {
+    clusterLayer(payload.trafficIncidents, 60, (inc) => extractCoords(inc.position || {}), '#f59e0b').forEach((inc) => {
       const p = inc.position;
       if (!p || p.lon == null || p.lat == null) return;
       addMarker(
@@ -718,7 +792,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     });
 
     if (mapLayers.earthquakes !== false)
-    decimateByZoom(payload.earthquakes, 120, currentZoom).forEach((eq) => {
+    clusterLayer(payload.earthquakes, 120, (eq) => extractCoords(eq), '#ef4444').forEach((eq) => {
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
       addMarker(
@@ -764,7 +838,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Crime incidents
     if (mapLayers.crime !== false)
-    decimateByZoom(payload.crimeIncidents, 80, currentZoom).forEach((crime, i) => {
+    clusterLayer(payload.crimeIncidents, 80, (crime) => extractCoords(crime), '#ef4444').forEach((crime, i) => {
       const c = extractCoords(crime);
       if (!c) return;
       const { lat, lon } = c;
@@ -778,7 +852,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Local events
     if (mapLayers.localEvents !== false)
-    decimateByZoom(payload.localEvents, 80, currentZoom).forEach((ev, i) => {
+    clusterLayer(payload.localEvents, 80, (ev) => extractCoords(ev), '#a855f7').forEach((ev, i) => {
       const c = extractCoords(ev);
       if (!c) return;
       const { lat, lon } = c;
@@ -792,7 +866,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Emergency services (fire stations, hospitals, ambulances) — data from incidents.js Overpass
     if (mapLayers.incidents !== false)
-    decimateByZoom(payload.emergencyIncidents, 120, currentZoom).forEach((inc) => {
+    clusterLayer(payload.emergencyIncidents, 120, (inc) => extractCoords(inc.lat != null ? inc : (inc.position || {})), '#ef4444').forEach((inc) => {
       const lat = inc.lat ?? inc.position?.lat;
       const lon = inc.lon ?? inc.position?.lon;
       if (lat == null || lon == null) return;
@@ -810,7 +884,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Weather alerts
     if (mapLayers.weather !== false)
-    decimateByZoom(payload.weatherAlerts, 80, currentZoom).forEach((wa, i) => {
+    clusterLayer(payload.weatherAlerts, 80, (wa) => extractCoords(wa), '#f59e0b').forEach((wa, i) => {
       const lat = wa.lat;
       const lon = wa.lon;
       if (lat == null || lon == null) return;
@@ -824,7 +898,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Wildfires
     if (mapLayers.wildfires !== false)
-    decimateByZoom(payload.wildfires, 80, currentZoom).forEach((fire, i) => {
+    clusterLayer(payload.wildfires, 80, (fire) => extractCoords(fire), '#f97316').forEach((fire, i) => {
       if (fire.lat == null || fire.lon == null) return;
       addMarker(
         'width:10px;height:10px;border-radius:50%;background:#f97316;animation:pulse-amber 1.6s infinite;',
@@ -873,7 +947,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Emergency services (Waze + city CAD: police, fire, EMS, accidents)
     if (mapLayers.incidents !== false)
-    decimateByZoom(payload.emergencyIncidents, 120, currentZoom).forEach((ev) => {
+    clusterLayer(payload.emergencyIncidents, 120, (ev) => extractCoords(ev), '#94a3b8').forEach((ev) => {
       if (ev.lat == null || ev.lng == null) return;
       const cat = ev.category || 'alert';
       const icon = cat === 'police' ? '🚔' : cat === 'fire' ? '🚒' : cat === 'ems' ? '🚑' : cat === 'accident' ? '💥' : cat === 'hazard' ? '⚠️' : cat === 'road_closed' ? '🚫' : '🚨';
@@ -888,7 +962,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // AQI readings
     if (mapLayers.aqi !== false)
-    decimateByZoom(payload.aqiReadings, 40, currentZoom).forEach((reading) => {
+    clusterLayer(payload.aqiReadings, 40, (reading) => extractCoords(reading), '#22c55e').forEach((reading) => {
       if (reading.lat == null || reading.lon == null) return;
       const aqi = reading.aqi || reading.value || 0;
       const aqiColor = aqi <= 50 ? '#22c55e' : aqi <= 100 ? '#eab308' : aqi <= 150 ? '#f97316' : '#ef4444';
@@ -925,7 +999,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     // New set is fully rendered — now retire the previous markers (no flash).
     staleMarkers.forEach(m => m.remove());
     staleFlights.forEach(m => m.marker.remove());
-  }, [center.lat, center.lon, payload, mapLoaded, mapLayers]);
+  }, [center.lat, center.lon, payload, mapLoaded, mapLayers, zoomTick]);
 
   // Dead-reckoning animation — moves flight markers between 60s polls
   // 1 knot ≈ 0.000008467 degrees lat/sec (= 1.852 km/hr / 111.32 km/deg / 3600 sec)
