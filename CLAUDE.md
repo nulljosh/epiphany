@@ -5,6 +5,16 @@ v2.6.1 -- Personal intelligence platform.
 ## Terminal dashboard (2026-07-09)
 `cli/epiphany-tui.mjs` (ink + React, `npm run tui -- <email>`) — live-refreshing portfolio TUI, polls Upstash KV directly every 15s (reuses `scripts/kv-portfolio-edit.sh`'s pull-and-cache pattern into `.env.tui.local`, gitignored). Pilot for the cross-app TUI rollout (plan: `~/.claude/plans/check-our-codebase-tuis-enumerated-sunset.md`) — Talli and Healstack next, reusing this KV/polling/keybind pattern. Requires ink 7 (not 5) for React 19 compat — ink 5's bundled react-reconciler crashes with `ReactCurrentOwner` undefined against React 19. Palantir for regular people. App Store: iOS v2.5.4 READY_FOR_SALE/live, macOS v2.5.2 READY_FOR_SALE/live (https://apps.apple.com/app/epiphany/id6779522175). See roadmap.md for current open items.
 
+## Statement upload broken — BLOCKED on Josh (2026-08-06)
+"June still missing" from bank statement uploads — root cause found: `putStatementBlob`
+(`server/api/statements.js:28-35`) correctly requires `access:'private'` (bank statements
+must never be publicly readable), but the Vercel Blob store actually attached to this
+project is provisioned **public**. Vercel Blob access mode is set at store creation, no
+API/CLI to flip it. Fails with "Cannot use private access on a public store." Fix needs
+Josh: Vercel dashboard → Storage → the Blob store → either switch it to private access, or
+create a new private-access store and update `BLOB_READ_WRITE_TOKEN` in prod env vars to
+point at it. Not code-fixable.
+
 ## TestFlight/screenshots (2026-07-07)
 TestFlight beta description updated (was internal QA notes, now real tester-facing
 copy). App Store screenshots for 2.5.2 are still stale (old generic set:
@@ -401,9 +411,29 @@ billing required). Use `TOMTOM_API_KEY`.
    - Register in `api/gateway.js`
    - Add fetch + marker render in `LiveMapBackdrop.jsx`
 
-4. **Clustering** — Add `supercluster` npm package
-   - Cluster per-layer before rendering markers; re-cluster on zoom change
-   - Changes `LiveMapBackdrop.jsx` marker creation blocks
+4. **Clustering** — DONE (web) 2026-08-06: `supercluster` added, dense layers
+   (incidents, traffic, crime, localEvents, weather, wildfires, emergency, aqi,
+   earthquakes) now cluster into count badges via `clusterLayer()` in
+   `LiveMapBackdrop.jsx`; re-clusters on zoomend (debounced). `events`/
+   `newsArticles`/`predictions` intentionally left unclustered (keyword-matched
+   coords, not the visual-mess source). Tests + build pass, committed `c2b35d5`.
+   - **iOS/macOS still open** — the pin-pile screenshot that prompted this was
+     actually the iOS app's `venueAnnotations` (Restaurant/Gas/Groceries/Coffee/
+     Parks chips, `ios/Views/SituationView.swift:464-487`), a separate SwiftUI
+     `Map`/`Annotation` implementation with no shared code with the web fix.
+     Found mid-session: SwiftUI's `Map`+`Annotation` (iOS 17 API this app uses)
+     has **no exposed clustering API** — `clusteringIdentifier` only exists on
+     UIKit's `MKAnnotationView` — so this isn't a one-line native-feature flip.
+     Real options: (a) manual grid/distance clustering in Swift mirroring the
+     web's `clusterPoints()` approach (region span from `mapPosition.region`,
+     group nearby `venueResults[cat]` items, render a count-badge `Annotation`,
+     tap zooms in) — smallest diff, stays on SwiftUI `Map`; or (b) drop to
+     `MKMapView` via `UIViewRepresentable` for real `MKClusterAnnotation`
+     support — matches the already-deferred Tier 5 "iOS map sources" item, much
+     bigger. Recommend (a) for a future session; not started (session ended on
+     low weekly usage headroom, see Claude Usage screenshot 92% weekly used).
+     Same likely applies to macOS's `macos/Views/SituationView.swift` (not yet
+     read this session — check for the same `venueAnnotations` pattern).
 
 5. **Lazy loading + debouncing**
    - Only fetch layers that are toggled on
