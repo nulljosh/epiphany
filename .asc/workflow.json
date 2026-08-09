@@ -12,8 +12,8 @@
     "ship-mac": { "description": "Bump, archive, upload, submit Mac", "steps": [
       { "name": "bump_mac", "run": "cd macos && asc xcode version edit --version \"$VERSION\" --build-number \"$(date +%Y%m%d%H%M)\"" },
       { "name": "archive_mac", "run": "cd macos && asc xcode archive --project Epiphany.xcodeproj --scheme Epiphany --archive-path ../.asc/artifacts/Epiphany-mac.xcarchive --overwrite --xcodebuild-flag=-skipPackagePluginValidation --xcodebuild-flag=-allowProvisioningUpdates --output json" },
-      { "name": "export_mac", "run": "cd macos && asc xcode export --archive-path ../.asc/artifacts/Epiphany-mac.xcarchive --export-options ExportOptions.plist --pkg-path ../.asc/artifacts/Epiphany-mac.pkg --output json" },
-      { "name": "publish_mac", "if": "SUBMIT", "run": "asc publish appstore --app $MAC_APP_ID --pkg .asc/artifacts/Epiphany-mac.pkg --version $VERSION --wait --submit --confirm --output json" }
+      { "name": "export_mac", "run": "cd macos && asc xcode export --archive-path ../.asc/artifacts/Epiphany-mac.xcarchive --export-options ExportOptions.plist --overwrite --ipa-path ../.asc/artifacts/Epiphany-mac.ipa --output json" },
+      { "name": "publish_mac", "if": "SUBMIT", "run": "asc publish appstore --app $MAC_APP_ID --ipa .asc/artifacts/Epiphany-mac.ipa --version $VERSION --wait --submit --confirm --output json" }
     ] }
   }
 }
