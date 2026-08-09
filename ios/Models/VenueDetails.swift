@@ -7,6 +7,7 @@ struct VenueDetails: Codable {
     let reviewCount: Int
     let reviews: [VenueReview]
     let yelpUrl: String?
+    let isOpenNow: Bool?
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -16,6 +17,7 @@ struct VenueDetails: Codable {
         reviewCount = try container.decodeIfPresent(Int.self, forKey: .reviewCount) ?? 0
         reviews = try container.decodeIfPresent([VenueReview].self, forKey: .reviews) ?? []
         yelpUrl = try container.decodeIfPresent(String.self, forKey: .yelpUrl)
+        isOpenNow = try container.decodeIfPresent(Bool.self, forKey: .isOpenNow)
     }
 }
 

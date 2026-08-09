@@ -65,6 +65,8 @@ export default async function handler(req, res) {
         user: r.user?.name || 'Anonymous',
       })),
       yelpUrl: detail.url || business.url || null,
+      hours: detail.hours?.[0]?.open || null,
+      isOpenNow: detail.hours?.[0]?.is_open_now ?? null,
     };
     cache.set(cacheKey, { time: Date.now(), data });
     return res.status(200).json(data);
