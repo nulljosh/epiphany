@@ -1156,6 +1156,11 @@ private struct VenueDetailSheet: View {
                     Text("(\(details.reviewCount) reviews)").font(.caption).foregroundStyle(.secondary)
                 }
             }
+            if let isOpenNow = details.isOpenNow {
+                Text(isOpenNow ? "Open now" : "Closed")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(isOpenNow ? .green : .red)
+            }
             ForEach(details.reviews) { review in
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {

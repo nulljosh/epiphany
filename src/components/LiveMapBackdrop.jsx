@@ -182,12 +182,15 @@ function venueExtrasHTML(details) {
   const rating = details.rating != null
     ? `<div style="margin-top:6px;font-size:11px;color:#facc15">★ ${details.rating.toFixed(1)} <span style="color:#93c5fd">(${details.reviewCount || 0} reviews)</span></div>`
     : '';
+  const openStatus = details.isOpenNow != null
+    ? `<div style="margin-top:4px;font-size:11px;font-weight:600;color:${details.isOpenNow ? '#4ade80' : '#f87171'}">${details.isOpenNow ? 'Open now' : 'Closed'}</div>`
+    : '';
   const reviews = (details.reviews || []).map((r) =>
     `<div style="margin-top:6px;font-size:10px;color:#cbd5e1"><b>${esc(r.user)}</b> ${'★'.repeat(r.rating)}<br/>${esc(r.text)}</div>`
   ).join('');
   return `<div style="margin-top:8px">
     ${photos ? `<div style="display:flex;gap:6px;overflow-x:auto">${photos}</div>` : ''}
-    ${rating}${reviews}
+    ${rating}${openStatus}${reviews}
   </div>`;
 }
 
