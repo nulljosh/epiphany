@@ -10,7 +10,6 @@
 
 ## From Apple Notes (imported 2026-08-08)
 - [ ] **Markets thumbnails are all default/basic, should be custom based on article.** From note "Epiphany": "Markets thumbnails are all default/basic. They should all be custom based on article." Needs the markets/news article view's thumbnail source checked (`src/components/` markets news list) — likely needs a per-article image fetch (og:image scrape or a stock-photo/dynamic-generation API) rather than reusing a shared placeholder. Bigger scope than a one-line fix, not attempted this pass — locations/hours (below) was done instead since it reused already-fetched Yelp data.
-- [x] Locations need hours — DONE 2026-08-08: Yelp Fusion business detail already returns `hours[0].open` + `hours[0].is_open_now`, just wasn't being surfaced. `server/api/venue-details.js` now returns `hours`/`isOpenNow` in the response; iOS (`VenueDetailSheet` in `SituationView.swift`) and macOS (same view) show an "Open now"/"Closed" badge; web popup (`LiveMapBackdrop.jsx venueExtrasHTML`) shows the same. Only open/closed status is wired, not the full weekly hours table (the raw `hours` field is there if that's wanted later — would need day/time-range formatting).
 
 ## App icon
 - [ ] `AppIcon-dark.png`/`AppIcon-tinted.png` are byte-identical copies of the light icon, not actually designed — cosmetic, tinted variant won't tint meaningfully.
