@@ -4,6 +4,14 @@
 - [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
   all builds pass, but Josh's "haven't seen it work in months" on mobile was not reproduced
   or confirmed fixed. Do this first next session.
+- [ ] **Debt rows have no sign convention.** The `Family` $100 row is really a *receivable*
+  — Josh said "they owe me $100" — but it renders as a debt because `{ balance }` is
+  unsigned everywhere in the debt model (`userProfile.js`, `usePortfolio.js`,
+  `server/api/portfolio.js`, `debtPayoff.js`). Showing money owed *to* Josh needs a real
+  decision: a sign, a `direction` field, or a separate receivables list.
+- [ ] **`DebtPayoffProjection` prints "Debt-free in now total"** — reads like a string
+  formatting bug in `src/utils/debtPayoff.js` when every debt row has `minPayment: 0`.
+  Spotted in Josh's screenshot 2026-08-10, not investigated (usage budget).
 
 ## Urgent
 - [ ] **Statement upload — two real bugs found and fixed 2026-08-10, awaiting Josh's retry to confirm they were *the* cause.** The 08-06 Blob fix was genuinely incomplete; two independent second bugs existed, both of which produce exactly "the statement never landed":
