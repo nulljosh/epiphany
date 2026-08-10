@@ -1,31 +1,6 @@
 # Epiphany Roadmap
 
 ## 2026-08-10 (late) — UI + data pass, shipped
-- [x] **Statement upload "missing" on web — root cause found, not a backend bug at all.**
-  `FinancePanel.jsx` had `shouldHideStatementsCard = syncedMonthCount >= 3`, which hid the
-  entire Saved Statements card once 3+ spending months had synced, leaving upload reachable
-  only from an overflow ActionMenu. The live account has **8** synced months, so the card had
-  been invisible for months — matching Josh's "still nowhere to upload statements, otherwise
-  it's hidden" exactly. Card now always renders. Note this is *separate* from the three
-  backend bugs fixed earlier today; the upload chain itself was healthy.
-- [x] Ticker showed only the watchlist when one was set (`App.jsx` `tickerItems`), diverging
-  from iOS/macOS which always show every live symbol. Web now matches native.
-- [x] Flat-UI pass: removed both landing-page radial glows, all 17 `box-shadow` declarations,
-  4 gradients and the hero drop-shadow; flattened the Markets fear/greed gradient + 2 button
-  glows; dropped the map marker drop-shadow glow and road-closure stripe gradient; removed the
-  4 SwiftUI `.shadow` modifiers (iOS + macOS). Net -67 lines.
-  - **Deliberately kept**: panel `backdrop-filter: blur()`. Those panels sit over the live map
-    backdrop and the blur is what keeps text legible over moving imagery, not decoration.
-    Removing it needs solid panel backgrounds designed at the same time — its own task.
-- [x] Debt rows consolidated in KV (live account) **and** in the `userProfile.js` seed:
-  Telus $400 + a single `Family` $100 row; `Mom/Dad`, `Her` and `Bell (TSI Canada
-  collections)` removed. Bell's reference data is preserved in project memory, not lost.
-  - **Open**: Josh said Family *"owe me $100"* — a receivable, the opposite direction from a
-    debt. It renders as a $100 debt row to match the card. Giving it the right sign needs a
-    convention the debt model doesn't have (`{ balance }` is unsigned everywhere).
-  - **Open**: verify the "Debt-free in now total" string on `DebtPayoffProjection` — reads
-    like a formatting bug in `src/utils/debtPayoff.js` when every row has `minPayment: 0`.
-    Not investigated this session (usage budget).
 - [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
   all builds pass, but Josh's "haven't seen it work in months" on mobile was not reproduced
   or confirmed fixed. Do this first next session.
@@ -39,7 +14,6 @@
 - [ ] **SnapTrade production key billing failed — deadline 2026-08-06 (today).** SnapTrade emailed 2026-08-03: payment for July 31 did not process (org Maybulb, key MAYBULB-LKHSV, $1.00 USD due). If unpaid, the key is disabled, killing all live holdings/account sync. Pay/update billing via the SnapTrade dashboard link in the email (billing@snaptrade.com). **Check current status — deadline may have already passed.**
 
 ## From Apple Notes (imported 2026-08-08)
-- [x] **Markets thumbnails are all default/basic, should be custom based on article.** Fixed 2026-08-10. Root cause was not the views — all of them already rendered `image`/`imageUrl` when present. GDELT (the *only* upstream that carries a per-article image, via `socialimage`) was contributing **zero** articles in production, so 100% of the feed came from Google News RSS, which carries no image data at all — verified: `/api/news?q=AAPL` returned 65/65 Google articles, 0 with an image, and `?category=business` 50/50 the same. Three fixes in `server/api/news.js`: (1) `fetchGdelt` read the body as text first — GDELT answers rate-limit/bad-query errors with **HTTP 200 + a plaintext body**, so `r.json()` threw an opaque parse error and the code silently degraded to Google-only; (2) stock queries quoted the ticker (`"AAPL" business`), which GDELT rejects with "The specified phrase is too short" — now unquoted under 5 chars, so short tickers work at all; (3) both parsers now emit `sourceUrl` (Google's `<source url="...">`, verified 100/100 items) since Google wraps every link in an opaque `news.google.com/rss/articles/CBMi...` redirect whose host is useless for branding. Thumbnail rule centralised in `src/utils/newsThumbnail.js` + `NewsArticle.thumbnailURL` (iOS/macOS): real article image when GDELT supplies one, else the publisher's own logo — so rows are distinct and branded even while GDELT is throttled, instead of identical newspaper glyphs. Applied across web (`NewsWidget`), iOS (`NewsView`, `NewsRow`, `NewsDrawerView`) and macOS (`NewsView`). 405 web tests pass, iOS + macOS BUILD SUCCEEDED.
 - [ ] Follow-up on the above: the fallback is a **publisher favicon, not a true per-article image**. Genuinely per-article imagery needs og:image, which for Google-sourced items means resolving the opaque `CBMi...` redirect *then* fetching the article page — ~2 network round-trips per row, too expensive to do inline in the handler. Only worth building if GDELT stays dead; check whether GDELT recovers first (it is rate-limiting shared Vercel IPs — "Please limit requests to one every 5 seconds"), since a healthy GDELT already supplies real images for free.
 
 ## App icon
