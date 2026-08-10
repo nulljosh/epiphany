@@ -64,7 +64,7 @@ function FearGreedBanner({ score, rating, t }) {
     <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block', margin: '0 -16px 12px -16px' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-        background: `linear-gradient(135deg, ${color}08 0%, ${color}04 100%)`,
+        background: `${color}06`,
         border: `1px solid ${color}40`,
         borderRadius: 0,
         cursor: 'pointer', transition: 'opacity 0.15s',
@@ -568,7 +568,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               padding: '10px 16px', borderRadius: 8,
               background: '#0071e3', color: '#fff', border: 'none',
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0,113,227,0.3)',
+              boxShadow: 'none',
               transition: 'transform 0.2s',
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -614,7 +614,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
             WebkitBackdropFilter: 'blur(20px)',
             borderTop: `1px solid ${t.border}`, borderRadius: '12px 12px 0 0',
             maxHeight: '70vh', overflow: 'auto', zIndex: 5,
-            boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+            boxShadow: 'none',
             animation: 'slideUp 0.25s ease-out',
             willChange: 'transform',
           }}>

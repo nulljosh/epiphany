@@ -695,14 +695,8 @@ const reset = useCallback(() => {
     const hasLive = stocks && Object.keys(stocks).length > 0;
 
     if (hasLive) {
-      let symbols = watchlist && watchlist.length > 0
-        ? watchlist.filter(s => stocks[s])
-        : Object.keys(stocks);
-
-      // If watchlist filtered everything out, fall back to all stocks
-      if (symbols.length === 0) symbols = Object.keys(stocks);
-
-      return symbols
+      // Ticker shows every live symbol, not just the watchlist (matches iOS).
+      return Object.keys(stocks)
         .sort((a, b) => ((stocks[b]?.changePercent || 0) - (stocks[a]?.changePercent || 0)))
         .map(sym => {
         const stock = stocks[sym];
@@ -722,7 +716,7 @@ const reset = useCallback(() => {
       price: ASSETS[sym].price,
       change: 0,
     }));
-  }, [stocks, watchlist]);
+  }, [stocks]);
 
   const handleMapReady = useCallback((map) => {
     mapInstanceRef.current = map;

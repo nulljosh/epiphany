@@ -492,7 +492,6 @@ struct SituationView: View {
         .background {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(nsColor: .windowBackgroundColor))
-                .shadow(color: .black.opacity(0.3), radius: 10, y: 3)
         }
     }
 

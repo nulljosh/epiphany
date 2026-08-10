@@ -116,7 +116,6 @@ private struct FloatingTabBar: View {
         .frame(maxWidth: 300)
         .background(.regularMaterial, in: Capsule())
         .overlay(Capsule().stroke(Palette.overlay.opacity(0.08), lineWidth: 1))
-        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
     }
 
     private func tabButton(_ index: Int) -> some View {
