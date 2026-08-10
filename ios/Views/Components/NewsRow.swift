@@ -55,7 +55,7 @@ struct CompactNewsRow: View {
 
             Spacer(minLength: 0)
 
-            if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
+            if let url = article.thumbnailURL {
                 AsyncImage(url: url) { phase in
                     if let image = phase.image {
                         image.resizable().scaledToFill()

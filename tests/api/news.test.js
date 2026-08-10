@@ -6,7 +6,13 @@ beforeEach(() => {
   global.fetch = vi.fn();
 });
 
-const mockOk = (body) => ({ ok: true, json: async () => body });
+// fetchGdelt reads the body as text before parsing, so it can catch GDELT's
+// HTTP-200 plaintext error replies. Mock both accessors.
+const mockOk = (body) => ({
+  ok: true,
+  json: async () => body,
+  text: async () => (typeof body === 'string' ? body : JSON.stringify(body)),
+});
 
 function makeGdeltArticle(overrides = {}) {
   return {

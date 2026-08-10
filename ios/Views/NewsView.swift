@@ -148,10 +148,7 @@ private struct NewsRow: View {
             .trimmingCharacters(in: .whitespaces)
     }
 
-    private var articleImageURL: URL? {
-        guard let urlString = article.imageUrl, !urlString.isEmpty else { return nil }
-        return URL(string: urlString)
-    }
+    private var articleImageURL: URL? { article.thumbnailURL }
 
     private var bylineText: String {
         let source = article.source.isEmpty ? "GDELT" : article.source
