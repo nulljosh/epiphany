@@ -1131,7 +1131,13 @@ struct SituationView: View {
             }
         }
         .frame(width: 230, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        // Opaque surface, not material -- the map used to bleed through and made
+        // the suggestions hard to read.
+        .background {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(white: 0.12))
+                .shadow(color: .black.opacity(0.3), radius: 10, y: 3)
+        }
     }
 
     private func flyTo(_ completion: MKLocalSearchCompletion) async {
