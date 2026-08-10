@@ -134,6 +134,27 @@ describe('statements upload handler', () => {
     expect(res2.body.statements[0].filename).toBe('feb-v2.pdf');
   });
 
+  // Regression: an unparseable PDF made summarizeStatementBuffer return a null
+  // spendingMonth, and the dedupe filter dereferenced `.month` on it -> 500. The
+  // upload was lost and its blob orphaned, which is what "June/July never landed"
+  // looked like from the client.
+  it('still stores a statement whose PDF could not be parsed', async () => {
+    summarizeStatementBuffer.mockResolvedValueOnce({ spendingMonth: null, transactions: [] });
+    const req = mockReq({
+      method: 'POST',
+      query: { action: 'upload' },
+      body: { filename: 'jun.pdf', contentBase64: Buffer.from('unreadable').toString('base64') },
+    });
+    const res = mockRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.statements).toHaveLength(1);
+    expect(res.body.statements[0].filename).toBe('jun.pdf');
+    expect(res.body.statements[0].spendingMonth).toBeTruthy();
+  });
+
   it('rejects upload missing filename or contentBase64', async () => {
     const req = mockReq({ method: 'POST', query: { action: 'upload' }, body: { filename: '' } });
     const res = mockRes();

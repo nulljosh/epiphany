@@ -14,9 +14,16 @@ function safeName(name = 'statement.pdf') {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-');
 }
 
-// Was 4MB, forced by KV's value ceiling. Blob's practical limit is far higher;
-// 25MB is a sanity bound on a scanned PDF, not a storage constraint.
-const MAX_STATEMENT_BYTES = 25 * 1024 * 1024;
+// ponytail: 3MB, and the ceiling is the transport, not Blob. The PDF reaches this
+// handler as base64 inside a JSON body to a Vercel Serverless Function, whose
+// request-body limit is 4.5MB — enforced by the platform, so an oversized upload
+// 413s before this code ever runs and the client sees no useful error. Base64
+// inflates by 4/3, so 3MB of PDF is the honest cap. The previous 25MB bound was
+// Blob's limit, which nothing here ever gets to use.
+// Upgrade path if real statements exceed this: client-direct upload to Blob
+// (`@vercel/blob/client` handleUpload + a token route), which bypasses the
+// function body entirely. That's a cross-platform client change, not a constant.
+const MAX_STATEMENT_BYTES = 3 * 1024 * 1024;
 
 // ponytail: statements live in Blob, not KV. KV rejected values over ~4MB, which
 // is why both the web and native clients carried a hard 4MB guard and why a
@@ -130,9 +137,11 @@ export default async function handler(req, res) {
 
       const buffer = Buffer.from(contentBase64, 'base64');
       if (buffer.length > MAX_STATEMENT_BYTES) {
-        return errorResponse(res, 400, 'Statement too large (max 25MB)');
+        return errorResponse(res, 400, 'Statement too large (max 3MB)');
       }
-      const { spendingMonth, transactions } = await summarizeStatementBuffer(buffer, filename);
+      const summary = await summarizeStatementBuffer(buffer, filename);
+      const spendingMonth = summary?.spendingMonth || summarizeTransactions([], filename);
+      const transactions = summary?.transactions;
       const statements = await kv.get(statementsKey);
       const recordId = `${session.userId}:${Date.now()}:${safeName(filename)}`;
 
@@ -152,7 +161,7 @@ export default async function handler(req, res) {
         transactions: transactions || [],
       };
       const nextStatements = [...(Array.isArray(statements) ? statements : [])]
-        .filter((item) => item?.spendingMonth?.month !== spendingMonth.month)
+        .filter((item) => item?.spendingMonth?.month !== spendingMonth?.month)
         .concat(nextRecord)
         .sort((a, b) => String(a?.spendingMonth?.sortKey || a?.spendingMonth?.month || '').localeCompare(String(b?.spendingMonth?.sortKey || b?.spendingMonth?.month || '')));
 
