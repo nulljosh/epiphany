@@ -52,3 +52,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Markets-row buy/sell/hold badge on the list view — the "why" panel itself already ships (tap BUY/SELL/HOLD pill on `StockDetail.jsx` for reasons + math rationale). Putting it on each Markets-list row is blocked: `MarketRow` only gets symbol/name/price/changePercent, but `signal()` needs 35+ price points — needs either N per-row history calls or the bulk price-history endpoint already deferred for sparklines. Same blocker, fix together.
 - [ ] Portfolio/Settings tab audit — getting cluttered, decide what stays. Calendar view specifically flagged as possibly unnecessary.
 - [ ] iOS landscape support — one-line flag, but map/markets/portfolio are portrait-first; enabling without adapting layouts looks broken. Needs a per-screen pass (split layouts, wider charts, map controls). Same applies to other iOS apps. Also: Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss).
+
+## From Apple Notes (imported 2026-08-10)
+- [ ] App Store splash/screenshot refresh: current screenshots show demo data — portfolio reads $0. Regenerate with realistic seeded portfolio data (fastlane snapshot / appstore-screenshots skill) before next submission.
