@@ -332,7 +332,7 @@ async function fetchGoogleNews(queryTerms, lat, lon) {
 async function handleStockNews(req, res, query) {
   const norm = query.toLowerCase();
   const cacheKey = `stock:${norm}`;
-  const kvKey = `news:stock:v1:${norm}`;
+  const kvKey = `news:stock:v2:${norm}`;
 
   // L1 in-memory
   const hit = cache.get(cacheKey);
@@ -428,7 +428,7 @@ export default async function handler(req, res) {
 
   // Build cache key
   const cacheKey = `${category}:${lat ?? ''}:${lon ?? ''}`;
-  const kvKey = `news:geo:v1:${cacheKey}`;
+  const kvKey = `news:geo:v2:${cacheKey}`;
 
   // L1 in-memory
   const hit = cache.get(cacheKey);
