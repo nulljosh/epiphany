@@ -1,4 +1,5 @@
 import { relativeTime } from '../utils/formatting';
+import { newsThumbnail } from '../utils/newsThumbnail';
 
 export default function NewsWidget({ articles = [], dark, t }) {
   if (articles.length === 0) {
@@ -11,7 +12,9 @@ export default function NewsWidget({ articles = [], dark, t }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {articles.slice(0, 10).map((article, i) => (
+      {articles.slice(0, 10).map((article, i) => {
+        const thumbnail = newsThumbnail(article);
+        return (
         <a
           key={i}
           href={article.url}
@@ -37,9 +40,9 @@ export default function NewsWidget({ articles = [], dark, t }) {
           }}
         >
           <div style={{ display: 'flex', gap: 10 }}>
-            {article.image && (
+            {thumbnail && (
               <img
-                src={article.image}
+                src={thumbnail}
                 alt=""
                 style={{
                   width: 60, height: 60, borderRadius: 6, objectFit: 'cover', flexShrink: 0,
@@ -62,7 +65,8 @@ export default function NewsWidget({ articles = [], dark, t }) {
             </div>
           </div>
         </a>
-      ))}
+        );
+      })}
     </div>
   );
 }

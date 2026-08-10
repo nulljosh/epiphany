@@ -233,7 +233,16 @@ async function fetchGdelt(url) {
   try {
     const r = await fetch(url, { signal: controller.signal });
     if (!r.ok) throw new Error(`GDELT ${r.status}`);
-    const json = await r.json();
+    // GDELT answers rate-limit/bad-query errors with HTTP 200 and a plaintext
+    // body ("Please limit requests to one every 5 seconds", "The specified
+    // phrase is too short"). Blindly calling r.json() turned those into an
+    // opaque parse error, so the caller silently degraded to Google-only —
+    // which is why every article arrived image-less. Surface the real reason.
+    const body = await r.text();
+    if (!body.trimStart().startsWith('{')) {
+      throw new Error(`GDELT: ${body.trim().slice(0, 120)}`);
+    }
+    const json = JSON.parse(body);
 
     return (json.articles || []).map(a => {
       const { lat: gLat, lon: gLon } = extractGeo(a);
@@ -245,6 +254,7 @@ async function fetchGdelt(url) {
         title: a.title || '',
         url: a.url || '',
         source,
+        sourceUrl: source ? `https://${source}` : null,
         image: a.socialimage || null,
         lat: gLat,
         lon: gLon,
@@ -280,6 +290,10 @@ async function fetchGoogleNews(queryTerms, lat, lon) {
         || item.match(/<source\b[^>]*>([\s\S]*?)<\/source>/i)?.[1]
         || '')
         .trim();
+      // Google News wraps every link in an opaque news.google.com redirect, so
+      // the article URL's host is useless for branding. <source url="..."> is
+      // the only publisher identity in the feed.
+      const sourceUrl = (item.match(/<source\b[^>]*\burl="([^"]+)"/i)?.[1] || '').trim() || null;
       const pubDate = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1] || '').trim();
       const { lat: gLat, lon: gLon } = extractGeo({ title });
 
@@ -300,6 +314,7 @@ async function fetchGoogleNews(queryTerms, lat, lon) {
         title,
         url: articleUrl,
         source,
+        sourceUrl,
         image: null,
         lat: gLat ?? lat ?? null,
         lon: gLon ?? lon ?? null,
@@ -341,8 +356,12 @@ async function handleStockNews(req, res, query) {
   }
 
   // Search GDELT directly for the stock symbol/company name
+  // GDELT rejects quoted phrases under 5 characters ("The specified phrase is
+  // too short"), so every short ticker (AAPL, HOOD, NVDA) failed outright and
+  // fell through to Google News, which carries no images at all.
+  const gdeltTerm = query.length >= 5 ? `"${query}"` : query;
   const gdeltParams = new URLSearchParams({
-    query: `"${query}" business`,
+    query: `${gdeltTerm} business`,
     mode: 'artlist',
     maxrecords: '15',
     format: 'json',
