@@ -35,8 +35,13 @@ export async function summarizeStatementBuffer(buffer, filename) {
   try {
     text = await parsePdfBuffer(buffer);
   } catch (err) {
+    // A PDF pdf-parse can't read is still a statement worth keeping. Returning a
+    // null spendingMonth here used to blow up the upload handler's dedupe
+    // (`spendingMonth.month` on null -> 500), so the file was rejected outright
+    // and its blob orphaned. Fall back to the empty summary, which already names
+    // the month after the filename.
     console.warn(`[PDF] Failed to parse ${filename}: ${err.message}`);
-    return { transactions: [], spendingMonth: null };
+    return { transactions: [], spendingMonth: summarizeTransactions([], filename) };
   }
   const transactions = parseStatementText(text);
   return {

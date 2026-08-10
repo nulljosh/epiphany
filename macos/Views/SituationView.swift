@@ -313,19 +313,14 @@ struct SituationView: View {
             }
 
             if let cat = selectedVenueCategory {
-                ForEach(venueResults, id: \.self) { item in
-                    if let coord = item.placemark.location?.coordinate {
-                        Annotation(item.name ?? cat.label, coordinate: coord) {
-                            Button {
-                                selectedVenue = item
-                            } label: {
-                                Image(systemName: cat.icon)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.white)
-                                    .padding(6)
-                                    .background(cat.tint, in: Circle())
-                            }
-                            .buttonStyle(.plain)
+                ForEach(venueClusters) { cluster in
+                    if let item = cluster.single {
+                        Annotation(item.name ?? cat.label, coordinate: cluster.coordinate) {
+                            venuePin(cat, item)
+                        }
+                    } else {
+                        Annotation("\(cluster.count) \(cat.label)", coordinate: cluster.coordinate) {
+                            venueClusterPin(cat, cluster)
                         }
                     }
                 }
@@ -338,6 +333,49 @@ struct SituationView: View {
         .sheet(item: $selectedVenue) { item in
             VenueDetailSheet(item: item)
         }
+    }
+
+    /// Groups the visible venue pins by the current span. Nothing is filtered out —
+    /// dense areas collapse into a count badge that zooms in on click.
+    private var venueClusters: [MapCluster<MKMapItem>] {
+        clusterByGrid(venueResults, in: visibleRegion.span) { $0.placemark.location?.coordinate }
+    }
+
+    private func venuePin(_ cat: VenueCategory, _ item: MKMapItem) -> some View {
+        Button {
+            selectedVenue = item
+        } label: {
+            Image(systemName: cat.icon)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(6)
+                .background(cat.tint, in: Circle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func venueClusterPin(_ cat: VenueCategory, _ cluster: MapCluster<MKMapItem>) -> some View {
+        Button {
+            zoomInto(cluster.coordinate)
+        } label: {
+            Text("\(cluster.count)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(minWidth: 26, minHeight: 26)
+                .background(cat.tint, in: Circle())
+                .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Halves the visible span around a cluster so a click breaks it apart.
+    private func zoomInto(_ coordinate: CLLocationCoordinate2D) {
+        let span = visibleRegion.span
+        let next = MKCoordinateSpan(
+            latitudeDelta: max(span.latitudeDelta / 2, 0.002),
+            longitudeDelta: max(span.longitudeDelta / 2, 0.002)
+        )
+        withAnimation { mapPosition = .region(MKCoordinateRegion(center: coordinate, span: next)) }
     }
 
     @ViewBuilder
