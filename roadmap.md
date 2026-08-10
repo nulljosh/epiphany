@@ -1,5 +1,35 @@
 # Epiphany Roadmap
 
+## 2026-08-10 (late) — UI + data pass, shipped
+- [x] **Statement upload "missing" on web — root cause found, not a backend bug at all.**
+  `FinancePanel.jsx` had `shouldHideStatementsCard = syncedMonthCount >= 3`, which hid the
+  entire Saved Statements card once 3+ spending months had synced, leaving upload reachable
+  only from an overflow ActionMenu. The live account has **8** synced months, so the card had
+  been invisible for months — matching Josh's "still nowhere to upload statements, otherwise
+  it's hidden" exactly. Card now always renders. Note this is *separate* from the three
+  backend bugs fixed earlier today; the upload chain itself was healthy.
+- [x] Ticker showed only the watchlist when one was set (`App.jsx` `tickerItems`), diverging
+  from iOS/macOS which always show every live symbol. Web now matches native.
+- [x] Flat-UI pass: removed both landing-page radial glows, all 17 `box-shadow` declarations,
+  4 gradients and the hero drop-shadow; flattened the Markets fear/greed gradient + 2 button
+  glows; dropped the map marker drop-shadow glow and road-closure stripe gradient; removed the
+  4 SwiftUI `.shadow` modifiers (iOS + macOS). Net -67 lines.
+  - **Deliberately kept**: panel `backdrop-filter: blur()`. Those panels sit over the live map
+    backdrop and the blur is what keeps text legible over moving imagery, not decoration.
+    Removing it needs solid panel backgrounds designed at the same time — its own task.
+- [x] Debt rows consolidated in KV (live account) **and** in the `userProfile.js` seed:
+  Telus $400 + a single `Family` $100 row; `Mom/Dad`, `Her` and `Bell (TSI Canada
+  collections)` removed. Bell's reference data is preserved in project memory, not lost.
+  - **Open**: Josh said Family *"owe me $100"* — a receivable, the opposite direction from a
+    debt. It renders as a $100 debt row to match the card. Giving it the right sign needs a
+    convention the debt model doesn't have (`{ balance }` is unsigned everywhere).
+  - **Open**: verify the "Debt-free in now total" string on `DebtPayoffProjection` — reads
+    like a formatting bug in `src/utils/debtPayoff.js` when every row has `minPayment: 0`.
+    Not investigated this session (usage budget).
+- [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
+  all builds pass, but Josh's "haven't seen it work in months" on mobile was not reproduced
+  or confirmed fixed. Do this first next session.
+
 ## Urgent
 - [ ] **Statement upload — two real bugs found and fixed 2026-08-10, awaiting Josh's retry to confirm they were *the* cause.** The 08-06 Blob fix was genuinely incomplete; two independent second bugs existed, both of which produce exactly "the statement never landed":
   1. **Unparseable PDF → 500, upload discarded** (fixed, regression test added). `summarizeStatementBuffer` returned `{ spendingMonth: null }` whenever `pdf-parse` threw, and the upload handler's dedupe then did `spendingMonth.month` on that null → `TypeError` → the outer catch returned a 500 with `statements: []`. The PDF was already written to Blob at that point, so it was orphaned and never recorded in KV. Any statement whose PDF pdf-parse can't read (encrypted, or a newer Wealthsimple template) failed permanently and silently this way. Fixed at the source in `server/api/statements-data.js` — falls back to `summarizeTransactions([], filename)`, so an unreadable statement is still stored and just gets named after its filename. Belt-and-braces `?.` in `server/api/statements.js`. Test: `tests/api/statements.test.js` "still stores a statement whose PDF could not be parsed".
