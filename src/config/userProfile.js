@@ -26,9 +26,8 @@ export const USER_BUDGET = {
 
 export const USER_DEBT = [
   { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
-  { name: 'Telus (current month)', balance: 300, rate: 0, minPayment: 0, note: 'Paid $310 on 2026-05-26, ~$300 remaining' },
-  { name: 'Mom/Dad', balance: 450, rate: 0, minPayment: 0, note: '$275 + $175 passport' },
-  { name: 'Bell', balance: 1000, rate: 0, minPayment: 0 },
+  { name: 'Telus (current month)', balance: 400, rate: 0, minPayment: 0 },
+  { name: 'Family', balance: 100, rate: 0, minPayment: 0 },
   { name: 'Visa', balance: 5000, rate: 0, minPayment: 0, note: 'In collections, lump-sum payoff in a year+' },
 ];
 

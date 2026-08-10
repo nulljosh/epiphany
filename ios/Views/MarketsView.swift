@@ -342,7 +342,6 @@ struct MarketsView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
             )
-            .shadow(radius: 8, y: -2)
             .padding(.bottom, 80)
             .overlay(alignment: .top) {
                 Color.clear

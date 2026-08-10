@@ -756,7 +756,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const isMuseum = t === 'museum' || cat === 'cultural';
       const isInfra = !isConstruction;
       const css = isConstruction
-        ? 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);animation:pulse-amber 1.8s infinite;'
+        ? 'width:44px;height:6px;border-radius:999px;background:#f59e0b;border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);animation:pulse-amber 1.8s infinite;'
         : isPolice
         ? `width:${isInfra ? 8 : 12}px;height:${isInfra ? 8 : 12}px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,${isInfra ? 0.3 : 0.6});opacity:${isInfra ? 0.6 : 1};`
         : isHospital
@@ -956,7 +956,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const icon = cat === 'police' ? '🚔' : cat === 'fire' ? '🚒' : cat === 'ems' ? '🚑' : cat === 'accident' ? '💥' : cat === 'hazard' ? '⚠️' : cat === 'road_closed' ? '🚫' : '🚨';
       const color = cat === 'police' ? '#3b82f6' : cat === 'fire' ? '#ef4444' : cat === 'ems' ? '#f97316' : cat === 'accident' ? '#f59e0b' : '#94a3b8';
       addMarker(
-        `width:20px;height:20px;background:transparent;font-size:14px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 3px ${color}88);`,
+        `width:20px;height:20px;background:transparent;font-size:14px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;color:${color};`,
         ev.title,
         { type: 'emergency', title: ev.title, detail: `Source: ${ev.source || 'Live feed'} | ${ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : ''}`, level: ev.severity || 'medium', source: ev.source || 'Emergency feed', link: null },
         ev.lng, ev.lat, 'incidents', icon

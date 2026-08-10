@@ -703,8 +703,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   );
   const spendingRecentFirst = useMemo(() => [...spendingChronological].reverse(), [spendingChronological]);
   const statementFilesRecentFirst = [...statementFiles].sort((a, b) => String(b?.spendingMonth?.sortKey || '').localeCompare(String(a?.spendingMonth?.sortKey || '')));
-  const syncedMonthCount = Math.max(statementFilesRecentFirst.length, spendingChronological.length);
-  const shouldHideStatementsCard = syncedMonthCount >= 3;
 
   const handleImport = useCallback((event) => {
     const file = event.target.files?.[0];
@@ -868,7 +866,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   }, []);
 
   const headerActions = [
-    ...(tab === 'spending' && shouldHideStatementsCard
+    ...(tab === 'spending'
       ? [{ label: statementUploading ? 'Uploading…' : 'Upload PDFs', onClick: () => statementInputRef.current?.click() }]
       : []),
     { label: 'Export JSON', onClick: handleExport },
@@ -1392,8 +1390,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 {importError}
               </div>
             )}
-            {!shouldHideStatementsCard && (
-              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+            <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                 <div style={labelStyle}>Saved Statements</div>
                 <div style={{ fontSize: 12, color: t.textSecondary, marginBottom: 12 }}>
                   Upload PDF statements once. Epiphany keeps the spending months in sync on this account.
@@ -1427,8 +1424,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                     ))}
                   </div>
                 )}
-              </Card>
-            )}
+            </Card>
 
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
               <div style={labelStyle}>Income Scenarios</div>

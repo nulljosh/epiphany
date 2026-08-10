@@ -378,7 +378,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
         <div className="lp-hero-bg" aria-hidden="true">
           <MapSceneSVG />
         </div>
-        <div className="lp-hero-glow" />
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
         <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
@@ -523,7 +522,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
 
       {/* ─── FINAL CTA ─── */}
       <section className="lp-final">
-        <div className="lp-final-glow" />
         <h2 className="lp-final-headline" style={{ position: 'relative' }}>Have an epiphany.</h2>
         <div style={{ position: 'relative', display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="lp-btn-primary" onClick={register}>Get Epiphany</button>
