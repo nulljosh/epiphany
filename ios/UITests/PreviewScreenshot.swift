@@ -64,10 +64,10 @@ final class PreviewScreenshot: XCTestCase {
             sleep(2)
             snapshot("4-portfolio")
         }
-        app.terminate()
 
-        // Run 3: fresh launch straight to Settings.
-        app = launchAuthenticated()
+        // Settings shares this launch: Portfolio and Settings are both plain tabs
+        // with no sheet in between, and a third relaunch was reliably failing with
+        // "Simulator device failed to launch ...xctrunner".
         if app.buttons["tab-settings"].waitForExistence(timeout: 5) {
             app.buttons["tab-settings"].tap()
             sleep(2)
