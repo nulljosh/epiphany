@@ -92,3 +92,15 @@ Fix order:
 3. Copy the 5 to `public/screenshots/screenshot-*-new.png` + `dist/`, deploy.
 4. While there: delete the unreferenced duplicates (`markets.png`, `portfolio.png`, `settings.png`,
    `situation.png`, `stocks.png`, and the non-`-new` `screenshot-*.png`) — index.html only uses `-new`.
+
+### Update 2026-08-10 (investigation)
+- Confirmed `portfolio:<demo id>` key does not exist in KV at all (get returns null).
+- Tried seeding from the app's own `DEMO_*` constants in `src/utils/financeData.js` — dead end:
+  `DEMO_HOLDINGS`, `DEMO_ACCOUNTS`, `DEMO_SPENDING`, `DEMO_GIVING` are all **empty arrays**.
+  Only `debt` (4), `goals` (5), `incomePhases` (3), `subscriptions` (8) have content.
+- So the three fields the screenshots render blank (holdings -> $0.00, spending -> "No transaction
+  data", budget -> "No budget data available") have no seed data anywhere in the repo.
+- NEXT: author holdings/accounts/spending JSON by hand (needs a call on what the demo portfolio
+  should show), then `./scripts/kv-portfolio-edit.sh set demo@heyitsmejosh.com <file>`, then
+  re-run screenshots. Steps 2-5 of the plan are unchanged.
+
