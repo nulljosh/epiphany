@@ -45,14 +45,7 @@ export default async function handler(req, res) {
     const ext = isSvg ? 'svg' : 'jpg';
     const contentType = isSvg ? 'image/svg+xml' : 'image/jpeg';
 
-    // Delete old avatar if exists
-    if (user.avatarUrl) {
-      try {
-        await del(user.avatarUrl);
-      } catch (err) {
-        console.error('[avatar POST] old blob delete failed (non-fatal)', { avatarUrl: user.avatarUrl, error: err?.message });
-      }
-    }
+    const previousAvatarUrl = user.avatarUrl;
 
     let blob;
     try {
@@ -75,6 +68,16 @@ export default async function handler(req, res) {
       return errorResponse(res, 500, 'Avatar uploaded but failed to save — please retry');
     }
 
+    // Only now is the replacement durable. An orphan blob beats destroying the
+    // only copy of an avatar because the upload or the save failed.
+    if (previousAvatarUrl && previousAvatarUrl !== blob.url) {
+      try {
+        await del(previousAvatarUrl);
+      } catch (err) {
+        console.error('[avatar POST] old blob delete failed (non-fatal)', { avatarUrl: previousAvatarUrl, error: err?.message });
+      }
+    }
+
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     return res.status(200).json({ ok: true, avatarUrl: blob.url });
   }
@@ -94,17 +97,20 @@ export default async function handler(req, res) {
     if (!user) return errorResponse(res, 401, 'User not found');
 
     if (user.avatarUrl) {
-      try {
-        await del(user.avatarUrl);
-      } catch (err) {
-        console.error('[avatar DELETE] blob delete failed (non-fatal)', { avatarUrl: user.avatarUrl, error: err?.message });
-      }
+      const previousAvatarUrl = user.avatarUrl;
       user.avatarUrl = null;
       try {
         await kv.set(`user:${session.email}`, user);
       } catch (err) {
         console.error('[avatar DELETE] KV set failed', { email: session.email, error: err?.message, stack: err?.stack });
         return errorResponse(res, 500, 'Failed to clear avatar');
+      }
+      // Clear the pointer first: a failed KV write must not leave the profile
+      // aimed at a blob that no longer exists.
+      try {
+        await del(previousAvatarUrl);
+      } catch (err) {
+        console.error('[avatar DELETE] blob delete failed (non-fatal)', { avatarUrl: previousAvatarUrl, error: err?.message });
       }
     }
 
