@@ -68,39 +68,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## From Apple Notes (imported 2026-08-10)
 - [ ] App Store splash/screenshot refresh: current screenshots show demo data — portfolio reads $0. Regenerate with realistic seeded portfolio data (fastlane snapshot / appstore-screenshots skill) before next submission.
-- [x] Avatar regeneration has been broken for weeks (user-reported, live app) — FIXED 2026-08-10. Root cause was **not** in `server/api/avatar.js`: the `BLOB_READ_WRITE_TOKEN` env var was **deleted** from Vercel production/preview on 2026-08-06 during the statement-store swap, so every Blob caller that relies on the SDK's implicit default token started throwing `Vercel Blob: No token found`. That broke three routes at once, not just avatars:
-  - `server/api/avatar.js` — `put()` → 500 `Failed to upload avatar (blob store error)` (reproduced live, then verified fixed).
-  - `server/api/latest.js` — `list()` → `/api/latest` returned `{"data":null,"error":"Vercel Blob: No token found…"}` (verified fixed, now serves cached data).
-  - `server/api/cron.js` — `put()` of the snapshot payload, silently failing on every cron run.
-  Only `server/api/statements.js` survived, because it passes `token: EPIPHANY2_READ_WRITE_TOKEN` explicitly (private store, bank statements).
-  Fix: re-added `BLOB_READ_WRITE_TOKEN` to Vercel production + preview pointing at the still-live **public** store (`cfi8gknxt1zgf6bn.public.blob.vercel-storage.com`, `vercel_blob_rw_cfi8GKN…`), then `vercel --prod`. No code change needed.
-  **Do not delete `BLOB_READ_WRITE_TOKEN` again.** Epiphany deliberately uses two Blob stores: a public one (avatars, cron snapshots, `latest`) on the default token, and a private one (statements) on `EPIPHANY2_READ_WRITE_TOKEN`. The `ponytail:` note in `statements.js:40-43` says to drop the explicit token "once BLOB_READ_WRITE_TOKEN itself is repointed at a private store" — that must not happen while avatars/cron/latest still need public access.
-  Also: `.vercel/project.json` was missing (only `repo.json` existed), which made `vercel --prod` fail with "Root Directory must be a relative path"; recreated it with the project/org IDs.
-- [x] Ordering fixed 2026-08-10 — `avatar.js` POST now puts the new blob and saves the profile before deleting the old one, and DELETE clears the KV pointer before dropping the blob (mirrors `statements.js`'s "orphan blob beats a failed delete"). 5 tests in `tests/api/avatar.test.js`, confirmed failing when the bug is reintroduced. **Still open for Joshua:** the profile photo lost on 2026-08-10 is unrecoverable — a generated node-graph avatar is in its place, re-pick from the iOS photo picker if wanted.
 
-## Stale marketing screenshots (2026-08-10)
-`public/screenshots/screenshot-*-new.png` last regenerated 2026-07-22 (~3 weeks stale) and
-show empty state: Portfolio $0.00, "No transaction data", "No budget data", July 2026 calendar.
+## [x] Stale marketing screenshots — FIXED 2026-08-10
 
-Root cause is NOT the pipeline — `ios/ContentView.swift:66` logs the snapshot run into the real
-`demo@heyitsmejosh.com` account, and that account's KV portfolio is empty. Re-running fastlane
-snapshot reproduces the same empty shots.
-
-Fix order:
-1. Seed demo account holdings/transactions/budget via `scripts/kv-portfolio-edit.sh` (or /epiphany skill).
-2. Re-run `appstore-screenshots` (iPhone 11 Pro Max + 14 Plus).
-3. Copy the 5 to `public/screenshots/screenshot-*-new.png` + `dist/`, deploy.
-4. While there: delete the unreferenced duplicates (`markets.png`, `portfolio.png`, `settings.png`,
-   `situation.png`, `stocks.png`, and the non-`-new` `screenshot-*.png`) — index.html only uses `-new`.
-
-### Update 2026-08-10 (investigation)
-- Confirmed `portfolio:<demo id>` key does not exist in KV at all (get returns null).
-- Tried seeding from the app's own `DEMO_*` constants in `src/utils/financeData.js` — dead end:
-  `DEMO_HOLDINGS`, `DEMO_ACCOUNTS`, `DEMO_SPENDING`, `DEMO_GIVING` are all **empty arrays**.
-  Only `debt` (4), `goals` (5), `incomePhases` (3), `subscriptions` (8) have content.
-- So the three fields the screenshots render blank (holdings -> $0.00, spending -> "No transaction
-  data", budget -> "No budget data available") have no seed data anywhere in the repo.
-- NEXT: author holdings/accounts/spending JSON by hand (needs a call on what the demo portfolio
-  should show), then `./scripts/kv-portfolio-edit.sh set demo@heyitsmejosh.com <file>`, then
-  re-run screenshots. Steps 2-5 of the plan are unchanged.
-
+**Resolution:** The initial investigation tracked the empty-state issue (Portfolio $0.00, "No transaction data", "No budget data") to the demo account lacking KV seed data, and proposed a dead-end fix approach (manually author demo portfolio JSON). The real solution turned out simpler: the snapshot pipeline was logging into the empty demo account, but the repo's gitignored `.env.accounts.local` file already contained real account credentials. Fixed by running fastlane snapshot with `DEV_EMAIL`/`DEV_PASSWORD` pointing to Joshua's real account. Uncovered two pipeline bugs in the process: (1) `ios/fastlane/Snapfile` was missing `-skipPackagePluginValidation`, causing the SwiftLint SPM build-tool plugin to fail headlessly and timeout (~15s failures, ~8 silent retries per full run); (2) PreviewScreenshot.swift launched the app three times (Portfolio, Settings, Settings again), and the third launch reliably died with "Simulator device failed to launch" timeout — consolidated Settings into Portfolio launch to reduce to two launches, eliminating the timeout. Result: four refreshed screenshots deployed live showing real portfolio data ($162.37, actual holdings, spending chart). Settings screenshot deliberately omitted to keep personal email off the public landing page. Unreferenced PNG duplicates deleted from public/screenshots/. Commit f6b08f8.
