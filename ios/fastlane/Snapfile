@@ -14,3 +14,7 @@ output_directory("./fastlane/screenshots")
 clear_previous_screenshots(true)
 
 override_status_bar(true)
+
+# Xcode won't auto-trust the SwiftLint SPM build-tool plugin in a non-interactive
+# run, which fails the build before any screenshot is captured.
+xcargs("-skipPackagePluginValidation -skipMacroValidation")
