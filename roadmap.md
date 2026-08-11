@@ -77,3 +77,18 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
   **Do not delete `BLOB_READ_WRITE_TOKEN` again.** Epiphany deliberately uses two Blob stores: a public one (avatars, cron snapshots, `latest`) on the default token, and a private one (statements) on `EPIPHANY2_READ_WRITE_TOKEN`. The `ponytail:` note in `statements.js:40-43` says to drop the explicit token "once BLOB_READ_WRITE_TOKEN itself is repointed at a private store" — that must not happen while avatars/cron/latest still need public access.
   Also: `.vercel/project.json` was missing (only `repo.json` existed), which made `vercel --prod` fail with "Root Directory must be a relative path"; recreated it with the project/org IDs.
 - [x] Ordering fixed 2026-08-10 — `avatar.js` POST now puts the new blob and saves the profile before deleting the old one, and DELETE clears the KV pointer before dropping the blob (mirrors `statements.js`'s "orphan blob beats a failed delete"). 5 tests in `tests/api/avatar.test.js`, confirmed failing when the bug is reintroduced. **Still open for Joshua:** the profile photo lost on 2026-08-10 is unrecoverable — a generated node-graph avatar is in its place, re-pick from the iOS photo picker if wanted.
+
+## Stale marketing screenshots (2026-08-10)
+`public/screenshots/screenshot-*-new.png` last regenerated 2026-07-22 (~3 weeks stale) and
+show empty state: Portfolio $0.00, "No transaction data", "No budget data", July 2026 calendar.
+
+Root cause is NOT the pipeline — `ios/ContentView.swift:66` logs the snapshot run into the real
+`demo@heyitsmejosh.com` account, and that account's KV portfolio is empty. Re-running fastlane
+snapshot reproduces the same empty shots.
+
+Fix order:
+1. Seed demo account holdings/transactions/budget via `scripts/kv-portfolio-edit.sh` (or /epiphany skill).
+2. Re-run `appstore-screenshots` (iPhone 11 Pro Max + 14 Plus).
+3. Copy the 5 to `public/screenshots/screenshot-*-new.png` + `dist/`, deploy.
+4. While there: delete the unreferenced duplicates (`markets.png`, `portfolio.png`, `settings.png`,
+   `situation.png`, `stocks.png`, and the non-`-new` `screenshot-*.png`) — index.html only uses `-new`.
