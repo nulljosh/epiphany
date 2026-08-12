@@ -29,16 +29,20 @@ private enum IncomeScenario: String, CaseIterable, Identifiable {
 }
 
 private let editableCategories = [
-    "food", "shopping", "tech", "apps", "transit", "gas", "pets", "laundry",
+    "food", "groceries", "coffee", "pharmacy", "shopping", "tech", "apps",
+    "transit", "gas", "pets", "laundry",
     "fitness", "entertainment", "auto", "services", "transfers", "vape",
     "alcohol", "cannabis", "housing", "utilities", "health", "insurance",
     "subscriptions", "other", "uncategorized",
 ].sorted()
 
+// Kept in sync with the iOS map in ios/Views/PortfolioView.swift — this one had
+// drifted and was missing most buckets, so those wedges all rendered grey.
 private let categoryColors: [String: Color] = [
     "housing": Palette.appleBlue,
     "food": Palette.successGreen,
     "transport": Palette.warningAmber,
+    "transit": Palette.warningAmber,
     "utilities": Palette.purple,
     "entertainment": Palette.dangerRed,
     "health": Palette.cyan,
@@ -46,6 +50,21 @@ private let categoryColors: [String: Color] = [
     "other": Palette.yellow,
     "insurance": Palette.brown,
     "subscriptions": Palette.indigo,
+    "apps": Palette.indigo,
+    "transfers": Palette.appleBlue.opacity(0.6),
+    "inter_account": Palette.appleBlue.opacity(0.6),
+    "etransfer_friends": Palette.appleBlue.opacity(0.4),
+    "atm_withdrawals": Palette.appleBlue.opacity(0.25),
+    "vape": Palette.warningAmber,
+    "alcohol": Palette.purple,
+    "liquor": Palette.purple,
+    "starbucks": Palette.brown,
+    "fitness": Palette.cyan,
+    "uncategorized": Color.gray.opacity(0.25),
+    "tech": Palette.appleBlue,
+    "groceries": Palette.successGreen.opacity(0.7),
+    "pharmacy": Palette.cyan.opacity(0.7),
+    "coffee": Palette.brown.opacity(0.7),
 ]
 
 struct PortfolioView: View {
@@ -1324,13 +1343,14 @@ struct PortfolioView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .chartXAxis {
-                    AxisMarks(position: .bottom) { value in
+                    AxisMarks(position: .bottom, values: thinnedMonthLabels(months.map(\.month))) { value in
                         AxisGridLine()
                         AxisTick()
                         AxisValueLabel(centered: true) {
                             if let month = value.as(String.self) {
                                 Text(shortMonthLabel(month))
                                     .font(.caption2)
+                                    .fixedSize()
                             } else {
                                 EmptyView()
                             }
@@ -1493,13 +1513,21 @@ struct PortfolioView: View {
     ) -> [String] {
         let actualMonths = months.map(\.month)
         let forecastMonths = forecast?.points.map(\.month) ?? []
-        let combined = actualMonths + forecastMonths
+        return thinnedMonthLabels(actualMonths + forecastMonths)
+    }
 
-        guard combined.count > 6 else { return combined }
+    // ponytail: labelling every month is what made the x-axis unreadable — at a
+    // year of data the "Jan Feb Mar…" run collides into mush. Keep at most 6
+    // evenly-spaced labels (always including the last one) so the remaining ones
+    // have room to render horizontally. Bars are unaffected.
+    private func thinnedMonthLabels(_ months: [String]) -> [String] {
+        let maxLabels = 6
+        guard months.count > maxLabels else { return months }
 
-        return combined.enumerated().compactMap { index, month in
-            let isLast = index == combined.count - 1
-            return index.isMultiple(of: 2) || isLast ? month : nil
+        let stride = Int(ceil(Double(months.count) / Double(maxLabels)))
+        return months.enumerated().compactMap { index, month in
+            let isLast = index == months.count - 1
+            return index.isMultiple(of: stride) || isLast ? month : nil
         }
     }
 

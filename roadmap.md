@@ -72,3 +72,13 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 ## [x] Stale marketing screenshots — FIXED 2026-08-10
 
 **Resolution:** The initial investigation tracked the empty-state issue (Portfolio $0.00, "No transaction data", "No budget data") to the demo account lacking KV seed data, and proposed a dead-end fix approach (manually author demo portfolio JSON). The real solution turned out simpler: the snapshot pipeline was logging into the empty demo account, but the repo's gitignored `.env.accounts.local` file already contained real account credentials. Fixed by running fastlane snapshot with `DEV_EMAIL`/`DEV_PASSWORD` pointing to Joshua's real account. Uncovered two pipeline bugs in the process: (1) `ios/fastlane/Snapfile` was missing `-skipPackagePluginValidation`, causing the SwiftLint SPM build-tool plugin to fail headlessly and timeout (~15s failures, ~8 silent retries per full run); (2) PreviewScreenshot.swift launched the app three times (Portfolio, Settings, Settings again), and the third launch reliably died with "Simulator device failed to launch" timeout — consolidated Settings into Portfolio launch to reduce to two launches, eliminating the timeout. Result: four refreshed screenshots deployed live showing real portfolio data ($162.37, actual holdings, spending chart). Settings screenshot deliberately omitted to keep personal email off the public landing page. Unreferenced PNG duplicates deleted from public/screenshots/. Commit f6b08f8.
+
+## From Apple Notes (imported 2026-08-11)
+- [ ] iOS: top-right corner crowded — make the 3-dots and search into clear distinct buttons, not floating icons
+- [ ] iOS: Fear & Greed bar — remove grey background, bar only, flush to top, horizontal, medium padding; keep "Fear and Greed" text + number but integrate it rather than island text
+- [ ] iOS: Statements — June imported fine, July returns nothing. Broken for the newer month
+- [ ] iOS: spending bar x-axis labels illegible/squished
+- [ ] iOS: pie chart categories too vague — make them more specific
+- [ ] iOS: fix "Login with …" (social sign-in buttons)
+- [ ] Web landing page needs a light mode (looks great otherwise)
+- [ ] Mac app: thorough end-to-end test pass

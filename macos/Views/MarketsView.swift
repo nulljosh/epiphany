@@ -173,20 +173,26 @@ struct MarketsView: View {
                     }
 
                     if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
-                        HStack(spacing: 10) {
-                            Text("\(fgScore)")
-                                .font(.title2.weight(.heavy).monospacedDigit())
-                                .foregroundStyle(fearGreedColor(fgScore))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Fear & Greed: \(fgRating)")
+                        // Same shape as iOS/web: label, score and rating on one
+                        // baseline with the bar flush beneath, full width.
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text("Fear & Greed")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                Text("\(fgScore)")
+                                    .font(.subheadline.weight(.bold).monospacedDigit())
+                                    .foregroundStyle(fearGreedColor(fgScore))
+                                Text(fgRating)
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(fearGreedColor(fgScore))
-                                ProgressView(value: Double(fgScore), total: 100)
-                                    .tint(fearGreedColor(fgScore))
+                                Spacer(minLength: 0)
                             }
+                            ProgressView(value: Double(fgScore), total: 100)
+                                .tint(fearGreedColor(fgScore))
                         }
                         .padding(.horizontal)
-                        .padding(.bottom, 6)
+                        .padding(.bottom, 10)
                     }
 
                     HStack(spacing: 12) {

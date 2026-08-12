@@ -61,29 +61,23 @@ function FearGreedBanner({ score, rating, t }) {
   if (score === null) return null;
   const color = getFearGreedColor(score);
   return (
+    // Matches iOS: no card fill or border, label/score/rating on one baseline,
+    // full-width bar flush beneath it rather than a small gauge off to the side.
     <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block', margin: '0 -16px 12px -16px' }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-        background: `${color}06`,
-        border: `1px solid ${color}40`,
-        borderRadius: 0,
-        cursor: 'pointer', transition: 'opacity 0.15s',
-      }}
-      onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+      <div style={{ padding: '12px 16px', cursor: 'pointer', transition: 'opacity 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
       >
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Fear & Greed
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 24, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{score}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color }}>{rating}</span>
-          </div>
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{score}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color }}>{rating}</span>
         </div>
-        <div style={{ width: 100, height: 8, borderRadius: 4, background: 'rgba(128,128,128,0.2)', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ width: '100%', height: 6, borderRadius: 3, background: 'rgba(128,128,128,0.2)', overflow: 'hidden' }}>
           <div style={{
-            width: `${score}%`, height: '100%', borderRadius: 4, background: color,
+            width: `${score}%`, height: '100%', borderRadius: 3, background: color,
             transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }} />
         </div>
