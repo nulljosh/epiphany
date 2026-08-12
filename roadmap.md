@@ -82,3 +82,5 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] iOS: fix "Login with …" (social sign-in buttons)
 - [ ] Web landing page needs a light mode (looks great otherwise)
 - [ ] Mac app: thorough end-to-end test pass
+
+> Resume note (2026-08-11): a `wip: partial work from /work notes ingest` commit holds unfinished, unverified changes for the items above. Review `git show HEAD` before building on it — it was committed mid-flight, not reviewed, and is unpushed.
