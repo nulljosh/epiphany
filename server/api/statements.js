@@ -4,7 +4,7 @@ import { getStatementsPayload, summarizeStatementBuffer } from './statements-dat
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
-import { summarizeTransactions } from './statements-shared.js';
+import { summarizeTransactions, SUMMARY_VERSION } from './statements-shared.js';
 
 function transactionId(txn) {
   return `${txn?.date}|${txn?.description}|${txn?.amount}`;
@@ -69,8 +69,17 @@ async function refreshStoredStatements(kv, statements) {
 
   const refreshed = await Promise.all(
     statements.map(async (statement) => {
-      // Skip re-parsing if spendingMonth and transactions already exist
-      if (statement?.spendingMonth?.month && statement?.spendingMonth?.total != null && Array.isArray(statement?.transactions) && statement.transactions.length > 0) {
+      // Skip re-parsing if spendingMonth and transactions already exist AND the
+      // summary was produced by the current parser. Records below SUMMARY_VERSION
+      // carry a month derived the old way (first transaction, not dominant month),
+      // so they re-parse once and self-heal.
+      if (
+        statement?.spendingMonth?.version >= SUMMARY_VERSION &&
+        statement?.spendingMonth?.month &&
+        statement?.spendingMonth?.total != null &&
+        Array.isArray(statement?.transactions) &&
+        statement.transactions.length > 0
+      ) {
         return statement;
       }
       try {

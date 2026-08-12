@@ -23,13 +23,27 @@ describe('categorizeTransaction', () => {
   });
 
   it('categorizes shopping', () => {
-    expect(categorizeTransaction('COSTCO WHOLESALE W259 LANGLEY BC')).toBe('shopping');
-    expect(categorizeTransaction('WALMART.CA MISSISSAUGA ON')).toBe('shopping');
-    expect(categorizeTransaction('WAL-MART #5853 SURREY BC')).toBe('shopping');
-    expect(categorizeTransaction('SHOPPERS DRUG MART #28 LANGLEY BC')).toBe('shopping');
     expect(categorizeTransaction('DOLLARAMA #1053 LANGLEY BC')).toBe('shopping');
-    expect(categorizeTransaction('REAL CDN SUPERSTORE #1 LANGLEY BC')).toBe('shopping');
-    expect(categorizeTransaction('SAVE ON FOODS #992 LANGLEY BC')).toBe('shopping');
+    expect(categorizeTransaction('MARSHALLS #482 SURREY BC')).toBe('shopping');
+    expect(categorizeTransaction('APPLE STORE R123 BURNABY BC')).toBe('shopping');
+  });
+
+  // Split out of the old catch-all 'shopping'/'food' buckets so the spending pie
+  // shows the actual recurring lines instead of one vague wedge.
+  it('splits groceries, pharmacy and coffee out of the generic buckets', () => {
+    expect(categorizeTransaction('COSTCO WHOLESALE W259 LANGLEY BC')).toBe('groceries');
+    expect(categorizeTransaction('WALMART.CA MISSISSAUGA ON')).toBe('groceries');
+    expect(categorizeTransaction('WAL-MART #5853 SURREY BC')).toBe('groceries');
+    expect(categorizeTransaction('REAL CDN SUPERSTORE #1 LANGLEY BC')).toBe('groceries');
+    expect(categorizeTransaction('SAVE ON FOODS #992 LANGLEY BC')).toBe('groceries');
+    expect(categorizeTransaction('SHOPPERS DRUG MART #28 LANGLEY BC')).toBe('pharmacy');
+    expect(categorizeTransaction('LONDON DRUGS #43 LANGLEY BC')).toBe('pharmacy');
+    expect(categorizeTransaction('TIM HORTONS #4821 SURREY BC')).toBe('coffee');
+    expect(categorizeTransaction('JJ BEAN COFFEE ROASTERS VANCOUVER BC')).toBe('coffee');
+    expect(categorizeTransaction('NETFLIX.COM')).toBe('subscriptions');
+    expect(categorizeTransaction('SPOTIFY P0A1B2C3')).toBe('subscriptions');
+    // Starbucks keeps its own dedicated bucket, not folded into coffee.
+    expect(categorizeTransaction('STARBUCKS #1234')).toBe('starbucks');
   });
 
   it('categorizes alcohol', () => {
@@ -105,7 +119,7 @@ describe('parseStatementText - Credit card format (RBC/TD/CIBC)', () => {
     expect(walmart.date).toBe('2026-02-11');
     expect(walmart.postedDate).toBe('2026-02-12');
     expect(walmart.amount).toBe(-130.24);
-    expect(walmart.category).toBe('shopping');
+    expect(walmart.category).toBe('groceries');
 
     const freshslice = result.find(t => t.description.includes('FRESHSLICE'));
     expect(freshslice).toBeDefined();
@@ -172,5 +186,37 @@ describe('summarizeTransactions', () => {
     expect(summary.total).toBe(0);
     expect(summary.categories).toEqual({});
     expect(summary.month).toBe('empty');
+  });
+
+  // Regression: a credit-card cycle spanning two months (Jun 25 - Jul 24) was
+  // labelled by its FIRST transaction, so the July statement came back as "Jun"
+  // and the upload handler's month-keyed dedupe deleted the real June statement.
+  it('names the statement after the month holding most transactions, not the first', () => {
+    const julyCycle = [
+      { date: '2026-06-26', amount: -12.00, category: 'food' },
+      { date: '2026-06-28', amount: -20.00, category: 'food' },
+      { date: '2026-07-02', amount: -30.00, category: 'shopping' },
+      { date: '2026-07-09', amount: -15.00, category: 'food' },
+      { date: '2026-07-18', amount: -25.00, category: 'gas' },
+    ];
+    const summary = summarizeTransactions(julyCycle, 'july.pdf');
+    expect(summary.month).toBe('Jul 2026');
+    expect(summary.sortKey).toBe('2026-07');
+  });
+
+  it('does not collide with the previous month when cycles overlap', () => {
+    const june = summarizeTransactions([
+      { date: '2026-05-27', amount: -10.00, category: 'food' },
+      { date: '2026-06-05', amount: -10.00, category: 'food' },
+      { date: '2026-06-19', amount: -10.00, category: 'food' },
+    ], 'june.pdf');
+    const july = summarizeTransactions([
+      { date: '2026-06-26', amount: -10.00, category: 'food' },
+      { date: '2026-07-05', amount: -10.00, category: 'food' },
+      { date: '2026-07-19', amount: -10.00, category: 'food' },
+    ], 'july.pdf');
+    expect(june.month).toBe('Jun 2026');
+    expect(july.month).toBe('Jul 2026');
+    expect(june.month).not.toBe(july.month);
   });
 });

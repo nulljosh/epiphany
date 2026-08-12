@@ -174,7 +174,7 @@ struct MarketsView: View {
             }
 
             if !isSearching {
-                HStack(spacing: 4) {
+                HStack(spacing: Spacing.sm) {
                     Menu {
                         Picker("Asset Type", selection: $marketFilter) {
                             ForEach(MarketFilter.allCases) { filter in
@@ -197,21 +197,21 @@ struct MarketsView: View {
                             Label("Gainers Only", systemImage: gainersOnly ? "checkmark" : "arrow.up.right")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.headline)
-                            .foregroundStyle(Palette.appleBlue)
-                            .padding(Spacing.sm)
+                        // ponytail: these two used to be bare glyphs floating over the
+                        // list, which read as decoration pinned at arbitrary spots
+                        // rather than controls. Same icons, now on an explicit circular
+                        // backing so each is visibly its own button with a real hit area.
+                        toolbarGlyph("ellipsis")
                     }
+                    .accessibilityLabel("Filter and sort")
 
                     Button {
                         isSearching = true
                         searchFieldFocused = true
                     } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.headline)
-                            .foregroundStyle(Palette.appleBlue)
-                            .padding(Spacing.sm)
+                        toolbarGlyph("magnifyingglass")
                     }
+                    .accessibilityLabel("Search markets")
                 }
             }
         }
@@ -401,6 +401,10 @@ struct MarketsView: View {
                 Section { fearGreedView }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    // Sits flush against the ticker strip above it rather than
+                    // floating with a default section gap on either side.
+                    .listSectionSpacing(0)
             }
 
             if !appState.watchlistStocks.isEmpty {
@@ -516,39 +520,43 @@ struct MarketsView: View {
         }
     }
 
+    private func toolbarGlyph(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Palette.appleBlue)
+            .frame(width: 34, height: 34)
+            .background(.regularMaterial, in: Circle())
+            .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+    }
+
     private var fearGreedView: some View {
         Group {
             if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
-                VStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Fear & Greed")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                            HStack(spacing: 8) {
-                                Text("\(fgScore)")
-                                    .font(.headline.weight(.heavy).monospacedDigit())
-                                    .foregroundStyle(fearGreedColor(fgScore))
-                                Text(fgRating)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(fearGreedColor(fgScore))
-                            }
-                        }
-                        Spacer()
-                        Text("\(fgScore)%")
-                            .font(.caption2.monospacedDigit())
+                // ponytail: was a grey material "island" — a stacked label block, a
+                // right-aligned duplicate percentage, and a bar underneath. Now one
+                // horizontal row: label, score, rating on a single baseline with the
+                // bar flush beneath it, no backing fill and no duplicate number.
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("Fear & Greed")
+                            .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
+                        Text("\(fgScore)")
+                            .font(.subheadline.weight(.bold).monospacedDigit())
+                            .foregroundStyle(fearGreedColor(fgScore))
+                        Text(fgRating)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(fearGreedColor(fgScore))
+                        Spacer(minLength: 0)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
                     ProgressView(value: Double(fgScore), total: 100)
                         .tint(fearGreedColor(fgScore))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                    Divider()
                 }
-                .background(.ultraThinMaterial)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Fear and Greed index \(fgScore), \(fgRating)")
             }
         }
     }

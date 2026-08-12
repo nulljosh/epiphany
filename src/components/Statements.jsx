@@ -21,7 +21,8 @@ function formatAmount(amount) {
 }
 
 const EDITABLE_CATEGORIES = [
-  'food', 'shopping', 'tech', 'apps', 'transit', 'gas', 'pets', 'laundry',
+  'food', 'groceries', 'coffee', 'pharmacy', 'shopping', 'tech', 'apps',
+  'transit', 'gas', 'pets', 'laundry',
   'fitness', 'entertainment', 'auto', 'services', 'transfers', 'vape',
   'alcohol', 'cannabis', 'housing', 'utilities', 'health', 'insurance',
   'subscriptions', 'other', 'uncategorized',

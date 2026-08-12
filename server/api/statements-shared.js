@@ -1,3 +1,5 @@
+export const SUMMARY_VERSION = 4;
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONEY_RE = /^[–-]?\$?[\d,]+\.\d{2}$/;
 const INLINE_RE = /^(\d{4}-\d{2}-\d{2})(\d{4}-\d{2}-\d{2})(.+?)([–−-]?\$?[\d,]+\.\d{2})(\$?[–−-]?[\d,]+\.\d{2})$/;
@@ -35,6 +37,31 @@ function monthDayToISO(monthAbbr, day, year) {
   return `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+// Picks the YYYY-MM the statement really belongs to: the month holding the most
+// transactions. Returns a representative date string in that month, or '' if the
+// list has no usable dates. Ties go to the later month.
+function dominantMonthDate(transactions = []) {
+  const counts = new Map();
+
+  for (const txn of transactions) {
+    const date = txn?.date;
+    if (typeof date !== 'string' || !DATE_RE.test(date)) continue;
+    const key = date.slice(0, 7);
+    const entry = counts.get(key);
+    if (entry) entry.count += 1;
+    else counts.set(key, { count: 1, date });
+  }
+
+  let best = null;
+  for (const [key, entry] of counts) {
+    if (!best || entry.count > best.count || (entry.count === best.count && key > best.key)) {
+      best = { key, count: entry.count, date: entry.date };
+    }
+  }
+
+  return best?.date || '';
+}
+
 export function categorizeTransaction(description = '') {
   const lower = description.toLowerCase();
 
@@ -57,7 +84,15 @@ export function categorizeTransaction(description = '') {
   if (lower.includes('starbucks')) return 'starbucks';
   if (lower.includes('subway') || lower.includes('wendy') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("tripple o") || lower.includes("a&w") || lower.includes("chachi") || lower.includes('chipotle') || lower.includes('firehouse') || lower.includes('dairy queen') || lower.includes('freshslice') || lower.includes("moreno")) return 'food';
   if (lower.includes('apple.com') || lower.includes('mac mini') || lower.includes('macbook') || lower.includes('apple computer')) return 'tech';
-  if (lower.includes('apple store') || lower.includes('london drugs') || lower.includes('dollarama') || lower.includes('marshalls') || lower.includes('homesense') || lower.includes('langley toy') || lower.includes('super fantastic') || lower.includes('costco') || lower.includes('walmart') || lower.includes('wal-mart') || lower.includes('save on') || lower.includes('nofrills') || lower.includes('no frills') || lower.includes('real cdn') || lower.includes('shoppers') || lower.includes('mcfrugal')) return 'shopping';
+  // ponytail: groceries, pharmacy and coffee used to fall into the generic
+  // 'shopping'/'food' buckets, which is why the pie chart read as vague — the
+  // largest recurring lines were invisible inside a catch-all wedge. These three
+  // must stay ABOVE the 'shopping' and generic-food checks or they'd be swallowed.
+  if (lower.includes('costco') || lower.includes('walmart') || lower.includes('wal-mart') || lower.includes('save on') || lower.includes('save-on') || lower.includes('nofrills') || lower.includes('no frills') || lower.includes('real cdn') || lower.includes('superstore') || lower.includes('safeway') || lower.includes('t&t') || lower.includes('freshco') || lower.includes('iga ') || lower.includes('produce')) return 'groceries';
+  if (lower.includes('shoppers') || lower.includes('london drugs') || lower.includes('pharmacy') || lower.includes('rexall') || lower.includes('pharmasave')) return 'pharmacy';
+  if (lower.includes('tim horton') || lower.includes('blenz') || lower.includes('jj bean') || lower.includes('waves coffee') || lower.includes('coffee') || lower.includes('cafe') || lower.includes('espresso')) return 'coffee';
+  if (lower.includes('netflix') || lower.includes('spotify') || lower.includes('icloud') || lower.includes('youtube premium') || lower.includes('disney') || lower.includes('crave') || lower.includes('patreon') || lower.includes('prime video')) return 'subscriptions';
+  if (lower.includes('apple store') || lower.includes('dollarama') || lower.includes('marshalls') || lower.includes('homesense') || lower.includes('langley toy') || lower.includes('super fantastic') || lower.includes('mcfrugal')) return 'shopping';
   if (lower.includes('vapory') || lower.includes('vape street')) return 'vape';
   if (lower.includes('liquor') || lower.includes('shooter')) return 'liquor';
   if (lower.includes('cannabis') || lower.includes('420')) return 'cannabis';
@@ -189,9 +224,16 @@ export function summarizeTransactions(transactions = [], filename = '') {
     Object.entries(categories).filter(([, amount]) => Math.abs(amount) >= 0.01)
   );
 
-  const firstDate = filtered[0]?.date || transactions[0]?.date || '';
-  const sortKey = firstDate ? firstDate.slice(0, 7) : filename;
-  const month = firstDate ? monthLabelFromDate(firstDate) : filename.replace(/\.pdf$/i, '');
+  // ponytail: the statement's month is the month MOST of its transactions fall in,
+  // not the first one's. A credit-card cycle runs mid-month to mid-month (e.g.
+  // Jun 25 - Jul 24), so keying off `filtered[0].date` labelled the July statement
+  // "Jun" — and since the upload handler dedupes by this month string, uploading
+  // July then silently deleted June and replaced it. That is the "June was fine,
+  // July no luck" bug. Ties break to the later month (statements are named for the
+  // month they close in).
+  const periodDate = dominantMonthDate(filtered.length > 0 ? filtered : transactions);
+  const sortKey = periodDate ? periodDate.slice(0, 7) : filename;
+  const month = periodDate ? monthLabelFromDate(periodDate) : filename.replace(/\.pdf$/i, '');
   const total = roundMoney(Object.values(cleanCategories).reduce((sum, amount) => sum + amount, 0));
 
   return {
@@ -200,7 +242,9 @@ export function summarizeTransactions(transactions = [], filename = '') {
     total,
     categories: cleanCategories,
     source: filename,
-    version: 3,
+    // Bumped to 4 when the month became the dominant month rather than the first
+    // transaction's. refreshStoredStatements re-parses anything below this.
+    version: SUMMARY_VERSION,
     importedAt: new Date().toISOString(),
   };
 }
