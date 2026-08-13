@@ -85,6 +85,13 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [x] iOS: Statements — June imported fine, July returns nothing. **Root cause found and fixed**: `summarizeTransactions` keyed the statement's month off `filtered[0].date`, but a credit-card cycle runs mid-month to mid-month (Jun 25 – Jul 24), so the July statement was labelled "Jun" — and the upload handler dedupes by that month string, so uploading July silently *replaced* June. Now uses `dominantMonthDate()` (the month holding the most transactions, ties to the later month) in `server/api/statements-shared.js`. Regression tests in `tests/api/statements-shared.test.js`.
 - [x] iOS: spending bar x-axis labels illegible/squished — `thinnedMonthLabels()` in `ios/Views/PortfolioView.swift` caps the axis at 6 evenly-spaced labels (always including the last). Bars unaffected.
 - [x] iOS: pie chart categories too vague — `groceries`, `pharmacy`, `coffee` and `subscriptions` split out of the catch-all `shopping`/`food` buckets in `categorizeTransaction`; the largest recurring lines were previously invisible inside one wedge. Ordering matters (these must stay above the `shopping` check).
+- [ ] **Needs Joshua: re-upload the June 2026 statement.** Consequence of the month-labelling
+  bug above — because July was mislabelled "Jun", the upload handler's dedupe treated it as a
+  duplicate of June and *replaced* the June record in KV. The parser fix stops it recurring and
+  `refreshStoredStatements` self-heals stored records below `SUMMARY_VERSION` (4), but it cannot
+  recover a record that was overwritten. If the June PDF still exists in Blob it may survive as
+  an orphan; otherwise just re-upload June, then July, and confirm both now appear as separate
+  months.
 - [ ] iOS: fix "Login with …" (social sign-in buttons) — **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set the Vercel env vars. No code change unblocks this.
 - [ ] Web landing page needs a light mode (looks great otherwise) — note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
