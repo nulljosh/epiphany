@@ -279,11 +279,17 @@ function DebtPayoffProjection({ debt, t }) {
   const sorted = [...debt].sort((a, b) => a.balance - b.balance);
   const projections = [];
   let cumulativeMonths = 0;
+  // ponytail: a debt with no minimum payment never pays off, so debtMonthsToPayoff
+  // returns Infinity. Folding that in as 0 made the total read "Debt-free in now
+  // total" — claiming the debt is already cleared when the truth is the payoff time
+  // is unknowable. Track it instead and say so.
+  let hasUnpayableDebt = false;
 
   for (const entry of sorted) {
     if (entry.balance <= 0) continue;
     const minPay = entry.minPayment || 0;
     const months = debtMonthsToPayoff(entry.balance, minPay, entry.rate);
+    if (!isFinite(months)) hasUnpayableDebt = true;
     cumulativeMonths += isFinite(months) ? months : 0;
     projections.push({ name: entry.name, balance: entry.balance, months, cumulativeMonths, totalPay: minPay });
   }
@@ -305,8 +311,10 @@ function DebtPayoffProjection({ debt, t }) {
           <ProgressBar value={isFinite(proj.months) ? proj.months : 0} max={Math.max(...projections.map(p => isFinite(p.months) ? p.months : 0), 1)} color={t.green} t={t} />
         </div>
       ))}
-      <div style={{ fontSize: 12, fontWeight: 600, color: t.green, marginTop: 8 }}>
-        Debt-free in {debtPayoffLabel(cumulativeMonths)} total
+      <div style={{ fontSize: 12, fontWeight: 600, color: hasUnpayableDebt ? t.textSecondary : t.green, marginTop: 8 }}>
+        {hasUnpayableDebt
+          ? 'Payoff time unknown — set a monthly payment on every debt'
+          : `Debt-free in ${debtPayoffLabel(cumulativeMonths)} total`}
       </div>
     </div>
   );

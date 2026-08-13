@@ -1401,10 +1401,17 @@ struct PortfolioView: View {
         let sorted = debt.sorted { $0.balance < $1.balance }
         var projections: [(name: String, balance: Double, months: Double, cumulative: Double)] = []
         var cumulative: Double = 0
+        // ponytail: a debt with no minimum payment never pays off, so
+        // debtMonthsToPayoff returns .infinity. Folding that in as 0 made the total
+        // read "Debt-free in now" — claiming the debt is already cleared when the
+        // truth is the payoff time is unknowable. Mirrors the web fix in
+        // src/components/FinancePanel.jsx.
+        var hasUnpayableDebt = false
 
         for item in sorted {
             guard item.balance > 0 else { continue }
             let months = debtMonthsToPayoff(item)
+            if !months.isFinite { hasUnpayableDebt = true }
             cumulative += months.isFinite ? months : 0
             projections.append((name: item.name, balance: item.balance, months: months, cumulative: cumulative))
         }
@@ -1431,7 +1438,11 @@ struct PortfolioView: View {
                 }
             }
 
-            if let last = projections.last {
+            if hasUnpayableDebt {
+                Text("Payoff time unknown — set a monthly payment on every debt")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            } else if let last = projections.last {
                 Text("Debt-free in \(debtPayoffLabel(last.cumulative))")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.successGreen)
