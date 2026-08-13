@@ -9,9 +9,15 @@
   unsigned everywhere in the debt model (`userProfile.js`, `usePortfolio.js`,
   `server/api/portfolio.js`, `debtPayoff.js`). Showing money owed *to* Josh needs a real
   decision: a sign, a `direction` field, or a separate receivables list.
-- [ ] **`DebtPayoffProjection` prints "Debt-free in now total"** — reads like a string
-  formatting bug in `src/utils/debtPayoff.js` when every debt row has `minPayment: 0`.
-  Spotted in Josh's screenshot 2026-08-10, not investigated (usage budget).
+- [x] **`DebtPayoffProjection` prints "Debt-free in now total"** — FIXED 2026-08-13, and it
+  was worse than a formatting bug. `debtMonthsToPayoff` correctly returns `Infinity` for a
+  debt with `minPayment: 0` (it never pays off), but both the web and macOS projection loops
+  folded that into the running total as `0`. With every row at `minPayment: 0` the total came
+  to 0 months → `debtPayoffLabel(0)` → `"now"` → the UI claimed the debt was *already cleared*
+  when the real answer is that payoff time is unknowable. Both now track `hasUnpayableDebt`
+  and render "Payoff time unknown — set a monthly payment on every debt" in secondary (not
+  green) text. `src/components/FinancePanel.jsx:280-315`, `macos/Views/PortfolioView.swift:1400-1450`.
+  iOS has no equivalent view. Existing coverage of the invariant: `tests/debtPayoff.test.js:31`.
 
 ## Urgent
 - [ ] **Statement upload — two real bugs found and fixed 2026-08-10, awaiting Josh's retry to confirm they were *the* cause.** The 08-06 Blob fix was genuinely incomplete; two independent second bugs existed, both of which produce exactly "the statement never landed":
@@ -74,13 +80,16 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 **Resolution:** The initial investigation tracked the empty-state issue (Portfolio $0.00, "No transaction data", "No budget data") to the demo account lacking KV seed data, and proposed a dead-end fix approach (manually author demo portfolio JSON). The real solution turned out simpler: the snapshot pipeline was logging into the empty demo account, but the repo's gitignored `.env.accounts.local` file already contained real account credentials. Fixed by running fastlane snapshot with `DEV_EMAIL`/`DEV_PASSWORD` pointing to Joshua's real account. Uncovered two pipeline bugs in the process: (1) `ios/fastlane/Snapfile` was missing `-skipPackagePluginValidation`, causing the SwiftLint SPM build-tool plugin to fail headlessly and timeout (~15s failures, ~8 silent retries per full run); (2) PreviewScreenshot.swift launched the app three times (Portfolio, Settings, Settings again), and the third launch reliably died with "Simulator device failed to launch" timeout — consolidated Settings into Portfolio launch to reduce to two launches, eliminating the timeout. Result: four refreshed screenshots deployed live showing real portfolio data ($162.37, actual holdings, spending chart). Settings screenshot deliberately omitted to keep personal email off the public landing page. Unreferenced PNG duplicates deleted from public/screenshots/. Commit f6b08f8.
 
 ## From Apple Notes (imported 2026-08-11)
-- [ ] iOS: top-right corner crowded — make the 3-dots and search into clear distinct buttons, not floating icons
-- [ ] iOS: Fear & Greed bar — remove grey background, bar only, flush to top, horizontal, medium padding; keep "Fear and Greed" text + number but integrate it rather than island text
-- [ ] iOS: Statements — June imported fine, July returns nothing. Broken for the newer month
-- [ ] iOS: spending bar x-axis labels illegible/squished
-- [ ] iOS: pie chart categories too vague — make them more specific
-- [ ] iOS: fix "Login with …" (social sign-in buttons)
-- [ ] Web landing page needs a light mode (looks great otherwise)
+- [x] iOS: top-right corner crowded — 3-dots and search are now explicit circular buttons (`toolbarGlyph` in `ios/Views/MarketsView.swift`) with real hit areas + accessibility labels. Verified in `2a46fe9`, build passes.
+- [x] iOS: Fear & Greed bar — grey material island replaced with one horizontal row (label/score/rating on a shared baseline, bar flush beneath, no backing fill, duplicate percentage removed). `ios/Views/MarketsView.swift`.
+- [x] iOS: Statements — June imported fine, July returns nothing. **Root cause found and fixed**: `summarizeTransactions` keyed the statement's month off `filtered[0].date`, but a credit-card cycle runs mid-month to mid-month (Jun 25 – Jul 24), so the July statement was labelled "Jun" — and the upload handler dedupes by that month string, so uploading July silently *replaced* June. Now uses `dominantMonthDate()` (the month holding the most transactions, ties to the later month) in `server/api/statements-shared.js`. Regression tests in `tests/api/statements-shared.test.js`.
+- [x] iOS: spending bar x-axis labels illegible/squished — `thinnedMonthLabels()` in `ios/Views/PortfolioView.swift` caps the axis at 6 evenly-spaced labels (always including the last). Bars unaffected.
+- [x] iOS: pie chart categories too vague — `groceries`, `pharmacy`, `coffee` and `subscriptions` split out of the catch-all `shopping`/`food` buckets in `categorizeTransaction`; the largest recurring lines were previously invisible inside one wedge. Ordering matters (these must stay above the `shopping` check).
+- [ ] iOS: fix "Login with …" (social sign-in buttons) — **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set the Vercel env vars. No code change unblocks this.
+- [ ] Web landing page needs a light mode (looks great otherwise) — note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
 
-> Resume note (2026-08-11): a `wip: partial work from /work notes ingest` commit holds unfinished, unverified changes for the items above. Review `git show HEAD` before building on it — it was committed mid-flight, not reviewed, and is unpushed.
+> Resume note (2026-08-11), **updated 2026-08-13**: the `wip: partial work from /work notes ingest` commit (`2a46fe9`) has now been reviewed and verified — 413 tests pass, iOS and macOS both BUILD SUCCEEDED. Five of the items above are genuinely done and checked off. The "unpushed" claim in the original note was already stale: `2a46fe9` and `d98e8ce` are both on `origin/main`. Safe to build on.
+
+## Design debt — standing colour rule violations
+- [ ] **Teal/cyan and purple are used throughout the native apps**, against the standing universal "no teal, no purple" rule. Not a one-line fix — ~20 sites: `Palette.purple` (`A855F7`) and `Palette.cyan` (`06B6D4`) in `ios/Helpers/Helpers.swift`, consumed by `PortfolioView.swift` category colours (utilities/health/alcohol/liquor/fitness/pharmacy, plus the debt-chart colour array), `StockDetailView.swift` (EMA overlay + indicator toggle), `MarketsView.swift` (DOW/SOL/MATIC ticker glyphs), `SituationView.swift` ("attraction" pins), `NewsRow.swift`'s literal `[.purple, .teal, .mint]` palette, and `macos/Views/SettingsView.swift`'s `Palette.cyanAlt`. Needs one deliberate palette pass picking replacement hues that stay distinguishable from each other in both light and dark, not a blind find-and-replace.
