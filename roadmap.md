@@ -9,15 +9,6 @@
   unsigned everywhere in the debt model (`userProfile.js`, `usePortfolio.js`,
   `server/api/portfolio.js`, `debtPayoff.js`). Showing money owed *to* Josh needs a real
   decision: a sign, a `direction` field, or a separate receivables list.
-- [x] **`DebtPayoffProjection` prints "Debt-free in now total"** — FIXED 2026-08-13, and it
-  was worse than a formatting bug. `debtMonthsToPayoff` correctly returns `Infinity` for a
-  debt with `minPayment: 0` (it never pays off), but both the web and macOS projection loops
-  folded that into the running total as `0`. With every row at `minPayment: 0` the total came
-  to 0 months → `debtPayoffLabel(0)` → `"now"` → the UI claimed the debt was *already cleared*
-  when the real answer is that payoff time is unknowable. Both now track `hasUnpayableDebt`
-  and render "Payoff time unknown — set a monthly payment on every debt" in secondary (not
-  green) text. `src/components/FinancePanel.jsx:280-315`, `macos/Views/PortfolioView.swift:1400-1450`.
-  iOS has no equivalent view. Existing coverage of the invariant: `tests/debtPayoff.test.js:31`.
 
 ## Urgent
 - [ ] **Statement upload — two real bugs found and fixed 2026-08-10, awaiting Josh's retry to confirm they were *the* cause.** The 08-06 Blob fix was genuinely incomplete; two independent second bugs existed, both of which produce exactly "the statement never landed":
@@ -80,11 +71,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 **Resolution:** The initial investigation tracked the empty-state issue (Portfolio $0.00, "No transaction data", "No budget data") to the demo account lacking KV seed data, and proposed a dead-end fix approach (manually author demo portfolio JSON). The real solution turned out simpler: the snapshot pipeline was logging into the empty demo account, but the repo's gitignored `.env.accounts.local` file already contained real account credentials. Fixed by running fastlane snapshot with `DEV_EMAIL`/`DEV_PASSWORD` pointing to Joshua's real account. Uncovered two pipeline bugs in the process: (1) `ios/fastlane/Snapfile` was missing `-skipPackagePluginValidation`, causing the SwiftLint SPM build-tool plugin to fail headlessly and timeout (~15s failures, ~8 silent retries per full run); (2) PreviewScreenshot.swift launched the app three times (Portfolio, Settings, Settings again), and the third launch reliably died with "Simulator device failed to launch" timeout — consolidated Settings into Portfolio launch to reduce to two launches, eliminating the timeout. Result: four refreshed screenshots deployed live showing real portfolio data ($162.37, actual holdings, spending chart). Settings screenshot deliberately omitted to keep personal email off the public landing page. Unreferenced PNG duplicates deleted from public/screenshots/. Commit f6b08f8.
 
 ## From Apple Notes (imported 2026-08-11)
-- [x] iOS: top-right corner crowded — 3-dots and search are now explicit circular buttons (`toolbarGlyph` in `ios/Views/MarketsView.swift`) with real hit areas + accessibility labels. Verified in `2a46fe9`, build passes.
-- [x] iOS: Fear & Greed bar — grey material island replaced with one horizontal row (label/score/rating on a shared baseline, bar flush beneath, no backing fill, duplicate percentage removed). `ios/Views/MarketsView.swift`.
-- [x] iOS: Statements — June imported fine, July returns nothing. **Root cause found and fixed**: `summarizeTransactions` keyed the statement's month off `filtered[0].date`, but a credit-card cycle runs mid-month to mid-month (Jun 25 – Jul 24), so the July statement was labelled "Jun" — and the upload handler dedupes by that month string, so uploading July silently *replaced* June. Now uses `dominantMonthDate()` (the month holding the most transactions, ties to the later month) in `server/api/statements-shared.js`. Regression tests in `tests/api/statements-shared.test.js`.
-- [x] iOS: spending bar x-axis labels illegible/squished — `thinnedMonthLabels()` in `ios/Views/PortfolioView.swift` caps the axis at 6 evenly-spaced labels (always including the last). Bars unaffected.
-- [x] iOS: pie chart categories too vague — `groceries`, `pharmacy`, `coffee` and `subscriptions` split out of the catch-all `shopping`/`food` buckets in `categorizeTransaction`; the largest recurring lines were previously invisible inside one wedge. Ordering matters (these must stay above the `shopping` check).
 - [ ] **Needs Joshua: re-upload the June 2026 statement.** Consequence of the month-labelling
   bug above — because July was mislabelled "Jun", the upload handler's dedupe treated it as a
   duplicate of June and *replaced* the June record in KV. The parser fix stops it recurring and
