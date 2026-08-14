@@ -86,3 +86,10 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## Design debt — standing colour rule violations
 - [ ] **Teal/cyan and purple are used throughout the native apps**, against the standing universal "no teal, no purple" rule. Not a one-line fix — ~20 sites: `Palette.purple` (`A855F7`) and `Palette.cyan` (`06B6D4`) in `ios/Helpers/Helpers.swift`, consumed by `PortfolioView.swift` category colours (utilities/health/alcohol/liquor/fitness/pharmacy, plus the debt-chart colour array), `StockDetailView.swift` (EMA overlay + indicator toggle), `MarketsView.swift` (DOW/SOL/MATIC ticker glyphs), `SituationView.swift` ("attraction" pins), `NewsRow.swift`'s literal `[.purple, .teal, .mint]` palette, and `macos/Views/SettingsView.swift`'s `Palette.cyanAlt`. Needs one deliberate palette pass picking replacement hues that stay distinguishable from each other in both light and dark, not a blind find-and-replace.
+
+## From Apple Notes (imported 2026-08-13)
+- [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
+- [ ] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
+- [ ] Add themes (dark mode etc.) to the stocks view
+- [ ] Analyze drawer video at ~/Documents/Misc/epiphany.mp4 for the drawer UX spec
+- [ ] Analyze project from CLAUDE.md + README.md, then refresh the app icon based on that analysis
