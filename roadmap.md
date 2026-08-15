@@ -93,3 +93,8 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Add themes (dark mode etc.) to the stocks view
 - [ ] Analyze drawer video at ~/Documents/Misc/epiphany.mp4 for the drawer UX spec
 - [ ] Analyze project from CLAUDE.md + README.md, then refresh the app icon based on that analysis
+
+### From Notes (2026-08-14)
+- [ ] **Add Duolingo (DUOL) to the stock list.** It's recovering; also worth revisiting the rest of
+  the default list for other additions.
+- [ ] **Widget support on iOS and macOS.** Both platforms, one pass.
