@@ -763,19 +763,19 @@ private struct MarketRow: View {
         if lower.contains("corn") || lower.contains("wheat") || lower.contains("soy") || lower.contains("coffee") || lower.contains("sugar") { return ("leaf.fill", .green) }
         if lower.contains("us500") || lower.contains("s&p") || lower.contains("spx") { return ("chart.line.uptrend.xyaxis", Palette.appleBlue) }
         if lower.contains("nas") || lower.contains("ndx") || lower.contains("nasdaq") { return ("chart.line.uptrend.xyaxis", .green) }
-        if lower.contains("us30") || lower.contains("dow") || lower.contains("dji") { return ("chart.line.uptrend.xyaxis", .cyan) }
+        if lower.contains("us30") || lower.contains("dow") || lower.contains("dji") { return ("chart.line.uptrend.xyaxis", Palette.paleBlue) }
         if lower.contains("dxy") || lower.contains("dollar") { return ("dollarsign.circle.fill", .green) }
         if lower.contains("vix") { return ("waveform.path.ecg", .red) }
         if lower.contains("btc") || lower.contains("bitcoin") { return ("bitcoinsign.circle.fill", .orange) }
         if lower.contains("eth") || lower.contains("ether") { return ("diamond.fill", Palette.appleBlue) }
-        if lower.contains("sol") || lower.contains("solana") { return ("sun.max.fill", .purple) }
+        if lower.contains("sol") || lower.contains("solana") { return ("sun.max.fill", Palette.sand) }
         if lower.contains("xrp") || lower.contains("ripple") { return ("circle.hexagongrid.fill", Color(.systemBlue)) }
         if lower.contains("doge") { return ("hare.fill", .yellow) }
         if lower.contains("ada") || lower.contains("cardano") { return ("hexagon.fill", Palette.appleBlue) }
         if lower.contains("bnb") { return ("square.fill", .yellow) }
         if lower.contains("avax") { return ("triangle.fill", .red) }
         if lower.contains("link") { return ("link.circle.fill", Palette.appleBlue) }
-        if lower.contains("matic") || lower.contains("pol") { return ("pentagon.fill", .purple) }
+        if lower.contains("matic") || lower.contains("pol") { return ("pentagon.fill", Palette.slate) }
         return ("chart.bar.fill", .secondary)
     }
 

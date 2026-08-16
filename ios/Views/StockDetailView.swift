@@ -558,7 +558,7 @@ struct StockDetailView: View {
                         y: .value("EMA", point.value),
                         series: .value("Series", "EMA")
                     )
-                    .foregroundStyle(Palette.purple)
+                    .foregroundStyle(Palette.slate)
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
 
@@ -630,7 +630,7 @@ struct StockDetailView: View {
     private var indicatorBar: some View {
         HStack(spacing: 8) {
             indicatorToggle("SMA \(smaPeriod)", isOn: $showSMA, color: Palette.warningAmber)
-            indicatorToggle("EMA \(emaPeriod)", isOn: $showEMA, color: Palette.purple)
+            indicatorToggle("EMA \(emaPeriod)", isOn: $showEMA, color: Palette.slate)
             Spacer()
             Button {
                 showIndicatorConfig = true

@@ -29,7 +29,7 @@ const SHOW_GOALS = false;
 const INCOME_SCENARIOS = [
   { label: '+$500', delta: 500, color: '#30D158' },
   { label: '+$1000', delta: 1000, color: '#FF9F0A' },
-  { label: 'x2 Income', multiplier: 2, color: '#BF5AF2' },
+  { label: 'x2 Income', multiplier: 2, color: '#8CA0B3' },
 ];
 
 
@@ -427,8 +427,8 @@ function SpendingChart({ spending, t, totalIncome, totalExpenses, activeScenario
             <stop offset="100%" stopColor={t.green} stopOpacity="0.03" />
           </linearGradient>
           <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={t.cyan} stopOpacity="0.32" />
-            <stop offset="100%" stopColor={t.cyan} stopOpacity="0.06" />
+            <stop offset="0%" stopColor={t.paleBlue} stopOpacity="0.32" />
+            <stop offset="100%" stopColor={t.paleBlue} stopOpacity="0.06" />
           </linearGradient>
           <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={t.green} stopOpacity="0.12" />
@@ -453,7 +453,7 @@ function SpendingChart({ spending, t, totalIncome, totalExpenses, activeScenario
           <path
             d={savingsPath}
             fill="none"
-            stroke={t.cyan}
+            stroke={t.paleBlue}
             strokeWidth="2"
             strokeOpacity="0.9"
             strokeLinecap="round"
@@ -464,8 +464,8 @@ function SpendingChart({ spending, t, totalIncome, totalExpenses, activeScenario
           const savingsValue = totalIncome - (actual[i]?.total || 0);
           return (
             <g key={`savings-${i}`}>
-              <circle cx={point.x} cy={point.y} r={3.5} fill={t.cyan} fillOpacity="0.9" />
-              <text x={point.x} y={point.y - 8} textAnchor="middle" fill={t.cyan} fontSize="9" fontWeight="600" fontFamily="-apple-system, system-ui, sans-serif" opacity="0.85">
+              <circle cx={point.x} cy={point.y} r={3.5} fill={t.paleBlue} fillOpacity="0.9" />
+              <text x={point.x} y={point.y - 8} textAnchor="middle" fill={t.paleBlue} fontSize="9" fontWeight="600" fontFamily="-apple-system, system-ui, sans-serif" opacity="0.85">
                 {compactCurrency(Math.max(0, savingsValue))}
               </text>
             </g>
@@ -1466,7 +1466,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                   </div>
                   {totalIncome > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: t.cyan }} />
+                      <div style={{ width: 8, height: 3, borderRadius: 2, background: t.paleBlue }} />
                       <span style={{ fontSize: 9, color: t.textTertiary }}>Savings</span>
                     </div>
                   )}

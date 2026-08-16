@@ -28,8 +28,8 @@ function CustomTooltip({ active, payload, label, t }) {
   );
 }
 
-const PHASE_COLORS = { current: '#0a84ff', soon: '#ffd60a', pending: '#bf5af2', future: '#ff9f0a', done: '#30d158' };
-const DONUT_COLORS = ['#0a84ff', '#5ac8fa', '#ff453a', '#30d158', '#bf5af2', '#ff9f0a', '#ffd60a', '#ff2d55'];
+const PHASE_COLORS = { current: '#0a84ff', soon: '#ffd60a', pending: '#8CA0B3', future: '#ff9f0a', done: '#30d158' };
+const DONUT_COLORS = ['#0a84ff', '#7FB2FF', '#ff453a', '#30d158', '#8CA0B3', '#ff9f0a', '#ffd60a', '#ff2d55'];
 const TIMELINE_EVENTS = [
   { label: 'Telus plan ends', date: 'Nov 2027', amount: '+$155/mo freed', status: 'future', description: '$700+/mo surplus' },
   { label: 'Debt-free', date: '~Early 2028', amount: '$0 debt', status: 'done', description: 'Savings begin' },
@@ -158,7 +158,7 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
         {[
           { value: formatCurrency(totalDebt), label: 'Total Debt', color: t.red },
           { value: formatCurrency(totalIncome || 0), label: 'Income Now', color: t.accent || '#0a84ff' },
-          { value: formatCurrency(incomeGoal), label: 'Income Goal', color: '#bf5af2' },
+          { value: formatCurrency(incomeGoal), label: 'Income Goal', color: '#8CA0B3' },
           { value: debtFreeMonths ? `~${debtFreeMonths}mo` : 'N/A', label: 'Debt-Free ETA', color: t.green },
         ].map((stat) => (
           <Card key={stat.label} dark t={t} style={{ padding: 12, textAlign: 'center', marginBottom: 0 }}>
@@ -212,7 +212,7 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {debtItems.map((d, i) => {
               const pct = totalDebt > 0 ? (d.balance / totalDebt) * 100 : 0;
-              const colors = ['#ff453a', '#ff9f0a', '#ffd60a', '#bf5af2', '#0a84ff'];
+              const colors = ['#ff453a', '#ff9f0a', '#ffd60a', '#8CA0B3', '#0a84ff'];
               const color = colors[i % colors.length];
               return (
                 <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

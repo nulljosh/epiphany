@@ -78,7 +78,7 @@ private enum VenueCategory: String, CaseIterable {
         case .gas:        return .yellow
         case .groceries:  return .green
         case .coffee:     return Color(red: 0.59, green: 0.39, blue: 0.2)
-        case .parks:      return .mint
+        case .parks:      return Palette.sand
         case .shopping:   return .pink
         }
     }
@@ -394,9 +394,9 @@ struct SituationView: View {
     private func localEventTint(_ event: LocalEvent) -> Color {
         switch event.category {
         case "place": return .gray
-        case "attraction": return .purple
-        case "recreation": return .mint
-        case "community": return .indigo
+        case "attraction": return Palette.slate
+        case "recreation": return Palette.sand
+        case "community": return Palette.paleBlue
         case "education": return .blue
         default: return .blue
         }

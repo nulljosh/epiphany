@@ -15,7 +15,7 @@ private enum IncomeScenario: String, CaseIterable, Identifiable {
         switch self {
         case .plus500: return Palette.successGreen
         case .plus1000: return Palette.warningAmber
-        case .double: return Palette.purple
+        case .double: return Palette.slate
         }
     }
 
@@ -43,27 +43,27 @@ private let categoryColors: [String: Color] = [
     "food": Palette.successGreen,
     "transport": Palette.warningAmber,
     "transit": Palette.warningAmber,
-    "utilities": Palette.purple,
+    "utilities": Palette.slate,
     "entertainment": Palette.dangerRed,
-    "health": Palette.cyan,
+    "health": Palette.paleBlue,
     "shopping": Palette.pink,
     "other": Palette.yellow,
     "insurance": Palette.brown,
-    "subscriptions": Palette.indigo,
-    "apps": Palette.indigo,
+    "subscriptions": Palette.sand,
+    "apps": Palette.sand,
     "transfers": Palette.appleBlue.opacity(0.6),
     "inter_account": Palette.appleBlue.opacity(0.6),
     "etransfer_friends": Palette.appleBlue.opacity(0.4),
     "atm_withdrawals": Palette.appleBlue.opacity(0.25),
     "vape": Palette.warningAmber,
-    "alcohol": Palette.purple,
-    "liquor": Palette.purple,
+    "alcohol": Palette.slate,
+    "liquor": Palette.slate,
     "starbucks": Palette.brown,
-    "fitness": Palette.cyan,
+    "fitness": Palette.paleBlue,
     "uncategorized": Color.gray.opacity(0.25),
     "tech": Palette.appleBlue,
     "groceries": Palette.successGreen.opacity(0.7),
-    "pharmacy": Palette.cyan.opacity(0.7),
+    "pharmacy": Palette.paleBlue.opacity(0.7),
     "coffee": Palette.brown.opacity(0.7),
 ]
 
@@ -431,7 +431,7 @@ struct PortfolioView: View {
     private var debtBreakdownBars: some View {
         let debt = appState.financeData?.debt ?? []
         let totalDebt = debt.reduce(0.0) { $0 + $1.balance }
-        let colors: [Color] = [Palette.dangerRed, Palette.warningAmber, Palette.yellow, Palette.purple, Palette.appleBlue]
+        let colors: [Color] = [Palette.dangerRed, Palette.warningAmber, Palette.yellow, Palette.slate, Palette.appleBlue]
 
         return Group {
             if !debt.isEmpty {

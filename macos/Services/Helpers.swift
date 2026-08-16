@@ -17,16 +17,19 @@ enum Palette {
     static let warningAmberAlt = Color(hex: "f5a623")
 
     // Category
-    static let purple = Color(hex: "BF5AF2")
-    static let cyan = Color(hex: "64D2FF")
-    static let cyanAlt = Color(hex: "5AC8FA")
+    // No teal/cyan/purple/indigo anywhere — standing house rule. Categorical
+    // slots stay distinguishable via hue + lightness within the allowed space
+    // (warm, green, blue, pink, neutral). Kept in sync with ios/Helpers/Helpers.swift.
+    static let slate = Color(hex: "8CA0B3")
+    static let paleBlue = Color(hex: "7FB2FF")
+    static let paleBlueAlt = Color(hex: "5C9BE6")
     static let pink = Color(hex: "FF375F")
     static let yellow = Color(hex: "FFD60A")
     static let brown = Color(hex: "AC8E68")
-    static let indigo = Color(hex: "5E5CE6")
+    static let sand = Color(hex: "C2A878")
 
     // Accent
-    static let ultraPurple = Color(hex: "7d5cff")
+    static let slateDeep = Color(hex: "6E829A")
     static let chartBlue = Color(hex: "32ade6")
     static let linkBlue = Color(hex: "0a84ff")
     static let mapBlue = Color(hex: "4da3ff")

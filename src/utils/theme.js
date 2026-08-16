@@ -15,8 +15,8 @@ export const darkTheme = {
   red: '#FF453A',
   yellow: '#FFD60A',
   orange: '#FF9F0A',
-  purple: '#BF5AF2',
-  cyan: '#64D2FF',
+  slate: '#8CA0B3',
+  paleBlue: '#7FB2FF',
   pink: '#FF375F',
 };
 
@@ -36,8 +36,8 @@ export const lightTheme = {
   red: '#FF3B30',
   yellow: '#FFCC00',
   orange: '#FF9500',
-  purple: '#AF52DE',
-  cyan: '#5AC8FA',
+  slate: '#5A6B7D',
+  paleBlue: '#4A90E2',
   pink: '#FF2D55',
 };
 

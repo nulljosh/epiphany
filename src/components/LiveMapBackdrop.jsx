@@ -768,7 +768,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         : isAirport
         ? 'width:22px;height:22px;background:transparent;font-size:16px;line-height:22px;text-align:center;display:flex;align-items:center;justify-content:center;'
         : isTransit
-        ? 'width:10px;height:10px;border-radius:2px;background:#818cf8;border:2px solid rgba(255,255,255,0.5);'
+        ? 'width:10px;height:10px;border-radius:2px;background:#C2A878;border:2px solid rgba(255,255,255,0.5);'
         : isMuseum
         ? 'width:10px;height:10px;border-radius:50%;background:#a78bfa;border:2px solid rgba(255,255,255,0.5);'
         : 'width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid rgba(255,255,255,0.5);animation:pulse-amber 1.8s infinite;';
@@ -814,7 +814,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         : geoKeywordMatch(ev.title);
       if (!coords) return;
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#22D3EE;animation:pulse-cyan 2.2s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#7FB2FF;animation:pulse-dot 2.2s infinite;',
         `${coords.label}: ${ev.title}`,
         { type: 'event', title: ev.country ? `[${ev.country}] ${coords.label}` : coords.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
         coords.lon, coords.lat, 'news'
@@ -855,12 +855,12 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
 
     // Local events
     if (mapLayers.localEvents !== false)
-    clusterLayer(payload.localEvents, 80, (ev) => extractCoords(ev), '#a855f7').forEach((ev, i) => {
+    clusterLayer(payload.localEvents, 80, (ev) => extractCoords(ev), '#8CA0B3').forEach((ev, i) => {
       const c = extractCoords(ev);
       if (!c) return;
       const { lat, lon } = c;
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#a855f7;animation:pulse-cyan 2.2s infinite;',
+        'width:14px;height:14px;border-radius:50%;background:#8CA0B3;animation:pulse-dot 2.2s infinite;',
         ev.title || (ev.kind === 'place' ? 'Place' : 'Event'),
         { type: 'local-event', title: ev.title || (ev.kind === 'place' ? 'Place' : 'Event'), detail: ev.description || ev.venue || ev.source || (ev.kind === 'place' ? 'Nearby place' : 'Nearby event'), level: ev.kind === 'place' ? 'place' : 'event', source: ev.source || 'Map data', link: ev.url || mapsLink(lat, lon), linkLabel: ev.url ? 'Open source' : 'Get Directions', image: ev.image || null },
         lon, lat, 'localEvents'
@@ -992,7 +992,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       const conf = Math.max(prob, 1 - prob);
       const size = conf > 0.9 ? 12 : conf > 0.75 ? 10 : 8;
       addMarker(
-        `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};animation:pulse-cyan 2.4s infinite;`,
+        `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};animation:pulse-dot 2.4s infinite;`,
         `${Math.round(prob * 100)}% · ${m.question || 'market'}`,
         { type: 'prediction', title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`, detail: m.question || 'Prediction market', level: p.label, source: 'Polymarket', link: `https://polymarket.com/event/${m.eventSlug || m.slug}` },
         p.lon, p.lat, 'predictions'
@@ -1129,7 +1129,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         @keyframes pulse-blue { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
         @keyframes pulse-amber { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
         @keyframes pulse-red { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
-        @keyframes pulse-cyan { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
+        @keyframes pulse-dot { 0%{opacity:1} 50%{opacity:0.45} 100%{opacity:1} }
         .epiphany-map-popup .maplibregl-popup-content { background:rgba(2,6,23,0.92); color:#fff; border:1px solid rgba(255,255,255,0.24); border-radius:12px; padding:10px 12px; }
         .epiphany-map-popup .maplibregl-popup-tip { border-top-color:rgba(2,6,23,0.92); }
         .epiphany-map-popup .maplibregl-popup-close-button { color:#94a3b8; font-size:16px; padding:2px 6px; }
