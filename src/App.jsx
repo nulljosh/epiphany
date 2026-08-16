@@ -34,9 +34,9 @@ import MobileLayout from './layouts/MobileLayout';
 // Last manual update: Feb 4, 2026
 const ASSETS = {
   // Indices (live via commodities.js / useLivePrices)
-  NAS100: { name: 'Nasdaq 100', price: 21600, color: '#00d4ff' },
+  NAS100: { name: 'Nasdaq 100', price: 21600, color: '#7FB2FF' },
   SP500:  { name: 'S&P 500',   price: 6120,  color: '#ff6b6b' },
-  US30:   { name: 'Dow Jones', price: 44200,  color: '#4ecdc4' },
+  US30:   { name: 'Dow Jones', price: 44200,  color: '#8CA0B3' },
   XAU:    { name: 'Gold',      price: 2943,   color: '#FFD700' },
   XAG:    { name: 'Silver',    price: 32.8,   color: '#A0A0A0' },
   // Top 100 stocks — seed prices Feb 20 2026 (replaced by live data on load)
@@ -135,7 +135,7 @@ const ASSETS = {
   XYZ: { name: 'Block Inc', price: 68, color: '#3D3D3D' },
   // Popular stocks
   COIN: { name: 'Coinbase', price: 265, color: '#0052FF' },
-  PLTR: { name: 'Palantir', price: 138, color: '#9d4edd' },
+  PLTR: { name: 'Palantir', price: 138, color: '#8CA0B3' },
   HOOD: { name: 'Robinhood', price: 86, color: '#00C805' },
   // Meme coins
   FARTCOIN: { name: 'FartCoin', price: 0.85, color: '#8B4513' },

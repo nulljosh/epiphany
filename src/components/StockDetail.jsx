@@ -39,9 +39,9 @@ function computeHeikinAshi(data) {
 const INDICATOR_LIBRARY = [
   { key: 'sma', label: 'SMA', category: 'overlay', defaults: { period: 20, color: '#2196F3', source: 'close' } },
   { key: 'ema', label: 'EMA', category: 'overlay', defaults: { period: 50, color: '#FF9800', source: 'close' } },
-  { key: 'wma', label: 'WMA', category: 'overlay', defaults: { period: 20, color: '#9C27B0', source: 'close' } },
-  { key: 'vwap', label: 'VWAP', category: 'overlay', defaults: { color: '#00BCD4' } },
-  { key: 'bb', label: 'Bollinger Bands', category: 'overlay', defaults: { period: 20, stdDev: 2, color: '#7E57C2' } },
+  { key: 'wma', label: 'WMA', category: 'overlay', defaults: { period: 20, color: '#78909C', source: 'close' } },
+  { key: 'vwap', label: 'VWAP', category: 'overlay', defaults: { color: '#C2A878' } },
+  { key: 'bb', label: 'Bollinger Bands', category: 'overlay', defaults: { period: 20, stdDev: 2, color: '#B4BEC8' } },
   { key: 'rsi', label: 'RSI', category: 'oscillator', defaults: { period: 14, color: '#E91E63', overbought: 70, oversold: 30 } },
   { key: 'macd', label: 'MACD', category: 'oscillator', defaults: { fast: 12, slow: 26, signal: 9, color: '#2196F3' } },
   { key: 'stoch', label: 'Stochastic', category: 'oscillator', defaults: { kPeriod: 14, dPeriod: 3, color: '#FF5722' } },
@@ -647,7 +647,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             const { kLine, dLine } = computeStochastic(history, p.kPeriod, p.dPeriod);
             const kS = chart.addSeries(LineSeries, { color: p.color, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: false });
             kS.setData(kLine);
-            const dS = chart.addSeries(LineSeries, { color: '#9C27B0', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
+            const dS = chart.addSeries(LineSeries, { color: '#78909C', lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false });
             dS.setData(dLine);
           } else if (ind.key === 'atr') {
             const d = computeATR(history, p.period);

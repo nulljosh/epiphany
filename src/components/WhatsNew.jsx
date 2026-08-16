@@ -19,7 +19,7 @@ export default function WhatsNew({ t }) {
           <li>People tab live</li>
           <li>Terms of Service on registration</li>
         </ul>
-        <button onClick={dismiss} style={{ width: '100%', padding: '10px 0', background: t.accent || '#00d4ff', color: '#000', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: font }}>Got it</button>
+        <button onClick={dismiss} style={{ width: '100%', padding: '10px 0', background: t.accent || '#7FB2FF', color: '#000', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: font }}>Got it</button>
       </div>
     </div>
   );
