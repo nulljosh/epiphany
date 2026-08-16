@@ -21,7 +21,7 @@ const ALL_SYMBOLS = [
   'NEE', 'DUK', 'SO',
   'TGT', 'LOW', 'SBUX', 'MCD', 'YUM', 'F', 'GM',
   'AMT', 'PLD', 'CME', 'WM', 'XYZ',
-  'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP',
+  'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP', 'DUOL',
   'GC=F', 'SI=F', 'CL=F',
   'SPY', 'SJIM', 'LJIM',
 ];

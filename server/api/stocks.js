@@ -280,8 +280,12 @@ async function enrichWithFundamentals(stocks) {
 }
 
 export default async function handler(req, res) {
+  // 60, not 50: DEFAULT_SYMBOLS sat exactly on the old cap, so adding a single
+  // ticker to the default list 400'd this endpoint against its own default.
+  // The cap is abuse protection, not a Yahoo limit — leave headroom above the
+  // default list rather than tracking it exactly.
   const parsed = parseSymbols(req.query.symbols, {
-    max: 50,
+    max: 60,
     validate: true,
     tooManyMessage: 'Too many symbols',
   });
