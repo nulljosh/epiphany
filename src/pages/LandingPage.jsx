@@ -118,9 +118,9 @@ function MapSceneSVG() {
           <circle cx="155" cy="322" r="4.5" fill="#fff" />
           <circle cx="155" cy="322" r="40" fill="none" stroke="#0071e3" strokeWidth="0.8" opacity="0.2" />
           {/* Flights */}
-          <text x="62" y="182" fontSize="14" fill="#4FC3F7" opacity="0.85" transform="rotate(42,62,182)">✈</text>
-          <text x="236" y="112" fontSize="12" fill="#4FC3F7" opacity="0.7" transform="rotate(128,236,112)">✈</text>
-          <text x="188" y="498" fontSize="11" fill="#4FC3F7" opacity="0.6" transform="rotate(215,188,498)">✈</text>
+          <text x="62" y="182" fontSize="14" fill="#5B9BE6" opacity="0.85" transform="rotate(42,62,182)">✈</text>
+          <text x="236" y="112" fontSize="12" fill="#5B9BE6" opacity="0.7" transform="rotate(128,236,112)">✈</text>
+          <text x="188" y="498" fontSize="11" fill="#5B9BE6" opacity="0.6" transform="rotate(215,188,498)">✈</text>
           {/* Events */}
           <circle cx="104" cy="212" r="6" fill="#30D158" opacity="0.9" />
           <circle cx="218" cy="268" r="5" fill="#30D158" opacity="0.8" />
@@ -153,7 +153,7 @@ function MapScreen() {
       </div>
 
       <div className="map-layers" style={{ top: 106 }}>
-        <div className="layer-chip" style={{ color: '#4FC3F7', borderColor: 'rgba(79,195,247,0.2)' }}>✈ Flights</div>
+        <div className="layer-chip" style={{ color: '#5B9BE6', borderColor: 'rgba(79,195,247,0.2)' }}>✈ Flights</div>
         <div className="layer-chip" style={{ color: '#30D158', borderColor: 'rgba(48,209,88,0.2)' }}>◉ Events</div>
         <div className="layer-chip" style={{ color: '#FF9F0A', borderColor: 'rgba(255,159,10,0.2)' }}>⚠ Incidents</div>
         <div className="layer-chip" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.2)' }}>◆ Crime</div>
@@ -163,7 +163,7 @@ function MapScreen() {
         <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Nearby now</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {[
-            { dot: '#4FC3F7', title: 'DAL 442 · 37,400 ft', sub: 'Delta Air Lines · Atlanta', when: 'now', border: true },
+            { dot: '#5B9BE6', title: 'DAL 442 · 37,400 ft', sub: 'Delta Air Lines · Atlanta', when: 'now', border: true },
             { dot: '#30D158', title: 'Warriors vs Clippers', sub: 'Chase Center · 0.4 mi', when: '7:30 PM', border: true },
             { dot: '#FF9F0A', title: 'Road closure — Mission St', sub: 'Construction · 0.2 mi', when: '2h ago', border: false },
           ].map(({ dot, title, sub, when, border }) => (

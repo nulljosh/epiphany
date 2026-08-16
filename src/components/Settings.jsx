@@ -104,8 +104,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
     const r = () => Math.random();
     const palettes = [
       ['#5b8fc9','#7aabde','#3a6fa8'], ['#7aab7a','#5a9e5a','#a8d4a8'],
-      ['#c96b6b','#e08080','#a84444'], ['#9b7ac9','#b89de0','#7a5aa8'],
-      ['#c8913a','#e0b060','#a87020'], ['#5bc9c9','#3aa8a8','#80dede'],
+      ['#c96b6b','#e08080','#a84444'], ['#8ca0b3','#a8bccd','#6e829a'],
+      ['#c8913a','#e0b060','#a87020'], ['#c2a878','#a88c58','#dcc79c'],
       ['#c96ba8','#e080c0','#a84480'], ['#c9c96b','#e0d840','#a8a830'],
     ];
     const palette = palettes[Math.floor(r() * palettes.length)];
@@ -222,7 +222,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   };
 
   const tierLabel = subscription?.plan === 'pro' ? 'Pro' : subscription?.plan === 'starter' ? 'Starter' : 'Free';
-  const tierColor = subscription?.plan === 'pro' ? '#8b5cf6' : subscription?.plan === 'starter' ? '#0071e3' : t.textTertiary;
+  const tierColor = subscription?.plan === 'pro' ? '#C2A878' : subscription?.plan === 'starter' ? '#0071e3' : t.textTertiary;
 
   const inputStyle = { width: '100%', padding: '7px 10px', fontSize: 12, fontFamily: font, background: t.glass, border: `1px solid ${t.border}`, borderRadius: 6, color: t.text, outline: 'none', boxSizing: 'border-box' };
   const btnStyle = (primary) => ({ padding: '6px 12px', fontSize: 11, fontWeight: 600, fontFamily: font, background: primary ? t.text : 'transparent', color: primary ? t.bg : t.textSecondary, border: `1px solid ${primary ? 'transparent' : t.border}`, borderRadius: 6, cursor: 'pointer', transition: 'all 0.15s' });

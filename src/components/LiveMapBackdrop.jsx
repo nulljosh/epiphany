@@ -168,7 +168,7 @@ function buildPopupHTML(data) {
     ${data.image ? `<img src="${esc(data.image)}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px" />` : ''}
     <div style="font-weight:700;font-size:12px">${esc(data.title)}</div>
     <div style="margin-top:4px;color:#cbd5e1;font-size:11px;line-height:1.45">${esc(data.detail)}</div>
-    <div style="margin-top:6px;font-size:10px;color:#67e8f9;text-transform:uppercase;letter-spacing:0.06em">${esc(data.level)}</div>
+    <div style="margin-top:6px;font-size:10px;color:#7FB2FF;text-transform:uppercase;letter-spacing:0.06em">${esc(data.level)}</div>
     <div style="margin-top:6px;font-size:10px;color:#93c5fd">Source: ${esc(data.source || 'Unknown')}</div>
     ${data.link ? `<a href="${esc(data.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;color:#60a5fa;font-size:11px;text-decoration:underline">${esc(data.linkLabel || 'Open source')} &#8594;</a>` : ''}
   </div>`;
@@ -770,7 +770,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         : isTransit
         ? 'width:10px;height:10px;border-radius:2px;background:#C2A878;border:2px solid rgba(255,255,255,0.5);'
         : isMuseum
-        ? 'width:10px;height:10px;border-radius:50%;background:#a78bfa;border:2px solid rgba(255,255,255,0.5);'
+        ? 'width:10px;height:10px;border-radius:50%;background:#C2A878;border:2px solid rgba(255,255,255,0.5);'
         : 'width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid rgba(255,255,255,0.5);animation:pulse-amber 1.8s infinite;';
       const label = inc.title || (isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isBarrier ? 'CHECKPOINT' : isAirport ? 'AIRPORT' : isTransit ? 'TRANSIT' : t.toUpperCase());
       addMarker(
