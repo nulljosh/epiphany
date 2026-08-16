@@ -19,7 +19,7 @@ struct CompactNewsRow: View {
 
     private var sourceColor: Color {
         let hash = article.source.unicodeScalars.reduce(0) { $0 + Int($1.value) }
-        let colors: [Color] = [.blue, .purple, .orange, .teal, .pink, .indigo, .mint]
+        let colors: [Color] = [.blue, Palette.slate, .orange, Palette.paleBlue, .pink, Palette.sand, .brown]
         return colors[hash % colors.count]
     }
 

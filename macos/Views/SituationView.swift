@@ -68,7 +68,7 @@ private enum VenueCategory: String, CaseIterable {
         case .gas:        return .yellow
         case .groceries:  return .green
         case .coffee:     return Color(red: 0.59, green: 0.39, blue: 0.2)
-        case .parks:      return .mint
+        case .parks:      return Palette.sand
         case .shopping:   return .pink
         }
     }
@@ -213,7 +213,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .flight(flight)
                     } label: {
-                        mapPin(color: .cyan, emoji: "\u{2708}\u{FE0F}", size: 15)
+                        mapPin(color: Palette.paleBlue, emoji: "\u{2708}\u{FE0F}", size: 15)
                     }
                     .buttonStyle(.plain)
                 }
@@ -261,7 +261,7 @@ struct SituationView: View {
                         Button {
                             selectedEvent = .localEvent(event)
                         } label: {
-                            mapPin(color: Palette.purple, emoji: localEventEmoji(event), size: 15)
+                            mapPin(color: Palette.slate, emoji: localEventEmoji(event), size: 15)
                         }
                         .buttonStyle(.plain)
                     }

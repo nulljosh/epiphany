@@ -142,7 +142,7 @@ struct SettingsView: View {
                             if normalizedTier == tier {
                                 Label("Current", systemImage: "checkmark.circle.fill")
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Palette.cyanAlt)
+                                    .foregroundStyle(Palette.paleBlueAlt)
                             } else if tier != .free {
                                 Text("Upgrade")
                                     .font(.caption.weight(.semibold))
@@ -323,7 +323,7 @@ struct SettingsView: View {
         switch appState.user?.tier {
         case "starter": return Palette.appleBlue
         case "pro": return Palette.warningAmberAlt
-        case "ultra": return Palette.ultraPurple
+        case "ultra": return Palette.slateDeep
         default: return .secondary
         }
     }
@@ -408,7 +408,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Image(systemName: systemImage)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(Palette.cyanAlt)
+                    .foregroundStyle(Palette.paleBlueAlt)
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
@@ -440,7 +440,7 @@ struct SettingsView: View {
         HStack(spacing: 14) {
             Image(systemName: systemImage)
                 .font(.headline)
-                .foregroundStyle(Palette.cyanAlt)
+                .foregroundStyle(Palette.paleBlueAlt)
                 .frame(width: 22)
 
             VStack(alignment: .leading, spacing: 3) {

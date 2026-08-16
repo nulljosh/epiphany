@@ -6,7 +6,7 @@ import {
 import { compactCurrency, formatCurrency, SYSTEM_FONT } from '../utils/formatting';
 import { simulate } from '../utils/roadmapSim';
 
-const CAT_COLORS = { Food: '#0a84ff', Vape: '#bf5af2', Alcohol: '#ff9f0a', Other: '#30d158' };
+const CAT_COLORS = { Food: '#0a84ff', Vape: '#8CA0B3', Alcohol: '#ff9f0a', Other: '#30d158' };
 const CATS = ['Food', 'Vape', 'Alcohol', 'Other'];
 
 // Real spending only. `months` comes from parsed PDF statements
@@ -329,8 +329,8 @@ export default function EpiphanyFinance({ t, spending }) {
                     label={{ value: '$100K', position: 'top', fill: t.accent, fontSize: 11, fontWeight: 600 }} />
                 )}
                 {milestones.hit500k && (
-                  <ReferenceDot x={milestones.hit500k.date} y={500000} r={5} fill={t.purple} stroke={t.bg} strokeWidth={2}
-                    label={{ value: '$500K', position: 'top', fill: t.purple, fontSize: 11, fontWeight: 600 }} />
+                  <ReferenceDot x={milestones.hit500k.date} y={500000} r={5} fill={t.slate} stroke={t.bg} strokeWidth={2}
+                    label={{ value: '$500K', position: 'top', fill: t.slate, fontSize: 11, fontWeight: 600 }} />
                 )}
                 {milestones.hit1m && (
                   <ReferenceDot x={milestones.hit1m.date} y={1000000} r={7} fill={t.yellow} stroke={t.bg} strokeWidth={2}

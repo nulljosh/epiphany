@@ -219,7 +219,7 @@ export default function SituationMonitor({
     events.slice(0, 6).forEach(ev => {
       entries.push({
         label: `${ev.country ? `[${ev.country}] ` : ''}${ev.title}`,
-        color: '#22d3ee',
+        color: '#7FB2FF',
         ts: ev.dateAdded ? new Date(ev.dateAdded).getTime() : Date.now(),
         time: ev.dateAdded ? new Date(ev.dateAdded).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
       });
@@ -270,7 +270,7 @@ export default function SituationMonitor({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BlinkingDot color={t.cyan} speed={3} />
+          <BlinkingDot color={t.paleBlue} speed={3} />
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.text, fontFamily: font }}>
             Situation Monitor
           </span>
@@ -333,7 +333,7 @@ export default function SituationMonitor({
               {dispatchCalls.slice(0, 15).map((call, i) => {
                 const isPolice = call.type === 'police';
                 const isFire = call.type === 'fire';
-                const color = isPolice ? '#3b82f6' : isFire ? '#f97316' : '#22d3ee';
+                const color = isPolice ? '#3b82f6' : isFire ? '#f97316' : '#7FB2FF';
                 const icon = isPolice ? '🚔' : isFire ? '🚒' : '🚑';
                 const detail = [call.address, call.source].filter(Boolean).join(' · ');
                 return (
@@ -474,7 +474,7 @@ export default function SituationMonitor({
                       <div style={{ width: `${dispProb * 100}%`, height: '100%', background: isYes ? t.green : t.red, borderRadius: 2 }} />
                     </div>
                     <span style={{ fontSize: 9, color: t.textTertiary }}>Vol ${((m.volume24h || 0) / 1000).toFixed(0)}K</span>
-                    {betTs && <span style={{ fontSize: 9, color: t.cyan }}>bet {msSinceBet < 60000 ? `${Math.round(msSinceBet / 1000)}s` : `${Math.round(msSinceBet / 60000)}m`} ago</span>}
+                    {betTs && <span style={{ fontSize: 9, color: t.paleBlue }}>bet {msSinceBet < 60000 ? `${Math.round(msSinceBet / 1000)}s` : `${Math.round(msSinceBet / 60000)}m`} ago</span>}
                   </div>
                 </div>
               );
@@ -544,7 +544,7 @@ export default function SituationMonitor({
                 const pnl = tr.pnl ? parseFloat(tr.pnl) : null;
                 return (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${t.border}` }}>
-                    <span style={{ color: tr.type === 'BUY' ? t.accent : tr.type?.startsWith('PM_') ? t.cyan : pnl >= 0 ? t.green : t.red }}>
+                    <span style={{ color: tr.type === 'BUY' ? t.accent : tr.type?.startsWith('PM_') ? t.paleBlue : pnl >= 0 ? t.green : t.red }}>
                       {tr.type} {tr.sym}
                     </span>
                     {pnl != null && <span style={{ color: pnl >= 0 ? t.green : t.red }}>{pnl >= 0 ? '+' : ''}{tr.pnl}</span>}
@@ -588,7 +588,7 @@ export default function SituationMonitor({
           )}
           {nearbyFlights.map((f, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: `1px solid ${t.border}`, fontSize: 10 }}>
-              <span style={{ fontWeight: 700, color: t.cyan, fontFamily: font }}>{f.callsign || f.icao24}</span>
+              <span style={{ fontWeight: 700, color: t.paleBlue, fontFamily: font }}>{f.callsign || f.icao24}</span>
               <span style={{ color: t.textTertiary, fontFamily: font }}>{f.altitude ? `FL${Math.round(f.altitude / 100)}` : '\u2014'}</span>
             </div>
           ))}

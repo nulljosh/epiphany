@@ -31,12 +31,15 @@ enum Palette {
     static let warningAmber = Color(hex: "FF851B")
 
     // Category (vibrant, dark-mode friendly)
-    static let purple = Color(hex: "A855F7")
-    static let cyan = Color(hex: "06B6D4")
+    // No teal/cyan/purple/indigo anywhere — standing house rule. Categorical
+    // slots stay distinguishable via hue + lightness within the allowed space
+    // (warm, green, blue, pink, neutral).
+    static let slate = Color(hex: "8CA0B3")
+    static let paleBlue = Color(hex: "7FB2FF")
     static let pink = Color(hex: "EC4899")
     static let yellow = Color(hex: "EAB308")
     static let brown = Color(hex: "D97706")
-    static let indigo = Color(hex: "818CF8")
+    static let sand = Color(hex: "C2A878")
 
     // Extended (clrs.cc)
     static let olive = Color(hex: "3D9970")

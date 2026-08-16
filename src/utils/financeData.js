@@ -24,7 +24,7 @@ export const UPCOMING_PAYMENTS = [];
 // Values are monthly amounts in CAD.
 export const INCOME_SCENARIOS = {
   ei: { label: 'EI', monthly: 2200, color: '#FF9F0A' },
-  pwd_dtc: { label: 'PWD+DTC', monthly: 1750, color: '#BF5AF2' },
+  pwd_dtc: { label: 'PWD+DTC', monthly: 1750, color: '#8CA0B3' },
   pwd_work: { label: 'PWD+Work', monthly: 2800, color: '#30D158' },
   actual: { label: 'Actual', monthly: 0, color: '#0A84FF' },
 };
