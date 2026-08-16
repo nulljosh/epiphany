@@ -6,7 +6,7 @@ export const DEFAULT_SYMBOLS = [
   // ETFs
   'SPY', 'QQQ', 'DIA', 'IWM',
   // Tech / Growth
-  'PLTR', 'HOOD', 'COIN', 'SQ', 'SHOP', 'SNOW', 'NET', 'CRWD',
+  'PLTR', 'HOOD', 'COIN', 'SQ', 'SHOP', 'SNOW', 'NET', 'CRWD', 'DUOL',
   // Commodities / Energy
   'XOM', 'CVX', 'OXY', 'COP',
   // Precious Metals / Mining

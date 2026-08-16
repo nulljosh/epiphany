@@ -142,7 +142,8 @@ describe('Stocks API', () => {
   });
 
   it('should limit number of symbols', async () => {
-    const tooManySymbols = Array(51).fill('AAPL').join(',');
+    // One past the handler's 60-symbol cap.
+    const tooManySymbols = Array(61).fill('AAPL').join(',');
     mockReq.query.symbols = tooManySymbols;
 
     await handler(mockReq, mockRes);
