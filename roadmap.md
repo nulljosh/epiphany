@@ -85,9 +85,21 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 > Resume note (2026-08-11), **updated 2026-08-13**: the `wip: partial work from /work notes ingest` commit (`2a46fe9`) has now been reviewed and verified — 413 tests pass, iOS and macOS both BUILD SUCCEEDED. Five of the items above are genuinely done and checked off. The "unpushed" claim in the original note was already stale: `2a46fe9` and `d98e8ce` are both on `origin/main`. Safe to build on.
 
 ## Design debt — standing colour rule violations
-- [ ] **Teal/cyan and purple are used throughout the native apps**, against the standing universal "no teal, no purple" rule. Not a one-line fix — ~20 sites: `Palette.purple` (`A855F7`) and `Palette.cyan` (`06B6D4`) in `ios/Helpers/Helpers.swift`, consumed by `PortfolioView.swift` category colours (utilities/health/alcohol/liquor/fitness/pharmacy, plus the debt-chart colour array), `StockDetailView.swift` (EMA overlay + indicator toggle), `MarketsView.swift` (DOW/SOL/MATIC ticker glyphs), `SituationView.swift` ("attraction" pins), `NewsRow.swift`'s literal `[.purple, .teal, .mint]` palette, and `macos/Views/SettingsView.swift`'s `Palette.cyanAlt`. Needs one deliberate palette pass picking replacement hues that stay distinguishable from each other in both light and dark, not a blind find-and-replace.
-
-## From Apple Notes (imported 2026-08-13)
+- [x] **Teal/cyan and purple removed across iOS/macOS/web (2026-08-15).** Fixed at the
+  definition point, not the ~20 call sites: the offending categorical slots were renamed in
+  each platform's single palette source, so no constant survives named for a colour it no
+  longer is. `purple`/`indigo`/`ultraPurple` -> `slate` #8CA0B3 / `sand` #C2A878 /
+  `slateDeep`; `cyan`/`cyanAlt` -> `paleBlue` #7FB2FF / `paleBlueAlt`. Raw SwiftUI
+  `.mint`/`.teal`/`.cyan`/`.purple`/`.indigo` literals and the hardcoded web hexes swept to
+  the same tokens. A second pass scanning by *hue* rather than by name caught 28 more the
+  name-grep missed (`#9d4edd` PLTR, `#67e8f9`/`#a78bfa` map pins, Settings' purple+teal
+  avatar palettes, three StockDetail indicator colours, the `#8b5cf6` Pro badge).
+  Deliberately left: the nine real corporate brand hexes in `App.jsx`'s ASSETS map (FedEx
+  #4D148C, Accenture #A100FF, Cisco, Salesforce, Bristol-Myers et al) — those are a
+  company's actual identity, so recolouring them makes the data wrong rather than the UI
+  compliant; they are allowlisted by name in the check. Regression guard:
+  `scripts/check-no-teal-purple.py` (scans by hue band, exit 1 on any non-brand violation).
+  Commits `b03074f` + `75d16b2`. iOS + macOS BUILD SUCCEEDED, web build clean, 413 tests pass.
 - [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
 - [ ] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
 - [ ] Add themes (dark mode etc.) to the stocks view
@@ -95,6 +107,38 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Analyze project from CLAUDE.md + README.md, then refresh the app icon based on that analysis
 
 ### From Notes (2026-08-14)
-- [ ] **Add Duolingo (DUOL) to the stock list.** It's recovering; also worth revisiting the rest of
-  the default list for other additions.
+- [x] **Add Duolingo (DUOL) to the stock list — DONE 2026-08-15** (`847f803`). Added to
+  `src/hooks/useStocks.js` (universe + Tech sector map), `server/api/cron.js` warm list, and
+  `server/api/stocks-shared.js` DEFAULT_SYMBOLS. Found and fixed a latent trap doing it:
+  DEFAULT_SYMBOLS sat on *exactly* the 50-symbol cap `/api/stocks` enforces against its own
+  default, so adding any single ticker made the endpoint 400 on a plain unparameterised
+  request. Cap raised to 60 for headroom (it is abuse protection, not a Yahoo limit).
+  Revisiting the rest of the ticker list is still open, below.
 - [ ] **Widget support on iOS and macOS.** Both platforms, one pass.
+
+## Stashed 2026-08-15
+
+Batch of 6 was dispatched; items 1–2 shipped (see checked lines above), 3–6 stopped at 69%
+session usage rather than half-built. All four are still open exactly as written above —
+this section only records what was learned while scoping them, so the next pass doesn't
+re-derive it.
+
+- [ ] **Period High/Low + SMA20/EMA50 on the commodity chart** (roadmap line ~48). Confirmed
+  still the right shape: purely client-side off already-loaded history, no backend work.
+  `StockDetailView` already computes SMA/EMA for equities — the job is reusing that path for
+  commodities, which the existing line correctly calls a chart refactor. Note the EMA
+  indicator toggle changed colour in the palette pass (`Palette.slate` now, was
+  `Palette.purple`) — match new overlays to the current tokens, don't reintroduce a literal.
+- [ ] **Buy/sell/hold button → drawer of sources** (roadmap line ~92). The "why" panel it
+  should reuse already ships on `StockDetail.jsx` (tap the BUY/SELL/HOLD pill → reasons +
+  math rationale from WHITEPAPER.md). This is a wiring job, not a new panel.
+- [ ] **Markets-row buy/sell/hold badge** (roadmap line ~62). Re-read the existing note before
+  attempting: it is *blocked*, not merely unstarted. `MarketRow` only receives
+  symbol/name/price/changePercent but `signal()` needs 35+ price points, so it needs either
+  N per-row history calls or the bulk price-history endpoint already deferred for sparklines.
+  Same blocker as the sparkline item — fix them together or not at all.
+- [ ] **Themes for the stocks view** (roadmap line ~93). Native only. `CLAUDE.md`'s standing
+  rule is "Web: dark only (Gotham brand, hardcoded dark surfaces)", so this must not turn
+  into relighting the web app. Native `Palette` is already fully adaptive light/dark, so the
+  real question is what a "theme" adds beyond system appearance — needs Joshua's intent
+  before building.
