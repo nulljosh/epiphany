@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../server/api/latest.js';
-import { list } from '@vercel/blob';
+import { list } from '../../server/api/_blob.js';
 
 // Mock Vercel Blob
-vi.mock('@vercel/blob', () => ({
+vi.mock('../../server/api/_blob.js', () => ({
   list: vi.fn(async (opts) => ({
     blobs: [
       {
@@ -132,7 +132,7 @@ describe('Latest API - No Cache', () => {
       return res;
     });
 
-    // Mock @vercel/blob to return no blobs
+    // Mock the blob layer to return no blobs
     vi.resetModules();
   });
 

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { put, del } from '@vercel/blob';
+import { put, del } from '../../server/api/_blob.js';
 import handler from '../../server/api/avatar.js';
 import { createMockKV, createReqRes, seedUser, resetAllMocks, getKVStore } from './_mocks.js';
 
 // Records the order blob calls happen in, so put-before-delete is assertable.
 const callOrder = [];
 
-vi.mock('@vercel/blob', () => ({
+vi.mock('../../server/api/_blob.js', () => ({
   put: vi.fn(async (pathname) => {
     callOrder.push('put');
     return { url: `https://blob.vercel-storage.com/${pathname}` };

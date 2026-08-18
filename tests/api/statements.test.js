@@ -19,7 +19,7 @@ vi.mock('../../server/api/_kv.js', () => ({ getKv: vi.fn().mockResolvedValue(kvM
 // metadata list now. Blob is stubbed in-memory so the handler's put/get/del
 // round-trip is exercised without network.
 const blobStore = new Map();
-vi.mock('@vercel/blob', () => ({
+vi.mock('../../server/api/_blob.js', () => ({
   put: vi.fn((pathname, buffer) => {
     const url = `https://blob.test/${pathname}`;
     blobStore.set(url, Buffer.from(buffer));
@@ -92,7 +92,7 @@ describe('statements upload handler', () => {
   // is a data breach, and 'public' is the value the avatar endpoint uses, so
   // it's exactly the wrong thing to copy-paste. Fail loudly if it regresses.
   it('stores the PDF as a private blob, never public', async () => {
-    const { put } = await import('@vercel/blob');
+    const { put } = await import('../../server/api/_blob.js');
     await handler(
       mockReq({
         method: 'POST',
