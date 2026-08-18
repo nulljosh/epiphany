@@ -6,7 +6,7 @@
     "ship-ios": { "description": "Bump, archive, upload, submit iOS", "steps": [
       { "name": "bump", "run": "cd ios && asc xcode version edit --version \"$VERSION\" --build-number \"$(date +%Y%m%d%H%M)\"" },
       { "name": "archive", "run": "cd ios && asc xcode archive --project Epiphany.xcodeproj --scheme Epiphany --archive-path ../.asc/artifacts/Epiphany.xcarchive --overwrite --xcodebuild-flag=-skipPackagePluginValidation --xcodebuild-flag=-allowProvisioningUpdates --output json" },
-      { "name": "export", "run": "cd ios && asc xcode export --archive-path ../.asc/artifacts/Epiphany.xcarchive --export-options ExportOptions.plist --xcodebuild-flag=-allowProvisioningUpdates --ipa-path ../.asc/artifacts/Epiphany.ipa --output json" },
+      { "name": "export", "run": "cd ios && asc xcode export --archive-path ../.asc/artifacts/Epiphany.xcarchive --export-options ExportOptions.plist --xcodebuild-flag=-allowProvisioningUpdates --overwrite --ipa-path ../.asc/artifacts/Epiphany.ipa --output json" },
       { "name": "publish", "if": "SUBMIT", "run": "asc publish appstore --app $IOS_APP_ID --ipa .asc/artifacts/Epiphany.ipa --version $VERSION --wait --submit --confirm --output json" }
     ] },
     "ship-mac": { "description": "Bump, archive, upload, submit Mac", "steps": [
