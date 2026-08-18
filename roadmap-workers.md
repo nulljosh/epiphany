@@ -36,6 +36,44 @@ CoinCap v2 is dead (connection refused) — don't reach for it.
 `stocks-free` flaps 500 occasionally on upstream rate limits; it does the same
 on Vercel, so it is pre-existing, not a migration regression.
 
+## BLOCKER — do not flip DNS until this is resolved
+
+22 of 57 Vercel env vars are marked **sensitive**, which makes them write-only:
+`vercel env pull` returns the literal string `[SENSITIVE]`, and the API with
+`?decrypt=true` returns nothing for them (0/22). They cannot be recovered from
+Vercel by any means. They were uploaded to the Worker as the literal string
+`[SENSITIVE]`, so these silently do the wrong thing today:
+
+- OAuth login (GitHub, Google, Twitter) — client secrets
+- `RESEND_API_KEY` — all transactional email
+- `SNAPTRADE_CLIENT_ID` / `SNAPTRADE_CONSUMER_KEY` — broker sync, and
+  `broker/morning-run` trades on it
+- `FMP_API_KEY`, `YELP_API_KEY`, `OPENSKY_*`, `ADMIN_EMAILS`
+
+This is why `stocks-free` looked healthy: FMP is failing and it is quietly
+serving the Yahoo fallback. Green status codes hid a broken key.
+
+### Already recovered (public by nature, no dashboard needed)
+- `GITHUB_CLIENT_ID` = `0v23lidQiMB1b0upXGgC`
+- `GOOGLE_CLIENT_ID` = `455155642136-apgrhdk2bc2p6gvvv029j2tsos57fcm2.apps.googleusercontent.com`
+- `TWITTER_CLIENT_ID` = `VFM1NnF6OWhXdG5SU1FUNFpYME06MTpjaQ`
+- `STRIPE_PRICE_ID_PRO` / `VITE_STRIPE_PRICE_ID_*` = `price_1U0KVCBmnhdgU9sGi8nOuDxo`
+  ("Epiphany Pro", confirmed against the Stripe API with the working secret key)
+- `SITE_URL` = `https://epiphany.heyitsmejosh.com`
+
+Client IDs came out of production's own OAuth redirects; the price ID out of the
+Stripe API. None of that needed a dashboard.
+
+### Must be fetched from each provider (the only manual work left)
+`GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_SECRET`, `TWITTER_CLIENT_SECRET`,
+`RESEND_API_KEY`, `FMP_API_KEY`, `YELP_API_KEY`, `SNAPTRADE_CONSUMER_KEY`,
+`SNAPTRADE_CLIENT_ID`, `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET`,
+`ADMIN_EMAILS`.
+
+Set them with `wrangler secret put`, then re-run the parity diff. **Status-code
+parity is not sufficient evidence here** — assert on response bodies for the
+routes each key backs.
+
 ## Left
 1. Exercise auth, Stripe checkout, and avatar upload (the KV blob write path).
 3. Arm crons and flip DNS **in the same change** — `broker/morning-run` places
