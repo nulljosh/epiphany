@@ -1,4 +1,4 @@
-import { put, del } from '@vercel/blob';
+import { put, del } from './_blob.js';
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 

@@ -1,4 +1,4 @@
-import { list } from '@vercel/blob';
+import { list } from './_blob.js';
 import { applyCors } from './_cors.js';
 import { BLOB_PREFIX } from './stocks-shared.js';
 

@@ -1,4 +1,4 @@
-import { put } from '@vercel/blob';
+import { put } from './_blob.js';
 import { getKv } from './_kv.js';
 import { YAHOO_HEADERS, FMP_BASE, getFmpApiKey, BLOB_PREFIX } from './stocks-shared.js';
 

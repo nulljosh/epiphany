@@ -1,0 +1,22 @@
+{
+  "name": "epiphany",
+  "main": "worker/index.js",
+  // 2025-04-01+ is required for nodejs_compat to populate process.env from
+  // bindings; earlier dates leave it empty and silently ignore assignment.
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "kv_namespaces": [
+    // Backs server/api/_blob.js, the @vercel/blob replacement.
+    { "binding": "BLOB", "id": "a67a16077d864bdfbb57f25254116550" }
+  ],
+  "observability": { "enabled": true },
+  // Crons stay disarmed until cutover: broker/morning-run places real trades,
+  // and Vercel is still running these on schedule. Re-enable in the same change
+  // that flips DNS, so they never fire from two places at once.
+  "triggers": { "crons": [] }
+}
