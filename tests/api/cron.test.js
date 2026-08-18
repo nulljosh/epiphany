@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../server/api/cron.js';
-import { put } from '@vercel/blob';
+import { put } from '../../server/api/_blob.js';
 
 // Mock Vercel Blob
-vi.mock('@vercel/blob', () => ({
+vi.mock('../../server/api/_blob.js', () => ({
   put: vi.fn(async (filename, content, opts) => ({
     url: `https://blob.vercel-storage.com/${filename}`,
     pathname: `/${filename}`,
