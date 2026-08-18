@@ -24,17 +24,20 @@ were corrupted this way on first upload — including `STRIPE_SECRET_KEY` and
 (real newline) but not here (backslash + n). Always `unicode_escape`-decode
 before uploading, and ping the provider afterwards.
 
-## Route parity vs production (12 sampled)
-9/12 identical. Three differ, all outbound-fetch blocks, not migration bugs:
-- `crypto`, `prices` — CoinGecko rate-limits/blocks Workers egress IPs
-- `fear-greed` — CNN returns 418 to Workers despite a browser User-Agent
+## Route parity vs production
+14/14 sampled routes match. The three egress-blocked routes are fixed:
+- `crypto` -> Kraken fallback when CoinGecko refuses (keyless, no IP gate)
+- `prices` -> Coinbase spot fallback, 24h change derived from yesterday's spot
+- `fear-greed` -> CNN has no keyed tier or free equivalent for the *stock*
+  index, so a good response is cached in KV and served stale; a cold cache
+  returns an explicit empty state instead of a 502, which the widget handles.
 
-Confirmed it's IP-based, not headers: fear-greed already sends a browser UA.
+CoinCap v2 is dead (connection refused) — don't reach for it.
+`stocks-free` flaps 500 occasionally on upstream rate limits; it does the same
+on Vercel, so it is pre-existing, not a migration regression.
 
 ## Left
-1. Decide the three blocked routes: add API keys (CoinGecko has a free keyed
-   tier, keys authenticate instead of IP), swap data source, or accept degraded.
-2. Exercise auth, Stripe checkout, and avatar upload (the KV blob write path).
+1. Exercise auth, Stripe checkout, and avatar upload (the KV blob write path).
 3. Arm crons and flip DNS **in the same change** — `broker/morning-run` places
    real trades and Vercel still runs them on schedule. Never both at once.
 4. Delete the Vercel project after a rollback window.

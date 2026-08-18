@@ -1,4 +1,6 @@
-// Crypto prices via CoinGecko (free, no auth, 30 calls/min)
+// Crypto prices via CoinGecko (free, no auth, 30 calls/min), with a Kraken
+// fallback because CoinGecko rate-limits by IP and Workers egress is shared.
+import { krakenMarkets } from './_crypto-fallback.js';
 
 const CACHE_TTL = 60_000;
 let cache = null;
@@ -42,6 +44,19 @@ export default async function handler(req, res) {
     return res.status(200).json(cache);
   } catch (err) {
     console.warn('[crypto] CoinGecko error:', err.message);
+
+    try {
+      const coins = await krakenMarkets(COINS.split(','));
+      if (coins.length > 0) {
+        cache = { coins, updatedAt: new Date().toISOString(), source: 'kraken' };
+        cacheTs = now;
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+        return res.status(200).json(cache);
+      }
+    } catch (fallbackErr) {
+      console.warn('[crypto] Kraken fallback failed:', fallbackErr.message);
+    }
+
     if (cache) return res.status(200).json(cache);
     return res.status(502).json({ error: 'Crypto data unavailable', coins: [] });
   }
