@@ -142,3 +142,7 @@ re-derive it.
   into relighting the web app. Native `Palette` is already fully adaptive light/dark, so the
   real question is what a "theme" adds beyond system appearance — needs Joshua's intent
   before building.
+
+## Ingested 2026-08-18
+- [ ] Renew Yelp (API key/subscription lapsed or expiring) — venue reviews depend on it.
+- [ ] Add Google reviews (and other review sources) alongside Yelp.
