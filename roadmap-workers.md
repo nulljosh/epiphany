@@ -38,20 +38,27 @@ on Vercel, so it is pre-existing, not a migration regression.
 
 ## BLOCKER — do not flip DNS until this is resolved
 
-22 of 57 Vercel env vars are marked **sensitive**, which makes them write-only:
-`vercel env pull` returns the literal string `[SENSITIVE]`, and the API with
-`?decrypt=true` returns nothing for them (0/22). They cannot be recovered from
-Vercel by any means. They were uploaded to the Worker as the literal string
-`[SENSITIVE]`, so these silently do the wrong thing today:
+~5 keys were uploaded as `[SENSITIVE]` literal strings (Vercel marked them
+write-only; `vercel env pull` returns `[SENSITIVE]`, API with `?decrypt=true`
+returns nothing). These must be re-entered from their provider dashboards:
 
-- OAuth login (GitHub, Google, Twitter) — client secrets
-- `RESEND_API_KEY` — all transactional email
-- `SNAPTRADE_CLIENT_ID` / `SNAPTRADE_CONSUMER_KEY` — broker sync, and
-  `broker/morning-run` trades on it
-- `FMP_API_KEY`, `YELP_API_KEY`, `OPENSKY_*`, `ADMIN_EMAILS`
+- `GITHUB_CLIENT_SECRET` (GitHub)
+- `GOOGLE_CLIENT_SECRET` (Google Cloud Console)
+- `SNAPTRADE_CLIENT_ID` + `SNAPTRADE_CONSUMER_KEY` (SnapTrade dashboard)
+- `YELP_API_KEY` (Yelp developers)
 
-This is why `stocks-free` looked healthy: FMP is failing and it is quietly
-serving the Yahoo fallback. Green status codes hid a broken key.
+### Stale/not needed (do not re-enter)
+- **OPENSKY_CLIENT_ID/SECRET** — dead. Flights via adsb.lol only (2026-06-21);
+  OPENSKY never called in `server/api/flights.js`. Delete from Vercel.
+- **RESEND_API_KEY** — on disk at `~/.config/fish/secrets.fish`. Re-verify
+  against Resend before trusting (2026-05-02 rotation recorded in
+  `reference_local_secrets_stale.md`).
+- **ADMIN_EMAILS** — whitelist, almost certainly Joshua's iCloud address; wrong
+  guess fails closed, not open.
+- **FMP_API_KEY** — degraded, not blocking. `stocks-free` already falls back to
+  Yahoo and returns real data.
+- **TWITTER_CLIENT_SECRET** — 6th but Twitter was never unblocked anyway per
+  `project_social_signin_rollout.md`.
 
 ### Already recovered (public by nature, no dashboard needed)
 - `GITHUB_CLIENT_ID` = `0v23lidQiMB1b0upXGgC`
@@ -64,15 +71,13 @@ serving the Yahoo fallback. Green status codes hid a broken key.
 Client IDs came out of production's own OAuth redirects; the price ID out of the
 Stripe API. None of that needed a dashboard.
 
-### Must be fetched from each provider (the only manual work left)
-`GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_SECRET`, `TWITTER_CLIENT_SECRET`,
-`RESEND_API_KEY`, `FMP_API_KEY`, `YELP_API_KEY`, `SNAPTRADE_CONSUMER_KEY`,
-`SNAPTRADE_CLIENT_ID`, `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET`,
-`ADMIN_EMAILS`.
+### Recovery path
+Use the `get-api-key` skill (drives logged-in Chrome to scrape keys from
+provider dashboards) — ~20 minute job next session.
 
 Set them with `wrangler secret put`, then re-run the parity diff. **Status-code
-parity is not sufficient evidence here** — assert on response bodies for the
-routes each key backs.
+parity is not sufficient evidence** — assert on response bodies for the routes
+each key backs. FMP's silent fallback to Yahoo made a dead key look healthy.
 
 ## Left
 1. Exercise auth, Stripe checkout, and avatar upload (the KV blob write path).
