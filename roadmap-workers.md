@@ -36,6 +36,18 @@ CoinCap v2 is dead (connection refused) — don't reach for it.
 `stocks-free` flaps 500 occasionally on upstream rate limits; it does the same
 on Vercel, so it is pre-existing, not a migration regression.
 
+## Test suite: green (413 tests, 32 files)
+
+The port broke CI twice before this was true, both worth not rediscovering:
+- Moving `jsdom` to devDependencies with a bare `npm i -D` upgraded it
+  27.4.0 -> 30.0.1; jsdom 30's nested undici needs newer Node than CI runs, so
+  vitest collected 32 startup errors and ran **zero** tests. Pinned back.
+- The four test files mocking the blob layer still mocked `@vercel/blob` after
+  the handlers moved to `./_blob.js`, so the mocks stopped intercepting (17
+  failures). Repointed, including one dynamic `await import` inside a test body.
+
+Fixed in c9121e1.
+
 ## BLOCKER — do not flip DNS until this is resolved
 
 ~5 keys were uploaded as `[SENSITIVE]` literal strings (Vercel marked them
