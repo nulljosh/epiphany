@@ -1,4 +1,4 @@
-import { put, del, get as getBlob } from '@vercel/blob';
+import { put, del, get as getBlob } from './_blob.js';
 import { applyCors } from './_cors.js';
 import { getStatementsPayload, summarizeStatementBuffer } from './statements-data.js';
 import { getKv } from './_kv.js';
