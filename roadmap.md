@@ -85,21 +85,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 > Resume note (2026-08-11), **updated 2026-08-13**: the `wip: partial work from /work notes ingest` commit (`2a46fe9`) has now been reviewed and verified — 413 tests pass, iOS and macOS both BUILD SUCCEEDED. Five of the items above are genuinely done and checked off. The "unpushed" claim in the original note was already stale: `2a46fe9` and `d98e8ce` are both on `origin/main`. Safe to build on.
 
 ## Design debt — standing colour rule violations
-- [x] **Teal/cyan and purple removed across iOS/macOS/web (2026-08-15).** Fixed at the
-  definition point, not the ~20 call sites: the offending categorical slots were renamed in
-  each platform's single palette source, so no constant survives named for a colour it no
-  longer is. `purple`/`indigo`/`ultraPurple` -> `slate` #8CA0B3 / `sand` #C2A878 /
-  `slateDeep`; `cyan`/`cyanAlt` -> `paleBlue` #7FB2FF / `paleBlueAlt`. Raw SwiftUI
-  `.mint`/`.teal`/`.cyan`/`.purple`/`.indigo` literals and the hardcoded web hexes swept to
-  the same tokens. A second pass scanning by *hue* rather than by name caught 28 more the
-  name-grep missed (`#9d4edd` PLTR, `#67e8f9`/`#a78bfa` map pins, Settings' purple+teal
-  avatar palettes, three StockDetail indicator colours, the `#8b5cf6` Pro badge).
-  Deliberately left: the nine real corporate brand hexes in `App.jsx`'s ASSETS map (FedEx
-  #4D148C, Accenture #A100FF, Cisco, Salesforce, Bristol-Myers et al) — those are a
-  company's actual identity, so recolouring them makes the data wrong rather than the UI
-  compliant; they are allowlisted by name in the check. Regression guard:
-  `scripts/check-no-teal-purple.py` (scans by hue band, exit 1 on any non-brand violation).
-  Commits `b03074f` + `75d16b2`. iOS + macOS BUILD SUCCEEDED, web build clean, 413 tests pass.
 - [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
 - [ ] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
 - [ ] Add themes (dark mode etc.) to the stocks view
@@ -107,13 +92,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Analyze project from CLAUDE.md + README.md, then refresh the app icon based on that analysis
 
 ### From Notes (2026-08-14)
-- [x] **Add Duolingo (DUOL) to the stock list — DONE 2026-08-15** (`847f803`). Added to
-  `src/hooks/useStocks.js` (universe + Tech sector map), `server/api/cron.js` warm list, and
-  `server/api/stocks-shared.js` DEFAULT_SYMBOLS. Found and fixed a latent trap doing it:
-  DEFAULT_SYMBOLS sat on *exactly* the 50-symbol cap `/api/stocks` enforces against its own
-  default, so adding any single ticker made the endpoint 400 on a plain unparameterised
-  request. Cap raised to 60 for headroom (it is abuse protection, not a Yahoo limit).
-  Revisiting the rest of the ticker list is still open, below.
 - [ ] **Widget support on iOS and macOS.** Both platforms, one pass.
 
 ## Stashed 2026-08-15
