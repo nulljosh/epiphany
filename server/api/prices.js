@@ -1,4 +1,5 @@
 import { applyCors } from './_cors.js';
+import { coinbaseSpot } from './_crypto-fallback.js';
 export default async function handler(req, res) {
   applyCors(req, res);
   try {
@@ -51,6 +52,17 @@ export default async function handler(req, res) {
     res.status(200).json(prices);
   } catch (error) {
     console.error('Prices API error:', error);
+
+    // CoinGecko IP-gates Workers egress; Coinbase is keyless and doesn't.
+    try {
+      const [btc, eth] = await Promise.all([coinbaseSpot('BTC'), coinbaseSpot('ETH')]);
+      if (btc.spot !== null || eth.spot !== null) {
+        res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+        return res.status(200).json({ btc, eth });
+      }
+    } catch (fallbackErr) {
+      console.error('Prices fallback error:', fallbackErr.message);
+    }
 
     if (error.name === 'AbortError') {
       return res.status(504).json({
