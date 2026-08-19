@@ -124,3 +124,7 @@ re-derive it.
 ## Ingested 2026-08-18
 - [ ] Renew Yelp (API key/subscription lapsed or expiring) — venue reviews depend on it.
 - [ ] Add Google reviews (and other review sources) alongside Yelp.
+
+## Braindump 2026-08-19
+- [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
+- [ ] Social layer copying Loopt (friend map / presence). Reference: https://youtu.be/KhhId_WG7RA?si=c0cu-aQHq087KJeF
