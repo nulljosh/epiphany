@@ -1,6 +1,6 @@
 # Epiphany Technical Whitepaper
 
-**v1.10.4** | May 2026
+**v2.6.1 web / 2.5.4 iOS / 2.5.2 macOS** | August 2026
 
 Epiphany is a map first intelligence platform. It pulls live geospatial data,
 markets, prediction markets, people, and news into one view, and it can trade a
@@ -88,12 +88,13 @@ connected, becomes the portfolio value of record.
 | Layer | Source | Auth | Notes |
 |-------|--------|------|-------|
 | Earthquakes | USGS | None | Global, real time |
-| Flights | OpenSky Network | Optional | Throttled when unauthenticated |
+| Flights | adsb.lol | None | Community ADS-B feed, replaced OpenSky |
 | Incidents | OpenStreetMap Overpass | None | Police, fire, hospitals, cameras |
 | Traffic | TomTom | API key | Free tier, key needed |
 | Weather | NWS + Environment Canada | None | Alerts |
 | Crime | Vancouver and Surrey open data, GDELT | None | Geo tagged |
 | Local events and places | Wikipedia, OSM, Ticketmaster | Mixed | Wikipedia is the free fallback |
+| Venue reviews | Yelp Fusion | API key | Ratings and review snippets on place markers |
 | Wildfires | NASA EONET / FIRMS | Optional | Satellite detections |
 | News | GDELT | None | Geo extraction |
 | Predictions | Polymarket | None | Whale tracking, probability markets |
@@ -114,7 +115,7 @@ jump on load.
 
 ## Auth and Billing
 
-Sessions use bcrypt with tokens in Vercel KV (Upstash Redis). Billing is Stripe
+Sessions use bcrypt with tokens in Upstash Redis (KV). Billing is Stripe
 Checkout, Free or $1 per week Premium. Free gets the map, ticker, and situation
 monitor. Premium unlocks portfolio, ontology, and deep data.
 
@@ -125,13 +126,16 @@ monitor. Premium unlocks portfolio, ontology, and deep data.
 | iOS | SwiftUI | 4 tabs, MapKit, parallel preload, auto refresh markets |
 | macOS | SwiftUI | 5 section nav, MapKit |
 | watchOS | SwiftUI | Glance complications |
+
+Native apps are live on the App Store (id6779522175). Portfolio, ontology, and deep
+data are gated behind Pro on every platform, matching the web tiering.
 | Widgets | SwiftUI | iOS and macOS extensions |
 
 All native apps share the API backend over URLSession with cookie persistence.
 
 ## Performance
 
-Cold start about 2 seconds on Vercel Fluid Compute. Data refresh on a 120 second
+Cold start about 2 seconds. Data refresh on a 120 second
 poll, paused when hidden. Bundle about 1MB gzipped, mostly MapLibre GL. Test suite
 runs across Vitest and Playwright.
 
