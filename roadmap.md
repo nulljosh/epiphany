@@ -128,3 +128,10 @@ re-derive it.
 ## Braindump 2026-08-19
 - [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
 - [ ] Social layer copying Loopt (friend map / presence). Reference: https://youtu.be/KhhId_WG7RA?si=c0cu-aQHq087KJeF
+
+## Landing page: live demo background (2026-08-19)
+Splash/hero background is a static image preview of the app. Replace with a live,
+non-interactive demo of the real app rendering behind the hero (pointer-events:none,
+demo/mock data, no auth). After sign-up, the same view becomes the real interactive
+app and the marketing chrome (Log in / Get Epiphany / Get started) hides.
+Scope: large UI change — do in a dedicated session.
