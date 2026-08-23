@@ -136,3 +136,10 @@ non-interactive demo of the real app rendering behind the hero (pointer-events:n
 demo/mock data, no auth). After sign-up, the same view becomes the real interactive
 app and the marketing chrome (Log in / Get Epiphany / Get started) hides.
 Scope: large UI change — do in a dedicated session.
+
+## Ingested 2026-08-22
+- [ ] Add a police scanner feature.
+- [ ] Build upon the ontology / people index feature.
+- [ ] Add Moderna and Pfizer to the stock list, plus any other suggestions. "Theoretically an infinite list that the user can organize and categorize themselves" — i.e. make the stock list user-extensible and user-categorizable rather than a fixed set.
+- [ ] Add VIX to the stock list.
+- [ ] Portfolio syncing is laggy and unreliable — "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end.
