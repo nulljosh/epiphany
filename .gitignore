@@ -172,3 +172,4 @@ ios/Configs/Secrets.xcconfig
 **/.asc/release/
 **/.asc/runs/
 **/.asc/reports/
+.asc/web-review/
