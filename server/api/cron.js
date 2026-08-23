@@ -23,6 +23,7 @@ const ALL_SYMBOLS = [
   'AMT', 'PLD', 'CME', 'WM', 'XYZ',
   'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP', 'DUOL',
   'GC=F', 'SI=F', 'CL=F',
+  '^VIX',
   'SPY', 'SJIM', 'LJIM',
 ];
 

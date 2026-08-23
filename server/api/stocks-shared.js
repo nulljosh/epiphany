@@ -14,7 +14,9 @@ export const DEFAULT_SYMBOLS = [
   // Finance
   'JPM', 'GS', 'V', 'MA',
   // Healthcare / Defense
-  'UNH', 'LMT', 'RTX',
+  'UNH', 'LMT', 'RTX', 'MRNA', 'PFE',
+  // Volatility
+  '^VIX',
   // Media / Telecom / Consumer
   'DIS', 'T', 'IBM', 'SHOO', 'APP',
   // Space -- SPCX = SpaceX (Nasdaq IPO 2026-06-12), RKLB = Rocket Lab

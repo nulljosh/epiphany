@@ -40,6 +40,8 @@ const DEFAULT_SYMBOLS = [
   'DELL', 'PENG', 'DRAM', 'SNDK', 'IREN', 'MU', 'NBIS', 'CRDO',
   // Commodity futures
   'GC=F', 'SI=F', 'CL=F',
+  // Volatility
+  '^VIX',
   // Cramer tracker ETFs + benchmark
   'SPY', 'SJIM', 'LJIM',
 ];
@@ -80,9 +82,11 @@ export const SECTOR_MAP = {
   'GC=F': 'Commodities', 'SI=F': 'Commodities',
   // ETFs
   SPY: 'ETFs', SJIM: 'ETFs', LJIM: 'ETFs', IWM: 'ETFs',
+  // Volatility
+  '^VIX': 'Volatility',
 };
 
-export const SECTOR_ORDER = ['Tech', 'Financials', 'Healthcare', 'Energy', 'Industrials', 'Consumer', 'Telecom', 'Utilities', 'REITs', 'Commodities', 'ETFs'];
+export const SECTOR_ORDER = ['Tech', 'Financials', 'Healthcare', 'Energy', 'Industrials', 'Consumer', 'Telecom', 'Utilities', 'REITs', 'Commodities', 'Volatility', 'ETFs'];
 
 const STALE_AFTER_MS = 10 * 60 * 1000;
 const MAX_SYMBOLS_PER_REQUEST = 50;
@@ -247,6 +251,8 @@ const FALLBACK_DATA = {
   SPY:    { symbol: 'SPY',   price: 689.43,  changePercent: 0.11 },
   SJIM:   { symbol: 'SJIM',  price: 22.80,   changePercent: 0.25 },
   LJIM:   { symbol: 'LJIM',  price: 21.40,   changePercent: -0.38 },
+  // Volatility
+  '^VIX': { symbol: '^VIX',  price: 16.40,   changePercent: -1.20 },
 };
 
 // Parse stock data from either serverless array or Yahoo quoteResponse format
