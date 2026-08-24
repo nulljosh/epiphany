@@ -221,7 +221,7 @@ private struct SharedErrorBanner: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
+        .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
         .padding(.horizontal)
     }
 }
