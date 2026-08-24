@@ -114,7 +114,7 @@ private struct FloatingTabBar: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 10)
         .frame(maxWidth: 300)
-        .background(.regularMaterial, in: Capsule())
+        .liquidGlass(in: Capsule(), interactive: true)
         .overlay(Capsule().stroke(Palette.overlay.opacity(0.08), lineWidth: 1))
     }
 
@@ -156,7 +156,7 @@ private struct SharedErrorBanner: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
+        .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
         .padding(.horizontal)
         .overlay(Capsule().stroke(Palette.overlay.opacity(0.1), lineWidth: 1))
     }
