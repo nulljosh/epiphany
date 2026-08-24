@@ -22,7 +22,6 @@
 - [ ] Follow-up on the above: the fallback is a **publisher favicon, not a true per-article image**. Genuinely per-article imagery needs og:image, which for Google-sourced items means resolving the opaque `CBMi...` redirect *then* fetching the article page — ~2 network round-trips per row, too expensive to do inline in the handler. Only worth building if GDELT stays dead; check whether GDELT recovers first (it is rate-limiting shared Vercel IPs — "Please limit requests to one every 5 seconds"), since a healthy GDELT already supplies real images for free.
 
 ## App icon
-- [x] iOS build 2.5.4 (uploaded 2026-08-04 15:03) ships old slate/orange icon. Icon fix landed 6 hours later (20:58). Repo is correct. Needs rebuild+resubmit to refresh live version. — STALE: 2.6.1+ is live, icon shipped.
 - [ ] `AppIcon-dark.png`/`AppIcon-tinted.png` are byte-identical copies of the light icon, not actually designed — cosmetic, tinted variant won't tint meaningfully.
 - [ ] Icon still reads generic/weak overall — a real personality refresh has been repeatedly deferred (imported from App Store.pdf 07-29, reconfirmed 08-04).
 
