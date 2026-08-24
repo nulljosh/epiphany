@@ -147,3 +147,14 @@ Scope: large UI change — do in a dedicated session.
 
 - [ ] **Hero animation pass** (Notes 2026-08-24). Reference: bookrank's hero animation — same style/vibe. Subject here is **the situation map — the actual map**. Login/registration/authentication required to actually interact with the map; otherwise features are gated. (Josh: "might have already noted all of this in wiki" — dedupe against `wiki/pages/epiphany.md` before building.)
 - [ ] Confirm all major banks are present in the stocks list (Notes 2026-08-24).
+- [ ] **Hero: animate the situation map.** Deferred 2026-08-24 when the other six apps got their
+      hero treatment. Use the existing animated SVG map from the 2026-07-28 landing restyle as
+      the backdrop, following the pattern now shipped on wordroot/curvely/wiretext/newsline
+      (absolute layer behind `.hero .container`, `.hero::after` scrim for headline contrast,
+      `prefers-reduced-motion` guard, fails soft).
+- [ ] **Gate map interaction behind auth** (the second half of the same note). Josh: "login/
+      registration/authentication to actually interact with the map. Otherwise, features gated."
+      This is a product feature, not a hero animation — deliberately kept out of the hero work
+      and left for its own session. Epiphany already has hand-rolled Google/Facebook OAuth server
+      code waiting on credentials (`server/api/auth.js:202-329`), so decide whether this rides on
+      that or on the existing native Apple sign-in before scoping.
