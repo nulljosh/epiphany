@@ -564,7 +564,7 @@ struct SituationView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.ultraThinMaterial, in: Capsule())
+            .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
             .padding(.horizontal)
             .padding(.top, 60)
             .transition(.move(edge: .top).combined(with: .opacity))
@@ -583,7 +583,7 @@ struct SituationView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(.ultraThinMaterial, in: Capsule())
+            .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
             .padding(.bottom, 100)
         } else if isLoadingData {
             HStack(spacing: 6) {
@@ -595,7 +595,7 @@ struct SituationView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(.ultraThinMaterial, in: Capsule())
+            .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
             .padding(.bottom, 100)
         } else if totalEventCount == 0 && allSourcesDisabled {
             Text("Enable data sources in Settings")
@@ -603,7 +603,7 @@ struct SituationView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(.ultraThinMaterial, in: Capsule())
+                .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
                 .padding(.bottom, 100)
         } else if totalEventCount > 0 && totalEventCount < 3 {
             Text("Quiet area -- \(totalEventCount) events found")
@@ -611,7 +611,7 @@ struct SituationView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(.ultraThinMaterial, in: Capsule())
+                .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
                 .padding(.bottom, 100)
         } else if totalEventCount >= 3 {
             Text("\(totalEventCount) events nearby")
@@ -619,7 +619,7 @@ struct SituationView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(.ultraThinMaterial, in: Capsule())
+                .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
                 .padding(.bottom, 100)
         }
     }
@@ -1140,7 +1140,7 @@ struct SituationView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
-        .background(.ultraThinMaterial, in: Capsule())
+        .liquidGlass(in: Capsule(), interactive: true, fallback: .ultraThinMaterial)
     }
 
     private var searchSuggestions: some View {
