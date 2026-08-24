@@ -11,6 +11,7 @@
   decision: a sign, a `direction` field, or a separate receivables list.
 
 ## Urgent
+- [ ] **Portfolio balance mismatch (2026-08-24 evening).** The portfolio screen shows a total balance of $75.35, but the Holdings list shows $193.93 + MSB $75.25 = $269.18. Missing accounts or stale duplicate holdings in the backend. Discovered during screenshot refresh; needs investigation.
 - [ ] **Statement upload — two real bugs found and fixed 2026-08-10, awaiting Josh's retry to confirm they were *the* cause.** The 08-06 Blob fix was genuinely incomplete; two independent second bugs existed, both of which produce exactly "the statement never landed":
   1. **Unparseable PDF → 500, upload discarded** (fixed, regression test added). `summarizeStatementBuffer` returned `{ spendingMonth: null }` whenever `pdf-parse` threw, and the upload handler's dedupe then did `spendingMonth.month` on that null → `TypeError` → the outer catch returned a 500 with `statements: []`. The PDF was already written to Blob at that point, so it was orphaned and never recorded in KV. Any statement whose PDF pdf-parse can't read (encrypted, or a newer Wealthsimple template) failed permanently and silently this way. Fixed at the source in `server/api/statements-data.js` — falls back to `summarizeTransactions([], filename)`, so an unreadable statement is still stored and just gets named after its filename. Belt-and-braces `?.` in `server/api/statements.js`. Test: `tests/api/statements.test.js` "still stores a statement whose PDF could not be parsed".
   2. **Advertised 25MB cap the transport cannot carry** (fixed). The PDF travels base64-encoded inside a JSON body to a Vercel *Serverless Function*, whose request-body limit is **4.5MB, enforced by the platform** — the handler never runs, so the client got a bare 413 with no useful message. Base64 inflates 4/3, so the honest PDF ceiling is 3MB, not the 25MB that `server/api/statements.js`, `ios/Views/PortfolioView.swift` and `macos/Views/PortfolioView.swift` all claimed (25MB was Blob's limit, which this path never gets to use). All three now say 3MB and reject oversized files client-side with a real message.
@@ -20,6 +21,9 @@
 
 ## From Apple Notes (imported 2026-08-08)
 - [ ] Follow-up on the above: the fallback is a **publisher favicon, not a true per-article image**. Genuinely per-article imagery needs og:image, which for Google-sourced items means resolving the opaque `CBMi...` redirect *then* fetching the article page — ~2 network round-trips per row, too expensive to do inline in the handler. Only worth building if GDELT stays dead; check whether GDELT recovers first (it is rate-limiting shared Vercel IPs — "Please limit requests to one every 5 seconds"), since a healthy GDELT already supplies real images for free.
+
+## OAuth rollout (2026-08-24)
+- [ ] iOS GitHub + Google sign-in: integrate native SDK flows. Web already ships hand-rolled GitHub + Google OAuth (server/api/auth.js:202-329, implemented 2026-07-09), no new web work needed. Existing Sign in with Apple (iOS native) stays as-is.
 
 ## App icon
 - [ ] `AppIcon-dark.png`/`AppIcon-tinted.png` are byte-identical copies of the light icon, not actually designed — cosmetic, tinted variant won't tint meaningfully.
