@@ -142,3 +142,8 @@ Scope: large UI change — do in a dedicated session.
 - [ ] Add Moderna and Pfizer to the stock list, plus any other suggestions. "Theoretically an infinite list that the user can organize and categorize themselves" — i.e. make the stock list user-extensible and user-categorizable rather than a fixed set.
 - [ ] Add VIX to the stock list.
 - [ ] Portfolio syncing is laggy and unreliable — "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end.
+
+## Ingested 2026-08-24
+
+- [ ] **Hero animation pass** (Notes 2026-08-24). Reference: bookrank's hero animation — same style/vibe. Subject here is **the situation map — the actual map**. Login/registration/authentication required to actually interact with the map; otherwise features are gated. (Josh: "might have already noted all of this in wiki" — dedupe against `wiki/pages/epiphany.md` before building.)
+- [ ] Confirm all major banks are present in the stocks list (Notes 2026-08-24).
