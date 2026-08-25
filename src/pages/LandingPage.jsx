@@ -383,6 +383,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
         <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
         <div className="lp-hero-actions">
           <a className="lp-btn-glass glass-pill" href="#markets">See what&rsquo;s inside</a>
+          <a className="lp-btn-glass glass-pill" href="https://apps.apple.com/app/id6779522175">Download on the App Store</a>
         </div>
 
         <div className="lp-hero-cta-bottom">
