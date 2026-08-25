@@ -11,22 +11,26 @@ final class PreviewScreenshot: XCTestCase {
         let app = XCUIApplication()
         setupSnapshot(app)
         app.launchArguments.append("UITEST_SNAPSHOT")
-        // Public demo account seeded specifically for App Store review/screenshots
-        // (see .env.accounts.local DEMO_EMAIL/DEMO_PASSWORD) -- not a real user's data.
-        app.launchEnvironment["SNAPSHOT_EMAIL"] = ProcessInfo.processInfo.environment["SNAPSHOT_EMAIL"] ?? "demo@heyitsmejosh.com"
-        app.launchEnvironment["SNAPSHOT_PASSWORD"] = ProcessInfo.processInfo.environment["SNAPSHOT_PASSWORD"] ?? "EpiphanyDemo2026!"
+        // Credentials come from .env.accounts.local DEMO_EMAIL/DEMO_PASSWORD.
+        // No fallback account: an empty demo login silently produced screenshots
+        // with no portfolio and no settings data. Fail the run instead.
+        let env = ProcessInfo.processInfo.environment
+        guard let email = env["SNAPSHOT_EMAIL"], let password = env["SNAPSHOT_PASSWORD"] else {
+            XCTFail("SNAPSHOT_EMAIL/SNAPSHOT_PASSWORD not set (pass via TEST_RUNNER_ prefix)")
+            return app
+        }
+        app.launchEnvironment["SNAPSHOT_EMAIL"] = email
+        app.launchEnvironment["SNAPSHOT_PASSWORD"] = password
         app.launch()
 
         // Wait for UI to settle: location fix arrives, map re-centers, tiles fetch.
         sleep(10)
 
-        // Auto-login can take a few seconds; wait for the Portfolio "Sign In"
-        // placeholder to disappear before screenshotting authenticated tabs.
-        let signInButton = app.buttons["Sign In"]
-        for _ in 0..<20 {
-            if !signInButton.exists { break }
-            sleep(1)
-        }
+        // Auto-login can take a few seconds. The Portfolio tab only renders once
+        // isLoggedIn is true, so it is the login signal -- the old check watched
+        // for a "Sign In" button that lives on a tab that isn't on screen yet, so
+        // it always passed instantly and Portfolio was missing from the run.
+        _ = app.buttons["tab-portfolio"].waitForExistence(timeout: 30)
 
         let gotIt = app.buttons["Got it"]
         if gotIt.waitForExistence(timeout: 3) {
