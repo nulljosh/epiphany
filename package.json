@@ -15,6 +15,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "shots": "bash ios/scripts/update_screenshots.sh",
     "test:speed": "playwright test tests/speed.spec.js"
   },
   "dependencies": {
