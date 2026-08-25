@@ -658,3 +658,16 @@ html:has(.lp) { scroll-behavior: smooth; }
   .lp .lp-footer { gap: 16px; }
   .lp .lp-footer-logo { justify-content: center; }
 }
+
+/* ─── PRE-AUTH SHELL ───
+   The live app map runs behind the landing page and the auth card. It is inert
+   until the visitor signs in: no pan, no zoom, no marker clicks. */
+.epiphany-preauth { position: relative; min-height: 100vh; background: #05070c; }
+.preauth-map { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.preauth-content { position: relative; z-index: 1; }
+/* Hero is the only window onto the map; everything below it is opaque. */
+.lp { background: transparent; }
+.lp .lp-hero { background: radial-gradient(ellipse at 50% 45%, rgba(5,7,12,0.86) 0%, rgba(5,7,12,0.62) 45%, rgba(5,7,12,0.92) 100%); }
+.lp .lp-ticker-wrap, .lp .lp-section, .lp .lp-final, .lp .lp-footer { background: var(--bg, #05070c); }
+.lp.zooming { opacity: 0; transform: scale(1.04); transition: opacity 380ms ease, transform 380ms ease; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .lp.zooming { transition: none; } }

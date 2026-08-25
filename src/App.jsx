@@ -147,11 +147,16 @@ const ASSETS = {
 };
 const SYMS = Object.keys(ASSETS);
 
+// Pre-auth landing runs the real map, so every anonymous visit costs a fan-out of
+// /api/* calls. Only the layers that read as "alive" at a glance are on.
+const PREAUTH_LAYERS = { flights: true, incidents: true, localEvents: true, weather: true, crime: true, earthquakes: false, news: false, traffic: false, predictions: false, heatmap: false, wildfires: false, aqi: false };
+
 export default function App() {
   const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout, refresh, changeName, changeEmail, changePassword } = useAuth();
   const resetToken = useMemo(() => new URLSearchParams(window.location.search).get('token'), []);
   const [authView, setAuthView] = useState(resetToken ? 'reset' : 'login'); // 'login' | 'register' | 'reset'
   const [showLanding, setShowLanding] = useState(true);
+  const [zooming, setZooming] = useState(false);
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
   const [dark, setDark] = useState(true);
@@ -729,22 +734,44 @@ const reset = useCallback(() => {
     else setDesktopPanelOpen(true);
   }, [isMobileNav]);
 
-  // Landing page for unauthenticated visitors
-  if (!isAuthenticated && !authLoading && showLanding) {
+  // Pre-auth: the real map runs behind both the landing page and the auth card,
+  // inert (pointer-events: none) until the visitor is signed in. Entering auth
+  // pushes the camera in while the marketing copy dissolves.
+  if (!isAuthenticated && !authLoading) {
+    const enterAuth = (view) => {
+      const map = mapInstanceRef.current;
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      const go = () => { setShowLanding(false); setAuthView(view); setZooming(false); };
+      if (reduced || !map) { go(); return; }
+      setZooming(true);
+      map.easeTo({ zoom: (map.getZoom() ?? 11) + 2.4, duration: 1100, easing: (x) => x * (2 - x) });
+      setTimeout(go, 600);
+    };
     return (
-      <LandingPage
-        onRegister={() => { setShowLanding(false); setAuthView('register'); }}
-        onRegisterPaid={() => {
-          sessionStorage.setItem('epiphany_pending_plan', 'starter');
-          setShowLanding(false);
-          setAuthView('register');
-        }}
-        onLogin={() => { setShowLanding(false); setAuthView('login'); }}
-      />
+      <div className="epiphany-preauth">
+        <div className="preauth-map" aria-hidden="true">
+          <LiveMapBackdrop dark mapLayers={PREAUTH_LAYERS} autoGeo={false} chrome={false} onMapReady={handleMapReady} />
+        </div>
+        <div className="preauth-content">
+          {showLanding && !resetToken ? (
+            <LandingPage
+              zooming={zooming}
+              onRegister={() => enterAuth('register')}
+              onRegisterPaid={() => {
+                sessionStorage.setItem('epiphany_pending_plan', 'starter');
+                enterAuth('register');
+              }}
+              onLogin={() => enterAuth('login')}
+            />
+          ) : (
+            AuthPage({ authLoading, isAuthenticated, authView, setAuthView, authError, resetToken, login, register, t })
+          )}
+        </div>
+      </div>
     );
   }
 
-  // Auth gate
+  // Auth gate (loading spinner / reset-token flow)
   const authGate = AuthPage({ authLoading, isAuthenticated, authView, setAuthView, authError, resetToken, login, register, t });
   if (authGate) return authGate;
 

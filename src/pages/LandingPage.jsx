@@ -336,7 +336,7 @@ function PeopleScreen() {
   );
 }
 
-export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
+export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zooming = false }) {
   // scroll reveal — same behavior as the prototype: reveal once on intersect,
   // 3s safety net so content never stays hidden
   useEffect(() => {
@@ -358,7 +358,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
   const login = (e) => { e.preventDefault(); onLogin(); };
 
   return (
-    <div className="lp">
+    <div className={`lp${zooming ? ' zooming' : ''}`}>
       {/* ─── NAV ─── */}
       <nav className="lp-nav">
         <a className="lp-logo" href="#" onClick={(e) => e.preventDefault()}><img src="/epiphany-icon.svg" alt="Epiphany" />Epiphany</a>
@@ -375,9 +375,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin }) {
 
       {/* ─── HERO ─── */}
       <header className="lp-hero">
-        <div className="lp-hero-bg" aria-hidden="true">
-          <MapSceneSVG />
-        </div>
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
         <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
