@@ -22,6 +22,8 @@ const DEFAULT_SYMBOLS = [
   'QCOM', 'PM', 'DHR', 'INTU', 'UNP', 'RTX', 'HON', 'SPGI',
   // Financials
   'BAC', 'GS', 'MS', 'C', 'WFC', 'BLK', 'SCHW', 'AXP',
+  // Canadian banks (NYSE-listed big five)
+  'RY', 'TD', 'BNS', 'BMO', 'CM',
   // Healthcare
   'PFE', 'MRNA', 'AMGN', 'BMY', 'MDT', 'BSX', 'ELV', 'CVS',
   // Industrials
@@ -58,6 +60,7 @@ export const SECTOR_MAP = {
   'BRK-B': 'Financials', V: 'Financials', JPM: 'Financials', MA: 'Financials', BAC: 'Financials',
   GS: 'Financials', MS: 'Financials', C: 'Financials', WFC: 'Financials', BLK: 'Financials',
   SCHW: 'Financials', AXP: 'Financials', SPGI: 'Financials', CME: 'Financials',
+  RY: 'Financials', TD: 'Financials', BNS: 'Financials', BMO: 'Financials', CM: 'Financials',
   // Healthcare
   LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare', MRK: 'Healthcare', ABBV: 'Healthcare',
   TMO: 'Healthcare', DHR: 'Healthcare', PFE: 'Healthcare', AMGN: 'Healthcare', BMY: 'Healthcare',
@@ -152,6 +155,12 @@ const FALLBACK_DATA = {
   UNH:    { symbol: 'UNH',    price: 290.00, changePercent: -0.38 },
   XOM:    { symbol: 'XOM',    price: 147.28, changePercent:  0.44 },
   JPM:    { symbol: 'JPM',    price: 310.79, changePercent:  0.19 },
+  // Canadian banks (previous close 2026-08-24)
+  RY:     { symbol: 'RY',     price: 205.23, changePercent:  0.59 },
+  TD:     { symbol: 'TD',     price: 117.15, changePercent: -0.51 },
+  BNS:    { symbol: 'BNS',    price: 87.57,  changePercent: -0.81 },
+  BMO:    { symbol: 'BMO',    price: 174.43, changePercent: -1.19 },
+  CM:     { symbol: 'CM',     price: 116.49, changePercent: -1.34 },
   WMT:    { symbol: 'WMT',    price: 122.99, changePercent: -0.61 },
   JNJ:    { symbol: 'JNJ',    price: 242.49, changePercent:  0.11 },
   MA:     { symbol: 'MA',     price: 526.41, changePercent:  0.05 },

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import handler from '../../server/api/stocks.js';
+import handler, { MAX_REQUEST_SYMBOLS } from '../../server/api/stocks.js';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -142,8 +142,8 @@ describe('Stocks API', () => {
   });
 
   it('should limit number of symbols', async () => {
-    // One past the handler's 60-symbol cap.
-    const tooManySymbols = Array(61).fill('AAPL').join(',');
+    // One past the handler's cap, read from the handler so this can't drift.
+    const tooManySymbols = Array(MAX_REQUEST_SYMBOLS + 1).fill('AAPL').join(',');
     mockReq.query.symbols = tooManySymbols;
 
     await handler(mockReq, mockRes);
