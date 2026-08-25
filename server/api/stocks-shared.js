@@ -12,7 +12,9 @@ export const DEFAULT_SYMBOLS = [
   // Precious Metals / Mining
   'GLD', 'SLV', 'NEM', 'FCX', 'COPX',
   // Finance
-  'JPM', 'GS', 'V', 'MA',
+  'JPM', 'GS', 'V', 'MA', 'BAC', 'WFC', 'C', 'MS',
+  // Canadian banks (NYSE-listed big five)
+  'RY', 'TD', 'BNS', 'BMO', 'CM',
   // Healthcare / Defense
   'UNH', 'LMT', 'RTX', 'MRNA', 'PFE',
   // Volatility

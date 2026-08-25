@@ -279,13 +279,16 @@ async function enrichWithFundamentals(stocks) {
   });
 }
 
+// Abuse protection, not a Yahoo limit. This has silently 400'd the endpoint
+// against its own default list twice (50 -> 60, then 60 -> 80 when the big-five
+// Canadian banks landed 2026-08-24), so keep real headroom above DEFAULT_SYMBOLS
+// (63) rather than tracking it exactly. Exported so the test asserts the real
+// cap instead of a copy that drifts.
+export const MAX_REQUEST_SYMBOLS = 80;
+
 export default async function handler(req, res) {
-  // 60, not 50: DEFAULT_SYMBOLS sat exactly on the old cap, so adding a single
-  // ticker to the default list 400'd this endpoint against its own default.
-  // The cap is abuse protection, not a Yahoo limit — leave headroom above the
-  // default list rather than tracking it exactly.
   const parsed = parseSymbols(req.query.symbols, {
-    max: 60,
+    max: MAX_REQUEST_SYMBOLS,
     validate: true,
     tooManyMessage: 'Too many symbols',
   });

@@ -144,13 +144,13 @@ Scope: large UI change — do in a dedicated session.
 - [ ] Add a police scanner feature.
 - [ ] Build upon the ontology / people index feature.
 - [ ] Add Moderna and Pfizer to the stock list, plus any other suggestions. "Theoretically an infinite list that the user can organize and categorize themselves" — i.e. make the stock list user-extensible and user-categorizable rather than a fixed set.
-- [ ] Add VIX to the stock list.
+- [x] Add VIX to the stock list. **Already done** (verified 2026-08-24): `^VIX` was already in `src/hooks/useStocks.js` DEFAULT_SYMBOLS + SECTOR_MAP + FALLBACK_DATA, `server/api/cron.js`, and `server/api/stocks-shared.js`, with a `Volatility` sector in SECTOR_ORDER. Nothing to add.
 - [ ] Portfolio syncing is laggy and unreliable — "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end.
 
 ## Ingested 2026-08-24
 
 - [ ] **Hero animation pass** (Notes 2026-08-24). Reference: bookrank's hero animation — same style/vibe. Subject here is **the situation map — the actual map**. Login/registration/authentication required to actually interact with the map; otherwise features are gated. (Josh: "might have already noted all of this in wiki" — dedupe against `wiki/pages/epiphany.md` before building.)
-- [ ] Confirm all major banks are present in the stocks list (Notes 2026-08-24).
+- [x] Confirm all major banks are present in the stocks list (Notes 2026-08-24). Done 2026-08-24. US big six (JPM/BAC/WFC/C/GS/MS) were already in the web list but `server/api/stocks-shared.js` — the list that actually feeds iOS/macOS/watchOS via `/api/stocks` — only had JPM and GS; added BAC, WFC, C, MS. Added the big-five Canadian banks (RY, TD, BNS, BMO, CM) to all three lists, since none were present. All 10 tickers verified live against Yahoo before adding. **Side effect worth knowing:** this pushed DEFAULT_SYMBOLS to 63, past the handler's 60-symbol cap, which 400'd `/api/stocks` against its own default and broke 3 tests. Cap raised to 80 and exported as `MAX_REQUEST_SYMBOLS` so the test derives it — that trap had already bitten once before (50 -> 60) and would have bitten again.
 - [ ] **Gate map interaction behind auth** (the second half of the same note). Josh: "login/
       registration/authentication to actually interact with the map. Otherwise, features gated."
       This is a product feature, not a hero animation — deliberately kept out of the hero work
