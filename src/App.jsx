@@ -188,7 +188,9 @@ export default function App() {
     window.dispatchEvent(new Event('epiphany:show-pricing'));
   }, [isAuthenticated]);
   const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  // ponytail: mobile sheet starts closed - it used to init open on <=768px, which dropped a
+  // full-screen dimmed backdrop over the map the instant you logged in on a phone.
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(false);
   const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
