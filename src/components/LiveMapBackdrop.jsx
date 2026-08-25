@@ -225,7 +225,7 @@ function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat,
   );
 }
 
-function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
+function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome = true }) {
   const storedGeoRef = useRef(loadStoredGeo());
   const storedGeo = storedGeoRef.current;
   const initPos = useRef(storedGeo || DEFAULT_CENTER).current;
@@ -275,6 +275,26 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
     if (mapInstanceRef.current) mapInstanceRef.current.flyTo(params);
     else pendingFlyRef.current = params;
   }, []);
+
+  // IP geolocation is ISP-level (can be a town over). Center the map and label
+  // it, but never treat it as the user's position and never persist it — the
+  // locate button must not fly here. Used as the GPS fallback and, when
+  // autoGeo is false (pre-auth landing), as the only location source.
+  const ipLocate = useCallback(async () => {
+    try {
+      const json = await fetch('https://ipapi.co/json/').then(r => r.json());
+      const isJunk = (lat, lon) => Math.abs(lat - IP_GEO_JUNK.lat) < 0.01 && Math.abs(lon - IP_GEO_JUNK.lon) < 0.01;
+      if (typeof json?.latitude === 'number' && typeof json?.longitude === 'number' && !isJunk(json.latitude, json.longitude)) {
+        const next = { lat: json.latitude, lon: json.longitude };
+        setCenter(next);
+        doFlyTo({ center: [next.lon, next.lat], zoom: IP_FALLBACK_ZOOM, offset: [0, 120], duration: 850 });
+        setLocLabel(json.city ? `${json.city} (IP approx)` : 'IP approx');
+        return;
+      }
+    } catch { /* fall through to the default centre */ }
+    setCenter(DEFAULT_CENTER);
+    setLocLabel('Location unavailable');
+  }, [doFlyTo]);
 
   // Autocomplete: debounced Nominatim lookup biased to the bbox the user is
   // currently looking at, rendered through a native <datalist> (no popup code,
@@ -391,23 +411,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           return;
         }
         try {
-          const json = await fetch('https://ipapi.co/json/').then(r => r.json());
-          const isJunk = (lat, lon) => Math.abs(lat - IP_GEO_JUNK.lat) < 0.01 && Math.abs(lon - IP_GEO_JUNK.lon) < 0.01;
-          if (typeof json?.latitude === 'number' && typeof json?.longitude === 'number' && !isJunk(json.latitude, json.longitude)) {
-            // IP geolocation is ISP-level (can be a town over). Center the map
-            // and label it, but never treat it as the user's position and
-            // never persist it — the locate button must not fly here.
-            const next = { lat: json.latitude, lon: json.longitude };
-            setCenter(next);
-            doFlyTo({ center: [next.lon, next.lat], zoom: IP_FALLBACK_ZOOM, offset: [0, 120], duration: 850 });
-            setLocLabel(json.city ? `${json.city} (IP approx)` : 'IP approx');
-          } else {
-            setCenter(DEFAULT_CENTER);
-            setLocLabel('Location unavailable');
-          }
-        } catch {
-          setCenter(DEFAULT_CENTER);
-          setLocLabel('Location unavailable');
+          await ipLocate();
         } finally {
           finish();
         }
@@ -419,11 +423,18 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (bridgeTimer) clearTimeout(bridgeTimer);
       isLocatingRef.current = false;
     };
-  }, [doFlyTo, persistGeo, storedGeo]);
+  }, [doFlyTo, ipLocate, persistGeo, storedGeo]);
 
-  useEffect(() => requestLocation(), [requestLocation]);
+  // ponytail: pre-auth (autoGeo=false) never touches navigator.geolocation, so a
+  // marketing page can't fire a permission prompt — or bank a denial the signed-in
+  // app then inherits. IP centring only until the user is actually in the product.
+  useEffect(() => {
+    if (!autoGeo) { ipLocate(); return undefined; }
+    return requestLocation();
+  }, [autoGeo, ipLocate, requestLocation]);
 
   useEffect(() => {
+    if (!autoGeo) return;
     if (!navigator.permissions?.query) return;
     let statusRef = null;
     const onChange = () => {
@@ -446,7 +457,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
       if (typeof statusRef.removeEventListener === 'function') statusRef.removeEventListener('change', onChange);
       else if (statusRef.onchange === onChange) statusRef.onchange = null;
     };
-  }, [requestLocation]);
+  }, [autoGeo, requestLocation]);
 
   useEffect(() => {
     setMapError(false);
@@ -1138,7 +1149,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         ref={mapRef}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto' }}
       />
-      <form onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
+      {chrome && (<form onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -1152,8 +1163,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
           {suggestions.map((s) => <option key={s.place_id} value={s.display_name} />)}
         </datalist>
         <button type="submit" aria-label="Go" style={{ height: 34, width: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#94a3b8', font: `700 14px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>→</button>
-      </form>
-      <button
+      </form>)}
+      {chrome && (<button
         onClick={() => {
           if (isLocating) return;
           // If we already have a fix, jump there immediately for instant
@@ -1172,7 +1183,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady }) {
         style={{ position: 'absolute', right: 14, top: 14, zIndex: 2, width: 34, height: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 9999, background: 'rgba(2,6,23,0.82)', color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
       >
         ⌖
-      </button>
+      </button>)}
       {mapLayers.flights !== false && payload.noFlights && (
         <div style={{ position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 3, pointerEvents: 'none' }}>
           <div style={{ background: 'rgba(2,6,23,0.72)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '5px 12px', color: '#94a3b8', fontSize: 11, fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
