@@ -176,3 +176,12 @@ Scope: large UI change — do in a dedicated session.
 - [ ] `/api/macro` returns an empty set on Cloudflare Workers. FRED sits behind Akamai, which refuses Workers egress IPs — every series comes back 520 at the edge, while the identical fetch succeeds from Vercel and from a laptop. Browser User-Agent, Referer and Accept-Language were all tried and none help, so it is the egress IP and not the request shape. Fix is either a reachable macro source or populating KV from something that can reach FRED. Already fixed alongside it: the handler used to cache the empty result for a full hour, serving the outage from memory in 1ms.
 - [ ] Move the cron jobs off Vercel. `broker/morning-run` places real trades, so Cloudflare crons stay disarmed in `wrangler.jsonc` while Vercel still runs them on schedule — arming both would double-trade. Web traffic is already fully on Cloudflare; this is the last piece of that migration.
 - [ ] Ship the macOS avatar fix. `macos/Models/AppState.swift` decodes inline data: URL avatars now, but macOS is still live on 2.5.2 and the change is unshipped.
+- [ ] `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
+  (2026-08-26 08:00 UTC) completed 200, but logged `[KV] set error: Too many
+  subrequests by single Worker invocation` twice, so part of the cache write was
+  dropped. The handler fans out to 111 stock symbols plus markets and commodities,
+  each its own fetch, then writes several KV keys — that is well past the
+  per-invocation subrequest limit. It never showed on Vercel, which has no such
+  cap. Fix is to batch the Yahoo fetches or split the run across the three cron
+  slots; raising the limit is a plan change, not a config flag. Also visible in
+  the same run and probably older: `Cron crypto fetch failed: HTTP 403`.
