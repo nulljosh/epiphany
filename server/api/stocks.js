@@ -127,6 +127,63 @@ async function fetchYahooChartSingle(symbol, provider) {
 
 // ponytail: 6/250ms, not 10/100ms -- the 63-symbol default list burst past Yahoo's
 // throttle and 500'd the whole markets list. Raise only with a prod check at full length.
+// Yahoo v7 quote takes every symbol in ONE request. That matters more than it
+// looks: production runs on a Cloudflare Worker, which caps a request at 50
+// subrequests, and the 63-symbol default list blew straight through that on the
+// one-symbol-per-request v8 chart path -- a hard 500 no amount of pacing fixed.
+// Needs the cookie+crumb pair; falls back to the chart path when that's missing.
+const YAHOO_QUOTE_CHUNK = 50;
+
+function mapYahooQuote(q) {
+  if (!q || typeof q.regularMarketPrice !== 'number') return null;
+  return {
+    symbol: q.symbol,
+    name: q.shortName || q.longName || q.symbol,
+    price: q.regularMarketPrice,
+    change: Math.round((q.regularMarketChange ?? 0) * 100) / 100,
+    changePercent: Math.round((q.regularMarketChangePercent ?? 0) * 100) / 100,
+    volume: q.regularMarketVolume ?? 0,
+    marketCap: q.marketCap ?? null,
+    peRatio: q.trailingPE ?? null,
+    eps: q.epsTrailingTwelveMonths ?? null,
+    fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? null,
+    fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
+    open: q.regularMarketOpen ?? null,
+    prevClose: q.regularMarketPreviousClose ?? null,
+    high: q.regularMarketDayHigh ?? null,
+    low: q.regularMarketDayLow ?? null,
+  };
+}
+
+async function fetchYahooBatchQuotes(symbolList) {
+  const session = await getYahooCrumb().catch(() => null);
+  if (!session || !session.crumb || !session.cookie) return null;
+
+  const out = [];
+  for (let i = 0; i < symbolList.length; i += YAHOO_QUOTE_CHUNK) {
+    const chunk = symbolList.slice(i, i + YAHOO_QUOTE_CHUNK);
+    const url = `${YAHOO_PROVIDERS[0]}/v7/finance/quote?symbols=${encodeURIComponent(chunk.join(','))}&crumb=${encodeURIComponent(session.crumb)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        headers: { ...YAHOO_HEADERS, Cookie: session.cookie },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) return null;
+      const data = await response.json();
+      const results = data?.quoteResponse?.result;
+      if (!Array.isArray(results)) return null;
+      out.push(...results.map(mapYahooQuote).filter(Boolean));
+    } catch {
+      clearTimeout(timeoutId);
+      return null;
+    }
+  }
+  return out.length ? out : null;
+}
+
 const YAHOO_BATCH_SIZE = 6;
 const YAHOO_BATCH_PAUSE_MS = 250;
 
@@ -325,8 +382,15 @@ export default async function handler(req, res) {
 
     // Fallback to Yahoo if FMP fails
     if (!stocks || stocks.length === 0) {
-      stocks = await fetchYahooQuotes(symbolList);
-      source = 'yahoo';
+      stocks = await fetchYahooBatchQuotes(symbolList);
+      source = 'yahoo-quote';
+    }
+
+    // Per-symbol chart path: only reachable when the batch quote had no crumb or
+    // failed outright. Stays capped so it can't exceed the Worker subrequest cap.
+    if (!stocks || stocks.length === 0) {
+      stocks = await fetchYahooQuotes(symbolList.slice(0, 40));
+      source = 'yahoo-chart';
     }
 
     stocks = stocks.filter(q => q.symbol && typeof q.price === 'number');
