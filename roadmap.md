@@ -11,6 +11,28 @@ capped at 40 symbols. **Still 500 in production after deploy.** The v7 path retu
 inside the Worker, so `getYahooCrumb()` is not producing a crumb there; its step 1 reads
 `set-cookie` from `https://fc.yahoo.com`, the prime suspect under the Workers runtime.
 
+**DECISIVE EVIDENCE FOUND 2026-08-26 via `wrangler tail`** (the logs were there all
+along). The Worker emits, ~20 times per failing request:
+
+> A stalled HTTP response was canceled to prevent deadlock. This can happen when a
+> Worker calls fetch() several times without reading the bodies of the returned
+> Response objects... because the Worker did not read the responses, they would never
+> complete. Therefore, to prevent deadlock, the oldest response was canceled.
+
+So the root cause is **abandoned response bodies**, NOT the subrequest cap, NOT Yahoo
+rate limiting, and NOT the crumb -- all three earlier diagnoses were wrong. Cloudflare
+caps concurrent in-flight responses; an unread body never completes, so the runtime
+kills the oldest, which makes unrelated fetches fail until every symbol returns null and
+`results.length === 0` throws. Node/Vercel does not care, which is why it worked there.
+
+Fixed the known offenders (`discardBody()` in stocks-shared.js, called on every early
+`return` in stocks.js and on the `fc.yahoo.com` header-only read in `getYahooCrumb`).
+**Deployed and STILL 500** -- so at least one more abandoned body remains on the path,
+or the in-flight concurrency is too high regardless. Next: tail again and count whether
+the stalled-response warning still appears; if it does, hunt the remaining sites
+(`enrichWithFundamentals`, the FMP path, `_kv.js` Upstash calls). If it is gone and the
+500 persists, the cause is something else and the error string is misleading.
+
 Full plan: `~/.claude/plans/fix-it-if-you-shimmying-fairy.md`
 
 Next: log the crumb result inside the Worker to confirm. If the cookie step is the

@@ -1,5 +1,5 @@
 // Premium stock API: FMP batch (primary) + Yahoo v7 quote (fallback)
-import { parseSymbols, setStockResponseHeaders, YAHOO_HEADERS, FMP_BASE, getFmpApiKey, getYahooCrumb } from './stocks-shared.js';
+import { discardBody, parseSymbols, setStockResponseHeaders, YAHOO_HEADERS, FMP_BASE, getFmpApiKey, getYahooCrumb } from './stocks-shared.js';
 
 const YAHOO_PROVIDERS = process.env.NODE_ENV === 'test'
   ? ['https://query1.finance.yahoo.com']
@@ -34,7 +34,7 @@ async function fmpStableGet(path, apiKey) {
     const sep = path.includes('?') ? '&' : '?';
     const response = await fetch(`${FMP_STABLE}${path}${sep}apikey=${apiKey}`, { signal: controller.signal });
     clearTimeout(timeoutId);
-    if (!response.ok) return null;
+    if (!response.ok) { discardBody(response); return null; }
     const data = await response.json();
     return Array.isArray(data) && data.length ? data[0] : null;
   } catch {
@@ -92,7 +92,7 @@ async function fetchYahooChartSingle(symbol, provider) {
     });
     clearTimeout(timeoutId);
 
-    if (!response.ok) return null;
+    if (!response.ok) { discardBody(response); return null; }
 
     const data = await response.json();
     const meta = data?.chart?.result?.[0]?.meta;
@@ -171,7 +171,7 @@ async function fetchYahooBatchQuotes(symbolList) {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      if (!response.ok) return null;
+      if (!response.ok) { discardBody(response); return null; }
       const data = await response.json();
       const results = data?.quoteResponse?.result;
       if (!Array.isArray(results)) return null;
@@ -254,7 +254,7 @@ async function enrichWithFmpProfile(stocks) {
     const url = `${FMP_BASE}/profile/${symbols.join(',')}?apikey=${apiKey}`;
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
-    if (!response.ok) return stocks;
+    if (!response.ok) { discardBody(response); return stocks; }
 
     const data = await response.json();
     if (!Array.isArray(data)) return stocks;
@@ -314,7 +314,7 @@ async function enrichWithFundamentals(stocks) {
         const response = await fetch(url, { headers, signal: controller.signal });
         clearTimeout(timeoutId);
         if (response.status === 401 && attempt === 0) continue; // refresh crumb, retry
-        if (!response.ok) return;
+        if (!response.ok) { discardBody(response); return; }
         const data = await response.json();
         const price = data?.quoteSummary?.result?.[0]?.price;
         const sd = data?.quoteSummary?.result?.[0]?.summaryDetail;
