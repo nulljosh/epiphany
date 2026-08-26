@@ -1,4 +1,4 @@
-import { put, del } from './_blob.js';
+import { del } from './_blob.js';
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 
@@ -37,40 +37,28 @@ export default async function handler(req, res) {
     if (!user) return errorResponse(res, 401, 'User not found');
 
     const buffer = Buffer.from(image, 'base64');
-    if (buffer.length > 5 * 1024 * 1024) {
-      return errorResponse(res, 400, 'Image too large (max 5MB)');
+    // ponytail: avatars are a few KB of generated SVG, so they live inline on
+    // the user record as a data URL. No blob store, no second thing to fail.
+    // Move back to blob storage only if real photo uploads land here.
+    if (buffer.length > 64 * 1024) {
+      return errorResponse(res, 400, 'Image too large (max 64KB)');
     }
 
-    const isSvg = format === 'svg';
-    const ext = isSvg ? 'svg' : 'jpg';
-    const contentType = isSvg ? 'image/svg+xml' : 'image/jpeg';
-
+    const contentType = format === 'svg' ? 'image/svg+xml' : 'image/jpeg';
     const previousAvatarUrl = user.avatarUrl;
+    const avatarUrl = `data:${contentType};base64,${image}`;
 
-    let blob;
-    try {
-      blob = await put(`avatars/${user.id}-${Date.now()}.${ext}`, buffer, {
-        access: 'public',
-        contentType,
-        addRandomSuffix: false,
-      });
-    } catch (err) {
-      console.error('[avatar POST] blob put failed', { userId: user.id, error: err?.message, stack: err?.stack });
-      return errorResponse(res, 500, 'Failed to upload avatar (blob store error)');
-    }
-
-    user.avatarUrl = blob.url;
+    user.avatarUrl = avatarUrl;
     user.avatarUpdatedAt = Date.now();
     try {
       await kv.set(`user:${session.email}`, user);
     } catch (err) {
-      console.error('[avatar POST] KV set failed after successful blob upload', { email: session.email, avatarUrl: blob.url, error: err?.message, stack: err?.stack });
-      return errorResponse(res, 500, 'Avatar uploaded but failed to save — please retry');
+      console.error('[avatar POST] KV set failed', { email: session.email, error: err?.message, stack: err?.stack });
+      return errorResponse(res, 500, 'Failed to save avatar - please retry');
     }
 
-    // Only now is the replacement durable. An orphan blob beats destroying the
-    // only copy of an avatar because the upload or the save failed.
-    if (previousAvatarUrl && previousAvatarUrl !== blob.url) {
+    // Clean up the old blob-hosted avatar, if this user still had one.
+    if (previousAvatarUrl && previousAvatarUrl.startsWith('http')) {
       try {
         await del(previousAvatarUrl);
       } catch (err) {
@@ -79,7 +67,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return res.status(200).json({ ok: true, avatarUrl: blob.url });
+    return res.status(200).json({ ok: true, avatarUrl });
   }
 
   // DELETE: remove avatar
@@ -108,7 +96,7 @@ export default async function handler(req, res) {
       // Clear the pointer first: a failed KV write must not leave the profile
       // aimed at a blob that no longer exists.
       try {
-        await del(previousAvatarUrl);
+        if (previousAvatarUrl.startsWith('http')) await del(previousAvatarUrl);
       } catch (err) {
         console.error('[avatar DELETE] blob delete failed (non-fatal)', { avatarUrl: previousAvatarUrl, error: err?.message });
       }

@@ -45,33 +45,7 @@ function DetectionCard({ type, title, detail, severity, time, color, t, font, on
   );
 }
 
-function SourceHealth({ label, lastUpdate, error, t }) {
-  const stale = lastUpdate ? (Date.now() - lastUpdate) > 300000 : true;
-  const color = error ? '#ef4444' : stale ? '#f59e0b' : '#30d158';
-  const age = lastUpdate ? `${Math.round((Date.now() - lastUpdate) / 60000)}m` : '--';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-      <div style={{ width: 5, height: 5, borderRadius: '50%', background: color }} />
-      <span style={{ fontSize: 9, color: t.textTertiary }}>{label}</span>
-      <span style={{ fontSize: 8, color: t.textTertiary }}>{age}</span>
-    </div>
-  );
-}
 
-function CongestionBar({ value, t, font }) {
-  const pct = CONGESTION_LEVELS[value] ?? 0;
-  const color = pct > 70 ? t.red : pct > 40 ? t.yellow : t.green;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 4, borderRadius: 2, background: t.border, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, transition: 'width 0.4s' }} />
-      </div>
-      <span style={{ fontSize: 10, color, fontFamily: font, fontWeight: 700, minWidth: 48, textTransform: 'capitalize' }}>
-        {value ?? 'unknown'}
-      </span>
-    </div>
-  );
-}
 
 function TimelineEntry({ icon, color, label, time, t }) {
   return (
@@ -94,49 +68,31 @@ export default function SituationMonitor({
   pmEdges = [],
   lastPmBetMap = {},
   trades = [],
-  pmExits = 0,
   pmWhales = null,
   mapFlyTo,
   mapLayers,
   alerts = [],
   isPro = false,
 }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 600);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
   const [showPmEdges, setShowPmEdges] = useState(false);
   const [showWhales, setShowWhales] = useState(false);
-  const [showTrades, setShowTrades] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showDetections, setShowDetections] = useState(true);
   const [showDispatch, setShowDispatch] = useState(true);
   const [showCrime, setShowCrime] = useState(false);
   const initialFlyDone = useRef(false);
-  const loadTimestamps = useRef({ flights: null, traffic: null, earthquakes: null, events: null });
 
   const {
     activeCenter,
-    worldCities, userLocation, selectedCity,
-    flights, traffic, flightsLoading, trafficLoading, flightsError, trafficError,
-    incidents, earthquakes, events, weatherAlerts, macro, crimeIncidents, dispatchCalls,
+    userLocation, selectedCity,
+    traffic,
+    earthquakes, events, weatherAlerts, macro, crimeIncidents, dispatchCalls,
   } = useSituation();
-
-  // Track data freshness per source
-  useEffect(() => { if (flights.length > 0) loadTimestamps.current.flights = Date.now(); }, [flights]);
-  useEffect(() => { if (traffic) loadTimestamps.current.traffic = Date.now(); }, [traffic]);
-  useEffect(() => { if (earthquakes.length > 0) loadTimestamps.current.earthquakes = Date.now(); }, [earthquakes]);
-  useEffect(() => { if (events.length > 0) loadTimestamps.current.events = Date.now(); }, [events]);
 
   // Stable ref for mapFlyTo to avoid busting detections memo
   const mapFlyToRef = useRef(mapFlyTo);
   useEffect(() => { mapFlyToRef.current = mapFlyTo; }, [mapFlyTo]);
 
-  const nearbyFlights = flights.slice(0, isMobile ? 3 : 6);
-  const congestion = traffic?.flow?.congestion ?? null;
-  const tradeExits = trades.filter(tr => tr?.pnl).length;
   const significantQuakes = useMemo(() => earthquakes.filter(e => e.mag >= 4), [earthquakes]);
 
   // Build detection feed from all sources
@@ -287,16 +243,6 @@ export default function SituationMonitor({
       </div>
 
       <DailyBrief t={t} font={font} dark={dark} isPro={isPro} />
-
-      {/* Source health strip — hidden on mobile */}
-      {!isMobile && (
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-          <SourceHealth label="flights" lastUpdate={loadTimestamps.current.flights} error={flightsError} t={t} />
-          <SourceHealth label="traffic" lastUpdate={loadTimestamps.current.traffic} error={trafficError} t={t} />
-          <SourceHealth label="seismic" lastUpdate={loadTimestamps.current.earthquakes} t={t} />
-          <SourceHealth label="events" lastUpdate={loadTimestamps.current.events} t={t} />
-        </div>
-      )}
 
       {/* Detections feed */}
       {detections.length > 0 && (
@@ -526,35 +472,6 @@ export default function SituationMonitor({
         </div>
       )}
 
-      {/* Trade log */}
-      <div style={{ background: t.surface, borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
-        <button
-          onClick={() => setShowTrades(!showTrades)}
-          style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 11, color: t.textTertiary, cursor: 'pointer' }}
-        >
-          <span>trades ({tradeExits}) &middot; stocks: {tradeExits - pmExits} &middot; PM: {pmExits}</span>
-          <span>{showTrades ? '\u2212' : '+'}</span>
-        </button>
-        {showTrades && (
-          <div style={{ padding: '0 12px 12px', maxHeight: 160, overflow: 'auto' }}>
-            {trades.length === 0 ? (
-              <div style={{ color: t.textTertiary, fontSize: 12, textAlign: 'center', padding: 8 }}>waiting...</div>
-            ) : (
-              [...trades].reverse().slice(0, 20).map((tr, i) => {
-                const pnl = tr.pnl ? parseFloat(tr.pnl) : null;
-                return (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${t.border}` }}>
-                    <span style={{ color: tr.type === 'BUY' ? t.accent : tr.type?.startsWith('PM_') ? t.paleBlue : pnl >= 0 ? t.green : t.red }}>
-                      {tr.type} {tr.sym}
-                    </span>
-                    {pnl != null && <span style={{ color: pnl >= 0 ? t.green : t.red }}>{pnl >= 0 ? '+' : ''}{tr.pnl}</span>}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-      </div>
 
       {/* Event Timeline */}
       {timelineEntries.length > 0 && (
@@ -576,45 +493,6 @@ export default function SituationMonitor({
         </div>
       )}
 
-      {/* Flights + Traffic */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: t.textSecondary, fontFamily: font, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Flights nearby
-          </div>
-          {flightsError && <div style={{ fontSize: 10, color: t.red, fontFamily: font }}>{flightsError}</div>}
-          {nearbyFlights.length === 0 && !flightsLoading && (
-            <div style={{ fontSize: 10, color: t.textTertiary, fontFamily: font }}>No flights tracked</div>
-          )}
-          {nearbyFlights.map((f, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: `1px solid ${t.border}`, fontSize: 10 }}>
-              <span style={{ fontWeight: 700, color: t.paleBlue, fontFamily: font }}>{f.callsign || f.icao24}</span>
-              <span style={{ color: t.textTertiary, fontFamily: font }}>{f.altitude ? `FL${Math.round(f.altitude / 100)}` : '\u2014'}</span>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: t.textSecondary, fontFamily: font, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Traffic {trafficLoading && <span style={{ color: t.textTertiary }}>(loading...)</span>}
-          </div>
-          {trafficError && <div style={{ fontSize: 10, color: t.red, fontFamily: font }}>{trafficError}</div>}
-          {congestion !== null && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 9, color: t.textTertiary, fontFamily: font, marginBottom: 4 }}>Congestion</div>
-              <CongestionBar value={congestion} t={t} font={font} />
-              {traffic?.flow?.source === 'estimated'
-                ? <div style={{ fontSize: 9, color: t.textTertiary, fontFamily: font, marginTop: 4, fontStyle: 'italic' }}>EST</div>
-                : traffic?.flow?.currentSpeed != null && (
-                  <div style={{ fontSize: 9, color: t.textTertiary, fontFamily: font, marginTop: 4 }}>
-                    {traffic.flow.currentSpeed} / {traffic.flow.freeFlowSpeed} km/h
-                  </div>
-                )
-              }
-            </div>
-          )}
-        </div>
-      </div>
 
     </Card>
   );

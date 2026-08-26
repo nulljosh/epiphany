@@ -97,7 +97,10 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   const [localAvatarUrl, setLocalAvatarUrl] = useState(null);
   const [imgError, setImgError] = useState(false);
   const baseAvatarUrl = localAvatarUrl || user?.avatarUrl;
-  const avatarUrl = baseAvatarUrl ? `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}` : null;
+  // Data URLs carry their own bytes, so a cache-buster would only corrupt the base64.
+  const avatarUrl = !baseAvatarUrl ? null
+    : baseAvatarUrl.startsWith('data:') ? baseAvatarUrl
+    : `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}`;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
   const generateNodeGraphSVG = () => {

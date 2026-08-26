@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { put, del } from '../../server/api/_blob.js';
+import { del } from '../../server/api/_blob.js';
 import handler from '../../server/api/avatar.js';
 import { createMockKV, createReqRes, seedUser, resetAllMocks, getKVStore } from './_mocks.js';
 
@@ -44,26 +44,27 @@ describe('avatar API — destructive ops never precede the durable write', () =>
     seedUser({ avatarUrl: OLD_URL });
   });
 
-  it('POST uploads the new blob before deleting the old one', async () => {
+  it('POST stores the image inline, then drops the legacy blob', async () => {
     const { res, run } = postAvatar();
     await run();
 
     expect(res.statusCode).toBe(200);
     expect(res.data.ok).toBe(true);
-    // The regression: `del` used to run first, so a failed `put` destroyed the
+    expect(res.data.avatarUrl.startsWith('data:image/jpeg;base64,')).toBe(true);
+    // The regression: `del` used to run first, so a failed write destroyed the
     // only copy of the avatar for nothing.
-    expect(callOrder).toEqual(['put', 'del']);
+    expect(getKVStore().get('user:user@example.com').avatarUrl).toBe(res.data.avatarUrl);
     expect(del).toHaveBeenCalledWith(OLD_URL);
   });
 
-  it('POST keeps the old avatar when the upload fails', async () => {
-    put.mockRejectedValueOnce(new Error('blob store down'));
+  it('POST rejects an image too large to inline', async () => {
+    const { req, res } = createReqRes({
+      method: 'POST',
+      body: { image: Buffer.alloc(65 * 1024).toString('base64'), format: 'jpg' },
+    });
+    await handler(req, res);
 
-    const { res, run } = postAvatar();
-    await run();
-
-    expect(res.statusCode).toBe(500);
-    expect(del).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(400);
     expect(getKVStore().get('user:user@example.com').avatarUrl).toBe(OLD_URL);
   });
 
