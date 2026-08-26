@@ -60,7 +60,7 @@ describe('avatar API — destructive ops never precede the durable write', () =>
   it('POST rejects an image too large to inline', async () => {
     const { req, res } = createReqRes({
       method: 'POST',
-      body: { image: Buffer.alloc(65 * 1024).toString('base64'), format: 'jpg' },
+      body: { image: Buffer.alloc(257 * 1024).toString('base64'), format: 'jpg' },
     });
     await handler(req, res);
 

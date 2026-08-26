@@ -37,11 +37,13 @@ export default async function handler(req, res) {
     if (!user) return errorResponse(res, 401, 'User not found');
 
     const buffer = Buffer.from(image, 'base64');
-    // ponytail: avatars are a few KB of generated SVG, so they live inline on
-    // the user record as a data URL. No blob store, no second thing to fail.
-    // Move back to blob storage only if real photo uploads land here.
-    if (buffer.length > 64 * 1024) {
-      return errorResponse(res, 400, 'Image too large (max 64KB)');
+    // ponytail: avatars are generated, not uploaded — a few KB of SVG from the
+    // web, a 200x200 JPEG from iOS — so they live inline on the user record as
+    // a data URL. No blob store, no second thing to fail. The cap has plenty of
+    // headroom over both; move back to blob storage only if real photo uploads
+    // ever land here.
+    if (buffer.length > 256 * 1024) {
+      return errorResponse(res, 400, 'Image too large (max 256KB)');
     }
 
     const contentType = format === 'svg' ? 'image/svg+xml' : 'image/jpeg';
