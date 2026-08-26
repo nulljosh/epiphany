@@ -125,7 +125,10 @@ async function fetchYahooChartSingle(symbol, provider) {
   }
 }
 
-const YAHOO_BATCH_SIZE = 10;
+// ponytail: 6/250ms, not 10/100ms -- the 63-symbol default list burst past Yahoo's
+// throttle and 500'd the whole markets list. Raise only with a prod check at full length.
+const YAHOO_BATCH_SIZE = 6;
+const YAHOO_BATCH_PAUSE_MS = 250;
 
 async function fetchYahooQuotes(symbolList) {
   const provider = YAHOO_PROVIDERS[0];
@@ -139,7 +142,18 @@ async function fetchYahooQuotes(symbolList) {
     results.push(...batchResults.filter(Boolean));
 
     if (i + YAHOO_BATCH_SIZE < symbolList.length) {
-      await sleep(process.env.NODE_ENV === 'test' ? 0 : 100);
+      await sleep(process.env.NODE_ENV === 'test' ? 0 : YAHOO_BATCH_PAUSE_MS);
+    }
+  }
+
+  // A throttled symbol shouldn't cost the caller the whole list -- retry just the
+  // missing ones serially before falling back to the second provider.
+  if (results.length > 0 && results.length < symbolList.length) {
+    const got = new Set(results.map(r => r.symbol));
+    for (const sym of symbolList.filter(s => !got.has(s))) {
+      const retried = await fetchYahooChartSingle(sym, provider);
+      if (retried) results.push(retried);
+      await sleep(process.env.NODE_ENV === 'test' ? 0 : YAHOO_BATCH_PAUSE_MS);
     }
   }
 

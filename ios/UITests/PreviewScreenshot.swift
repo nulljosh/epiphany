@@ -51,7 +51,9 @@ final class PreviewScreenshot: XCTestCase {
             snapshot("2-markets")
 
             let row = app.buttons["market-stock-row"].firstMatch
-            if row.waitForExistence(timeout: 5) {
+            // ponytail: 20s, but a missed shot here usually means /api/stocks 500ed and the
+            // list has only commodities/crypto -- check the API before blaming the timeout
+            if row.waitForExistence(timeout: 20) {
                 row.tap()
                 sleep(2)
                 snapshot("3-stock-detail")
