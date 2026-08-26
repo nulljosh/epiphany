@@ -35,6 +35,15 @@ export const YAHOO_HEADERS = {
   'Pragma': 'no-cache',
 };
 
+// Cloudflare Workers cap the number of concurrent in-flight HTTP responses, and
+// an unread body never completes -- the runtime then cancels the OLDEST stalled
+// response to avoid deadlock, which makes unrelated fetches fail. Abandoning a
+// body on an early return is therefore not free here the way it is on Node, and
+// it is what took /api/stocks down on the 63-symbol list. Always discard.
+export function discardBody(res) {
+  try { res?.body?.cancel(); } catch { /* already consumed or no body */ }
+}
+
 export const FMP_BASE = 'https://financialmodelingprep.com/api/v3';
 
 export function getFmpApiKey() {
@@ -80,6 +89,7 @@ export async function getYahooCrumb({ force = false } = {}) {
       redirect: 'manual',
     });
     const rawCookie = cookieRes.headers.get('set-cookie');
+    discardBody(cookieRes); // headers are all we want; an unread body stalls the Worker
     const cookie = rawCookie ? rawCookie.split(';')[0] : null;
     if (!cookie) return _yahooSession;
 
@@ -87,7 +97,7 @@ export async function getYahooCrumb({ force = false } = {}) {
     const crumbRes = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
       headers: { 'User-Agent': ua, Accept: '*/*', Cookie: cookie },
     });
-    if (!crumbRes.ok) return _yahooSession;
+    if (!crumbRes.ok) { discardBody(crumbRes); return _yahooSession; }
     const crumb = (await crumbRes.text()).trim();
     // A valid crumb is a short opaque token, never JSON or an error sentence.
     if (!crumb || crumb.length > 40 || /[\s{}]/.test(crumb)) return _yahooSession;
