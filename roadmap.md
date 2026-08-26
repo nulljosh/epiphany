@@ -150,3 +150,7 @@ Scope: large UI change — do in a dedicated session.
 
 - [ ] Mobile web: on login the entire screen is instantly covered by the situation monitor, forcing the user to close it. Fix so it doesn't block content on mobile.
 - [ ] Mobile web UI/UX is spotty overall — general pass needed.
+
+- [ ] `/api/macro` returns an empty set on Cloudflare Workers. FRED sits behind Akamai, which refuses Workers egress IPs — every series comes back 520 at the edge, while the identical fetch succeeds from Vercel and from a laptop. Browser User-Agent, Referer and Accept-Language were all tried and none help, so it is the egress IP and not the request shape. Fix is either a reachable macro source or populating KV from something that can reach FRED. Already fixed alongside it: the handler used to cache the empty result for a full hour, serving the outage from memory in 1ms.
+- [ ] Move the cron jobs off Vercel. `broker/morning-run` places real trades, so Cloudflare crons stay disarmed in `wrangler.jsonc` while Vercel still runs them on schedule — arming both would double-trade. Web traffic is already fully on Cloudflare; this is the last piece of that migration.
+- [ ] Ship the macOS avatar fix. `macos/Models/AppState.swift` decodes inline data: URL avatars now, but macOS is still live on 2.5.2 and the change is unshipped.
