@@ -74,6 +74,8 @@ async function fetchFmpSymbol(yahooSym) {
 
 async function fetchFmpQuotes(symbolList) {
   if (!getFmpApiKey()) return null;
+  // 2 subrequests per symbol; only safe for short lists.
+  if (symbolList.length > PER_SYMBOL_FANOUT_MAX) return null;
   const results = await Promise.all(symbolList.map(fetchFmpSymbol));
   const out = results.filter(Boolean);
   return out.length ? out : null;
@@ -183,6 +185,16 @@ async function fetchYahooBatchQuotes(symbolList) {
   }
   return out.length ? out : null;
 }
+
+// Cloudflare Workers cap a single invocation at 50 subrequests. Three separate
+// code paths here fan out per-symbol -- FMP quote+ratios (2 each), the v8 chart
+// fallback (1 each), and v10 fundamentals enrichment (1 each) -- so the 63-symbol
+// default list issued well over 100 and everything past the cap failed, including
+// the Upstash KV read inside getYahooCrumb. The v7 batch path below covers the
+// whole list in ONE subrequest; the per-symbol paths are now gated to small lists.
+// ponytail: a flat symbol cap, not a real budget counter. If a fourth fan-out
+// path ever lands, swap this for a shared counter threaded through the handler.
+const PER_SYMBOL_FANOUT_MAX = 15;
 
 const YAHOO_BATCH_SIZE = 6;
 const YAHOO_BATCH_PAUSE_MS = 250;
@@ -376,14 +388,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try FMP first
-    let stocks = await fetchFmpQuotes(symbolList);
-    let source = 'fmp';
+    // Yahoo v7 batch first: one subrequest for the whole list, so it is the only
+    // path that scales to the default 63 symbols inside the Worker.
+    let stocks = await fetchYahooBatchQuotes(symbolList);
+    let source = 'yahoo-quote';
 
-    // Fallback to Yahoo if FMP fails
+    // FMP is richer but costs 2 subrequests per symbol, so it is a short-list path.
     if (!stocks || stocks.length === 0) {
-      stocks = await fetchYahooBatchQuotes(symbolList);
-      source = 'yahoo-quote';
+      stocks = await fetchFmpQuotes(symbolList);
+      source = 'fmp';
     }
 
     // Per-symbol chart path: only reachable when the batch quote had no crumb or
@@ -397,7 +410,8 @@ export default async function handler(req, res) {
 
     // Enrich with fundamentals if missing. Treat 0 as missing: FMP free tier returns
     // marketCap/peRatio of 0 for some stocks, which is always a data error, not a real value.
-    const needsEnrichment = stocks.some(s => !s.marketCap || !s.peRatio || !s.name || s.name === s.symbol);
+    const needsEnrichment = stocks.length <= PER_SYMBOL_FANOUT_MAX
+      && stocks.some(s => !s.marketCap || !s.peRatio || !s.name || s.name === s.symbol);
     if (needsEnrichment) {
       try {
         const enriched = await enrichWithFundamentals(stocks);
