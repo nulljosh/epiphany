@@ -1,3 +1,25 @@
+## OPEN: /api/stocks 500s on the full default symbol list (2026-08-25)
+
+Production is a Cloudflare Worker, which caps a request at **50 subrequests**. The
+63-symbol `DEFAULT_SYMBOLS` list was fetched one symbol per request against Yahoo's v8
+chart endpoint, so every default-list call blew the cap. Requests of 40 symbols or fewer
+return 200, which is why single-symbol probes always looked healthy and hid this.
+
+Shipped so far: Yahoo **v7 batch quote** as the primary path (verified locally, returns
+62 of 63 symbols in ONE subrequest), with the per-symbol chart path kept as a fallback
+capped at 40 symbols. **Still 500 in production after deploy.** The v7 path returns null
+inside the Worker, so `getYahooCrumb()` is not producing a crumb there; its step 1 reads
+`set-cookie` from `https://fc.yahoo.com`, the prime suspect under the Workers runtime.
+
+Next: log the crumb result inside the Worker to confirm. If the cookie step is the
+blocker, mint the crumb out-of-band and cache it in KV (the cron already runs) so the
+request path never mints one. Also re-check the serial retry loop added to
+`fetchYahooQuotes` -- 40 stragglers 250ms apart may itself exceed the Worker budget.
+
+Symptom users see: "Failed to fetch stock data" banner on every screen, and a Markets
+list with only commodities/crypto and zero equities. This also blocks the App Store /
+landing-page screenshot refresh, since the stock-detail shot cannot be captured.
+
 # Epiphany Roadmap
 
 ## 2026-08-10 (late) — UI + data pass, shipped
