@@ -51,6 +51,21 @@ final class AppState {
             return
         }
         guard let urlString = user?.avatarUrl else { return }
+        // Generated avatars come back inline as a data: URL. URLSession cannot
+        // load those, and a cache-buster would corrupt the base64 payload.
+        if urlString.hasPrefix("data:") {
+            guard let comma = urlString.firstIndex(of: ","),
+                  let data = Data(base64Encoded: String(urlString[urlString.index(after: comma)...])) else { return }
+            Task { @MainActor in
+                // ponytail: no SVG rasterizer on macOS, same as before — an SVG
+                // avatar simply falls back to the initial, it never did render here.
+                guard NSImage(data: data) != nil else { return }
+                avatarImageData = data
+                try? data.write(to: Self.avatarFileURL)
+                UserDefaults.standard.set(currentTs, forKey: Self.avatarTimestampKey)
+            }
+            return
+        }
         let cacheBusted = urlString + "?v=\(currentTs)"
         guard let url = URL(string: cacheBusted) else { return }
         Task { @MainActor in

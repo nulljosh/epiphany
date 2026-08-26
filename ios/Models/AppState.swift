@@ -56,6 +56,25 @@ final class AppState {
             return
         }
         guard let urlString = user?.avatarUrl else { return }
+        // Generated avatars come back inline as a data: URL. URLSession cannot
+        // load those, and a cache-buster would corrupt the base64 payload.
+        if urlString.hasPrefix("data:") {
+            guard let comma = urlString.firstIndex(of: ","),
+                  let data = Data(base64Encoded: String(urlString[urlString.index(after: comma)...])) else { return }
+            Task { @MainActor in
+                if UIImage(data: data) != nil {
+                    avatarImageData = data
+                } else if let rasterized = await SVGRasterizer.rasterize(data),
+                          let jpegData = rasterized.jpegData(compressionQuality: 0.85) {
+                    avatarImageData = jpegData
+                } else {
+                    return
+                }
+                try? avatarImageData?.write(to: Self.avatarFileURL)
+                UserDefaults.standard.set(currentTs, forKey: Self.avatarTimestampKey)
+            }
+            return
+        }
         let cacheBusted = urlString + "?v=\(currentTs)"
         guard let url = URL(string: cacheBusted) else { return }
         Task { @MainActor in
