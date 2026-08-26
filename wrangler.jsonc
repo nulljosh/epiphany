@@ -18,8 +18,8 @@
   // DNS record, so this replaces the old CNAME at Vercel.
   "routes": [{ "pattern": "epiphany.heyitsmejosh.com", "custom_domain": true }],
   "observability": { "enabled": true },
-  // Crons stay disarmed until cutover: broker/morning-run places real trades,
-  // and Vercel is still running these on schedule. Re-enable in the same change
-  // that flips DNS, so they never fire from two places at once.
-  "triggers": { "crons": [] }
+  // Mirrors the three entries removed from vercel.json in this same commit, so
+  // exactly one platform is ever armed. worker/index.js scheduled() maps each
+  // expression to its gateway path. broker/morning-run places real trades.
+  "triggers": { "crons": ["0 8 * * 1-5", "30 14 * * 1-5", "0 12 * * *"] }
 }
