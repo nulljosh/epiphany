@@ -1,50 +1,24 @@
-## OPEN: /api/stocks 500s on the full default symbol list (2026-08-25)
+## RESOLVED 2026-08-26: /api/stocks 500 on the full default symbol list
 
-Production is a Cloudflare Worker, which caps a request at **50 subrequests**. The
-63-symbol `DEFAULT_SYMBOLS` list was fetched one symbol per request against Yahoo's v8
-chart endpoint, so every default-list call blew the cap. Requests of 40 symbols or fewer
-return 200, which is why single-symbol probes always looked healthy and hid this.
+Cloudflare Workers cap a single invocation at **50 subrequests**. This handler had
+THREE per-symbol fan-out paths: FMP quote+ratios (2 subrequests each), the v8 chart
+fallback (1 each), and v10 fundamentals enrichment (1 each). The 63-symbol default
+list issued well over 100, so everything past the cap failed -- including the Upstash
+KV read inside `getYahooCrumb`, which is what finally showed up in `wrangler tail` as
+`[KV] get error: Too many subrequests by single Worker invocation`.
 
-Shipped so far: Yahoo **v7 batch quote** as the primary path (verified locally, returns
-62 of 63 symbols in ONE subrequest), with the per-symbol chart path kept as a fallback
-capped at 40 symbols. **Still 500 in production after deploy.** The v7 path returns null
-inside the Worker, so `getYahooCrumb()` is not producing a crumb there; its step 1 reads
-`set-cookie` from `https://fc.yahoo.com`, the prime suspect under the Workers runtime.
+A second, independent bug masked it: early returns dropped response bodies without
+reading or cancelling them. Workers cap concurrent in-flight responses and an unread
+body never completes, so the runtime cancelled the oldest and unrelated fetches failed.
+Fixed with `discardBody()`; that removed the stall warnings and exposed the real error.
 
-**DECISIVE EVIDENCE FOUND 2026-08-26 via `wrangler tail`** (the logs were there all
-along). The Worker emits, ~20 times per failing request:
+Fix: Yahoo **v7 batch quote** first (one subrequest for all 63 symbols), with the two
+per-symbol paths gated behind `PER_SYMBOL_FANOUT_MAX = 15`. Verified in production:
+`/api/stocks` returns 200 with 62 symbols.
 
-> A stalled HTTP response was canceled to prevent deadlock. This can happen when a
-> Worker calls fetch() several times without reading the bodies of the returned
-> Response objects... because the Worker did not read the responses, they would never
-> complete. Therefore, to prevent deadlock, the oldest response was canceled.
-
-So the root cause is **abandoned response bodies**, NOT the subrequest cap, NOT Yahoo
-rate limiting, and NOT the crumb -- all three earlier diagnoses were wrong. Cloudflare
-caps concurrent in-flight responses; an unread body never completes, so the runtime
-kills the oldest, which makes unrelated fetches fail until every symbol returns null and
-`results.length === 0` throws. Node/Vercel does not care, which is why it worked there.
-
-Fixed the known offenders (`discardBody()` in stocks-shared.js, called on every early
-`return` in stocks.js and on the `fc.yahoo.com` header-only read in `getYahooCrumb`).
-**Deployed and STILL 500** -- so at least one more abandoned body remains on the path,
-or the in-flight concurrency is too high regardless. Next: tail again and count whether
-the stalled-response warning still appears; if it does, hunt the remaining sites
-(`enrichWithFundamentals`, the FMP path, `_kv.js` Upstash calls). If it is gone and the
-500 persists, the cause is something else and the error string is misleading.
-
-Full plan: `~/.claude/plans/fix-it-if-you-shimmying-fairy.md`
-
-Next: log the crumb result inside the Worker to confirm. If the cookie step is the
-blocker, mint the crumb out-of-band and cache it in KV (the cron already runs) so the
-request path never mints one. Also re-check the serial retry loop added to
-`fetchYahooQuotes` -- 40 stragglers 250ms apart may itself exceed the Worker budget.
-
-Symptom users see: "Failed to fetch stock data" banner on every screen, and a Markets
-list with only commodities/crypto and zero equities. This also blocks the App Store /
-landing-page screenshot refresh, since the stock-detail shot cannot be captured.
-
-# Epiphany Roadmap
+Worth remembering: the thrown error said "Yahoo Finance v8 chart API returned no data",
+which was misleading -- Yahoo was fine, the Worker had simply run out of subrequests.
+Diagnose Workers 500s with `wrangler tail` before trusting the handler's own message.
 
 ## 2026-08-10 (late) — UI + data pass, shipped
 - [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
