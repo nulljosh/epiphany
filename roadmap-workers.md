@@ -1,7 +1,9 @@
 # Epiphany → Cloudflare Workers
 
-Deployed for verification at https://epiphany.trommatic.workers.dev
-Production DNS still points at Vercel. Nothing has been cut over.
+Production runs on Cloudflare Workers at https://epiphany.heyitsmejosh.com
+(Workers custom domain). DNS was flipped in a2a1547; the three cron jobs moved
+off Vercel in cb72eef, and the Vercel project is paused as a rollback target
+until it is deleted.
 
 ## Done
 - `worker/index.js`: assets binding + a Vercel `(req,res)` → `Response` adapter

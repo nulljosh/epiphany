@@ -9,6 +9,7 @@
   "scripts": {
     "tui": "node cli/epiphany-tui.mjs",
     "dev": "vite",
+    "deploy": "wrangler deploy",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -23,7 +24,7 @@
     "@stripe/stripe-js": "^8.7.0",
     "@trickfilm400/rollup-plugin-off-main-thread": "^3.0.0-pre1",
     "@upstash/redis": "^1.38.0",
-    "@vercel/blob": "^2.1.0",
+
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.6.2",
     "dotenv": "^17.3.1",

@@ -18,6 +18,9 @@
   // DNS record, so this replaces the old CNAME at Vercel.
   "routes": [{ "pattern": "epiphany.heyitsmejosh.com", "custom_domain": true }],
   "observability": { "enabled": true },
+  // Default-deny switch for local-only debug routes (server/api/statements.js
+  // scan-local). Must stay "production" on the deployed Worker.
+  "vars": { "NODE_ENV": "production" },
   // Mirrors the three entries removed from vercel.json in this same commit, so
   // exactly one platform is ever armed. worker/index.js scheduled() maps each
   // expression to its gateway path. broker/morning-run places real trades.
