@@ -125,7 +125,7 @@ export default {
     if (!path) return;
 
     const url = new URL(`https://cron.local/api/${path}`);
-    const req = makeReq(new Request(url, { headers: { 'x-cron-secret': env.CRON_SECRET || '' } }), url, undefined);
+    const req = makeReq(new Request(url, { headers: { Authorization: `Bearer ${env.CRON_SECRET || ''}` } }), url, undefined);
     const { res, state } = makeRes();
     await gateway(req, res);
     console.log(`[cron] ${event.cron} -> ${path} -> ${state.status}`);
