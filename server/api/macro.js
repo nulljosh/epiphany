@@ -34,7 +34,12 @@ async function fetchSeries(seriesId) {
     const response = await fetch(`${FRED_CSV}?id=${seriesId}`, {
       method: 'GET',
       signal: controller.signal,
-      headers: { Accept: 'text/csv' },
+      // FRED's WAF answers 520 to the Workers runtime's default empty
+      // User-Agent. A real one is the whole fix.
+      headers: {
+        Accept: 'text/csv',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+      },
     });
 
     if (!response.ok) {
@@ -92,6 +97,11 @@ async function fetchMacroData() {
 
   // No fabricated fallback. A series that fails or returns empty is omitted
   // entirely so the UI shows an honest gap instead of invented numbers.
+  const failures = settled.filter(r => r.status === 'rejected');
+  if (failures.length) {
+    console.error(`[macro] ${failures.length}/${SERIES.length} FRED series failed:`, failures[0].reason?.message);
+  }
+
   return settled
     .filter(r => r.status === 'fulfilled' && r.value.obs.length > 0)
     .map(r => buildIndicator(r.value.spec, r.value.obs));
@@ -111,7 +121,10 @@ export default async function handler(req, res) {
 
   try {
     const fresh = await fetchMacroData();
-    cache = { ts: now, data: fresh };
+    // Only cache a result that actually has data. Caching an empty array — every
+    // series failed — pinned the outage in place for the full hour and returned
+    // it in 1ms, which is exactly what made this look like a config problem.
+    if (fresh.length > 0) cache = { ts: now, data: fresh };
     return res.status(200).json(fresh);
   } catch (error) {
     console.error('Macro API error:', error);
