@@ -34,12 +34,14 @@ async function fetchSeries(seriesId) {
     const response = await fetch(`${FRED_CSV}?id=${seriesId}`, {
       method: 'GET',
       signal: controller.signal,
-      // FRED's WAF answers 520 to the Workers runtime's default empty
-      // User-Agent. A real one is the whole fix.
-      headers: {
-        Accept: 'text/csv',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-      },
+      // ponytail: FRED sits behind Akamai, which refuses this request from
+      // Cloudflare Workers egress — every series comes back 520 at the edge
+      // while the same fetch works from Vercel and from a laptop. Browser
+      // User-Agent, Referer and Accept-Language were all tried; none help, so
+      // it is the egress IP, not the request shape. Until macro moves to a
+      // reachable source (or gets populated into KV by something that can
+      // reach FRED), this returns an empty set and the UI shows an honest gap.
+      headers: { Accept: 'text/csv' },
     });
 
     if (!response.ok) {
