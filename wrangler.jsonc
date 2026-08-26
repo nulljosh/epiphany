@@ -14,6 +14,9 @@
     // Backs server/api/_blob.js, the @vercel/blob replacement.
     { "binding": "BLOB", "id": "a67a16077d864bdfbb57f25254116550" }
   ],
+  // Serves the production hostname directly; Workers custom domains own the
+  // DNS record, so this replaces the old CNAME at Vercel.
+  "routes": [{ "pattern": "epiphany.heyitsmejosh.com", "custom_domain": true }],
   "observability": { "enabled": true },
   // Crons stay disarmed until cutover: broker/morning-run places real trades,
   // and Vercel is still running these on schedule. Re-enable in the same change
