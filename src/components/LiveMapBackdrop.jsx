@@ -1149,7 +1149,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         ref={mapRef}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto' }}
       />
-      {chrome && (<form onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
+      {chrome && (<form className="epiphany-map-search" onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -1157,7 +1157,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           aria-label="Search map location"
           list="epiphany-map-search-options"
           autoComplete="off"
-          style={{ height: 34, padding: '0 10px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#fff', font: `13px ${SYSTEM_FONT}`, outline: 'none', width: 180, backdropFilter: 'blur(8px)', transition: 'border-color 0.2s' }}
+          style={{ height: 34, minWidth: 0, padding: '0 10px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#fff', font: `13px ${SYSTEM_FONT}`, outline: 'none', width: 180, backdropFilter: 'blur(8px)', transition: 'border-color 0.2s' }}
         />
         <datalist id="epiphany-map-search-options">
           {suggestions.map((s) => <option key={s.place_id} value={s.display_name} />)}

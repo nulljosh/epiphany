@@ -870,6 +870,13 @@ const reset = useCallback(() => {
         .epiphany-ticker { display: block; }
         .epiphany-header, .epiphany-footer, .epiphany-panel { display: none; }
         .epiphany-mobile-nav { display: flex; }
+        /* Mobile nav floats over the map top-left, so the map's search bar
+           starts past the 44px burger and stops short of the recenter button. */
+        .epiphany-map-search {
+          left: calc(env(safe-area-inset-left, 0px) + 68px) !important;
+          right: 58px;
+        }
+        .epiphany-map-search input { width: auto !important; flex: 1; }
         .epiphany-root {
           grid-template-rows: auto 1fr !important;
           grid-template-columns: 1fr !important;
@@ -900,6 +907,8 @@ const reset = useCallback(() => {
         @media (min-width: 768px) {
           .epiphany-ticker, .epiphany-header, .epiphany-footer { display: flex; }
           .epiphany-mobile-nav { display: none; }
+          .epiphany-map-search { left: 14px !important; right: auto; }
+          .epiphany-map-search input { width: 180px !important; flex: none; }
           .epiphany-mobile-panel { display: none !important; }
           .epiphany-root {
             grid-template-rows: auto auto 1fr auto !important;

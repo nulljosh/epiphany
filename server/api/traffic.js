@@ -23,15 +23,6 @@ function estimateCongestion(lon) {
   return { source: 'estimated', congestion, currentSpeed: null, freeFlowSpeed: null, confidence: null };
 }
 
-function estimateIncidents(bbox) {
-  const midLat = (bbox.lamin + bbox.lamax) / 2;
-  const midLon = (bbox.lomin + bbox.lomax) / 2;
-  const spread = 0.02;
-  return [
-    { type: 'ESTIMATED', description: 'Estimated congestion zone', severity: 'MINOR', position: { lat: midLat + spread, lon: midLon - spread }, startTime: null },
-    { type: 'ESTIMATED', description: 'Estimated slow traffic area', severity: 'MINOR', position: { lat: midLat - spread, lon: midLon + spread }, startTime: null },
-  ];
-}
 
 function parseBbox(query) {
   const { lamin, lomin, lamax, lomax, lat, lon } = query;
@@ -70,7 +61,9 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=60');
   return res.status(200).json({
     flow: estimateCongestion(center.lon),
-    incidents: estimateIncidents(bbox),
+    // ponytail: no incident feed since TomTom/HERE keys expired; invented
+    // "estimated" incidents were fake pins, not data. Wire a real source here.
+    incidents: [],
     center,
   });
 }
