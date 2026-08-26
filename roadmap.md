@@ -11,6 +11,8 @@ capped at 40 symbols. **Still 500 in production after deploy.** The v7 path retu
 inside the Worker, so `getYahooCrumb()` is not producing a crumb there; its step 1 reads
 `set-cookie` from `https://fc.yahoo.com`, the prime suspect under the Workers runtime.
 
+Full plan: `~/.claude/plans/fix-it-if-you-shimmying-fairy.md`
+
 Next: log the crumb result inside the Worker to confirm. If the cookie step is the
 blocker, mint the crumb out-of-band and cache it in KV (the cron already runs) so the
 request path never mints one. Also re-check the serial retry loop added to
