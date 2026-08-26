@@ -1,9 +1,12 @@
-// Autopilot run for enrolled premium users — fires hourly during market hours.
-// Triggers: Vercel cron at open (vercel.json, 14:30 UTC weekdays — Hobby plan
-// allows daily only) + GitHub Actions hourly ticks (.github/workflows/autopilot.yml),
-// both authed with Bearer CRON_SECRET. The handler itself guards market hours
-// (9:30–16:00 ET Mon–Fri) and dedupes to one run per clock hour via KV, so
-// extra or overlapping triggers are no-ops.
+// Autopilot run for enrolled premium users.
+// Trigger: one Cloudflare Cron Trigger at open (wrangler.jsonc, 30 14 * * 1-5),
+// authed with Bearer CRON_SECRET. So this fires once per weekday, not hourly —
+// the GitHub Actions hourly tick this once referenced (.github/workflows/
+// autopilot.yml) does not exist and may never have. The handler still guards
+// market hours (9:30–16:00 ET Mon–Fri) and dedupes to one run per clock hour
+// via KV, so the hour granularity is now belt-and-braces rather than load-
+// bearing; keep it, since the KV lock is also what protects against a second
+// platform ever being armed by mistake.
 //
 // Signals are computed once per watchlist symbol from 6 months of daily closes
 // (drift/vol estimated from log returns, SMA20/50 momentum tilt, GBM Monte

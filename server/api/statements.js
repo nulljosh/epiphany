@@ -112,7 +112,12 @@ export default async function handler(req, res) {
     const action = req.query?.action || 'list';
 
     if (req.method === 'GET' && action === 'scan-local') {
-      if (process.env.VERCEL) {
+      // scan-local reads statements off the local filesystem, so it must never
+      // be reachable in production. This used to test process.env.VERCEL, which
+      // is undefined on Workers — the check silently inverted at cutover and
+      // exposed the route. Default-deny on NODE_ENV instead, which wrangler.jsonc
+      // pins to "production" for the deployed Worker.
+      if (process.env.NODE_ENV === 'production') {
         return errorResponse(res, 404, 'Not found');
       }
       const requested = typeof req.query?.filename === 'string' ? req.query.filename : '';
