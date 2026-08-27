@@ -104,31 +104,6 @@ struct LoginSheet: View {
                     .signInWithAppleButtonStyle(.black)
                     .frame(height: 50)
                     .padding(.horizontal)
-
-                    // ponytail: stubs — enable when OAuth credentials added to Vercel
-                    Button {
-                    } label: {
-                        HStack {
-                            Image(systemName: "globe")
-                            Text("Continue with Google")
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(true)
-                    .padding(.horizontal)
-
-                    Button {
-                    } label: {
-                        HStack {
-                            Image(systemName: "f.circle.fill")
-                            Text("Continue with Facebook")
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(true)
-                    .padding(.horizontal)
                 }
 
                 HStack {
