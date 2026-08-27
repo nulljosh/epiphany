@@ -536,6 +536,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="/terms.md" target="_blank">Terms</a></li>
           <li><a href="/privacy.md" target="_blank">Privacy</a></li>
+          <li><a href="https://github.com/nulljosh/epiphany/blob/main/docs/API.md" target="_blank" rel="noreferrer">API</a></li>
         </ul>
         <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '1.5rem', lineHeight: 1.6 }}>
           Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.
