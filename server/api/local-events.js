@@ -1,4 +1,5 @@
 // Local events endpoint: PredictHQ (primary) + free fallbacks for universal coverage
+import { overpassQuery } from './_overpass.js';
 // Fallbacks: Wikipedia GeoSearch (multi-point), OSM venues, Eventbrite, news RSS
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -176,17 +177,7 @@ async function fetchOSMVenues(lat, lon) {
     `);out center 30;`;
 
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`Overpass ${res.status}`);
-    const json = await res.json();
+    const json = await overpassQuery(query, 10000);
 
     for (const el of (json.elements || [])) {
       const elLat = el.center?.lat ?? el.lat;
