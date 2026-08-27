@@ -18,6 +18,7 @@ import { useSubscription } from './hooks/useSubscription';
 import { useAuth } from './hooks/useAuth';
 import { useWatchlist } from './hooks/useWatchlist';
 import { useAlerts } from './hooks/useAlerts';
+import { useWebMCP } from './lib/webmcp';
 import AlertsPanel from './components/AlertsPanel';
 import { useWeather } from './hooks/useWeather';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -298,6 +299,7 @@ export default function App() {
   }, [refetchSubscription]);
   const { watchlist, addSymbol, removeSymbol, toggleSymbol } = useWatchlist(user);
   const { alerts, activeCount, addAlert, removeAlert, clearTriggered, checkAlerts } = useAlerts(user);
+  useWebMCP({ watchlist, addSymbol, removeSymbol, alerts, addAlert, removeAlert });
   const [showAlerts, setShowAlerts] = useState(false);
   const weather = useWeather();
 
