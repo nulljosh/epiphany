@@ -1,6 +1,6 @@
 # Epiphany Technical Whitepaper
 
-**v2.6.1 web / 2.5.4 iOS / 2.5.2 macOS** | August 2026
+**v2.6.2 web / 2.5.5 iOS / 2.5.2 macOS** | August 2026
 
 Epiphany is a map first intelligence platform. It pulls live geospatial data,
 markets, prediction markets, people, and news into one view, and it can trade a
