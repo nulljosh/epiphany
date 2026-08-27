@@ -181,3 +181,11 @@ Scope: large UI change — do in a dedicated session.
   cap. Fix is to batch the Yahoo fetches or split the run across the three cron
   slots; raising the limit is a plan change, not a config flag. Also visible in
   the same run and probably older: `Cron crypto fetch failed: HTTP 403`.
+
+## From Apple Notes (imported 2026-08-27)
+- [ ] **REJECTED**: Epiphany iOS 2.5.5 rejected (submitted Aug 25 2026 20:03 PDT, submission 84f6bcd6-8160-4e7b-9a96-e9c53e959110). Apple reviewers hit registration/login bugs — Sign in with Apple does not work for them. Check for remaining wiring steps on "login with X" providers.
+- [ ] Web map shows no events/places; some data eventually loads but renders as one big dot for the whole city. Also a loading glitch in the top App Store bar.
+- [ ] SnapTrade brokerage connection error persists even though the $1 bill was paid this month.
+- [ ] Bump landing page links and GitHub links to current.
+- [ ] Decide: is the app icon green or blue? Pick one and make it consistent.
+- [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
