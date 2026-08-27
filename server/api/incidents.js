@@ -1,6 +1,6 @@
 // Road incidents + nearby infrastructure from OpenStreetMap Overpass API (free, no auth)
 // Returns active incidents (construction, road works) separately from static infrastructure
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+import { overpassQuery } from './_overpass.js';
 const CACHE_TTL = 10 * 60 * 1000;
 const cache = new Map();
 
@@ -126,18 +126,8 @@ async function fetchIncidents(bbox) {
     `way["tourism"="museum"](${bb});` +
     `);out center 60;`;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
   try {
-    const res = await fetch(OVERPASS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`Overpass ${res.status}`);
-    const json = await res.json();
+    const json = await overpassQuery(query, 12000);
     const junkNames = new Set(['no', 'yes', 'none', 'null', 'n/a', '']);
 
     const incidents = [];
@@ -177,7 +167,6 @@ async function fetchIncidents(bbox) {
     cache.set(key, { ts: Date.now(), data });
     return { data, state: 'live' };
   } catch (err) {
-    clearTimeout(timer);
     console.warn('Overpass error:', err.message);
     if (cached) {
       return {
