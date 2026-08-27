@@ -1,8 +1,13 @@
 // GET current Alpaca paper positions + account summary
 import { ALPACA_BASE, alpacaHeaders, hasAlpacaKey } from './alpaca.js';
+import { getSessionUser, errorResponse } from '../auth-helpers.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Account equity, cash and open positions — session required.
+  const session = await getSessionUser(req);
+  if (!session) return errorResponse(res, 401, 'Authentication required');
 
   if (!hasAlpacaKey()) {
     return res.status(200).json({ positions: [], account: null, configured: false });

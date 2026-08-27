@@ -73,8 +73,13 @@ export default async function handler(req, res) {
     } else {
       return res.status(401).json({ error: 'Unauthorized: invalid secret' });
     }
-  } else if (webhookSecret) {
-    return res.status(401).json({ error: 'Unauthorized: invalid secret' });
+  } else {
+    // No per-user key and no valid global secret. Previously an unset
+    // WEBHOOK_SECRET fell through as userId 'anonymous', leaving this open to
+    // anyone who knew the URL.
+    return res.status(webhookSecret ? 401 : 503).json({
+      error: webhookSecret ? 'Unauthorized: invalid secret' : 'Webhook not configured',
+    });
   }
 
   let body = req.body;
