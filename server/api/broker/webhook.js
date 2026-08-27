@@ -1,4 +1,5 @@
 import { applyCors } from '../_cors.js';
+import { verifyWebhookSecret } from '../_webhook-auth.js';
 // TradingView alert → Alpaca paper order
 // POST { ticker, action, price?, qty? }
 const BASE = process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets';
@@ -15,6 +16,9 @@ export default async function handler(req, res) {
   applyCors(req, res, { methods: 'POST, OPTIONS' });
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const auth = verifyWebhookSecret(req);
+  if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const { ticker, action, qty = 1 } = body || {};
