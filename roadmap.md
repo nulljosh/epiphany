@@ -194,3 +194,14 @@ Scope: large UI change — do in a dedicated session.
 - [ ] Decide: is the app icon green or blue? Pick one and make it consistent.
 - [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
 - [ ] Housekeeping: build `202608271355` (2.5.6) was uploaded by mistake on 2026-08-27 — a duplicate of work already done. The build actually in review is **2.5.5 / `202608271349`**, which does include the dead-button removal (`03c89b3`). `ios/project.yml` now reads 2.5.6, so the next build is correctly numbered; the orphaned 202608271355 build can be ignored or deleted in ASC. Note `44cfa65` (broker webhook auth) landed AFTER that build, so it ships server-side only until the next binary.
+
+### Open — security
+
+- **Rotate the two dashboard-gated secrets** (2026-08-27 security sweep). Fresh
+  `WEBHOOK_SECRET` + `CRON_SECRET` were already regenerated locally in
+  `.env.tui.local` and need pushing to Vercel prod (my broker/webhook + autopilot
+  cron endpoints now 503 until the secret is set in prod). Still to do by hand,
+  because no API mints these headlessly:
+  - `STRIPE_SECRET_KEY` (roll `sk_live_` at dashboard.stripe.com/apikeys)
+  - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API; rotating invalidates all tokens)
+  Run `scripts/rotate-keys.sh` to open all tabs, then `scripts/sync-vercel-env.sh`.
