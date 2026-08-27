@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
 import { supabaseRequest, supabaseConfigured } from './supabase.js';
+import { verifyAppleIdentityToken } from './_apple-jwt.js';
 import { sendEmail } from './_email.js';
 
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
@@ -27,6 +28,12 @@ async function checkRateLimit(kv, ip) {
 }
 
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
+
+// Bundle IDs / Services IDs permitted to request an Apple identity token for this app.
+const APPLE_AUDIENCES = (process.env.APPLE_AUDIENCES || 'com.heyitsmejosh.epiphany')
+  .split(',')
+  .map((a) => a.trim())
+  .filter(Boolean);
 const VERIFY_TTL = 24 * 60 * 60; // 24 hours
 const RESET_TTL = 60 * 60; // 1 hour
 const DEFAULT_BASE_URL = 'https://epiphany.heyitsmejosh.com';
@@ -557,20 +564,28 @@ export default async function handler(req, res) {
 
   // POST: Sign in with Apple
   if (action === 'signin-apple') {
-    const { identityToken, email, fullName } = req.body || {};
+    const { identityToken, fullName } = req.body || {};
     if (!identityToken) {
       return errorResponse(res, 400, 'Identity token required');
     }
 
+    let payload;
     try {
-      // Decode Apple JWT payload (base64url)
-      const parts = identityToken.split('.');
-      if (parts.length !== 3) return errorResponse(res, 400, 'Invalid token format');
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-      const appleUserId = payload.sub;
-      const appleEmail = payload.email || email;
+      payload = await verifyAppleIdentityToken(identityToken, APPLE_AUDIENCES, kv);
+    } catch (err) {
+      // An unverified token is an impersonation attempt, not a server fault.
+      console.warn('[AUTH] Apple token rejected:', err.message);
+      return errorResponse(res, 401, 'Invalid Apple token');
+    }
 
-      if (!appleUserId) return errorResponse(res, 400, 'Invalid Apple token');
+    try {
+      const appleUserId = payload.sub;
+      // Only Apple's own verified claim may identify the account. A caller-supplied
+      // email would let anyone link their Apple ID to someone else's account.
+      const appleEmail =
+        payload.email && payload.email_verified !== false && payload.email_verified !== 'false'
+          ? payload.email
+          : null;
 
       // Check if Apple ID is already linked
       let user = await kv.get(`apple:${appleUserId}`);
