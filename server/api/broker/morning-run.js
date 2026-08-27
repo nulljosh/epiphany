@@ -15,6 +15,7 @@
 // linked SnapTrade brokerage) exists below but is unreachable -- autopilot.js
 // forces mode to 'paper' until live execution is vetted further.
 import { getKv } from '../_kv.js';
+import { verifyCronSecret } from '../_shared-secret.js';
 import { isProByEmail } from '../gates.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
 
@@ -196,9 +197,8 @@ function marketOpenNow() {
 
 export default async function handler(req, res) {
   // Auth: Vercel cron and GitHub Actions send Authorization: Bearer <CRON_SECRET>
-  if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const cronAuth = verifyCronSecret(req);
+  if (!cronAuth.ok) return res.status(cronAuth.status).json({ error: cronAuth.error });
 
   const kv = await getKv();
   if (!kv) return res.status(200).json({ ok: false, error: 'KV unavailable' });

@@ -5,14 +5,14 @@
 //
 // GET /api/broker/impact-test[?userId=...&symbol=AAPL]
 import { getKv } from '../_kv.js';
+import { verifyCronSecret } from '../_shared-secret.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
 
 const DEFAULT_USER = '6ac57c6c-6975-4eaf-b306-d58fd8b3b784';
 
 export default async function handler(req, res) {
-  if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const cronAuth = verifyCronSecret(req);
+  if (!cronAuth.ok) return res.status(cronAuth.status).json({ error: cronAuth.error });
   if (!SnapTradeAdapter.isConfigured()) {
     return res.status(200).json({ ok: false, error: 'SnapTrade not configured' });
   }

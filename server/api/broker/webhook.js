@@ -1,5 +1,5 @@
 import { applyCors } from '../_cors.js';
-import { verifyWebhookSecret } from '../_webhook-auth.js';
+import { verifyWebhookSecret } from '../_shared-secret.js';
 // TradingView alert → Alpaca paper order
 // POST { ticker, action, price?, qty? }
 const BASE = process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets';
