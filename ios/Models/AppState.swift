@@ -1,4 +1,3 @@
-import AuthenticationServices
 import LocalAuthentication
 import SwiftUI
 
@@ -241,29 +240,6 @@ final class AppState {
 
     func register(email: String, password: String) async {
         await authenticate { try await authAPI.register(email: email, password: password) }
-    }
-
-    func handleAppleSignIn(result: Result<ASAuthorization, Error>) async {
-        switch result {
-        case .failure(let err):
-            error = err.localizedDescription
-        case .success(let auth):
-            guard let cred = auth.credential as? ASAuthorizationAppleIDCredential,
-                  let tokenData = cred.identityToken,
-                  let token = String(data: tokenData, encoding: .utf8) else {
-                error = "Invalid Apple credential"
-                return
-            }
-            let fullName = [cred.fullName?.givenName, cred.fullName?.familyName]
-                .compactMap { $0 }.joined(separator: " ")
-            await authenticate {
-                try await self.authAPI.signinApple(
-                    identityToken: token,
-                    email: cred.email,
-                    fullName: fullName.isEmpty ? nil : fullName
-                )
-            }
-        }
     }
 
     func saveBiometricCredentials(email: String, password: String) {
