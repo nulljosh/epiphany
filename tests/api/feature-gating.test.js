@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createReqRes, resetAllMocks, getKVStore } from './_mocks.js';
 import { FEATURES, isPremiumFeature } from '../../src/config/features.js';
 
@@ -26,6 +26,12 @@ describe('autopilot premium gate (server/api/broker/autopilot.js)', () => {
     vi.resetModules();
     mockGetSessionUser.mockReset();
     process.env.ADMIN_EMAILS = 'admin@example.com';
+    // Gate is open by default for Guideline 3.1.1; opt into the paid path under test.
+    process.env.EPIPHANY_REQUIRE_PRO = 'true';
+  });
+
+  afterEach(() => {
+    delete process.env.EPIPHANY_REQUIRE_PRO;
   });
 
   async function postAutopilot(session, body = { enabled: true }) {

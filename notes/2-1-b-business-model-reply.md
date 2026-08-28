@@ -35,7 +35,15 @@ So a user who pays $1 on the website gets features unlocked inside the iOS app, 
 Apple taking no part in the transaction. That is what 3.1.1 prohibits for digital
 content consumed in the app.
 
-**This needs a product decision from Joshua before replying.** The realistic options:
+**DECIDED 2026-08-28: option 2.** Option 1 is blocked upstream on the unsigned Paid Apps
+Agreement, and even unblocked it needs a fresh submission during the 4.3(a) freeze. Option 2
+forfeits no actual revenue -- the record carries zero IAPs, so Apple revenue is already
+impossible -- and it is one env var to reverse. Implemented in `server/api/gates.js`:
+`isProByEmail` grants Pro to any signed-in user unless `EPIPHANY_REQUIRE_PRO=true`. The dead
+`ios/Services/StoreKitManager.swift` was deleted so the binary carries no reference to a
+StoreKit product that does not exist on the record.
+
+The options as assessed:
 
 1. **Add a real IAP** for the Pro unlock and use it as the iOS purchase path (keep Stripe
    for web only). Blocked upstream on the Paid Apps Agreement + bank account, which is
@@ -61,9 +69,9 @@ services in the app?**
 **2. Where can users purchase the content, subscriptions, features, and services that can
 be accessed in the app?**
 
-> [PENDING THE DECISION ABOVE.] As the build currently stands, the only purchase path is
-> a one-time Stripe payment on our website, epiphany.heyitsmejosh.com. The iOS app itself
-> contains no purchase interface and no link to that page.
+> Nothing is sold in the iOS app. It contains no purchase interface, no paywall, and no
+> link to any external purchase page. Every feature in the iOS build is available to any
+> signed-in user at no charge.
 
 **3. What specific types of previously purchased content, subscriptions, features, and
 services can a user access in the app?**
@@ -76,11 +84,8 @@ services can a user access in the app?**
 **4. What paid content, subscriptions, or features are unlocked within the app that do
 not use In-App Purchase?**
 
-> [ANSWER HONESTLY ONCE THE DECISION IS MADE. If nothing changes, the truthful answer is:
-> Autopilot live trading, the Daily Brief, and the People graph are gated server-side on
-> a Pro flag that is currently only obtainable via a one-time Stripe payment on the web.
-> If option 2 is taken, the answer becomes: none — the iOS build unlocks no paid features
-> and contains no purchase path.]
+> None. The iOS app unlocks no paid content, subscriptions or features. Every feature is
+> free to all signed-in users, and the app contains no purchase path of any kind.
 
 ## Free vs paid, as the code actually behaves
 
