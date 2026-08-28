@@ -215,3 +215,15 @@ Scope: large UI change — do in a dedicated session.
 
 ## Stashed 2026-08-28
 - [ ] Verify the deploy state before replying to Apple's 2.1(b) query. The answer to question 4 in `notes/2-1-b-business-model-reply.md` ("none") is only true while this build is live — check with `npx vercel inspect https://epiphany.heyitsmejosh.com` and confirm `created` is newer than the gates.js commit. Do NOT verify by curling `/api/daily-brief` or `/api/people` unauthenticated: both return 402 under old and new code, so that probe proves nothing.
+
+## Migrate off Vercel to Cloudflare (scoped 2026-08-28)
+
+Everything else in the codebase is on Cloudflare; epiphany and talli are the last two on Vercel, and talli genuinely cannot move (Express monolith with headless Chrome and Python shells). Epiphany can. The trigger: a paused Vercel project silently blocked every deploy for two days while production served a stale build, and the CLI never surfaced it — a failure mode that does not exist on Cloudflare Pages. See `reference_vercel_paused_project` in memory.
+
+**Do this AFTER the Guideline 4.3(a) appeal clears.** Do not move the most complex app in the codebase while a submission is in review.
+
+- [ ] **Spike first, before committing to the migration: does `pdf-parse` run on the Workers runtime?** It powers bank-statement parsing in `server/api/statements.js` and is the one dependency that could turn a small job into a large one. Needs `nodejs_compat`. If it cannot work, the fallback is keeping statement parsing on a separate Node host or moving it client-side, which changes the shape of the whole migration — so settle this before anything else.
+- [ ] Port Vercel Blob to R2. The lock-in surface is only three files: `server/api/_blob.js`, `server/api/statements.js`, `server/api/cron.js`. Statements must stay private — `putStatementBlob` requires non-public access, and a public store was a real incident on 2026-08-06 (a Vercel store's access mode is fixed at creation; R2 is private by default, which is safer). Note the current 3MB effective upload cap exists because the PDF is sent base64 in a JSON body through a Vercel Function's 4.5MB limit; R2 direct upload removes that constraint, so the cap can go away rather than be ported.
+- [ ] Everything else is already portable: KV is Upstash (external, not `@vercel/kv`), there is one function (`api/gateway.js`) and no crons in `vercel.json`.
+- [ ] Move env vars to Cloudflare (`wrangler pages secret put`), re-point the Stripe webhook endpoint, and verify the SnapTrade and broker paths still authenticate.
+- [ ] Flip DNS last, and confirm the new deploy serves before removing the Vercel project.
