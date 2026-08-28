@@ -1,3 +1,23 @@
+## Google sign-in on native: server is DONE, only the client is missing (verified 2026-08-28)
+
+`https://epiphany.heyitsmejosh.com/api/auth?action=google` returns a live **302** to
+accounts.google.com using client_id `455155642136-...apps.googleusercontent.com` — the same
+Google Cloud client the shared Supabase project uses — with redirect_uri
+`https://epiphany.heyitsmejosh.com/api/auth?action=google-callback` already configured.
+
+So the "blocked on Joshua registering a Google app" note elsewhere is **stale for Epiphany**.
+The web half works today. What is actually missing for iOS/macOS:
+
+1. A Google button in `ios/Views/LoginSheet.swift` + the macOS equivalent, driving
+   `ASWebAuthenticationSession`.
+2. A custom URL scheme — Epiphany has **none** registered. Add `CFBundleURLTypes` via
+   `ios/project.yml`'s generated info block, never the plist (xcodegen rewrites it).
+3. A server change so the google-callback can redirect back to `epiphany://` for the native
+   client instead of only to the web app.
+
+Do NOT re-add Sign in with Apple here. It was removed 2026-08-28 to clear the Guideline
+2.1(a) rejection and 2.5.6 is in review on that basis; revisit only after a verdict.
+
 ## RESOLVED 2026-08-26: /api/stocks 500 on the full default symbol list
 
 Cloudflare Workers cap a single invocation at **50 subrequests**. This handler had
