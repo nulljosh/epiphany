@@ -18,10 +18,22 @@ describe('gates.js', () => {
   beforeEach(() => {
     resetAllMocks();
     vi.resetModules();
+    // The gate is open by default so the iOS build unlocks nothing bought outside IAP
+    // (Guideline 3.1.1). These tests cover the paid path, which is what reverting the
+    // env var restores, so they opt back into it explicitly.
+    process.env.EPIPHANY_REQUIRE_PRO = 'true';
   });
 
   afterEach(() => {
     process.env.ADMIN_EMAILS = ORIGINAL_ADMIN_EMAILS;
+    delete process.env.EPIPHANY_REQUIRE_PRO;
+  });
+
+  it('grants Pro to any signed-in user when EPIPHANY_REQUIRE_PRO is unset', async () => {
+    delete process.env.EPIPHANY_REQUIRE_PRO;
+    const { isProByEmail } = await import('../../server/api/gates.js');
+    await expect(isProByEmail('nobody@example.com')).resolves.toBe(true);
+    await expect(isProByEmail('')).resolves.toBe(false);
   });
 
   describe('isAdmin', () => {
