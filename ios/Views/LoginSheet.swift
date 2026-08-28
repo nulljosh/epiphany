@@ -1,4 +1,3 @@
-import AuthenticationServices
 import LocalAuthentication
 import SwiftUI
 
@@ -95,25 +94,12 @@ struct LoginSheet: View {
                     .padding(.horizontal, 32)
                 }
 
-                VStack(spacing: 12) {
-                    SignInWithAppleButton(.signIn) { request in
-                        request.requestedScopes = [.email, .fullName]
-                    } onCompletion: { result in
-                        Task { await appState.handleAppleSignIn(result: result) }
-                    }
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 50)
-                    .padding(.horizontal)
-                }
-
-                HStack {
-                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
-                    Text("or")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
-                }
-                .padding(.horizontal, 32)
+                // ponytail: Sign in with Apple pulled 2026-08-28. Review kept failing
+                // inside Apple's own sheet ("Sign-Up Not Completed"), which we cannot
+                // reach or reproduce. Guideline 4.8 no longer applies now that Google
+                // and Facebook are gone, so the button is optional. The server route
+                // (auth.js signin-apple) and the entitlement stay, so restoring it is
+                // one commit.
 
                 VStack(spacing: 16) {
                     TextField("Email", text: $email)
