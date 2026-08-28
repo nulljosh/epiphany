@@ -551,12 +551,20 @@ gating/pricing decision this depends on), or drop these two items.
 
 ### Free vs Premium ($1/wk)
 
-| Free | Premium |
-|---|---|
-| Map + all data layers | Autopilot (live trading) |
-| Situation monitor | Portfolio + watchlist |
-| Stock data + ticker | Ontology writes + batch |
-| Weather/quakes | Deep news + crime data |
+**Verified against `server/api/gates.js` 2026-08-28 — the previous table was aspirational
+and wrong. Portfolio, watchlist and Ontology writes are NOT gated. Do not quote a stale
+version of this table to App Review.**
+
+What `isPro` actually gates (402 otherwise): **Autopilot live trading, Daily Brief, and the
+People graph**. Everything else is free — map and all data layers, situation monitor, stock
+data and ticker, weather/quakes, portfolio, watchlist, ontology writes.
+
+The only entitlement path is a one-time **Stripe** payment on the web. `asc iap list --app
+6779522175` returns zero IAPs, and `ios/Services/StoreKitManager.swift` declares
+`com.heyitsmejosh.epiphany.paid` but is dead code referenced nowhere, against a product that
+does not exist in ASC. Since `ios/API/EpiphanyAPI.swift` calls every gated endpoint, the iOS
+app unlocks paid features purchased outside IAP — a Guideline 3.1.1 exposure. See
+`notes/2-1-b-business-model-reply.md`; this needs a product decision, not a code tweak.
 
 ### Monetization
 
