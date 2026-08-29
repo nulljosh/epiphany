@@ -193,7 +193,10 @@ export default function App() {
   // full-screen dimmed backdrop over the map the instant you logged in on a phone.
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [desktopPanelOpen, setDesktopPanelOpen] = useState(false);
-  const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  // 767.98, not 768: the stylesheet switches to the desktop grid at `min-width: 768px`, so a
+  // `max-width: 768px` probe made both true at exactly 768 (iPad portrait) and laid the
+  // mobile sheet + its fixed backdrop over the desktop layout.
+  const [isMobileNav, setIsMobileNav] = useState(() => window.matchMedia('(max-width: 767.98px)').matches);
   const [commandBarOpen, setCommandBarOpen] = useState(false);
   const [commandBarStock, setCommandBarStock] = useState(null);
   const desktopPanelRef = useRef(null);
@@ -249,7 +252,7 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler);
   }, [commandBarOpen, isMobileNav]);
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
+    const mq = window.matchMedia('(max-width: 767.98px)');
     const handler = (e) => {
       setIsMobileNav(e.matches);
       if (e.matches) {

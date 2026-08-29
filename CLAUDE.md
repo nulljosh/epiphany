@@ -273,13 +273,13 @@ Ordered by effort (fewest tokens → most). Ship the top first. Last updated: 20
   "enabled brokerages"). **Blocked on Joshua: test in brokerage reconnect flow** (June 14–15)
 - CDB research (Canada Disability Benefit, ~$200/m)
 - Eventually: rename to Yotta/Yota
-- [x] Autopilot is the only gated feature — DONE 2026-06-13: there is currently
-  **no** "AI Analyst (Claude)" chat feature in the codebase (no `AiPanel`, no
-  `ANTHROPIC_API_KEY` usage, no `people-enrich.js`). `DailyBrief` is
-  rule-based (movers + GDELT headlines), not LLM-generated. The only working
-  Pro gate is autopilot live trading (`isPro` in `broker/autopilot.js` /
-  `morning-run.js`). Free vs Premium table (line 330–335) correctly reflects
-  this: autopilot only. If AI Analyst feature is built later, add to Premium.
+- [x] Autopilot is the only gated feature — DONE 2026-06-13, **superseded 2026-08-28**:
+  there is still **no** "AI Analyst (Claude)" chat feature in the codebase (no
+  `AiPanel`, no `ANTHROPIC_API_KEY` usage, no `people-enrich.js`), and
+  `DailyBrief` is rule-based (movers + GDELT headlines), not LLM-generated. But
+  autopilot is no longer the only gate — see the **Free vs Premium** section
+  below for the verified list. If an AI Analyst feature is built later, add it
+  to Premium there.
 - Landing page simplification (v2): `src/pages/LandingPage.jsx` (517 lines) +
   `landing.css` (398 lines) — needs the user to say *what* "simplify" means
   (fewer sections? cut the canvas animation for perf? trim copy?) before it
@@ -555,9 +555,18 @@ gating/pricing decision this depends on), or drop these two items.
 and wrong. Portfolio, watchlist and Ontology writes are NOT gated. Do not quote a stale
 version of this table to App Review.**
 
-What `isPro` actually gates (402 otherwise): **Autopilot live trading, Daily Brief, and the
-People graph**. Everything else is free — map and all data layers, situation monitor, stock
-data and ticker, weather/quakes, portfolio, watchlist, ontology writes.
+What `isPro` actually gates (402 otherwise), verified by call site: **autopilot + live
+trading** (`broker/autopilot.js:25,45`, `broker/trade.js:15`, `broker/morning-run.js:163`),
+**Daily Brief** (`daily-brief.js:110`) and the **People graph** (`people.js:199`,
+`people-index.js:28`, `people-import.js:66`, `people-crossref.js:57`). Everything else is
+free — map and all data layers, situation monitor, stock data and ticker, weather/quakes,
+portfolio, watchlist, ontology writes.
+
+**But the gate is currently open to everyone.** `isProByEmail` in `gates.js` returns `true`
+for any signed-in user unless `EPIPHANY_REQUIRE_PRO=true`, which is not set. That is
+deliberate (the Guideline 3.1.1 fix below — the iOS build ships with no IAP), so in
+production *no* feature is actually paywalled today. Quote this paragraph, not just the
+list above, if the tiering is ever described to App Review.
 
 The only entitlement path is a one-time **Stripe** payment on the web. `asc iap list --app
 6779522175` returns zero IAPs, and `ios/Services/StoreKitManager.swift` declares
