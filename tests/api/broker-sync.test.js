@@ -91,7 +91,9 @@ describe('broker/sync stale-userSecret self-heal', () => {
 
     expect(kvStore.get('snaptrade:user:u1')).toEqual({ userSecret: 'stale-secret' });
     expect(res.statusCode).toBe(502);
-    expect(res.body.error).toMatch(/network timeout/);
+    // Upstream detail must not reach the clients — they render `error` verbatim.
+    expect(res.body.error).toBe('Brokerage temporarily unavailable');
+    expect(res.body.error).not.toMatch(/network timeout/);
   });
 });
 

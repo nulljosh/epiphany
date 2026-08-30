@@ -74,7 +74,9 @@ export default async function handler(req, res) {
     console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.total.toFixed(2)} cash`);
     return res.status(200).json({ ok: true, linked: true, ...snapshot });
   } catch (err) {
+    // Upstream detail stays in the logs; the clients (iOS/macOS/web) render
+    // `error` verbatim, so never hand them a raw SnapTrade payload.
     console.error('[BROKER/SYNC] Error:', err.message);
-    return res.status(502).json({ ok: false, error: err.message });
+    return res.status(502).json({ ok: false, error: 'Brokerage temporarily unavailable' });
   }
 }
