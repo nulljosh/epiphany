@@ -58,7 +58,8 @@ targets:
       PRODUCT_MODULE_NAME: Epiphany
       INFOPLIST_KEY_CFBundleDisplayName: Epiphany
       INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
-      TARGETED_DEVICE_FAMILY: "1"
+      # Universal: iPad was never excluded for a design reason, only never enabled.
+      TARGETED_DEVICE_FAMILY: "1,2"
     entitlements:
       # `properties` must be declared here: xcodegen REWRITES this file on every
       # `xcodegen generate`, so a path with no properties silently regenerates it
