@@ -7,7 +7,7 @@ import gateway from '../api/gateway.js';
 
 // Vercel handlers expect Node's (req, res). Build a request shim, collect what
 // the handler writes, and hand back a Response.
-function makeReq(request, url, body) {
+function makeReq(request, url, body, rawBody) {
   const headers = Object.fromEntries(request.headers);
   return {
     method: request.method,
@@ -15,6 +15,10 @@ function makeReq(request, url, body) {
     headers,
     query: Object.fromEntries(url.searchParams),
     body,
+    // Stripe signs the exact bytes it sent, so the webhook handler cannot use the
+    // parsed `body`. This object is not a Node stream either, so re-reading is
+    // impossible: the raw text has to be carried alongside the parsed value.
+    rawBody,
     // Handlers fall back to this for rate limiting when x-forwarded-for is absent.
     socket: { remoteAddress: headers['cf-connecting-ip'] || '' },
   };
@@ -54,9 +58,13 @@ async function readBody(request) {
   if (request.method === 'GET' || request.method === 'HEAD') return undefined;
   const type = request.headers.get('content-type') || '';
   try {
-    if (type.includes('application/json')) return await request.json();
-    if (type.includes('form')) return Object.fromEntries(await request.formData());
-    return await request.text();
+    if (type.includes('form')) return { body: Object.fromEntries(await request.formData()) };
+    // Read the text once and parse from it, so the raw bytes survive for signature checks.
+    const rawBody = await request.text();
+    if (type.includes('application/json')) {
+      return { body: rawBody ? JSON.parse(rawBody) : undefined, rawBody };
+    }
+    return { body: rawBody, rawBody };
   } catch {
     return undefined;
   }
@@ -75,9 +83,9 @@ function guessType(key) {
 }
 
 async function handleApi(request, url) {
-  const body = await readBody(request);
+  const { body, rawBody } = (await readBody(request)) || {};
   const { res, state, headers } = makeRes();
-  await gateway(makeReq(request, url, body), res);
+  await gateway(makeReq(request, url, body, rawBody), res);
   return new Response(state.body, { status: state.status, headers });
 }
 
@@ -125,7 +133,7 @@ export default {
     if (!path) return;
 
     const url = new URL(`https://cron.local/api/${path}`);
-    const req = makeReq(new Request(url, { headers: { Authorization: `Bearer ${env.CRON_SECRET || ''}` } }), url, undefined);
+    const req = makeReq(new Request(url, { headers: { Authorization: `Bearer ${env.CRON_SECRET || ''}` } }), url, undefined, undefined);
     const { res, state } = makeRes();
     await gateway(req, res);
     console.log(`[cron] ${event.cron} -> ${path} -> ${state.status}`);
