@@ -56,9 +56,8 @@ export default async function handler(req, res) {
       });
     }
 
-    res.status(500).json({
-      error: 'Failed to validate link',
-      details: error.message
-    });
+    // Detail stays in the log above. error.message here is Polymarket's or the
+    // runtime's, and it is not the caller's to read.
+    res.status(500).json({ error: 'Failed to validate link' });
   }
 }

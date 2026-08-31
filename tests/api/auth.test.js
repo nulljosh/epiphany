@@ -249,7 +249,7 @@ describe('Auth API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(429);
-      expect(res.data).toEqual({ error: 'Too many login attempts. Try again in 15 minutes.' });
+      expect(res.data).toEqual({ error: 'Too many attempts. Try again in a few minutes.' });
     });
   });
 
