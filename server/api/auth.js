@@ -5,27 +5,29 @@ import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
 import { supabaseRequest, supabaseConfigured } from './supabase.js';
 import { verifyAppleIdentityToken } from './_apple-jwt.js';
 import { sendEmail } from './_email.js';
+import { checkRateLimit } from './_ratelimit.js';
 
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
 const RATE_LIMIT_MAX = 15;
 
-async function checkRateLimit(kv, ip) {
-  if (!kv) return false;
-  const now = Date.now();
-  const key = `ratelimit:${ip}`;
-  const entry = await kv.get(key);
-
-  if (!entry || now - entry.firstAttempt > RATE_LIMIT_WINDOW) {
-    await kv.set(key, { count: 1, firstAttempt: now }, { ex: RATE_LIMIT_WINDOW / 1000 });
-    return true;
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-
-  const next = { count: entry.count + 1, firstAttempt: entry.firstAttempt };
-  await kv.set(key, next, { ex: RATE_LIMIT_WINDOW / 1000 });
-  return true;
-}
+// Every action that guesses at a credential, mints a token, or answers "does this
+// account exist". Throttled together at the dispatcher rather than one guard per
+// branch -- login was the only one covered before, so register and lookup were a free
+// account-enumeration oracle and forgot-password was an unmetered mail cannon.
+// ponytail: shared counter per IP across all of these, not per action. An attacker
+// working several actions at once burns one budget, which is the behaviour we want;
+// split it per action only if a legitimate flow starts tripping it.
+const THROTTLED_ACTIONS = new Set([
+  'login',
+  'register',
+  'lookup',
+  'signin-apple',
+  'verify-email',
+  'forgot-password',
+  'reset-password',
+  'change-password',
+  'change-email',
+]);
 
 const SESSION_TTL = 30 * 24 * 60 * 60; // 30 days
 
@@ -130,6 +132,26 @@ async function deleteSupabaseUserData(email) {
   ]);
 }
 
+// OAuth providers answer an outage with an HTML error page, and .json() on that threw
+// inside the callback's try -- every failure collapsed into one nameless
+// `_callback_error` redirect. Returning {} instead lets the existing
+// `if (!access_token)` / `if (!user.email)` checks fire as intended, and logs which
+// provider and status actually broke.
+// ponytail: no retry, no backoff. The user is standing at a redirect; they can click
+// sign-in again faster than any retry we could hide here.
+async function providerJson(response, label) {
+  if (!response.ok) {
+    console.error(`[oauth] ${label} responded ${response.status}`);
+    return {};
+  }
+  try {
+    return await response.json();
+  } catch {
+    console.error(`[oauth] ${label} returned a non-JSON body`);
+    return {};
+  }
+}
+
 export default async function handler(req, res) {
   try {
     const kv = await getKv();
@@ -137,6 +159,15 @@ export default async function handler(req, res) {
       return errorResponse(res, 503, 'Database connection unavailable');
     }
     const { action } = req.query;
+
+    if (THROTTLED_ACTIONS.has(action)) {
+      const ok = await checkRateLimit(req, {
+        prefix: 'ratelimit',
+        window: RATE_LIMIT_WINDOW,
+        max: RATE_LIMIT_MAX,
+      });
+      if (!ok) return errorResponse(res, 429, 'Too many attempts. Try again in a few minutes.');
+    }
 
   // GET: GitHub OAuth redirect
   if (req.method === 'GET' && action === 'github') {
@@ -161,15 +192,15 @@ export default async function handler(req, res) {
         method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({ client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code }),
       });
-      const { access_token } = await tokenRes.json();
+      const { access_token } = await providerJson(tokenRes, 'github/token');
       if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=github_token` }); return res.end(); }
 
       const [ghUserRes, ghEmailRes] = await Promise.all([
         fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${access_token}`, 'User-Agent': 'Epiphany' } }),
         fetch('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${access_token}`, 'User-Agent': 'Epiphany' } }),
       ]);
-      const ghUser = await ghUserRes.json();
-      const ghEmails = await ghEmailRes.json();
+      const ghUser = await providerJson(ghUserRes, 'github/user');
+      const ghEmails = await providerJson(ghEmailRes, 'github/emails');
       const primaryEmail = (Array.isArray(ghEmails) ? (ghEmails.find(e => e.primary && e.verified) || ghEmails[0]) : null)?.email || ghUser.email;
       if (!primaryEmail) { res.writeHead(302, { Location: `${base}/?auth_error=github_email` }); return res.end(); }
 
@@ -234,13 +265,13 @@ export default async function handler(req, res) {
           code, redirect_uri: `${base}/api/auth?action=google-callback`, grant_type: 'authorization_code',
         }),
       });
-      const { access_token } = await tokenRes.json();
+      const { access_token } = await providerJson(tokenRes, 'google/token');
       if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=google_token` }); return res.end(); }
 
       const guRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${access_token}` },
       });
-      const gUser = await guRes.json();
+      const gUser = await providerJson(guRes, 'google/userinfo');
       if (!gUser.email || !gUser.email_verified) { res.writeHead(302, { Location: `${base}/?auth_error=google_email` }); return res.end(); }
 
       const googleId = String(gUser.sub);
@@ -302,11 +333,11 @@ export default async function handler(req, res) {
         code, redirect_uri: `${base}/api/auth?action=facebook-callback`,
       });
       const tokenRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?${tokenParams}`);
-      const { access_token } = await tokenRes.json();
+      const { access_token } = await providerJson(tokenRes, 'facebook/token');
       if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=facebook_token` }); return res.end(); }
 
       const fbRes = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name,email,picture&access_token=${access_token}`);
-      const fbUser = await fbRes.json();
+      const fbUser = await providerJson(fbRes, 'facebook/me');
       if (!fbUser.email) { res.writeHead(302, { Location: `${base}/?auth_error=facebook_email` }); return res.end(); }
 
       const facebookId = String(fbUser.id);
@@ -381,13 +412,13 @@ export default async function handler(req, res) {
           redirect_uri: `${base}/api/auth?action=twitter-callback`, code_verifier: stored.codeVerifier,
         }),
       });
-      const { access_token } = await tokenRes.json();
+      const { access_token } = await providerJson(tokenRes, 'twitter/token');
       if (!access_token) { res.writeHead(302, { Location: `${base}/?auth_error=twitter_token` }); return res.end(); }
 
       const xuRes = await fetch('https://api.twitter.com/2/users/me?user.fields=profile_image_url,name,username', {
         headers: { Authorization: `Bearer ${access_token}` },
       });
-      const { data: xUser } = await xuRes.json();
+      const { data: xUser } = await providerJson(xuRes, 'twitter/users-me');
       if (!xUser?.id) { res.writeHead(302, { Location: `${base}/?auth_error=twitter_user` }); return res.end(); }
 
       const twitterId = String(xUser.id);
@@ -521,11 +552,6 @@ export default async function handler(req, res) {
 
   // POST: login
   if (action === 'login') {
-    const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-    if (!(await checkRateLimit(kv, clientIp))) {
-      return errorResponse(res, 429, 'Too many login attempts. Try again in 15 minutes.');
-    }
-
     const { email, password } = req.body || {};
     if (!email || !password) {
       return errorResponse(res, 400, 'Email and password required');

@@ -4,16 +4,20 @@ import { getSessionUser, errorResponse } from './auth-helpers.js';
 
 export default async function handler(req, res) {
   const kv = await getKv();
+  if (!kv) return errorResponse(res, 503, 'Database connection unavailable');
 
-  // GET: fetch avatar URL for a user
+  // GET: fetch the signed-in user's own avatar.
+  // This used to take a userId from the query with no auth at all, and answered it by
+  // scanning every user:* key -- an unauthenticated read of anyone's profile whose cost
+  // grew with the user table. No caller ever passed someone else's id.
   if (req.method === 'GET') {
-    const { userId } = req.query;
-    if (!userId) return errorResponse(res, 400, 'userId is required');
+    const session = await getSessionUser(req);
+    if (!session) return errorResponse(res, 401, 'Authentication required');
     let user;
     try {
-      user = await findUserById(kv, userId);
+      user = await kv.get(`user:${session.email}`);
     } catch (err) {
-      console.error('[avatar GET] KV lookup failed', { userId, error: err?.message, stack: err?.stack });
+      console.error('[avatar GET] KV lookup failed', { error: err?.message, stack: err?.stack });
       return errorResponse(res, 500, 'Failed to look up avatar');
     }
     return res.status(200).json({ avatarUrl: user?.avatarUrl || null });
@@ -108,15 +112,4 @@ export default async function handler(req, res) {
   }
 
   return errorResponse(res, 405, 'Method not allowed');
-}
-
-async function findUserById(kv, userId) {
-  // KV is keyed by email, so we scan -- this is only used for GET by userId
-  // For production scale, maintain an index. For now, iterate.
-  const keys = (await kv.keys('user:*')) || [];
-  for (const key of keys) {
-    const user = await kv.get(key);
-    if (user?.id === userId) return user;
-  }
-  return null;
 }
