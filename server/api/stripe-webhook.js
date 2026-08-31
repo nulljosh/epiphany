@@ -24,13 +24,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const buf = await buffer(req);
+  // On Workers `req` is a plain object from worker/index.js, not a Node stream, so
+  // iterating it threw before the try below and every Stripe delivery got a 500 --
+  // the card was charged and `sub:<customerId>` was never written.
+  const buf = req.rawBody !== undefined ? req.rawBody : await buffer(req);
   const sig = req.headers['stripe-signature'];
 
   let event;
 
   try {
-    event = getStripe().webhooks.constructEvent(
+    // Async variant: Workers has no synchronous crypto for the signature check.
+    event = await getStripe().webhooks.constructEventAsync(
       buf,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
