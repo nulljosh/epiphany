@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import './landing.css';
+import InstallAnywhere from '../components/InstallAnywhere';
 
 // Landing Page v2 — ported from the Claude Design handoff prototype
 // (epiphany-handoff.zip → Landing Page v2.html + screens.css). Demo data in
@@ -529,6 +530,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       </section>
 
       {/* ─── FOOTER ─── */}
+      <InstallAnywhere name="Epiphany" appUrl="https://epiphany.heyitsmejosh.com" appStoreUrl="https://apps.apple.com/app/id6779522175" />
       <footer className="lp-footer">
         <div className="lp-footer-logo"><img src="/epiphany-icon.svg" alt="" />Epiphany</div>
         <ul className="lp-footer-links">
