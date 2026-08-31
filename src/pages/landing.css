@@ -90,7 +90,12 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .lp-hero .lp-eyebrow,
 .lp .lp-hero-headline,
 .lp .lp-hero-sub,
-.lp .lp-hero-actions { position: relative; z-index: 2; }
+.lp .lp-hero-actions,
+.lp .lp-hero-platforms { position: relative; z-index: 2; }
+.lp .lp-hero-platforms {
+  font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.35);
+  margin-top: 18px; letter-spacing: 0.02em;
+}
 .lp .lp-hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
 .lp .lp-btn-primary {
   display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
