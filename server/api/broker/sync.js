@@ -89,7 +89,7 @@ export default async function handler(req, res) {
   } catch (err) {
     // Upstream detail stays in the logs; the clients (iOS/macOS/web) render
     // `error` verbatim, so never hand them a raw SnapTrade payload.
-    console.error('[BROKER/SYNC] Error:', err.message);
+    console.error('[BROKER/SYNC] Error:', err?.stack || String(err));
     return res.status(502).json({ ok: false, error: 'Brokerage temporarily unavailable' });
   }
 }

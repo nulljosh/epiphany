@@ -253,3 +253,5 @@ Everything else in the codebase is on Cloudflare; epiphany and talli are the las
 - [ ] Everything else is already portable: KV is Upstash (external, not `@vercel/kv`), there is one function (`api/gateway.js`) and no crons in `vercel.json`.
 - [ ] Move env vars to Cloudflare (`wrangler pages secret put`), re-point the Stripe webhook endpoint, and verify the SnapTrade and broker paths still authenticate.
 - [ ] Flip DNS last, and confirm the new deploy serves before removing the Vercel project.
+
+- [ ] **BLOCKED on Joshua (2026-09-02)**: SnapTrade `registerUser` returns 401 code 1076 "Unable to verify signature" in prod, so broker sync 502s for any user without a cached userSecret. The `SNAPTRADE_CONSUMER_KEY` Worker secret is wrong or rotated. Fix: copy the consumer key from the SnapTrade dashboard and run `env -u CLOUDFLARE_API_TOKEN npx wrangler secret put SNAPTRADE_CONSUMER_KEY`. Activities/cost-basis/dividends feature (shipped 2026-09-02) is unverified live until then.
