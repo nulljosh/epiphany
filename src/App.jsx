@@ -160,7 +160,14 @@ export default function App() {
   const [zooming, setZooming] = useState(false);
 
   const { showHelp, setShowHelp, SHORTCUTS } = useKeyboardShortcuts();
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(() => resolveAutoTheme() === 'dark');
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!mq) return;
+    const onChange = (e) => setDark(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
   const [tickerVisible, setTickerVisible] = useState(() => {
     try { return localStorage.getItem('epiphany_ticker_visible') !== 'false'; } catch { return true; }
   });
