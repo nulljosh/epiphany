@@ -416,7 +416,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
               <li>RSI, MACD, Bollinger — the full indicator suite</li>
               <li>Read-only brokerage sync via SnapTrade</li>
             </ul>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginTop: '1.5rem' }}>Educational and informational only. Not investment advice.</p>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', marginTop: '1.5rem' }}>Educational and informational only. Not investment advice.</p>
           </div>
           <div className="lp-showcase-phone lp-reveal">
             <Phone>
@@ -438,7 +438,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
               <li>Real-time P&amp;L tracking and edge detection</li>
               <li>High-frequency paper trading engine</li>
             </ul>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginTop: '1.5rem' }}>Simulated trading only. No real funds, no real orders.</p>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', marginTop: '1.5rem' }}>Simulated trading only. No real funds, no real orders.</p>
           </div>
           <div className="lp-showcase-phone lp-reveal">
             <Phone>
@@ -541,7 +541,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           <li><a href="/privacy.md" target="_blank">Privacy</a></li>
           <li><a href="https://github.com/nulljosh/epiphany/blob/main/docs/API.md" target="_blank" rel="noreferrer">API</a></li>
         </ul>
-        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '1.5rem', lineHeight: 1.6 }}>
+        <div style={{ fontSize: '0.8rem', color: 'rgba(var(--lp-ink),0.4)', marginTop: '1.5rem', lineHeight: 1.6 }}>
           Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.
         </div>
         <div style={{ marginTop: '1rem', fontSize: '0.85rem' }}>© 2026 Epiphany</div>
