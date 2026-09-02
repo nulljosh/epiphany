@@ -178,6 +178,47 @@ export class SnapTradeAdapter {
     return Array.from(merged.values());
   }
 
+  // Transaction history across all accounts, newest first. Normalized:
+  // { date, type, symbol, units, price, amount, currency, account }.
+  // type is SnapTrade's upper-case label (BUY, SELL, DIVIDEND, CONTRIBUTION, ...).
+  async getActivities({ startDate, endDate } = {}) {
+    this._requireUser();
+    const query = { userId: this.userId, userSecret: this.userSecret };
+    if (startDate) query.startDate = startDate;
+    if (endDate) query.endDate = endDate;
+    const acts = await this._request('GET', '/activities', { query });
+    return (acts ?? []).map((a) => ({
+      date: a.trade_date || a.settlement_date || null,
+      type: String(a.type || '').toUpperCase(),
+      symbol: a.symbol?.symbol || a.option_symbol?.ticker || null,
+      units: Number(a.units) || 0,
+      price: Number(a.price) || 0,
+      amount: Number(a.amount) || 0,
+      currency: a.currency?.code || 'CAD',
+      account: a.account?.name || a.account?.id || null,
+    })).sort((x, y) => String(y.date).localeCompare(String(x.date)));
+  }
+
+  // Average cost per share by symbol from BUY/SELL activity (oldest first).
+  // ponytail: average cost, not lot-level ACB; fine for display, not for tax.
+  static costBasisFromActivities(activities) {
+    const lots = {};
+    for (const a of [...activities].sort((x, y) => String(x.date).localeCompare(String(y.date)))) {
+      if (!a.symbol || !a.units) continue;
+      const lot = lots[a.symbol] ?? (lots[a.symbol] = { shares: 0, cost: 0 });
+      const units = Math.abs(a.units);
+      if (a.type === 'BUY') { lot.shares += units; lot.cost += units * a.price; }
+      else if (a.type === 'SELL' && lot.shares > 0) {
+        const avg = lot.cost / lot.shares;
+        const sold = Math.min(units, lot.shares);
+        lot.shares -= sold; lot.cost -= sold * avg;
+      }
+    }
+    const out = {};
+    for (const [sym, lot] of Object.entries(lots)) if (lot.shares > 0) out[sym] = lot.cost / lot.shares;
+    return out;
+  }
+
   // Total cash across accounts plus per-account/currency breakdown.
   async getBalance() {
     const accounts = await this.listAccounts();

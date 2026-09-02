@@ -343,6 +343,20 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
                 <Row label="Last synced" t={t}>
                   <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{brokerSnapshot.syncedAt ? new Date(brokerSnapshot.syncedAt).toLocaleString() : '—'}</span>
                 </Row>
+                <Row label="Dividends, last 12 months" t={t}>
+                  <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{(brokerSnapshot.dividends12m ?? 0).toLocaleString(undefined, { style: 'currency', currency: 'CAD' })}</span>
+                </Row>
+                {(brokerSnapshot.activities ?? []).length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 6 }}>Recent activity</div>
+                    {brokerSnapshot.activities.slice(0, 10).map((a, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: t.textSecondary, padding: '4px 0', borderBottom: `1px solid ${t.border}` }}>
+                        <span>{a.date?.slice(0, 10)} {a.type.toLowerCase()} {a.symbol ?? ''}{a.units ? ` ×${Math.abs(a.units)}` : ''}</span>
+                        <span>{Math.abs(a.amount).toLocaleString(undefined, { style: 'currency', currency: a.currency || 'CAD' })}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </>

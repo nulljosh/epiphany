@@ -309,7 +309,7 @@ export function usePortfolio(stocks, isAuthenticated) {
       }
 
       const nextHoldings = (data.holdings || []).map(h => ({
-        symbol: h.symbol, shares: h.shares, costBasis: null,
+        symbol: h.symbol, shares: h.shares, costBasis: h.costBasis ?? null,
         marketValue: h.marketValue, account: h.account, source: 'broker',
       }));
       const nextAccounts = mergeBrokerAccounts(base.accounts, data.balance?.accounts);
@@ -318,7 +318,7 @@ export function usePortfolio(stocks, isAuthenticated) {
         ...base,
         holdings: nextHoldings,
         accounts: nextAccounts,
-        brokerSnapshot: { linked: true, syncedAt: data.syncedAt },
+        brokerSnapshot: { linked: true, syncedAt: data.syncedAt, dividends12m: data.dividends12m ?? 0, activities: data.activities ?? [] },
       });
       return { success: true, linked: true };
     } catch (err) {
