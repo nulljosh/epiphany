@@ -80,6 +80,12 @@ export class SnapTradeAdapter {
     return data;
   }
 
+  // Remove a SnapTrade user (and every brokerage link under it). Used when
+  // our stored userSecret is gone but SnapTrade still has the user (code 1010).
+  async deleteUser(userId) {
+    return this._request('DELETE', '/snapTrade/deleteUser', { query: { userId } });
+  }
+
   // Hosted connection portal URL for the user to link a brokerage.
   // Pass a SnapTrade broker slug (e.g. WEALTHSIMPLE, QUESTRADE) to deep-link
   // that brokerage's login; omit to let the user choose in the portal.
