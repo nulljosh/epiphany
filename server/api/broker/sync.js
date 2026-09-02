@@ -10,6 +10,18 @@ import { getKv } from '../_kv.js';
 import { getSessionUser, errorResponse } from '../auth-helpers.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
 
+// Register, and if SnapTrade already has this user (code 1010) but we lost the
+// secret, delete the orphan and register again. The user re-links their broker.
+async function registerFresh(adapter, userId) {
+  try {
+    return await adapter.registerUser(userId);
+  } catch (err) {
+    if (!/1010|already exist/i.test(err.message)) throw err;
+    await adapter.deleteUser(userId);
+    return adapter.registerUser(userId);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -40,7 +52,7 @@ export default async function handler(req, res) {
     if (cached?.userSecret) {
       adapter.userSecret = cached.userSecret;
     } else {
-      const reg = await adapter.registerUser(session.userId);
+      const reg = await registerFresh(adapter, session.userId);
       if (kv) await kv.set(secretKey, { userSecret: reg.userSecret });
     }
 
@@ -52,7 +64,7 @@ export default async function handler(req, res) {
       // re-register once instead of surfacing a hard 401/1083 to the user.
       if (cached?.userSecret && /1083|invalid userid|usersecret/i.test(err.message)) {
         if (kv) await kv.del(secretKey);
-        const reg = await adapter.registerUser(session.userId);
+        const reg = await registerFresh(adapter, session.userId);
         if (kv) await kv.set(secretKey, { userSecret: reg.userSecret });
         accounts = await adapter.listAccounts();
       } else {
