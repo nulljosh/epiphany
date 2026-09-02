@@ -62,6 +62,8 @@ describe('broker/sync stale-userSecret self-heal', () => {
         async getBalance() { return { total: 0 }; }
         async getAccounts() { return [{ id: 'acct1' }]; }
         async listConnections() { return []; }
+        async getActivities() { return []; }
+        static costBasisFromActivities() { return {}; }
       },
     }));
     const { default: freshHandler } = await import('../../server/api/broker/sync.js');

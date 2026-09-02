@@ -65,10 +65,23 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, linked: false, linkUrl });
     }
 
-    const [holdings, balance, snapAccounts, connections] = await Promise.all([
+    const since = new Date(Date.now() - 2 * 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const [rawHoldings, balance, snapAccounts, connections, activities] = await Promise.all([
       adapter.getHoldings(), adapter.getBalance(), adapter.getAccounts(), adapter.listConnections().catch(() => []),
+      adapter.getActivities({ startDate: since }).catch(() => []),
     ]);
-    const snapshot = { holdings, balance, accounts: snapAccounts, connections, syncedAt: new Date().toISOString() };
+    // Activities give what /positions doesn't: cost basis (for gain/loss on
+    // synced holdings) and dividend income.
+    const basis = SnapTradeAdapter.costBasisFromActivities(activities);
+    const holdings = rawHoldings.map(h => ({ ...h, costBasis: basis[h.symbol] ?? null }));
+    const yearAgo = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const dividends12m = activities
+      .filter(a => a.type === 'DIVIDEND' && String(a.date) >= yearAgo)
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+    const snapshot = {
+      holdings, balance, accounts: snapAccounts, connections,
+      activities: activities.slice(0, 50), dividends12m, syncedAt: new Date().toISOString(),
+    };
     if (kv) await kv.set(snapshotKey, snapshot);
 
     console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.total.toFixed(2)} cash`);
