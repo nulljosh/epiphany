@@ -2,9 +2,11 @@
 
 **v2.6.2 web / 2.5.5 iOS / 2.5.2 macOS** | August 2026
 
-Epiphany is a map first intelligence platform. It pulls live geospatial data,
-markets, prediction markets, people, and news into one view, and it can trade a
-portfolio on a quantified signal. Palantir for regular people. Live at
+Everything happening in your world, on one screen.
+
+Epiphany starts with a map. Onto it go live geodata, markets, prediction markets,
+people and news. It can also trade a portfolio on a measured signal. Palantir for
+regular people. Live at
 [epiphany.heyitsmejosh.com](https://epiphany.heyitsmejosh.com), with companion
 apps for iOS, macOS, and watchOS.
 
