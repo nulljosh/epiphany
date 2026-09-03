@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { formatCurrency } from '../utils/formatting';
 import StockDetail from './StockDetail';
 import SparklineChart from './SparklineChart';
@@ -101,7 +101,29 @@ function ChangePill({ value }) {
   );
 }
 
+function SignalBadge({ signal }) {
+  if (!signal) return null;
+  const color = signal.label === 'Buy' ? '#30D158' : signal.label === 'Sell' ? '#FF453A' : '#8e8e93';
+  return (
+    <span
+      title={signal.reasons.join(', ')}
+      style={{
+        display: 'inline-block', padding: '2px 6px', borderRadius: 100,
+        fontSize: 10, fontWeight: 700, color, border: `1px solid ${color}`,
+        whiteSpace: 'nowrap', flexShrink: 0,
+      }}
+    >
+      {signal.label.toUpperCase()}
+    </span>
+  );
+}
+
 function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle, canToggle, t, onClick }) {
+  const [signal, setSignal] = useState(null);
+  // Stable identity: SparklineChart's effect deps include this callback, an
+  // inline arrow here would change identity every render (the setSignal call
+  // itself causes one) and re-fire the effect forever.
+  const handleSignal = useCallback((_, s) => setSignal(s), []);
   return (
     <div
       onClick={onClick}
@@ -135,7 +157,8 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
         <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{symbol}</div>
         <div style={{ fontSize: 11, color: t.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
       </div>
-      <SparklineChart symbol={symbol} changePercent={changePercent} t={t} />
+      <SparklineChart symbol={symbol} changePercent={changePercent} t={t} onSignal={handleSignal} />
+      <SignalBadge signal={signal} />
       <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '45%' }}>
         <div style={{ fontWeight: 600, fontSize: 14, color: t.text, whiteSpace: 'nowrap' }}>{formatCurrency(price)}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

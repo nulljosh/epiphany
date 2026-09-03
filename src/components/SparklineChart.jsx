@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { signal as computeSignal } from '../utils/indicators';
 
-export default function SparklineChart({ symbol, changePercent, t }) {
+export default function SparklineChart({ symbol, changePercent, t, onSignal }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +26,16 @@ export default function SparklineChart({ symbol, changePercent, t }) {
 
     fetchHistory();
   }, [symbol]);
+
+  // Reuses the same 1d/1m history this sparkline already fetches -- no extra
+  // network call -- to unblock the per-row Buy/Sell/Hold badge (roadmap.md
+  // "Other open items": was blocked on a bulk history endpoint that turned
+  // out unnecessary since this per-row fetch already exists).
+  useEffect(() => {
+    if (!onSignal) return;
+    const closes = (data || []).map(d => d.close).filter(p => p != null);
+    onSignal(symbol, computeSignal(closes));
+  }, [data, symbol, onSignal]);
 
   if (loading) {
     return (
