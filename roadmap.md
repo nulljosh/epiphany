@@ -257,3 +257,5 @@ Confirmed still true from the original scoping: whoever revisits this should re-
 `pdf-parse` (bank-statement parsing) actually works under the deployed Worker with a real
 upload, since that was the one open risk flagged before the migration and no test result for
 it is recorded here.
+
+- **macOS screenshot capture broken (2026-09-02)**: `EpiphanyMacUITests` launches the app but `app.windows` stays empty, so no capture. Test itself is fixed (dark mode, flat map, Cmd+1, creds via `TEST_RUNNER_SNAPSHOT_*`). Concurrent UI tests from another session make it worse (once captured Healstack's window). Next: replace XCUITest with a plain launch + `screencapture -l <windowID>` from a small Swift script using CGWindowList.
