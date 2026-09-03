@@ -9,7 +9,12 @@ final class MacScreenshot: XCTestCase {
 
     func testCaptureMacScreenshot() throws {
         let env = ProcessInfo.processInfo.environment
-        let app = XCUIApplication()
+        // Launch by path, not bundle id: LaunchServices has dozens of stale iOS-simulator
+        // Epiphany.app registrations with the same id, and XCUIApplication() picks the wrong one.
+        let runner = Bundle(for: MacScreenshot.self).bundleURL // .../Runner.app/Contents/PlugIns/X.xctest
+        let appURL = runner.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("Epiphany.app")
+        let app = XCUIApplication(url: appURL)
         // ponytail: `-key value` launch args land in the UserDefaults argument domain, so
         // this forces dark mode + the flat map without touching app code. Hybrid/realistic
         // imagery never finished loading in 8s and washed the whole shot out.
