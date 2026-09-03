@@ -70,7 +70,7 @@ Deploy: Vercel (`npx vercel --prod`)
 
 ## License
 
-MIT 2026, Joshua Trommel
+Apache 2.0, 2026, Joshua Trommel
 
 ## API and agent tools
 
