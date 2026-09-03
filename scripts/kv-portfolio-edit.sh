@@ -11,11 +11,9 @@ cd "$(dirname "$0")/.."
 ACTION="${1:?usage: kv-portfolio-edit.sh <get|set> <email> [file.json]}"
 EMAIL="${2:?email required}"
 
-TMPENV=$(mktemp)
-npx --yes vercel env pull "$TMPENV" --environment=production --yes >/dev/null 2>&1
-KV_URL=$(grep KV_REST_API_URL "$TMPENV" | sed 's/KV_REST_API_URL="//;s/\\n"//')
-KV_TOKEN=$(grep '^KV_REST_API_TOKEN' "$TMPENV" | sed 's/KV_REST_API_TOKEN="//;s/\\n"//')
-rm -f "$TMPENV"
+# ponytail: Vercel is gone (migrated to Cloudflare 2026-08-31); read the Upstash creds from .env.tui.local, stripping the literal \n Vercel appended.
+KV_URL=$(grep '^KV_REST_API_URL' .env.tui.local | sed 's/^[^"]*"//;s/\\n"$//;s/"$//')
+KV_TOKEN=$(grep '^KV_REST_API_TOKEN' .env.tui.local | sed 's/^[^"]*"//;s/\\n"$//;s/"$//')
 
 USER_JSON=$(curl -s "$KV_URL/get/user:$EMAIL" -H "Authorization: Bearer $KV_TOKEN")
 USER_ID=$(python3 -c "import json,sys; print(json.loads(json.loads(sys.stdin.read())['result'])['id'])" <<< "$USER_JSON")

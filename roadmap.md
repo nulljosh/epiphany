@@ -259,3 +259,10 @@ upload, since that was the one open risk flagged before the migration and no tes
 it is recorded here.
 
 - **macOS screenshot capture broken (2026-09-02)**: `EpiphanyMacUITests` launches the app but `app.windows` stays empty, so no capture. Test itself is fixed (dark mode, flat map, Cmd+1, creds via `TEST_RUNNER_SNAPSHOT_*`). Concurrent UI tests from another session make it worse (once captured Healstack's window). Next: replace XCUITest with a plain launch + `screencapture -l <windowID>` from a small Swift script using CGWindowList.
+
+## Portfolio + Markets feedback (2026-09-03)
+- [x] Data: income 1650/mo, Telus debt 300 due Sep 30 2026, Family debt removed (KV edit via scripts/kv-portfolio-edit.sh, now reads .env.tui.local since Vercel is gone)
+- [ ] Budget card: "Avg Monthly Spending" and "Monthly Surplus" show budget targets (1070) because `financeData.spending` is empty in KV. Make them use the same statement-derived `actuals` the category pie uses (ios/Views/PortfolioView.swift ~L272 `averageMonthlySpending` vs ~L780 `actuals`). Mirror on macOS.
+- [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
+- [ ] Markets toolbar: search + filter glyphs render as semi-transparent overlay on top of rows (ios/Views/MarketsView.swift ~L212 `toolbarGlyph`); give them an opaque pill or move into the nav bar.
+- [ ] Portfolio pie: "Other" is 64% because transactions with nil category fall into "Other" (PortfolioView.swift L787). Bucket by merchant when category is nil, cap slices at top 6 + Other, and add a category filter chip row.
