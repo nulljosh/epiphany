@@ -81,7 +81,10 @@ npm test -- --run
 npm run build
 ```
 
-Deploy: Vercel. Repo: github.com/nulljosh/epiphany
+Deploy: Cloudflare Workers, `npm run build && npx wrangler deploy` (migrated off Vercel
+2026-08-25/26, see `worker/index.js` + `wrangler.jsonc`; `vercel.json` is a dead leftover).
+No CI auto-deploy on push, `.github/workflows/test.yml` only runs tests. Repo:
+github.com/nulljosh/epiphany
 
 ## Key Systems
 
