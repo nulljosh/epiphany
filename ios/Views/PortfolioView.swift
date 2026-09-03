@@ -848,7 +848,7 @@ struct PortfolioView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks { value in
+                    AxisMarks(values: thinnedMonthLabels(allData.map(\.month))) { value in
                         AxisValueLabel {
                             if let month = value.as(String.self), month.count >= 7 {
                                 let monthNum = Int(month.suffix(2)) ?? 0

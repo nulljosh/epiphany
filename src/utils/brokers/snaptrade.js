@@ -20,6 +20,9 @@ export class SnapTradeAdapter {
     this.userId = config.userId || null;
     this.userSecret = config.userSecret || null;
     this.connected = false;
+    // ponytail: per-instance GET memo. Cloudflare caps a Worker at 50 subrequests;
+    // sync.js fans out to listAccounts/positions/balances several times over.
+    this._memo = new Map();
   }
 
   static isConfigured() {
@@ -44,6 +47,7 @@ export class SnapTradeAdapter {
   }
 
   async _request(method, path, { query = {}, body = null } = {}) {
+    if (method !== 'GET') this._memo.clear();
     if (!this.clientId || !this.consumerKey) throw new Error('[SnapTrade] Missing clientId or consumerKey');
 
     const params = new URLSearchParams({
@@ -56,6 +60,14 @@ export class SnapTradeAdapter {
     const sortedBody = body ? this._sortKeysDeep(body) : null;
     const signature = this._sign(fullPath, queryString, sortedBody);
 
+    const memoKey = method === 'GET' ? `${fullPath}?${JSON.stringify(query)}` : null;
+    if (memoKey && this._memo.has(memoKey)) return this._memo.get(memoKey);
+    const promise = this._fetch(method, fullPath, queryString, signature, sortedBody);
+    if (memoKey) this._memo.set(memoKey, promise);
+    return promise;
+  }
+
+  async _fetch(method, fullPath, queryString, signature, sortedBody) {
     const res = await fetch(`${BASE}${fullPath}?${queryString}`, {
       method,
       headers: { 'Content-Type': 'application/json', Signature: signature },
