@@ -8,17 +8,25 @@ final class MacScreenshot: XCTestCase {
     }
 
     func testCaptureMacScreenshot() throws {
+        let env = ProcessInfo.processInfo.environment
         let app = XCUIApplication()
-        app.launchArguments.append("UITEST_SNAPSHOT")
-        app.launchEnvironment["SNAPSHOT_EMAIL"] = "demo@heyitsmejosh.com"
-        app.launchEnvironment["SNAPSHOT_PASSWORD"] = "EpiphanyDemo2026!"
+        // ponytail: `-key value` launch args land in the UserDefaults argument domain, so
+        // this forces dark mode + the flat map without touching app code. Hybrid/realistic
+        // imagery never finished loading in 8s and washed the whole shot out.
+        app.launchArguments += ["UITEST_SNAPSHOT", "-app_theme", "dark", "-situation.mapLayer", "standard", "-ApplePersistenceIgnoreState", "YES"]
+        app.launchEnvironment["SNAPSHOT_EMAIL"] = env["TEST_RUNNER_SNAPSHOT_EMAIL"] ?? env["SNAPSHOT_EMAIL"] ?? "demo@heyitsmejosh.com"
+        app.launchEnvironment["SNAPSHOT_PASSWORD"] = env["TEST_RUNNER_SNAPSHOT_PASSWORD"] ?? env["SNAPSHOT_PASSWORD"] ?? "EpiphanyDemo2026!"
         app.launch()
-        sleep(8)
-
+        sleep(5)
         app.activate()
-        sleep(1)
+        app.typeKey("1", modifierFlags: .command) // Situation tab
+        sleep(25) // login + nine data layers + tiles
+
         let window = app.windows.firstMatch
-        XCTAssertTrue(window.waitForExistence(timeout: 10), "App window never appeared")
+        if !window.waitForExistence(timeout: 15) {
+            XCTFail("App window never appeared: \(app.debugDescription)")
+        }
+
         let screenshot = window.screenshot()
         let dir = NSTemporaryDirectory() + "epiphany-mac-screenshots"
         do {
