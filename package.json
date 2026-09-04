@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.6.2",
   "description": "Everything happening in your world, on one screen. The map, the markets, the people.",
+  "keywords": ["dashboard", "finance", "markets", "map"],
   "type": "module",
   "bin": {
     "epiphany-tui": "cli/epiphany-tui.mjs"
