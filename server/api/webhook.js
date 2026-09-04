@@ -1,5 +1,6 @@
 import { applyCors } from './_cors.js';
 import { getKv } from './_kv.js';
+import { getSessionUser, errorResponse } from './auth-helpers.js';
 import crypto from 'crypto';
 
 export const config = { api: { bodyParser: true } };
@@ -18,6 +19,17 @@ export default async function handler(req, res) {
     const { action, customerId } = req.query;
     if (action !== 'generate') return res.status(400).json({ error: 'Missing action=generate' });
     if (!customerId) return res.status(400).json({ error: 'Missing customerId' });
+
+    // customerId was previously trusted straight from the query string with no
+    // ownership check: anyone who knew or guessed another user's Stripe customer
+    // ID could fetch that user's webhook key. Require a session and verify it
+    // owns this customerId before issuing or returning the key.
+    const session = await getSessionUser(req);
+    if (!session) return errorResponse(res, 401, 'Authentication required');
+    const user = await kv.get(`user:${session.email}`);
+    if (!user?.stripe_customer_id || user.stripe_customer_id !== customerId) {
+      return errorResponse(res, 403, 'customerId does not match session');
+    }
 
     // Pro gate
     try {
