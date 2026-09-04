@@ -24,13 +24,14 @@ const SIGNAL_THRESHOLD = 0.55; // bull prob > 55% = buy, < 45% = sell
 const MOMENTUM_TILT_CAP = 0.08;
 const TRADE_LOG_LIMIT = 100;
 
-// Live mode is in a "get the ball rolling" probe phase: BTC only (cheap,
-// fractional-qty friendly, low blast radius), and hard-capped at a handful
-// of fills total -- once hit, auto-flips the user back to paper instead of
-// trading unsupervised forever. Raise/replace once live execution is trusted.
+// Live mode: full watchlist, hard-capped per-trade notional and total fill
+// count -- once the cap is hit, auto-flips the user back to paper instead of
+// trading unsupervised forever. Raise/replace once live execution is trusted
+// further.
 const LIVE_PROBE_ORDER_SYMBOL = 'BTC';
 const LIVE_PROBE_PRICE_SYMBOL = 'BTC-USD'; // Yahoo ticker for the price/signal series
-const LIVE_PROBE_TRADE_CAP = 3;
+const LIVE_MAX_NOTIONAL = 50; // hard $ cap per live trade, overrides user setting
+const LIVE_PROBE_TRADE_CAP = 20;
 
 // GBM Monte Carlo — 500 paths, 30-day horizon, params estimated per symbol.
 function monteCarlo(price, mu, sigma, paths = 500, days = 30) {
@@ -170,18 +171,20 @@ async function executeForUser(kv, userId, signals) {
     return { userId, mode: ap.mode, trades };
   }
 
-  // Live probe phase: BTC only, hard-capped trade count, auto-reverts to paper.
+  // Live: hard-capped per-trade notional and total fill count, auto-reverts to paper.
   const countKey = `autopilot:liveCount:${userId}`;
   const liveCount = Number((await kv.get(countKey)) || 0);
   if (liveCount >= LIVE_PROBE_TRADE_CAP) {
     await kv.set(`autopilot:${userId}`, { ...ap, mode: 'paper' });
-    return { userId, mode: 'live', skipped: `live probe cap (${LIVE_PROBE_TRADE_CAP}) reached -- reverted to paper` };
+    return { userId, mode: 'live', skipped: `live trade cap (${LIVE_PROBE_TRADE_CAP}) reached -- reverted to paper` };
   }
 
-  const btcSignal = await getLiveProbeSignal();
-  if (!btcSignal?.signal) return { userId, mode: 'live', skipped: 'no actionable BTC signal' };
+  const liveNotional = Math.min(maxNotional, LIVE_MAX_NOTIONAL);
+  const remaining = LIVE_PROBE_TRADE_CAP - liveCount;
+  const actionable = signals.filter((s) => s.signal).slice(0, remaining);
+  if (!actionable.length) return { userId, mode: 'live', skipped: 'no actionable signal' };
 
-  const trades = await runLive(kv, userId, [btcSignal], maxNotional);
+  const trades = await runLive(kv, userId, actionable, liveNotional);
   const filled = trades.filter((t) => !t.error).length;
   if (filled > 0) await kv.set(countKey, liveCount + filled);
   return { userId, mode: 'live', trades, liveCount: liveCount + filled };

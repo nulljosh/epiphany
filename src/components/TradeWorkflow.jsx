@@ -5,6 +5,8 @@ import { generateRecommendations } from '../utils/recommendations';
 
 const STEPS = ['Connect', 'Sync', 'Recommend', 'Review'];
 const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+const LIVE_MAX_NOTIONAL = 50;
+const LIVE_TRADE_CAP = 20;
 
 // Premium auto-trading controls. Self-contained: GET /api/broker/autopilot
 // returns the pro flag, settings, and trade log; POST saves settings.
@@ -84,7 +86,8 @@ function AutopilotCard({ dark, t }) {
         {state?.pro && settings && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <span style={pill(true)}>Paper</span>
+              <span onClick={() => save({ mode: 'paper' })} style={pill(settings.mode !== 'live')}>Paper</span>
+              <span onClick={() => save({ mode: 'live' })} style={pill(settings.mode === 'live')}>Live</span>
               <div style={{ flex: 1 }} />
               <span style={{ fontSize: 11, color: t.textTertiary }}>Max / trade</span>
               <input
@@ -96,7 +99,9 @@ function AutopilotCard({ dark, t }) {
               />
             </div>
             <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 10 }}>
-              Paper trading only -- simulated fills, no real orders are placed.
+              {settings.mode === 'live'
+                ? `Live -- real orders through your linked brokerage, capped at $${LIVE_MAX_NOTIONAL}/trade and ${LIVE_TRADE_CAP} trades total, then auto-reverts to paper.`
+                : 'Paper trading -- simulated fills, no real orders are placed.'}
             </div>
             {trades.length > 0 && (
               <>

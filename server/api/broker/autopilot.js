@@ -1,8 +1,8 @@
 // GET/POST /api/broker/autopilot — premium auto-trading enrollment + trade log.
 // GET: settings + recent trades + pro flag (drives the UI lock state).
-// POST: enable/disable, set per-trade cap. Premium only. Mode is forced to
-// paper -- live order execution is disabled until it's been vetted further.
-// Execution happens in broker/morning-run.js (hourly during market hours).
+// POST: enable/disable, set mode + per-trade cap. Premium only. Live mode is
+// opt-in (client must pass mode:'live'); default stays paper.
+// Execution happens in broker/morning-run.js (daily at market open).
 import { getKv } from '../_kv.js';
 import { getSessionUser, errorResponse } from '../auth-helpers.js';
 import { isPro } from '../gates.js';
@@ -44,12 +44,12 @@ export default async function handler(req, res) {
 
   if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
 
-  const { enabled, maxNotional, allocation, allowCrypto, allowOvernight } = req.body || {};
+  const { enabled, mode, maxNotional, allocation, allowCrypto, allowOvernight } = req.body || {};
   const cap = Number(maxNotional);
   const alloc = Number(allocation);
   const settings = {
     enabled: Boolean(enabled),
-    mode: 'paper', // live execution disabled for now
+    mode: mode === 'live' ? 'live' : 'paper',
     maxNotional: Number.isFinite(cap) && cap > 0 ? Math.min(cap, MAX_NOTIONAL_CAP) : 1,
     allocation: Number.isFinite(alloc) && alloc > 0 && alloc <= 100 ? alloc : 10, // % of portfolio
     allowCrypto: Boolean(allowCrypto),
