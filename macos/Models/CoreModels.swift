@@ -42,6 +42,13 @@ struct WatchlistItem: Codable, Identifiable {
     // Server id when present, else fall back to symbol (unique per user).
     var id: String { rawId ?? symbol }
 
+    init(id: String?, userEmail: String?, symbol: String, addedAt: String?) {
+        self.rawId = id
+        self.userEmail = userEmail
+        self.symbol = symbol
+        self.addedAt = addedAt
+    }
+
     enum CodingKeys: String, CodingKey {
         case symbol
         case rawId = "id"

@@ -14,8 +14,8 @@ const MIRRORS = (process.env.OVERPASS_MIRRORS ||
     // it is a Switzerland-only extract that answers 200 with zero elements for
     // anywhere else, so failover can never tell it apart from "nothing here".
     'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.openstreetmap.fr/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
   ].join(','))
   .split(',')
   .map((m) => m.trim())
@@ -38,7 +38,11 @@ export async function overpassQuery(query, timeoutMs = 12000) {
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          // Mirrors 403/406/521 requests with no UA -- looks like a bare bot/proxy hit.
+          'User-Agent': 'EpiphanyApp/1.0 (+https://epiphany.heyitsmejosh.com; contact: trommatic@icloud.com)',
+        },
         body,
         signal: controller.signal,
       });
