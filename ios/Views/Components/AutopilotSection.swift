@@ -115,7 +115,7 @@ struct AutopilotSection: View {
 
             if let s = state {
                 if !s.pro {
-                    Label("Premium feature. Upgrade on the web to enable.", systemImage: "lock.fill")
+                    Label("Premium feature.", systemImage: "lock.fill")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 } else {
