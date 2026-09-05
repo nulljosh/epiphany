@@ -25,7 +25,7 @@ targets:
     destinations:
       - iPhone
     sources:
-      - path: ../Shared
+      - path: Shared
       - path: .
         excludes:
           - "Epiphany.xcodeproj"

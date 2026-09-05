@@ -1068,7 +1068,8 @@ private struct SnapshotFlight: Codable {
 
     var model: Flight {
         Flight(id: id, callsign: callsign, origin: origin, destination: destination,
-               latitude: latitude, longitude: longitude, altitudeFeet: altitudeFeet, status: status)
+               latitude: latitude, longitude: longitude, altitudeFeet: altitudeFeet,
+               velocityKnots: nil, headingDeg: nil, status: status)
     }
 }
 
