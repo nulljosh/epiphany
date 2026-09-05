@@ -13,6 +13,7 @@ targets:
     type: application
     platform: macOS
     sources:
+      - path: ../Shared
       - path: .
         excludes:
           - "*.xcodeproj"
