@@ -1,3 +1,4 @@
+import { sumDebt, sumReceivable } from '../utils/debtPayoff';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   DEMO_HOLDINGS, DEMO_ACCOUNTS, DEMO_BUDGET, DEMO_DEBT,
@@ -205,13 +206,14 @@ export function usePortfolio(stocks, isAuthenticated) {
 
   const stocksValue = useMemo(() => valuedHoldings.reduce((sum, h) => sum + h.value, 0), [valuedHoldings]);
   const cashValue = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
-  const totalDebt = useMemo(() => debt.reduce((sum, d) => sum + d.balance, 0), [debt]);
+  const totalDebt = useMemo(() => sumDebt(debt), [debt]);
+  const totalReceivable = useMemo(() => sumReceivable(debt), [debt]);
 
   const totalIncome = useMemo(() => (Array.isArray(budget?.income) ? budget.income : []).reduce((sum, i) => sum + i.amount, 0), [budget]);
   const totalExpenses = useMemo(() => (Array.isArray(budget?.expenses) ? budget.expenses : []).reduce((sum, e) => sum + e.amount, 0), [budget]);
   const surplus = totalIncome - totalExpenses;
 
-  const netWorth = stocksValue + cashValue - totalDebt;
+  const netWorth = stocksValue + cashValue + totalReceivable - totalDebt;
 
   const importData = useCallback((data) => {
     const { valid, error } = validatePortfolioData(data);
@@ -339,6 +341,7 @@ export function usePortfolio(stocks, isAuthenticated) {
     stocksValue,
     cashValue,
     totalDebt,
+    totalReceivable,
     totalIncome,
     totalExpenses,
     surplus,
