@@ -99,3 +99,34 @@ import/cross-reference endpoints.
 Note the `epiphany/CLAUDE.md` "Free vs Premium" table is out of date — it lists
 "Portfolio + watchlist" and "Ontology writes + batch" as Premium. Neither is gated in
 code. Do not quote that table to Apple.
+
+## 2026-09-05 follow-up — submission `f52adec8-f1cd-447e-b225-5b4aaad3e7d3`, 2.5.7 (202609051406)
+
+Apple asked one question: "Please explain more about the Pro features. What are the users paying for?"
+
+What the reviewer can see in 2.5.7: Settings shows a "Free"/"Weekly" plan badge
+(`ios/Views/SettingsView.swift` tierLabel), and `AutopilotSection.swift` still has a
+"Premium feature." lock label, though it never renders because `gates.js` grants Pro to
+every signed-in user (`EPIPHANY_REQUIRE_PRO` unset). Nothing is sold in the app; no IAP on
+the record; the web upgrade pointer was removed in `adeb4d9`.
+
+Reply (paste into App Review thread):
+
+> Thank you for the follow-up. To be direct: users are not paying for anything in the
+> iOS app, and nothing in the iOS app is locked.
+>
+> Epiphany has a "Pro" tier on our website only. It covers three account-level features:
+> Autopilot (simulated paper trading against the user's own connected brokerage), the
+> Daily Brief (a generated morning summary of the user's portfolio and watchlist), and the
+> People graph (a personal relationship map the user builds themselves). It is a one-time
+> payment on the website.
+>
+> In the iOS app, every signed-in user has full access to all of those features at no
+> charge. The app contains no purchase flow, no paywall, no In-App Purchase products, and
+> no link or reference to the website's paid tier. The "Free" label under Settings > Account
+> is informational only and does not restrict any feature. We removed the earlier in-app
+> pointer to the website upgrade in this build (2.5.7) specifically to comply with
+> Guideline 3.1.1.
+>
+> If we later sell Pro on iOS, it will be through In-App Purchase. Happy to provide a test
+> account or a screen recording if that would help.

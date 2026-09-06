@@ -258,3 +258,6 @@ it is recorded here.
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
 - [ ] Markets toolbar: search + filter glyphs render as semi-transparent overlay on top of rows (ios/Views/MarketsView.swift ~L212 `toolbarGlyph`); give them an opaque pill or move into the nav bar.
 - [ ] Portfolio pie: "Other" is 64% because transactions with nil category fall into "Other" (PortfolioView.swift L787). Bucket by merchant when category is nil, cap slices at top 6 + Other, and add a category filter chip row.
+
+## Inbox
+- [ ] 2026-09-05 App Review 2.1(b) follow-up on 2.5.7 iOS (submission f52adec8): "explain the Pro features, what are users paying for?" Reply drafted in `notes/2-1-b-business-model-reply.md` (bottom section); must be pasted into the ASC review thread by hand (no `asc web review reply` command). For 2.5.8: drop the Settings "Free" plan badge (`SettingsView.swift` tierLabel) and the dead "Premium feature." lock label in `AutopilotSection.swift` so nothing hints at a tier.
