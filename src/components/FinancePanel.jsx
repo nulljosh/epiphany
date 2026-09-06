@@ -6,7 +6,7 @@ import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../util
 import { normalizeSpendingMonths, UPCOMING_PAYMENTS, DEMO_BILLS, TELUS_DETAILS } from '../utils/financeData';
 import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
-import { debtMonthsToPayoff, debtPayoffLabel } from '../utils/debtPayoff';
+import { debtMonthsToPayoff, debtPayoffLabel, isReceivable, owedDebts } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 // TradeWorkflow import removed — Trade tab disabled until SnapTrade sync math is fixed (phantom holdings, bad net worth).
@@ -274,9 +274,10 @@ function StackedBarChart({ spending, t }) {
 }
 
 function DebtPayoffProjection({ debt, t }) {
-  if (!debt || debt.length === 0) return null;
+  const owed = owedDebts(debt);
+  if (owed.length === 0) return null;
 
-  const sorted = [...debt].sort((a, b) => a.balance - b.balance);
+  const sorted = [...owed].sort((a, b) => a.balance - b.balance);
   const projections = [];
   let cumulativeMonths = 0;
   // ponytail: a debt with no minimum payment never pays off, so debtMonthsToPayoff
@@ -664,7 +665,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
   const {
     holdings, accounts, budget, debt, goals, spending, giving, incomePhases, subscriptions,
-    stocksValue, cashValue, totalDebt, totalIncome, totalExpenses,
+    stocksValue, cashValue, totalDebt, totalReceivable, totalIncome, totalExpenses,
     surplus, netWorth, isDemo, portfolioFetchedAt, brokerSnapshot, syncBroker,
     importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
@@ -931,6 +932,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           <span>Stocks: {formatCurrency(stocksValue)}</span>
           <span>Cash: {formatCurrency(cashValue, 'CAD')}</span>
           <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>
+          {totalReceivable > 0 && <span style={{ color: t.green }}>Owed to you: +{formatCurrency(totalReceivable)}</span>}
         </div>
         {(() => {
           const ageMs = portfolioFetchedAt ? Date.now() - portfolioFetchedAt.getTime() : null;
@@ -1179,10 +1181,14 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             <EditorSection title="Debt" t={t}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {editableDebt.map((entry, index) => (
-                  <div key={`${entry.name}-${index}`} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.4fr auto', gap: 6 }}>
+                  <div key={`${entry.name}-${index}`} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.4fr auto auto', gap: 6, alignItems: 'center' }}>
                     <EditorInput value={entry.name || ''} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, name: event.target.value } : item))} placeholder="Debt name" />
                     <EditorInput type="number" value={entry.balance ?? 0} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, balance: parseNumberInput(event.target.value) } : item))} placeholder="Balance" />
                     <EditorInput value={entry.note || ''} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, note: event.target.value } : item))} placeholder="Note" />
+                    <label title="Money someone owes you" style={{ fontSize: 11, color: t.textSecondary, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                      <input type="checkbox" checked={entry.owedToMe === true} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, owedToMe: event.target.checked } : item))} />
+                      owed to me
+                    </label>
                     <button onClick={() => updateDraft('debt', (list) => list.filter((_, idx) => idx !== index))} style={{ ...pillButtonStyle, color: t.red }}>Remove</button>
                   </div>
                 ))}
@@ -1302,11 +1308,13 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{entry.name}</div>
                         {entry.note && <div style={{ fontSize: 11, color: t.textTertiary }}>{entry.note}</div>}
                       </div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: t.red, fontVariantNumeric: 'tabular-nums' }}>
-                        {formatCurrency(entry.balance)}
+                      <div style={{ fontWeight: 600, fontSize: 14, color: isReceivable(entry) ? t.green : t.red, fontVariantNumeric: 'tabular-nums' }}>
+                        {isReceivable(entry) ? '+' : ''}{formatCurrency(entry.balance)}
                       </div>
                     </div>
-                    <ProgressBar value={0} max={entry.balance} color={t.red} t={t} />
+                    {isReceivable(entry)
+                      ? <div style={{ fontSize: 11, color: t.textTertiary }}>Owed to you</div>
+                      : <ProgressBar value={0} max={entry.balance} color={t.red} t={t} />}
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, paddingTop: 12, borderTop: `1px solid ${t.border}`, fontWeight: 700, fontSize: 16 }}>

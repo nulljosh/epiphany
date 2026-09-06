@@ -27,7 +27,7 @@ export const USER_BUDGET = {
 export const USER_DEBT = [
   { name: 'Phone (device)', balance: 780, rate: 0, minPayment: 0 },
   { name: 'Telus (current month)', balance: 400, rate: 0, minPayment: 0 },
-  { name: 'Family', balance: 100, rate: 0, minPayment: 0 },
+  { name: 'Family', balance: 100, rate: 0, minPayment: 0, owedToMe: true },
   { name: 'Visa', balance: 5000, rate: 0, minPayment: 0, note: 'In collections, lump-sum payoff in a year+' },
 ];
 

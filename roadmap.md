@@ -44,7 +44,7 @@ Diagnose Workers 500s with `wrangler tail` before trusting the handler's own mes
 - [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
   all builds pass, but Josh's "haven't seen it work in months" on mobile was not reproduced
   or confirmed fixed. Do this first next session.
-- [ ] **Debt rows have no sign convention.** The `Family` $100 row is really a *receivable*
+- [x] **Debt rows have no sign convention.** Fixed 2026-09-06: `owedToMe: true` on a row makes it a receivable (green, +, adds to net worth, out of payoff math); checkbox in the editor. Original note: The `Family` $100 row is really a *receivable*
  , Josh said "they owe me $100", but it renders as a debt because `{ balance }` is
   unsigned everywhere in the debt model (`userProfile.js`, `usePortfolio.js`,
   `server/api/portfolio.js`, `debtPayoff.js`). Showing money owed *to* Josh needs a real

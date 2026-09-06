@@ -110,8 +110,10 @@ export default async function handler(req, res) {
 
     const stocksValue = (data.holdings || []).reduce((sum, h) => sum + (h.marketValue ?? (h.shares * (h.costBasis || 0))), 0);
     const cashValue = (data.accounts || []).reduce((sum, a) => sum + (a.balance || 0), 0);
-    const totalDebt = (data.debt || []).reduce((sum, d) => sum + (d.balance || 0), 0);
-    const netWorth = stocksValue + cashValue - totalDebt;
+    const owed = (d) => d.owedToMe !== true;
+    const totalDebt = (data.debt || []).filter(owed).reduce((sum, d) => sum + (d.balance || 0), 0);
+    const totalReceivable = (data.debt || []).filter((d) => !owed(d)).reduce((sum, d) => sum + (d.balance || 0), 0);
+    const netWorth = stocksValue + cashValue + totalReceivable - totalDebt;
 
     const totalIncome = data.budget?.income?.reduce((sum, i) => sum + (i.amount || 0), 0) || 0;
     const totalExpenses = data.budget?.expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
@@ -121,6 +123,7 @@ export default async function handler(req, res) {
       stocksValue: Math.round(stocksValue * 100) / 100,
       cashValue: Math.round(cashValue * 100) / 100,
       totalDebt: Math.round(totalDebt * 100) / 100,
+      totalReceivable: Math.round(totalReceivable * 100) / 100,
       monthlyIncome: totalIncome,
       monthlyExpenses: totalExpenses,
       surplus: totalIncome - totalExpenses,
@@ -129,7 +132,7 @@ export default async function handler(req, res) {
         .map(h => ({ symbol: h.symbol, value: Math.round((h.marketValue ?? (h.shares * (h.costBasis || 0))) * 100) / 100 }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5),
-      debtItems: (data.debt || []).map(d => ({ name: d.name, balance: d.balance })),
+      debtItems: (data.debt || []).map(d => ({ name: d.name, balance: d.balance, owedToMe: d.owedToMe === true })),
       updatedAt: data.updatedAt || null,
     });
   }

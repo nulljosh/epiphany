@@ -1,3 +1,10 @@
+// A debt row with owedToMe: true is money someone owes you, not money you owe.
+// It counts as an asset in net worth and stays out of every payoff calculation.
+export const isReceivable = (d) => d?.owedToMe === true;
+export const owedDebts = (list) => (Array.isArray(list) ? list : []).filter((d) => !isReceivable(d));
+export const sumDebt = (list) => owedDebts(list).reduce((s, d) => s + (d.balance || 0), 0);
+export const sumReceivable = (list) => (Array.isArray(list) ? list : []).filter(isReceivable).reduce((s, d) => s + (d.balance || 0), 0);
+
 export function debtMonthsToPayoff(balance, minPayment, rate) {
   if (balance <= 0) return 0;
   if (minPayment <= 0) return Infinity;

@@ -5,6 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   Line, LineChart, ComposedChart, Area, PieChart, Pie, Cell,
 } from 'recharts';
+import { sumDebt, owedDebts } from '../utils/debtPayoff';
 import { simulateDebtCuts, simulateStrategies, projectNetWorth, projectLive, computeSimulator } from '../utils/debtProjections';
 
 const axisTickStyle = (t) => ({ fill: t.textTertiary, fontSize: 9 });
@@ -42,7 +43,7 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
   const labelStyle = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 };
 
   const totalDebt = useMemo(
-    () => Array.isArray(debtItems) ? debtItems.reduce((s, d) => s + (d.balance || 0), 0) : 0,
+    () => sumDebt(debtItems),
     [debtItems]
   );
 
@@ -95,8 +96,9 @@ export default function FinanceDashboard({ dark, t, spending, totalIncome, debt:
   }, [incomePhases, totalExpenses, surplus]);
 
   const strategiesData = useMemo(() => {
-    if (!debtItems || debtItems.length === 0) return null;
-    return simulateStrategies(debtItems, 500, 36);
+    const owed = owedDebts(debtItems);
+    if (owed.length === 0) return null;
+    return simulateStrategies(owed, 500, 36);
   }, [debtItems]);
 
   const netWorthData = useMemo(() => {
