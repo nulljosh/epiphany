@@ -686,20 +686,20 @@ html:has(.lp) { scroll-behavior: smooth; }
 .preauth-content { position: relative; z-index: 1; }
 /* Hero is the only window onto the map; everything below it is opaque. */
 .lp { background: transparent; }
-.lp .lp-hero { background: none; }
+.lp .lp-hero { background: none; --lp-ink: 255,255,255; --lp-fg: #fff; --lp-bg-rgb: 5,7,12; color: #fff; } /* map behind is always dark */
 /* No vignette: the map stays full-brightness. Legibility comes from a text
    shadow plus a soft blur pane that covers only the copy block. */
 .lp .lp-hero::before {
   content: ''; position: absolute; left: 50%; top: 50%; z-index: 1;
   width: min(880px, 96vw); height: 62%; transform: translate(-50%, -50%);
   backdrop-filter: blur(14px) saturate(120%); -webkit-backdrop-filter: blur(14px) saturate(120%);
-  background: rgba(var(--lp-bg-rgb), 0.28);
+  background: rgba(var(--lp-bg-rgb), 0.18);
   -webkit-mask: radial-gradient(ellipse at center, #000 40%, transparent 72%);
   mask: radial-gradient(ellipse at center, #000 40%, transparent 72%);
   pointer-events: none;
 }
 .lp .lp-hero .lp-eyebrow, .lp .lp-hero-headline, .lp .lp-hero-sub, .lp .lp-hero-platforms {
-  text-shadow: 0 1px 2px rgba(var(--lp-bg-rgb), 0.9), 0 0 24px rgba(var(--lp-bg-rgb), 0.8);
+  text-shadow: 0 1px 2px rgba(var(--lp-bg-rgb), 0.9), 0 0 16px rgba(var(--lp-bg-rgb), 0.7);
 }
 .lp .lp-hero-sub { color: rgba(var(--lp-ink),0.7); }
 .lp .lp-ticker-wrap, .lp .lp-section, .lp .lp-final, .lp .lp-footer { background: var(--lp-bg); }
