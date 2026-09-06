@@ -12,9 +12,20 @@ const MAX_LON_SPAN = 2.0;
 const MIN_ALTITUDE_FT = 500;
 const SOURCE_TIMEOUT_MS = 4000; // client aborts at 6s; two sources must fit
 
+// Each source: url(bbox) and toReadsb(json) → readsb-style aircraft records
+// that normalize() understands. adsb.lol 429s and adsb.fi 403s Cloudflare's
+// shared egress most of the time, so FR24's public feed (bbox-native, no key,
+// unofficial) sits in the middle; the readsb ones fail fast when blocked.
+const radius = (bbox) => { const { lat, lon, nm } = radiusQuery(bbox); return `lat/${lat}/lon/${lon}/dist/${nm}`; };
+const readsb = (j) => j?.ac ?? j?.aircraft ?? [];
 export const SOURCES = [
-  { name: 'adsb.lol', url: (lat, lon, nm) => `https://api.adsb.lol/v2/lat/${lat}/lon/${lon}/dist/${nm}` },
-  { name: 'adsb.fi',  url: (lat, lon, nm) => `https://opendata.adsb.fi/api/v2/lat/${lat}/lon/${lon}/dist/${nm}` },
+  { name: 'adsb.lol', url: (b) => `https://api.adsb.lol/v2/${radius(b)}`, toReadsb: readsb },
+  { name: 'flightradar24',
+    url: (b) => `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${b.lamax},${b.lamin},${b.lomin},${b.lomax}&faa=1&adsb=1&gnd=0&air=1&estimated=0&maxage=60`,
+    // FR24 rows: [hex, lat, lon, track, alt, gs, squawk, radar, type, reg, ts, from, to, flightNo, onGround, vspeed, callsign, ...]
+    toReadsb: (j) => Object.entries(j ?? {}).filter(([k, v]) => Array.isArray(v) && !['full_count', 'version', 'stats'].includes(k))
+      .map(([, v]) => ({ hex: v[0]?.toLowerCase(), lat: v[1], lon: v[2], track: v[3], alt_baro: v[14] ? 'ground' : v[4], gs: v[5], t: v[8], r: v[9], baro_rate: v[15], flight: v[16] || v[13] })) },
+  { name: 'adsb.fi',  url: (b) => `https://opendata.adsb.fi/api/v2/${radius(b)}`, toReadsb: readsb },
 ];
 
 const cache = new Map(); // key: bbox string → { data, ts }
@@ -61,9 +72,8 @@ export function parseBbox(query = {}) {
 // Both sources emit readsb aircraft records (adsb.lol under `ac`, adsb.fi under
 // `aircraft`). The API is point+radius, so we query the bbox's circumscribed
 // circle and re-filter to the exact bbox.
-export function normalize(json, bbox) {
-  const raw = json?.ac ?? json?.aircraft ?? [];
-  return raw.map((a) => ({
+export function normalize(json, bbox, toReadsb = readsb) {
+  return toReadsb(json).map((a) => ({
     icao24:   a.hex,
     callsign: (a.flight ?? '').trim(),
     origin:   null,
@@ -96,13 +106,12 @@ export function radiusQuery(bbox) {
 }
 
 async function fetchSource(source, bbox) {
-  const { lat, lon, nm } = radiusQuery(bbox);
-  const res = await fetch(source.url(lat, lon, nm), {
+  const res = await fetch(source.url(bbox), {
     signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
-    headers: { Accept: 'application/json', 'User-Agent': 'epiphany.heyitsmejosh.com flights layer' },
+    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (epiphany.heyitsmejosh.com flights layer)' },
   });
   if (!res.ok) throw new Error(`${source.name} ${res.status}`);
-  return normalize(await res.json(), bbox);
+  return normalize(await res.json(), bbox, source.toReadsb);
 }
 
 // Try each source in order; resolve with the first that answers.

@@ -66,7 +66,7 @@ See [CLAUDE.md](CLAUDE.md) for dev, test, and build commands.
 
 `npm run tui -- <email>` is a live portfolio dashboard in the terminal (ink). It reads Upstash KV directly. No login.
 
-Deploy: Vercel (`npx vercel --prod`)
+Deploy: Cloudflare Workers (`npm run deploy`)
 
 ## License
 

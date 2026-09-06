@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import handler, { parseBbox, normalize, radiusQuery, fetchFlights, clearCache } from '../../server/api/flights.js';
+import handler, { parseBbox, normalize, radiusQuery, fetchFlights, clearCache, SOURCES } from '../../server/api/flights.js';
 import { createReqRes } from './_mocks.js';
 
 const BBOX = { lamin: 49, lomin: -124, lamax: 50, lomax: -122 };
@@ -38,6 +38,14 @@ describe('normalize', () => {
     expect(out).toHaveLength(1);
     expect(out[0].altitude).toBeNull();
   });
+  it('parses FlightRadar24 rows through the same pipeline', () => {
+    const fr = SOURCES.find((s) => s.name === 'flightradar24');
+    const row = ['A4DF4F', 49.31, -123.8, 181, 6425, 165, '', 'F-BDWY1', 'SR22', 'N413AK', 1788653518, '', '', '', 0, -64, 'N413AK', 0, ''];
+    const out = normalize({ full_count: 1, version: 4, x1: row, x2: [...row.slice(0, 14), 1, 0, 'GND'] }, BBOX, fr.toReadsb);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ icao24: 'a4df4f', callsign: 'N413AK', altitude: 6425, velocity: 165, heading: 181, aircraftType: 'SR22', registration: 'N413AK', vertRate: -64 });
+    expect(fr.url(BBOX)).toContain('bounds=50,49,-124,-122');
+  });
   it('tolerates an empty or malformed body', () => {
     expect(normalize(null, BBOX)).toEqual([]);
     expect(normalize({}, BBOX)).toEqual([]);
@@ -61,22 +69,22 @@ describe('fetchFlights failover', () => {
     expect(r.meta.fallback).toBeUndefined();
     expect(fetch).toHaveBeenCalledTimes(1);
   });
-  it('falls back to adsb.fi when adsb.lol errors, and says so', async () => {
-    fetch.mockRejectedValueOnce(new Error('timeout')).mockResolvedValueOnce(ok({ aircraft: [ac()] }));
+  it('falls back in order and says so', async () => {
+    fetch.mockRejectedValueOnce(new Error('timeout')).mockResolvedValueOnce({ ok: false, status: 403 }).mockResolvedValueOnce(ok({ aircraft: [ac()] }));
     const r = await fetchFlights(BBOX);
     expect(r.source).toBe('adsb.fi');
     expect(r.meta.fallback).toBe(true);
-    expect(r.meta.failures).toEqual(['adsb.lol: timeout']);
+    expect(r.meta.failures).toEqual(['adsb.lol: timeout', 'flightradar24: flightradar24 403']);
   });
-  it('falls back on non-2xx too', async () => {
-    fetch.mockResolvedValueOnce({ ok: false, status: 503 }).mockResolvedValueOnce(ok({ aircraft: [] }));
+  it('rate-limited primary → FR24', async () => {
+    fetch.mockResolvedValueOnce({ ok: false, status: 429 }).mockResolvedValueOnce(ok({ full_count: 0, version: 4 }));
     const r = await fetchFlights(BBOX);
-    expect(r.source).toBe('adsb.fi');
+    expect(r.source).toBe('flightradar24');
     expect(r.noFlights).toBe(true);
   });
   it('throws with every failure when all sources die', async () => {
     fetch.mockRejectedValue(new Error('down'));
-    await expect(fetchFlights(BBOX)).rejects.toThrow('adsb.lol: down; adsb.fi: down');
+    await expect(fetchFlights(BBOX)).rejects.toThrow('adsb.lol: down; flightradar24: down; adsb.fi: down');
   });
 });
 
