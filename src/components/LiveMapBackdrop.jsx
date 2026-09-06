@@ -941,7 +941,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           if (activePopupRef?.current) activePopupRef.current.remove();
           const popup = new maplibreRef.current.Popup({ offset: 14, closeButton: true, maxWidth: '320px', className: 'epiphany-map-popup' })
             .setLngLat([fl.lon, fl.lat])
-            .setHTML(buildPopupHTML({ type: 'flight', title: cs || fl.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`, level: 'monitor', source: 'OpenSky Network', link: trackLink }))
+            .setHTML(buildPopupHTML({ type: 'flight', title: cs || fl.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`, level: 'monitor', source: 'ADS-B', link: trackLink }))
             .addTo(mapInstanceRef.current);
           activePopupRef.current = popup;
         });
