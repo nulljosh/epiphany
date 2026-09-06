@@ -203,7 +203,6 @@ Scope: large UI change, do in a dedicated session.
   the same run and probably older: `Cron crypto fetch failed: HTTP 403`.
 
 ## From Apple Notes (imported 2026-08-27)
-- [x] **`/api/flights` is blocked by Cloudflare Workers egress IPs, same class as Overpass/FRED. FIXED 2026-09-05:** Built a three-way ordered failover across adsb.lol → FlightRadar24 public feed → adsb.fi. When adsb.lol returns 429 or adsb.fi returns 403 from our Worker, the handler automatically tries the next source. Added a Cloudflare Cache API layer so we hit upstream about once per minute per map area instead of on every isolate invocation. Wrote a 49-test suite that caught contracts returning 502 instead of 200 (fixed). Verified live: adsb.lol still 429s, FR24 takes over with real aircraft data. Commits 632f7fd, 12c3e6e, 5254232, 5d84a14.
 - [ ] Remaining empty map layers (as of 2026-08-27, now dated): `/api/events` 502 (GDELT unavailable, no cache), `/api/flights` FIXED (see above), `traffic`/`emergency`/`weather-alerts`/`aqi`/`earthquakes` all 0 (unchanged). `crime` returning 0 is expected, it only covers 9 US cities. Working: `news` (69 articles), `wildfires` (3).
 - [ ] "One big dot for the entire city" on web: not yet root-caused. With almost every layer empty, the surviving markers cluster into a single badge (`clusterPoints` in `src/components/LiveMapBackdrop.jsx`, radius 60 at initial zoom 10.6). Re-check now that flights layer is returning real data.
 - [ ] Loading glitch in the top App Store bar on web.
