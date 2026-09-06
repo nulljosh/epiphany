@@ -44,11 +44,6 @@ Diagnose Workers 500s with `wrangler tail` before trusting the handler's own mes
 - [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
   all builds pass, but Josh's "haven't seen it work in months" on mobile was not reproduced
   or confirmed fixed. Do this first next session.
-- [x] **Debt rows have no sign convention.** Fixed 2026-09-06: `owedToMe: true` on a row makes it a receivable (green, +, adds to net worth, out of payoff math); checkbox in the editor. Original note: The `Family` $100 row is really a *receivable*
- , Josh said "they owe me $100", but it renders as a debt because `{ balance }` is
-  unsigned everywhere in the debt model (`userProfile.js`, `usePortfolio.js`,
-  `server/api/portfolio.js`, `debtPayoff.js`). Showing money owed *to* Josh needs a real
-  decision: a sign, a `direction` field, or a separate receivables list.
 
 ## Urgent
 - [ ] **Dashboard cleanup: two leftover draft submissions (5156cbcb, f88508a7) from retry attempts.** iOS 2.5.6 submitted 2026-08-28 WAITING_FOR_REVIEW (submission e55e6142). The 4 initial stale drafts were deleted, but retrying failed submits before that created 2 new drafts that remain. They are harmless but count toward Apple's concurrency limit (max 5). Dashboard-only cleanup via "Draft Submissions" panel. See [[reference_asc_stray_curvely_submission]] for the full concurrency trap.
