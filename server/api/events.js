@@ -141,7 +141,7 @@ export default async function handler(req, res) {
         }),
       });
     }
-    return res.status(502).json({
+    return res.status(200).json({
       error: 'GDELT unavailable',
       events: [],
       meta: buildMeta('degraded', {
