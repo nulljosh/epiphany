@@ -19,6 +19,29 @@ export const SOURCES = [
 
 const cache = new Map(); // key: bbox string → { data, ts }
 const CACHE_TTL = 60_000;
+const EDGE_TTL_S = 90; // Cloudflare Cache API: shared across isolates + colos
+
+// ponytail: the Map above dies with the isolate, so under Workers nearly every
+// request went upstream — which is how adsb.lol started 429-ing the shared
+// Cloudflare egress IP. The Cache API is the durable layer; the Map is a
+// same-isolate fast path. Both go to KV only if a colo-wide cache proves short.
+function edgeKey(cacheKey) { return `https://flights.epiphany.internal/${cacheKey}`; }
+async function edgeGet(cacheKey) {
+  try {
+    if (typeof caches === 'undefined') return null;
+    const r = await caches.default.match(edgeKey(cacheKey));
+    if (!r) return null;
+    return { data: await r.json(), ts: Number(r.headers.get('X-Ts')) || 0 };
+  } catch { return null; }
+}
+async function edgePut(cacheKey, entry) {
+  try {
+    if (typeof caches === 'undefined') return;
+    await caches.default.put(edgeKey(cacheKey), new Response(JSON.stringify(entry.data), {
+      headers: { 'Content-Type': 'application/json', 'X-Ts': String(entry.ts), 'Cache-Control': `s-maxage=${EDGE_TTL_S * 10}` },
+    }));
+  } catch { /* cache is best-effort */ }
+}
 
 function buildMeta(status, bbox, extra = {}) {
   return { status, bbox, updatedAt: new Date().toISOString(), ...extra };
@@ -111,7 +134,7 @@ export default async function handler(req, res) {
 
   const cacheKey = `${bbox.lamin},${bbox.lomin},${bbox.lamax},${bbox.lomax}`;
   const now = Date.now();
-  const hit = cache.get(cacheKey);
+  const hit = cache.get(cacheKey) ?? await edgeGet(cacheKey);
   res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
 
   if (hit && now - hit.ts < CACHE_TTL) {
@@ -121,7 +144,9 @@ export default async function handler(req, res) {
 
   try {
     const result = await fetchFlights(bbox);
-    cache.set(cacheKey, { data: result, ts: now });
+    const entry = { data: result, ts: now };
+    cache.set(cacheKey, entry);
+    await edgePut(cacheKey, entry);
     res.setHeader('X-Cache', 'MISS');
     res.setHeader('X-Flights-Source', result.source);
     return res.status(200).json(result);
