@@ -114,11 +114,8 @@ struct AutopilotSection: View {
                 .foregroundStyle(.secondary)
 
             if let s = state {
-                if !s.pro {
-                    Label("Premium feature.", systemImage: "lock.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                } else {
+                // ponytail: gating is off server-side; nothing is locked in the App Store build
+                if s.pro {
                     Text("Paper-trading only. No real funds, no real orders, no real account impact.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
