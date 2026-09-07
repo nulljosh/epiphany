@@ -22,11 +22,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
   }, [handleEscape]);
 
   const handleUpgrade = async (plan) => {
-    const priceId = PRICE_IDS[plan];
-    if (!priceId) {
-      alert('Missing Stripe price ID for selected plan.');
-      return;
-    }
+    const priceId = PRICE_IDS[plan]; // optional: the server falls back to its own price
     setLoadingPlan(plan);
 
     try {
