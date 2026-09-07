@@ -161,8 +161,8 @@ re-derive it.
   before building.
 
 ## Ingested 2026-08-18
-- [x] Yelp / venue reviews: WON'T DO 2026-09-07. Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Joshua declined. `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
-- [x] Google reviews: WON'T DO, same card gate as above.
+- [ ] Venue reviews via Google Places, DEFERRED 2026-09-07 (Joshua: later). Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Needs Joshua to add a card + accept ToS at console.cloud.google.com (project winnie-372220, Places API enable started). Then: create key, `wrangler secret put GOOGLE_PLACES_API_KEY`, port `server/api/venue-details.js` from Yelp to Places (New). `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
+- [ ] Google reviews: folded into the item above.
 
 ## Braindump 2026-08-19
 - [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
