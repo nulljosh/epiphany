@@ -161,8 +161,8 @@ re-derive it.
   before building.
 
 ## Ingested 2026-08-18
-- [ ] Renew Yelp. Verified dead 2026-09-07: `YELP_API_KEY` is set on the Worker but Yelp answers 400 to `/v3/businesses/search`, and `/api/venue-details` returns `{available:false,error:"HTTP 400"}`. Yelp Fusion is paid now (no free tier), so this is a buy decision: either a Yelp plan key or a `GOOGLE_PLACES_API_KEY` ($200/mo free credit). Blocked on Joshua supplying a key; wiring is `npx wrangler secret put <NAME>` in this repo.
-- [ ] Add Google reviews (and other review sources) alongside Yelp.
+- [x] Yelp / venue reviews: WON'T DO 2026-09-07. Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Joshua declined. `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
+- [x] Google reviews: WON'T DO, same card gate as above.
 
 ## Braindump 2026-08-19
 - [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
