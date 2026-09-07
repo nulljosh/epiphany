@@ -94,17 +94,11 @@ struct SettingsView: View {
                             Text(appState.user?.email ?? "")
                                 .font(.subheadline)
                                 .foregroundStyle(appState.user?.name != nil ? .secondary : .primary)
-                            Text(tierLabel)
-                                .font(.caption)
-                                .foregroundStyle(tierColor)
                         }
                     }
                     .padding(.vertical, 2)
                 }
 
-                // App Store builds must not link out to web payment (guideline
-                // 3.1.1) -- tier is shown read-only in the profile row above;
-                // StoreKit upgrade flow is a planned follow-up.
                 Section("Brokerage") {
                     if appState.brokerLinked {
                         if !appState.brokerName.isEmpty {
@@ -387,24 +381,6 @@ struct SettingsView: View {
         }
     }
 
-    private var tierLabel: String {
-        switch appState.user?.tier?.lowercased() {
-        case "starter", "weekly": return "Weekly"
-        default: return "Free"
-        }
-    }
-
-    private var tierColor: Color {
-        appState.user?.tier?.lowercased() == "starter" || appState.user?.tier?.lowercased() == "weekly"
-            ? Palette.appleBlue : .secondary
-    }
-
-    private var normalizedTier: SubscriptionTier {
-        switch appState.user?.tier?.lowercased() {
-        case "starter", "weekly": return .starter
-        default: return .free
-        }
-    }
 }
 
 private struct ChangeEmailSheet: View {
@@ -589,26 +565,6 @@ private struct DeleteAccountSheet: View {
     }
 }
 
-private enum SubscriptionTier: String, CaseIterable, Identifiable {
-    case free
-    case starter
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .free: return "Free"
-        case .starter: return "Weekly"
-        }
-    }
-
-    var price: String? {
-        switch self {
-        case .free: return "Free"
-        case .starter: return "$1/wk"
-        }
-    }
-}
 
 private struct ChangeNameSheet: View {
     @Environment(AppState.self) private var appState
