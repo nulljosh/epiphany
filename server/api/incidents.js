@@ -1,6 +1,7 @@
 // Road incidents + nearby infrastructure from OpenStreetMap Overpass API (free, no auth)
 // Returns active incidents (construction, road works) separately from static infrastructure
 import { overpassQuery } from './_overpass.js';
+import { edgeGet, edgePut } from './_edge-cache.js';
 const CACHE_TTL = 10 * 60 * 1000;
 const cache = new Map();
 
@@ -102,6 +103,11 @@ async function fetchIncidents(bbox) {
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return { data: cached.data, state: 'cache', cacheAgeMs: Date.now() - cached.ts };
   }
+  const edge = await edgeGet('incidents', key);
+  if (edge) {
+    cache.set(key, { ts: edge.ts, data: edge.data });
+    return { data: edge.data, state: 'cache', cacheAgeMs: Date.now() - edge.ts };
+  }
 
   const { lamin, lomin, lamax, lomax } = bbox;
   const bb = `${lamin},${lomin},${lamax},${lomax}`;
@@ -165,6 +171,7 @@ async function fetchIncidents(bbox) {
       infrastructure: infrastructure.slice(0, 20),
     };
     cache.set(key, { ts: Date.now(), data });
+    await edgePut('incidents', key, data, CACHE_TTL / 1000);
     return { data, state: 'live' };
   } catch (err) {
     console.warn('Overpass error:', err.message);

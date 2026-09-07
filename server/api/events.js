@@ -64,8 +64,14 @@ function countryCoords(name) {
   if (!name) return null;
   return COUNTRY_CENTROIDS[name.trim()] || null;
 }
+import { edgeGet, edgePut } from './_edge-cache.js';
 const CACHE_TTL = 5 * 60 * 1000;
 let cache = null;
+// GDELT allows one request per 5 s and takes ~17 s to 429; a short timeout plus
+// edge-cached results (including the empty result on failure) keeps the map fast.
+const GDELT_TIMEOUT_MS = 4000;
+const EDGE_OK_S = 600;
+const EDGE_FAIL_S = 120;
 
 function buildMeta(status, extra = {}) {
   return {
@@ -92,6 +98,16 @@ export default async function handler(req, res) {
     });
   }
 
+  const edge = await edgeGet('events', cacheKey);
+  if (edge) {
+    cache = { ts: edge.ts, data: edge.data, key: cacheKey };
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.status(200).json({
+      ...edge.data,
+      meta: buildMeta('cache', { cached: true, edge: true, cacheAgeMs: Date.now() - edge.ts }),
+    });
+  }
+
   // Make GDELT query location-aware when coordinates provided
   let query;
   if (!isNaN(lat) && !isNaN(lon)) {
@@ -102,7 +118,7 @@ export default async function handler(req, res) {
   const url = `${GDELT_BASE}?query=${query}&mode=artlist&maxrecords=50&format=json&sort=datedesc`;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
+  const timer = setTimeout(() => controller.abort(), GDELT_TIMEOUT_MS);
   try {
     const r = await fetch(url, { signal: controller.signal });
     clearTimeout(timer);
@@ -124,6 +140,7 @@ export default async function handler(req, res) {
       meta: buildMeta('live'),
     };
     cache = { ts: Date.now(), data, key: cacheKey };
+    await edgePut('events', cacheKey, data, EDGE_OK_S);
     res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(200).json(data);
   } catch (err) {
@@ -141,13 +158,15 @@ export default async function handler(req, res) {
         }),
       });
     }
-    return res.status(200).json({
+    const empty = {
       error: 'GDELT unavailable',
       events: [],
       meta: buildMeta('degraded', {
         degraded: true,
         warning: 'GDELT unavailable and no cached events are available',
       }),
-    });
+    };
+    await edgePut('events', cacheKey, empty, EDGE_FAIL_S);
+    return res.status(200).json(empty);
   }
 }

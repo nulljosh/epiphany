@@ -57,8 +57,10 @@ export default async function handler(req, res) {
   // POST: checkout
   if (action === 'checkout') {
     try {
-      const { priceId } = req.body;
-      if (!priceId) return res.status(400).json({ error: 'Price ID required' });
+      // The server owns the price: the client never has it (Worker secrets are not
+      // visible to the Vite build), so a missing/absent priceId means "the one product".
+      const priceId = req.body?.priceId || process.env.STRIPE_PRICE_ID_STARTER;
+      if (!priceId) return res.status(500).json({ error: 'STRIPE_PRICE_ID_STARTER not configured' });
       if (allowedPriceIds.size > 0 && !allowedPriceIds.has(priceId)) {
         return res.status(400).json({ error: 'Invalid price ID' });
       }
@@ -87,6 +89,11 @@ export default async function handler(req, res) {
       };
       if (clientReferenceId) {
         sessionParams.client_reference_id = clientReferenceId;
+      }
+      // Optional promo applied server-side (comp links, e2e). Stripe's own promo box stays on.
+      if (req.body?.promo) {
+        const codes = await getStripe().promotionCodes.list({ code: String(req.body.promo), active: true, limit: 1 });
+        if (codes.data[0]) { sessionParams.discounts = [{ promotion_code: codes.data[0].id }]; delete sessionParams.allow_promotion_codes; }
       }
 
       const session = await getStripe().checkout.sessions.create(sessionParams);
