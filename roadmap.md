@@ -247,13 +247,8 @@ Confirmed still true from the original scoping: whoever revisits this should re-
 upload, since that was the one open risk flagged before the migration and no test result for
 it is recorded here.
 
-- [x] macOS screenshot capture FIXED 2026-09-07: `macos/scripts/screenshot.sh` (plain launch + `screencapture -l <windowID>` via CGWindowList). The old XCUITest path committed a terminal capture; README now shows the real Situation window (`50c2c21`).
-
 ## Portfolio + Markets feedback (2026-09-03)
 - [ ] Budget card: "Avg Monthly Spending" and "Monthly Surplus" show budget targets (1070) because `financeData.spending` is empty in KV. Make them use the same statement-derived `actuals` the category pie uses (ios/Views/PortfolioView.swift ~L272 `averageMonthlySpending` vs ~L780 `actuals`). Mirror on macOS.
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
 - [ ] Markets toolbar: search + filter glyphs render as semi-transparent overlay on top of rows (ios/Views/MarketsView.swift ~L212 `toolbarGlyph`); give them an opaque pill or move into the nav bar.
 - [ ] Portfolio pie: "Other" is 64% because transactions with nil category fall into "Other" (PortfolioView.swift L787). Bucket by merchant when category is nil, cap slices at top 6 + Other, and add a category filter chip row.
-
-## Inbox
-- [x] 2026-09-05 App Review 2.1(b) on 2.5.7: replies posted in-thread 2026-09-06; Apple asked for a resubmit with "the remaining issue" fixed. 2026-09-07: removed the Settings tier badge + SubscriptionTier enum and the "Premium feature." lock label, retitled the version to 2.5.8 in place, attached build 202609070905, WAITING_FOR_REVIEW (submission 036b9052).
