@@ -678,7 +678,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
   // Keep brokerage holdings/cash in sync automatically while the tab is visible.
   // Server throttles real SnapTrade calls to every 25 min.
-  useVisibilityPolling(() => syncBroker(), 5 * 60 * 1000, [isAuthenticated, syncBroker]);
+  useVisibilityPolling(() => syncBroker(), 5 * 60 * 1000, [isAuthenticated]); // ponytail: syncBroker deliberately not a dep; it changes on every persist and looped the poll (480k reqs 2026-09-07)
 
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const sectionStyle = { padding: '16px 20px' };
