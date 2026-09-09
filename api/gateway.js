@@ -47,6 +47,7 @@ const ROUTES = {
   'local-events':       lazy(() => import('../server/api/local-events.js')),
   'venue-details':      lazy(() => import('../server/api/venue-details.js')),
   macro:                lazy(() => import('../server/api/macro.js')),
+  iap:                  lazy(() => import('../server/api/iap.js')),
   news:                 lazy(() => import('../server/api/news.js')),
   prices:               lazy(() => import('../server/api/prices.js')),
   signals:              lazy(() => import('../server/api/signals.js')),

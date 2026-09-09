@@ -109,6 +109,16 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         _ = try await perform(request)
     }
 
+    /// Hand a StoreKit transaction to the server, which verifies it with Apple and upgrades the account.
+    func claimPurchase(transactionId: String) async throws {
+        let url = try makeURL("/api/iap")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["transactionId": transactionId])
+        _ = try await perform(request)
+    }
+
     func me() async throws -> User {
         let url = try makeURL("/api/auth", query: ["action": "me"])
         let request = URLRequest(url: url)
