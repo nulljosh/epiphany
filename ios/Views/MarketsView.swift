@@ -136,6 +136,7 @@ struct MarketsView: View {
             if appState.dailyBrief == nil { await appState.loadDailyBrief() }
             if appState.statements.isEmpty { await appState.loadStatements() }
         }
+        loadNewsIfNeeded()
     }
 
     private func loadNewsIfNeeded() {
