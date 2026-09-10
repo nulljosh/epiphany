@@ -75,6 +75,10 @@ const SITE_SUFFIXES = [
   / [-\u2013\u2014|] Bloomberg$/i,
 ];
 
+// Search-engine result titles come formatted for SEO ("Jane Doe (@jane) - Twitter"),
+// not as a bare name. Strips the known site suffixes and a trailing parenthetical,
+// then sanity-checks length so a garbled/empty result falls back to the raw query
+// instead of showing junk.
 function extractProfileName(results, query) {
   if (!results?.results?.length) return query;
   const title = results.results[0].title || '';
