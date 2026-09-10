@@ -1,7 +1,7 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
 # Epiphany.
-[![web](https://img.shields.io/badge/web-v2.6.2-blue)](https://epiphany.heyitsmejosh.com) [![ios](https://img.shields.io/badge/iOS-v2.5.5-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![watchos](https://img.shields.io/badge/watchOS-v1.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany) [![Claude Skill](https://img.shields.io/badge/Claude%20Skill-epiphany-CC785C?logo=claude)](.claude/skills/epiphany/SKILL.md)
+[![web](https://img.shields.io/badge/web-v2.6.2-blue)](https://epiphany.heyitsmejosh.com) [![ios](https://img.shields.io/badge/iOS-v2.5.5-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany) [![Claude Skill](https://img.shields.io/badge/Claude%20Skill-epiphany-CC785C?logo=claude)](.claude/skills/epiphany/SKILL.md)
 
 Everything happening in your world, on one screen. The map, the markets, the people. Palantir for regular people.
 
@@ -54,7 +54,7 @@ scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with merged JSO
 - **Auth and Billing.** Free, or Premium at $1 a week through Stripe
 - **Landing Page.** A node-graph hero, a ticker, features and pricing
 - **PWA.** Works offline
-- **Native.** iOS, macOS and watchOS
+- **Native.** iOS, macOS, Windows, Linux and Android
 
 Roadmap: [ROADMAP.md](ROADMAP.md).
 
