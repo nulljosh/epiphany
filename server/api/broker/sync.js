@@ -8,6 +8,7 @@
 //   3. Otherwise returns + persists { holdings, balance }
 import { getKv } from '../_kv.js';
 import { getSessionUser, errorResponse } from '../auth-helpers.js';
+import { isPro } from '../gates.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
 
 // Register, and if SnapTrade already has this user (code 1010) but we lost the
@@ -71,10 +72,14 @@ export default async function handler(req, res) {
         throw err;
       }
     }
-    if (!accounts || accounts.length === 0) {
+    const connectAdditional = req.body?.action === 'connect-additional';
+    if (!accounts || accounts.length === 0 || connectAdditional) {
+      if (connectAdditional && !(await isPro(session))) {
+        return res.status(200).json({ ok: true, upgradeRequired: true });
+      }
       const broker = typeof req.body?.broker === 'string' ? req.body.broker.toUpperCase() : null;
       const linkUrl = await adapter.loginLink(broker);
-      return res.status(200).json({ ok: true, linked: false, linkUrl });
+      return res.status(200).json({ ok: true, linked: accounts?.length > 0, linkUrl });
     }
 
     const since = new Date(Date.now() - 2 * 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);

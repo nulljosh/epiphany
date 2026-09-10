@@ -281,9 +281,13 @@ export class SnapTradeAdapter {
       ]);
       const cash = (balances ?? []).reduce((sum, b) => sum + Number(b.cash ?? 0), 0);
       const holdingsValue = (positions ?? []).reduce((sum, pos) => {
-        const price = Number(pos.price) > 0 ? Number(pos.price) : null;
         const units = Number(pos.units ?? 0);
-        return sum + (price != null ? price * units : 0);
+        // SnapTrade reports price 0/null for thinly-synced symbols (see getHoldings).
+        // Falling back to $0 silently understates the account total, so fall back
+        // to average purchase price (cost basis) instead of dropping the value.
+        const price = Number(pos.price) > 0 ? Number(pos.price)
+          : Number(pos.average_purchase_price) > 0 ? Number(pos.average_purchase_price) : 0;
+        return sum + price * units;
       }, 0);
       out.push({
         id: acct.id,
