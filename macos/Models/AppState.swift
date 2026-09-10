@@ -466,4 +466,31 @@ final class AppState {
         }
         return defaults.bool(forKey: key)
     }
+
+    // MARK: - Brokerage Persistence
+
+    private static let brokerLinkedKey = "epiphany_broker_linked"
+    private static let brokerNameKey = "epiphany_broker_name"
+
+    var brokerLinked: Bool = { UserDefaults.standard.bool(forKey: brokerLinkedKey) }()
+    var brokerName: String = { UserDefaults.standard.string(forKey: brokerNameKey) ?? "" }()
+
+    func saveBrokerageSelection(linked: Bool, name: String) {
+        brokerLinked = linked
+        brokerName = name
+        UserDefaults.standard.set(linked, forKey: Self.brokerLinkedKey)
+        UserDefaults.standard.set(name, forKey: Self.brokerNameKey)
+    }
+
+    func clearBrokerageSelection() {
+        brokerLinked = false
+        brokerName = ""
+        UserDefaults.standard.removeObject(forKey: Self.brokerLinkedKey)
+        UserDefaults.standard.removeObject(forKey: Self.brokerNameKey)
+    }
+
+    func restoreBrokerageSelection() {
+        brokerLinked = UserDefaults.standard.bool(forKey: Self.brokerLinkedKey)
+        brokerName = UserDefaults.standard.string(forKey: Self.brokerNameKey) ?? ""
+    }
 }
