@@ -64,13 +64,15 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
     setBrokerDisconnecting(false);
   };
 
-  const handleBrokerSync = async ({ auto = false, force = false } = {}) => {
+  const handleBrokerSync = async ({ auto = false, force = false, action = null } = {}) => {
     setBrokerSyncing(true); if (!auto) setBrokerMsg(null);
     try {
-      const res = await fetch('/api/broker/sync', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force }) });
+      const res = await fetch('/api/broker/sync', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force, ...(action ? { action } : {}) }) });
       const d = await res.json();
-      if (d.skipped) { if (!auto) setBrokerMsg({ error: false, text: 'Brokerage sync not configured yet' }); }
-      else if (d.linked === false && d.linkUrl) {
+      if (d.upgradeRequired) {
+        setBrokerMsg({ error: false, text: 'Connecting another brokerage is a Premium feature. Upgrade in Settings → Subscription.' });
+      } else if (d.skipped) { if (!auto) setBrokerMsg({ error: false, text: 'Brokerage sync not configured yet' }); }
+      else if (d.linkUrl) {
         // Auto-check on tab open must not pop the connection portal uninvited.
         if (!auto) {
           window.open(d.linkUrl, '_blank', 'noopener');
@@ -339,6 +341,9 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
                     <button onClick={() => handleBrokerDisconnect(c.id)} disabled={brokerDisconnecting} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>{brokerDisconnecting ? '...' : 'Disconnect'}</button>
                   </Row>
                 ))}
+                <button onClick={() => handleBrokerSync({ action: 'connect-additional' })} disabled={brokerSyncing} style={{ ...btnStyle(false), marginTop: 8 }}>
+                  {brokerSyncing ? '...' : 'Connect another brokerage'}
+                </button>
                 {/* Holdings live in Portfolio, not Settings. Connection state only here. */}
                 <Row label="Last synced" t={t}>
                   <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{brokerSnapshot.syncedAt ? new Date(brokerSnapshot.syncedAt).toLocaleString() : '—'}</span>
