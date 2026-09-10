@@ -236,11 +236,16 @@ final class EpiphanyAPI {
     }
 
     struct BrokerSyncResponse: Decodable {
+        struct Connection: Decodable {
+            let id: String
+            let brokerName: String?
+        }
         let ok: Bool
         let linked: Bool?
         let skipped: Bool?
         let linkUrl: String?
         let upgradeRequired: Bool?
+        let connections: [Connection]?
     }
 
     /// POST /api/broker/sync — returns linkUrl when no brokerage is linked yet,
@@ -256,6 +261,14 @@ final class EpiphanyAPI {
         }
         let data = try await perform(request)
         return try decode(BrokerSyncResponse.self, from: data)
+    }
+
+    /// POST /api/broker/disconnect — removes the linked brokerage connection(s).
+    func disconnectBroker() async throws {
+        let url = try makeURL("/api/broker/disconnect")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        _ = try await perform(request)
     }
 
     // MARK: - Portfolio

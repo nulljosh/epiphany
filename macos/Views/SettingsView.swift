@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var showChangeEmail = false
     @State private var showChangePassword = false
     @State private var showDeleteAccount = false
+    @State private var brokerConnecting = false
+    @State private var brokerStatus: String?
 
     var body: some View {
         NavigationStack {
@@ -17,6 +19,87 @@ struct SettingsView: View {
         }
         .onAppear {
             appState.loadAvatar()
+            appState.restoreBrokerageSelection()
+        }
+    }
+
+    private func connectBrokerage(action: String? = nil) async {
+        brokerConnecting = true
+        defer { brokerConnecting = false }
+        do {
+            let result = try await EpiphanyAPI.shared.syncBroker(action: action)
+            if result.upgradeRequired == true {
+                brokerStatus = "Connecting another brokerage is a Premium feature."
+                return
+            }
+            if let link = result.linkUrl, let url = URL(string: link) {
+                brokerStatus = "Finish linking in the browser, then click Sync again."
+                openURL(url)
+            } else if result.linked == true {
+                let names = (result.connections ?? []).compactMap { $0.brokerName }.filter { !$0.isEmpty }
+                let brokerName = names.isEmpty ? appState.brokerName : names.joined(separator: ", ")
+                appState.saveBrokerageSelection(linked: true, name: brokerName)
+                brokerStatus = brokerName.isEmpty ? "Brokerage linked" : "Connected: \(brokerName)"
+            } else if result.skipped == true {
+                brokerStatus = "Brokerage sync not configured on the server"
+            }
+        } catch {
+            brokerStatus = "Connect failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func disconnectBrokerage() async {
+        brokerConnecting = true
+        defer { brokerConnecting = false }
+        do {
+            try await EpiphanyAPI.shared.disconnectBroker()
+            appState.clearBrokerageSelection()
+            brokerStatus = "Brokerage disconnected"
+        } catch {
+            brokerStatus = "Disconnect failed: \(error.localizedDescription)"
+        }
+    }
+
+    private var brokerageCard: some View {
+        settingsCard("Brokerage", subtitle: "Connect a brokerage through SnapTrade to sync holdings and cash.") {
+            VStack(alignment: .leading, spacing: 10) {
+                if appState.brokerLinked {
+                    if !appState.brokerName.isEmpty {
+                        Label(appState.brokerName, systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack(spacing: 12) {
+                        Button {
+                            Task { await connectBrokerage(action: "connect-additional") }
+                        } label: {
+                            Label("Connect another brokerage", systemImage: "plus.circle")
+                        }
+                        .disabled(brokerConnecting)
+
+                        Button(role: .destructive) {
+                            Task { await disconnectBrokerage() }
+                        } label: {
+                            Label("Disconnect", systemImage: "link.badge.minus")
+                        }
+                        .disabled(brokerConnecting)
+                    }
+                } else {
+                    Button {
+                        Task { await connectBrokerage() }
+                    } label: {
+                        Label("Connect brokerage", systemImage: "link")
+                    }
+                    .disabled(brokerConnecting)
+                }
+                if brokerConnecting {
+                    ProgressView().controlSize(.small)
+                }
+                if let status = brokerStatus {
+                    Text(status)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 
@@ -28,6 +111,7 @@ struct SettingsView: View {
                     profileCard
                     subscriptionCard
                     accountCard
+                    brokerageCard
                     mapSourcesCard
                     signOutCard
                     dangerZoneCard
