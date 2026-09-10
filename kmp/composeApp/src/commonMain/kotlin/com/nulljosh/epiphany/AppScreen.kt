@@ -2,6 +2,7 @@ package com.nulljosh.epiphany
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,13 +34,15 @@ fun EpiphanyTheme(content: @Composable () -> Unit) =
 // Public market snapshot always shows, no account needed. Signing in
 // additionally shows the account's own portfolio -- read-only (no save/
 // edit path wired here), same GET /api/portfolio?action=get the web/iOS/
-// macOS apps read. No statement upload, no broker connect: those touch raw
-// bank data and stay their own decision.
+// macOS apps read. Brokerage connect/disconnect (server/api/broker/*.js)
+// mirrors the same flow the web/iOS/macOS Settings screens drive. No
+// statement upload here still -- separate scope.
 @Composable
 fun AppScreen(
     client: EpiphanyClient = EpiphanyClient(),
     auth: EpiphanyAuth = EpiphanyAuth(),
     portfolioClient: PortfolioClient = PortfolioClient(),
+    brokerClient: BrokerClient = BrokerClient(),
 ) {
     var fearGreed by remember { mutableStateOf<FearGreed?>(null) }
     var sp500 by remember { mutableStateOf<List<Sp500Constituent>>(emptyList()) }
@@ -52,7 +55,16 @@ fun AppScreen(
     var portfolio by remember { mutableStateOf<Portfolio?>(null) }
     var authError by remember { mutableStateOf<String?>(null) }
     var signingIn by remember { mutableStateOf(false) }
+    var broker by remember { mutableStateOf<BrokerSyncResponse?>(null) }
+    var brokerBusy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    suspend fun syncBroker(current: AuthSession, force: Boolean = false, action: String? = null) {
+        brokerBusy = true
+        broker = runCatching { brokerClient.sync(current, force = force, action = action) }.getOrNull()
+        broker?.linkUrl?.let { openUrl(it) }
+        brokerBusy = false
+    }
 
     fun signIn() {
         scope.launch {
@@ -62,6 +74,7 @@ fun AppScreen(
                 val s = auth.signIn(email, password)
                 session = s
                 portfolio = portfolioClient.portfolio(s)
+                syncBroker(s)
             }.onFailure { authError = it.message ?: "Sign in failed" }
             signingIn = false
         }
@@ -104,6 +117,39 @@ fun AppScreen(
                     p.holdings.forEach { h -> Text("${h.symbol} - ${h.shares} sh${h.marketValue?.let { " - $it" } ?: ""}") }
                     Text("Accounts (${p.accounts.size})", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
                     p.accounts.forEach { a -> Text("${a.name} - ${a.balance}") }
+                }
+
+                Text("Brokerage", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 24.dp))
+                if (broker?.upgradeRequired == true) {
+                    Text("Connecting another brokerage is a Premium feature.", modifier = Modifier.padding(top = 4.dp))
+                }
+                if (broker?.linked == true) {
+                    broker?.connections.orEmpty().distinctBy { it.brokerName }.forEach {
+                        Text("Connected: ${it.brokerName ?: "Brokerage"}", modifier = Modifier.padding(top = 4.dp))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        Button(
+                            onClick = { scope.launch { syncBroker(currentSession, action = "connect-additional") } },
+                            enabled = !brokerBusy,
+                        ) { Text("Connect another") }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    brokerBusy = true
+                                    brokerClient.disconnect(currentSession)
+                                    broker = null
+                                    brokerBusy = false
+                                }
+                            },
+                            enabled = !brokerBusy,
+                        ) { Text("Disconnect") }
+                    }
+                } else {
+                    Button(
+                        onClick = { scope.launch { syncBroker(currentSession) } },
+                        enabled = !brokerBusy,
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) { Text(if (brokerBusy) "Connecting..." else "Connect brokerage") }
                 }
             }
 
