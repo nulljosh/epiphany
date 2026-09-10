@@ -75,16 +75,23 @@ enum SpendingForecastBuilder {
             let mcMedian = percentile(sorted, p: 0.5)
             let hwValue = index < hwForecasts.count ? hwForecasts[index] : mcMedian
 
-            // Ensemble: blend Monte Carlo median (60%) with Holt-Winters (40%)
+            // Ensemble: blend Monte Carlo median (60%) with Holt-Winters (40%).
+            // hwValue is an unbounded trend extrapolation, so the blend can land
+            // outside the MC 20th/80th percentile band -- clamp it back in so
+            // low <= median <= high always holds (was violated: a $25 trend push
+            // put median above high with only 3 months of history).
+            let low = percentile(sorted, p: 0.2).roundedToCents()
+            let high = percentile(sorted, p: 0.8).roundedToCents()
             let blended = (mcMedian * 0.6 + hwValue * 0.4).roundedToCents()
+                .clamped(to: low...high)
 
             let monthLabel = nextMonth(after: lastSortKey, offset: index + 1)
             return SpendingForecast.Point(
                 month: monthLabel.month,
                 sortKey: monthLabel.sortKey,
                 median: blended,
-                low: percentile(sorted, p: 0.2).roundedToCents(),
-                high: percentile(sorted, p: 0.8).roundedToCents()
+                low: low,
+                high: high
             )
         }
 
@@ -197,5 +204,9 @@ private struct SeededGenerator {
 private extension Double {
     func roundedToCents() -> Double {
         (self * 100).rounded() / 100
+    }
+
+    func clamped(to range: ClosedRange<Double>) -> Double {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }
