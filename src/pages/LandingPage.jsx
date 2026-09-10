@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import './landing.css';
 import InstallAnywhere from '../components/InstallAnywhere';
 
@@ -338,6 +338,28 @@ function PeopleScreen() {
 }
 
 export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zooming = false }) {
+  const heroRef = useRef(null);
+
+  // Layered parallax: the hero content drifts slightly slower than the page
+  // scrolls, rAF-throttled, skipped entirely under reduced motion.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        if (heroRef.current) {
+          const y = Math.min(window.scrollY, 600);
+          heroRef.current.style.transform = `translateY(${y * -0.08}px)`;
+        }
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   // scroll reveal — same behavior as the prototype: reveal once on intersect,
   // 3s safety net so content never stays hidden
   useEffect(() => {
@@ -375,7 +397,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       </nav>
 
       {/* ─── HERO ─── */}
-      <header className="lp-hero">
+      <header className="lp-hero" ref={heroRef}>
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
         <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
