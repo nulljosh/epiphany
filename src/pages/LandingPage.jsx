@@ -405,7 +405,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           <a className="lp-btn-glass glass-pill" href="#markets">See what&rsquo;s inside</a>
           <a className="lp-btn-glass glass-pill" href="https://apps.apple.com/app/id6779522175">Download on the App Store</a>
         </div>
-        <p className="lp-hero-platforms">Web &middot; iPhone &middot; iPad &middot; Mac &middot; Apple Watch</p>
+        <p className="lp-hero-platforms">Web &middot; iPhone &middot; iPad &middot; Mac &middot; Windows &middot; Linux &middot; Android</p>
 
         <div className="lp-hero-cta-bottom">
           <button className="lp-btn-primary" onClick={register}>Get started</button>
