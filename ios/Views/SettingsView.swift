@@ -36,14 +36,18 @@ struct SettingsView: View {
         }
     }
 
-    private func connectBrokerage(broker: String? = nil) async {
+    private func connectBrokerage(broker: String? = nil, action: String? = nil) async {
         brokerConnecting = true
         defer { brokerConnecting = false }
         // SnapTrade registration can transiently drop the connection -- retry
         // once before surfacing an error so one flaky request doesn't fail the flow.
         for attempt in 1...2 {
             do {
-                let result = try await EpiphanyAPI.shared.syncBroker(broker: broker)
+                let result = try await EpiphanyAPI.shared.syncBroker(broker: broker, action: action)
+                if result.upgradeRequired == true {
+                    brokerStatus = "Connecting another brokerage is a Premium feature."
+                    return
+                }
                 if let link = result.linkUrl, let url = URL(string: link) {
                     brokerStatus = nil
                     brokerLinkURL = url
@@ -123,6 +127,12 @@ struct SettingsView: View {
                             Task { await disconnectBrokerage() }
                         } label: {
                             Label("Disconnect brokerage", systemImage: "link.badge.minus")
+                        }
+                        .disabled(brokerConnecting)
+                        Button {
+                            Task { await connectBrokerage(action: "connect-additional") }
+                        } label: {
+                            Label("Connect another brokerage", systemImage: "plus.circle")
                         }
                         .disabled(brokerConnecting)
                     } else {

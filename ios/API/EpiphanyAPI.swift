@@ -392,20 +392,24 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let skipped: Bool?
         let linkUrl: String?
         let connections: [Connection]?
+        let upgradeRequired: Bool?
     }
 
     /// POST /api/broker/sync — returns linkUrl when no brokerage is linked yet,
     /// otherwise refreshes and returns the linked snapshot. Pass a SnapTrade
     /// broker slug (e.g. "WEALTHSIMPLE") to deep-link that brokerage's login.
-    func syncBroker(broker: String? = nil) async throws -> BrokerSyncResponse {
+    func syncBroker(broker: String? = nil, action: String? = nil) async throws -> BrokerSyncResponse {
         let url = try makeURL("/api/broker/sync")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         // SnapTrade registration/link can be slow but must not hang the UI forever
         request.timeoutInterval = 30
-        if let broker {
+        if broker != nil || action != nil {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(["broker": broker])
+            var body: [String: String] = [:]
+            if let broker { body["broker"] = broker }
+            if let action { body["action"] = action }
+            request.httpBody = try JSONEncoder().encode(body)
         }
         let data = try await perform(request)
         return try decode(BrokerSyncResponse.self, from: data)
