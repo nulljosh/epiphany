@@ -480,20 +480,22 @@ export default async function handler(req, res) {
     sourcelang: 'english',
   });
   const url = `${GDELT_BASE}?${params}`;
-  let googleArticles = [];
+  // ponytail: fetch Google once, up front, in parallel with GDELT. Retrying
+  // it again inside the catch (old code) double-paid its 8s timeout on top
+  // of GDELT's, pushing total latency past the client's 15s timeout — the
+  // "loads forever then errors" report. Never re-fetch what already ran.
+  const [gdeltResult, googleResult] = await Promise.allSettled([
+    fetchGdelt(url),
+    fetchGoogleNews(queryTerms, parsedLat, parsedLon),
+  ]);
+  let googleArticles = googleResult.status === 'fulfilled' ? googleResult.value : [];
 
   try {
-    const [gdeltResult, googleResult] = await Promise.allSettled([
-      fetchGdelt(url),
-      fetchGoogleNews(queryTerms, parsedLat, parsedLon),
-    ]);
-
     if (gdeltResult.status === 'rejected') {
       throw gdeltResult.reason;
     }
 
     const gdeltArticles = gdeltResult.value;
-    googleArticles = googleResult.status === 'fulfilled' ? googleResult.value : [];
     const articles = dedup([...gdeltArticles, ...googleArticles]).filter(a => isEnglishTitle(a.title));
     const data = {
       articles,
@@ -507,9 +509,6 @@ export default async function handler(req, res) {
   } catch (err) {
     console.warn('GDELT news error:', err.message);
 
-    if (googleArticles.length === 0) {
-      googleArticles = await fetchGoogleNews(queryTerms, parsedLat, parsedLon);
-    }
     googleArticles = dedup(googleArticles).filter(a => isEnglishTitle(a.title));
 
     if (googleArticles.length > 0) {

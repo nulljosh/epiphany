@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './landing.css';
 import InstallAnywhere from '../components/InstallAnywhere';
 
@@ -84,39 +84,61 @@ function TabBar({ active }) {
   );
 }
 
-function MapSceneSVG() {
+// ponytail: the device-frame mockups depict the native app, which follows
+// system appearance (see CLAUDE.md), so they should too — matchMedia rather
+// than a CSS var because SVG fill attributes don't reliably pick up var().
+function usePrefersDark() {
+  const [dark, setDark] = useState(() =>
+    typeof window === 'undefined' || !window.matchMedia
+      ? true
+      : window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = (e) => setDark(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return dark;
+}
+
+function MapSceneSVG({ dark }) {
+  const c = dark
+    ? { bg: '#060a10', road: '#0d1e36', roadHi: '#0b1c32', block: '#0a1520', water: '#030c18', accent: '#122040', label: 'rgba(255,255,255,0.38)', dot: '#fff' }
+    : { bg: '#e9edf2', road: '#c7d0dd', roadHi: '#b9c4d4', block: '#d3dae4', water: '#aec4dd', accent: '#b0bcce', label: 'rgba(0,0,0,0.4)', dot: '#fff' };
   return (
     <svg viewBox="0 0 310 680" xmlns="http://www.w3.org/2000/svg">
-      <rect width="310" height="680" fill="#060a10" />
+      <rect width="310" height="680" fill={c.bg} />
           {/* Road grid with blue tint */}
-          <line x1="0" y1="300" x2="310" y2="300" stroke="#0d1e36" strokeWidth="12" />
-          <line x1="0" y1="385" x2="310" y2="385" stroke="#0d1e36" strokeWidth="6" />
-          <line x1="0" y1="465" x2="310" y2="465" stroke="#0d1e36" strokeWidth="5" />
-          <line x1="0" y1="205" x2="310" y2="205" stroke="#0d1e36" strokeWidth="5" />
-          <line x1="0" y1="125" x2="310" y2="125" stroke="#0d1e36" strokeWidth="4" />
-          <line x1="78" y1="0" x2="78" y2="680" stroke="#0d1e36" strokeWidth="5" />
-          <line x1="155" y1="0" x2="155" y2="680" stroke="#0d1e36" strokeWidth="10" />
-          <line x1="232" y1="0" x2="232" y2="680" stroke="#0d1e36" strokeWidth="5" />
-          <line x1="0" y1="550" x2="210" y2="155" stroke="#0b1c32" strokeWidth="7" />
+          <line x1="0" y1="300" x2="310" y2="300" stroke={c.road} strokeWidth="12" />
+          <line x1="0" y1="385" x2="310" y2="385" stroke={c.road} strokeWidth="6" />
+          <line x1="0" y1="465" x2="310" y2="465" stroke={c.road} strokeWidth="5" />
+          <line x1="0" y1="205" x2="310" y2="205" stroke={c.road} strokeWidth="5" />
+          <line x1="0" y1="125" x2="310" y2="125" stroke={c.road} strokeWidth="4" />
+          <line x1="78" y1="0" x2="78" y2="680" stroke={c.road} strokeWidth="5" />
+          <line x1="155" y1="0" x2="155" y2="680" stroke={c.road} strokeWidth="10" />
+          <line x1="232" y1="0" x2="232" y2="680" stroke={c.road} strokeWidth="5" />
+          <line x1="0" y1="550" x2="210" y2="155" stroke={c.roadHi} strokeWidth="7" />
           {/* City blocks */}
-          <rect x="8" y="135" width="60" height="56" rx="4" fill="#0a1520" opacity="0.95" />
-          <rect x="8" y="203" width="60" height="88" rx="4" fill="#0a1520" opacity="0.95" />
-          <rect x="86" y="135" width="56" height="56" rx="4" fill="#0a1520" opacity="0.9" />
-          <rect x="242" y="135" width="58" height="56" rx="4" fill="#0a1520" opacity="0.9" />
-          <rect x="242" y="310" width="58" height="64" rx="4" fill="#0a1520" opacity="0.9" />
-          <rect x="242" y="400" width="58" height="54" rx="4" fill="#0a1520" opacity="0.9" />
-          <rect x="86" y="475" width="136" height="74" rx="4" fill="#0a1520" opacity="0.85" />
+          <rect x="8" y="135" width="60" height="56" rx="4" fill={c.block} opacity="0.95" />
+          <rect x="8" y="203" width="60" height="88" rx="4" fill={c.block} opacity="0.95" />
+          <rect x="86" y="135" width="56" height="56" rx="4" fill={c.block} opacity="0.9" />
+          <rect x="242" y="135" width="58" height="56" rx="4" fill={c.block} opacity="0.9" />
+          <rect x="242" y="310" width="58" height="64" rx="4" fill={c.block} opacity="0.9" />
+          <rect x="242" y="400" width="58" height="54" rx="4" fill={c.block} opacity="0.9" />
+          <rect x="86" y="475" width="136" height="74" rx="4" fill={c.block} opacity="0.85" />
           {/* Water */}
-          <ellipse cx="268" cy="178" rx="42" ry="28" fill="#030c18" opacity="0.95" />
-          <ellipse cx="42" cy="445" rx="30" ry="20" fill="#030c18" opacity="0.9" />
+          <ellipse cx="268" cy="178" rx="42" ry="28" fill={c.water} opacity="0.95" />
+          <ellipse cx="42" cy="445" rx="30" ry="20" fill={c.water} opacity="0.9" />
           {/* Road highlights */}
-          <line x1="0" y1="300" x2="310" y2="300" stroke="#122040" strokeWidth="2" opacity="0.6" />
-          <line x1="155" y1="0" x2="155" y2="680" stroke="#122040" strokeWidth="2" opacity="0.5" />
+          <line x1="0" y1="300" x2="310" y2="300" stroke={c.accent} strokeWidth="2" opacity="0.6" />
+          <line x1="155" y1="0" x2="155" y2="680" stroke={c.accent} strokeWidth="2" opacity="0.5" />
           {/* User location */}
           <circle cx="155" cy="322" r="30" fill="#0071e3" opacity="0.08" />
           <circle cx="155" cy="322" r="19" fill="#0071e3" opacity="0.13" />
           <circle cx="155" cy="322" r="9" fill="#0071e3" opacity="0.9" />
-          <circle cx="155" cy="322" r="4.5" fill="#fff" />
+          <circle cx="155" cy="322" r="4.5" fill={c.dot} />
           <circle cx="155" cy="322" r="40" fill="none" stroke="#0071e3" strokeWidth="0.8" opacity="0.2" />
           {/* Flights */}
           <text x="62" y="182" fontSize="14" fill="#5B9BE6" opacity="0.85" transform="rotate(42,62,182)">✈</text>
@@ -134,47 +156,49 @@ function MapSceneSVG() {
           <circle cx="120" cy="366" r="4" fill="#FF453A" opacity="0.7" />
           <circle cx="190" cy="185" r="3.5" fill="#FF453A" opacity="0.6" />
           {/* Labels */}
-      <text x="62" y="200" fontSize="7" fill="rgba(255,255,255,0.38)" textAnchor="middle">DAL 442</text>
-      <text x="104" y="200" fontSize="7" fill="rgba(255,255,255,0.38)" textAnchor="middle">Stadium</text>
+      <text x="62" y="200" fontSize="7" fill={c.label} textAnchor="middle">DAL 442</text>
+      <text x="104" y="200" fontSize="7" fill={c.label} textAnchor="middle">Stadium</text>
     </svg>
   );
 }
 
 function MapScreen() {
+  const dark = usePrefersDark();
+  const fg = dark ? '255,255,255' : '0,0,0';
   return (
     <>
       <div className="map-screen">
-        <MapSceneSVG />
+        <MapSceneSVG dark={dark} />
       </div>
 
       <div className="map-top-bar" style={{ paddingTop: 56 }}>
-        <div className="map-tab on">Situation</div>
-        <div className="map-tab">Markets</div>
-        <div className="map-tab">People</div>
+        <div className={`map-tab on${dark ? '' : ' light'}`}>Situation</div>
+        <div className={`map-tab${dark ? '' : ' light'}`}>Markets</div>
+        <div className={`map-tab${dark ? '' : ' light'}`}>People</div>
       </div>
 
       <div className="map-layers" style={{ top: 106 }}>
-        <div className="layer-chip" style={{ color: '#5B9BE6', borderColor: 'rgba(79,195,247,0.2)' }}>✈ Flights</div>
-        <div className="layer-chip" style={{ color: '#30D158', borderColor: 'rgba(48,209,88,0.2)' }}>◉ Events</div>
-        <div className="layer-chip" style={{ color: '#FF9F0A', borderColor: 'rgba(255,159,10,0.2)' }}>⚠ Incidents</div>
-        <div className="layer-chip" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.2)' }}>◆ Crime</div>
+        <div className={`layer-chip${dark ? '' : ' light'}`} style={{ color: '#5B9BE6', borderColor: 'rgba(79,195,247,0.2)' }}>✈ Flights</div>
+        <div className={`layer-chip${dark ? '' : ' light'}`} style={{ color: '#30D158', borderColor: 'rgba(48,209,88,0.2)' }}>◉ Events</div>
+        <div className={`layer-chip${dark ? '' : ' light'}`} style={{ color: '#FF9F0A', borderColor: 'rgba(255,159,10,0.2)' }}>⚠ Incidents</div>
+        <div className={`layer-chip${dark ? '' : ' light'}`} style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.2)' }}>◆ Crime</div>
       </div>
 
-      <div className="map-card">
-        <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Nearby now</div>
+      <div className={`map-card${dark ? '' : ' light'}`}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: `rgba(${fg},0.3)`, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Nearby now</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {[
             { dot: '#5B9BE6', title: 'DAL 442 · 37,400 ft', sub: 'Delta Air Lines · Atlanta', when: 'now', border: true },
             { dot: '#30D158', title: 'Warriors vs Clippers', sub: 'Chase Center · 0.4 mi', when: '7:30 PM', border: true },
             { dot: '#FF9F0A', title: 'Road closure — Mission St', sub: 'Construction · 0.2 mi', when: '2h ago', border: false },
           ].map(({ dot, title, sub, when, border }) => (
-            <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: border ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+            <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: border ? `1px solid rgba(${fg},0.08)` : 'none' }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, fontWeight: 500, color: '#fff' }}>{title}</div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{sub}</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: dark ? '#fff' : '#000' }}>{title}</div>
+                <div style={{ fontSize: 9, color: `rgba(${fg},0.5)`, marginTop: 1 }}>{sub}</div>
               </div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontVariantNumeric: 'tabular-nums' }}>{when}</div>
+              <div style={{ fontSize: 9, color: `rgba(${fg},0.35)`, fontVariantNumeric: 'tabular-nums' }}>{when}</div>
             </div>
           ))}
         </div>
