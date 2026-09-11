@@ -19,6 +19,9 @@ export async function getKv() {
       };
 
       _kv = {
+        // Payment handlers must distinguish a storage outage from a missing key.
+        getStrict: (...args) => redis.get(...args),
+        setStrict: (...args) => redis.set(...args),
         get: wrap('get', (...args) => redis.get(...args)),
         set: wrap('set', (...args) => redis.set(...args)),
         del: wrap('del', (...args) => redis.del(...args)),

@@ -23,8 +23,7 @@ const TAB_LABELS = {
   subscriptions: 'Subscriptions', dashboard: 'Dashboard', roadmap: 'Roadmap',
 };
 
-// Goals card hidden for now -- flip back on when ready to track savings goals again
-const SHOW_GOALS = false;
+const SHOW_GOALS = true;
 
 const INCOME_SCENARIOS = [
   { label: '+$500', delta: 500, color: '#30D158' },

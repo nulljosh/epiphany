@@ -1,3 +1,11 @@
+## Revenue check, 2026-09-11
+
+Handoff: paused at Joshua's request to conserve usage. Changes are local and uncommitted; no deployment or release. Confirmation remains pending. Completed checks and next steps: [revenue handoff](../REVENUE.md).
+
+ASC: iOS 2.5.11 WAITING_FOR_REVIEW; macOS 2.5.2 READY_FOR_DISTRIBUTION. Premium IAP com.heyitsmejosh.epiphany.premium is APPROVED. Older notes saying the IAP does not exist or the current submission is rejected are superseded.
+
+Local payment fixes: failed storage reads/writes no longer report a successful unlock; IAP ownership is reserved atomically; Stripe waits for confirmed payment and retries failed entitlement writes. Paid feature enforcement still depends on EPIPHANY_REQUIRE_PRO=true. Verify the deployed flag and a real sandbox purchase before promoting the paid offer. See ../REVENUE.md.
+
 ## Google sign-in on native: server is DONE, only the client is missing (verified 2026-08-28)
 
 `https://epiphany.heyitsmejosh.com/api/auth?action=google` returns a live **302** to

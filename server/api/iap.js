@@ -54,17 +54,29 @@ export default async function handler(req, res) {
     console.error('[IAP]', err.message);
     return errorResponse(res, 502, 'Could not verify purchase with Apple');
   }
-  if (!tx || tx.bundleId !== BUNDLE_ID || !PRODUCT_IDS.has(tx.productId) || tx.revocationDate) {
+  if (!tx || tx.bundleId !== BUNDLE_ID || !PRODUCT_IDS.has(tx.productId) || tx.revocationDate
+      || !/^\d{1,30}$/.test(String(tx.originalTransactionId ?? ''))) {
     return errorResponse(res, 402, 'Purchase not valid');
   }
 
-  const kv = await getKv();
   const email = session.email;
-  const owner = await kv.get(`iap:${tx.originalTransactionId}`);
-  if (owner && owner !== email) return errorResponse(res, 409, 'Purchase already claimed by another account');
-
-  const user = (await kv.get(`user:${email}`)) || { email };
-  await kv.set(`user:${email}`, { ...user, tier: 'premium', appleOriginalTransactionId: tx.originalTransactionId, premiumSince: user.premiumSince || new Date().toISOString() });
-  await kv.set(`iap:${tx.originalTransactionId}`, email);
-  return res.status(200).json({ ok: true, tier: 'premium' });
+  try {
+    const kv = await getKv();
+    if (!kv) throw new Error('Purchase storage unavailable');
+    // Reserve ownership atomically so concurrent claims cannot upgrade two accounts.
+    // Keep the reservation if the account write fails: the same owner can retry.
+    const ownerKey = `iap:${tx.originalTransactionId}`;
+    const claimed = await kv.setStrict(ownerKey, email, { nx: true });
+    if (claimed !== 'OK') {
+      const owner = await kv.getStrict(ownerKey);
+      if (!owner) throw new Error('Purchase owner could not be confirmed');
+      if (owner !== email) return errorResponse(res, 409, 'Purchase already claimed by another account');
+    }
+    const user = (await kv.getStrict(`user:${email}`)) || { email };
+    await kv.setStrict(`user:${email}`, { ...user, tier: 'premium', appleOriginalTransactionId: tx.originalTransactionId, premiumSince: user.premiumSince || new Date().toISOString() });
+    return res.status(200).json({ ok: true, tier: 'premium' });
+  } catch (err) {
+    console.error('[IAP] Account upgrade failed:', err.message);
+    return errorResponse(res, 503, 'Purchase verified, but the account could not be upgraded. Restore the purchase to retry.');
+  }
 }

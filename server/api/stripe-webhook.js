@@ -47,12 +47,15 @@ export default async function handler(req, res) {
   // Handle the event
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object;
+        if (!['paid', 'no_payment_required'].includes(session.payment_status)) break;
         const customerId = session.customer;
+        if (!customerId || !kv) throw new Error('Payment customer or storage missing');
 
         // One-time payment ($1) — access is permanent, no subscription to track.
-        await kv.set(`sub:${customerId}`, {
+        await kv.setStrict(`sub:${customerId}`, {
           status: 'active',
           customerId,
           priceId: session.line_items?.data?.[0]?.price?.id || process.env.STRIPE_PRICE_ID_STARTER,
