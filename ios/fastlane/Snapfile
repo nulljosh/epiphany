@@ -9,6 +9,11 @@ languages([
 
 scheme("Epiphany")
 
+# ponytail: default concurrent_simulators runs both devices' xcodebuild +
+# simulator boot at once, which pegs the machine. One at a time is slower
+# but doesn't fight for CPU/RAM.
+concurrent_simulators(false)
+
 output_directory("./fastlane/screenshots")
 
 clear_previous_screenshots(true)
