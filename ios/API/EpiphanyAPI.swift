@@ -874,8 +874,11 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
                 throw APIError.httpError(0, "No HTTP response")
             }
 
-            if http.statusCode == 503 && attempt < maxRetries {
-                lastError = APIError.httpError(503, "Server temporarily unavailable")
+            // 500s here are usually the Yahoo Finance crumb/rate-limit flake (see CLAUDE.md
+            // "Known Issues"), not a real server error; retrying like a 503 self-heals most of them
+            // instead of leaving stocks stale until the next poll.
+            if (http.statusCode == 503 || http.statusCode == 500) && attempt < maxRetries {
+                lastError = APIError.httpError(http.statusCode, "Server temporarily unavailable")
                 continue
             }
 

@@ -10,9 +10,6 @@ struct MarketsView: View {
     @State private var sortAscending = false
     @State private var marketFilter: MarketFilter = .all
 
-    private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
-
-
     private var allItems: [MarketItem] {
         var items: [MarketItem] = []
         for stock in appState.stocks {
@@ -371,9 +368,14 @@ struct MarketsView: View {
             guard isLoggedIn, appState.watchlist.isEmpty else { return }
             Task { await appState.loadWatchlist() }
         }
-        .onReceive(refreshTimer) { _ in
-            guard isVisible else { return }
-            Task {
+        // ponytail: adaptive interval instead of a fixed 30s Combine timer -- polls faster (10s)
+        // while data is stale so it self-heals as soon as the upstream API recovers, instead of
+        // sitting on the "Data may be stale" banner for a full 30s+ per retry.
+        .task {
+            while !Task.isCancelled {
+                let interval = appState.isStockDataStale ? 10 : 30
+                try? await Task.sleep(for: .seconds(interval))
+                guard isVisible else { continue }
                 async let s: Void = appState.loadStocks(force: true)
                 async let c: Void = appState.loadCommodities(force: true)
                 async let k: Void = appState.loadCrypto(force: true)
