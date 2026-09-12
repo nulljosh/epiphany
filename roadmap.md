@@ -260,3 +260,8 @@ it is recorded here.
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
 - [ ] Markets toolbar: search + filter glyphs render as semi-transparent overlay on top of rows (ios/Views/MarketsView.swift ~L212 `toolbarGlyph`); give them an opaque pill or move into the nav bar.
 - [ ] Portfolio pie: "Other" is 64% because transactions with nil category fall into "Other" (PortfolioView.swift L787). Bucket by merchant when category is nil, cap slices at top 6 + Other, and add a category filter chip row.
+
+## From Notes (2026-09-12)
+- [ ] Current location button works but no pin shown on map
+- [ ] Event/places need more detail (reviews etc.)
+- [ ] Remove stale-data banner — should stay updated live instead
