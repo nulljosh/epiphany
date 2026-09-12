@@ -29,8 +29,6 @@ struct MarketsView: View {
         var id: Self { self }
     }
 
-    private let refreshTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
-
     private static let assetDisplayNames: [String: String] = [
         "Gold": "Gold (XAU/USD)", "Silver": "Silver (XAG/USD)",
         "Oil": "WTI Crude Oil", "Natgas": "Natural Gas",
@@ -117,9 +115,16 @@ struct MarketsView: View {
                     Task { await appState.loadWatchlist() }
                 }
             }
-            .onReceive(refreshTimer) { _ in
-                guard isVisible, scenePhase == .active else { return }
-                Task { await refreshAllData() }
+            // ponytail: adaptive interval instead of a fixed 30s Combine timer -- polls faster
+            // (10s) while data is stale so it self-heals as soon as the upstream API recovers,
+            // instead of sitting on the "Data may be stale" banner for a full 30s+ per retry.
+            .task {
+                while !Task.isCancelled {
+                    let interval = appState.isStockDataStale ? 10 : 30
+                    try? await Task.sleep(for: .seconds(interval))
+                    guard isVisible, scenePhase == .active else { continue }
+                    await refreshAllData()
+                }
             }
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase == .active, isVisible else { return }

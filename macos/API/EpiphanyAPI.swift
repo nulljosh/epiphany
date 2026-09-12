@@ -586,32 +586,51 @@ final class EpiphanyAPI {
     }
 
     private func perform(_ request: URLRequest) async throws -> Data {
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch let urlError as URLError {
-            switch urlError.code {
-            case .timedOut:
-                throw APIError.networkError("Request timed out")
-            case .notConnectedToInternet:
-                throw APIError.networkError("No internet connection")
-            case .networkConnectionLost:
-                throw APIError.networkError("Connection lost")
-            default:
-                throw APIError.networkError(urlError.localizedDescription)
+        let maxRetries = 2
+        var lastError: Error?
+
+        for attempt in 0...maxRetries {
+            if attempt > 0 {
+                try? await Task.sleep(for: .seconds(1))
             }
+
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await session.data(for: request)
+            } catch let urlError as URLError {
+                switch urlError.code {
+                case .timedOut, .networkConnectionLost, .cancelled:
+                    lastError = APIError.networkError(urlError.localizedDescription)
+                    continue
+                case .notConnectedToInternet:
+                    throw APIError.networkError("No internet connection")
+                default:
+                    throw APIError.networkError(urlError.localizedDescription)
+                }
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.httpError(0, "No HTTP response")
+            }
+
+            // 500s here are usually the Yahoo Finance crumb/rate-limit flake, not a real server
+            // error; retrying like a 503 self-heals most of them instead of leaving stocks stale
+            // until the next poll.
+            if (http.statusCode == 503 || http.statusCode == 500) && attempt < maxRetries {
+                lastError = APIError.httpError(http.statusCode, "Server temporarily unavailable")
+                continue
+            }
+
+            guard (200...299).contains(http.statusCode) else {
+                if http.statusCode == 401 { throw APIError.unauthorized }
+                let body = String(data: data, encoding: .utf8) ?? "unknown"
+                throw APIError.httpError(http.statusCode, body)
+            }
+            return data
         }
 
-        guard let http = response as? HTTPURLResponse else {
-            throw APIError.httpError(0, "No HTTP response")
-        }
-        guard (200...299).contains(http.statusCode) else {
-            if http.statusCode == 401 { throw APIError.unauthorized }
-            let body = String(data: data, encoding: .utf8) ?? "unknown"
-            throw APIError.httpError(http.statusCode, body)
-        }
-        return data
+        throw lastError ?? APIError.networkError("Request failed after retries")
     }
 
     private func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {

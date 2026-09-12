@@ -264,4 +264,15 @@ it is recorded here.
 ## From Notes (2026-09-12)
 - [ ] Current location button works but no pin shown on map
 - [ ] Event/places need more detail (reviews etc.)
-- [ ] Remove stale-data banner — should stay updated live instead
+- [x] Stale-data banner in Markets (only place it existed: `isStockDataStale`
+      in `ios/macos Models/AppState.swift`) — root cause was twofold: (1) the
+      known intermittent 500 from Yahoo's crumb/rate-limit flake wasn't
+      retried at all (`perform()` only retried 503s, and macOS had no retry
+      logic whatsoever), so a transient failure went straight to stale instead
+      of self-healing; (2) the 30s poll was fixed-interval even while stale.
+      Fixed both: 500s now retry like 503s (mirrored to macOS, which had zero
+      retry before), and the poll interval drops to 10s while
+      `isStockDataStale` is true so it recovers as soon as the upstream does,
+      instead of waiting out a fixed 30s tick. Banner itself is honest
+      signal (CLAUDE.md: no fake data before it arrives) so it stays, it
+      should now just fire far less often. Both builds verified.
