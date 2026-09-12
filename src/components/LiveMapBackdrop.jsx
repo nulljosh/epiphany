@@ -434,7 +434,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   }, [autoGeo, ipLocate, requestLocation]);
 
   useEffect(() => {
-    if (!autoGeo) return;
+    // Querying permission state never prompts, even pre-auth, so if the user already
+    // granted location (e.g. signed in before) the landing page can use it instead of
+    // city-level IP geocoding, with no new permission dialog on a marketing page.
     if (!navigator.permissions?.query) return;
     let statusRef = null;
     const onChange = () => {
