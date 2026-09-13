@@ -108,6 +108,7 @@ struct SituationView: View {
     @State private var selectedVenueCategory: VenueCategory?
     @State private var venueResults: [MKMapItem] = []
     @State private var selectedVenue: MKMapItem?
+    @State private var showPlaces = false
     @State private var isSearchingVenues = false
     @State private var mapSearch = ""
     @State private var mapSearchError = false
@@ -333,6 +334,15 @@ struct SituationView: View {
         .sheet(item: $selectedVenue) { item in
             VenueDetailSheet(item: item)
         }
+        .sheet(isPresented: $showPlaces) {
+            NearbyPlacesSheet(center: visibleRegion.center) { coordinate in
+                withAnimation { mapPosition = .region(MKCoordinateRegion(
+                    center: coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )) }
+            }
+            .frame(minWidth: 420, minHeight: 500)
+        }
     }
 
     /// Groups the visible venue pins by the current span. Nothing is filtered out —
@@ -382,6 +392,14 @@ struct SituationView: View {
     private var venueCategoryBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                Button { showPlaces = true } label: {
+                    Label("Places", systemImage: "list.bullet")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 11).padding(.vertical, 7)
+                        .background(Color.black.opacity(0.7), in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
                 ForEach(VenueCategory.allCases, id: \.self) { cat in
                     Button {
                         if selectedVenueCategory == cat {

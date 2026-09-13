@@ -126,6 +126,7 @@ struct SituationView: View {
     @State private var venueResults: [VenueCategory: [MKMapItem]] = [:]
     @State private var isSearchingVenues = false
     @State private var selectedVenue: MKMapItem?
+    @State private var showPlaces = false
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var mapSearch = ""
     @State private var mapSearchError = false
@@ -387,6 +388,7 @@ struct SituationView: View {
         case "recreation": return "leaf.fill"
         case "community": return "megaphone.fill"
         case "education": return "graduationcap.fill"
+        case "cemetery": return "cross.fill"
         default: return "mappin"
         }
     }
@@ -398,6 +400,7 @@ struct SituationView: View {
         case "recreation": return Palette.sand
         case "community": return Palette.paleBlue
         case "education": return .blue
+        case "cemetery": return .gray
         default: return .blue
         }
     }
@@ -657,6 +660,14 @@ struct SituationView: View {
             VenueDetailSheet(item: venue)
                 .presentationDetents([.fraction(0.4), .medium])
         }
+        .sheet(isPresented: $showPlaces) {
+            NearbyPlacesSheet(center: visibleRegion?.center ?? currentRegion.center) { coordinate in
+                withAnimation { mapPosition = .region(MKCoordinateRegion(
+                    center: coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )) }
+            }
+        }
         .overlay(alignment: .top) { errorOverlay }
         .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: .bottom) { venueCategoryBar }
@@ -669,6 +680,14 @@ struct SituationView: View {
     private var venueCategoryBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
+                Button { showPlaces = true } label: {
+                    Label("Places", systemImage: "list.bullet")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 10).padding(.vertical, 7)
+                        .background(Color.black.opacity(0.7), in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
                 ForEach(VenueCategory.allCases, id: \.self) { cat in
                     Button {
                         Haptics.impact(.light)

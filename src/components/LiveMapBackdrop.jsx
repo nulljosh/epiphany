@@ -255,6 +255,12 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   const [search, setSearch] = useState('');
   const [searchError, setSearchError] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [showPlaces, setShowPlaces] = useState(false);
+  const [places, setPlaces] = useState([]);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  const [placesError, setPlacesError] = useState('');
+  const [placesQuery, setPlacesQuery] = useState('');
+  const [placesCenter, setPlacesCenter] = useState(null);
   const autoRetriedRef = useRef(false);
   const visibilityHandlerRef = useRef(null);
   // Grayscale basemap is the permanent Gotham look — colored data markers ride
@@ -336,6 +342,24 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       mapInstanceRef.current?.flyTo({ center: [+hit.lon, +hit.lat], zoom: 11, duration: 900 });
       setSearch('');
     } catch { setSearchError(true); setTimeout(() => setSearchError(false), 2000); }
+  }
+
+  async function loadPlaces() {
+    const c = mapInstanceRef.current?.getCenter();
+    if (!c) return;
+    setPlacesLoading(true);
+    setPlacesError('');
+    setPlacesCenter({ lat: c.lat, lon: c.lng });
+    try {
+      const response = await fetch(apiPath(`/api/places?lat=${c.lat}&lon=${c.lng}`));
+      if (!response.ok) throw new Error('Places are temporarily unavailable');
+      const data = await response.json();
+      setPlaces(data.places || []);
+    } catch (error) {
+      setPlacesError(error.message);
+    } finally {
+      setPlacesLoading(false);
+    }
   }
 
   const requestLocation = useCallback(() => {
@@ -868,7 +892,15 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
 
     // Local events
     if (mapLayers.localEvents !== false)
-    clusterLayer(payload.localEvents, 80, (ev) => extractCoords(ev), '#8CA0B3').forEach((ev, i) => {
+    // Cluster the full place feed. Slicing its first 80 entries made later
+    // schools and landmarks disappear based on provider response order.
+    clusterPoints(payload.localEvents, currentZoom, extractCoords).map((c) => {
+      if (c.cluster) {
+        addClusterMarker(maplibregl, mapInstanceRef.current, markersRef.current, c.lon, c.lat, c.count, '#8CA0B3');
+        return null;
+      }
+      return c.item;
+    }).filter(Boolean).forEach((ev) => {
       const c = extractCoords(ev);
       if (!c) return;
       const { lat, lon } = c;
@@ -1186,6 +1218,37 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       >
         ⌖
       </button>)}
+      {chrome && (<button
+        onClick={() => { setShowPlaces(value => !value); if (!showPlaces) loadPlaces(); }}
+        aria-label="Browse nearby places"
+        style={{ position: 'absolute', right: 14, top: 56, zIndex: 3, minHeight: 34, padding: '0 11px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.88)', color: '#fff', font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
+      >Places</button>)}
+      {chrome && showPlaces && (
+        <section aria-label="Nearby places" style={{ position: 'absolute', top: 98, right: 14, bottom: 14, zIndex: 3, width: 'min(350px, calc(100% - 28px))', background: 'rgba(2,6,23,0.96)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 12, color: '#fff', display: 'flex', flexDirection: 'column', fontFamily: SYSTEM_FONT, boxShadow: '0 8px 30px rgba(0,0,0,.35)' }}>
+          <div style={{ padding: 12, borderBottom: '1px solid rgba(255,255,255,.15)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <strong>Places near map center</strong>
+              <button onClick={loadPlaces} disabled={placesLoading} style={{ background: 'none', border: 0, color: '#9ecbff', cursor: 'pointer' }}>Refresh</button>
+            </div>
+            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>OpenStreetMap · about 6 km · mapped places only</div>
+            <input value={placesQuery} onChange={event => setPlacesQuery(event.target.value)} placeholder="Find a place or category" aria-label="Filter places" style={{ width: '100%', boxSizing: 'border-box', marginTop: 10, padding: 8, borderRadius: 7, border: '1px solid rgba(255,255,255,.25)', background: '#101827', color: '#fff' }} />
+          </div>
+          {placesLoading && <div style={{ padding: 14 }}>Loading places…</div>}
+          {placesError && <div role="alert" style={{ padding: 14, color: '#ff8a83' }}>{placesError}</div>}
+          {!placesLoading && !placesError && <div style={{ overflowY: 'auto', flex: 1 }}>
+            <div style={{ padding: '9px 12px', fontSize: 11, color: '#9ca3af' }}>
+              {places.filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase())).length} places
+              {placesCenter && ` near ${placesCenter.lat.toFixed(2)}, ${placesCenter.lon.toFixed(2)}`}
+            </div>
+            {places.filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase())).map(place => (
+              <button key={place.id} onClick={() => { mapInstanceRef.current?.flyTo({ center: [place.lon, place.lat], zoom: 16, duration: 600 }); setShowPlaces(false); }} style={{ display: 'block', width: '100%', padding: '9px 12px', textAlign: 'left', border: 0, borderTop: '1px solid rgba(255,255,255,.08)', background: 'none', color: '#fff', cursor: 'pointer' }}>
+                <span style={{ display: 'block', fontSize: 13 }}>{place.title}</span>
+                <span style={{ color: '#9ca3af', fontSize: 11 }}>{place.category}</span>
+              </button>
+            ))}
+          </div>}
+        </section>
+      )}
       {mapLayers.flights !== false && payload.noFlights && (
         <div style={{ position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 3, pointerEvents: 'none' }}>
           <div style={{ background: 'rgba(2,6,23,0.72)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '5px 12px', color: '#94a3b8', fontSize: 11, fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
