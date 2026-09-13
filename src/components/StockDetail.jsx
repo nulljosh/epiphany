@@ -390,11 +390,12 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     const el = newsRef.current;
     if (!el) return;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    let timeout;
     const obs = new IntersectionObserver((entries) => {
       if (entries.some(e => e.isIntersecting)) {
         obs.disconnect();
-        fetchNews(controller.signal);
+        timeout = setTimeout(() => controller.abort(), 12000);
+        fetchNews(controller.signal).finally(() => clearTimeout(timeout));
       }
     }, { rootMargin: '200px' });
     obs.observe(el);

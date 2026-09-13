@@ -4,6 +4,7 @@ Personal intelligence platform (map, markets, portfolio, brokerage sync). Palant
 Web: epiphany.heyitsmejosh.com. iOS/macOS: ASC 6779522175. Roadmap and changelog live in `roadmap.md` — don't duplicate them here.
 
 ## Rules
+- All changes must cover every applicable platform in the same session: web, iOS, macOS, Android, Windows/Linux, and watchOS. Check each client; explicitly report where a feature does not exist.
 - Map stays steady — no jumps on load, no flashing on state changes
 - No fake prices before real data arrives
 - Mobile-first layout

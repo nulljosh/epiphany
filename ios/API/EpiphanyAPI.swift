@@ -40,6 +40,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
 
     private let baseURL = "https://epiphany.heyitsmejosh.com"
     private let session: URLSession
+    private let newsSession: URLSession
     private let decoder: JSONDecoder
 
     // Simple time-based cache
@@ -65,6 +66,10 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         config.timeoutIntervalForRequest = 15
         config.timeoutIntervalForResource = 30
         session = URLSession(configuration: config)
+        // News already has server fallbacks; bound the entire transfer.
+        config.timeoutIntervalForRequest = 12
+        config.timeoutIntervalForResource = 12
+        newsSession = URLSession(configuration: config)
         decoder = JSONDecoder()
     }
 
@@ -851,7 +856,9 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     }
 
     private func perform(_ request: URLRequest) async throws -> Data {
-        let maxRetries = 2
+        let isNews = request.url?.path == "/api/news"
+        let maxRetries = isNews ? 0 : 2
+        let requestSession = isNews ? newsSession : session
         var lastError: Error?
 
         for attempt in 0...maxRetries {
@@ -862,7 +869,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
             let data: Data
             let response: URLResponse
             do {
-                (data, response) = try await session.data(for: request)
+                (data, response) = try await requestSession.data(for: request)
             } catch let urlError as URLError {
                 switch urlError.code {
                 case .timedOut, .networkConnectionLost, .cancelled:

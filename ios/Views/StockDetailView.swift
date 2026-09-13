@@ -732,21 +732,12 @@ struct StockDetailView: View {
     private func loadRelatedNews() async {
         isLoadingNews = true
         defer { isLoadingNews = false }
+        newsError = false
         do {
-            async let symbolNews = EpiphanyAPI.shared.fetchStockNews(query: stock.symbol)
-            async let nameNews = EpiphanyAPI.shared.fetchStockNews(query: stock.name)
-            let (bySymbol, byName) = try await (symbolNews, nameNews)
-            relatedNews = bySymbol.isEmpty ? byName : bySymbol
+            relatedNews = try await EpiphanyAPI.shared.fetchStockNews(query: stock.symbol)
         } catch {
-            do {
-                let allNews = try await EpiphanyAPI.shared.fetchNews()
-                let terms = [stock.symbol.lowercased(), stock.name.lowercased()]
-                relatedNews = allNews.filter { article in
-                    terms.contains { article.title.lowercased().contains($0) }
-                }
-            } catch {
-                newsError = true
-            }
+            relatedNews = []
+            newsError = true
         }
     }
 }
