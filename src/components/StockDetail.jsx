@@ -360,25 +360,20 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     finally { setHistoryLoading(false); }
   }, [symbol, range]);
 
-  // Fetch news with retry
+  // Fetch news — no retry; server has fallbacks (GDELT → Google → stale cache → empty)
   const fetchNews = useCallback(async (signal) => {
     if (!symbol) return;
     setNewsLoading(true);
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const res = await fetch(`/api/news?q=${encodeURIComponent(symbol)}`, { signal });
-        if (!res.ok) throw new Error('Failed');
-        const data = await res.json();
-        setNews(data.articles || []);
-        setNewsLoading(false);
-        return;
-      } catch (err) {
-        if (err.name === 'AbortError') { setNewsLoading(false); return; }
-        if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
-      }
+    try {
+      const res = await fetch(`/api/news?q=${encodeURIComponent(symbol)}`, { signal });
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      setNews(data.articles || []);
+    } catch (err) {
+      if (err.name !== 'AbortError') setNews([]);
+    } finally {
+      setNewsLoading(false);
     }
-    setNews([]);
-    setNewsLoading(false);
   }, [symbol]);
 
   useEffect(() => {
@@ -389,11 +384,13 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   }, [symbol]);
 
   // Lazy-load news only once the Related News section scrolls near the viewport.
+  // Client-side timeout: 12s (server allows ~8s for GDELT/Google, plus network overhead)
   useEffect(() => {
     setNews([]);
     const el = newsRef.current;
     if (!el) return;
     const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
     const obs = new IntersectionObserver((entries) => {
       if (entries.some(e => e.isIntersecting)) {
         obs.disconnect();
@@ -401,7 +398,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       }
     }, { rootMargin: '200px' });
     obs.observe(el);
-    return () => { obs.disconnect(); controller.abort(); };
+    return () => { obs.disconnect(); controller.abort(); clearTimeout(timeout); };
   }, [symbol, fetchNews]);
 
   useEffect(() => { fetchHistory(); }, [range]);
