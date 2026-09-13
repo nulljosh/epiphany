@@ -261,6 +261,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   const [placesLoading, setPlacesLoading] = useState(false);
   const [placesError, setPlacesError] = useState('');
   const [placesQuery, setPlacesQuery] = useState('');
+  const [placesSection, setPlacesSection] = useState('places');
   const [placesCenter, setPlacesCenter] = useState(null);
   const autoRetriedRef = useRef(false);
   const visibilityHandlerRef = useRef(null);
@@ -554,6 +555,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     return () => {
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
+      flightMarkersRef.current.forEach(entry => entry.marker.remove());
+      flightMarkersRef.current = [];
       if (visibilityHandlerRef.current) {
         document.removeEventListener('visibilitychange', visibilityHandlerRef.current);
         visibilityHandlerRef.current = null;
@@ -746,6 +749,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       wa: payload.weatherAlerts.length,
       wf: payload.wildfires.length,
       fl: payload.flights.length,
+      flightFix: payload.flights.slice(0, 120).map(f => `${f.icao24 || f.callsign}:${f.lat},${f.lon}`).join('|'),
       em: payload.emergencyIncidents.length,
       c: `${center.lat.toFixed(3)},${center.lon.toFixed(3)}`,
       ml: Object.keys(mapLayers).filter(k => mapLayers[k] !== false).join(','),
@@ -759,7 +763,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     // Add-then-remove: build the new marker set first, drop the old set only
     // after the new one is on the map, so there is never an empty frame.
     const staleMarkers = markersRef.current;
-    const staleFlights = flightMarkersRef.current;
+    const staleFlights = new Map(flightMarkersRef.current.map(entry => [entry.id, entry]));
     markersRef.current = [];
     flightMarkersRef.current = [];
 
@@ -827,7 +831,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       addMarker(
         `width:48px;height:6px;border-radius:999px;background:${trafficColor(inc)};border:1px solid rgba(0,0,0,0.2);transform:rotate(18deg);animation:pulse-amber 1.6s infinite;`,
         inc.description || inc.type || 'traffic incident',
-        { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local', source: 'Traffic feed / fallback model', link: mapsLink(p.lat, p.lon), linkLabel: 'Get Directions' },
+        { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local', source: inc.source || 'Traffic feed', link: inc.url || mapsLink(p.lat, p.lon), linkLabel: inc.url ? 'Open source' : 'Get Directions' },
         p.lon, p.lat, 'traffic'
       );
     });
@@ -961,8 +965,25 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     if (mapLayers.flights !== false && Array.isArray(payload.flights)) {
       payload.flights.slice(0, 120).forEach((fl) => {
         if (fl.lat == null || fl.lon == null) return;
+        const id = fl.icao24 || fl.callsign;
+        const retained = id && staleFlights.get(id);
+        if (retained) {
+          staleFlights.delete(id);
+          if (retained.sourceLat !== fl.lat || retained.sourceLon !== fl.lon) {
+            retained.targetLat = fl.lat;
+            retained.targetLon = fl.lon;
+            retained.correctionSeconds = 8;
+            retained.sourceLat = fl.lat;
+            retained.sourceLon = fl.lon;
+          }
+          retained.velocity = fl.velocity || 0;
+          retained.heading = fl.heading || 0;
+          retained.flight = fl;
+          retained.el.style.transform = `rotate(${retained.heading}deg)`;
+          flightMarkersRef.current.push(retained);
+          return;
+        }
         const cs = (fl.callsign || '').trim();
-        const trackLink = cs ? `https://www.flightaware.com/live/flight/${cs}` : null;
         const el = document.createElement('div');
         el.style.cssText = `width:20px;height:20px;background:transparent;font-size:16px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.05s linear;`;
         el.textContent = '✈';
@@ -970,27 +991,38 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         if (fl.heading != null) el.style.transform = `rotate(${fl.heading}deg)`;
         const hoverTitle = `${cs || fl.icao24 || 'Aircraft'} | ${fl.altitude ? fl.altitude + 'ft' : '?ft'} | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`;
         el.title = hoverTitle;
-        const aircraftDetail = [fl.aircraftType, fl.registration].filter(Boolean).join(' · ');
+        let entry;
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           if (activePopupRef?.current) activePopupRef.current.remove();
+          const current = entry.flight;
+          const callsign = (current.callsign || '').trim();
+          const trackLink = callsign ? `https://www.flightaware.com/live/flight/${callsign}` : null;
+          const aircraftDetail = [current.aircraftType, current.registration].filter(Boolean).join(' · ');
           const popup = new maplibreRef.current.Popup({ offset: 14, closeButton: true, maxWidth: '320px', className: 'epiphany-map-popup' })
-            .setLngLat([fl.lon, fl.lat])
-            .setHTML(buildPopupHTML({ type: 'flight', title: cs || fl.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${fl.altitude || '?'}ft | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`, level: 'monitor', source: 'ADS-B', link: trackLink }))
+            .setLngLat([entry.lon, entry.lat])
+            .setHTML(buildPopupHTML({ type: 'flight', title: callsign || current.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${current.altitude || '?'}ft | ${current.velocity || '?'}kts | Hdg: ${current.heading || '?'}°`, level: 'monitor', source: 'ADS-B', link: trackLink }))
             .addTo(mapInstanceRef.current);
           activePopupRef.current = popup;
         });
         const mapMarker = new maplibreRef.current.Marker({ element: el }).setLngLat([fl.lon, fl.lat]).addTo(mapInstanceRef.current);
-        markersRef.current.push(mapMarker);
-        flightMarkersRef.current.push({
+        entry = {
+          id,
+          flight: fl,
           marker: mapMarker,
           el,
           lat: fl.lat,
           lon: fl.lon,
+          sourceLat: fl.lat,
+          sourceLon: fl.lon,
+          targetLat: fl.lat,
+          targetLon: fl.lon,
+          correctionSeconds: 0,
           velocity: fl.velocity || 0,   // knots
           heading: fl.heading || 0,      // degrees
           anchorTs: Date.now(),
-        });
+        };
+        flightMarkersRef.current.push(entry);
       });
     }
 
@@ -1047,7 +1079,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
 
     // New set is fully rendered — now retire the previous markers (no flash).
     staleMarkers.forEach(m => m.remove());
-    staleFlights.forEach(m => m.marker.remove());
+    staleFlights.forEach(entry => entry.marker.remove());
   }, [center.lat, center.lon, payload, mapLoaded, mapLayers, zoomTick]);
 
   // Dead-reckoning animation — moves flight markers between 60s polls
@@ -1069,6 +1101,14 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         const latCos = Math.cos((entry.lat * Math.PI) / 180);
         entry.lat += speedDegSec * Math.cos(headingRad) * elapsed;
         entry.lon += speedDegSec * Math.sin(headingRad) * elapsed / (latCos || 1);
+        if (entry.correctionSeconds > 0) {
+          entry.targetLat += speedDegSec * Math.cos(headingRad) * elapsed;
+          entry.targetLon += speedDegSec * Math.sin(headingRad) * elapsed / (latCos || 1);
+          const fraction = Math.min(1, elapsed / entry.correctionSeconds);
+          entry.lat += (entry.targetLat - entry.lat) * fraction;
+          entry.lon += (entry.targetLon - entry.lon) * fraction;
+          entry.correctionSeconds = Math.max(0, entry.correctionSeconds - elapsed);
+        }
         entry.marker.setLngLat([entry.lon, entry.lat]);
       }
 
@@ -1167,7 +1207,15 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       if (!type) continue;
       el.style.display = mapLayers?.[type] === false ? 'none' : '';
     }
+    for (const entry of flightMarkersRef.current) {
+      entry.el.style.display = mapLayers?.flights === false ? 'none' : '';
+    }
   }, [mapLayers]);
+
+  const listedPlaces = (placesSection === 'places' ? places : payload.localEvents
+    .filter(event => event.kind === 'event' && event.source !== 'news_rss' && Number.isFinite(event.lat) && Number.isFinite(event.lng ?? event.lon))
+    .map((event, index) => ({ id: `${event.source}-${index}-${event.title}`, title: event.title, category: 'Event', lat: event.lat, lon: event.lng ?? event.lon })))
+    .filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase()));
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -1184,21 +1232,49 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         ref={mapRef}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'auto' }}
       />
-      {chrome && (<form className="epiphany-map-search" onSubmit={handleSearch} style={{ position: 'absolute', left: 14, top: 14, zIndex: 2, display: 'flex', gap: 4 }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search location…"
-          aria-label="Search map location"
-          list="epiphany-map-search-options"
-          autoComplete="off"
-          style={{ height: 34, minWidth: 0, padding: '0 10px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#fff', font: `13px ${SYSTEM_FONT}`, outline: 'none', width: 180, backdropFilter: 'blur(8px)', transition: 'border-color 0.2s' }}
-        />
-        <datalist id="epiphany-map-search-options">
-          {suggestions.map((s) => <option key={s.place_id} value={s.display_name} />)}
-        </datalist>
-        <button type="submit" aria-label="Go" style={{ height: 34, width: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.82)', color: '#94a3b8', font: `700 14px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>→</button>
-      </form>)}
+      {chrome && (
+        <div style={{ position: 'absolute', left: 0, top: 0, right: 0, zIndex: 2, padding: '14px 14px', display: 'flex', flexDirection: 'column', gap: 12, pointerEvents: 'none' }}>
+          <form className="epiphany-map-search" onSubmit={handleSearch} style={{ display: 'flex', gap: 8, pointerEvents: 'auto' }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search here"
+              aria-label="Search map location"
+              list="epiphany-map-search-options"
+              autoComplete="off"
+              style={{ flex: 1, height: 40, padding: '0 14px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 24, background: 'rgba(2,6,23,0.88)', color: '#fff', font: `14px ${SYSTEM_FONT}`, outline: 'none', backdropFilter: 'blur(12px)', transition: 'border-color 0.2s' }}
+            />
+            <datalist id="epiphany-map-search-options">
+              {suggestions.map((s) => <option key={s.place_id} value={s.display_name} />)}
+            </datalist>
+            <button type="submit" aria-label="Go" style={{ height: 40, width: 40, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 20, background: 'rgba(2,6,23,0.88)', color: '#94a3b8', font: `700 16px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>→</button>
+          </form>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollBehavior: 'smooth', pointerEvents: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {['Work', 'Restaurants', 'Coffee', 'Gas', 'Parks', 'Hotels', 'Banks', 'Transit'].map((cat) => (
+              <button
+                key={cat}
+                style={{
+                  height: 36,
+                  padding: '0 14px',
+                  border: '1px solid rgba(255,255,255,0.24)',
+                  borderRadius: 18,
+                  background: 'rgba(2,6,23,0.88)',
+                  color: '#fff',
+                  font: `13px ${SYSTEM_FONT}`,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  backdropFilter: 'blur(12px)',
+                  transition: 'all 0.2s',
+                  flexShrink: 0,
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <style>{`::-webkit-scrollbar { display: none; }`}</style>
+        </div>
+      )}
       {chrome && (<button
         onClick={() => {
           if (isLocating) return;
@@ -1215,14 +1291,14 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         disabled={isLocating}
         aria-label="Recenter to my location"
         title="Recenter to my location"
-        style={{ position: 'absolute', right: 14, top: 14, zIndex: 2, width: 34, height: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 9999, background: 'rgba(2,6,23,0.82)', color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
+        style={{ position: 'absolute', right: 14, top: 100, zIndex: 2, width: 34, height: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 9999, background: 'rgba(2,6,23,0.82)', color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
       >
         ⌖
       </button>)}
       {chrome && (<button
         onClick={() => { setShowPlaces(value => !value); if (!showPlaces) loadPlaces(); }}
         aria-label="Browse nearby places"
-        style={{ position: 'absolute', right: 14, top: 56, zIndex: 3, minHeight: 34, padding: '0 11px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.88)', color: '#fff', font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
+        style={{ position: 'absolute', right: 14, top: 140, zIndex: 3, minHeight: 34, padding: '0 11px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.88)', color: '#fff', font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
       >Places</button>)}
       {chrome && showPlaces && (
         <section aria-label="Nearby places" style={{ position: 'absolute', top: 98, right: 14, bottom: 14, zIndex: 3, width: 'min(350px, calc(100% - 28px))', background: 'rgba(2,6,23,0.96)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 12, color: '#fff', display: 'flex', flexDirection: 'column', fontFamily: SYSTEM_FONT, boxShadow: '0 8px 30px rgba(0,0,0,.35)' }}>
@@ -1231,17 +1307,21 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
               <strong>Places near map center</strong>
               <button onClick={loadPlaces} disabled={placesLoading} style={{ background: 'none', border: 0, color: '#9ecbff', cursor: 'pointer' }}>Refresh</button>
             </div>
-            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>OpenStreetMap · about 6 km · mapped places only</div>
+            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{placesSection === 'places' ? 'OpenStreetMap · about 6 km · mapped places only' : 'Connected event feeds · verified map locations only'}</div>
+            <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+              {['places', 'events'].map(section => <button key={section} onClick={() => setPlacesSection(section)} style={{ flex: 1, padding: 6, border: '1px solid rgba(255,255,255,.2)', borderRadius: 6, background: placesSection === section ? '#334155' : 'transparent', color: '#fff', cursor: 'pointer' }}>{section === 'places' ? 'Places' : 'Events'}</button>)}
+            </div>
             <input value={placesQuery} onChange={event => setPlacesQuery(event.target.value)} placeholder="Find a place or category" aria-label="Filter places" style={{ width: '100%', boxSizing: 'border-box', marginTop: 10, padding: 8, borderRadius: 7, border: '1px solid rgba(255,255,255,.25)', background: '#101827', color: '#fff' }} />
           </div>
           {placesLoading && <div style={{ padding: 14 }}>Loading places…</div>}
           {placesError && <div role="alert" style={{ padding: 14, color: '#ff8a83' }}>{placesError}</div>}
           {!placesLoading && !placesError && <div style={{ overflowY: 'auto', flex: 1 }}>
             <div style={{ padding: '9px 12px', fontSize: 11, color: '#9ca3af' }}>
-              {places.filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase())).length} places
+              {listedPlaces.length} {placesSection === 'places' ? 'places' : 'geolocated events'}
               {placesCenter && ` near ${placesCenter.lat.toFixed(2)}, ${placesCenter.lon.toFixed(2)}`}
             </div>
-            {places.filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase())).map(place => (
+            {placesSection === 'events' && listedPlaces.length === 0 && <div style={{ padding: 12, color: '#9ca3af' }}>No verified local events from connected feeds.</div>}
+            {listedPlaces.map(place => (
               <button key={place.id} onClick={() => {
                 const map = mapInstanceRef.current;
                 selectedPlaceMarkerRef.current?.remove();

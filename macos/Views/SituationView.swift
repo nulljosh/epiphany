@@ -90,6 +90,7 @@ struct SituationView: View {
 
     @State private var earthquakes: [Earthquake] = []
     @State private var flights: [Flight] = []
+    @State private var lastFlightTick = Date()
     @State private var incidents: [Incident] = []
     @State private var weatherAlerts: [WeatherAlert] = []
     @State private var crimeIncidents: [CrimeIncident] = []
@@ -121,6 +122,16 @@ struct SituationView: View {
 
     var body: some View {
         mapView
+        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { now in
+            let elapsed = min(now.timeIntervalSince(lastFlightTick), 1)
+            lastFlightTick = now
+            guard appState.situationFlightsEnabled else { return }
+            flights = flights.map { flight in
+                var updated = flight
+                updated.advance(seconds: elapsed)
+                return updated
+            }
+        }
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true

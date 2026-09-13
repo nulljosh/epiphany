@@ -241,7 +241,7 @@ async function backfillImagesFromWikipedia(events) {
 }
 
 // News RSS fallback: search for local events in news
-async function fetchEventNews(lat, lon, cityName) {
+async function fetchEventNews(cityName) {
   const events = [];
   if (!cityName) return events;
 
@@ -270,8 +270,10 @@ async function fetchEventNews(lat, lon, cityName) {
       const publication = splitIdx > 0 ? title.slice(splitIdx + 3) : null;
 
       events.push({
-        lat: lat + (Math.random() - 0.5) * 0.01,
-        lng: lon + (Math.random() - 0.5) * 0.01,
+        // A news headline has no venue coordinates. Keep it in the feed for
+        // context, but never invent a map location for it.
+        lat: null,
+        lng: null,
         type: 'local-event', kind: 'event', category: 'community',
         title: headline.length > 80 ? headline.slice(0, 77) + '...' : headline,
         venue: publication,
@@ -338,7 +340,7 @@ export default async function handler(req, res) {
     const cityName = await reverseGeocode(lat, lon);
     if (cityName) {
       attemptedSources.push('news_rss');
-      fetchers.push(fetchEventNews(lat, lon, cityName).catch(() => []));
+      fetchers.push(fetchEventNews(cityName).catch(() => []));
     }
 
     const results = await Promise.all(fetchers);

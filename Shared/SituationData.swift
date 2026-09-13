@@ -135,6 +135,15 @@ struct Flight: Codable, Identifiable {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
+    mutating func advance(seconds: TimeInterval) {
+        guard let velocityKnots, let headingDeg, velocityKnots > 0, seconds > 0 else { return }
+        let distanceMeters = Double(velocityKnots) * seconds * 1852 / 3600
+        let heading = Double(headingDeg) * .pi / 180
+        latitude += distanceMeters * cos(heading) / 111_320
+        longitude += distanceMeters * sin(heading) /
+            (111_320 * max(abs(cos(latitude * .pi / 180)), 0.01))
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, callsign, origin, destination, latitude, longitude, status
         case icao24, lat, lon, altitude, velocity, heading

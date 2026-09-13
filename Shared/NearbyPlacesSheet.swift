@@ -7,13 +7,16 @@ struct NearbyPlacesSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var places: [LocalEvent] = []
+    @State private var events: [LocalEvent] = []
+    @State private var section = 0
     @State private var query = ""
     @State private var isLoading = true
     @State private var error: String?
 
     private var filteredPlaces: [LocalEvent] {
-        guard !query.isEmpty else { return places }
-        return places.filter {
+        let items = section == 0 ? places : events
+        guard !query.isEmpty else { return items }
+        return items.filter {
             $0.title.localizedCaseInsensitiveContains(query) ||
             ($0.category?.localizedCaseInsensitiveContains(query) ?? false)
         }
@@ -21,11 +24,19 @@ struct NearbyPlacesSheet: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            VStack {
+                Picker("Browse", selection: $section) {
+                    Text("Places").tag(0)
+                    Text("Events").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
                 if isLoading {
                     ProgressView("Loading mapped places")
                 } else if let error {
                     ContentUnavailableView(error, systemImage: "wifi.exclamationmark")
+                } else if filteredPlaces.isEmpty && section == 1 {
+                    ContentUnavailableView("No verified local events", systemImage: "calendar")
                 } else {
                     List(filteredPlaces) { place in
                         Button {
@@ -43,9 +54,11 @@ struct NearbyPlacesSheet: View {
                     .searchable(text: $query, prompt: "Find a place or category")
                 }
             }
-            .navigationTitle("Places near map center")
+            .navigationTitle("Near map center")
             .safeAreaInset(edge: .bottom) {
-                Text("\(filteredPlaces.count) mapped places · OpenStreetMap · about 6 km")
+                Text(section == 0
+                     ? "\(filteredPlaces.count) mapped places · OpenStreetMap · about 6 km"
+                     : "\(filteredPlaces.count) geolocated events · connected feeds")
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(8)
             }
@@ -59,6 +72,9 @@ struct NearbyPlacesSheet: View {
                 self.error = "Places are temporarily unavailable"
             }
             isLoading = false
+            events = (try? await EpiphanyAPI.shared.fetchLocalEvents(
+                lat: center.latitude, lon: center.longitude
+            ))?.filter { $0.kind == "event" && $0.source != "news_rss" && $0.coordinate != nil } ?? []
         }
     }
 }

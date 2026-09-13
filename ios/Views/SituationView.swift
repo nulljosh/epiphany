@@ -110,6 +110,7 @@ struct SituationView: View {
     @State private var lastSnapshotSave: Date = .distantPast
     @State private var loadRegionId: UUID?
     @State private var flightAnimationTimer: Timer?
+    @State private var lastFlightTick = Date()
 
     @AppStorage("showEarthquakes") private var showEarthquakes = true
     @AppStorage("showFlights") private var showFlights = true
@@ -165,8 +166,11 @@ struct SituationView: View {
             flightAnimationTimer?.invalidate()
             flightAnimationTimer = nil
         }
-        .onReceive(Timer.publish(every: 2, on: .main, in: .common).autoconnect()) { _ in
-            updateFlightPositions()
+        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { now in
+            let elapsed = min(now.timeIntervalSince(lastFlightTick), 1)
+            lastFlightTick = now
+            guard showFlights else { return }
+            updateFlightPositions(seconds: elapsed)
         }
         .onChange(of: locationManager.locationUpdateCount) { _, _ in
             guard let region = locationManager.region else { return }
@@ -1074,20 +1078,10 @@ struct SituationView: View {
         flightStatusMessage = snapshot.flightStatusMessage
     }
 
-    private func updateFlightPositions() {
+    private func updateFlightPositions(seconds: TimeInterval) {
         flights = flights.map { flight in
-            guard let velocity = flight.velocityKnots, let heading = flight.headingDeg, velocity > 0 else {
-                return flight
-            }
-            let knotsPerSecond = Double(velocity) / 3600.0
-            let distanceNauticalMiles = knotsPerSecond * 2.0
-            let distanceMeters = distanceNauticalMiles * 1852.0
-            let headingRad = Double(heading) * .pi / 180.0
-            let latDelta = (distanceMeters / 111320.0) * cos(headingRad)
-            let lonDelta = (distanceMeters / (111320.0 * cos(flight.latitude * .pi / 180.0))) * sin(headingRad)
             var updated = flight
-            updated.latitude += latDelta
-            updated.longitude += lonDelta
+            updated.advance(seconds: seconds)
             return updated
         }
     }
