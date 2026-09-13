@@ -1250,7 +1250,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
             <button type="submit" aria-label="Go" style={{ height: 40, width: 40, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 20, background: 'rgba(2,6,23,0.88)', color: '#94a3b8', font: `700 16px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>→</button>
           </form>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollBehavior: 'smooth', pointerEvents: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {['Work', 'Restaurants', 'Coffee', 'Gas', 'Parks', 'Hotels', 'Banks', 'Transit'].map((cat) => (
+            {['Restaurants', 'Coffee', 'Gas', 'Parks', 'Shopping', 'Groceries'].map((cat) => (
               <button
                 key={cat}
                 style={{
