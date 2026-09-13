@@ -999,16 +999,9 @@ private struct MarketItemDetailView: View {
 
     private func loadRelatedNews() async {
         do {
-            async let symbolNews = EpiphanyAPI.shared.fetchStockNews(query: item.symbol)
-            async let nameNews = EpiphanyAPI.shared.fetchStockNews(query: item.name)
-            let (bySymbol, byName) = try await (symbolNews, nameNews)
-            relatedNews = bySymbol.isEmpty ? byName : bySymbol
+            relatedNews = try await EpiphanyAPI.shared.fetchStockNews(query: item.symbol)
         } catch {
-            guard let allNews = try? await EpiphanyAPI.shared.fetchNews() else { return }
-            let terms = [item.symbol.lowercased(), item.name.lowercased()]
-            relatedNews = allNews.filter { article in
-                terms.contains { article.title.lowercased().contains($0) }
-            }
+            relatedNews = []
         }
     }
 }
