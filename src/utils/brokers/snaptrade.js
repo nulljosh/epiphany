@@ -76,7 +76,7 @@ export class SnapTradeAdapter {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`[SnapTrade] ${method} ${path} failed: ${res.status} ${text}`);
+      throw new Error(`[SnapTrade] ${method} ${fullPath} failed: ${res.status} ${text}`);
     }
     // DELETE (and some 204s) return an empty body — res.json() would throw
     // "Unexpected end of JSON input".

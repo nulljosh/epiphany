@@ -81,7 +81,6 @@ function App({ email }) {
     refresh();
     const id = setInterval(refresh, POLL_MS);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (error) return h(Box, { flexDirection: 'column' }, h(Text, { color: 'red' }, `error: ${error}`), h(Text, { dimColor: true }, 'press q to quit'));

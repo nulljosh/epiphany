@@ -56,8 +56,8 @@ export async function krakenMarkets(ids) {
       // Kraken has no market cap; the UI treats it as optional.
       marketCap: null,
       volume: Number(t.v?.[1]) * price || null,
-      high24h: Number(t.h?.[1]) ?? null,
-      low24h: Number(t.l?.[1]) ?? null,
+      high24h: t.h?.[1] == null ? null : Number(t.h[1]),
+      low24h: t.l?.[1] == null ? null : Number(t.l[1]),
       image: null,
     });
   }
