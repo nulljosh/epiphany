@@ -3,7 +3,7 @@ import SwiftUI
 
 struct NearbyPlacesSheet: View {
     let center: CLLocationCoordinate2D
-    let onSelect: (CLLocationCoordinate2D) -> Void
+    let onSelect: (LocalEvent) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var places: [LocalEvent] = []
@@ -29,8 +29,8 @@ struct NearbyPlacesSheet: View {
                 } else {
                     List(filteredPlaces) { place in
                         Button {
-                            guard let coordinate = place.coordinate else { return }
-                            onSelect(coordinate)
+                            guard place.coordinate != nil else { return }
+                            onSelect(place)
                             dismiss()
                         } label: {
                             VStack(alignment: .leading, spacing: 3) {
