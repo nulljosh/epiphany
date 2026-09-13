@@ -17,6 +17,9 @@ const GEO_DETAIL_ZOOM = 13.6;
 const CACHE_DETAIL_ZOOM = 13.2;
 const IP_FALLBACK_ZOOM = 11.5;
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+// Search terms for the map's category chips, matched against `${place.title} ${place.category}`
+// (see /api/places' category buckets: Food & drink, Shopping, Recreation, ...).
+const CATEGORY_TERMS = { Restaurants: 'food & drink', Coffee: 'coffee', Gas: 'gas', Parks: 'park', Shopping: 'shopping', Groceries: 'grocery' };
 
 const apiPath = (path) => `${API_BASE}${path}`;
 
@@ -1250,15 +1253,22 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
             <button type="submit" aria-label="Go" style={{ height: 40, width: 40, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 20, background: 'rgba(2,6,23,0.88)', color: '#94a3b8', font: `700 16px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>→</button>
           </form>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollBehavior: 'smooth', pointerEvents: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {['Restaurants', 'Coffee', 'Gas', 'Parks', 'Shopping', 'Groceries'].map((cat) => (
+            {/* ponytail: naive text match against place title/category (see CATEGORY_TERMS),
+                not a true tag filter — upgrade if /api/places exposes raw OSM tags */}
+            {Object.entries(CATEGORY_TERMS).map(([cat, term]) => (
               <button
                 key={cat}
+                onClick={() => {
+                  setPlacesQuery(term);
+                  setShowPlaces(true);
+                  if (!places.length) loadPlaces();
+                }}
                 style={{
                   height: 36,
                   padding: '0 14px',
                   border: '1px solid rgba(255,255,255,0.24)',
                   borderRadius: 18,
-                  background: 'rgba(2,6,23,0.88)',
+                  background: showPlaces && placesQuery === term ? '#334155' : 'rgba(2,6,23,0.88)',
                   color: '#fff',
                   font: `13px ${SYSTEM_FONT}`,
                   cursor: 'pointer',
