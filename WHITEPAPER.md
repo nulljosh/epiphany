@@ -4,20 +4,27 @@
 
 Everything happening in your world, on one screen.
 
-Epiphany starts with a map. Onto it go live geodata, markets, prediction markets,
-people and news. It can also trade a portfolio on a measured signal. Palantir for
-regular people. Live at
-[epiphany.heyitsmejosh.com](https://epiphany.heyitsmejosh.com), with companion
-apps for iOS, macOS, and watchOS.
+The tools that fuse geodata, markets and news into one picture are built for
+governments and hedge funds, not a person checking what's happening near them
+or in their portfolio. Epiphany starts with a map, because a map is the one
+interface that puts unrelated feeds (earthquakes, flights, crime, prices,
+prediction markets) into a shared frame without forcing them into a single
+schema first. It can also trade a portfolio on a measured signal, so the same
+picture that shows what's happening can act on it. Palantir for regular
+people. Live at [epiphany.heyitsmejosh.com](https://epiphany.heyitsmejosh.com),
+with companion apps for iOS, macOS, and watchOS.
 
-This paper leads with the algorithms. Everything after the trading and prediction
-sections is supporting detail.
+This paper leads with the algorithms, because the trading and prediction
+pipeline is the one part of Epiphany making decisions on its own; everything
+after those sections is supporting detail.
 
 ## Prediction and Trading Algorithm
 
-The core bet is that a disciplined, sized, rules based strategy beats discretionary
-trading. The pipeline runs signal to execution and is paper only by default. Real
-money is a separate opt in step.
+The core bet is that a disciplined, sized, rules based strategy beats
+discretionary trading, because discretion is where fear and excitement
+override a plan. The pipeline runs signal to execution and is paper only by
+default, so the strategy proves itself on real prices before it risks real
+money; going live is a separate opt in step, never the default.
 
 ### 1. Price prediction (Monte Carlo)
 
@@ -31,14 +38,18 @@ S(t+1) = S(t) * exp((mu - 0.5 * sigma^2) * dt + sigma * sqrt(dt) * Z)
 
 where `mu` is drift, `sigma` is volatility, `dt` is one trading day, and `Z` is a
 standard normal draw. The bull probability is the share of the 500 paths that close
-above the current price. That probability becomes the raw conviction score. This
-runs in the in app simulator at 60fps (`src/utils/simBenchmark.js`) across the full
-asset universe, and in the weekday morning cron (`server/api/broker/morning-run.js`).
+above the current price, because a single point forecast hides how much the paths
+disagree with each other; the spread across 500 runs is the actual signal. That
+probability becomes the raw conviction score. This runs in the in app simulator at
+60fps (`src/utils/simBenchmark.js`) across the full asset universe, and in the
+weekday morning cron (`server/api/broker/morning-run.js`).
 
 ### 2. Technical signal (entry filter)
 
-A trade only triggers when the technicals agree with the prediction. The composite
-signal (`src/utils/indicators.js`) combines:
+A trade only triggers when the technicals agree with the prediction, because a
+Monte Carlo path is a statistical opinion about drift, not proof a trade is timed
+right; the composite signal (`src/utils/indicators.js`) is what stops a good long
+term simulation from buying into a short term downtrend. It combines:
 
 - **RSI (14)**: Wilder's smoothing. Above 55 reads as strength, below 45 as weakness.
 - **MACD (12/26/9)**: histogram above zero is bullish momentum, below zero bearish.
@@ -58,9 +69,12 @@ f* = (p * b - (1 - p)) / b
 ```
 
 where `p` is the bull probability from step 1 and `b` is the reward to risk ratio
-implied by the target and stop. Epiphany uses a default 0.25 fraction of `f*` to cut
-variance, then caps any single position at 10% of equity. A momentum strength and
-volatility gate blocks sizing into chop.
+implied by the target and stop. Full Kelly is mathematically optimal but also
+overbets in practice, since its inputs are estimates, not certainties, so
+Epiphany uses a default 0.25 fraction of `f*` to cut variance, then caps any
+single position at 10% of equity so one bad estimate cannot dominate the
+account. A momentum strength and volatility gate blocks sizing into chop, since
+Kelly's inputs mean little when price is not trending either way.
 
 ### 4. Execution and guardrails
 
@@ -73,17 +87,21 @@ volatility gate blocks sizing into chop.
 
 The strategy is shared with a backtestable Pine Script port
 (`tradingview/monica-kelly-strategy.pine`) so the same rules can be validated on
-TradingView history.
+years of TradingView history instead of trusted on faith from a few weeks of
+paper trading.
 
 ### Broker abstraction
 
 `src/utils/broker.js` defines one `BrokerAdapter` interface (`connect`, `placeOrder`,
-`getPositions`, `getBalance`). Adapters: Alpaca (paper and live), SnapTrade (read
-only aggregator sync, HMAC signed REST, covers Wealthsimple and Questrade in Canada
-plus US brokers under one connection), cTrader (OAuth2), TradingView (webhook),
-Wealthsimple (read only), IBKR (stub). Read only sync
+`getPositions`, `getBalance`), so the strategy code never has to know which broker
+it is talking to and a new broker is one adapter, not a rewrite. Adapters: Alpaca
+(paper and live), SnapTrade (read only aggregator sync, HMAC signed REST, covers
+Wealthsimple and Questrade in Canada plus US brokers under one connection, chosen
+because Alpaca alone has no reach into Canadian brokers), cTrader (OAuth2),
+TradingView (webhook), Wealthsimple (read only), IBKR (stub). Read only sync
 (`server/api/broker/sync.js`) writes a holdings and cash snapshot to KV and, once
-connected, becomes the portfolio value of record.
+connected, becomes the portfolio value of record, since a synced real balance is
+more trustworthy than a locally tracked one that can drift from reality.
 
 ## Data Sources
 
@@ -103,23 +121,32 @@ connected, becomes the portfolio value of record.
 | Macro | FRED | API key | Fed funds, CPI, GDP, unemployment, treasuries |
 
 All sources fetch in parallel every 120 seconds and pause when the tab is hidden
-(`useVisibilityPolling`). Each source has its own error boundary, so a failure
-returns an empty array instead of blocking the others. Markers only render with real
-coordinates. No synthetic scatter, no placeholder data.
+(`useVisibilityPolling`), because polling a backgrounded tab burns quota for a
+picture nobody is looking at. Each source has its own error boundary, so a failure
+in one feed (a rate limit, a dead endpoint) returns an empty array instead of
+blocking the others: a map that goes fully blank because one of a dozen sources
+hiccuped would be worse than one missing layer. Markers only render with real
+coordinates. No synthetic scatter, no placeholder data, because a fake dot on a
+live map is worse than no dot at all.
 
 ## Map Engine
 
 MapLibre GL JS on a CARTO dark basemap. DOM markers with per layer CSS pulse
 animations. The heatmap is computed client side from every geo tagged point.
 Geolocation chain is browser GPS, then cached position (30 minute TTL), then IP
-fallback. Position resolves before first render when cached, so the map does not
-jump on load.
+fallback, because a map with no starting location is a blank screen and a
+returning visitor shouldn't have to grant permission again just to see
+themselves on it. Position resolves before first render when cached, so the
+map does not jump on load, since the rule from the top of this paper is a
+steady map with no jumps or flashes.
 
 ## Auth and Billing
 
 Sessions use bcrypt with tokens in Upstash Redis (KV). Billing is Stripe
 Checkout, Free or $1 per week Premium. Free gets the map, ticker, and situation
-monitor. Premium unlocks portfolio, ontology, and deep data.
+monitor, because the ambient picture of what's happening is the hook; Premium
+unlocks portfolio, ontology, and deep data, the parts that cost real money in
+API calls and compute per user.
 
 ## Companion Apps
 
@@ -130,10 +157,14 @@ monitor. Premium unlocks portfolio, ontology, and deep data.
 | watchOS | SwiftUI | Glance complications |
 
 Native apps are live on the App Store (id6779522175). Portfolio, ontology, and deep
-data are gated behind Pro on every platform, matching the web tiering.
+data are gated behind Pro on every platform, matching the web tiering, so a
+Premium subscription means the same thing everywhere instead of being a web only
+perk.
 | Widgets | SwiftUI | iOS and macOS extensions |
 
-All native apps share the API backend over URLSession with cookie persistence.
+All native apps share the API backend over URLSession with cookie persistence, so
+the trading and prediction logic lives in one place instead of being reimplemented
+per platform.
 
 ## Performance
 
