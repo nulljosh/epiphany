@@ -464,6 +464,11 @@ final class EpiphanyAPI {
         return try decode(LocalEventResponse.self, from: data).events
     }
 
+    func fetchPlaces(lat: Double, lon: Double) async throws -> [LocalEvent] {
+        let url = try makeURL("/api/places", query: ["lat": String(lat), "lon": String(lon)])
+        return try decode(PlacesResponse.self, from: await perform(URLRequest(url: url))).places
+    }
+
     func fetchTraffic(lat: Double, lon: Double) async throws -> TrafficData {
         let url = try makeURL("/api/traffic", query: ["lat": String(lat), "lon": String(lon)])
         let request = URLRequest(url: url)

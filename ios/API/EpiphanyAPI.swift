@@ -629,6 +629,11 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return try decode(LocalEventResponse.self, from: data).events
     }
 
+    func fetchPlaces(lat: Double, lon: Double) async throws -> [LocalEvent] {
+        let url = try makeURL("/api/places", query: ["lat": String(lat), "lon": String(lon)])
+        return try decode(PlacesResponse.self, from: await perform(URLRequest(url: url))).places
+    }
+
     func fetchTraffic(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> TrafficData {
         var params: [String: String] = ["lat": String(lat), "lon": String(lon)]
         if let lamin, let lomin, let lamax, let lomax {

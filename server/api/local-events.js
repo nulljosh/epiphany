@@ -164,20 +164,24 @@ async function fetchWikipediaSingle(lat, lon) {
   return events;
 }
 
-// OSM venue query: find real places people visit (community centres, theatres, parks, libraries)
+// OSM places shared by the web and native maps. Schools and cemeteries are
+// commonly mapped as areas, so query nodes, ways, and relations alike.
 async function fetchOSMVenues(lat, lon) {
   const events = [];
   const delta = 0.08;
   const bb = `${lat - delta},${lon - delta},${lat + delta},${lon + delta}`;
-  const query = `[out:json][timeout:8];(` +
-    `node["amenity"~"^(community_centre|theatre|cinema|library|arts_centre|marketplace|school|university|college)$"](${bb});` +
-    `node["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|aquarium)$"](${bb});` +
-    `node["leisure"~"^(park|sports_centre|stadium|swimming_pool|ice_rink)$"](${bb});` +
-    `way["leisure"="park"](${bb});` +
-    `);out center 30;`;
+  const tags = [
+    '["amenity"~"^(community_centre|theatre|cinema|library|arts_centre|marketplace|school|university|college|grave_yard)$"]',
+    '["landuse"="cemetery"]',
+    '["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|aquarium)$"]',
+    '["leisure"~"^(park|sports_centre|stadium|swimming_pool|ice_rink)$"]',
+  ];
+  const query = `[out:json][timeout:15];(` +
+    tags.flatMap(tag => ['node', 'way', 'relation'].map(type => `${type}${tag}(${bb});`)).join('') +
+    `);out center;`;
 
   try {
-    const json = await overpassQuery(query, 10000);
+    const json = await overpassQuery(query, 20000);
 
     for (const el of (json.elements || [])) {
       const elLat = el.center?.lat ?? el.lat;
@@ -186,11 +190,12 @@ async function fetchOSMVenues(lat, lon) {
       const name = el.tags?.name;
       if (!name) continue;
 
-      const amenity = el.tags?.amenity || el.tags?.tourism || el.tags?.leisure || '';
+      const amenity = el.tags?.amenity || el.tags?.landuse || el.tags?.tourism || el.tags?.leisure || '';
       const isSchool = ['school', 'university', 'college'].includes(el.tags?.amenity);
+      const isCemetery = el.tags?.amenity === 'grave_yard' || el.tags?.landuse === 'cemetery';
       events.push({
         lat: elLat, lng: elLon, type: 'local-event', kind: 'place',
-        category: isSchool ? 'education' : el.tags?.tourism ? 'attraction' : el.tags?.leisure ? 'recreation' : 'venue',
+        category: isSchool ? 'education' : isCemetery ? 'cemetery' : el.tags?.tourism ? 'attraction' : el.tags?.leisure ? 'recreation' : 'venue',
         title: name,
         venue: name,
         severity: 'low',
@@ -204,7 +209,7 @@ async function fetchOSMVenues(lat, lon) {
   // OSM doesn't carry photos; backfill from Wikipedia when a venue has a
   // same-named article (common for museums, theatres, parks) so these places
   // aren't the only ones in the feed without an image.
-  if (events.length) await backfillImagesFromWikipedia(events);
+  if (events.length) await backfillImagesFromWikipedia(events.slice(0, 20));
 
   return events;
 }

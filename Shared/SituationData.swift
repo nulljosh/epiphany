@@ -516,6 +516,10 @@ struct LocalEvent: Codable, Identifiable {
     }
 }
 
+struct PlacesResponse: Decodable {
+    let places: [LocalEvent]
+}
+
 // MARK: - Traffic Data
 
 struct TrafficData: Codable {
