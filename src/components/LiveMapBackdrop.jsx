@@ -235,6 +235,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const selectedPlaceMarkerRef = useRef(null);
   const centerRef = useRef(initPos);
   const sawGeoGrantedRef = useRef(false);
   const pendingFlyRef = useRef(null);
@@ -1241,7 +1242,16 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
               {placesCenter && ` near ${placesCenter.lat.toFixed(2)}, ${placesCenter.lon.toFixed(2)}`}
             </div>
             {places.filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase())).map(place => (
-              <button key={place.id} onClick={() => { mapInstanceRef.current?.flyTo({ center: [place.lon, place.lat], zoom: 16, duration: 600 }); setShowPlaces(false); }} style={{ display: 'block', width: '100%', padding: '9px 12px', textAlign: 'left', border: 0, borderTop: '1px solid rgba(255,255,255,.08)', background: 'none', color: '#fff', cursor: 'pointer' }}>
+              <button key={place.id} onClick={() => {
+                const map = mapInstanceRef.current;
+                selectedPlaceMarkerRef.current?.remove();
+                if (map && maplibreRef.current) {
+                  selectedPlaceMarkerRef.current = new maplibreRef.current.Marker({ color: '#60a5fa' })
+                    .setLngLat([place.lon, place.lat]).setPopup(new maplibreRef.current.Popup().setText(place.title)).addTo(map);
+                  map.flyTo({ center: [place.lon, place.lat], zoom: 16, duration: 600 });
+                }
+                setShowPlaces(false);
+              }} style={{ display: 'block', width: '100%', padding: '9px 12px', textAlign: 'left', border: 0, borderTop: '1px solid rgba(255,255,255,.08)', background: 'none', color: '#fff', cursor: 'pointer' }}>
                 <span style={{ display: 'block', fontSize: 13 }}>{place.title}</span>
                 <span style={{ color: '#9ca3af', fontSize: 11 }}>{place.category}</span>
               </button>

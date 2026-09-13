@@ -127,6 +127,7 @@ struct SituationView: View {
     @State private var isSearchingVenues = false
     @State private var selectedVenue: MKMapItem?
     @State private var showPlaces = false
+    @State private var selectedListedPlace: LocalEvent?
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var mapSearch = ""
     @State private var mapSearchError = false
@@ -641,6 +642,12 @@ struct SituationView: View {
             wildfireAnnotations
             aqiAnnotations
             venueAnnotations
+            if let place = selectedListedPlace, let coordinate = place.coordinate {
+                Annotation(place.title, coordinate: coordinate) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.title).foregroundStyle(.blue)
+                }
+            }
             UserAnnotation()
         }
         .mapStyle(activeMapStyle)
@@ -661,7 +668,9 @@ struct SituationView: View {
                 .presentationDetents([.fraction(0.4), .medium])
         }
         .sheet(isPresented: $showPlaces) {
-            NearbyPlacesSheet(center: visibleRegion?.center ?? currentRegion.center) { coordinate in
+            NearbyPlacesSheet(center: visibleRegion?.center ?? currentRegion.center) { place in
+                guard let coordinate = place.coordinate else { return }
+                selectedListedPlace = place
                 withAnimation { mapPosition = .region(MKCoordinateRegion(
                     center: coordinate,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)

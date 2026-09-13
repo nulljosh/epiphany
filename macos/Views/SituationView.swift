@@ -109,6 +109,7 @@ struct SituationView: View {
     @State private var venueResults: [MKMapItem] = []
     @State private var selectedVenue: MKMapItem?
     @State private var showPlaces = false
+    @State private var selectedListedPlace: LocalEvent?
     @State private var isSearchingVenues = false
     @State private var mapSearch = ""
     @State private var mapSearchError = false
@@ -326,6 +327,12 @@ struct SituationView: View {
                     }
                 }
             }
+            if let place = selectedListedPlace, let coordinate = place.coordinate {
+                Annotation(place.title, coordinate: coordinate) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.title).foregroundStyle(.blue)
+                }
+            }
         }
         .mapStyle(activeMapStyle)
         .overlay(alignment: .topLeading) { mapSearchBar }
@@ -335,7 +342,9 @@ struct SituationView: View {
             VenueDetailSheet(item: item)
         }
         .sheet(isPresented: $showPlaces) {
-            NearbyPlacesSheet(center: visibleRegion.center) { coordinate in
+            NearbyPlacesSheet(center: visibleRegion.center) { place in
+                guard let coordinate = place.coordinate else { return }
+                selectedListedPlace = place
                 withAnimation { mapPosition = .region(MKCoordinateRegion(
                     center: coordinate,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
