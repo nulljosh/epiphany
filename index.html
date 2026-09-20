@@ -63,5 +63,24 @@ cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}
   });
 })();
 </script>
+<script src="/onboarding.js"></script>
+<script>
+    // First-run onboarding. Signed-out newcomers only, once per browser.
+    Onboarding.start({
+        key: "epiphany",
+        finishLabel: "Get started",
+        slides: [
+                { title: "Your money, one page",
+                  body: "Epiphany pulls your accounts, holdings and spending into a single dashboard you can read in a glance.",
+                  art: "<svg width=\"120\" height=\"120\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7h15a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zM3 7l0-1a2 2 0 0 1 2-2h11M16 13h2\"/></svg>" },
+                { title: "Watch it move",
+                  body: "Charts for net worth, allocation and performance update as your positions do. No spreadsheet upkeep.",
+                  art: "<svg width=\"120\" height=\"120\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20h16M7 16V9M12 16V5M17 16v-6\"/></svg>" },
+                { title: "Know before it stings",
+                  body: "Set alerts on prices, balances and budgets so the number finds you instead of the other way round.",
+                  art: "<svg width=\"120\" height=\"120\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 21a2 2 0 0 1-3.4 0\"/></svg>" }
+        ]
+    });
+</script>
 </body>
 </html>
