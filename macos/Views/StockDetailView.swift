@@ -272,6 +272,24 @@ struct StockDetailView: View {
         return ha
     }
 
+    /// Every price the y-axis has to fit, for whichever chart type is showing.
+    private static func priceRange(chartType: ChartType,
+                                   candles: [OHLCPoint],
+                                   points: [(Date, Double)]) -> [Double] {
+        switch chartType {
+        case .heikinAshi, .candles, .hollowCandles, .bars:
+            var out: [Double] = []
+            out.reserveCapacity(candles.count * 2)
+            for c in candles {
+                out.append(c.high)
+                out.append(c.low)
+            }
+            return out
+        default:
+            return points.map { $0.1 }
+        }
+    }
+
     @ViewBuilder
     private var chartView: some View {
         let points = priceHistory.compactMap { point -> (Date, Double)? in
@@ -285,10 +303,9 @@ struct StockDetailView: View {
             default: return []
             }
         }()
-        let usesOHLC = [.heikinAshi, .candles, .hollowCandles, .bars].contains(chartType)
-        let allPrices: [Double] = usesOHLC
-            ? candleData.flatMap { [$0.high, $0.low] }
-            : points.map(\.1)
+        // ponytail: the y-scale maths used to sit inline here, which is what pushed this
+        // @ViewBuilder past the type-checker's budget. Plain functions type-check on their own.
+        let allPrices = Self.priceRange(chartType: chartType, candles: candleData, points: points)
         let minPrice = allPrices.min() ?? 0
         let maxPrice = allPrices.max() ?? 0
         let padding = (maxPrice - minPrice) * 0.1

@@ -36,6 +36,9 @@ struct EpiphanyApp: App {
                 }
             }
             .shareApp("https://epiphany.heyitsmejosh.com")
+            .onboarding(key: "epiphany",
+                        signedIn: appState.user != nil,
+                        slides: epiphanyOnboardingSlides)
         }
     }
 }
