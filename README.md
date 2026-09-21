@@ -19,6 +19,8 @@ Everything happening in your world, on one screen. The map, the markets, the peo
   <img src="watchos/fastlane/screenshots/watch/1-main.png" width="120">
 </p>
 
+<img src="progress.svg" width="460">
+
 ## Claude Skill
 
 [`.claude/skills/epiphany`](.claude/skills/epiphany/SKILL.md) gives Claude Code admin access to your portfolio data in Upstash KV. Holdings, debt, budget. No app login:
