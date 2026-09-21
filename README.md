@@ -58,7 +58,7 @@ scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with merged JSO
 - **PWA.** Works offline
 - **Native.** iOS, macOS, Windows, Linux and Android
 
-Roadmap: [ROADMAP.md](ROADMAP.md).
+Roadmap: [roadmap.md](roadmap.md).
 
 ## Setup
 
