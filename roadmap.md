@@ -138,39 +138,8 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Analyze drawer video at ~/Documents/Misc/epiphany.mp4 for the drawer UX spec
 - [ ] Analyze project from CLAUDE.md + README.md, then refresh the app icon based on that analysis
 
-### From Notes (2026-08-14)
-- [ ] **Widget support on iOS and macOS.** Both platforms, one pass.
-
-## Stashed 2026-08-15
-
-Batch of 6 was dispatched; items 1–2 shipped (see checked lines above), 3–6 stopped at 69%
-session usage rather than half-built. All four are still open exactly as written above , 
-this section only records what was learned while scoping them, so the next pass doesn't
-re-derive it.
-
-- [ ] **Period High/Low + SMA20/EMA50 on the commodity chart** (roadmap line ~48). Confirmed
-  still the right shape: purely client-side off already-loaded history, no backend work.
-  `StockDetailView` already computes SMA/EMA for equities, the job is reusing that path for
-  commodities, which the existing line correctly calls a chart refactor. Note the EMA
-  indicator toggle changed colour in the palette pass (`Palette.slate` now, was
-  `Palette.purple`), match new overlays to the current tokens, don't reintroduce a literal.
-- [ ] **Buy/sell/hold button → drawer of sources** (roadmap line ~92). The "why" panel it
-  should reuse already ships on `StockDetail.jsx` (tap the BUY/SELL/HOLD pill → reasons +
-  math rationale from WHITEPAPER.md). This is a wiring job, not a new panel.
-- [ ] **Markets-row buy/sell/hold badge** (roadmap line ~62). Re-read the existing note before
-  attempting: it is *blocked*, not merely unstarted. `MarketRow` only receives
-  symbol/name/price/changePercent but `signal()` needs 35+ price points, so it needs either
-  N per-row history calls or the bulk price-history endpoint already deferred for sparklines.
-  Same blocker as the sparkline item, fix them together or not at all.
-- [ ] **Themes for the stocks view** (roadmap line ~93). Native only. `CLAUDE.md`'s standing
-  rule is "Web: dark only (Gotham brand, hardcoded dark surfaces)", so this must not turn
-  into relighting the web app. Native `Palette` is already fully adaptive light/dark, so the
-  real question is what a "theme" adds beyond system appearance, needs Joshua's intent
-  before building.
-
 ## Ingested 2026-08-18
 - [ ] Venue reviews via Google Places, DEFERRED 2026-09-07 (Joshua: later). Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Needs Joshua to add a card + accept ToS at console.cloud.google.com (project winnie-372220, Places API enable started). Then: create key, `wrangler secret put GOOGLE_PLACES_API_KEY`, port `server/api/venue-details.js` from Yelp to Places (New). `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
-- [ ] Google reviews: folded into the item above.
 
 ## Braindump 2026-08-19
 - [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
@@ -194,7 +163,6 @@ Scope: large UI change, do in a dedicated session.
 - [ ] Mobile web UI/UX is spotty overall, general pass needed.
 
 - [ ] `/api/macro` returns an empty set on Cloudflare Workers. FRED sits behind Akamai, which refuses Workers egress IPs, every series comes back 520 at the edge, while the identical fetch succeeds from Vercel and from a laptop. Browser User-Agent, Referer and Accept-Language were all tried and none help, so it is the egress IP and not the request shape. Fix is either a reachable macro source or populating KV from something that can reach FRED. Already fixed alongside it: the handler used to cache the empty result for a full hour, serving the outage from memory in 1ms.
-- [ ] Move the cron jobs off Vercel. `broker/morning-run` places real trades, so Cloudflare crons stay disarmed in `wrangler.jsonc` while Vercel still runs them on schedule, arming both would double-trade. Web traffic is already fully on Cloudflare; this is the last piece of that migration.
 - [ ] Ship the macOS avatar fix. `macos/Models/AppState.swift` decodes inline data: URL avatars now, but macOS is still live on 2.5.2 and the change is unshipped.
 - [ ] `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
   (2026-08-26 08:00 UTC) completed 200, but logged `[KV] set error: Too many
@@ -213,7 +181,6 @@ Scope: large UI change, do in a dedicated session.
 - [ ] Bump landing page links and GitHub links to current.
 - [ ] Decide: is the app icon green or blue? Pick one and make it consistent.
 - [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
-- [ ] Housekeeping: build `202608271355` (2.5.6) was uploaded by mistake on 2026-08-27, a duplicate of work already done. The build actually in review is **2.5.5 / `202608271349`**, which does include the dead-button removal (`03c89b3`). `ios/project.yml` now reads 2.5.6, so the next build is correctly numbered; the orphaned 202608271355 build can be ignored or deleted in ASC. Note `44cfa65` (broker webhook auth) landed AFTER that build, so it ships server-side only until the next binary.
 
 ### Open, security
 
@@ -227,16 +194,7 @@ Scope: large UI change, do in a dedicated session.
   Run `scripts/rotate-keys.sh` to open all tabs, then `scripts/sync-vercel-env.sh`.
 
 ## From Notes (imported 2026-08-27)
-- [ ] **Epiphany 2.5.5 iOS REJECTED, reason now READ (submission `1afd5ca2-4103-4da7-914f-fca3f2051915`, read 2026-08-28). TWO guidelines cited, neither resolved.**
-      - **2.1(a), "error shown when attempting to sign in with Apple"**, reviewed on iPad Air 11-inch (M3), iPadOS 26.6. The reviewer screenshot shows **"Sign-Up Not Completed" rendered inside Apple's OWN Sign in with Apple sheet** while creating an account for `ar_user1144@icloud.com`. It never reaches our backend, so `_apple-jwt.js` is definitively not implicated, that earlier audit was correct.
-      - **The entitlement hypothesis is RULED OUT.** Verified end to end 2026-08-28: `ios/project.yml` declares `com.apple.developer.applesignin` under `entitlements.properties` (fix `39d7102`, 2026-07-27) and it survives `xcodegen generate`; `ios/Epiphany.entitlements` has it; the archive that produced the reviewed build (`.asc/artifacts/Epiphany.xcarchive`, CFBundleVersion `202608271349`, 2.5.5) is **signed with it**; its embedded profile grants it; the other distribution-signed IPA from the same day (`202608271355`) retains it through export, so export is not stripping it; App ID `com.heyitsmejosh.epiphany` (`8QHAV87C9U`) has `APPLE_ID_AUTH`/`PRIMARY_APP_CONSENT` and no competing App ID claims Apple auth; client code is stock `SignInWithAppleButton`.
-      - **Closed 2026-09-07:** Sign in with Apple was removed 2026-08-28 and the 2.5.7 review raised only 2.1(b), so 2.1(a) no longer applies. Keep the iPad note below only if Apple sign-in is ever re-added.
-      - The binary is `UIDeviceFamily = [1]` (iPhone-only) yet review ran on iPad, and Apple's letter adds "apps that may be downloaded onto iPad devices should function as expected for iPad users." Next step: run 2.5.5 on an iPad in iPhone-compatibility mode and attempt Sign in with Apple. Do NOT resubmit until it reproduces. Builds `202608271349` and `202608271355` are both VALID and attachable.
-      - **2.1(b), Information Needed (business model), 4 questions.** Draft answers + evidence in `notes/2-1-b-business-model-reply.md`. **Surfaces a real Guideline 3.1.1 exposure needing Joshua's decision before replying:** Autopilot live trading, Daily Brief and the People graph are gated by `isPro`, obtainable only via a one-time **Stripe** payment on the web, and `ios/API/EpiphanyAPI.swift` calls every one of those gated endpoints. `asc iap list --app 6779522175` returns **zero** IAPs, and `ios/Services/StoreKitManager.swift` (product `com.heyitsmejosh.epiphany.paid`) is dead code referenced nowhere. The iOS app therefore unlocks paid features bought outside IAP.
 - [ ] Widgets receive no data: `widgets-ios/Models/WidgetAPI.swift` reads `UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany")`, but the **main app declares no app-groups entitlement** (only the widget target does) and no main-app code writes that suite. Found while inspecting the signed archive; unrelated to the rejection.
-
-## Stashed 2026-08-28
-- [ ] Verify the deploy state before replying to Apple's 2.1(b) query. The answer to question 4 in `notes/2-1-b-business-model-reply.md` ("none") is only true while this build is live, check with `npx vercel inspect https://epiphany.heyitsmejosh.com` and confirm `created` is newer than the gates.js commit. Do NOT verify by curling `/api/daily-brief` or `/api/people` unauthenticated: both return 402 under old and new code, so that probe proves nothing.
 
 ## Migrate off Vercel to Cloudflare, DONE (verified 2026-09-02)
 
