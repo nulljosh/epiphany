@@ -838,8 +838,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
                 style={{
                   display: 'inline-block', padding: '3px 10px', borderRadius: 100, border: 'none', cursor: 'pointer',
                   fontSize: 13, fontWeight: 700, letterSpacing: '0.03em', fontFamily: 'inherit',
-                  background: tradeSignal.label === 'Buy' ? 'rgba(48,209,88,0.18)' : tradeSignal.label === 'Sell' ? 'rgba(255,69,58,0.18)' : 'rgba(142,142,147,0.18)',
-                  color: tradeSignal.label === 'Buy' ? '#30d158' : tradeSignal.label === 'Sell' ? '#ff453a' : t.textSecondary,
+                  background: tradeSignal.label === 'Long' ? 'rgba(48,209,88,0.18)' : tradeSignal.label === 'Short' ? 'rgba(255,69,58,0.18)' : 'rgba(142,142,147,0.18)',
+                  color: tradeSignal.label === 'Long' ? '#30d158' : tradeSignal.label === 'Short' ? '#ff453a' : t.textSecondary,
                 }}
               >
                 {tradeSignal.label.toUpperCase()} {showSignalWhy ? '▾' : '▸'}

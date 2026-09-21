@@ -79,7 +79,7 @@ export function bollinger(values, period = 20, mult = 2) {
 }
 
 // Composite Buy/Hold/Sell signal from RSI + MACD + 50/200 MA trend.
-// Returns { label: 'Buy'|'Hold'|'Sell', score, reasons: [] }.
+// Returns { label: 'Long'|'Hold'|'Short', score, reasons: [] }.
 export function signal(values) {
   if (!Array.isArray(values) || values.length < 35) return null;
   let score = 0;
@@ -107,6 +107,6 @@ export function signal(values) {
     else if (fast < slow) { score -= 1; reasons.push('Downtrend (MA)'); }
   }
 
-  const label = score >= 2 ? 'Buy' : score <= -2 ? 'Sell' : 'Hold';
+  const label = score >= 2 ? 'Long' : score <= -2 ? 'Short' : 'Hold';
   return { label, score, reasons };
 }

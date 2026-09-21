@@ -72,7 +72,7 @@ enum Indicators {
 
     // Buy/Hold/Sell signal from RSI + MACD + MA trend. Mirrors
     // src/utils/indicators.js so web and native agree.
-    enum TradeSignal: String { case buy = "Buy", hold = "Hold", sell = "Sell" }
+    enum TradeSignal: String { case buy = "Long", hold = "Hold", sell = "Short" }
 
     private static func emaSeries(_ values: [Double], _ period: Int) -> [Double] {
         guard values.count >= period, period > 0 else { return [] }
