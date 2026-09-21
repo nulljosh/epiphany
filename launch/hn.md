@@ -1,3 +1,7 @@
-Show HN: Epiphany – Everything in your world, on one screen
+Show HN: Epiphany – a situation room for your life, with a Kelly-sized trading engine
 
-I wanted the view a trading desk or an ops room has, but for my own life. Where my money is, what the markets are doing to it, where the people I care about are, and what news actually touches any of it. Epiphany puts that on one screen. It pulls your accounts, prices, a map and a feed together and gets out of the way. Built for one person, then opened up. Web at epiphany.heyitsmejosh.com, source on GitHub.
+I wanted the view a trading desk or an ops room has, but for my own life. Where my money is, what the markets are doing to it, where the people I care about are, and what news actually touches any of it. Epiphany puts that on one screen: a live map, markets, a people graph, and a portfolio.
+
+The part I'd actually call technical is the trading pipeline. Each symbol runs a Geometric Brownian Motion Monte Carlo simulation, 500 price paths over a 30 day horizon, and the share of paths that close above the current price becomes the conviction score. A trade only fires when RSI, MACD, and moving average trend agree with that score, so a statistical opinion about drift never overrides a short-term downtrend. Position size comes from fractional Kelly (0.25 of full Kelly, capped at 10% of equity per position), because full Kelly overbets when its inputs are estimates, not certainties. It's paper trading by default; going live is a separate opt-in through a broker adapter (Alpaca, SnapTrade, cTrader, TradingView webhooks). The same rules are ported to a backtestable Pine Script strategy so they can be checked against years of history instead of a few weeks of paper trading.
+
+Free on web, iPhone, and Mac. Premium is a one-time unlock: $0.99 on iOS, $1 on the web. Live at epiphany.heyitsmejosh.com, source on GitHub.

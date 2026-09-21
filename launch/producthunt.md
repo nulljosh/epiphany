@@ -8,7 +8,7 @@ Description (167): A personal situation room. Your markets, your map, your peopl
 
 Topics: Finance, Productivity, News
 
-Pricing: Free. A Pro tier on the web adds more accounts and history. A one dollar unlock is coming to iOS.
+Pricing: Free. Premium is a one-time unlock: $0.99 on iOS, $1 on the web.
 
 Links
 Web: https://epiphany.heyitsmejosh.com
@@ -21,4 +21,4 @@ Hi, I'm Josh, I built Epiphany.
 
 I wanted the view a trading desk or an ops room has, but for my own life. Where my money is, what the markets are doing to it, where the people I care about are, and what news actually touches any of it. Epiphany puts that on one screen. It pulls your accounts, prices, a map and a feed together and gets out of the way. Built for one person, then opened up.
 
-Free. A Pro tier on the web adds more accounts and history. A one dollar unlock is coming to iOS. Happy to answer anything.
+Free. Premium is a one-time unlock: $0.99 on iOS, $1 on the web. Happy to answer anything.
