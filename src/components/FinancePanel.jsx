@@ -6,7 +6,7 @@ import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../util
 import { normalizeSpendingMonths, UPCOMING_PAYMENTS, DEMO_BILLS, TELUS_DETAILS } from '../utils/financeData';
 import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
-import { debtMonthsToPayoff, debtPayoffLabel, isReceivable, owedDebts } from '../utils/debtPayoff';
+import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 // TradeWorkflow import removed — Trade tab disabled until SnapTrade sync math is fixed (phantom holdings, bad net worth).
@@ -664,7 +664,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
   const {
     holdings, accounts, budget, debt, goals, spending, giving, incomePhases, subscriptions,
-    stocksValue, cashValue, totalDebt, totalReceivable, totalIncome, totalExpenses,
+    stocksValue, cashValue, totalDebt, totalIncome, totalExpenses,
     surplus, netWorth, isDemo, portfolioFetchedAt, brokerSnapshot, syncBroker,
     importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
@@ -698,7 +698,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
   const pieData = [
     ...holdings.filter((holding) => holding.value > 0).map((holding) => ({ label: holding.symbol, value: holding.value })),
-    ...accounts.filter((account) => account.balance > 0).map((account) => ({ label: account.name, value: account.balance })),
+    ...accounts.filter((account) => (account.cash ?? account.balance) > 0).map((account) => ({ label: account.name, value: account.cash ?? account.balance })),
   ];
 
   const statementMonths = useMemo(
@@ -931,7 +931,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           <span>Stocks: {formatCurrency(stocksValue)}</span>
           <span>Cash: {formatCurrency(cashValue, 'CAD')}</span>
           <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>
-          {totalReceivable > 0 && <span style={{ color: t.green }}>Owed to you: +{formatCurrency(totalReceivable)}</span>}
         </div>
         {(() => {
           const ageMs = portfolioFetchedAt ? Date.now() - portfolioFetchedAt.getTime() : null;
@@ -1184,10 +1183,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                     <EditorInput value={entry.name || ''} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, name: event.target.value } : item))} placeholder="Debt name" />
                     <EditorInput type="number" value={entry.balance ?? 0} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, balance: parseNumberInput(event.target.value) } : item))} placeholder="Balance" />
                     <EditorInput value={entry.note || ''} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, note: event.target.value } : item))} placeholder="Note" />
-                    <label title="Money someone owes you" style={{ fontSize: 11, color: t.textSecondary, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-                      <input type="checkbox" checked={entry.owedToMe === true} onChange={(event) => updateDraft('debt', (list) => list.map((item, idx) => idx === index ? { ...item, owedToMe: event.target.checked } : item))} />
-                      owed to me
-                    </label>
                     <button onClick={() => updateDraft('debt', (list) => list.filter((_, idx) => idx !== index))} style={{ ...pillButtonStyle, color: t.red }}>Remove</button>
                   </div>
                 ))}
@@ -1307,13 +1302,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{entry.name}</div>
                         {entry.note && <div style={{ fontSize: 11, color: t.textTertiary }}>{entry.note}</div>}
                       </div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: isReceivable(entry) ? t.green : t.red, fontVariantNumeric: 'tabular-nums' }}>
-                        {isReceivable(entry) ? '+' : ''}{formatCurrency(entry.balance)}
+                      <div style={{ fontWeight: 600, fontSize: 14, color: t.red, fontVariantNumeric: 'tabular-nums' }}>
+                        {formatCurrency(entry.balance)}
                       </div>
                     </div>
-                    {isReceivable(entry)
-                      ? <div style={{ fontSize: 11, color: t.textTertiary }}>Owed to you</div>
-                      : <ProgressBar value={0} max={entry.balance} color={t.red} t={t} />}
+                    <ProgressBar value={0} max={entry.balance} color={t.red} t={t} />
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, paddingTop: 12, borderTop: `1px solid ${t.border}`, fontWeight: 700, fontSize: 16 }}>

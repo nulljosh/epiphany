@@ -28,7 +28,7 @@ function scrubManualAccounts(data) {
   return { ...data, accounts: data.accounts.filter(a => a.source === 'broker') };
 }
 
-// Mirror of the server-side scrub in server/api/portfolio.js -- stale Visa /
+// Mirror of the server-side scrub in server/api/portfolio.js -- stale
 // "Dad $25" debt rows persist in localStorage and would resurface on load.
 function scrubRemovedDebts(data) {
   if (!data || !Array.isArray(data.debt)) return data;
@@ -36,7 +36,6 @@ function scrubRemovedDebts(data) {
     ...data,
     debt: data.debt.filter(d => {
       const name = String(d.name || '').toLowerCase();
-      if (name.includes('visa')) return false;
       if ((name.includes('dad') || name.includes('mom')) && Number(d.balance) <= 25) return false;
       return true;
     }),
@@ -89,32 +88,6 @@ async function pushToServer(data) {
   } catch {
     // best-effort server sync
   }
-}
-
-// Merge broker balance.accounts ({account, currency, cash}) into the
-// user's manual accounts list by case-insensitive name match. Matching
-// accounts get their balance/currency synced from the broker; manual
-// accounts with no broker match (e.g. a cash envelope) are kept as-is.
-function mergeBrokerAccounts(manualAccounts, brokerAccounts) {
-  if (!Array.isArray(manualAccounts)) return brokerAccounts || [];
-  const result = manualAccounts.map(a => ({ ...a }));
-  const used = new Set();
-  for (const ba of brokerAccounts || []) {
-    const name = ba.account || 'Brokerage';
-    const lowerName = name.toLowerCase();
-    let idx = result.findIndex((a, i) =>
-      !used.has(i) && (a.brokerAlias || []).some(alias => lowerName.includes(alias.toLowerCase()))
-    );
-    if (idx < 0) {
-      idx = result.findIndex((a, i) =>
-        !used.has(i) && (a.name.toLowerCase().includes(lowerName) || lowerName.includes(a.name.toLowerCase()))
-      );
-    }
-    const merged = { name, type: 'brokerage', balance: ba.cash, currency: ba.currency || 'CAD', source: 'broker' };
-    if (idx >= 0) { result[idx] = { ...result[idx], ...merged, name: result[idx].name }; used.add(idx); }
-    else result.push(merged);
-  }
-  return result;
 }
 
 export function usePortfolio(stocks, isAuthenticated) {
@@ -205,7 +178,7 @@ export function usePortfolio(stocks, isAuthenticated) {
   }, [holdings, stocks, extraQuotes]);
 
   const stocksValue = useMemo(() => valuedHoldings.reduce((sum, h) => sum + h.value, 0), [valuedHoldings]);
-  const cashValue = useMemo(() => accounts.reduce((sum, a) => sum + a.balance, 0), [accounts]);
+  const cashValue = useMemo(() => accounts.reduce((sum, a) => sum + (a.cash ?? a.balance), 0), [accounts]);
   const totalDebt = useMemo(() => sumDebt(debt), [debt]);
   const totalReceivable = useMemo(() => sumReceivable(debt), [debt]);
 
@@ -314,7 +287,12 @@ export function usePortfolio(stocks, isAuthenticated) {
         symbol: h.symbol, shares: h.shares, costBasis: h.costBasis ?? null,
         marketValue: h.marketValue, account: h.account, source: 'broker',
       }));
-      const nextAccounts = mergeBrokerAccounts(base.accounts, data.balance?.accounts);
+      // Same row shape the server overlay hands native clients: balance is the
+      // account total (cash + holdings), cash is the uninvested part. Web used to
+      // persist cash-only rows, so web and iOS kept overwriting each other's totals.
+      const nextAccounts = (data.accounts || []).map(a => ({
+        name: a.name, type: a.type, balance: a.balance, cash: a.cash, source: 'broker',
+      }));
 
       persistPortfolio({
         ...base,

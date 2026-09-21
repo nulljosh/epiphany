@@ -4,8 +4,8 @@ import { checkRateLimit } from './_ratelimit.js';
 
 const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving', 'incomePhases'];
 
-// Debts removed from the books (Visa -> collections 2026-06-12; old "Dad" $25
-// loan repaid). Stale copies persist in KV and localStorage and kept
+// Debts removed from the books (old "Dad" $25 loan repaid; Visa is back on
+// the books as of 2026-09-20). Stale copies persist in KV and localStorage and kept
 // resurfacing on every client -- scrub them at the source.
 function scrubRemovedDebts(data) {
   if (!data || !Array.isArray(data.debt)) return data;
@@ -13,7 +13,6 @@ function scrubRemovedDebts(data) {
     ...data,
     debt: data.debt.filter(d => {
       const name = String(d.name || '').toLowerCase();
-      if (name.includes('visa')) return false;
       if ((name.includes('dad') || name.includes('mom')) && Number(d.balance) <= 25) return false;
       if (name.includes('apple developer')) return false;
       return true;
@@ -96,7 +95,7 @@ export default async function handler(req, res) {
       // kept duplicating alongside the fresh broker copy.
       const manualAccounts = (data.accounts || []).filter(a => a.source !== 'broker' && !brokerNames.has(a.name));
       const brokerAccounts = snapshot.accounts.map(a => ({
-        name: a.name, type: a.type, balance: a.balance, source: 'broker',
+        name: a.name, type: a.type, balance: a.balance, cash: a.cash, source: 'broker',
       }));
       data.accounts = [...manualAccounts, ...brokerAccounts];
     }
@@ -109,7 +108,7 @@ export default async function handler(req, res) {
     if (!data) return res.status(200).json({ empty: true });
 
     const stocksValue = (data.holdings || []).reduce((sum, h) => sum + (h.marketValue ?? (h.shares * (h.costBasis || 0))), 0);
-    const cashValue = (data.accounts || []).reduce((sum, a) => sum + (a.balance || 0), 0);
+    const cashValue = (data.accounts || []).reduce((sum, a) => sum + (a.cash ?? a.balance ?? 0), 0);
     const owed = (d) => d.owedToMe !== true;
     const totalDebt = (data.debt || []).filter(owed).reduce((sum, d) => sum + (d.balance || 0), 0);
     const totalReceivable = (data.debt || []).filter((d) => !owed(d)).reduce((sum, d) => sum + (d.balance || 0), 0);

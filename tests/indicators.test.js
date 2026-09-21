@@ -46,10 +46,10 @@ describe('bollinger', () => {
 
 describe('signal', () => {
   it('returns Buy on a strong uptrend', () => {
-    expect(signal(rising).label).toBe('Buy');
+    expect(signal(rising).label).toBe('Long');
   });
   it('returns Sell on a strong downtrend', () => {
-    expect(signal(falling).label).toBe('Sell');
+    expect(signal(falling).label).toBe('Short');
   });
   it('returns null without enough data', () => {
     expect(signal([1, 2, 3])).toBeNull();

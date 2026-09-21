@@ -166,8 +166,13 @@ export class SnapTradeAdapter {
         query: { userId: this.userId, userSecret: this.userSecret },
       });
       for (const pos of positions ?? []) {
-        const symbol = pos.symbol?.symbol?.symbol ?? pos.symbol?.symbol ?? pos.symbol ?? null;
-        if (!symbol) continue;
+        const rawSymbol = pos.symbol?.symbol?.symbol ?? pos.symbol?.symbol ?? pos.symbol ?? null;
+        if (!rawSymbol) continue;
+        // Crypto comes back as bare "BTC", which every quote feed resolves to the
+        // Grayscale ETF (~$35) and valued a bitcoin position at pennies. Emit the
+        // Yahoo pair so all clients price it right.
+        const isCrypto = pos.symbol?.symbol?.type?.code === 'crypto' || /crypto/i.test(acct.name || '');
+        const symbol = isCrypto && !String(rawSymbol).includes('-') ? `${rawSymbol}-USD` : rawSymbol;
         // SnapTrade reports price 0/null for thinly-synced symbols (e.g. RL) --
         // treat 0 as missing so the client-side quote fallback kicks in.
         const price = Number(pos.price) > 0 ? Number(pos.price) : null;
@@ -294,6 +299,7 @@ export class SnapTradeAdapter {
         name,
         type: SnapTradeAdapter.inferAccountType(name),
         balance: cash + holdingsValue,
+        cash,
       });
     }
     return out;

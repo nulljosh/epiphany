@@ -14,3 +14,15 @@ describe('SnapTradeAdapter.costBasisFromActivities', () => {
     expect(SnapTradeAdapter.costBasisFromActivities(acts)).toEqual({ XEQT: 25 });
   });
 });
+
+describe('SnapTradeAdapter.getHoldings', () => {
+  it('emits crypto as a Yahoo pair so BTC is not priced as the Grayscale ETF', async () => {
+    const adapter = new SnapTradeAdapter({ clientId: 'c', consumerKey: 'k', userId: 'u', userSecret: 's' });
+    adapter._request = async (_m, path) => path === '/accounts'
+      ? [{ id: 'a1', name: 'Wealthsimple Trade CRYPTO' }, { id: 'a2', name: 'Wealthsimple Trade TFSA' }]
+      : path.includes('a1') ? [{ symbol: { symbol: { symbol: 'BTC' } }, units: 0.001, price: 100000 }]
+        : [{ symbol: { symbol: { symbol: 'SPY' } }, units: 1, price: 700 }];
+    const symbols = (await adapter.getHoldings()).map(h => h.symbol);
+    expect(symbols).toEqual(['BTC-USD', 'SPY']);
+  });
+});

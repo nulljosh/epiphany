@@ -103,7 +103,7 @@ function ChangePill({ value }) {
 
 function SignalBadge({ signal }) {
   if (!signal) return null;
-  const color = signal.label === 'Buy' ? '#30D158' : signal.label === 'Sell' ? '#FF453A' : '#8e8e93';
+  const color = signal.label === 'Long' ? '#30D158' : signal.label === 'Short' ? '#FF453A' : '#8e8e93';
   return (
     <span
       title={signal.reasons.join(', ')}
