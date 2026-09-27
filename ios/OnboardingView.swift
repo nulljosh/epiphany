@@ -4,12 +4,11 @@ import SwiftUI
 /// then hang it off the root view:
 ///
 ///     ContentView()
-///         .onboarding(key: "spark", signedIn: appState.isLoggedIn, slides: Onboarding.spark) {
-///             appState.showSignUp = true
-///         }
+///         .onboarding(key: "spark", signedIn: appState.isLoggedIn, slides: Onboarding.spark)
 ///
-/// Shows once per install for signed-out newcomers. Reset in the simulator with
-/// `defaults delete <bundle-id> onboarded_spark`.
+/// Shows once per install, right after the user registers: never to signed-out
+/// visitors, and never to an account that was already signed in at launch.
+/// Reset in the simulator with `defaults delete <bundle-id> onboarded_spark`.
 struct OnboardingSlide: Identifiable {
     let id = UUID()
     let symbol: String
@@ -97,6 +96,7 @@ private struct OnboardingModifier: ViewModifier {
 
     @AppStorage private var seen: Bool
     @State private var showing = false
+    @State private var settled = false
 
     init(key: String, signedIn: Bool, slides: [OnboardingSlide], finishLabel: String, onFinish: @escaping () -> Void) {
         self.storageKey = "onboarded_" + key
@@ -110,15 +110,17 @@ private struct OnboardingModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             // ponytail: the wait is the whole point. Apps restore their session
-            // asynchronously at launch, so signedIn reads false for the first frames and
-            // deciding on .onAppear would flash onboarding at signed-in users. Decide once
-            // auth has had a moment, and back out if it resolves late.
+            // asynchronously at launch, so signedIn reads false for the first frames.
+            // Once auth has settled, anyone already signed in existed before and is
+            // stamped as seen. A later false-to-true flip is a fresh sign-up (or a sign-in
+            // on a new install, the known ceiling) and shows the slides once.
             .task {
                 try? await Task.sleep(for: .milliseconds(700))
-                showing = !seen && !signedIn && !slides.isEmpty
+                if signedIn { seen = true }
+                settled = true
             }
             .onChange(of: signedIn) { _, nowSignedIn in
-                if nowSignedIn { showing = false }
+                if settled && nowSignedIn && !seen && !slides.isEmpty { showing = true }
             }
             .fullScreenCoverCompat(isPresented: $showing) {
                 OnboardingView(slides: slides, finishLabel: finishLabel) {
