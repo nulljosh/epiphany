@@ -64,7 +64,7 @@ struct NewsDrawerView: View {
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                         Spacer()
-                                        Text(article.publishedAt)
+                                        Text(article.publishedRelative)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }

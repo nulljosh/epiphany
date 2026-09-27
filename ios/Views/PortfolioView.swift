@@ -180,14 +180,6 @@ struct PortfolioView: View {
                         }
                         .padding(.bottom, 80)
                     }
-                    .refreshable {
-                        do {
-                            try await appState.refreshPortfolio()
-                            Haptics.notification(.success)
-                        } catch {
-                            print("Portfolio refresh failed: \(error)")
-                        }
-                    }
                 }
             }
             .navigationTitle("Portfolio")
@@ -205,6 +197,14 @@ struct PortfolioView: View {
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, hasLoaded else { return }
             Task {
+                try? await appState.refreshPortfolio()
+            }
+        }
+        // ponytail: replaces pull-to-refresh. Polls every 60s while on screen.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                guard scenePhase == .active, hasLoaded else { continue }
                 try? await appState.refreshPortfolio()
             }
         }
@@ -268,10 +268,22 @@ struct PortfolioView: View {
         }
     }
 
+
+    /// "AMAZON.CA*2K3 ONLINE" -> "Amazon.ca". First word, trimmed of card noise.
+    private func merchantName(_ description: String) -> String {
+        let cleaned = description.replacingOccurrences(of: #"[*#][^\s]*|\d{3,}"#, with: "", options: .regularExpression)
+        let first = cleaned.split(separator: " ").first.map(String.init) ?? "Other"
+        return first.isEmpty ? "Other" : first.capitalized
+    }
+
     private var averageMonthlySpending: Double {
         let months = spendingMonths
-        guard !months.isEmpty else { return 0 }
-        return months.map(\.total).reduce(0, +) / Double(months.count)
+        if !months.isEmpty { return months.map(\.total).reduce(0, +) / Double(months.count) }
+        // ponytail: KV spending is usually empty, so fall back to the same
+        // statement-derived monthly totals the category pie uses.
+        let byMonth = Dictionary(grouping: appState.statements.flatMap(\.transactions).filter { $0.amount < 0 }) { String($0.date.prefix(7)) }
+        guard !byMonth.isEmpty else { return 0 }
+        return byMonth.values.map { $0.reduce(0) { $0 + abs($1.amount) } }.reduce(0, +) / Double(byMonth.count)
     }
 
     private var budgetContent: some View {
@@ -784,9 +796,14 @@ struct PortfolioView: View {
             categorySource = actuals.last
         }
         let categoryTransactions = categorySource?.transactions ?? []
-        let baseCategories = Dictionary(grouping: categoryTransactions) { $0.category ?? "Other" }
+        // ponytail: nil category buckets by merchant instead of one fat "Other";
+        // top 6 slices, the rest roll into Other.
+        let ranked = Dictionary(grouping: categoryTransactions) { $0.category ?? merchantName($0.description) }
             .map { (name: $0.key, total: $0.value.reduce(0) { $0 + abs($1.amount) }) }
             .sorted { $0.total > $1.total }
+        var baseCategories = Array(ranked.prefix(6))
+        let rest = ranked.dropFirst(6).reduce(0) { $0 + $1.total }
+        if rest > 0 { baseCategories.append((name: "Other", total: rest)) }
 
         // Scale category distribution to forecast total when a forecast month is selected
         let categories: [(name: String, total: Double)]

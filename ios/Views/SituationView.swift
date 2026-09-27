@@ -536,8 +536,16 @@ struct SituationView: View {
 
     // MARK: - Computed helpers
 
+    // ponytail: the local-events feed pads itself with static OSM places
+    // (schools, parks, cemeteries). At town-level zoom they bury the real
+    // events, so they only draw once the span is under ~2km.
+    private static let staticPlaceCategories: Set<String> = ["education", "cemetery", "recreation", "place", "venue"]
     private var locatableLocalEvents: [LocalEvent] {
-        localEvents.filter { $0.coordinate != nil }
+        let span = visibleRegion?.span ?? currentRegion.span
+        let zoomedIn = span.latitudeDelta < 0.02
+        return localEvents.filter {
+            $0.coordinate != nil && (zoomedIn || !Self.staticPlaceCategories.contains($0.category ?? ""))
+        }
     }
 
     private var totalEventCount: Int {
@@ -586,18 +594,6 @@ struct SituationView: View {
                 Image(systemName: "wifi.slash")
                     .foregroundStyle(.secondary)
                 Text("Offline -- showing cached data")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
-            .padding(.bottom, 100)
-        } else if isLoadingData {
-            HStack(spacing: 6) {
-                ProgressView()
-                    .controlSize(.mini)
-                Text("Updating...")
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
             }
@@ -741,7 +737,7 @@ struct SituationView: View {
             }
             .padding(.horizontal, 10)
         }
-        .padding(.bottom, 155)
+        .padding(.bottom, 12)
     }
 
     @ViewBuilder
@@ -1129,7 +1125,7 @@ struct SituationView: View {
                 searchSuggestions
             }
         }
-        .padding(.leading, 12)
+        .padding(.horizontal, 12)
         .padding(.top, 54)
     }
 
@@ -1148,7 +1144,7 @@ struct SituationView: View {
                 .onChange(of: mapSearch) { _, query in
                     searchCompleter.update(query: query, region: visibleRegion ?? currentRegion)
                 }
-                .frame(width: 150)
+                .frame(maxWidth: .infinity)
             if !mapSearch.isEmpty {
                 Button {
                     mapSearch = ""
