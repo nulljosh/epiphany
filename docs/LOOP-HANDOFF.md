@@ -1,13 +1,25 @@
 # Epiphany loop handoff (2026-09-26, late evening)
 
-## Loop status
+## What the loop is
 
-Loop completed. Both iOS 2.5.13 and macOS 2.5.3 submitted and now WAITING_FOR_REVIEW.
+The native polish and submission loop is complete. No loop is running in this session.
 
-## What was shipped
+## Where things stand
 
-iOS 2.5.13: full polish pass (native tab bar, full-width map search, relative news timestamps, auto-refresh portfolio, markets toolbar search/filter, pie chart Other bucket by merchant, map layer zoom gating, removed stale location). macOS 2.5.3: same fixes where applicable. Three roadmap items marked complete: Markets toolbar, Portfolio pie Other bucket, Budget card Avg Monthly Spending (iOS only). Cleared four stuck draft submissions from ASC dashboard so the 5-submission cap reset.
+Last recorded App Store state: iOS 2.5.13 and macOS 2.5.3 submitted and WAITING_FOR_REVIEW. Native polish covers tabs, map search, relative news times, portfolio refresh, markets controls, and merchant grouping. Four stale draft submissions were cleared.
 
-## What's next
+Repository organization is pushed as `48039db`. Historical files live in `docs/reference/`; generated iOS artifacts are ignored and kept locally. App code is unchanged. Validation: 518 tests passed, 2 skipped; production build passed.
 
-Both platforms are in review. Next action is monitoring App Store status. If either is rejected, fix and resubmit. If both approve, version bump + archive the next builds when ready.
+## Next, in order
+
+1. Check current App Store review status before making release decisions.
+2. If rejected, read the actual rejection and address it before resubmitting.
+3. Continue with open items in `roadmap.md` when requested.
+
+## Restart prompt
+
+Suggested prompt; the original loop command was not recorded:
+
+```text
+/loop Check Epiphany's iOS and macOS review status. Read docs/LOOP-HANDOFF.md and roadmap.md first. Report the verdict and address any rejection before resubmitting.
+```

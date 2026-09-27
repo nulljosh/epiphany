@@ -33,3 +33,7 @@ Historical PDFs, the old screenshot, and Cloudflare migration notes live in `doc
 
 ## Monetization
 Ambient layer (map, events, news, markets) stays free; autopilot trading, Daily Brief, and People graph are the paid gates in `server/api/gates.js`. Gate is currently open to everyone (`EPIPHANY_REQUIRE_PRO` unset) — no feature is actually paywalled in production. Only entitlement path is Stripe on web; no IAP exists in ASC yet (Guideline 3.1.1 exposure, see `notes/2-1-b-business-model-reply.md`).
+
+## The loop
+
+Current handoff and restart guidance: [docs/LOOP-HANDOFF.md](docs/LOOP-HANDOFF.md). The native submission loop is complete; verify current review status before resuming.
