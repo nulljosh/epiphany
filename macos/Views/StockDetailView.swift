@@ -514,8 +514,8 @@ struct StockDetailView: View {
                 Text(article.source)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                if !article.publishedAt.isEmpty {
-                    Text(article.publishedAt)
+                if !article.publishedRelative.isEmpty {
+                    Text(article.publishedRelative)
                         .font(.caption)
                         .foregroundStyle(.secondary.opacity(0.7))
                 }

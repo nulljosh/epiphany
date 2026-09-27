@@ -10,6 +10,24 @@ struct NewsArticle: Codable, Identifiable {
 
     var id: String { url.isEmpty ? "\(title)-\(publishedAt)" : url }
 
+    nonisolated(unsafe) private static let isoFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return f
+    }()
+    nonisolated(unsafe) private static let iso = ISO8601DateFormatter()
+    nonisolated(unsafe) private static let relative: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter(); f.unitsStyle = .abbreviated; return f
+    }()
+
+    var publishedDate: Date? {
+        Self.isoFractional.date(from: publishedAt) ?? Self.iso.date(from: publishedAt)
+    }
+
+    /// "3h ago" instead of the raw ISO string. Empty when unparseable.
+    var publishedRelative: String {
+        guard let date = publishedDate else { return "" }
+        return Self.relative.localizedString(for: date, relativeTo: Date())
+    }
+
     private enum CodingKeys: String, CodingKey {
         case title, source, publishedAt, url, imageUrl, sourceUrl
     }

@@ -150,6 +150,8 @@ async function fetchIncidents(bbox) {
       const rawName = el.tags?.name || el.tags?.description || null;
       const name = rawName && !junkNames.has(rawName.toLowerCase().trim()) ? rawName : null;
 
+      // ponytail: OSM still carries the closed Brookswood RCMP detachment.
+      if (type === 'police' && /brookswood/i.test(name || '')) continue;
       const item = {
         type,
         category,

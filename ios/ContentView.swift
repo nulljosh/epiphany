@@ -9,36 +9,24 @@ struct ContentView: View {
 
         TabView(selection: $selectedTab) {
             SituationView()
-                .tabItem {
-                    Image(systemName: "map")
-                }
+                .tabItem { Label("Map", systemImage: "map") }
                 .tag(0)
-                .toolbar(.hidden, for: .tabBar)
 
             MarketsView()
-                .tabItem {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                }
+                .tabItem { Label("Markets", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(1)
-                .toolbar(.hidden, for: .tabBar)
 
             if appState.isLoggedIn {
                 PortfolioView()
-                    .tabItem {
-                        Image(systemName: "briefcase")
-                    }
+                    .tabItem { Label("Portfolio", systemImage: "briefcase") }
                     .tag(2)
-                    .toolbar(.hidden, for: .tabBar)
             }
 
             SettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape")
-                }
+                .tabItem { Label("Settings", systemImage: "gearshape") }
                 .tag(3)
-                .toolbar(.hidden, for: .tabBar)
         }
-        .toolbar(.hidden, for: .tabBar)
+        .toolbar(appState.hideFloatingTabBar ? .hidden : .visible, for: .tabBar)
         .onChange(of: selectedTab) { _, _ in
             Haptics.selection()
         }
@@ -48,12 +36,6 @@ struct ContentView: View {
             if !loggedIn, selectedTab == 2 { selectedTab = 0 }
         }
         .tint(Palette.appleBlue)
-        .overlay(alignment: .bottom) {
-            if !appState.hideFloatingTabBar {
-                FloatingTabBar(selectedTab: $selectedTab, showPortfolio: appState.isLoggedIn)
-                    .padding(.bottom, 8)
-            }
-        }
         .overlay(alignment: .top) {
             if let error = appState.error, !error.isEmpty {
                 SharedErrorBanner(message: error) {
@@ -95,49 +77,6 @@ struct ContentView: View {
 }
 
 
-private struct FloatingTabBar: View {
-    @Binding var selectedTab: Int
-    var showPortfolio: Bool
-
-    private let icons = ["map", "chart.line.uptrend.xyaxis", "briefcase", "gearshape"]
-    private let filledIcons = ["map.fill", "chart.line.uptrend.xyaxis", "briefcase.fill", "gearshape.fill"]
-    private let identifiers = ["tab-situation", "tab-markets", "tab-portfolio", "tab-settings"]
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(icons.indices, id: \.self) { index in
-                if index != 2 || showPortfolio {
-                    tabButton(index)
-                }
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 10)
-        .frame(maxWidth: 300)
-        .liquidGlass(in: Capsule(), interactive: true)
-        .overlay(Capsule().stroke(Palette.overlay.opacity(0.08), lineWidth: 1))
-    }
-
-    private func tabButton(_ index: Int) -> some View {
-        Button {
-            selectedTab = index
-            Haptics.selection()
-        } label: {
-            Image(systemName: selectedTab == index ? filledIcons[index] : icons[index])
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(selectedTab == index ? Palette.text : Palette.textSecondary)
-                .symbolEffect(.bounce, value: selectedTab == index)
-                .frame(width: 50, height: 40)
-                .background {
-                    if selectedTab == index {
-                        Capsule().fill(Palette.overlay.opacity(0.08))
-                    }
-                }
-        }
-        .frame(maxWidth: .infinity)
-        .accessibilityIdentifier(identifiers[index])
-    }
-}
 
 private struct SharedErrorBanner: View {
     let message: String

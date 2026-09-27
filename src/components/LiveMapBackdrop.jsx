@@ -252,6 +252,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   const [geoState, setGeoState] = useState('checking');
   const [isLocating, setIsLocating] = useState(false);
   const isLocatingRef = useRef(false);
+  const STATIC_PLACE_CATEGORIES = new Set(['education', 'cemetery', 'recreation', 'place', 'venue']);
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [], aqiReadings: [], emergencyIncidents: [], noFlights: false });
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -902,7 +903,12 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     if (mapLayers.localEvents !== false)
     // Cluster the full place feed. Slicing its first 80 entries made later
     // schools and landmarks disappear based on provider response order.
-    clusterPoints(payload.localEvents, currentZoom, extractCoords).map((c) => {
+    // ponytail: static places (schools, parks, cemeteries) only past zoom 13,
+    // same rule as iOS, so town-level view shows real events only.
+    clusterPoints(
+      currentZoom >= 13 ? payload.localEvents : payload.localEvents.filter(e => !STATIC_PLACE_CATEGORIES.has(e.category)),
+      currentZoom, extractCoords
+    ).map((c) => {
       if (c.cluster) {
         addClusterMarker(maplibregl, mapInstanceRef.current, markersRef.current, c.lon, c.lat, c.count, '#8CA0B3');
         return null;

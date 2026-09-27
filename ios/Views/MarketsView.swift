@@ -167,20 +167,18 @@ struct MarketsView: View {
     }
 
     private var mainNavigation: some View {
-        ZStack(alignment: .topTrailing) {
-            NavigationStack {
-                mainContent
-                    .navigationDestination(item: $feedDest) { dest in
-                        switch dest {
-                        case .news: NewsView().environment(appState)
-                        case .macro: MacroView().environment(appState)
-                        case .alerts: AlertsView().environment(appState)
-                        }
+        NavigationStack {
+            mainContent
+                .navigationDestination(item: $feedDest) { dest in
+                    switch dest {
+                    case .news: NewsView().environment(appState)
+                    case .macro: MacroView().environment(appState)
+                    case .alerts: AlertsView().environment(appState)
                     }
-            }
-
-            if !isSearching {
-                HStack(spacing: Spacing.sm) {
+                }
+                .navigationTitle("Markets")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { if !isSearching { ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Picker("Asset Type", selection: $marketFilter) {
                             ForEach(MarketFilter.allCases) { filter in
@@ -203,11 +201,7 @@ struct MarketsView: View {
                             Label("Gainers Only", systemImage: gainersOnly ? "checkmark" : "arrow.up.right")
                         }
                     } label: {
-                        // ponytail: these two used to be bare glyphs floating over the
-                        // list, which read as decoration pinned at arbitrary spots
-                        // rather than controls. Same icons, now on an explicit circular
-                        // backing so each is visibly its own button with a real hit area.
-                        toolbarGlyph("ellipsis")
+                        Image(systemName: "line.3.horizontal.decrease.circle")
                     }
                     .accessibilityLabel("Filter and sort")
 
@@ -215,20 +209,19 @@ struct MarketsView: View {
                         isSearching = true
                         searchFieldFocused = true
                     } label: {
-                        toolbarGlyph("magnifyingglass")
+                        Image(systemName: "magnifyingglass")
                     }
                     .accessibilityLabel("Search markets")
-                }
-            }
+                } } }
         }
         .sheet(item: $selectedStock) { stock in
-            let isWatchlisted = appState.watchlistSymbols.contains(stock.symbol)
-            let stocks = isWatchlisted
-                ? appState.stocks
-                : filteredItems.compactMap { item -> Stock? in
-                    if case .stock(let s) = item.kind { return s }
-                    return nil
-                }
+            // ponytail: page order = the order the row was tapped in, so a
+            // swipe walks the list the user is looking at.
+            let visible = filteredItems.compactMap { item -> Stock? in
+                if case .stock(let s) = item.kind { return s }
+                return nil
+            }
+            let stocks = visible.contains(where: { $0.symbol == stock.symbol }) ? visible : appState.watchlistStocks
             let initialIndex = stocks.firstIndex(where: { $0.symbol == stock.symbol }) ?? 0
             NavigationStack {
                 StockDetailPageView(stocks: stocks, initialIndex: initialIndex)
@@ -322,7 +315,7 @@ struct MarketsView: View {
             case .medium: return totalHeight * 0.45
             // Fills up to just under the top ticker strip (~top 10%) so a fully
             // open drawer reads as "ticker bar + drawer", nothing in between.
-            case .large: return totalHeight * 0.90
+            case .large: return totalHeight - 80
             }
         }
     }
@@ -351,7 +344,7 @@ struct MarketsView: View {
             .padding(.bottom, 80)
             .overlay(alignment: .top) {
                 Color.clear
-                    .frame(height: 60)
+                    .frame(height: 96)
                     .contentShape(Rectangle())
                     .gesture(
                         DragGesture()
@@ -446,13 +439,13 @@ struct MarketsView: View {
                     commodityCryptoRow(item)
                 }
             }
-            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+            .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
         // Clear the floating tab bar AND the news drawer's peek (which floats over
         // the list bottom) so the last stock rows scroll fully into view.
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 156) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 72) }
         .refreshable {
             do {
                 try await appState.refreshMarkets()
@@ -524,15 +517,6 @@ struct MarketsView: View {
                 .opacity(appState.isStockDataStale ? 0.65 : 1.0)
             }
         }
-    }
-
-    private func toolbarGlyph(_ systemName: String) -> some View {
-        Image(systemName: systemName)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Palette.appleBlue)
-            .frame(width: 34, height: 34)
-            .background(.regularMaterial, in: Circle())
-            .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
     }
 
     private var fearGreedView: some View {
