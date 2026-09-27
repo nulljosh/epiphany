@@ -290,6 +290,108 @@ struct StockDetailView: View {
         }
     }
 
+
+    // ponytail: split out of chartView so the type-checker finishes; each case is small on its own.
+    @ChartContentBuilder
+    private func priceMarks(candleData: [OHLCPoint], points: [(Date, Double)]) -> some ChartContent {
+        switch chartType {
+        case .heikinAshi, .candles:
+            ForEach(candleData) { c in
+                RuleMark(
+                    x: .value("Date", c.date),
+                    yStart: .value("Low", c.low),
+                    yEnd: .value("High", c.high)
+                )
+                .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
+                .lineStyle(StrokeStyle(lineWidth: 1))
+                RectangleMark(
+                    x: .value("Date", c.date),
+                    yStart: .value("Open", c.open),
+                    yEnd: .value("Close", c.close),
+                    width: 4
+                )
+                .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
+            }
+        case .hollowCandles:
+            ForEach(candleData) { c in
+                RuleMark(
+                    x: .value("Date", c.date),
+                    yStart: .value("Low", c.low),
+                    yEnd: .value("High", c.high)
+                )
+                .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
+                .lineStyle(StrokeStyle(lineWidth: 1))
+                RectangleMark(
+                    x: .value("Date", c.date),
+                    yStart: .value("Open", c.open),
+                    yEnd: .value("Close", c.close),
+                    width: 4
+                )
+                .foregroundStyle(c.isUp ? Palette.successGreen.opacity(0.15) : Palette.dangerRed)
+            }
+        case .bars:
+            ForEach(candleData) { c in
+                RuleMark(
+                    x: .value("Date", c.date),
+                    yStart: .value("Low", c.low),
+                    yEnd: .value("High", c.high)
+                )
+                .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
+                .lineStyle(StrokeStyle(lineWidth: 1.5))
+            }
+        case .line:
+            ForEach(points, id: \.0) { date, close in
+                LineMark(x: .value("Date", date), y: .value("Price", close))
+                    .foregroundStyle(Palette.successGreen)
+            }
+        case .stepLine:
+            ForEach(points, id: \.0) { date, close in
+                LineMark(x: .value("Date", date), y: .value("Price", close))
+                    .foregroundStyle(Palette.successGreen)
+                    .interpolationMethod(.stepCenter)
+            }
+        case .area:
+            ForEach(points, id: \.0) { date, close in
+                AreaMark(x: .value("Date", date), y: .value("Price", close))
+                    .foregroundStyle(
+                        .linearGradient(
+                            colors: [Palette.successGreen.opacity(0.3), .clear],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                LineMark(x: .value("Date", date), y: .value("Price", close))
+                    .foregroundStyle(Palette.successGreen)
+            }
+        case .baseline:
+            let basePrice = points.first?.1 ?? 0
+            ForEach(points, id: \.0) { date, close in
+                AreaMark(x: .value("Date", date), y: .value("Price", close))
+                    .foregroundStyle(
+                        .linearGradient(
+                            colors: [
+                                close >= basePrice ? Palette.successGreen.opacity(0.3) : Palette.dangerRed.opacity(0.3),
+                                .clear
+                            ],
+                            startPoint: close >= basePrice ? .top : .bottom,
+                            endPoint: close >= basePrice ? .bottom : .top
+                        )
+                    )
+                LineMark(x: .value("Date", date), y: .value("Price", close))
+                    .foregroundStyle(close >= basePrice ? Palette.successGreen : Palette.dangerRed)
+            }
+            RuleMark(y: .value("Baseline", basePrice))
+                .foregroundStyle(.secondary.opacity(0.4))
+                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+        case .columns:
+            ForEach(Array(points.enumerated()), id: \.offset) { i, item in
+                let prev = i > 0 ? points[i - 1].1 : item.1
+                BarMark(x: .value("Date", item.0), y: .value("Price", item.1))
+                    .foregroundStyle(item.1 >= prev ? Palette.successGreen : Palette.dangerRed)
+            }
+        }
+
+    }
+
     @ViewBuilder
     private var chartView: some View {
         let points = priceHistory.compactMap { point -> (Date, Double)? in
@@ -311,102 +413,7 @@ struct StockDetailView: View {
         let padding = (maxPrice - minPrice) * 0.1
 
         Chart {
-            switch chartType {
-            case .heikinAshi, .candles:
-                ForEach(candleData) { c in
-                    RuleMark(
-                        x: .value("Date", c.date),
-                        yStart: .value("Low", c.low),
-                        yEnd: .value("High", c.high)
-                    )
-                    .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
-                    .lineStyle(StrokeStyle(lineWidth: 1))
-                    RectangleMark(
-                        x: .value("Date", c.date),
-                        yStart: .value("Open", c.open),
-                        yEnd: .value("Close", c.close),
-                        width: 4
-                    )
-                    .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
-                }
-            case .hollowCandles:
-                ForEach(candleData) { c in
-                    RuleMark(
-                        x: .value("Date", c.date),
-                        yStart: .value("Low", c.low),
-                        yEnd: .value("High", c.high)
-                    )
-                    .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
-                    .lineStyle(StrokeStyle(lineWidth: 1))
-                    RectangleMark(
-                        x: .value("Date", c.date),
-                        yStart: .value("Open", c.open),
-                        yEnd: .value("Close", c.close),
-                        width: 4
-                    )
-                    .foregroundStyle(c.isUp ? Palette.successGreen.opacity(0.15) : Palette.dangerRed)
-                }
-            case .bars:
-                ForEach(candleData) { c in
-                    RuleMark(
-                        x: .value("Date", c.date),
-                        yStart: .value("Low", c.low),
-                        yEnd: .value("High", c.high)
-                    )
-                    .foregroundStyle(c.isUp ? Palette.successGreen : Palette.dangerRed)
-                    .lineStyle(StrokeStyle(lineWidth: 1.5))
-                }
-            case .line:
-                ForEach(points, id: \.0) { date, close in
-                    LineMark(x: .value("Date", date), y: .value("Price", close))
-                        .foregroundStyle(Palette.successGreen)
-                }
-            case .stepLine:
-                ForEach(points, id: \.0) { date, close in
-                    LineMark(x: .value("Date", date), y: .value("Price", close))
-                        .foregroundStyle(Palette.successGreen)
-                        .interpolationMethod(.stepCenter)
-                }
-            case .area:
-                ForEach(points, id: \.0) { date, close in
-                    AreaMark(x: .value("Date", date), y: .value("Price", close))
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [Palette.successGreen.opacity(0.3), .clear],
-                                startPoint: .top, endPoint: .bottom
-                            )
-                        )
-                    LineMark(x: .value("Date", date), y: .value("Price", close))
-                        .foregroundStyle(Palette.successGreen)
-                }
-            case .baseline:
-                let basePrice = points.first?.1 ?? 0
-                ForEach(points, id: \.0) { date, close in
-                    AreaMark(x: .value("Date", date), y: .value("Price", close))
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [
-                                    close >= basePrice ? Palette.successGreen.opacity(0.3) : Palette.dangerRed.opacity(0.3),
-                                    .clear
-                                ],
-                                startPoint: close >= basePrice ? .top : .bottom,
-                                endPoint: close >= basePrice ? .bottom : .top
-                            )
-                        )
-                    LineMark(x: .value("Date", date), y: .value("Price", close))
-                        .foregroundStyle(close >= basePrice ? Palette.successGreen : Palette.dangerRed)
-                }
-                RuleMark(y: .value("Baseline", basePrice))
-                    .foregroundStyle(.secondary.opacity(0.4))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-            case .columns:
-                ForEach(Array(points.enumerated()), id: \.offset) { i, item in
-                    let prev = i > 0 ? points[i - 1].1 : item.1
-                    BarMark(x: .value("Date", item.0), y: .value("Price", item.1))
-                        .foregroundStyle(item.1 >= prev ? Palette.successGreen : Palette.dangerRed)
-                }
-            }
-
+            priceMarks(candleData: candleData, points: points)
             if let scrubPrice {
                 RuleMark(x: .value("Date", scrubPrice.date))
                     .foregroundStyle(.secondary.opacity(0.5))
