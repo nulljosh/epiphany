@@ -1,5 +1,7 @@
 # Epiphany → Cloudflare Workers
 
+Historical migration notes. DNS and cron cutover are complete; the pre-cutover checklist below is retained for reference, not as current work. See `../../roadmap.md` for current tasks.
+
 Production runs on Cloudflare Workers at https://epiphany.heyitsmejosh.com
 (Workers custom domain). DNS was flipped in a2a1547; the three cron jobs moved
 off Vercel in cb72eef, and the Vercel project is paused as a rollback target

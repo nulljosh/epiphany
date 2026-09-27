@@ -21,6 +21,8 @@ npm run build
 Deploy: Cloudflare Workers, `npm run build && npx wrangler deploy`. No CI auto-deploy on push, `.github/workflows/test.yml` only runs tests. Repo: github.com/nulljosh/epiphany
 
 ## Key systems
+Historical PDFs, the old screenshot, and Cloudflare migration notes live in `docs/reference/`. Current work stays in `roadmap.md`. Web assets live in `public/`; native clients and release tooling stay in their platform directories.
+
 - **Gateway**: `api/gateway.js` — critical routes static-imported; everything else lazy-loaded
 - **Auth**: `server/api/auth.js`, `server/api/auth-helpers.js`
 - **Map**: `src/components/LiveMapBackdrop.jsx` (MapLibre GL, many data layers)

@@ -3,6 +3,8 @@ test-results/
 macos/Epiphany.app/
 macos/Epiphany.pkg
 macos/fastlane/report.xml
+ios/fastlane/report.xml
+*.dSYM.zip
 
 # Python
 __pycache__/
