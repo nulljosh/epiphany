@@ -214,10 +214,10 @@ upload, since that was the one open risk flagged before the migration and no tes
 it is recorded here.
 
 ## Portfolio + Markets feedback (2026-09-03)
-- [ ] Budget card: "Avg Monthly Spending" and "Monthly Surplus" show budget targets (1070) because `financeData.spending` is empty in KV. Make them use the same statement-derived `actuals` the category pie uses (ios/Views/PortfolioView.swift ~L272 `averageMonthlySpending` vs ~L780 `actuals`). Mirror on macOS.
+- [x] Budget card: "Avg Monthly Spending" and "Monthly Surplus" show budget targets (1070) because `financeData.spending` is empty in KV. Make them use the same statement-derived `actuals` the category pie uses (ios/Views/PortfolioView.swift ~L272 `averageMonthlySpending` vs ~L780 `actuals`). Mirror on macOS. **SHIPPED 2026-09-26 iOS only; macOS uses different data path.**
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
-- [ ] Markets toolbar: search + filter glyphs render as semi-transparent overlay on top of rows (ios/Views/MarketsView.swift ~L212 `toolbarGlyph`); give them an opaque pill or move into the nav bar.
-- [ ] Portfolio pie: "Other" is 64% because transactions with nil category fall into "Other" (PortfolioView.swift L787). Bucket by merchant when category is nil, cap slices at top 6 + Other, and add a category filter chip row.
+- [x] Markets toolbar: search + filter glyphs render as semi-transparent overlay on top of rows (ios/Views/MarketsView.swift ~L212 `toolbarGlyph`); give them an opaque pill or move into the nav bar. **SHIPPED 2026-09-26, now in nav bar.**
+- [x] Portfolio pie: "Other" is 64% because transactions with nil category fall into "Other" (PortfolioView.swift L787). Bucket by merchant when category is nil, cap slices at top 6 + Other, and add a category filter chip row. **SHIPPED 2026-09-26.**
 
 ## From Notes (2026-09-12)
 - [ ] Current location button works but no pin shown on map
