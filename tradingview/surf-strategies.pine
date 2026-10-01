@@ -3,7 +3,7 @@
 // Ported from the equations (#37, #4, #38, #40, #81), long-only to match the Alpaca paper endpoint.
 // ponytail: no price stop, a stop fill draws no label and the bot would miss the exit.
 // Draws BUY / SELL labels that scripts/tv-signal-agent.js turns into orders.
-strategy("Surf Strategies", overlay = true, initial_capital = 10000, default_qty_type = strategy.percent_of_equity, default_qty_value = 100, commission_type = strategy.commission.percent, commission_value = 0.05)
+strategy("Surf Strategies", overlay = true, initial_capital = 10000, default_qty_type = strategy.percent_of_equity, default_qty_value = 100, commission_type = strategy.commission.percent, commission_value = 0.05, margin_long = 0, margin_short = 0)
 
 mode   = input.string("Two MA", "Strategy", options = ["Single MA", "Two MA", "Three MA", "Donchian", "IBS", "RSI2 pullback", "IBS + trend"])
 t1     = input.int(20,  "Fast / single MA length", minval = 1)
@@ -46,11 +46,11 @@ longOut = switch mode
 flat = strategy.position_size == 0
 if longIn and flat
     strategy.entry("L", strategy.long, comment = " ")
-    // Text is invisible but still readable by tv-signal-agent.js; the arrow is the only mark.
-    label.new(bar_index, low, "BUY", style = label.style_triangleup, size = size.tiny, color = color.black, textcolor = color.new(color.white, 100))
+    // Invisible on the chart (TradingView draws its own trade arrows) but readable by tv-signal-agent.js.
+    label.new(bar_index, low, "BUY", style = label.style_triangleup, size = size.tiny, color = color.new(color.black, 100), textcolor = color.new(color.white, 100))
 else if longOut and not flat
     strategy.close("L", comment = " ")
-    label.new(bar_index, high, "SELL", style = label.style_triangledown, size = size.tiny, color = color.gray, textcolor = color.new(color.white, 100))
+    label.new(bar_index, high, "SELL", style = label.style_triangledown, size = size.tiny, color = color.new(color.gray, 100), textcolor = color.new(color.white, 100))
 
 plot(mode == "Donchian" ? na : ma1, "MA1", color.black)
 plot(mode == "Two MA" or mode == "Three MA" ? ma2 : na, "MA2", color.gray)
