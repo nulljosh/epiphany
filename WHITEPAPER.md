@@ -383,6 +383,35 @@ and in 2022 it lost more than holding (-20% against -13%, and -31% against
 -13.7% against -20.5% for holding. Verdict: worth paper trading, not real money,
 and only with next-close trades and fees under 0.25%.
 
+**What to hold when it is out.** The paper sleeve parks in T-bills (BIL) while
+the S&P sits under its average, so we asked whether something else earns more
+there (`century.py --out`, raw output in `tradingview/results-out-asset.txt`).
+Same fixed rule, same 0.1% fee, same 0.8% fund gap off. We tried 10 year
+Treasuries (IEF), 20 year Treasuries (TLT), gold (GLD), half bills and half
+gold, and 2x bonds, each plain and held only while its own price is above its
+own 200 day average (else bills). Picked on 1929 to 1975, graded on 1976 to now,
+against Trend 2x with bills at 14.4% / 44%. Plain Treasuries add return but also
+a bigger drop, because 2022 is the year the bonds and the stocks fell together:
+the rule's 2022 was -31% with bills, but -41% with 10 year and -47% with 20 year
+Treasuries (the 2008 side paid, +19% and +32% against +1%). Holding them only
+above their own average fixes that: 2022 stays -31%, 2008 stays +19% and +31%.
+That version made 15.6% with a 45% drop for 10 year and 16.8% with a 45% drop
+for 20 year, won 5 of 6 decades, and beat nearly all of 500 random bond in and out
+schedules. It still fails our bar by 0.6 of a point on the drop (44.6% against
+44.0%), and one day late it keeps its lead (13.5% and 14.6% against 12.3%) but
+the drop is 63% against 62%. Two rows do pass on the model, gold above
+its own average (15.5% / 41%) and half bills, half gold the same way (14.8% /
+42%), but neither survives the real GLD since 2006 (drop 45% and 44% against
+41%), and gold's train half is a fixed price that private owners were banned
+from holding, so that edge is not tradable history. The real funds are the sober
+part: from 2006 on, bills gave 12.5% / 41%, IEF with its own filter 12.8% / 42%
+and TLT with its own filter 12.5% / 40%. Most of the model's gain is the long
+fall in bond yields from 1981 to 2020, which will not repeat from 5%. 2x bonds
+earned the most on the model (17.0% to 19.3%) but fail the drop by about a point
+and made only 12.2% to 13.2% on real fund returns. Verdict: nothing replaces BIL
+yet. The one worth running on paper beside it is IEF held only above its own 200
+day average, BIL otherwise.
+
 **Does it work on other indexes, with dividends?** The earlier other-markets
 check left dividends out, so we reran it with them in (`century.py --indexes`,
 raw output in `tradingview/results-trend-indexes.txt`). Same rule, nothing
@@ -509,12 +538,24 @@ files named above.
 | Trend 1x Bitcoin, 50 day average, 0.25% a side | 2018 to now | 53.8% / 60% | 46.7% / 77% | fail (4 of 8 years) |
 | Trend 1x Ethereum, same frozen rule | 2018 to now | 58.5% / 61% | 49.2% / 79% | fail (4 of 8 years) |
 | Trend 1x top 10 coin basket, same frozen rule | 2018 to now | 75.7% / 53% | 77.7% / 77% | fail (less return) |
+| Trend 2x S&P, 10y Treasuries when out | 1976 to now | 15.0% / 50% | Trend 2x, bills 14.4% / 44% | fail (bigger drop, 3 of 6 decades) |
+| Same, 10y only above its own 200 day average | 1976 to now | 15.6% / 45% | 14.4% / 44% | fail (drop 0.6 point bigger) |
+| Trend 2x S&P, 20y Treasuries when out | 1976 to now | 15.6% / 55% | 14.4% / 44% | fail (bigger drop, 3 of 6 decades) |
+| Same, 20y only above its own 200 day average | 1976 to now | 16.8% / 45% | 14.4% / 44% | fail (drop 0.6 point bigger) |
+| Trend 2x S&P, gold when out | 1976 to now | 14.1% / 52% | 14.4% / 44% | fail (less return, bigger drop) |
+| Same, gold only above its own 200 day average | 1976 to now | 15.5% / 41% | 14.4% / 44% | pass on the model (4 of 6), fails on real GLD from 2006 |
+| Trend 2x S&P, half bills half gold when out | 1976 to now | 14.3% / 43% | 14.4% / 44% | fail (less return) |
+| Same, gold half only above its own 200 day average | 1976 to now | 14.8% / 42% | 14.4% / 44% | pass on the model (4 of 6), fails on real GLD from 2006 |
+| Trend 2x S&P, 2x 10y Treasuries in a bond uptrend, else bills | 1976 to now | 17.0% / 45% | 14.4% / 44% | fail (0.8 point bigger drop) |
+| Trend 2x S&P, 2x 20y Treasuries in a bond uptrend, else bills | 1976 to now | 19.3% / 45% | 14.4% / 44% | fail (1.0 point bigger drop) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
-the 429 stocks, so it is a different yardstick from the others. Two of 22 rows
+the 429 stocks, so it is a different yardstick from the others. Two of the first 22 rows
 pass, and they are the same bet twice: trend at 2x on the S&P and the
-Nasdaq 100. The only rule we paper trade is the first. The Nasdaq 100 stays a
+Nasdaq 100. The ten out-asset rows at the bottom swap what
+sits in the box when the rule is out and are graded against Trend 2x with bills,
+not the S&P, so they are variations on the first bet, not new edges. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 

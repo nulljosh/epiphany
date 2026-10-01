@@ -15,6 +15,7 @@ in tradingview/data/.
     python3 tradingview/century.py --leverage # S&P above its average at L x leverage, daily since 1928; French momentum deciles
     python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
     python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
+    python3 tradingview/century.py --out     # what Trend 2x holds when out: bills vs Treasuries, gold, 2x bonds, each with its own trend filter
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
@@ -1097,7 +1098,259 @@ def crypto():
     return out
 
 
+# ---------- what to hold when the trend is out (--out) ----------
+
+OUT_EXP = {"ief": 0.0015, "tlt": 0.0015, "gold": 0.004}  # IEF, TLT, GLD expense ratios, taken off the model series
+
+
+def out_data(D):
+    """Daily returns after fund expenses: ief = 10y Treasury priced from yields, tlt = 20y par bond repriced off the same 10y yield
+    (parallel shift, 10y coupon, so carry is a little low), gold = monthly gold price spread over the month's days."""
+    dates, bill = D[0], D[3]
+    sh = {r[0][:7]: float(r[5]) for r in rows("shiller.csv")}
+    y = {k: v / 100 for k, v in sh.items() if v > 0 and k < "1953-04"}
+    y.update({r[0][:7]: float(r[1]) / 100 for r in rows("gs10.csv") if r[1] not in ("", ".")})
+    yk = sorted(y)
+    b20 = {yk[i]: bond_ret(y[yk[i - 1]], y[yk[i]], 20.0) for i in range(1, len(yk))}
+    gm = to_rets({r[0][:7]: float(r[1]) for r in rows("gold.csv")})
+    nd = {}
+    for d in dates:
+        nd[d[:7]] = nd.get(d[:7], 0) + 1
+    spread = lambda m, k: (1 + m.get(k, 0.0)) ** (1 / nd[k]) - 1
+    ief = [r - OUT_EXP["ief"] / 252 for r in D[4]]
+    tlt = [spread(b20, d[:7]) - OUT_EXP["tlt"] / 252 for d in dates]
+    gold = [spread(gm, d[:7]) - OUT_EXP["gold"] / 252 for d in dates]
+    return {"ief": ief, "tlt": tlt, "gold": gold, "mix": [0.5 * b + 0.5 * g for b, g in zip(bill, gold)]}
+
+
+def real_rets(dates, sym):
+    """Daily return of a real fund (Yahoo adjusted close, dividends in, expenses out) on the S&P calendar; 0 before it exists."""
+    px, prev, out = {r[0]: r[2] for r in raw(sym)}, None, []
+    for d in dates:
+        out.append(px[d] / prev - 1 if d in px and prev else 0.0)
+        if d in px:
+            prev = px[d]
+    return out
+
+
+def trend_of(rets):
+    """True while the asset's own total return index closes above its 200 day average."""
+    idx, v = [], 1.0
+    for r in rets:
+        v *= 1 + r
+        idx.append(v)
+    sg, run = [False] * len(idx), sum(idx[:200])
+    for i in range(200, len(idx)):
+        run += idx[i] - idx[i - 200]
+        sg[i] = idx[i] > run / 200
+    return sg
+
+
+def out_sim(D, spec, lo, hi, fee=FEE, delay=0, gap=GAP, amask=None):
+    """Fixed Trend 2x (2x fund above the S&P 200 day average, signal at close j-2, trade close j-1, earn day j, 2x fund model with
+    SWAP_EXP + gap). When out, hold spec['ret'] (x spec['mult'] as a daily-reset fund: m*r - bill - SWAP_EXP - gap), or bills when
+    spec['sig'] (the asset's own 200 day trend) says no. Fee on every non-cash dollar bought or sold; spec['frac'] = non-cash share."""
+    dates, _, sp, bill, _, sigs = D
+    s, r0, so = sigs["200d"], spec["ret"], spec.get("sig")
+    fr = {"stock": 1.0, "asset": spec["frac"], "bills": 0.0, None: 1.0}
+    m = spec["mult"]
+    eq, pos, curve = 1.0, None, [1.0]
+    for j in range(lo, hi):
+        if s[j - 2 - delay]:
+            st = "stock"
+        elif amask is not None:
+            st = "asset" if amask[j - lo] else "bills"
+        else:
+            st = "asset" if (so is None or so[j - 2 - delay]) else "bills"
+        if st != pos:
+            eq *= 1 - fee * (fr[st] + fr[pos])
+            pos = st
+        if st == "stock":
+            eq *= max(1 + 2 * sp[j] - bill[j] - (SWAP_EXP + gap) / 252, 1e-12)
+        elif st == "asset":
+            eq *= max(1 + (r0[j] if m == 1 else m * r0[j] - bill[j] - (SWAP_EXP + gap) / 252), 1e-12)
+        else:
+            eq *= 1 + bill[j]
+        curve.append(eq)
+    return curve
+
+
+def out_specs(D, rets):
+    """name -> spec. rets = {'ief','tlt','gold','mix'} daily returns (model or real funds)."""
+    sp = {"T-bills (baseline)": {"ret": D[3], "mult": 1, "frac": 0.0}}
+    for key, nm in (("ief", "IEF-like 10y"), ("tlt", "TLT-like 20y"), ("gold", "Gold"), ("mix", "50/50 bills+gold")):
+        fr = 0.5 if key == "mix" else 1.0
+        sp[nm] = {"ret": rets[key], "mult": 1, "frac": fr}
+        sp[nm + ", own trend"] = {"ret": rets[key], "mult": 1, "frac": fr, "sig": trend_of(rets[key])}
+    for key, nm in (("ief", "2x IEF-like"), ("tlt", "2x TLT-like")):
+        sp[nm + ", bond uptrend"] = {"ret": rets[key], "mult": 2, "frac": 1.0, "sig": trend_of(rets[key])}
+    return sp
+
+
+def out_random(D, spec, lo, hi, base, draws=500, seed=7):
+    """Rule's own asset on/off schedule against random ones: same stock schedule, same asset days among the out days, same number of
+    asset/bills switches. Returns (share of randoms the rule's CAGR beats, randoms matching both CAGR and worst drop)."""
+    import random
+    dates, s = D[0], D[5]["200d"]
+    outs = [j for j in range(lo, hi) if not s[j - 2]]
+    seq = [spec["sig"][j - 2] for j in outs]
+    n, n_in = len(seq), sum(seq)
+    if n_in in (0, n):
+        return None
+    k = sum(seq[i] != seq[i - 1] for i in range(1, n))
+    segs = k + 1
+    n_si = (segs + 1) // 2 if seq[0] else segs // 2
+    n_so = segs - n_si
+    def comp(total, m):
+        cuts = sorted(random.sample(range(1, total), m - 1))
+        return [b - a for a, b in zip([0] + cuts, cuts + [total])]
+    st = dstats(dates, out_sim(D, spec, lo, hi), lo)
+    random.seed(seed)
+    wins = both = 0
+    for _ in range(draws):
+        ins, ots = comp(n_in, n_si), comp(n - n_in, n_so)
+        p, cur, ii, oo = [], seq[0], 0, 0
+        for _ in range(segs):
+            if cur:
+                p += [True] * ins[ii]; ii += 1
+            else:
+                p += [False] * ots[oo]; oo += 1
+            cur = not cur
+        mk = [False] * (hi - lo)
+        for j, v in zip(outs, p):
+            mk[j - lo] = v
+        r = dstats(dates, out_sim(D, spec, lo, hi, amask=mk), lo)
+        wins += r["cagr"] < st["cagr"]
+        both += r["cagr"] >= st["cagr"] and r["mdd"] <= st["mdd"]
+    return wins / draws, both, k
+
+
+def out_asset():
+    D = lev_data()
+    dates = D[0]
+    lo = next(i for i, d in enumerate(dates) if d >= "1929-01-01")
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    hi = len(dates)
+    M = out_data(D)
+    specs = out_specs(D, M)
+    base = "T-bills (baseline)"
+    print(f"WHAT TO HOLD WHEN OUT. Fixed rule: Trend 2x S&P (2x fund above 200 day average, signal at close, trade next close, {FEE:.1%} a switch,")
+    print(f"daily-reset 2x fund model with {SWAP_EXP:.1%} expense, {GAP:.1%} a year model gap taken off). Pick on {dates[lo]}..{dates[split - 1]}, blind {dates[split]}..{dates[-1]}.")
+    print("Out-assets, daily, net of fund expenses (IEF 0.15%, TLT 0.15%, GLD 0.40%). IEF-like = 10y Treasury priced off GS10 yields. TLT-like = 20y par bond")
+    print("repriced off the same GS10 yield (parallel shift, 10y coupon). Gold = monthly price series (fixed at $20.67/$35 until 1971, private ownership banned")
+    print("until 1974, so its train half is not a real test) spread over the month. 2x bond = daily-reset 2x of that bond, T-bill financing, 0.9% expense + gap.")
+    print("'own trend' = hold it only while its own total return index is above its 200 day average, else bills (signal timing as the stock rule).")
+    print("The 50/50 mix is half bills, half gold, rebalance cost ignored. Fee counted on every non-cash dollar bought or sold.\n")
+
+    # model against real funds
+    r0 = next(i for i, d in enumerate(dates) if d >= "2006-01-03")
+    print("MODEL VS REAL FUNDS, 2006-01-03 on, always invested (Yahoo adjusted closes)")
+    for key, sym in (("ief", "IEF"), ("tlt", "TLT"), ("gold", "GLD")):
+        mc, rc = [1.0], [1.0]
+        rr = real_rets(dates, sym)
+        for j in range(r0, hi):
+            mc.append(mc[-1] * (1 + M[key][j]))
+            rc.append(rc[-1] * (1 + rr[j]))
+        m_, r_ = dstats(dates, mc, r0), dstats(dates, rc, r0)
+        print(f"  {sym:4} model {m_['cagr']:.1%} / worst {m_['mdd']:.0%}   real {r_['cagr']:.1%} / worst {r_['mdd']:.0%}   gap {m_['cagr'] - r_['cagr']:+.1%} a year")
+    print()
+
+    names = list(specs)
+    tr, bl, nog, late, cur = {}, {}, {}, {}, {}
+    for nm in names:
+        sp_ = specs[nm]
+        tr[nm] = dstats(dates, out_sim(D, sp_, lo, split), lo)
+        cur[nm] = out_sim(D, sp_, split, hi)
+        bl[nm] = dstats(dates, cur[nm], split)
+        nog[nm] = dstats(dates, out_sim(D, sp_, split, hi, gap=0.0), split)
+        late[nm] = dstats(dates, out_sim(D, sp_, split, hi, delay=1), split)
+    dec = {nm: ddecades(dates, cur[nm], split) for nm in names}
+    decs = sorted(dec[base])
+    chk = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, FEE, 0, GAP), split)
+    assert abs(chk["cagr"] - bl[base]["cagr"]) < 1e-3 and abs(chk["mdd"] - bl[base]["mdd"]) < 1e-3, (chk, bl[base])
+    print(f"Baseline matches lev_sim (etf, 2x, 200d, bills, gap {GAP:.1%}): {chk['cagr']:.1%} / {chk['mdd']:.0%}. Without the gap it is {nog[base]['cagr']:.1%} / {nog[base]['mdd']:.0%}, the --leverage row.\n")
+
+    W = 28
+    print(f"{'out-asset':{W}} | {'train CAGR':>10}{'maxDD':>6} | {'BLIND CAGR':>10}{'maxDD':>6}{'no gap':>8} | {'won vs bills':>12} | {'1 day late':>12}")
+    for nm in names:
+        print(f"{nm:{W}} | {tr[nm]['cagr']:>10.1%}{tr[nm]['mdd']:>6.0%} | {bl[nm]['cagr']:>10.1%}{bl[nm]['mdd']:>6.0%}{nog[nm]['cagr']:>8.1%} | "
+              f"{(sum(dec[nm][d] > dec[base][d] for d in decs) if nm != base else '-'):>9}/{len(decs) if nm != base else '':<2}| {late[nm]['cagr']:>7.1%} /{late[nm]['mdd']:>3.0%}")
+
+    print(f"\n{'blind decade CAGR':{W}}" + "".join(f"{d:>8}" for d in decs))
+    for nm in names:
+        print(f"{nm:{W}}" + "".join(f"{dec[nm][d]:>8.1%}" for d in decs))
+
+    # stress windows
+    dl = dates[split - 1:hi]
+    hold = lev_sim(D, 1.0, None, "bills", "margin", split, hi)
+    wins = (("2008 (calendar year)", "2008-01-01", "2008-12-31"), ("2022 (calendar year)", "2022-01-01", "2022-12-31"),
+            ("Mar 2020 (Feb 19 to Apr 30)", "2020-02-19", "2020-04-30"))
+    print("\nSTRESS, blind, rule with each out-asset: return over the window (worst drop inside it)")
+    print(f"{'':{W}}" + "".join(f"{w[0][:17]:>20}" for w in wins))
+    print(f"{'S&P hold':{W}}" + "".join(f"{window(dl, hold, a, b)[0]:>+12.0%} ({window(dl, hold, a, b)[1]:>3.0%})  " for _, a, b in wins))
+    for nm in names:
+        print(f"{nm:{W}}" + "".join(f"{window(dl, cur[nm], a, b)[0]:>+12.0%} ({window(dl, cur[nm], a, b)[1]:>3.0%})  " for _, a, b in wins))
+    print("\nThe out-assets alone in those windows (always held, no stocks), return (worst drop):")
+    for key, nm in (("ief", "IEF-like"), ("tlt", "TLT-like"), ("gold", "Gold"), ("mix", "50/50 bills+gold"), ("bill", "T-bills")):
+        r_ = D[3] if key == "bill" else M[key]
+        cv = [1.0]
+        for j in range(split, hi):
+            cv.append(cv[-1] * (1 + r_[j]))
+        print(f"{nm:{W}}" + "".join(f"{window(dl, cv, a, b)[0]:>+12.0%} ({window(dl, cv, a, b)[1]:>3.0%})  " for _, a, b in wins))
+    # how often the stock rule is out in those windows
+    s = D[5]["200d"]
+    for lab, a, b in wins[:2]:
+        js = [j for j in range(split, hi) if a <= dates[j] <= b]
+        print(f"  Stock rule out of the S&P on {sum(not s[j - 2] for j in js)} of {len(js)} days in {lab[:4]}.")
+
+    # random baseline
+    print("\nRANDOM BASELINE where the switch schedule differs (500 random asset/bills schedules, same stock schedule, same asset days among the out days, same asset switches)")
+    for nm in names:
+        if "sig" not in specs[nm]:
+            continue
+        r = out_random(D, specs[nm], split, hi, base)
+        if r is None:
+            print(f"  {nm:{W}} filter never differs from always holding it"); continue
+        print(f"  {nm:{W}} {bl[nm]['cagr']:.1%} beats {r[0]:.0%} of random schedules ({r[2]} asset/bills flips), randoms matching on return and worst drop: {r[1]} of 500")
+    print("  The unfiltered rows share the baseline's stock in/out schedule exactly; only the asset held when out differs, so there is nothing to shuffle.")
+
+    # pick and bar
+    b0, d0 = bl[base], dec[base]
+    print(f"\nPICK on the train half: best train CAGR whose train worst drop is no bigger than the bills baseline's ({tr[base]['mdd']:.0%}); must also beat its train CAGR ({tr[base]['cagr']:.1%}).")
+    ok = [nm for nm in names if nm != base and tr[nm]["cagr"] > tr[base]["cagr"] and tr[nm]["mdd"] <= tr[base]["mdd"]]
+    pk = max(ok, key=lambda nm: tr[nm]["cagr"]) if ok else base
+    print(f"  train pick: {pk}" + ("" if ok else " (nothing beat bills on the train half)"))
+    ok2 = [nm for nm in ok if "Gold" not in nm and "gold" not in nm]
+    l35 = next(i for i, d in enumerate(dates) if d >= "1935-01-01")
+    g35, b35 = (dstats(dates, out_sim(D, specs[n_], l35, split), l35) for n_ in ("Gold, own trend", base))
+    print(f"  Gold's train half is a fixed price (one revaluation, Jan 1934, +69%) until 1971, and private gold was banned until 1974, so its train edge is not tradable history."
+          f" From 1935 on: gold own trend {g35['cagr']:.1%} / {g35['mdd']:.0%} against bills {b35['cagr']:.1%} / {b35['mdd']:.0%}.")
+    print(f"  train pick with gold set aside: {max(ok2, key=lambda nm: tr[nm]['cagr']) if ok2 else base}")
+    print(f"\nBAR vs Trend 2x with bills ({b0['cagr']:.1%} / {b0['mdd']:.1%}): blind CAGR higher, worst drop no bigger, more than half the decades won.")
+    for nm in names[1:]:
+        w = sum(dec[nm][d] > d0[d] for d in decs)
+        pas = bl[nm]["cagr"] > b0["cagr"] and bl[nm]["mdd"] <= b0["mdd"] and w > len(decs) / 2
+        why = "" if pas else " (" + ", ".join(x for x, c in (("less return", bl[nm]["cagr"] <= b0["cagr"]), ("bigger drop", bl[nm]["mdd"] > b0["mdd"]), (f"{w} of {len(decs)} decades", w <= len(decs) / 2)) if c) + ")"
+        print(f"  {nm:{W}} {bl[nm]['cagr']:.1%} / {bl[nm]['mdd']:.1%}, won {w}/{len(decs)}: {'PASS' if pas else 'FAIL'}{why}{'   [train pick]' if nm == pk else ''}")
+
+    # real funds
+    print("\nREAL FUNDS CHECK, 2006-01-03 on (Yahoo adjusted closes for IEF, TLT, GLD; 2x rows run the 2x fund model on the real fund's returns). Same fixed rule, gap taken off.")
+    real = {"ief": real_rets(dates, "IEF"), "tlt": real_rets(dates, "TLT"), "gold": real_rets(dates, "GLD")}
+    real["mix"] = [0.5 * b + 0.5 * g for b, g in zip(D[3], real["gold"])]
+    rs = out_specs(D, real)
+    rc = {nm: out_sim(D, rs[nm], r0, hi) for nm in rs}
+    dl2 = dates[r0 - 1:hi]
+    print(f"{'out-asset':{W}} | {'CAGR':>6}{'maxDD':>6} | {'2008':>12} | {'2022':>12}")
+    for nm in rs:
+        c, dd = dstats(dates, rc[nm], r0)["cagr"], dstats(dates, rc[nm], r0)["mdd"]
+        w8, w22 = window(dl2, rc[nm], "2008-01-01", "2008-12-31"), window(dl2, rc[nm], "2022-01-01", "2022-12-31")
+        print(f"{nm:{W}} | {c:>6.1%}{dd:>6.0%} | {w8[0]:>+6.0%} ({w8[1]:>3.0%}) | {w22[0]:>+6.0%} ({w22[1]:>3.0%})")
+
+
 if __name__ == "__main__":
+    if "--out" in sys.argv:
+        out_asset()
+        sys.exit()
     if "--robust" in sys.argv:
         robust()
         sys.exit()
