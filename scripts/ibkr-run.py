@@ -84,6 +84,8 @@ try:
     spy_now = closes("SPY")[-1]
     state.setdefault("start", {"account": acct, "netLiquidation": nl, "spy": spy_now, "date": datetime.now().isoformat(timespec="minutes")})
     state["start"].setdefault("spy", spy_now)
+    if a.go:
+        state["lastGo"] = datetime.now(ZoneInfo("America/New_York")).date().isoformat()  # lets a loop tell if today already ran
     state.setdefault("orders", []).extend({**x, "date": datetime.now().isoformat(timespec="minutes")} for x in sent)
     json.dump(state, open(STATE, "w"), indent=1)
     start = state["start"]["netLiquidation"]
