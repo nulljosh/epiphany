@@ -60,19 +60,24 @@ scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with merged JSO
 
 Roadmap: [roadmap.md](roadmap.md).
 
-## Trading benchmark
+## Does the trading actually work?
 
-Every strategy, run on 15 years of history and scored on years it never saw. 429 S&P 500 stocks plus BTC, 0.1% fees, next-open fills.
+We tested it on real history. Hundreds of stocks, index funds, Bitcoin, gold, oil, and the S&P 500 back to 1927. Each strategy was tuned on older years, then graded on newer years it had never seen. Like practising on old exams, then sitting a new one. Fees included.
 
-| Strategy | Win rate | Avg trade | Trades |
+One strategy passed. It's called Double 7s. When something that's been rising has its worst close in 10 days, buy. When it has its best close in 10 days, sell.
+
+| Tested on | Trades that made money | Average gain per trade | Trades |
 |---|---|---|---|
-| **Double 7s** | **67%** | **+0.39%** | 22,614 |
-| RSI(2) pullback | 65% | +0.25% | 19,156 |
-| IBS dip buy | 61% | +0.50% | 52,697 |
-| Donchian breakout | 41% | +3.21% | 5,057 |
-| Monica, all in | 30% | -0.07% | 43,701 |
+| 429 S&P 500 stocks | 67% | 0.39% | 22,614 |
+| 16 index funds | 71% | 0.44% | 807 |
+| Our TradingView watchlist, every symbol from its first day | 69% | 0.62% | 3,508 |
+| Bitcoin | 71% | | 104 |
 
-Double 7s clears the bar: 66%+ wins, profit after fees, on unseen years. It holds on index ETFs (71%), on BTC (71%), and on the live TradingView watchlist tested from each symbol's first bar, S&P 500 index since 1927 included (69% of 3,508 trades). Method, caveats and the full table are in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark). Run it yourself with `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart through `tradingview/epiphany.pine`.
+Two out of three trades make money, after fees, on years the strategy never saw. Only buying when fear is high (the VIX is spiking) lifts that to 73% on index funds.
+
+What it won't do is beat buying and holding. It's in the market a few days at a time, so most of the year the cash sits still. You get a smoother ride, not a bigger one.
+
+The full story, including everything that failed, is in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark-does-it-work). Run it yourself: `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart from `tradingview/epiphany.pine`.
 
 ## Setup
 

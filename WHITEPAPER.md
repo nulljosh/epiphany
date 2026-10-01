@@ -90,73 +90,74 @@ The strategy is shared with a backtestable Pine Script port
 years of TradingView history instead of trusted on faith from a few weeks of
 paper trading.
 
-### 5. Benchmark
+### 5. Benchmark: does it work?
 
-We stopped trusting the strategy on faith and ran it against history. So did
-every popular alternative. The engine is `tradingview/backtest.py`, plain Python,
-no dependencies. The rules keep it honest. Signals read the close and fill at the
-next open. Every trade pays 0.1% each way. Long only. Settings are picked on
-2012 to 2019, then scored blind on 2020 to now.
+Short answer: one strategy does. Here is how we know.
 
-The data is Bitstamp BTC daily since 2011, plus every S&P 500 stock with history
-back to 2011 (429 of 503), split and dividend adjusted. Raw output lives in
-`tradingview/results-sp500.txt` and `tradingview/results-btc.txt`. Rerun with
-`python3 tradingview/backtest.py sp500`.
+**How we tested.** We replayed every strategy on real daily prices. A trade
+happens the morning after its signal, never with hindsight. Every trade pays a
+0.1% fee on the way in and again on the way out. Each strategy was tuned on
+older years (2012 to 2019) and then graded on years it had never seen (2020 to
+now). Think of it as practising on old exams, then sitting a new one. For the
+watchlist, each symbol is tuned on the first half of its life and graded on the
+second. The code is `tradingview/backtest.py`. Raw results are in
+`tradingview/results-*.txt`.
 
-The bar for an edge: at least 66% of trades win, the average trade makes money
-after fees, and it holds on years it never saw.
+**What counts as a real edge.** Three things at once. At least two out of three
+trades make money. The average trade makes money after fees. And it still works
+on the years it never saw.
 
-S&P 500, blind 2020 to now:
+**The winner: Double 7s.** When something that has been rising (above its 200
+day average) has its worst close in 10 days, buy. When it has its best close in
+10 days, sell. It passed everywhere we tried it:
 
-| Strategy | Win rate | Avg trade | Median CAGR | Median max drop | Trades |
-|---|---|---|---|---|---|
-| **Double 7s** | **67%** | **+0.39%** | 0.7% | 37% | 22,614 |
-| RSI(2) pullback | 65% | +0.25% | 0.5% | 25% | 19,156 |
-| Cumulative RSI | 65% | +0.25% | 0.6% | 23% | 17,091 |
-| IBS dip buy | 61% | +0.50% | 6.1% | 38% | 52,697 |
-| Donchian breakout | 41% | +3.21% | 2.5% | 41% | 5,057 |
-| Two MA crossover | 37% | +2.82% | 2.1% | 44% | 6,509 |
-| Monica, all in | 30% | -0.07% | -2.0% | 34% | 43,701 |
-| Buy and hold | | | 9.1% | 50% | |
-
-The same test on every other universe we could reach. Double 7s holds up
-everywhere, which is the point: an edge that only shows up on one list is luck.
-
-| Universe | Blind period | Double 7s win rate | Avg trade | Trades |
+| Tested on | Graded on | Trades that made money | Average gain per trade | Trades |
 |---|---|---|---|---|
-| 429 S&P 500 stocks | 2020 to now | 67% | +0.39% | 22,614 |
-| 16 index and sector ETFs | 2020 to now | 71% | +0.44% | 807 |
-| Live TradingView watchlist, 28 symbols from their first bar (S&P 500 index since 1927, Dow, gold, silver, oil, copper, BTC, stocks) | second half of each symbol's life | 69% | +0.62% | 3,508 |
-| BTC alone | 2020 to now | 71% | | 104 |
+| 429 S&P 500 stocks | 2020 to now | 67% | 0.39% | 22,614 |
+| 16 index funds | 2020 to now | 71% | 0.44% | 807 |
+| Our TradingView watchlist, 28 symbols from their first day (S&P 500 since 1927, Dow, gold, silver, oil, copper, Bitcoin, stocks) | second half of each life | 69% | 0.62% | 3,508 |
+| Bitcoin | 2020 to now | 71% | | 104 |
+| Index funds, only when the VIX is spiking | 2020 to now | 73% | 0.52% | 610 |
 
-The watchlist run reads the symbols straight from TradingView through the MCP
-(`python3 tradingview/backtest.py watchlist`), so the benchmark follows
-whatever is on the list. BTC year by year (`backtest.py btc-years`): Double 7s
-lost 53% in its worst year (2014) and was flat in 2022, when holding lost 65%.
-It also never got near holding's best years. It trades upside for a smoother
-ride.
+The watchlist row reads the symbols straight off our TradingView watchlist
+(`backtest.py watchlist`), so the test follows whatever is on the list.
 
-What it says:
+**Everything else we tried,** on the 429 S&P 500 stocks, 2020 to now:
 
-- **Double 7s is the edge.** Buy a stock in an uptrend (above its 200 day
-  average) when it closes at a 10 day low. Sell when it closes at a 10 day high.
-  It won 67% of 22,614 trades it was never tuned on. It is the only strategy
-  that clears all three bars. On BTC since 2011 it won 72% of its trades.
-- **The edge is per trade, not per year.** One stock only triggers a few times a
-  year, so the money sits idle and the yearly return is small. The way to use it
-  is many stocks at once, so the cash is always working. That portfolio test is
-  next.
-- **Trend following never beat holding.** Moving averages, breakouts and
-  Supertrend all cut the worst drops and gave back most of the gain. On BTC from
-  2020, holding made 11.7x with a 77% drop. Donchian made 9.5x with 43%.
-- **Monica, as shipped, does not work.** Its entry signal loses money (30% win
-  rate). Its Kelly sizing has a bug: one early loss with no wins sets the bet to
-  zero, and it never trades again. It stays paper only until both are fixed.
+| Strategy | Trades that made money | Average gain per trade | Typical yearly return |
+|---|---|---|---|
+| Double 7s | 67% | 0.39% | 0.7% |
+| Double 7s, only when the VIX is spiking | 67% | 0.51% | 0.4% |
+| RSI(2) pullback | 65% | 0.25% | 0.5% |
+| IBS dip buy | 61% | 0.50% | 6.1% |
+| Donchian breakout | 41% | 3.21% | 2.5% |
+| Moving average crossover | 37% | 2.82% | 2.1% |
+| Monica (our original strategy) | 30% | -0.07% | -2.0% |
+| Buy and hold | | | 9.1% |
 
-Caveats, said plainly. The stock list is today's S&P 500, so companies that
-fell out are missing, and that flatters dip buying most of all. There is no
-slippage beyond the fee. A luck test (random entries, same time in the market)
-is still to run. Until those are done, this is a strong lead, not a promise.
+**What we learned.**
+
+- **Buying dips works more often than chasing trends.** Trend strategies made
+  money on fewer than half their trades. They softened the crashes but gave
+  back most of the gains.
+- **Nothing beat buying and holding on raw return.** Double 7s is a smoother
+  ride. On Bitcoin its worst year was -53% (2014) where holding's was -72%
+  (2018), and it was flat in 2022 when holding lost 65%. It also missed most of
+  the giant years.
+- **Fear helps a little.** Only buying when the VIX is well above its recent
+  average lifted index funds from 71% to 73%.
+- **Monica does not work yet.** Its buy signal loses money. Its bet sizing has
+  a bug: one early loss before any win sets the bet to zero forever. It stays
+  paper only until both are fixed.
+- **80% is not there yet.** The best so far is 73%. Stacking extra filters on
+  top made things worse, not better.
+
+**What could still be wrong.** The stock list is today's S&P 500. Companies
+that crashed and got kicked out are missing, and that makes buying dips look
+better than it really was. Prices are assumed to fill exactly, with no extra
+slippage beyond the fee. And we haven't yet checked how often random trades
+would do just as well. Until those are done, treat this as a strong lead, not
+a promise.
 
 ### Broker abstraction
 
