@@ -1,6 +1,6 @@
 ## 2026-10-01 brain dump (open)
 - [ ] Offline mode
-- [ ] Smooth business news drawer drag animation
+- [x] Smooth business news drawer drag animation (global-space drag, rubber band, velocity spring; feel-check on device)
 - [ ] Better event filtering on the map
 - [ ] More info on event tap
 - [ ] Map events still slow to load (profile loadData fan-out)

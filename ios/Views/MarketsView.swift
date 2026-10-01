@@ -320,11 +320,18 @@ struct MarketsView: View {
         }
     }
 
+    /// Past either end the drawer gives a little and resists, like a system sheet.
+    static func rubberBand(_ value: CGFloat, min lo: CGFloat, max hi: CGFloat) -> CGFloat {
+        if value < lo { return lo - (lo - value) / (1 + (lo - value) / 60) }
+        if value > hi { return hi + (value - hi) / (1 + (value - hi) / 60) }
+        return value
+    }
+
     private var newsDrawerOverlay: some View {
         GeometryReader { geo in
             let maxHeight = geo.size.height - 80
             let target = drawerState.height(in: geo.size.height) - dragTranslation
-            let height = min(max(64, target), maxHeight)
+            let height = Self.rubberBand(target, min: 64, max: maxHeight)
             VStack(spacing: 0) {
                 NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, isExpanded: drawerState != .peek, brief: appState.dailyBrief)
             }
@@ -347,21 +354,32 @@ struct MarketsView: View {
                     .frame(height: 96)
                     .contentShape(Rectangle())
                     .gesture(
-                        DragGesture()
+                        // Global space: this handle rides on the drawer's top edge, so a
+                        // local translation shifts under the finger every frame and the
+                        // drag jitters. Measured globally it tracks the finger 1:1.
+                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
                             .onChanged { value in
-                                dragTranslation = value.translation.height
+                                var t = SwiftUI.Transaction()
+                                t.disablesAnimations = true
+                                withTransaction(t) { dragTranslation = value.translation.height }
                             }
                             .onEnded { value in
                                 let totalHeight = geo.size.height
+                                let current = min(max(64, drawerState.height(in: totalHeight) - value.translation.height), maxHeight)
                                 // Project momentum so a flick settles past the nearest detent.
                                 let predicted = drawerState.height(in: totalHeight)
                                     - value.predictedEndTranslation.height
                                 let settled = DrawerState.allCases.min(
                                     by: { abs($0.height(in: totalHeight) - predicted) < abs($1.height(in: totalHeight) - predicted) }
                                 ) ?? .peek
+                                // Hand the finger's speed to the spring so release doesn't
+                                // stall or lurch. initialVelocity is in units of the distance left.
+                                let distance = settled.height(in: totalHeight) - current
+                                let velocity = abs(distance) > 1 ? -value.velocity.height / distance : 0
+                                if settled != drawerState { Haptics.impact(.light) }
                                 // Reset drag AND snap the detent in one animation so the
                                 // height interpolates continuously -- no instant pop.
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                withAnimation(.interpolatingSpring(duration: 0.4, bounce: 0.12, initialVelocity: velocity)) {
                                     drawerState = settled
                                     dragTranslation = 0
                                 }
