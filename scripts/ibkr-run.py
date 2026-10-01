@@ -88,6 +88,13 @@ try:
         state["lastGo"] = datetime.now(ZoneInfo("America/New_York")).date().isoformat()  # lets a loop tell if today already ran
     state.setdefault("orders", []).extend({**x, "date": datetime.now().isoformat(timespec="minutes")} for x in sent)
     json.dump(state, open(STATE, "w"), indent=1)
+    # One snapshot per run so we can later see which positions made (or lost) the money.
+    state.setdefault("snapshots", []).append({
+        "t": datetime.now().isoformat(timespec="minutes"), "netLiquidation": nl, "spy": spy_now,
+        "positions": {p.contract.symbol: {"qty": p.position, "cost": p.averageCost, "px": p.marketPrice, "pnl": p.unrealizedPNL} for p in ib.portfolio()},
+    })
+    state["snapshots"] = state["snapshots"][-500:]
+    json.dump(state, open(STATE, "w"), indent=1)
     start = state["start"]["netLiquidation"]
     print(f"\naccount value {nl:,.2f} {cur} ({nl - start:+,.2f} since {state['start']['date']}), "
           f"unrealized P&L {summ.get('UnrealizedPnL', (0,))[0]:,.2f}, realized {summ.get('RealizedPnL', (0,))[0]:,.2f}")
