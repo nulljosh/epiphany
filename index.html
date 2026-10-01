@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#111111">
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="/icon-192.svg">
     <!-- System fonts only -->
     <link rel="stylesheet" href="/src/design-tokens.css" />
@@ -23,23 +24,25 @@
   <meta name="apple-itunes-app" content="app-id=6779522175">
     <script>
       (function () {
-        var hour = new Date().getHours();
-        var isNight = hour >= 19 || hour < 7;
-        var prefersDark = false;
-        var prefersLight = false;
-        try {
-          prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        } catch (_) {}
-        var theme = prefersLight ? 'light' : 'dark';
-        window.__MONICA_THEME__ = theme;
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.style.colorScheme = theme;
-        document.documentElement.style.backgroundColor = theme === 'dark' ? '#111111' : '#fafafa';
+        // Follow the system setting, and keep following it if it flips while the page is open.
+        var mq = null;
+        try { mq = window.matchMedia('(prefers-color-scheme: light)'); } catch (_) {}
+        function apply() {
+          var theme = mq && mq.matches ? 'light' : 'dark';
+          var bg = theme === 'dark' ? '#111111' : '#fafafa';
+          window.__MONICA_THEME__ = theme;
+          var root = document.documentElement;
+          root.dataset.theme = theme;
+          root.style.colorScheme = theme;
+          root.style.backgroundColor = bg;
+          root.style.setProperty('--boot-bg', bg);
+        }
+        apply();
+        if (mq && mq.addEventListener) mq.addEventListener('change', apply);
       })();
     </script>
   </head>
-  <body style="background:#111111;">
+  <body style="background:var(--boot-bg,#111111);">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   
