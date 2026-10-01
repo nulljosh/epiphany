@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { usePremium, showPricing } from '../context/PremiumContext.js';
 
 const styles = {
   overlay: {
@@ -95,7 +96,9 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
     return watchlist.filter(s => s.includes(q) && s !== q).slice(0, 6);
   }, [symbol, watchlist]);
 
+  const isPro = usePremium();
   const handleAdd = () => {
+    if (!isPro) { showPricing(); return; } // price alerts are Premium
     const sym = symbol.trim().toUpperCase();
     const p = parseFloat(price);
     if (!sym || isNaN(p) || p <= 0) return;
@@ -111,6 +114,8 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           <h3 style={styles.title}>Price Alerts</h3>
           <button style={styles.close} onClick={onClose}>&times;</button>
         </div>
+
+        {!isPro && <div style={{ ...styles.empty, paddingTop: 0 }}>Price alerts are part of Premium. $1, once.</div>}
 
         <div style={styles.form}>
           <div style={{ position: 'relative', flex: 1, minWidth: 80 }}>
@@ -145,7 +150,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           />
           <button style={styles.dirBtn(direction === 'above')} onClick={() => setDirection('above')}>Above</button>
           <button style={styles.dirBtn(direction === 'below')} onClick={() => setDirection('below')}>Below</button>
-          <button style={styles.addBtn} onClick={handleAdd}>Add</button>
+          <button style={styles.addBtn} onClick={handleAdd}>{isPro ? 'Add' : 'Unlock'}</button>
         </div>
 
         <div style={styles.section}>

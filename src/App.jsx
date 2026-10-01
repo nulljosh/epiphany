@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { PremiumContext } from './context/PremiumContext.js';
 import { usePolymarket } from './hooks/usePolymarket';
 import { useLivePrices } from './hooks/useLivePrices';
 import { useStocks } from './hooks/useStocks';
@@ -367,7 +368,7 @@ export default function App() {
 
   const { prices: liveAssets, lastUpdated } = useLivePrices(defaultAssets);
   const { markets, whales, loading: pmLoading, error: pmError } = usePolymarket();
-  const { stocks, reliability: stocksReliability } = useStocks();
+  const { stocks, reliability: stocksReliability } = useStocks(undefined, { realtime: isPro });
 
   const { elapsedTime, resetElapsedTime } = useElapsedTime(running);
   const { runStats } = useRunHistory({ running, balance, tick, trades, elapsedTime, targetTrillion });
@@ -865,6 +866,7 @@ const reset = useCallback(() => {
   );
 
   return (
+    <PremiumContext.Provider value={isPro}>
     <div className="epiphany-root" style={{
       height: '100dvh',
       display: 'grid',
@@ -1033,5 +1035,6 @@ const reset = useCallback(() => {
         </div>
       )}
     </div>
+    </PremiumContext.Provider>
   );
 }
