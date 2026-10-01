@@ -764,7 +764,7 @@ against 2.7% / 76%, 2 of 3 decades, beating 98% of random schedules, and 2008 wa
 (5.1% / 42% against 6.6% / 73%, 1 of 5 decades), and so do GSG, USO (crude), SLV
 (silver) and CPER (copper), and so do the front month crude, silver and copper
 series, which are not roll adjusted and only indicative. One fund passing against
-five and an index failing is a coincidence of one 20 year window, not an edge.
+four others and an index failing is a coincidence of one 20 year window, not an edge.
 The 80/20 question: put 20% in the best passing trend sleeve and keep 80% in
 Trend 2x. From the month-end series every blend gives up return. DBC: 11.6% / 28%
 against Trend 2x alone at 12.7% / 36% from 2006. Gold trend from 1976: 14.2% /
