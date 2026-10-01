@@ -14,6 +14,7 @@ from ib_async import IB
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
+BEST = os.path.join(ROOT, "tradingview", "ibkr-best.json")
 
 
 def spy_price():
@@ -44,9 +45,14 @@ def snapshot():
     except Exception:
         spy = 0.0
     pct = gain / cost if cost else 0.0
+    # Own file, so it never races ibkr-live.py writing the state file.
+    rec = json.load(open(BEST)) if os.path.exists(BEST) else {"high": d, "low": d}
+    rec = {"high": max(rec["high"], d), "low": min(rec["low"], d)}
+    json.dump(rec, open(BEST, "w"))
     return f"{d:+.0f}", [
         f"{d:+,.2f} CAD since {start.get('date', 'the start')[5:10]}",
         f"Positions {pct:+.2%}   SPY {spy:+.2%}",
+        f"High {rec['high']:+,.2f}   Low {rec['low']:+,.2f}",
     ]
 
 
@@ -60,7 +66,7 @@ def main():
     class App(rumps.App):
         def __init__(self):
             super().__init__("Epiphany Live", title="..", icon=os.path.join(ROOT, "scripts", "menubar-icon.png"), template=True, quit_button=None)
-            self.rows = [rumps.MenuItem(x, callback=None) for x in ("Starting...", " ")]
+            self.rows = [rumps.MenuItem(x, callback=None) for x in ("Starting...", " ", " ")]
             self.menu = [*self.rows, None, rumps.MenuItem("Quit", callback=self.quit)]
             self.child = None
             self.ensure_runner()
@@ -75,7 +81,7 @@ def main():
         def tick(self, _):
             self.ensure_runner()
             self.title, lines = snapshot()
-            for row, text in zip(self.rows, lines + ["", ""]):
+            for row, text in zip(self.rows, lines + ["", "", ""]):
                 row.title = text or " "
 
         def quit(self, _):

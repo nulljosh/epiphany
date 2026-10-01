@@ -183,3 +183,4 @@ tradingview/ibkr-state.json
 
 # local Cloudflare dev state
 .wrangler/
+tradingview/ibkr-best.json
