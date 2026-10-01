@@ -1,18 +1,18 @@
-# Monica TradingView Indicators
+# Epiphany Kelly TradingView Indicators
 
-Pine Script v6 indicators ported from Monica's trading simulator.
+Pine Script v6 indicators ported from Epiphany's trading simulator.
 
 ## Files
 
-- `monica-kelly.pine` -- Indicator overlay. Shows Kelly position sizing, entry/exit signals, info table.
-- `monica-kelly-strategy.pine` -- Strategy version. Same logic but backtestable via TradingView Strategy Tester.
+- `epiphany-kelly.pine` -- Indicator overlay. Shows Kelly position sizing, entry/exit signals, info table.
+- `epiphany-kelly-strategy.pine` -- Strategy version. Same logic but backtestable via TradingView Strategy Tester.
 
 ## How to Use
 
-### Indicator (monica-kelly.pine)
+### Indicator (epiphany-kelly.pine)
 
 1. Open TradingView chart
-2. Pine Editor > Open > paste `monica-kelly.pine`
+2. Pine Editor > Open > paste `epiphany-kelly.pine`
 3. Add to Chart
 4. Configure inputs:
    - **Account Equity**: your account size (default $10,000)
@@ -22,9 +22,9 @@ Pine Script v6 indicators ported from Monica's trading simulator.
 
 The info table (top-right) shows recommended position size in dollars and shares.
 
-### Strategy (monica-kelly-strategy.pine)
+### Strategy (epiphany-kelly-strategy.pine)
 
-1. Pine Editor > Open > paste `monica-kelly-strategy.pine`
+1. Pine Editor > Open > paste `epiphany-kelly-strategy.pine`
 2. Add to Chart
 3. Open Strategy Tester tab to see:
    - Equity curve
@@ -64,7 +64,7 @@ The strategy version computes win rate and R:R dynamically from backtest results
 
 ## Simulator Balance Scaling (Reference)
 
-The Monica simulator uses balance-dependent Kelly fractions:
+The Epiphany simulator uses balance-dependent Kelly fractions:
 
 | Balance      | Kelly Fraction |
 |-------------|---------------|

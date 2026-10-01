@@ -1,0 +1,47 @@
+{
+ "CBOE:VIX": {
+  "symbol": "CBOE:VIX",
+  "gif": "/Users/joshua/Documents/Code/epiphany/tradingview/replays/CBOE-VIX.gif",
+  "trades": 118,
+  "wins": 65,
+  "net_pct": 4.007869434500009,
+  "max_dd_pct": 0.8323817871079833,
+  "profit_factor": 1.052752398901327
+ },
+ "NYSE:IBM": {
+  "symbol": "NYSE:IBM",
+  "gif": "/Users/joshua/Documents/Code/epiphany/tradingview/replays/NYSE-IBM.gif",
+  "trades": 325,
+  "wins": 222,
+  "net_pct": 0.47241204900000155,
+  "max_dd_pct": 0.6189726249465639,
+  "profit_factor": 1.0533902540553384
+ },
+ "NASDAQ:SHOO": {
+  "symbol": "NASDAQ:SHOO",
+  "gif": "/Users/joshua/Documents/Code/epiphany/tradingview/replays/NASDAQ-SHOO.gif",
+  "trades": 192,
+  "wins": 145,
+  "net_pct": 11.71343033050002,
+  "max_dd_pct": 0.7174833099983637,
+  "profit_factor": 1.4193964489069475
+ },
+ "BLACKBULL:WTI": {
+  "symbol": "BLACKBULL:WTI",
+  "gif": "/Users/joshua/Documents/Code/epiphany/tradingview/replays/BLACKBULL-WTI.gif",
+  "trades": 30,
+  "wins": 20,
+  "net_pct": 0.16709031806499933,
+  "max_dd_pct": 0.4271140453495379,
+  "profit_factor": 1.163648775108585
+ },
+ "NASDAQ:DUOL": {
+  "symbol": "NASDAQ:DUOL",
+  "gif": "/Users/joshua/Documents/Code/epiphany/tradingview/replays/NASDAQ-DUOL.gif",
+  "trades": 17,
+  "wins": 12,
+  "net_pct": 0.5763341525000002,
+  "max_dd_pct": 0.3588587512923747,
+  "profit_factor": 1.6236090372180179
+ }
+}
