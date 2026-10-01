@@ -26,69 +26,54 @@ override a plan. The pipeline runs signal to execution and is paper only by
 default, so the strategy proves itself on real prices before it risks real
 money; going live is a separate opt in step, never the default.
 
-### 1. Price prediction (Monte Carlo)
+### 1. The rule: Double 7s
 
-For each symbol the engine runs a Geometric Brownian Motion simulation: 500 price
-paths over a 30 day horizon. Drift and volatility come from the symbol's recent
-daily returns (log returns, annualized). Each path steps daily:
+Every trade follows one rule, picked because it held up best in the tests in
+section 5. If a fund closes above its 200 day average and at its lowest close
+of the last 10 days, buy it. If we hold it and it closes at its highest close
+of the last 10 days, sell it. Nothing else decides a trade. The code is
+`double7s()` in `src/utils/indicators.js` (server) and `decide()` in
+`scripts/ibkr-run.py` (Mac).
 
-```
-S(t+1) = S(t) * exp((mu - 0.5 * sigma^2) * dt + sigma * sqrt(dt) * Z)
-```
+The app still shows a Monte Carlo bull probability (500 random price paths over
+30 days) and a Buy/Hold/Sell badge from RSI, MACD and moving averages. Those
+are there to read, not to trade on. The original strategy built on them,
+Epiphany Kelly, lost money in testing (section 5) and was retired.
 
-where `mu` is drift, `sigma` is volatility, `dt` is one trading day, and `Z` is a
-standard normal draw. The bull probability is the share of the 500 paths that close
-above the current price, because a single point forecast hides how much the paths
-disagree with each other; the spread across 500 runs is the actual signal. That
-probability becomes the raw conviction score. This runs in the in app simulator at
-60fps across the full asset universe, and in the
-weekday morning cron (`server/api/broker/morning-run.js`).
+### 2. Sizing
 
-### 2. Technical signal (entry filter)
+Each position is a fixed slice: 10% of the strategy's money on the Mac runner,
+a per-trade dollar cap on the server. Whole shares only for stocks and funds.
+At most 10 positions at once on the Mac runner. No leverage.
 
-A trade only triggers when the technicals agree with the prediction, because a
-Monte Carlo path is a statistical opinion about drift, not proof a trade is timed
-right; the composite signal (`src/utils/indicators.js`) is what stops a good long
-term simulation from buying into a short term downtrend. It combines:
+### 3. Two places it runs
 
-- **RSI (14)**: Wilder's smoothing. Above 55 reads as strength, below 45 as weakness.
-- **MACD (12/26/9)**: histogram above zero is bullish momentum, below zero bearish.
-- **Moving average trend**: 50 period versus 200 period (or the longest available).
-  Fast above slow is an uptrend.
+- **Autopilot (server, Premium).** A user links a brokerage through SnapTrade,
+  turns Autopilot on and sets a per-trade cap (`server/api/broker/autopilot.js`).
+  A weekday cron (`server/api/broker/morning-run.js`) runs the rule on a short
+  watchlist and trades for every enrolled user. Paper by default: the trades are
+  simulated and logged, no order leaves. Live mode is opt in, places real orders
+  through SnapTrade, is capped at $50 a trade and 20 fills, then flips the user
+  back to paper on its own.
+- **Epiphany Live (Mac).** `scripts/ibkr-live.py` runs the rule on 16 index and
+  sector funds once a day at 3:45pm New York through a local IB Gateway, on an
+  Interactive Brokers practice account. It refuses real accounts. The menu bar
+  app (`scripts/menubar.py`) runs it, keeps it alive, and scores it against the
+  S&P 500, the 16 funds held equally, the Nasdaq, Dow, Russell 2000, TSX, gold
+  and Bitcoin.
 
-Each component contributes plus or minus one to a score. Score of plus two or more
-is Buy, minus two or less is Sell, otherwise Hold. The same score drives the
-Buy/Hold/Sell badge shown on every stock.
+### 4. Guardrails
 
-### 3. Position sizing (Kelly)
+- **Paper first.** Both places start on practice money. Real money is a
+  separate opt in, never the default.
+- **Hard caps.** Live server trades are capped per trade and in count,
+  whatever the user sets.
+- **Kill switch.** Turning Autopilot off, unlinking the brokerage, or Pause in
+  the menu bar stops all orders. Pause is a file, so it survives a restart.
+- **Audit.** Every trade is logged with time, side, size and fill.
 
-Size comes from the fractional Kelly criterion. Full Kelly fraction is:
-
-```
-f* = (p * b - (1 - p)) / b
-```
-
-where `p` is the bull probability from step 1 and `b` is the reward to risk ratio
-implied by the target and stop. Full Kelly is mathematically optimal but also
-overbets in practice, since its inputs are estimates, not certainties, so
-Epiphany uses a default 0.25 fraction of `f*` to cut variance, then caps any
-single position at 10% of equity so one bad estimate cannot dominate the
-account. A momentum strength and volatility gate blocks sizing into chop, since
-Kelly's inputs mean little when price is not trending either way.
-
-### 4. Execution and guardrails
-
-- **Entry**: moving average crossover confirmed by the composite signal.
-- **Exit**: fixed stop and target, plus a trailing stop once in profit.
-- **Venue**: paper by default. Live routing goes through SnapTrade after a paper
-  proving period.
-- **Kill switch**: removing the broker keys disables all order placement.
-- **Audit**: a full per symbol trade log is written on every run.
-
-The strategy is shared with a backtestable Pine Script port
-(`tradingview/epiphany-kelly-strategy.pine`) so the same rules can be validated on
-years of TradingView history instead of trusted on faith from a few weeks of
-paper trading.
+The rules also exist as Pine Script (`tradingview/`) so they can be checked on
+TradingView's history, not trusted on a few weeks of paper trading.
 
 ### 5. Benchmark: does it work?
 
