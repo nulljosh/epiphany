@@ -14,10 +14,9 @@ struct ContentView: View {
 
         var id: String { rawValue }
 
-        // People is Pro-only -- keep it out of the nav entirely for free accounts,
-        // matching the web build.
-        static func visibleCases(isPro: Bool, isLoggedIn: Bool) -> [AppSection] {
-            allCases.filter { ($0 != .people || isPro) && ($0 != .portfolio || isLoggedIn) }
+        // ponytail: the $1 store price is the whole unlock, no in-app tier.
+        static func visibleCases(isLoggedIn: Bool) -> [AppSection] {
+            allCases.filter { $0 != .portfolio || isLoggedIn }
         }
 
         var icon: String {
@@ -53,7 +52,6 @@ struct ContentView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             BottomTabBar(selectedSection: $selectedSection,
-                         isPro: ["pro", "premium"].contains(appState.user?.tier ?? "free"),
                          isLoggedIn: appState.isLoggedIn)
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
@@ -110,12 +108,11 @@ struct ContentView: View {
 
 private struct BottomTabBar: View {
     @Binding var selectedSection: ContentView.AppSection
-    let isPro: Bool
     let isLoggedIn: Bool
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(ContentView.AppSection.visibleCases(isPro: isPro, isLoggedIn: isLoggedIn)) { section in
+            ForEach(ContentView.AppSection.visibleCases(isLoggedIn: isLoggedIn)) { section in
                 tabCell(for: section)
             }
         }

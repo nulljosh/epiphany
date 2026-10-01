@@ -12,7 +12,6 @@ struct SettingsView: View {
     @State private var brokerConnecting = false
     @State private var brokerStatus: String?
     @State private var brokerLinkURL: URL?
-    @State private var store = Store()
 
 
     var body: some View {
@@ -169,36 +168,6 @@ struct SettingsView: View {
                 //         .listRowInsets(EdgeInsets())
                 //         .listRowBackground(Color.clear)
                 // }
-
-                Section("Premium") {
-                    if appState.user?.tier == "premium" || appState.user?.tier == "pro" {
-                        Label("Premium is active", systemImage: "checkmark.seal.fill")
-                            .foregroundStyle(Palette.appleBlue)
-                    } else {
-                        Button {
-                            Task { await store.purchase(); await appState.checkSession() }
-                        } label: {
-                            HStack {
-                                Text("Unlock Premium")
-                                Spacer()
-                                Text(store.product?.displayPrice ?? "")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .disabled(store.isBusy || store.product == nil)
-                        Text("One-time purchase. Portfolio, watchlist, daily brief and situation monitor.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    Button("Restore Purchases") {
-                        Task { await store.restore(); await appState.checkSession() }
-                    }
-                    .disabled(store.isBusy)
-                    if let err = store.error {
-                        Text(err).font(.footnote).foregroundStyle(Palette.dangerRed)
-                    }
-                }
-                .task { await store.load() }
 
                 Section("Appearance") {
                     AppearancePicker(rawTheme: $rawTheme)
