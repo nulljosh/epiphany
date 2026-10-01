@@ -32,7 +32,7 @@ Historical PDFs, the old screenshot, and Cloudflare migration notes live in `doc
 - **Landing page**: `src/pages/LandingPage.jsx` + `landing.css`, shown to unauthenticated visitors
 
 ## Monetization
-Ambient layer (map, events, news, markets) stays free; autopilot trading, Daily Brief, and People graph are the paid gates in `server/api/gates.js`. Gate is currently open to everyone (`EPIPHANY_REQUIRE_PRO` unset) — no feature is actually paywalled in production. Only entitlement path is Stripe on web; no IAP exists in ASC yet (Guideline 3.1.1 exposure, see `notes/2-1-b-business-model-reply.md`).
+Web is freemium: Free is delayed quotes, basic indicators and one portfolio; Premium ($1 once, Stripe) adds real-time quotes, the full indicator suite, price alerts, People, Daily Brief and extra brokerage links. The iOS, Mac and Watch apps are a $1 App Store purchase that unlocks everything. Gates live in `server/api/gates.js` (server, enforced) and `src/context/PremiumContext.js` (web UI). The app is told from a browser by its URLSession User-Agent, and the account is marked `nativeApp` so the autopilot cron, which has no request, still treats it as paid. `EPIPHANY_REQUIRE_PRO=false` is the escape hatch that opens every gate. Details in the memory note on the pricing model.
 
 ## The loop
 

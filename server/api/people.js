@@ -196,7 +196,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const session = await getSessionUser(req);
-  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
+  if (!(await isPro(session, req))) return errorResponse(res, 402, 'Premium required');
 
   const q = (req.query.q || '').trim();
   if (!q) {

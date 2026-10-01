@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       }
     }
     if (!accounts || accounts.length === 0 || connectAdditional) {
-      if (connectAdditional && !(await isPro(session))) {
+      if (connectAdditional && !(await isPro(session, req))) {
         return res.status(200).json({ ok: true, upgradeRequired: true });
       }
       const broker = typeof req.body?.broker === 'string' ? req.body.broker.toUpperCase() : null;

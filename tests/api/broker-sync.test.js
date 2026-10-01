@@ -117,8 +117,15 @@ describe('broker/sync stale-userSecret self-heal', () => {
     expect(cached.body.cached).toBe(true);
     expect(listAccounts).not.toHaveBeenCalled();
 
+    // A second brokerage is Premium: a free account is told to upgrade, a Premium one gets the portal.
+    const blocked = mockRes();
+    await freshHandler({ method: 'POST', body: { action: 'connect-additional' }, headers: { 'user-agent': 'Mozilla/5.0' } }, blocked);
+    expect(blocked.body.upgradeRequired).toBe(true);
+    expect(loginLink).not.toHaveBeenCalled();
+
+    kvStore.set('user:u1@example.com', { tier: 'premium' });
     const connected = mockRes();
-    await freshHandler({ method: 'POST', body: { action: 'connect-additional' } }, connected);
+    await freshHandler({ method: 'POST', body: { action: 'connect-additional' }, headers: { 'user-agent': 'Mozilla/5.0' } }, connected);
     expect(connected.body.linkUrl).toBe('https://broker.example/connect');
     expect(loginLink).toHaveBeenCalledOnce();
     expect(kvStore.get('broker:snapshot:u1')).toEqual(snapshot);

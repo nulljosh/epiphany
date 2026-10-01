@@ -1,110 +1,63 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { resetAllMocks, getKVStore } from './_mocks.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const store = new Map();
 vi.mock('../../server/api/_kv.js', () => ({
-  getKv: vi.fn(async () => {
-    const kvStore = getKVStore();
-    return {
-      get: vi.fn(async (key) => kvStore.get(key)),
-      set: vi.fn(async (key, value) => { kvStore.set(key, value); }),
-      del: vi.fn(async (key) => { kvStore.delete(key); }),
-    };
-  }),
+  getKv: async () => ({ get: async (k) => store.get(k) ?? null, set: async (k, v) => { store.set(k, v); } }),
 }));
 
-const ORIGINAL_ADMIN_EMAILS = process.env.ADMIN_EMAILS;
+const web = { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh) AppleWebKit/605 Safari/605' } };
+const app = { headers: { 'user-agent': 'Epiphany/2.5.14 CFNetwork/1494.0.7 Darwin/23.4.0' } };
 
-describe('gates.js', () => {
-  beforeEach(() => {
-    resetAllMocks();
-    vi.resetModules();
-    // The gate is open by default so the iOS build unlocks nothing bought outside IAP
-    // (Guideline 3.1.1). These tests cover the paid path, which is what reverting the
-    // env var restores, so they opt back into it explicitly.
-    process.env.EPIPHANY_REQUIRE_PRO = 'true';
-  });
-
-  afterEach(() => {
-    process.env.ADMIN_EMAILS = ORIGINAL_ADMIN_EMAILS;
+describe('Premium gate', () => {
+  let gates;
+  beforeEach(async () => {
+    vi.resetModules(); store.clear();
+    process.env.ADMIN_EMAILS = 'owner@example.test';
     delete process.env.EPIPHANY_REQUIRE_PRO;
+    gates = await import('../../server/api/gates.js');
   });
 
-  it('grants Pro to any signed-in user when EPIPHANY_REQUIRE_PRO is unset', async () => {
-    delete process.env.EPIPHANY_REQUIRE_PRO;
-    const { isProByEmail } = await import('../../server/api/gates.js');
-    await expect(isProByEmail('nobody@example.com')).resolves.toBe(true);
-    await expect(isProByEmail('')).resolves.toBe(false);
+  it('a free account on the web is not Premium', async () => {
+    store.set('user:free@example.test', { email: 'free@example.test' });
+    expect(await gates.isProByEmail('free@example.test', web)).toBe(false);
   });
 
-  describe('isAdmin', () => {
-    it('returns true for an email in ADMIN_EMAILS', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com,demo@example.com';
-      const { isAdmin } = await import('../../server/api/gates.js');
-      expect(isAdmin('admin@example.com')).toBe(true);
-      expect(isAdmin('demo@example.com')).toBe(true);
-    });
-
-    it('returns false for an email not in ADMIN_EMAILS', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com';
-      const { isAdmin } = await import('../../server/api/gates.js');
-      expect(isAdmin('nobody@example.com')).toBe(false);
-    });
-
-    it('returns false for everyone when ADMIN_EMAILS is empty (the prod bug we just fixed)', async () => {
-      process.env.ADMIN_EMAILS = '';
-      const { isAdmin } = await import('../../server/api/gates.js');
-      expect(isAdmin('admin@example.com')).toBe(false);
-    });
+  it('a web purchase is Premium, and so is a comped tier', async () => {
+    store.set('user:paid@example.test', { stripe_customer_id: 'cus_1' });
+    store.set('sub:cus_1', { status: 'active' });
+    store.set('user:comp@example.test', { tier: 'premium' });
+    expect(await gates.isProByEmail('paid@example.test', web)).toBe(true);
+    expect(await gates.isProByEmail('comp@example.test', web)).toBe(true);
   });
 
-  describe('isProByEmail', () => {
-    it('returns true for an admin email with no Stripe customer at all', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com';
-      const { isProByEmail } = await import('../../server/api/gates.js');
-      getKVStore().set('user:admin@example.com', { email: 'admin@example.com', tier: 'free', stripe_customer_id: null });
-      await expect(isProByEmail('admin@example.com')).resolves.toBe(true);
-    });
-
-    it('returns false for a free, non-admin user with no Stripe customer', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com';
-      const { isProByEmail } = await import('../../server/api/gates.js');
-      getKVStore().set('user:free@example.com', { email: 'free@example.com', tier: 'free', stripe_customer_id: null });
-      await expect(isProByEmail('free@example.com')).resolves.toBe(false);
-    });
-
-    it('returns true for a non-admin user with an active subscription', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com';
-      const { isProByEmail } = await import('../../server/api/gates.js');
-      getKVStore().set('user:paid@example.com', { email: 'paid@example.com', tier: 'starter', stripe_customer_id: 'cus_123' });
-      getKVStore().set('sub:cus_123', { status: 'active', priceId: 'price_999' });
-      await expect(isProByEmail('paid@example.com')).resolves.toBe(true);
-    });
-
-    it('returns false when the subscription is canceled', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com';
-      const { isProByEmail } = await import('../../server/api/gates.js');
-      getKVStore().set('user:canceled@example.com', { email: 'canceled@example.com', tier: 'starter', stripe_customer_id: 'cus_456' });
-      getKVStore().set('sub:cus_456', { status: 'canceled', priceId: 'price_999' });
-      await expect(isProByEmail('canceled@example.com')).resolves.toBe(false);
-    });
-
-    it('returns false for a missing email', async () => {
-      const { isProByEmail } = await import('../../server/api/gates.js');
-      await expect(isProByEmail(undefined)).resolves.toBe(false);
-    });
+  it('the owner is always Premium, even on a request the app made without a purchase', async () => {
+    expect(await gates.isProByEmail('owner@example.test', web)).toBe(true);
   });
 
-  describe('isPro', () => {
-    it('delegates to isProByEmail using session.email', async () => {
-      process.env.ADMIN_EMAILS = 'admin@example.com';
-      const { isPro } = await import('../../server/api/gates.js');
-      getKVStore().set('user:admin@example.com', { email: 'admin@example.com', tier: 'free', stripe_customer_id: null });
-      await expect(isPro({ email: 'admin@example.com' })).resolves.toBe(true);
-    });
+  it('App Store buyers are Premium from the app and the account is marked for the cron', async () => {
+    store.set('user:buyer@example.test', { email: 'buyer@example.test' });
+    expect(await gates.isProByEmail('buyer@example.test', app)).toBe(true);
+    expect(store.get('user:buyer@example.test').nativeApp).toBe(true);
+    // the autopilot cron has no request, so it trusts the mark; a browser still does not
+    expect(await gates.isProByEmail('buyer@example.test')).toBe(true);
+    expect(await gates.isProByEmail('buyer@example.test', web)).toBe(false);
+  });
 
-    it('returns false when session is missing', async () => {
-      const { isPro } = await import('../../server/api/gates.js');
-      await expect(isPro(undefined)).resolves.toBe(false);
-    });
+  it('a script claiming to be a browser or sending nothing does not get the app unlock', async () => {
+    store.set('user:x@example.test', { email: 'x@example.test' });
+    expect(await gates.isProByEmail('x@example.test', { headers: { 'user-agent': 'curl/8.4.0' } })).toBe(false);
+    expect(await gates.isProByEmail('x@example.test', { headers: {} })).toBe(false);
+    expect(await gates.isProByEmail('x@example.test')).toBe(false);
+  });
+
+  it('the app can also say so with a header', async () => {
+    expect(gates.isNativeClient({ headers: { 'x-epiphany-client': 'ios' } })).toBe(true);
+    expect(gates.isNativeClient({ headers: { 'x-epiphany-client': 'web' } })).toBe(false);
+  });
+
+  it('the escape hatch opens everything again', async () => {
+    process.env.EPIPHANY_REQUIRE_PRO = 'false';
+    store.set('user:free@example.test', { email: 'free@example.test' });
+    expect(await gates.isProByEmail('free@example.test', web)).toBe(true);
   });
 });
