@@ -117,3 +117,13 @@ uv run --with ib_async python3 scripts/ibkr-run.py --go   # send today's orders
 ```
 
 Run it once per trading day. It does not schedule itself. Each position is 10% of `--sleeve` (default $10,000), whole shares only, demo and paper accounts only unless you pass `--live`. It prints your account value and how much it has changed since the first run, and keeps a local log in `tradingview/ibkr-state.json`.
+
+### All day, for weeks, with no Claude usage
+
+`scripts/ibkr-live.py` is one foreground script. Start it once in a terminal tab:
+
+```
+caffeinate -i uv run --with ib_async python3 scripts/ibkr-live.py
+```
+
+It watches the account during US market hours and sends a Mac notification when the positions move another 1% or the account moves another 20. It runs the daily trade once after the close, tells you if the Gateway logs out, and logs to `~/Library/Logs/EpiphanyIBKR.log`. Ctrl-C stops it. The strategy decides once a day on the closing prices, so orders placed after the close fill at the next open in the live market.
