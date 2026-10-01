@@ -1,6 +1,7 @@
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
-- [ ] Web free vs Premium, still client-side only: confirm the Autopilot and brokerage-sync screens show Premium locks to Free users. Server enforcement needs a native-client header sent by the iOS/Mac apps (next app build), otherwise App Store buyers get locked out.
+- [ ] Next iOS/Mac build: send an explicit X-Epiphany-Client header (the server already accepts it) so the gate stops depending on the default User-Agent.
+- [ ] Autopilot back on the web: Trade tab is off until the SnapTrade sync math is fixed; then drop the "web soon" notes from the Premium lists.
 - [ ] Stripe LIVE $0 coupon checkout (code SGFJ5Z8B, 3 uses): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
 - [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
