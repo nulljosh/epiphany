@@ -9,7 +9,9 @@ import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
-// TradeWorkflow import removed — Trade tab disabled until SnapTrade sync math is fixed (phantom holdings, bad net worth).
+// The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
+// TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
+import { AutopilotCard } from './TradeWorkflow';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -977,13 +979,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         return (
           <div style={{ display: 'flex', gap: 4, padding: '0 16px', marginBottom: 16, flexWrap: 'wrap' }}>
             {group.tabs.map((tabName) => {
-              const disabled = tabName === 'trade';
+              const disabled = false;
               return (
                 <button
                   key={tabName}
                   onClick={() => !disabled && setTab(tabName)}
                   disabled={disabled}
-                  title={disabled ? 'Trade is temporarily disabled — coming soon' : undefined}
                   style={{
                     padding: '4px 12px',
                     borderRadius: 100,
@@ -1008,11 +1009,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       })()}
 
       <div style={{ padding: '0 16px 80px', maxWidth: 720, margin: '0 auto' }}>
-        {tab === 'trade' && (
-          <Card dark={dark} t={t} style={{ padding: 20, textAlign: 'center', color: t.textTertiary }}>
-            Trade is temporarily disabled while we fix a sync issue with brokerage balances. Coming back soon.
-          </Card>
-        )}
+        {tab === 'trade' && <AutopilotCard dark={dark} t={t} />}
         {tab === 'portfolio' && !isEditingPortfolio && (
           <>
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
