@@ -278,6 +278,51 @@ sits idle between trades, and that costs far more than the edge earns.
   index over 49 unseen years. Stacking extra filters on
   top made things worse, not better.
 
+**A century across asset classes.** We wanted one rule a robot could run for
+a hundred years and beat holding the S&P 500. So we went monthly and went back
+to 1871 (`tradingview/century.py`, raw output in
+`tradingview/results-century.txt`). US stocks with dividends come from
+Shiller's data, then the S&P 500 index, then SPY. Ten year Treasuries are
+priced from their yields. Gold goes back to 1833, though it sat pegged until
+1971. The wider mix joins as each series begins: long Treasuries (1986),
+emerging and international stocks (1994, 1996), REITs (1996), oil, silver and
+copper futures (2000), commodities (2006), the dollar (2007), Bitcoin (2011)
+and Ethereum (2017). Cash earns the T-bill rate from 1934 and nothing before.
+Fees are 0.1% a side. Every setting was picked on 1872 to 1948 and graded on
+1949 to now, 77 years it never saw. We tried 24 settings in all, plus 4 for the
+stock momentum lead.
+
+| Rule | Blind yearly return | Worst drop | Decades it beat the S&P |
+|---|---|---|---|
+| Hold the S&P 500 | 11.7% | 51% | |
+| 60/40 stocks and bonds | 9.3% | 29% | 3 of 16 |
+| Risk parity, stocks, bonds, gold | 5.9% | 16% | 3 of 16 |
+| S&P only above its 12 month average | 11.4% | 23% | 8 of 16 |
+| Each asset only above its 12 month average | 9.0% | 10% | 3 of 16 |
+| Dual momentum: best of stocks, bonds, gold | 13.5% | 27% | 7 of 16 |
+| Dual momentum, every asset including crypto | 23.7% | 80% | 9 of 16 |
+| Stock momentum from edge.py (2007 on only) | 21.2% | 34% | SPY made 11.1%, fell 55% |
+
+Our bar was three things at once: more money than holding on the unseen
+years, a smaller worst drop, and a win in most decades. Nothing clears it.
+Dual momentum on stocks, bonds and gold comes closest. Each month it holds
+whichever of the three rose most over the past year, if that beat T-bills.
+It made more than holding with about half the worst drop. But it beat the
+S&P in only 7 of 16 decades and 2 of the 8 unseen ones. Most of its lead is
+one decade, the 1970s, when it rode gold to 32% a year. Adding crypto turns it
+into a Bitcoin bet: 79% a year in the 2010s and an 80% drop. Without crypto
+the same rule falls to 11.2% with a 63% drop, because a one-asset bet on oil
+or silver futures hurts. Trend rules do what they did on SPY: they cut the
+crash, not the return gap. The stock momentum lead passes on its own unseen
+half, 2007 to now, but it only has 40 years of data and today's stock list,
+and the same stocks held equally made 14.7%. So it is still a maybe.
+Monthly closes also hide the worst days, so every drop here was deeper in real
+life. The honest answer: no autopilot rule we can find beats holding stocks
+across a century. Trend rules buy a smaller crash at a small cost in return,
+and that is the trade we would choose on purpose. Every asset above trades on
+IBKR as a US ETF: SPY, IEF and TLT, GLD, VEU, EEM, VNQ, DBC, USO, SLV, CPER,
+UUP, IBIT and ETHA.
+
 **What could still be wrong.** The stock list is today's S&P 500. Companies
 that crashed and got kicked out are missing, and that makes buying dips look
 better than it really was. Prices are assumed to fill exactly, with no extra
