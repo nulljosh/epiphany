@@ -92,18 +92,21 @@ struct FinanceData: Codable {
         let type: String?
         let balance: Double
         let currency: String?
+        // The uninvested part of balance, already in CAD. Only brokerage accounts carry it.
+        let cash: Double?
 
         var id: String { name }
 
         private enum CodingKeys: String, CodingKey {
-            case name, type, balance, currency
+            case name, type, balance, currency, cash
         }
 
-        init(name: String, type: String? = nil, balance: Double, currency: String? = nil) {
+        init(name: String, type: String? = nil, balance: Double, currency: String? = nil, cash: Double? = nil) {
             self.name = name
             self.type = type
             self.balance = balance
             self.currency = currency
+            self.cash = cash
         }
 
         init(from decoder: Decoder) throws {
@@ -112,6 +115,7 @@ struct FinanceData: Codable {
             type = try? container.decode(String.self, forKey: .type)
             balance = (try? container.decode(Double.self, forKey: .balance)) ?? 0
             currency = try? container.decode(String.self, forKey: .currency)
+            cash = try? container.decode(Double.self, forKey: .cash)
         }
 
         var typeLabel: String {

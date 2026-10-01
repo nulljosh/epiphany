@@ -622,8 +622,12 @@ struct PortfolioView: View {
                         .foregroundStyle(Palette.text)
                     // Holdings are already inside totalValue (investment balances
                     // fold them in); cash is the remainder, not the raw balance sum.
-                    let holdingsTotal = portfolio.holdings.reduce(0.0) { $0 + $1.marketValue }
-                    let cashTotal = max(portfolio.totalValue - holdingsTotal, 0)
+                    // The server converts USD holdings to CAD before it folds them into each balance, so
+                    // the client's USD marketValue can't be subtracted from it. Use the server's cash and
+                    // derive holdings as the rest of the (CAD) total.
+                    let serverCash = appState.financeData?.accounts.compactMap(\.cash).reduce(0.0, +)
+                    let holdingsTotal = serverCash.map { max(portfolio.totalValue - $0, 0) } ?? portfolio.holdings.reduce(0.0) { $0 + $1.marketValue }
+                    let cashTotal = serverCash ?? max(portfolio.totalValue - holdingsTotal, 0)
                     if holdingsTotal > 0 {
                         Text("Cash \(CurrencyFormatter.formatPrice(cashTotal)) \u{00B7} Holdings \(CurrencyFormatter.formatPrice(holdingsTotal))")
                             .font(.caption2)

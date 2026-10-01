@@ -50,11 +50,11 @@ struct ContentView: View {
                 appState.user = DemoData.user
                 appState.financeData = DemoData.finance
                 appState.financeDataLoaded = true
-                async let s: Void = appState.loadStocks()
-                async let c: Void = appState.loadCommodities()
-                async let k: Void = appState.loadCrypto()
-                async let fg: Void = appState.loadFearGreed()
-                _ = await (s, c, k, fg)
+                // One after another: `async let` on the main-actor appState is a data-race error in Swift 6.
+                await appState.loadStocks()
+                await appState.loadCommodities()
+                await appState.loadCrypto()
+                await appState.loadFearGreed()
                 appState.portfolio = Portfolio(financeData: DemoData.finance, stocks: appState.stocks)
                 return
             }
