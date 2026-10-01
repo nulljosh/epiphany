@@ -186,3 +186,6 @@ tradingview/ibkr-state.json
 tradingview/ibkr-best.json
 tradingview/ibkr-paused
 tradingview/menubar.lock
+
+# Local wrangler dev secrets and flags
+.dev.vars

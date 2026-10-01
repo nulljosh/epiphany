@@ -1,0 +1,9 @@
+# Local test copy of the Worker, no real database, no real email:
+#   npx wrangler dev --local --port 8787 --var NODE_ENV:development --var EPIPHANY_LOCAL_KV:1 --var SITE_URL:http://localhost:8787
+# Throwaway account for signup, login and checkout QA on localhost only. Never use on the live site.
+QA_EMAIL=qa-ui@example.test
+QA_PASSWORD=Qa-ui-Pass-2026!
+# Stripe TEST mode only (sk_test_...), for local checkout runs. Put the real value in .dev.vars, which is gitignored.
+STRIPE_SECRET_KEY=
+STRIPE_PRICE_ID=
+STRIPE_WEBHOOK_SECRET=

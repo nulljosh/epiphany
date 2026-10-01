@@ -282,12 +282,12 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .lp-price-card.premium .lp-price-feats li::before { color: var(--link, var(--accent)); }
 .lp .lp-price-btn {
   display: block; text-align: center; text-decoration: none;
-  font-size: 14px; font-weight: 600; color: #fff;
+  font-size: 14px; font-weight: 600; color: rgb(var(--lp-ink));
   padding: 13px 0; border-radius: 100px;
   width: 100%; border: none;
 }
 .lp .lp-price-btn.solid {
-  background: var(--accent);
+  background: var(--accent); color: #fff;
   transition: filter 0.2s;
 }
 .lp .lp-price-btn.solid:hover { filter: brightness(1.12); }
