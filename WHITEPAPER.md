@@ -119,6 +119,23 @@ S&P 500, blind 2020 to now:
 | Monica, all in | 30% | -0.07% | -2.0% | 34% | 43,701 |
 | Buy and hold | | | 9.1% | 50% | |
 
+The same test on every other universe we could reach. Double 7s holds up
+everywhere, which is the point: an edge that only shows up on one list is luck.
+
+| Universe | Blind period | Double 7s win rate | Avg trade | Trades |
+|---|---|---|---|---|
+| 429 S&P 500 stocks | 2020 to now | 67% | +0.39% | 22,614 |
+| 16 index and sector ETFs | 2020 to now | 71% | +0.44% | 807 |
+| Live TradingView watchlist, 28 symbols from their first bar (S&P 500 index since 1927, Dow, gold, silver, oil, copper, BTC, stocks) | second half of each symbol's life | 69% | +0.62% | 3,508 |
+| BTC alone | 2020 to now | 71% | | 104 |
+
+The watchlist run reads the symbols straight from TradingView through the MCP
+(`python3 tradingview/backtest.py watchlist`), so the benchmark follows
+whatever is on the list. BTC year by year (`backtest.py btc-years`): Double 7s
+lost 53% in its worst year (2014) and was flat in 2022, when holding lost 65%.
+It also never got near holding's best years. It trades upside for a smoother
+ride.
+
 What it says:
 
 - **Double 7s is the edge.** Buy a stock in an uptrend (above its 200 day

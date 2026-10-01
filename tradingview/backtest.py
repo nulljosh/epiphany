@@ -8,8 +8,9 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
     python3 tradingview/backtest.py etfs     # index and sector ETFs
     python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
+    python3 tradingview/backtest.py watchlist  # live TradingView watchlist via the MCP, each symbol from its first bar
 """
-import json, os, re, statistics, sys, time, urllib.request
+import json, os, re, statistics, subprocess, sys, time, urllib.parse, urllib.request
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timezone
 
@@ -47,7 +48,7 @@ def fetch_yahoo(sym):
     if os.path.exists(path) and time.time() - os.path.getmtime(path) < 86400:
         return json.load(open(path))
     try:
-        r = json.loads(get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?period1=0&period2=9999999999&interval=1d"))["chart"]["result"][0]
+        r = json.loads(get(f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(sym)}?period1=-1400000000&period2=9999999999&interval=1d"))["chart"]["result"][0]
         q, adj = r["indicators"]["quote"][0], r["indicators"]["adjclose"][0]["adjclose"]
         out = []
         for i, t in enumerate(r["timestamp"]):
@@ -328,12 +329,18 @@ def check():
     assert m["mult"] > 1.5 and m["trades"] > 5 and m["mdd"] < 0.02, m
 
 
-def evaluate(bars):
+def halves(bars):
+    """Origin mode: pick on the first half of a symbol's own history (after a 200 bar warmup), score on the second."""
+    mid = 200 + (len(bars) - 200) // 2
+    return (200, mid), (mid, len(bars))
+
+
+def evaluate(bars, split=False):
     """Pick each mode's setting on TRAIN, score it on TEST. Returns {mode: test metrics}."""
     global MK
     MK = [MARKET.get(r[0] // 86400, False) for r in bars] if MARKET else []
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
-    tr, te = window(bars, *TRAIN), window(bars, *TEST)
+    tr, te = halves(bars) if split else (window(bars, *TRAIN), window(bars, *TEST))
     out = {}
     for mode, grid in GRID.items():
         best = max(grid, key=lambda p: score(mode, p, bars, (o, h, l, c), *tr)["cagr"])
@@ -344,17 +351,27 @@ def evaluate(bars):
 ETFS = ["SPY", "QQQ", "DIA", "IWM", "MDY", "EFA", "EEM", "XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"]
 
 
-def universe(syms=None, label="S&P 500"):
+def universe(syms=None, label="S&P 500", origin=False, data=None):
     # ponytail: today's S&P 500 members only, so dead and dropped companies are missing (survivorship bias flatters Hold).
     syms = syms or sp500()
-    with ThreadPoolExecutor(8) as ex:
-        data = dict(zip(syms, ex.map(fetch_yahoo, syms)))
-    cutoff = datetime(2011, 1, 1, tzinfo=timezone.utc).timestamp()
-    ok = {s: b for s, b in data.items() if b and b[0][0] <= cutoff}
-    print(f"{label}: {len(syms)} listed, {len(ok)} with daily history back to 2011. Fee {FEE:.1%}/side.")
-    print(f"Settings picked per stock on {TRAIN[0]}..{TRAIN[1]}, scored blind {TEST[0]}..now.\n")
+    if data is None:
+        with ThreadPoolExecutor(8) as ex:
+            data = dict(zip(syms, ex.map(fetch_yahoo, syms)))
+    if origin:
+        ok = {s: b for s, b in data.items() if len(b) >= 600}
+        print(f"{label}: {len(syms)} symbols, {len(ok)} with 600+ daily bars. Fee {FEE:.1%}/side.")
+        print("Each symbol from its first bar: settings picked on the first half of its history, scored blind on the second.\n")
+        for s, b in ok.items():
+            day = lambda t: datetime.fromtimestamp(t, timezone.utc).date()
+            print(f"  {s:10} {day(b[0][0])} to {day(b[-1][0])}, blind from {day(b[halves(b)[1][0]][0])}")
+        print()
+    else:
+        cutoff = datetime(2011, 1, 1, tzinfo=timezone.utc).timestamp()
+        ok = {s: b for s, b in data.items() if b and b[0][0] <= cutoff}
+        print(f"{label}: {len(syms)} listed, {len(ok)} with daily history back to 2011. Fee {FEE:.1%}/side.")
+        print(f"Settings picked per stock on {TRAIN[0]}..{TRAIN[1]}, scored blind {TEST[0]}..now.\n")
     with ProcessPoolExecutor(initializer=set_market, initargs=(market_up(),)) as ex:
-        res = dict(zip(ok, ex.map(evaluate, ok.values(), chunksize=4)))
+        res = dict(zip(ok, ex.map(evaluate, ok.values(), [origin] * len(ok), chunksize=1 if origin else 4)))
     hold = {s: r["Hold"] for s, r in res.items()}
     print(f"{'strategy':16}{'median CAGR':>12}{'median maxDD':>13}{'beat Hold':>10}{'win rate':>9}{'avg trade':>10}{'trades':>8}")
     for mode in GRID:
@@ -385,8 +402,30 @@ def btc_years():
     print(f"{'trades':6}" + "".join(f"{len(r['rets']):>15}" for r in rows))
 
 
+# TradingView symbol -> Yahoo symbol, for the ones that don't map by just dropping the exchange.
+TV_YAHOO = {"CBOE:VIX": "^VIX", "TVC:DXY": "DX-Y.NYB", "TVC:SPX": "^GSPC", "SP:SPX": "^GSPC", "TVC:NDX": "^NDX",
+            "OANDA:XAUUSD": "GC=F", "OANDA:XAGUSD": "SI=F", "BLACKBULL:WTI": "CL=F", "TVC:USOIL": "CL=F",
+            "CAPITALCOM:SPX500": "^GSPC", "CAPITALCOM:US30": "^DJI", "OANDA:XCUUSD": "HG=F", "XETR:DBK": "DBK.DE"}
+
+
+def watchlist():
+    """Live TradingView watchlist (through the MCP), each symbol tested from its first bar."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    tv = [x["symbol"] for x in json.loads(subprocess.check_output(["node", os.path.join(here, "watchlist.mjs")]))["symbols"]]
+    data = {}
+    for t in tv:
+        if t == "BITSTAMP:BTCUSD":
+            data[t] = fetch()
+            continue
+        y = TV_YAHOO.get(t) or (t.split(":")[1][:-3] + "-USD" if t.endswith("USD") and ":" in t else t.split(":")[-1].replace(".", "-"))
+        data[t] = fetch_yahoo(y)
+    universe(list(data), f"TradingView watchlist ({len(tv)})", origin=True, data=data)
+
+
 def main():
     check()
+    if sys.argv[1:] == ["watchlist"]:
+        return watchlist()
     if sys.argv[1:] == ["sp500"]:
         return universe()
     if sys.argv[1:] == ["etfs"]:

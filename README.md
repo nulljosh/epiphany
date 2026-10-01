@@ -72,7 +72,7 @@ Every strategy, run on 15 years of history and scored on years it never saw. 429
 | Donchian breakout | 41% | +3.21% | 5,057 |
 | Monica, all in | 30% | -0.07% | 43,701 |
 
-Double 7s clears the bar: 66%+ wins, profit after fees, on unseen years. Method, caveats and the full table are in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark). Run it yourself with `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart through `tradingview/epiphany.pine`.
+Double 7s clears the bar: 66%+ wins, profit after fees, on unseen years. It holds on index ETFs (71%), on BTC (71%), and on the live TradingView watchlist tested from each symbol's first bar, S&P 500 index since 1927 included (69% of 3,508 trades). Method, caveats and the full table are in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark). Run it yourself with `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart through `tradingview/epiphany.pine`.
 
 ## Setup
 
