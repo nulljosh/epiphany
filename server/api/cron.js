@@ -23,7 +23,8 @@ const ALL_SYMBOLS = [
   'TGT', 'LOW', 'SBUX', 'MCD', 'YUM', 'F', 'GM',
   'AMT', 'PLD', 'CME', 'WM', 'XYZ',
   'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP', 'DUOL',
-  'GC=F', 'SI=F', 'CL=F',
+  'GC=F', 'SI=F', 'CL=F', 'HG=F', 'NG=F',
+  'KODK', 'RL', 'IGV', 'IAU', 'XIC.TO',
   '^VIX',
   'SPY', 'SJIM', 'LJIM',
 ];

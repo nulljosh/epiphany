@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './auth.css';
 
 const FONT = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
-const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
+const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
 const card = { background: 'rgba(255,255,255,0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(40px)' };
 const errorBox = { color: '#ff5555', fontSize: 13, marginBottom: 20, padding: '10px 14px', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 10 };
 
@@ -12,7 +12,7 @@ function fadeStyle(mounted, delay = 0) {
 
 const TIERS = [
   { name: 'Free', price: '$0', period: 'forever', features: ['Map + all data layers', 'Live stock data + ticker', 'Situation monitor', 'Trading simulator'], highlight: false },
-  { name: 'Premium', price: '$3', period: '· then a few $/mo', features: ['Everything in Free', 'AI Analyst with live tools', 'Autopilot trading (makes back cost)', 'Brokerage sync + net worth'], highlight: true },
+  { name: 'Premium', price: '$1', period: 'one-time', features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Autopilot on paper money'], highlight: true },
 ];
 
 export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
@@ -47,7 +47,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
         <div style={{ textAlign: 'center', marginBottom: 32, ...fadeStyle(mounted, 0.05) }}>
           <img src="/epiphany-icon.svg" alt="Epiphany" style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12 }} />
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Create your account to get started</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>Create your account to get started</p>
         </div>
 
         {/* Pricing tiers */}
@@ -73,31 +73,31 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
             {/* ponytail: Facebook sign-up wired but not linked — FACEBOOK_APP_ID/SECRET not set yet. Uncomment once Josh creates the Facebook app (roadmap.md). */}
             {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with Facebook</a> */}
             {/* ponytail: X sign-up disabled 2026-07-21 — dev X account deleted, TWITTER_CLIENT_ID/SECRET dead. Re-enable once a new account + keys exist. */}
-            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)', margin: '14px 0' }}>or</div>
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '14px 0' }}>or</div>
           </div>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 18 }}>
-              <label style={label}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" placeholder="you@example.com" />
+              <label htmlFor="reg-email" style={label}>Email</label>
+              <input id="reg-email" name="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" placeholder="you@example.com" />
             </div>
             <div style={{ marginBottom: 18 }}>
-              <label style={label}>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Min 8 characters" />
+              <label htmlFor="reg-password" style={label}>Password</label>
+              <input id="reg-password" name="new-password" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Min 8 characters" />
             </div>
             <div style={{ marginBottom: 24 }}>
-              <label style={label}>Confirm Password</label>
-              <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Repeat password" />
+              <label htmlFor="reg-confirm" style={label}>Confirm Password</label>
+              <input id="reg-confirm" name="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Repeat password" />
             </div>
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.35)', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={tosChecked} onChange={e => setTosChecked(e.target.checked)} />
                 I agree to the <a href="/tos" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }}>Terms of Service</a>
               </label>
             </div>
-            {displayError && <div style={errorBox}>{displayError}</div>}
+            {displayError && <div role="alert" style={errorBox}>{displayError}</div>}
             <button type="submit" disabled={submitting} className="auth-btn">{submitting ? 'Creating account...' : 'Create Account'}</button>
           </form>
-          <p style={{ textAlign: 'center', marginTop: 22, marginBottom: 0, fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>
+          <p style={{ textAlign: 'center', marginTop: 22, marginBottom: 0, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
             Already have an account? <button onClick={onSwitchToLogin} className="auth-link-accent">Sign in</button>
           </p>
         </div>

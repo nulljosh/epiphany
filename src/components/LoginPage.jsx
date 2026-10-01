@@ -68,7 +68,7 @@ function NetworkCanvas() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.6, pointerEvents: 'none' }} />;
 }
 
-const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
+const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
 const card = { background: 'rgba(255,255,255,0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(40px)' };
 const errorBox = { color: '#ff5555', fontSize: 13, marginBottom: 20, padding: '10px 14px', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 10 };
 
@@ -171,7 +171,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
         <div style={{ textAlign: 'center', marginBottom: 36, ...fadeStyle(mounted, 0.05) }}>
           <img src="/epiphany-icon.svg" alt="Epiphany" style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14 }} />
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Personal intelligence platform</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>Personal intelligence platform</p>
         </div>
 
         {/* Step 1: Email */}
@@ -182,11 +182,14 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
             {/* ponytail: Facebook sign-in wired but not linked — FACEBOOK_APP_ID/SECRET not set yet. Uncomment once Josh creates the Facebook app (roadmap.md). */}
             {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with Facebook</a> */}
             {/* ponytail: X sign-in disabled 2026-07-21 — dev X account deleted, TWITTER_CLIENT_ID/SECRET dead. Re-enable once a new account + keys exist. */}
-            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)', marginBottom: 20 }}>or</div>
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>or</div>
             <form onSubmit={handleEmailSubmit}>
               <div style={{ marginBottom: 24 }}>
-                <label style={label}>Email</label>
+                <label htmlFor="login-email" style={label}>Email</label>
                 <input
+                  id="login-email"
+                  name="email"
+                  autoComplete="username"
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -229,8 +232,11 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
 
             <form onSubmit={handlePasswordSubmit}>
               <div style={{ marginBottom: 14 }}>
-                <label style={label}>Password</label>
+                <label htmlFor="login-password" style={label}>Password</label>
                 <input
+                  id="login-password"
+                  name="password"
+                  autoComplete="current-password"
                   ref={passwordRef}
                   type="password"
                   value={password}
@@ -246,7 +252,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
                   Forgot password?
                 </button>
               </div>
-              {error && <div style={errorBox}>{error}</div>}
+              {error && <div role="alert" style={errorBox}>{error}</div>}
               <button type="submit" disabled={submitting} className="auth-btn">
                 {submitting ? 'Signing in...' : 'Sign In'}
               </button>

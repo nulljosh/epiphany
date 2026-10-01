@@ -365,7 +365,7 @@ async function enrichWithFundamentals(stocks) {
 // Abuse protection, not a Yahoo limit. This has silently 400'd the endpoint
 // against its own default list twice (50 -> 60, then 60 -> 80 when the big-five
 // Canadian banks landed 2026-08-24), so keep real headroom above DEFAULT_SYMBOLS
-// (63) rather than tracking it exactly. Exported so the test asserts the real
+// (70) rather than tracking it exactly. Exported so the test asserts the real
 // cap instead of a copy that drifts.
 export const MAX_REQUEST_SYMBOLS = 80;
 

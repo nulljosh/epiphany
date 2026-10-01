@@ -8,7 +8,7 @@ worst position, the record high and low, and when the daily trade runs next. It 
     uv run --with rumps --with ib_async python3 scripts/menubar.py            # the app
     uv run --with ib_async python3 scripts/menubar.py --selftest              # print what the menu would say
 """
-import json, math, os, subprocess, sys, traceback, urllib.request
+import json, math, os, subprocess, sys, traceback, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -72,6 +72,31 @@ def intraday(sym):
     """Today's 5 minute closes and yesterday's close for one symbol."""
     r = yahoo(f"/v8/finance/chart/{sym}?interval=5m&range=1d")["chart"]["result"][0]
     return [c for c in r["indicators"]["quote"][0]["close"] if c is not None], num(r["meta"].get("chartPreviousClose"))
+
+
+# Joshua's iPhone Stocks list, in his order.
+WATCH = ["KODK", "DUOL", "IBM", "RL", "SHOO", "PLTR", "IGV", "BTC-USD", "SI=F", "NVDA", "NET", "SBUX", "^XAX", "GC=F",
+         "IAU", "^RUT", "^NDX", "^GSPC", "SPY", "^NYA", "KO", "^DJI", "^IXIC", "CADUSD=X", "XIC.TO", "^GSPTSE",
+         "T", "GS", "HG=F", "AAPL", "NKE", "HOOD", "GOOGL", "SPCX", "NG=F", "DIS"]
+
+
+def watch_quotes(syms=WATCH):
+    """{symbol: (price, day change %)} from Yahoo's batch spark endpoint, 20 symbols a call."""
+    out = {}
+    for i in range(0, len(syms), 20):
+        q = urllib.parse.quote(",".join(syms[i:i + 20]))
+        for sym, d in yahoo(f"/v8/finance/spark?symbols={q}&range=1d&interval=1d").items():
+            if d and d.get("fulldayPrice") is not None:
+                out[sym] = (num(d["fulldayPrice"]), num(d.get("fulldayChangePercent")) / 100)
+    return out
+
+
+def watch_line(sym, quote):
+    """One watchlist row: symbol, price, day change. Missing quote reads as a dash, not a crash."""
+    if not quote:
+        return f"{sym}  \u2014"
+    price, ch = quote
+    return f"{sym}  {price:,.2f}  {pct(ch)}"
 
 
 def safe(f, *a):
@@ -367,8 +392,11 @@ def main():
                     menu.addItem_(item)
                     self.rows.append((item, fields))
             menu.addItem_(NSMenuItem.separatorItem())
+            self.watch = symbol(rumps.MenuItem("Watchlist"), "list.bullet")
+            for sym in WATCH:
+                self.watch.add(rumps.MenuItem(sym))
             self.toggle = rumps.MenuItem("", callback=self.pause)
-            self.menu = [self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
+            self.menu = [self.watch, self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
                          symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
             fill(*self.rows[0], "Starting...", "", None)
             self.label_toggle()
@@ -427,6 +455,9 @@ def main():
             for i, (h, first, n) in enumerate(self.headers):
                 h.setTitle_(since if i == 0 else GROUPS[i][0])
                 h.setHidden_(not any(r[0] for r in rows[first:first + n]))
+            quotes = safe(watch_quotes) or {}
+            for sym in WATCH:
+                self.watch[sym].title = watch_line(sym, quotes.get(sym))
             syms = chart_symbols(rows)
             # In parallel, so four slow fetches freeze the menu for one timeout, not four.
             with ThreadPoolExecutor(4) as ex:

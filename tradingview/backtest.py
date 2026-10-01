@@ -435,8 +435,13 @@ TV_YAHOO = {"CBOE:VIX": "^VIX", "TVC:DXY": "DX-Y.NYB", "TVC:SPX": "^GSPC", "SP:S
             "CAPITALCOM:SPX500": "^GSPC", "CAPITALCOM:US30": "^DJI", "OANDA:XCUUSD": "HG=F", "XETR:DBK": "DBK.DE"}
 
 
+# Joshua's iPhone Stocks list that TradingView's watchlist lacks, as Yahoo symbols.
+# ponytail: hardcoded; the MCP's add-symbol UI click only lands the first symbol per run.
+PHONE = ["RL", "IGV", "NET", "IAU", "SPY", "KO", "NKE", "SPCX", "XIC.TO", "^GSPTSE", "^RUT", "^NDX", "^IXIC", "^NYA", "^XAX", "CADUSD=X", "NG=F"]
+
+
 def watchlist():
-    """Live TradingView watchlist (through the MCP), each symbol tested from its first bar."""
+    """Live TradingView watchlist (through the MCP) plus PHONE, each symbol tested from its first bar."""
     here = os.path.dirname(os.path.abspath(__file__))
     tv = [x["symbol"] for x in json.loads(subprocess.check_output(["node", os.path.join(here, "watchlist.mjs")]))["symbols"]]
     data = {}
@@ -448,7 +453,12 @@ def watchlist():
             continue
         y = TV_YAHOO.get(t) or (t.split(":")[1][:-3] + "-USD" if t.endswith("USD") and ":" in t else t.split(":")[-1].replace(".", "-"))
         data[t] = fetch_yahoo(y)
-    universe(list(data), f"TradingView watchlist ({len(tv)})", origin=True, data=data)
+    for y in PHONE:
+        try:
+            data[y] = fetch_yahoo(y)
+        except Exception as e:  # a new listing or a Yahoo gap skips one symbol, not the run
+            print(f"  skip {y}: {e}")
+    universe(list(data), f"TradingView watchlist + phone ({len(data)})", origin=True, data=data)
 
 
 def sp_century():
