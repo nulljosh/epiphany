@@ -3,6 +3,7 @@
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
 - [ ] Autopilot back on the web: Trade tab is off until the SnapTrade sync math is fixed; then drop the "web soon" notes from the Premium lists.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
+- [ ] Brokerage net worth mixes currencies (checked 2026-10-01 on the real snapshot): holdings are clean, no duplicates, but USD-priced SPY and a USD cash line are added straight onto CAD cash, so net worth reads low. SnapTrade positions need their currency carried through sync.js and converted before the sum. Keep the Trade tab off until then.
 - [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
