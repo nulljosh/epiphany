@@ -88,3 +88,21 @@ node scripts/tv-signal-agent.js --study Epiphany --dry-run
 ```
 
 The agent fires only on labels that appear after it starts. Drop `--dry-run` to hit the Alpaca paper endpoint.
+
+## IBKR (Interactive Brokers) hookup
+
+Alpaca does not take Canadian residents for live accounts, so IBKR Canada is the broker. The bot talks to IB Gateway running on this Mac, so no key ever leaves the machine.
+
+One time, by you:
+1. Open an account at ibkr.ca (ID check, funding is optional for paper). Then Settings, Paper Trading Account, create one.
+2. Install IB Gateway (stable), log in with the paper username.
+3. In Gateway: Configure, Settings, API. Tick Enable ActiveX and Socket Clients, port 4002, untick Read-Only API, add 127.0.0.1 as trusted.
+
+Then, with Gateway logged in:
+
+```
+node scripts/tv-signal-agent.js --study Epiphany --broker ibkr --dry-run   # watches the chart, connects, sends nothing
+node scripts/tv-signal-agent.js --study Epiphany --broker ibkr             # paper orders
+```
+
+`scripts/ibkr-order.py` refuses the live ports unless you pass `--live`. Stocks and ETFs only. Whole shares: SPY is about $760 a share, so a sleeve under that needs a cheaper ETF or IBKR's fractional orders.

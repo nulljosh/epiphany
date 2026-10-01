@@ -3,7 +3,7 @@
 // Polls live TradingView chart for Monica Kelly entry signals, fires orders.
 //
 // Usage:
-//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple] [--study Monica|Epiphany] [--dry-run]
+//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple|ibkr] [--study Monica|Epiphany] [--dry-run]
 //
 // Requires:
 //   - TradingView Desktop running with --remote-debugging-port=9222
@@ -15,6 +15,7 @@
 // Talks to the TradingView MCP server directly via its JS core (no MCP protocol needed).
 
 import path from 'path';
+import { execFileSync } from 'child_process';
 
 const TV_MCP_PATH = path.resolve('/Users/joshua/Documents/Code/_external/tradingview-mcp');
 const POLL_INTERVAL_MS = 5000;
@@ -56,6 +57,17 @@ async function readSignal() {
 }
 
 async function fireOrder(signal) {
+  if (BROKER === 'ibkr') {
+    // Local IB Gateway, paper port 4002. Crypto and FX symbols are skipped inside the helper.
+    const args = ['run', '--quiet', '--with', 'ib_async', 'python3', 'scripts/ibkr-order.py', signal.action, signal.sym, '1'];
+    log(`[ibkr] ${signal.action} ${signal.sym}${DRY_RUN ? ' (dry-run)' : ''}`);
+    try {
+      log(execFileSync('uv', DRY_RUN ? [...args, '--dry-run'] : args, { encoding: 'utf8', timeout: 60000 }).trim());
+    } catch (e) {
+      log('[ERROR] ibkr:', (e.stderr || e.message).toString().trim().split('\n').pop());
+    }
+    return;
+  }
   const endpoint = BROKER === 'wealthsimple'
     ? `${SIGNAL_API}/api/broker/ws-signal`
     : `${SIGNAL_API}/api/broker/signal`;
