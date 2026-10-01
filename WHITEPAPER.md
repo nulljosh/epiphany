@@ -615,6 +615,31 @@ we paper trade. Profitability at 1x through QUAL is the only new thing that
 clears the bar, and only against holding, so at most a small paper only sleeve
 beside Trend 2x, not a replacement.
 
+**Upgrading quality.** Profitability was the one factor that cleared the bar,
+so we tried the four upgrades the literature suggests, all fixed in advance,
+nothing picked (`century.py --quality`, raw output in
+`tradingview/results-quality.txt`). Same French tenths, same 1976 to now window,
+same costs. One: hold the quality tenth only while the market is above its 10
+month average, else bills, no leverage (Faber, 2007). Two: half quality, half
+momentum, rebalanced monthly (French has no profitability by momentum file, so
+this is a blend of two tenths). Three: both at once. Four: half quality, half
+value (Novy-Marx, 2013). The trend filter lost: 10.9% with a 28% drop against
+holding's 12.3% with 50%, 1 of 6 decades, and it beat only 33% of 300 random in
+and out schedules with the same time in the market, so the timing earned
+nothing (it did sidestep 2008, +1.5% against -37%, and held 2022 to -9.6%, but
+it missed the rebounds). Quality plus momentum looked best: 15.0% with a 46%
+drop, 5 of 6 decades, past holding and past Trend 2x on the same monthly series
+(14.3% / 51%). But it makes 1.4 points more than plain quality (13.6% / 41%) with
+a bigger drop, so it does not beat plain quality on the bar, and at 0.5% a side
+it falls to 12.1% / 48%, a tie with holding. Both at once made 12.3% / 28%, a tie
+on return and 2 of 6 decades. Quality plus value made 15.0% but fell 56%. None
+beat Trend 2x's 14.4% / 44% on the drop. On the real funds from July 2013 (QUAL,
+MTUM, VTV against SPY, BIL as bills) QUAL plus MTUM made 14.8% / 34.1% against
+SPY's 14.0% / 33.7% and won 7 of 14 years, a tie at best, the two filtered
+versions made 8.0% and 8.7%, and QUAL plus VTV made 12.6% / 35.4%. Verdict: one
+model pass against holding, no real fund pass, so the paper Quality sleeve stays
+plain QUAL with no filter and no momentum blend.
+
 **A 24/7 sleeve: trend on crypto.** Joshua wants something that runs around the
 clock, and crypto is the obvious candidate, so we ran the same kind of test on
 Bitcoin (`century.py --crypto`, raw output in `tradingview/results-crypto.txt`).
@@ -713,6 +738,10 @@ files named above.
 | Same, on the profitability tenth | 1976 to now | 14.6% / 56% | 14.3% / 51% | fail (bigger drop) |
 | Same, on the investment tenth | 1976 to now | 15.8% / 61% | 14.3% / 51% | fail (bigger drop) |
 | Same, on the momentum tenth | 1976 to now | 17.4% / 59% | 14.3% / 51% | fail (bigger drop) |
+| Quality tenth only while the market is above its 10 month average, bills else, 1x | 1976 to now | 10.9% / 28% | 12.3% / 50% | fail (1.4 points less return, 1 of 6 decades; beats 33% of random schedules; real QUAL from 2013 8.0% / 26% against SPY 14.0% / 34%) |
+| Quality plus momentum tenths, 50/50 monthly | 1976 to now | 15.0% / 46% | 12.3% / 50% | pass on the model (5 of 6 decades, past Trend 2x 14.3% / 51% too), not past plain quality (drop 46% against 41%), 12.1% / 48% at 0.5% a side, fails on real QUAL plus MTUM from 2013 (14.8% / 34.1% against SPY 14.0% / 33.7%, 7 of 14 years) |
+| Same, with the market 10 month filter | 1976 to now | 12.3% / 28% | 12.3% / 50% | fail (no more return, 2 of 6 decades; real 8.7% / 30% against SPY 14.0% / 34%) |
+| Quality plus value tenths, 50/50 monthly | 1976 to now | 15.0% / 56% | 12.3% / 50% | fail (bigger drop; real QUAL plus VTV 12.6% / 35% against SPY 14.0% / 34%) |
 | Trend 2x S&P, exposure scaled to 20% target vol on 60 days (picked of 6 on 1929 to 1975) | 1976 to now | 11.3% / 29% | Trend 2x 14.4% / 44% | fail (less return, 1 of 6 decades; also behind holding's 12.1%) |
 | Trend 2x S&P, 2x only when 20 day vol is under its 1 year median, else 1x | 1976 to now | 10.3% / 38% | 14.4% / 44% | fail (less return, 2 of 6 decades) |
 | Turn of the month, 1x S&P on the last and first 3 days, bills else, 0.1% fee | 1976 to now | 5.9% / 21% | 12.1% / 55% | fail (less return, 2 of 6 decades; beats 100% of random masks, loses 2.6 points a year to fees) |
@@ -730,7 +759,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The two vol rows after them are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 
