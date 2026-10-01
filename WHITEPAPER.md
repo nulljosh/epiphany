@@ -222,31 +222,35 @@ sits idle between trades, and that costs far more than the edge earns.
   holding, 7.1% against 6.2%, with a smaller worst drop (72% against 86%). But
   that win comes from the 1930s crash. Since 2000 and since 2020 holding earned
   more. So it is a way to sleep better, not a way to beat the market.
-- **One real lead, still not a win: momentum with a market filter.** Across the
+- **Momentum with a market filter: the lead was survivorship bias.** Across the
   429 S&P 500 stocks (`tradingview/edge.py`), we held the 20 stocks with the best
   6 month returns (skipping the latest month), only while the whole stock basket
-  was above its 200 day average, rebalanced monthly. Settings were picked on 2012
-  to 2019 and graded on 2020 to now. We then stress tested it with the settings
-  frozen (`tradingview/results-momentum-stress.txt`). First, a bug: the fee was
-  never reaching the score, so the old 19.6% a year was fee free. At the real 0.1%
-  it is 18.4% with a 31% worst drop, against 15.1% and 34% for SPY. Other
-  periods: 2008 to 2011 it made 6.8% with a 29% drop while SPY made minus 1.4% and
-  fell 52%. 2012 to 2019 it made 23.4% with a 24% drop against SPY's 14.6% and
-  19%, so it took a bigger drop there. By calendar year since 1994 it beat SPY in
-  25 of 33 years, and in 13 of the 19 years since 2008. It lost money in 2008,
-  2011, 2022 and 2001, and 2022 and 2011 were years the filter did not save it.
-  Fees hurt but do not kill it: at 0.2% a side it makes 17.2% on 2020 to now, at
-  0.5% it makes 13.7%, which is below SPY. More names is worse, not safer: 30
-  holdings made 17.4% and 50 made 14.8% on 2020 to now. The filter does the real
-  work on drawdowns (without it 2008 fell 52% and 2020 to now fell 39%). The
-  survivorship problem is untested. We have no delisted stocks, and the 1990s
-  numbers (82% in 1995, 96% in 1999) are plainly the bias talking, since the list
-  is today's winners. The equal-weight basket shares that bias and made 14.6%
-  to 19% a year, so the part we can credit to momentum is the gap above it, about
-  4 points a year on 2012 to now, and even that is unproven. Verdict: it survives
-  the stress tests we could run and is the best thing we have found, but it is a
-  maybe, not a yes. We do not trade it until we test it on a list that includes
-  the stocks that died. Mixed asset classes are still untested.
+  was above its 200 day average, rebalanced monthly, 0.1% fee a side. On today's
+  list it made 18.4% a year on 2020 to now against 15.1% for SPY, 23.4% on 2012
+  to 2019, and beat SPY in 25 of 33 years
+  (`tradingview/results-momentum-stress.txt`). But today's list is today's
+  winners. So we rebuilt the index as it really was on each day since 1996, from
+  the free fja05680/sp500 history (`tradingview/data/sp500-pit.csv.gz`), and
+  reran it with every setting frozen (`edge.py --pit`,
+  `tradingview/results-survivorship.txt`). The lead is gone. 2012 to 2019 it
+  made 10.3% with a 28% drop, while the same members held equally made 15.3% and
+  SPY 14.6%. 2020 to now it made 9.8% with a 35% drop, against 11.2% for the
+  members held equally and 15.1% for SPY. 2008 to 2011 it made 4.3% against
+  4.5% for the basket and minus 1.4% for SPY, so the filter still halved the
+  drop (31% against 55%), but it earned nothing extra. By calendar year it beat
+  SPY in 14 of 30 and the real basket in 13 of 30, a coin flip. The data has a
+  hole we cannot fill for free: Yahoo has prices for 764 of the 1,209 stocks
+  that were ever in the index, and Stooq now blocks scripts. The missing ones
+  are mostly companies that went bust or were bought before about 2010, so
+  coverage runs from 64% of member months in 2008 to 2011 up to 93% since 2020.
+  Because Yahoo drops a dead stock's whole history, the two ways we price a held
+  stock that disappears (sell at its last price, or count it as a total loss)
+  give the same answer, since we never hold one. The gap does not save the lead,
+  though. On 2020 to now, where coverage is 93%, it lost to the basket, and the
+  same code on today's list makes 35% there, so the list alone was worth about
+  25 points a year. Verdict: no. Momentum with a filter cuts the crash, like
+  every trend rule here, but it does not beat holding. We do not trade it for
+  real.
   A daily dip-buying version looked even better (36% a year) but it fills at the
   same close it reads, which real orders cannot always do, so we do not count it.
 - **Many small trades a day lose.** We simulated the busiest idea we could: buy
@@ -305,9 +309,10 @@ one decade, the 1970s, when it rode gold to 32% a year. Adding crypto turns it
 into a Bitcoin bet: 79% a year in the 2010s and an 80% drop. Without crypto
 the same rule falls to 11.2% with a 63% drop, because a one-asset bet on oil
 or silver futures hurts. Trend rules do what they did on SPY: they cut the
-crash, not the return gap. The stock momentum lead passes on its own unseen
-half, 2007 to now, but it only has 40 years of data and today's stock list,
-and the same stocks held equally made 14.7%. So it is still a maybe.
+crash, not the return gap. The stock momentum lead passed on its own unseen
+half, 2007 to now, but only on today's stock list. On the real list as it stood
+each day it falls behind both SPY and the same members held equally, so it is
+out.
 Monthly closes also hide the worst days, so every drop here was deeper in real
 life. The honest answer: no autopilot rule we can find beats holding stocks
 across a century. Trend rules buy a smaller crash at a small cost in return,

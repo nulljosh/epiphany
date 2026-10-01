@@ -5,9 +5,11 @@ Every pick uses data through yesterday's close and trades at today's close (IBS-
 exception, flagged). 0.1% fee on every dollar traded. Settings picked on 2012-2019 by Sharpe,
 scored blind on 2020-now, then the winner faces a luck test against random picks.
 
-    python3 tradingview/edge.py
+    python3 tradingview/edge.py            # pick and score
+    python3 tradingview/edge.py --stress   # momentum + trend, frozen, on today's list
+    python3 tradingview/edge.py --pit      # same, on point-in-time members (survivorship test)
 """
-import random, statistics
+import bisect, csv, gzip, os, random, statistics
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from backtest import FEE, TRAIN, TEST, fetch_yahoo, sp500
@@ -15,17 +17,19 @@ from backtest import FEE, TRAIN, TEST, fetch_yahoo, sp500
 DAY = 86400
 
 
-def panel():
-    syms = sp500()
+def panel(syms=None):
+    """Today's S&P list with history back to 2011, or any ticker list (the point-in-time run) as is."""
+    pit = syms is not None
+    syms = syms or sp500()
     with ThreadPoolExecutor(8) as ex:
         data = dict(zip(syms, ex.map(fetch_yahoo, syms)))
-    cutoff = datetime(2011, 1, 1, tzinfo=timezone.utc).timestamp()
+    cutoff = datetime(2099 if pit else 2011, 1, 1, tzinfo=timezone.utc).timestamp()
     data = {s: b for s, b in data.items() if b and b[0][0] <= cutoff}
     count = {}
     for b in data.values():
         for r in b:
             count[r[0] // DAY] = count.get(r[0] // DAY, 0) + 1
-    days = sorted(d for d, n in count.items() if n >= len(data) // 2)
+    days = sorted(d for d, n in count.items() if n >= (100 if pit else len(data) // 2))
     ix = {d: i for i, d in enumerate(days)}
     O, H, L, C = ({s: [None] * len(days) for s in data} for _ in range(4))
     for s, b in data.items():
@@ -36,15 +40,17 @@ def panel():
     return days, list(data), O, H, L, C
 
 
-def simulate(days, C, pick, sched, lo, hi, lag=1, fee_rate=FEE):
-    """pick(i) -> list of symbols to hold equally from close i on. Decided with data through i - lag."""
+def simulate(days, C, pick, sched, lo, hi, lag=1, fee_rate=FEE, last=None):
+    """pick(i) -> list of symbols to hold equally from close i on. Decided with data through i - lag.
+    A held name whose prices stop keeps its last price until the next rebalance sells it, or with
+    last={sym: final index with a price} it goes to zero the day after (the -100% bound)."""
     vals, eq, rets, traded = {}, 1.0, [], 0.0
     for i in range(lo, hi):
         if i > lo:  # mark to market close i-1 -> close i
             new = 0.0
             for s, v in vals.items():
                 a, b = C[s][i - 1], C[s][i]
-                vals[s] = v * (b / a) if a and b else v
+                vals[s] = v * (b / a) if a and b else 0.0 if last and i > last[s] else v
                 new += vals[s]
             if vals:  # in cash the day's return is 0, not -100%
                 rets.append(new / eq - 1 if eq else 0.0)
@@ -75,13 +81,15 @@ def simulate(days, C, pick, sched, lo, hi, lag=1, fee_rate=FEE):
             "turnover": traded / years, "mult": mult}
 
 
-def build(days, syms, O, H, L, C, sizes=(20, 50)):
-    """Strategy families: name -> {setting: (pick, sched, lag)}. pick(j) sees data up to index j-1."""
+def build(days, syms, O, H, L, C, sizes=(20, 50), member=None):
+    """Strategy families: name -> {setting: (pick, sched, lag)}. pick(j) sees data up to index j-1.
+    member(i) -> set of index members on day i, for the point-in-time run; None means all of syms."""
+    member = member or (lambda i: syms)
     month = lambda i: i > 0 and datetime.fromtimestamp(days[i] * DAY, timezone.utc).month != datetime.fromtimestamp(days[i - 1] * DAY, timezone.utc).month
     week = lambda i: i % 5 == 0
     daily = lambda i: True
     def alive(j, back):
-        return [s for s in syms if C[s][j - 1] and C[s][j - 1 - back]]
+        return [s for s in member(j - 1) if C[s][j - 1] and C[s][j - 1 - back]]
     def ret(s, j, a, b):  # return from j-1-a to j-1-b
         x, y = C[s][j - 1 - a], C[s][j - 1 - b]
         return y / x - 1 if x and y else None
@@ -116,7 +124,7 @@ def build(days, syms, O, H, L, C, sizes=(20, 50)):
     idx = [None] * len(days)
     level = 1.0
     for i in range(1, len(days)):
-        rs = [C[s][i] / C[s][i - 1] - 1 for s in syms if C[s][i] and C[s][i - 1]]
+        rs = [C[s][i] / C[s][i - 1] - 1 for s in member(i) if C[s][i] and C[s][i - 1]]
         level *= 1 + (statistics.mean(rs) if rs else 0)
         idx[i] = level
     def trend(f):
@@ -212,6 +220,59 @@ def stress():
     print("\nSurvivorship: UNTESTED. No delisted constituents here. The EW basket column shares the same bias, so only the gap above it is momentum's own.")
 
 
+def pit():
+    """Momentum + trend on point-in-time S&P 500 members (fja05680/sp500, cached in data/), settings fixed."""
+    with gzip.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sp500-pit.csv.gz"), "rt") as f:
+        snaps = [(datetime.fromisoformat(d).replace(tzinfo=timezone.utc).timestamp() // DAY, {t.replace(".", "-") for t in ts.split(",")})
+                 for d, ts in list(csv.reader(f))[1:]]
+    names = sorted(set().union(*(m for _, m in snaps)))
+    days, syms, O, H, L, C = panel(names)
+    have = set(syms)
+    keys = [d for d, _ in snaps]
+    raw = [snaps[max(0, bisect.bisect_right(keys, d) - 1)][1] for d in days]
+    mem = [m & have for m in raw]
+    last = {s: max(i for i, c in enumerate(C[s]) if c) for s in syms}
+    spy = {r[0] // DAY: r[4] for r in fetch_yahoo("SPY")}
+    C["SPY"] = [spy.get(d) for d in days]
+    fam = build(days, syms, O, H, L, C, sizes=(20,), member=lambda i: mem[i])
+    month = lambda i: i > 0 and datetime.fromtimestamp(days[i] * DAY, timezone.utc).month != datetime.fromtimestamp(days[i - 1] * DAY, timezone.utc).month
+    def cover(lo, hi):  # share of (month, member) slots with a price that day
+        slots = [(len(raw[i]), sum(1 for s in raw[i] if s in have and C[s][i])) for i in range(lo, hi) if month(i)]
+        return sum(b for _, b in slots) / max(1, sum(a for a, _ in slots))
+    def run(name, lo, hi, zero):
+        pick, sched, lag = fam[name][(126, 20) if name != "EW basket" else ()]
+        return simulate(days, C, pick, sched, lo, hi, lag=lag, last=last if zero else None)
+    cell = lambda r: f"{r['cagr']:>6.1%} {r['mdd']:>4.0%}"
+    pair = lambda lo, hi, n: f"{cell(run(n, lo, hi, True))} | {cell(run(n, lo, hi, False))}"
+    print(f"Point-in-time S&P 500: {len(snaps)} membership snapshots {datetime.fromtimestamp(snaps[0][0] * DAY, timezone.utc).date()} on, "
+          f"{len(names)} tickers ever listed, {len(syms)} with Yahoo prices ({len(syms) / len(names):.0%}).")
+    print("Momentum + trend = 126 day return skipping the latest 21, top 20 of that day's members, only while the members' equal-weight basket")
+    print("is above its 200 day average, monthly, 0.1% fee per side. Settings fixed, nothing re-tuned.")
+    print("Each strategy cell: low bound (a held name whose prices stop goes to zero) | high bound (it exits at its last price).")
+    print("Cells are CAGR then max drawdown. Coverage = share of (month, member) slots with a price.\n")
+    print(f"{'period':10}{'cover':>6}   {'mom+trend low | high':>25}   {'PIT EW basket low | high':>25}   {'SPY':>11}")
+    periods = [("2008-01-01", "2011-12-31"), ("2012-01-01", "2019-12-31"), ("2020-01-01", "2099-01-01")]
+    periods += [(f"{y}-01-01", f"{y}-12-31") for y in range(1997, datetime.now().year + 1)]
+    won = {k: [0, 0, 0] for k in ("low", "high")}
+    for a, b in periods:
+        lo, hi = span(days, a, b)
+        if hi - lo < 20:
+            continue
+        sp = simulate(days, C, lambda j: ["SPY"], lambda i: i == lo, lo, hi, fee_rate=0)
+        tag = f"{a[:4]}-{'now' if b[:4] == '2099' else b[:4]}"
+        print(f"{tag:10}{cover(lo, hi):>6.0%}   {pair(lo, hi, 'Momentum + trend'):>25}   {pair(lo, hi, 'EW basket'):>25}   {cell(sp):>11}")
+        if a[:4] == b[:4]:
+            for k, z in (("low", True), ("high", False)):
+                m, e = run("Momentum + trend", lo, hi, z), run("EW basket", lo, hi, z)
+                won[k][0] += m["cagr"] > sp["cagr"]
+                won[k][1] += m["cagr"] > e["cagr"]
+                won[k][2] += 1
+    for k, (x, y, n) in won.items():
+        print(f"\nCalendar years, {k} bound: beat SPY in {x} of {n}, beat the point-in-time basket in {y} of {n}.", end="")
+    print("\nGaps: tickers Yahoo cannot find (mostly bankrupt or bought out before ~2010) never enter the ranking or the basket.")
+    print("Reused tickers can carry the wrong company's prices. Both are listed in the coverage column, not hidden.")
+
+
 if __name__ == "__main__":
     import sys
-    stress() if "--stress" in sys.argv else main()
+    pit() if "--pit" in sys.argv else stress() if "--stress" in sys.argv else main()
