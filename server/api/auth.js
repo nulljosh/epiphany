@@ -76,7 +76,8 @@ function publicUser(user) {
     name: user?.name || user?.fullName || null,
     verified: user?.verified ?? false,
     tier: user?.tier || 'free',
-    stripeCustomerId: user?.stripeCustomerId || null,
+    // The purchase handler stores it snake_case; read both so a paid account shows as paid on any device.
+    stripeCustomerId: user?.stripeCustomerId || user?.stripe_customer_id || null,
     watchlist: user?.watchlist || null,
     avatarUrl: user?.avatarUrl || null,
     avatarUpdatedAt: user?.avatarUpdatedAt || null,

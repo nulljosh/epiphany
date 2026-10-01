@@ -8,7 +8,7 @@ export function useSubscription(user) {
   const [loading, setLoading] = useState(true);
 
   const fetchStatus = useCallback(() => {
-    const customerId = localStorage.getItem('stripe_customer_id');
+    const customerId = user?.stripeCustomerId || localStorage.getItem('stripe_customer_id');
 
     if (!customerId) {
       setSubscription({ tier: 'free', status: null });
@@ -28,7 +28,7 @@ export function useSubscription(user) {
         setSubscription({ tier: 'free', status: null });
         setLoading(false);
       });
-  }, []);
+  }, [user?.stripeCustomerId]);
 
   useEffect(() => {
     fetchStatus();
