@@ -41,7 +41,9 @@ try:
     if a.dry_run:
         print(f"[dry-run] would {a.side} {a.qty:g} {c.symbol}")
     else:
-        t = ib.placeOrder(c, MarketOrder(a.side.upper(), a.qty))
+        o = MarketOrder(a.side.upper(), a.qty)
+        o.tif = "DAY"  # IBKR's order preset forces DAY and warns (error 10349) if it is left unset
+        t = ib.placeOrder(c, o)
         ib.sleep(3)
         print(f"{t.orderStatus.status}: {a.side} {a.qty:g} {c.symbol}, filled {t.orderStatus.filled:g} @ {t.orderStatus.avgFillPrice}")
 finally:
