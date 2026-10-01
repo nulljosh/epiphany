@@ -1,3 +1,11 @@
+## 2026-10-01 brain dump (open)
+- [ ] Offline mode
+- [ ] Smooth business news drawer drag animation
+- [ ] Better event filtering on the map
+- [ ] More info on event tap
+- [ ] Map events still slow to load (profile loadData fan-out)
+- [ ] Search UX pass beyond the contrast fix
+
 ## Revenue check, 2026-09-11
 
 Handoff: paused at Joshua's request to conserve usage. Changes are local and uncommitted; no deployment or release. Confirmation remains pending. Completed checks and next steps: [revenue handoff](../REVENUE.md).

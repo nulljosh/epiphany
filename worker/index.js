@@ -72,8 +72,10 @@ async function readBody(request) {
 
 // _blob.js reads its binding and public origin off globalThis so the call sites
 // it replaced keep their original signatures.
-function bindGlobals(env, origin) {
+function bindGlobals(env, origin, ctx) {
   globalThis.__blobKv = env.BLOB;
+  // Lets handlers finish work after responding (news.js stale-while-revalidate).
+  globalThis.__waitUntil = ctx ? (p) => ctx.waitUntil(p) : null;
   globalThis.__publicBaseUrl = env.PUBLIC_BASE_URL || origin;
 }
 
@@ -94,7 +96,7 @@ export default {
     // nodejs_compat populates process.env from bindings only on recent
     // compatibility dates; assign defensively so handlers reading it still work.
     try { Object.assign(process.env, env); } catch { /* read-only, compat date handles it */ }
-    bindGlobals(env, new URL(request.url).origin);
+    bindGlobals(env, new URL(request.url).origin, ctx);
 
     const url = new URL(request.url);
 
@@ -127,7 +129,7 @@ export default {
   // targets Workers rather than Pages.
   async scheduled(event, env, ctx) {
     try { Object.assign(process.env, env); } catch { /* see above */ }
-    bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.heyitsmejosh.com');
+    bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.heyitsmejosh.com', ctx);
 
     const path = { '0 8 * * 1-5': 'cron', '30 14 * * 1-5': 'broker/morning-run', '0 12 * * *': 'supabase-ping' }[event.cron];
     if (!path) return;
