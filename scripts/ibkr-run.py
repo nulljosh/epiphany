@@ -6,7 +6,8 @@
 
 Rule (WHITEPAPER section 5): in an uptrend (close above the 200 day average) buy a close at a 10 day low,
 sell a close at a 10 day high. Each position is 10% of --sleeve. Whole shares only. Demo and paper accounts
-only (IDs starting with D) unless --live. Meant to run once per trading day; it does not schedule itself.
+only (IDs starting with D) unless --live. Meant to run once per trading day, ideally around 3:45pm New York (12:45pm Pacific), 15 minutes before the close,
+so the orders fill today in the live market. It does not schedule itself.
 """
 import argparse, json, os, sys, urllib.request
 from datetime import datetime
@@ -30,8 +31,9 @@ def closes(sym):
     r = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=20))
     c = [x for x in r["chart"]["result"][0]["indicators"]["quote"][0]["close"] if x is not None]
     now = datetime.now(ZoneInfo("America/New_York"))
-    if now.weekday() < 5 and (9, 30) <= (now.hour, now.minute) < (16, 0):
+    if now.weekday() < 5 and (9, 30) <= (now.hour, now.minute) < (15, 30):
         c = c[:-1]  # the last bar is still forming, use completed days only
+    # From 3:30pm New York the forming bar is within minutes of the close: keep it, so the signal reads today's price.
     return c
 
 
