@@ -37,9 +37,10 @@ export default async function handler(req, res) {
   const secretKey = `snaptrade:user:${session.userId}`;
   const snapshotKey = `broker:snapshot:${session.userId}`;
   const force = req.body?.force === true;
+  const connectAdditional = req.body?.action === 'connect-additional';
 
   try {
-    if (!force && kv) {
+    if (!force && !connectAdditional && kv) {
       const cached = await kv.get(snapshotKey);
       if (cached?.syncedAt && (Date.now() - new Date(cached.syncedAt).getTime()) < 25 * 60 * 1000) {
         return res.status(200).json({ ok: true, linked: true, ...cached, cached: true });
@@ -72,7 +73,6 @@ export default async function handler(req, res) {
         throw err;
       }
     }
-    const connectAdditional = req.body?.action === 'connect-additional';
     if (!accounts || accounts.length === 0 || connectAdditional) {
       if (connectAdditional && !(await isPro(session))) {
         return res.status(200).json({ ok: true, upgradeRequired: true });
