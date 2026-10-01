@@ -1,95 +1,63 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
-# Epiphany.
-[![web](https://img.shields.io/badge/web-v2.6.2-blue)](https://epiphany.heyitsmejosh.com) [![ios](https://img.shields.io/badge/iOS-v2.5.5-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany) [![Claude Skill](https://img.shields.io/badge/Claude%20Skill-epiphany-CC785C?logo=claude)](.claude/skills/epiphany/SKILL.md)
+# Epiphany
 
-Everything happening in your world, on one screen. The map, the markets, the people. Palantir for regular people.
+Everything happening in your world, on one screen. The map, the markets, the people.
 
-[Live](https://epiphany.heyitsmejosh.com) | [App Store](https://apps.apple.com/app/epiphany/id6779522175) | [Architecture](architecture.svg) | [Whitepaper](WHITEPAPER.md)
+[Live](https://epiphany.heyitsmejosh.com) | [App Store](https://apps.apple.com/app/epiphany/id6779522175) | [Whitepaper](WHITEPAPER.md) | [Roadmap](roadmap.md)
 
 <p align="center">
-  <img src="public/screenshots/screenshot-situation-new.png" width="180">
-  <img src="public/screenshots/screenshot-markets-new.png" width="180">
-  <img src="public/screenshots/screenshot-stocks-new.png" width="180">
-  <img src="public/screenshots/screenshot-portfolio-new.png" width="180">
+  <img src="docs/double7s-spy.gif" width="720" alt="The Epiphany trading algorithm replaying SPY day by day: green arrows buy, red arrows sell">
+  <br>
+  <sub>The trading algorithm replaying the S&amp;P 500 ETF, one day at a time. Green arrows buy, red arrows sell.</sub>
 </p>
 
 <p align="center">
-  <img src="macos/fastlane/screenshots/mac/1-main.png" width="320">
-  <img src="watchos/fastlane/screenshots/watch/1-main.png" width="120">
+  <img src="public/screenshots/screenshot-situation-new.png" width="170">
+  <img src="public/screenshots/screenshot-markets-new.png" width="170">
+  <img src="public/screenshots/screenshot-stocks-new.png" width="170">
+  <img src="public/screenshots/screenshot-portfolio-new.png" width="170">
 </p>
 
-<img src="progress.svg" width="460">
+## What it does
 
-## Claude Skill
+- **Situation.** A live map with 11 layers (flights, weather, news, incidents and more), a daily brief, and the macro pulse.
+- **Markets.** Stocks, crypto and commodities with a Buy, Hold or Sell read on each. Prediction markets too.
+- **Portfolio.** Holdings, net worth and where the money went. Read-only brokerage sync.
+- **People.** Search anyone and see how they connect.
+- **Autopilot.** Our trading algorithm, on paper money.
 
-[`.claude/skills/epiphany`](.claude/skills/epiphany/SKILL.md) gives Claude Code admin access to your portfolio data in Upstash KV. Holdings, debt, budget. No app login:
+Web, iOS, macOS, watchOS, Windows, Linux and Android. Free to start, $1 once for everything.
 
-```bash
-scripts/kv-portfolio-edit.sh get <email>            # dump current portfolio JSON
-scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with merged JSON
-```
+## Does the trading work?
 
-## Tabs
+We replayed it on real history: hundreds of stocks, index funds, Bitcoin, gold, oil, and the S&P 500 back to 1927. Each strategy was tuned on older years, then graded on years it had never seen. Fees included.
 
-| Tab | Status |
-|---|---|
-| Situation | Live map + daily brief + situation monitor + macro pulse |
-| Markets | Stocks, crypto, commodities, fear/greed, Polymarket whales |
-| Simulator | 60fps trading simulator with Kelly criterion and edge detection |
-| Portfolio | Holdings, budgets, spending analysis |
-| People | Search and index with relationship graph |
-| Settings | Theme, ticker, account, billing |
-
-## Features
-
-- **Live Map.** 11 layers: flights, earthquakes, weather, wildfires, news, incidents, emergency services, dispatch, crime, local events, predictions
-- **Daily Brief.** The morning in one card: top movers and headlines
-- **Macro Pulse.** GDP, CPI, the Fed rate, yields, VIX, fear and greed, live
-- **Markets.** Live quotes with bid, ask and exchange. 1m, 15m and max. Anomalies flagged
-- **Indicators and Signal.** RSI, MACD, Bollinger, SMAs, Stochastic, ATR, and one Buy, Hold or Sell badge
-- **Trading Simulator.** A 60 fps canvas with Kelly sizing and edge detection
-- **Portfolio.** Holdings, net worth, where the money went
-- **Prediction Markets.** Polymarket, with the whales tracked
-- **Knowledge Graph.** 9 kinds of thing, 6 kinds of link
-- **Command Bar.** Cmd+K, then type
-- **Auth and Billing.** Free, or Premium at $1 a week through Stripe
-- **Landing Page.** A node-graph hero, a ticker, features and pricing
-- **PWA.** Works offline
-- **Native.** iOS, macOS, Windows, Linux and Android
-
-Roadmap: [roadmap.md](roadmap.md).
-
-## Does the trading actually work?
-
-We tested it on real history. Hundreds of stocks, index funds, Bitcoin, gold, oil, and the S&P 500 back to 1927. Each strategy was tuned on older years, then graded on newer years it had never seen. Like practising on old exams, then sitting a new one. Fees included.
-
-One strategy passed. It's called Double 7s. When something that's been rising has its worst close in 10 days, buy. When it has its best close in 10 days, sell.
-
-![Double 7s replaying SPY day by day in TradingView: green arrows buy, red arrows sell](docs/double7s-spy.gif)
+One rule passed: **Double 7s.** In a rising market, buy a 10 day low and sell a 10 day high.
 
 | Tested on | Trades that made money | Average gain per trade | Trades |
 |---|---|---|---|
 | 429 S&P 500 stocks | 67% | 0.39% | 22,614 |
 | 16 index funds | 71% | 0.44% | 807 |
-| Our TradingView watchlist, every symbol from its first day | 69% | 0.62% | 3,508 |
+| Our watchlist, each symbol from its first day | 69% | 0.62% | 3,508 |
 | Bitcoin | 71% | | 104 |
+| S&P 500 index, 49 unseen years (a related dip rule) | 77% | | 377 |
 
-Two out of three trades make money, after fees, on years the strategy never saw. Only buying when fear is high (the VIX is spiking) lifts that to 73% on index funds. On the S&P 500 itself, graded on 49 years it never saw (1977 to now), the RSI(2) dip buy made money on 77% of trades.
+**It does not beat buying and holding.** Run as one account it grew about 3% a year against 15% for SPY. Even parking idle cash in SPY only reached 8.8%. Most of the wins are just the market rising. The full story, failures included, is in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark-does-it-work).
 
-What it won't do is beat buying and holding. We even tried parking the idle cash in SPY and only switching into dips: 8.8% a year against SPY's 15.1%. Most of those wins are just the market rising. It's in the market a few days at a time, so most of the year the cash sits still. Run as one account over index funds it grew about 2.7% a year, while just holding SPY grew 15%. TradingView's own Strategy Tester agrees on the win rate: 65% of 4,733 trades across our whole watchlist made money.
+Run it yourself: `python3 tradingview/backtest.py sp500`. Daily paper trading through Interactive Brokers: `scripts/ibkr-run.py`.
 
-The full story, including everything that failed, is in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark-does-it-work). Run it yourself: `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart from `tradingview/epiphany.pine`.
+## Run it
 
-## Setup
+```bash
+npm install && npm run dev
+npm test -- --run
+npm run build
+```
 
-See [CLAUDE.md](CLAUDE.md) for dev, test, and build commands.
+Deploys to Cloudflare Workers (`npm run deploy`). Dev notes are in [CLAUDE.md](CLAUDE.md). `npm run tui -- <email>` is a live portfolio dashboard in the terminal.
 
-### Terminal dashboard
-
-`npm run tui -- <email>` is a live portfolio dashboard in the terminal (ink). It reads Upstash KV directly. No login.
-
-Deploy: Cloudflare Workers (`npm run deploy`)
+For Claude Code: [`.claude/skills/epiphany`](.claude/skills/epiphany/SKILL.md) reads and edits portfolio data directly, and [`docs/API.md`](docs/API.md) lists the HTTP and agent tools.
 
 ## Credits
 
@@ -98,9 +66,3 @@ Chart control is built on [tradingview-mcp](https://github.com/tradesdontlie/tra
 ## License
 
 Apache 2.0, 2026, Joshua Trommel
-
-## API and agent tools
-
-An agent can drive this app. [`docs/API.md`](docs/API.md) lists the HTTP surface, where there
-is one, and the WebMCP tools registered on `document.modelContext`. Tools come in three kinds:
-read-only, writes you can undo, and the few that ask a human first.
