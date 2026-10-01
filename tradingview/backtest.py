@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay surf-strategies.pine (plus Supertrend+RSI and Monica Kelly) on Bitstamp BTC daily history since 2011.
+"""Replay epiphany.pine (plus Supertrend+RSI and Monica Kelly) on Bitstamp BTC daily history since 2011.
 
 Signals on the close, fills at the next open, 0.1% fee per side, long only.
 Settings are picked on 2012-2019 and scored blind on 2020-now.
@@ -114,7 +114,7 @@ def supertrend(h, l, c, n, m):
 
 
 def signals(mode, p, o, h, l, c):
-    """Return (enter, exit) boolean lists, same rules as surf-strategies.pine."""
+    """Return (enter, exit) boolean lists, same rules as epiphany.pine."""
     N = len(c)
     if mode == "Hold":
         return [True] * N, [False] * N
@@ -141,6 +141,23 @@ def signals(mode, p, o, h, l, c):
         r, t, x = rsi(c, 2), sma(c, 200), sma(c, p[1])
         return ([t[i] is not None and r[i] is not None and c[i] > t[i] and r[i] < p[0] for i in range(N)],
                 [x[i] is not None and c[i] > x[i] for i in range(N)])
+    if mode == "RSI2 exit high":  # same dip entry, out the first close above yesterday's high
+        r, t = rsi(c, 2), sma(c, 200)
+        return ([t[i] is not None and r[i] is not None and c[i] > t[i] and r[i] < p[0] for i in range(N)],
+                [i > 0 and c[i] > h[i - 1] for i in range(N)])
+    if mode == "Cumulative RSI":  # two-day RSI(2) sum
+        r, t = rsi(c, 2), sma(c, 200)
+        return ([i > 0 and t[i] is not None and r[i - 1] is not None and c[i] > t[i] and r[i] + r[i - 1] < p[0] for i in range(N)],
+                [r[i] is not None and r[i] > p[1] for i in range(N)])
+    if mode == "Double 7s":  # close at an n-day low in an uptrend, out at an n-day high
+        t, n = sma(c, 200), p[0]
+        return ([i >= n and t[i] is not None and c[i] > t[i] and c[i] <= min(c[i - n + 1:i + 1]) for i in range(N)],
+                [i >= n and c[i] >= max(c[i - n + 1:i + 1]) for i in range(N)])
+    if mode == "IBS + RSI2":
+        r, t = rsi(c, 2), sma(c, 200)
+        ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
+        return ([t[i] is not None and r[i] is not None and c[i] > t[i] and ibs[i] < p[0] and r[i] < p[1] for i in range(N)],
+                [i > 0 and c[i] > h[i - 1] for i in range(N)])
     if mode == "IBS + trend":
         t = sma(c, 200)
         ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
@@ -246,6 +263,10 @@ GRID = {
     "Supertrend+RSI": [(10, 2), (10, 3), (14, 3), (20, 4)],
     "RSI2 pullback": [(5, 5), (10, 5), (10, 10), (15, 5)],
     "IBS + trend": [(0.1, 0.7), (0.2, 0.8), (0.2, 0.5)],
+    "RSI2 exit high": [(5,), (10,), (15,)],
+    "Cumulative RSI": [(20, 70), (35, 65), (35, 70)],
+    "Double 7s": [(5,), (7,), (10,)],
+    "IBS + RSI2": [(0.25, 10), (0.25, 20), (0.5, 10)],
     "Monica Kelly": [()],   # as shipped, no tuning
     "Monica all-in": [()],  # same signal, whole account per trade
 }

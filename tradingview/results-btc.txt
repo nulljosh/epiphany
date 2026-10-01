@@ -1,0 +1,19 @@
+BTC daily, 2011-08-18 to 2026-10-01, 5524 bars. Fee 0.1%/side.
+Pick on 2012-01-01..2019-12-31, score blind on 2020-01-01..2026-10-01.
+
+strategy               setting | train CAGR  maxDD |  TEST CAGR  maxDD  x money trades
+Hold                        () |       148%    85% |        44%    77%     11.7      1
+Single MA                (20,) |       168%    72% |        27%    67%      4.9    144
+Two MA                (10, 20) |       179%    70% |        28%    75%      5.3     66
+Three MA           (5, 10, 20) |       171%    66% |        22%    66%      3.8    102
+Donchian                 (55,) |       159%    73% |        40%    43%      9.5     12
+IBS                 (0.3, 0.7) |        13%    75% |         7%    61%      1.6    367
+Supertrend+RSI         (10, 2) |       153%    71% |        39%    54%      9.3     49
+RSI2 pullback         (10, 10) |        14%    54% |        11%    36%      2.0     50
+IBS + trend         (0.1, 0.7) |         9%    21% |        -3%    32%      0.8     57
+RSI2 exit high            (5,) |        13%    36% |         7%    29%      1.6     28
+Cumulative RSI        (35, 65) |        14%    43% |         9%    34%      1.8     58
+Double 7s                (10,) |         8%    72% |        17%    35%      3.0     51
+IBS + RSI2           (0.5, 10) |        10%    41% |        10%    33%      1.9     56
+Monica Kelly                () |        -0%     0% |         0%     1%      1.0      3
+Monica all-in               () |         9%    15% |         1%    22%      1.0    112

@@ -60,6 +60,20 @@ scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with merged JSO
 
 Roadmap: [roadmap.md](roadmap.md).
 
+## Trading benchmark
+
+Every strategy, run on 15 years of history and scored on years it never saw. 429 S&P 500 stocks plus BTC, 0.1% fees, next-open fills.
+
+| Strategy | Win rate | Avg trade | Trades |
+|---|---|---|---|
+| **Double 7s** | **67%** | **+0.39%** | 22,614 |
+| RSI(2) pullback | 65% | +0.25% | 19,156 |
+| IBS dip buy | 61% | +0.50% | 52,697 |
+| Donchian breakout | 41% | +3.21% | 5,057 |
+| Monica, all in | 30% | -0.07% | 43,701 |
+
+Double 7s clears the bar: 66%+ wins, profit after fees, on unseen years. Method, caveats and the full table are in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark). Run it yourself with `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart through `tradingview/epiphany.pine`.
+
 ## Setup
 
 See [CLAUDE.md](CLAUDE.md) for dev, test, and build commands.

@@ -239,4 +239,6 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Fee test: 0%, 0.1%, 0.25% per side
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
-- [ ] Fix the WHITEPAPER's dead `simBenchmark.js` reference
+- [x] Fix the WHITEPAPER's dead `simBenchmark.js` reference
+- [x] Edge found: Double 7s, 67% win rate, +0.39%/trade after fees, 22,614 blind S&P 500 trades (WHITEPAPER section 5)
+- [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
