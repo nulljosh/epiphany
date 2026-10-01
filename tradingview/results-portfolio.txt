@@ -1,0 +1,9 @@
+Double 7s as one account, 16 index and sector ETFs, 10% per position, $500 start. Fee 0.1%/side.
+
+period         lookback  end value   CAGR worst drop win rate trades/yr avg invested |  SPY hold CAGR SPY worst drop
+2012 to now           5        563   0.8%        23%      66%       216          48% |          14.9%            34%
+2012 to now           7        725   2.6%        26%      70%       147          47% |          14.9%            34%
+2012 to now          10        883   3.9%        35%      72%       100          46% |          14.9%            34%
+2020 to now           5        510   0.3%        17%      65%       209          47% |          15.1%            34%
+2020 to now           7        563   1.8%        22%      69%       141          46% |          15.1%            34%
+2020 to now          10        599   2.7%        35%      71%        94          47% |          15.1%            34%
