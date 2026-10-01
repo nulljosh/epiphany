@@ -237,3 +237,4 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
 - [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
+- [ ] Flip the iOS and macOS App Store price to $1 upfront (`asc pricing`) once iOS 2.5.14 clears review, then drop the in-app Stripe unlock path. Decided 2026-10-01: same $1 everywhere, free tier stays web only
