@@ -1,7 +1,6 @@
-TradingView watchlist (29): 29 symbols, 28 with 600+ daily bars. Fee 0.1%/side.
+TradingView watchlist (28): 28 symbols, 27 with 600+ daily bars. Fee 0.1%/side.
 Each symbol from its first bar: settings picked on the first half of its history, scored blind on the second.
 
-  CBOE:VIX   1990-01-02 to 2026-10-01, blind from 2008-10-02
   NYSE:IBM   1962-01-02 to 2026-10-01, blind from 1994-10-10
   NASDAQ:SHOO 1993-12-13 to 2026-10-01, blind from 2010-09-27
   BLACKBULL:WTI 2000-08-23 to 2026-10-01, blind from 2014-02-12
@@ -31,24 +30,24 @@ Each symbol from its first bar: settings picked on the first half of its history
   NYSE:DIS   1962-01-02 to 2026-10-01, blind from 1994-10-10
 
 strategy         median CAGR median maxDD beat Hold win rate avg trade  trades
-Hold                   10.6%          59%        0%       0%     0.00%       0
-Single MA               6.0%          46%       11%      26%     1.28%    2903
-Two MA                  6.3%          47%       18%      38%     5.15%    1046
-Three MA                3.7%          42%       11%      41%     1.97%    1640
-Donchian                5.4%          49%        7%      43%     4.55%     905
-IBS                     5.9%          47%       14%      60%     0.53%    8578
-Supertrend+RSI          4.8%          50%       18%      43%     2.43%    1656
-RSI2 pullback           2.0%          37%        7%      68%     0.44%    2775
-IBS + trend             0.4%          40%       11%      59%     0.19%    6812
-RSI2 exit high          1.7%          25%       11%      67%     0.41%    2946
-Cumulative RSI          1.6%          32%        4%      68%     0.42%    2469
-Double 7s               3.3%          37%        7%      69%     0.62%    3508
-IBS + RSI2              1.4%          31%        7%      66%     0.43%    2997
-D7 first up close        0.3%          32%       11%      57%     0.09%    5739
-D7 + RSI2               2.1%          26%       11%      67%     0.48%    2684
-D7 + market             3.1%          39%       11%      68%     0.55%    3449
-D7 stacked              0.7%          16%       11%      59%     0.23%    2216
-D7 + VIX fear           3.2%          34%        4%      70%     0.62%    2465
-VIX stretch             0.5%          38%        0%      64%     0.05%    2723
-Monica Kelly           -0.0%           0%       11%      31%     0.05%    1858
-Monica all-in           0.4%          30%       11%      32%     0.12%    5477
+Hold                   10.9%          59%        0%       0%     0.00%       0
+Single MA               6.3%          45%       11%      26%     1.90%    2717
+Two MA                  6.4%          47%       19%      38%     5.63%    1027
+Three MA                4.0%          41%       11%      42%     2.22%    1611
+Donchian                5.9%          48%        7%      44%     5.18%     890
+IBS                     5.6%          46%       11%      60%     0.40%    8117
+Supertrend+RSI          5.0%          49%       19%      43%     2.81%    1614
+RSI2 pullback           2.2%          36%        4%      68%     0.42%    2725
+IBS + trend             0.4%          40%       11%      59%     0.18%    6633
+RSI2 exit high          1.7%          24%        7%      67%     0.36%    2916
+Cumulative RSI          1.7%          31%        0%      68%     0.41%    2407
+Double 7s               3.4%          36%        7%      69%     0.63%    3434
+IBS + RSI2              1.7%          30%        4%      67%     0.42%    2946
+D7 first up close        0.4%          32%        7%      57%     0.08%    5554
+D7 + RSI2               2.0%          26%        7%      67%     0.45%    2637
+D7 + market             2.9%          39%        7%      68%     0.51%    3407
+D7 stacked              0.6%          16%        7%      59%     0.21%    2188
+D7 + VIX fear           3.2%          33%        4%      70%     0.66%    2453
+VIX stretch             0.6%          37%        0%      65%     0.28%    2543
+Monica Kelly           -0.0%           0%        7%      31%     0.05%    1855
+Monica all-in           0.5%          30%        7%      32%     0.12%    5474
