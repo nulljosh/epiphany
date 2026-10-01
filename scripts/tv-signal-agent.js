@@ -3,7 +3,7 @@
 // Polls live TradingView chart for Monica Kelly entry signals, fires orders.
 //
 // Usage:
-//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple] [--dry-run]
+//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple] [--study Monica|Surf] [--dry-run]
 //
 // Requires:
 //   - TradingView Desktop running with --remote-debugging-port=9222
@@ -14,51 +14,39 @@
 //
 // Talks to the TradingView MCP server directly via its JS core (no MCP protocol needed).
 
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import path from 'path';
-
-const require = createRequire(import.meta.url);
 
 const TV_MCP_PATH = path.resolve('/Users/joshua/Documents/Code/_external/tradingview-mcp');
 const POLL_INTERVAL_MS = 5000;
 const SIGNAL_API = process.env.SIGNAL_API || 'http://localhost:3000';
 const DRY_RUN = process.argv.includes('--dry-run');
-const BROKER = process.argv.includes('--broker')
-  ? process.argv[process.argv.indexOf('--broker') + 1]
-  : 'alpaca';
+const arg = (k, d) => process.argv.includes(k) ? process.argv[process.argv.indexOf(k) + 1] : d;
+const BROKER = arg('--broker', 'alpaca');
+const STUDY = arg('--study', 'Monica');
 
 // Import TradingView MCP core directly (bypasses MCP protocol overhead)
-const { default: connect } = await import(`${TV_MCP_PATH}/src/connection.js`);
+const { connect } = await import(`${TV_MCP_PATH}/src/connection.js`);
 const core = await import(`${TV_MCP_PATH}/src/core/index.js`);
 
-// Signal state — prevent duplicate orders on the same candle
-let lastSignal = null;
-let lastSignalTime = 0;
-const SIGNAL_COOLDOWN_MS = 60_000; // 1 min minimum between orders
+// Last label seen. Fire only when a new one appears, never on labels already on the chart at startup.
+let lastKey;
 
 function log(...args) {
   console.log(new Date().toISOString(), ...args);
 }
 
 async function readSignal() {
-  // Get current study values from all visible indicators
-  const studyValues = await core.data.getStudyValues({});
-  if (!studyValues?.studies) return null;
-
-  // Look for Monica Kelly indicator — detects buy/sell from signal labels
-  const labels = await core.data.getPineLabels({ study_filter: 'Monica' });
-  if (!labels?.labels?.length) return null;
-
-  // Most recent label — Monica Kelly draws "BUY" / "SELL" at signal bars
-  const latest = labels.labels[0];
+  // Labels come oldest first; the strategy draws "BUY" / "SELL" at signal bars
+  const res = await core.data.getPineLabels({ study_filter: STUDY, verbose: true });
+  const latest = res?.studies?.[0]?.labels?.at(-1);
   if (!latest?.text) return null;
 
   const text = latest.text.toUpperCase();
   if (!text.includes('BUY') && !text.includes('SELL')) return null;
 
-  const quote = await core.data.quote({});
+  const quote = await core.data.getQuote({});
   return {
+    key: `${latest.id}:${latest.x}:${latest.text}`,
     action: text.includes('BUY') ? 'buy' : 'sell',
     sym: quote?.symbol?.replace(/^[A-Z]+:/, '') || 'SPY',
     price: quote?.close || 0,
@@ -102,15 +90,12 @@ async function poll() {
     const signal = await readSignal();
     if (!signal) return;
 
-    const isDuplicate = signal.action === lastSignal
-      && (Date.now() - lastSignalTime) < SIGNAL_COOLDOWN_MS;
-
-    if (isDuplicate) return;
+    if (lastKey === undefined) { lastKey = signal.key; return; } // prime, don't trade history
+    if (signal.key === lastKey) return;
+    lastKey = signal.key;
 
     log(`Signal detected: ${signal.action.toUpperCase()} ${signal.sym} — "${signal.labelText}"`);
     await fireOrder(signal);
-    lastSignal = signal.action;
-    lastSignalTime = signal.time;
   } catch (err) {
     log('[POLL ERROR]', err.message);
   }
@@ -119,7 +104,7 @@ async function poll() {
 // Connect to TradingView CDP
 log(`Connecting to TradingView CDP...`);
 await connect();
-log(`Connected. Polling every ${POLL_INTERVAL_MS / 1000}s. Broker: ${BROKER}. Dry-run: ${DRY_RUN}`);
+log(`Connected. Polling every ${POLL_INTERVAL_MS / 1000}s. Study: ${STUDY}. Broker: ${BROKER}. Dry-run: ${DRY_RUN}`);
 
 setInterval(poll, POLL_INTERVAL_MS);
 poll(); // immediate first check
