@@ -471,8 +471,9 @@ def sp_century():
         print(f"{name + ' dd':8}" + "".join(f"{r['mdd']:>15.0%}" for r in rows))
 
 
-def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0):
-    """Double 7s run as one account over the index and sector ETFs: each entry puts `cap` of equity in, fees both ways."""
+def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
+    """Double 7s run as one account over the index and sector ETFs: each entry puts `cap` of equity in, fees both ways.
+    park=True keeps idle cash in SPY instead of cash (rotating out of SPY on a dip signal costs an extra fee each way)."""
     data = {s: fetch_yahoo(s) for s in ETFS}
     data = {s: b for s, b in data.items() if len(b) > 400}
     days = sorted({r[0] // 86400 for r in data["SPY"]})
@@ -486,11 +487,16 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0):
             rows[s] = {b[i][0] // 86400: (b[i][1], b[i][4], en[i - 1], ex[i - 1]) for i in range(1, len(b))}
         cash, pos, last, curve, wins, trades = start, {}, {}, [], 0, 0
         window = [d for d in days if lo <= d <= hi]
+        prev_spy, extra = None, (FEE if park else 0.0)
         for d in window:
+            spy_c = rows["SPY"][d][1] if d in rows["SPY"] else None
+            if park and spy_c and prev_spy:
+                cash *= spy_c / prev_spy
+            prev_spy = spy_c or prev_spy
             for s in list(pos):                      # exits first
                 if d in rows[s] and rows[s][d][3]:
                     units, cost = pos.pop(s)
-                    proceeds = units * rows[s][d][0] * (1 - FEE)
+                    proceeds = units * rows[s][d][0] * (1 - FEE - extra)
                     cash += proceeds
                     wins += proceeds > cost
                     trades += 1
@@ -498,11 +504,11 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0):
             for s in rows:                           # then entries
                 if s in pos or d not in rows[s] or not rows[s][d][2]:
                     continue
-                size = min(cap * equity, cash / (1 + FEE))
+                size = min(cap * equity, cash / (1 + FEE + extra))
                 if size < 1:
                     continue
                 pos[s] = (size * (1 - FEE) / rows[s][d][0], size)
-                cash -= size * (1 + FEE)
+                cash -= size * (1 + FEE + extra)
             for s in rows:
                 if d in rows[s]:
                     last[s] = rows[s][d][1]
