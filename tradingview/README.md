@@ -127,3 +127,11 @@ caffeinate -i uv run --with ib_async python3 scripts/ibkr-live.py
 ```
 
 It watches the account during US market hours and sends a Mac notification when the positions move another 1% or the account moves another 20. It runs the daily trade once after the close, tells you if the Gateway logs out, and logs to `~/Library/Logs/EpiphanyIBKR.log`. Ctrl-C stops it. The strategy decides once a day on the closing prices, so orders placed after the close fill at the next open in the live market.
+
+To start it on every login and right now, install the job file once (you run this, automation is blocked from installing background jobs):
+
+```
+cp scripts/com.heyitsmejosh.epiphany-live.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.heyitsmejosh.epiphany-live.plist
+```
+
+To turn it off: `launchctl bootout gui/$(id -u)/com.heyitsmejosh.epiphany-live && rm ~/Library/LaunchAgents/com.heyitsmejosh.epiphany-live.plist`
