@@ -925,10 +925,10 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       <div style={{ padding: '16px 16px 12px' }}>
         <div style={{ fontSize: 11, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Net Worth</div>
         <div style={{ fontSize: 'clamp(28px, 6vw, 40px)', fontWeight: 700, color: netWorth >= 0 ? t.text : t.red, fontVariantNumeric: 'tabular-nums', letterSpacing: '-1.5px', lineHeight: 1 }}>
-          {formatCurrency(netWorth)}
+          {formatCurrency(netWorth, 'CAD')}
         </div>
         <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 6, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <span>Stocks: {formatCurrency(stocksValue)}</span>
+          <span>Stocks: {formatCurrency(stocksValue, 'CAD')}</span>
           <span>Cash: {formatCurrency(cashValue, 'CAD')}</span>
           <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>
         </div>
