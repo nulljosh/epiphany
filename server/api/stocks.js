@@ -383,7 +383,7 @@ export default async function handler(req, res) {
   const cached = getCached(cacheKey, CACHE_TTL_MS);
   if (cached) {
     setStockResponseHeaders(req, res);
-    res.setHeader('X-Monica-Data-Status', 'cache');
+    res.setHeader('X-Epiphany-Data-Status', 'cache');
     return res.status(200).json(cached);
   }
 
@@ -424,14 +424,14 @@ export default async function handler(req, res) {
     }
 
     setStockResponseHeaders(req, res);
-    res.setHeader('X-Monica-Data-Status', 'live');
-    res.setHeader('X-Monica-Data-Source', source);
+    res.setHeader('X-Epiphany-Data-Status', 'live');
+    res.setHeader('X-Epiphany-Data-Source', source);
     return res.status(200).json(stocks);
   } catch (err) {
     const staleCached = getCached(cacheKey, STALE_IF_ERROR_MS);
     if (staleCached) {
       setStockResponseHeaders(req, res);
-      res.setHeader('X-Monica-Data-Status', 'stale');
+      res.setHeader('X-Epiphany-Data-Status', 'stale');
       return res.status(200).json(staleCached);
     }
 

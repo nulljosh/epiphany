@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   applyCors(req, res);
 
   if (cache && Date.now() - cache.ts < CACHE_TTL_MS) {
-    res.setHeader('X-Monica-Data-Status', 'cache');
+    res.setHeader('X-Epiphany-Data-Status', 'cache');
     return res.status(200).json(cache.data);
   }
 
@@ -131,13 +131,13 @@ export default async function handler(req, res) {
 
     cache = { ts: Date.now(), data: result };
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
-    res.setHeader('X-Monica-Data-Status', 'live');
+    res.setHeader('X-Epiphany-Data-Status', 'live');
     return res.status(200).json(result);
   } catch (error) {
     console.error('[polymarket-whales] Error:', error.message);
 
     if (cache) {
-      res.setHeader('X-Monica-Data-Status', 'stale');
+      res.setHeader('X-Epiphany-Data-Status', 'stale');
       return res.status(200).json(cache.data);
     }
 
