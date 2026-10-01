@@ -81,6 +81,13 @@ class Summarize(Base):
         mb.summarize([], 1010.0, {"start": {"netLiquidation": 1000}})
         self.assertEqual(mb.read_json(mb.BEST, {}), {"high": 50, "low": -30})
 
+    def test_chart_symbols_dedupe_and_label(self):
+        rows = [("Best \u00b7 IWM", "", 1), ("Worst \u00b7 SPY", "", -1)]
+        with mock.patch.object(mb, "top_gainer", return_value="XYZ"):
+            self.assertEqual(mb.chart_symbols(rows), [("SPY", "SPY"), ("XYZ", "XYZ \u00b7 Top gainer"), ("IWM", "IWM")])
+        with mock.patch.object(mb, "top_gainer", return_value=None):
+            self.assertEqual(mb.chart_symbols([]), [("SPY", "SPY")])
+
     def test_paused(self):
         self.write(mb.PAUSED, "")
         self.assertEqual(mb.summarize([], None, {})[2][-1][1], "Paused")
@@ -90,6 +97,21 @@ class Summarize(Base):
             ib.return_value.connect.side_effect = ConnectionRefusedError
             ib.return_value.isConnected.return_value = False
             self.assertEqual(mb.snapshot()[0], "!")
+
+
+class SingleInstance(Base):
+    def test_second_copy_exits_before_touching_the_ui(self):
+        import fcntl, sys
+        os.makedirs(os.path.join(self.dir.name, "tradingview"))
+        with mock.patch.object(mb, "ROOT", self.dir.name), mock.patch.object(sys, "argv", ["menubar.py"]):
+            held = open(os.path.join(self.dir.name, "tradingview", "menubar.lock"), "w")
+            fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.assertIsNone(mb.main())  # would raise ImportError on rumps if it got past the lock
+            held.close()
+
+    def test_hide_gateway_without_gateway_is_a_no_op(self):
+        with mock.patch.object(mb.subprocess, "run", return_value=NS(stdout="")):
+            self.assertIsNone(mb.hide_gateway())
 
 
 class NextTrade(unittest.TestCase):

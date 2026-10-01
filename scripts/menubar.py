@@ -62,6 +62,37 @@ def spy_price():
     return r["chart"]["result"][0]["meta"]["regularMarketPrice"]
 
 
+def yahoo(path):
+    req = urllib.request.Request("https://query1.finance.yahoo.com" + path, headers={"User-Agent": "Mozilla/5.0"})
+    return json.load(urllib.request.urlopen(req, timeout=5))
+
+
+def intraday(sym):
+    """Today's 5 minute closes and yesterday's close for one symbol."""
+    r = yahoo(f"/v8/finance/chart/{sym}?interval=5m&range=1d")["chart"]["result"][0]
+    return [c for c in r["indicators"]["quote"][0]["close"] if c is not None], num(r["meta"].get("chartPreviousClose"))
+
+
+def top_gainer():
+    """The biggest US stock gainer today, or None."""
+    try:
+        return yahoo("/v1/finance/screener/predefined/saved?scrIds=day_gainers&count=1")["finance"]["result"][0]["quotes"][0]["symbol"]
+    except Exception:
+        return None
+
+
+def chart_symbols(rows):
+    """(symbol, label) for SPY, today's top gainer, then the best and worst holding, each once."""
+    out, g = {"SPY": "SPY"}, top_gainer()
+    if g:
+        out.setdefault(g, f"{g} \u00b7 Top gainer")
+    for r in rows:
+        if " \u00b7 " in r[0]:
+            sym = r[0].split(" \u00b7 ")[1]
+            out.setdefault(sym, sym)
+    return list(out.items())[:4]
+
+
 def next_trade(st):
     """When ibkr-live.py places the next daily trade, in local time."""
     ny = datetime.now(ZoneInfo("America/New_York"))
@@ -150,7 +181,7 @@ def hide_gateway(seen=set()):
     """Hide the IB Gateway window once per Gateway launch; the menu bar is the UI. Needs Accessibility
     permission, which macOS asks for the first time. Without it the window just stays put."""
     try:
-        pid = int(subprocess.run(["pgrep", "-f", "java.*ibc/config.ini"], capture_output=True, text=True).stdout.split()[0])
+        pid = int(subprocess.run(["pgrep", "-f", "[b]in/java .*ibc/config.ini"], capture_output=True, text=True).stdout.split()[0])
     except (IndexError, ValueError):
         return
     if pid in seen:
@@ -188,6 +219,43 @@ def row_view():
     return v, label, value
 
 
+def chart_view():
+    """A row with the symbol and today's move on top and today's line under it."""
+    from AppKit import NSImageView
+    v, label, value = row_view()
+    v.setFrameSize_((268, 46))
+    label.setFrameOrigin_((14, 27))
+    value.setFrameOrigin_((116, 27))
+    img = NSImageView.alloc().initWithFrame_(((14, 5), (240, 20)))
+    v.addSubview_(img)
+    return v, label, value, img
+
+
+def spark(closes, prev, color, w=240, h=20):
+    """Today's line against a dotted line at yesterday's close. The x axis is the whole session (78 five
+    minute bars), so at noon the line stops halfway across."""
+    from AppKit import NSBezierPath, NSColor, NSImage
+    lo, hi = min(closes + [prev]), max(closes + [prev])
+    y = lambda v: 1.5 + (v - lo) / ((hi - lo) or 1) * (h - 3)
+
+    def draw(_):
+        base = NSBezierPath.bezierPath()
+        base.moveToPoint_((0, y(prev)))
+        base.lineToPoint_((w, y(prev)))
+        base.setLineDash_count_phase_([1, 3], 2, 0)
+        NSColor.tertiaryLabelColor().set()
+        base.stroke()
+        line = NSBezierPath.bezierPath()
+        line.setLineWidth_(1.5)
+        line.setLineJoinStyle_(1)  # round
+        for i, c in enumerate(closes):
+            (line.lineToPoint_ if i else line.moveToPoint_)((min(i, 77) * (w - 1) / 77, y(c)))
+        color.set()
+        line.stroke()
+        return True
+    return NSImage.imageWithSize_flipped_drawingHandler_((w, h), False, draw)
+
+
 def ink(light, dark):
     """Deeper green and red on light glass, where the system ones wash out; the system ones on dark."""
     from AppKit import NSAppearanceNameAqua, NSAppearanceNameDarkAqua, NSColor
@@ -214,6 +282,15 @@ def main():
         for label, value, _ in rows:
             print(f"  {label:<14}{value:>24}")
         return
+    # One copy only. Exit 0 so the launcher's restart loop ends instead of stacking a second icon.
+    import fcntl
+    global LOCK
+    LOCK = open(os.path.join(ROOT, "tradingview", "menubar.lock"), "w")
+    try:
+        fcntl.flock(LOCK, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log("already running, exiting")
+        return
     import rumps
     from AppKit import NSImage, NSMenuItem
 
@@ -233,7 +310,16 @@ def main():
         def build(self):
             # Built once rumps owns the NSMenu, so the native section headers and row views can go straight in.
             menu = self._menu._menu
-            self.headers, self.rows = [], []
+            self.headers, self.rows, self.charts = [], [], []
+            menu.addItem_(NSMenuItem.sectionHeaderWithTitle_("Today"))
+            for _ in range(4):
+                view, *fields = chart_view()
+                item = NSMenuItem.alloc().init()
+                item.setView_(view)
+                item.setHidden_(True)
+                menu.addItem_(item)
+                self.charts.append((item, fields))
+            menu.addItem_(NSMenuItem.separatorItem())
             for header, n in GROUPS:
                 if self.headers or self.rows:
                     menu.addItem_(NSMenuItem.separatorItem())
@@ -307,6 +393,17 @@ def main():
             for i, (h, first, n) in enumerate(self.headers):
                 h.setTitle_(since if i == 0 else GROUPS[i][0])
                 h.setHidden_(not any(r[0] for r in rows[first:first + n]))
+            syms = chart_symbols(rows)
+            for i, (item, fields) in enumerate(self.charts):
+                try:
+                    sym, name = syms[i]
+                    closes, prev = intraday(sym)
+                    ch = closes[-1] / prev - 1
+                except Exception:  # no symbol, no data yet, or Yahoo down: hide the row
+                    fill(item, fields[:2], "", "", None)
+                    continue
+                fill(item, fields[:2], name, pct(ch), ch)
+                fields[2].setImage_(spark(closes, prev, UP if ch >= 0 else DOWN))
 
         def quit(self, _):
             if self.child:
