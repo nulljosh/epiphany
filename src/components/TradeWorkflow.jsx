@@ -10,7 +10,7 @@ const LIVE_TRADE_CAP = 20;
 
 // Premium auto-trading controls. Self-contained: GET /api/broker/autopilot
 // returns the pro flag, settings, and trade log; POST saves settings.
-function AutopilotCard({ dark, t }) {
+export function AutopilotCard({ dark, t }) {
   const [state, setState] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);

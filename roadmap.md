@@ -2,12 +2,11 @@
 - [ ] Edge (h), from Joshua 2026-10-01: Kronos, the open-source candlestick foundation model (github.com/shiyu-coder/Kronos, MIT, AAAI 2026, fine-tune scripts shipped). Test it as a signal with the same bar as every other edge: frozen settings, blind second half, fees in, random baseline, vs Trend 2x. Resource: x.com/quantscience_/status/2100558909735887197
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
-- [ ] Autopilot back on the web: Trade tab is off until the SnapTrade sync math is fixed; then drop the "web soon" notes from the Premium lists.
+- [x] Autopilot is back on the web (2026-10-01): the Trade tab shows the Autopilot card (paper by default, live capped $50/trade, Premium only). The manual recommend-and-review flow stays off until its math converts USD to CAD.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
 - [x] Web net worth now sums in CAD (USD holdings converted with CADUSD=X), 2026-10-01. Holdings were already clean on the real snapshot.
 - [x] Account totals convert USD holdings and USD cash to CAD at sync (server), Mac net worth no longer double-counts balances (2026-10-01).
 - [ ] iOS Portfolio header splits Cash/Holdings by subtracting USD holdings from the CAD total; show the server's cash instead. Ships with the next iOS build.
-- [ ] Trade tab back on the web: data checked and net worth fixed; needs Joshua's one look at a fresh force-sync before switching it on (it can place live orders).
 - [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode

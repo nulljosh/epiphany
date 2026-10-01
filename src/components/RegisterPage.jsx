@@ -12,7 +12,7 @@ function fadeStyle(mounted, delay = 0) {
 
 const TIERS = [
   { name: 'Free', price: '$0', period: 'forever', features: ['Live map and news', '1 portfolio', 'Delayed market data', 'Basic Buy / Hold / Sell signals'], highlight: false },
-  { name: 'Premium', price: '$1', period: 'one-time', features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Autopilot on paper money (app now, web soon)'], highlight: true },
+  { name: 'Premium', price: '$1', period: 'one-time', features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Autopilot on paper money'], highlight: true },
 ];
 
 export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
