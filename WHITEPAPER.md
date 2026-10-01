@@ -243,6 +243,14 @@ sits idle between trades, and that costs far more than the edge earns.
   fees, and stocks that were delisted. Mixed asset classes are still untested.
   A daily dip-buying version looked even better (36% a year) but it fills at the
   same close it reads, which real orders cannot always do, so we do not count it.
+- **Many small trades a day lose.** We simulated the busiest idea we could: buy
+  a quick dip on 5 minute prices across 16 index funds, sell on the bounce or
+  by the close (`tradingview/intraday.py`, 60 days, the most Yahoo gives).
+  That makes about 127 trades a day. They win 40 to 43% of the time and earn
+  about nothing before costs. Interactive Brokers charges at least $1 an order,
+  plus the gap between buy and sell prices, so each round trip cost about $3.90
+  and the account lost around $480 a day on $10,000 per trade. There is no speed
+  edge here, and the costs are certain. We do not trade it.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
 - **Our original strategy, Epiphany Kelly, does not work.** Its buy signal wins
