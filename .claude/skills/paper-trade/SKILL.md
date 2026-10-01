@@ -27,4 +27,5 @@ Read `tradingview/ibkr-state.json`: `snapshots` (per-position profit and loss ov
 - Whole shares only, 10% of the sleeve per position, at most 10 positions.
 - One run per day. Weekends and US holidays: nothing to do.
 - App Store price changes and standing background jobs are blocked for automation. Hand Joshua the command with the `!` prefix instead.
+- `scripts/ibkr-live.py` runs all day with no Claude usage: Joshua starts it once in a terminal tab (`caffeinate -i uv run --with ib_async python3 scripts/ibkr-live.py`), it sends Mac notifications on 1% or 20 CAD moves, tells him if the Gateway logs out, and runs the daily trade after the close. Prefer pointing him at it over polling from a session.
 - `scripts/ibkr-watch.py` is a quiet read-only watcher (pings on 1% moves, each 20 CAD from the start, and at the close). Start it as a Monitor if he wants pings.
