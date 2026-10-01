@@ -62,6 +62,13 @@ At most 10 positions at once on the Mac runner. No leverage.
   S&P 500, the 16 funds held equally, the Nasdaq, Dow, Russell 2000, TSX, gold
   and Bitcoin.
 
+  A second sleeve runs beside it: `scripts/ibkr-momentum.py`, the momentum rule
+  from `tradingview/edge.py`. Once a month it buys the 20 S&P 500 stocks with
+  the best six month return (skipping the latest month), $100,000 split equally,
+  but only while the basket sits above its 200 day average. Otherwise it holds
+  cash. It keeps its own state file and only ever sells shares it bought, so the
+  16 funds are never touched.
+
 ### 4. Guardrails
 
 - **Paper first.** Both places start on practice money. Real money is a
