@@ -434,6 +434,8 @@ def watchlist():
     here = os.path.dirname(os.path.abspath(__file__))
     tv = [x["symbol"] for x in json.loads(subprocess.check_output(["node", os.path.join(here, "watchlist.mjs")]))["symbols"]]
     data = {}
+    # The VIX is a fear gauge, not something you can hold; it feeds the "D7 + VIX fear" filter instead.
+    tv = [t for t in tv if t not in ("CBOE:VIX", "TVC:VIX")]
     for t in tv:
         if t == "BITSTAMP:BTCUSD":
             data[t] = fetch()

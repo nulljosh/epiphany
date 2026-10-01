@@ -30,6 +30,12 @@ async function settleDialogs() {
     await sleep(2500);
   }
 }
+// Bottom drawer (strategy tester / replay trading) eats half the chart; collapse it.
+async function collapseDrawer() {
+  const r = await evaluate(`(function(){var b=[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&b.getBoundingClientRect().y>window.innerHeight*0.4).find(b=>/collapse|minimi[sz]e/i.test(b.getAttribute('aria-label')||b.getAttribute('data-tooltip')||''));if(!b)return null;var r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+  if (r) for (const type of ['mouseMoved', 'mousePressed', 'mouseReleased']) await cdp.Input.dispatchMouseEvent({ type, x: r.x, y: r.y, button: 'left', clickCount: 1 });
+  return !!r;
+}
 try { await core.replay.stop(); } catch {}
 await sleep(1000);
 await settleDialogs();
@@ -44,6 +50,7 @@ console.log('chart', (await core.chart.getState()).symbol);
 try { await core.replay.start({ date }); } catch (e) { console.log('start', e.message); }
 await sleep(2500);
 await settleDialogs();
+console.log('drawer collapsed', await collapseDrawer());
 console.log('replay at', JSON.stringify(await core.replay.status()).slice(0, 200));
 const dir = fs.mkdtempSync('/tmp/epiphany-replay-');
 const shot = async n => {
@@ -54,7 +61,10 @@ let n = 0;
 try {
   for (let i = 0; i < Number(steps); i++) {
     await core.replay.step();
-    if (i % 2 === 0) await shot(n++);
+    if (i % 2 === 0) {
+      if (await seen('Continue your last replay?') || await seen('Select date')) await settleDialogs();
+      await shot(n++);
+    }
   }
   console.log('status', JSON.stringify(await core.replay.status()).slice(0, 300));
 } finally {
