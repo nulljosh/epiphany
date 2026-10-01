@@ -508,7 +508,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         <div className="lp-grid-head lp-reveal">
           <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Pricing</div>
           <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Start free. Pay once if you want more.</h2>
-          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>One dollar, one time, on the App Store or on the web. No subscription, no ads, nothing to cancel.</p>
+          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>One dollar, one time. No subscription, no ads, nothing to cancel.</p>
         </div>
         <div className="lp-pricing lp-reveal">
           <div className="lp-price-card glass">
@@ -525,7 +525,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           <div className="lp-price-card glass premium">
             <div className="lp-price-tier">Paid</div>
             <div className="lp-price-num">$1<span> one-time</span></div>
-            <div className="lp-price-note" style={{ fontSize: 13, color: 'rgba(var(--lp-ink),0.45)', marginTop: -8 }}>Same price on iPhone, Mac and the web</div>
             <ul className="lp-price-feats">
               <li>Everything in Free</li>
               <li>Real-time market data</li>
