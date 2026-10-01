@@ -81,13 +81,21 @@ try:
     summ = {v.tag: (float(v.value), v.currency) for v in ib.accountSummary() if v.tag in ("NetLiquidation", "UnrealizedPnL", "RealizedPnL", "TotalCashValue") and v.currency != "BASE"}
     nl, cur = summ.get("NetLiquidation", (0, "?"))
     state = json.load(open(STATE)) if os.path.exists(STATE) else {}
-    state.setdefault("start", {"account": acct, "netLiquidation": nl, "date": datetime.now().isoformat(timespec="minutes")})
+    spy_now = closes("SPY")[-1]
+    state.setdefault("start", {"account": acct, "netLiquidation": nl, "spy": spy_now, "date": datetime.now().isoformat(timespec="minutes")})
+    state["start"].setdefault("spy", spy_now)
     state.setdefault("orders", []).extend({**x, "date": datetime.now().isoformat(timespec="minutes")} for x in sent)
     json.dump(state, open(STATE, "w"), indent=1)
     start = state["start"]["netLiquidation"]
     print(f"\naccount value {nl:,.2f} {cur} ({nl - start:+,.2f} since {state['start']['date']}), "
           f"unrealized P&L {summ.get('UnrealizedPnL', (0,))[0]:,.2f}, realized {summ.get('RealizedPnL', (0,))[0]:,.2f}")
-    for p in ib.portfolio():
+    port = ib.portfolio()
+    cost = sum(p.averageCost * p.position for p in port)
+    gain = sum(p.unrealizedPNL for p in port)
+    if cost:
+        spy_move = spy_now / state["start"]["spy"] - 1
+        print(f"\nscoreboard since {state['start']['date']}: our positions {gain / cost:+.2%} (unrealized, USD), SPY buy and hold {spy_move:+.2%}")
+    for p in port:
         print(f"  {p.contract.symbol:5} {p.position:>5g} @ {p.averageCost:8.2f}  now {p.marketPrice:8.2f}  P&L {p.unrealizedPNL:+9.2f}")
 finally:
     ib.disconnect()
