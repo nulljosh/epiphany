@@ -121,6 +121,18 @@ enum Indicators {
         return m - s
     }
 
+    /// Double 7s, the benchmarked rule behind the server autopilot (WHITEPAPER section 5): in an uptrend
+    /// (close above the 200 day average) buy a close at the lowest in `lookback` days, sell a close at
+    /// the highest. Mirrors `double7s()` in src/utils/indicators.js. Nil until there are 200 closes.
+    static func double7s(closes: [Double], lookback: Int = 10) -> TradeSignal? {
+        guard closes.count >= 200, lookback >= 2, let last = closes.last else { return nil }
+        let trend = closes.suffix(200).reduce(0, +) / 200
+        let window = closes.suffix(lookback)
+        if last > trend, last <= window.min()! { return .buy }
+        if last >= window.max()! { return .sell }
+        return .hold
+    }
+
     static func signal(closes: [Double]) -> TradeSignal? {
         guard closes.count >= 35 else { return nil }
         var score = 0

@@ -243,4 +243,5 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [x] Edge found: Double 7s, 67% win rate, +0.39%/trade after fees, 22,614 blind S&P 500 trades (WHITEPAPER section 5)
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
 - [x] Double 7s drives the server autopilot (`morning-run.js` via `double7s()` in `src/utils/indicators.js`), paper only
-- [ ] Double 7s on the Buy/Hold/Sell badge: mirror `double7s()` in `ios/Helpers/Indicators.swift` (macOS and watchOS share it) and swap it into the badge in `StockDetail.jsx`; keep the old composite as the detail view
+- [x] `double7s()` mirrored in `Shared/Indicators.swift` (iOS, macOS, watchOS) with XCTests, logic verified standalone
+- [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
