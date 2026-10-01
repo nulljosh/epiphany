@@ -15,6 +15,7 @@ in tradingview/data/.
     python3 tradingview/century.py --leverage # S&P above its average at L x leverage, daily since 1928; French momentum deciles
     python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
     python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
+    python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
 from datetime import datetime, timezone
@@ -783,10 +784,10 @@ def yearly(dates, cv, a):
     return {y: e / s for y, (s, e, n) in out.items() if n >= 200}
 
 
-def rand_base(pos, gin, gout, yrs, draws=500, seed=7):
+def rand_base(pos, gin, gout, yrs, draws=500, seed=7, fee=FEE):
     """Same random in/out schedules as --robust: same days in the market, same number of switches. Returns (CAGR, drop) of the rule and a list for the randoms."""
     import math, random
-    lf = math.log(1 - FEE)
+    lf = math.log(1 - fee)
     def path(p):
         cum = pk = worst = 0.0
         prev = p[0]
@@ -903,6 +904,199 @@ def trend_indexes():
     return verdicts
 
 
+# ---------- Trend on crypto, 1x (--crypto) ----------
+
+CFEE = 0.0025  # exchange-realistic fee per side
+CM_ASSETS = "btc,eth,xrp,ltc,bnb,ada,doge,sol,trx,link,bch,xlm,dot,avax,matic,xmr,etc,dash"
+BASKET = ["btc", "eth", "xrp", "ltc", "bnb", "ada", "doge", "sol", "trx", "link"]
+
+
+def cm_daily():
+    """Coin Metrics community API PriceUSD, daily, free, BTC from 2010-07-18 (Mt. Gox era), ETH from 2015-08-08. Cached in tradingview/data/."""
+    path = os.path.join(DATA, "coinmetrics-crypto.json")
+    if os.path.exists(path):
+        return json.load(open(path))
+    import urllib.request
+    u = f"https://community-api.coinmetrics.io/v4/timeseries/asset-metrics?assets={CM_ASSETS}&metrics=PriceUSD&frequency=1d&start_time=2010-07-01&page_size=10000"
+    out = {}
+    while u:
+        j = json.loads(get(u))
+        for r in j["data"]:
+            if r.get("PriceUSD"):
+                out.setdefault(r["asset"], {})[r["time"][:10]] = float(r["PriceUSD"])
+        u = j.get("next_page_url")
+    out = {k: sorted(v.items()) for k, v in out.items()}
+    json.dump(out, open(path, "w"))
+    return out
+
+
+def csigs(px):
+    """Signals at each close: price above its 50, 100 or 200 day average, or 84 day (12 week) return above zero."""
+    n, out = len(px), {}
+    for N in (50, 100, 200):
+        sg, run = [False] * n, sum(px[:N])
+        for i in range(N, n):
+            run += px[i] - px[i - N]
+            sg[i] = px[i] > run / N
+        sg[N - 1] = px[N - 1] > run / N if n >= N else False
+        out[f"{N}d average"] = sg
+    out["12 week return"] = [i >= 84 and px[i] > px[i - 84] for i in range(n)]
+    return out
+
+
+def ccurve(ds, px, bl, sg, lo, hi, delay=0, fee=CFEE):
+    """Daily equity, 24/7. Signal read at close j-2-delay, traded at close j-1-delay... same convention as the index tests: earns day j. 1x or cash at T-bill, fee on every switch."""
+    cv, eq, prev = [1.0], 1.0, None
+    pos = [sg[j - 2 - delay] for j in range(lo, hi)]
+    for k, j in enumerate(range(lo, hi)):
+        if prev is not None and pos[k] != prev:
+            eq *= 1 - fee
+        prev = pos[k]
+        eq *= px[j] / px[j - 1] if pos[k] else 1 + bl[j]
+        cv.append(eq)
+    return cv, pos
+
+
+def crypto():
+    import math
+    bill = bill_fn()
+    cb = lambda d: bill(d) * 252 / 365  # the house T-bill a day, spread over 365 days
+    raw_ = cm_daily()
+    print("TREND ON CRYPTO, 1x ONLY. Daily, 24/7, BTC from 2010-07-18 (Coin Metrics community PriceUSD, free), ETH from 2015-08-08 (same source).")
+    print(f"Rules: close above its 50, 100 or 200 day average, or 12 week (84 day) return above zero. Signal at one close, trade the next close, {CFEE:.2%} per side (exchange-realistic),")
+    print("out of the coin = T-bills. Hold pays no fee. 1x only: a 2x crypto fund resets daily and decays too much in choppy years, so there is no leverage here.")
+    print("Pick on the FIRST half of BTC history (by date), by train CAGR among rules whose train worst drop is no bigger than hold's. Blind = second half. ETH and the basket reuse the frozen rule, same blind dates.")
+    print("Drops are daily closes only; intraday they were deeper.\n")
+    series = {}
+    for k, v in raw_.items():
+        series[k] = ([d for d, _ in v], [p for _, p in v])
+    def idx(k):
+        return series[k]
+    ds, px = idx("btc")
+    n = len(ds)
+    bl = [cb(d) for d in ds]
+    sg = csigs(px)
+    lo0 = 202  # first day every rule (and the 1 day late test) has a signal
+    mid = (datetime.fromisoformat(ds[lo0 - 1]) + (datetime.fromisoformat(ds[-1]) - datetime.fromisoformat(ds[lo0 - 1])) / 2).strftime("%Y-%m-%d")
+    a = next(i for i, d in enumerate(ds) if d >= mid)
+    dd = lambda lo, hi: ds[lo - 1:hi]
+    hold = lambda ds_, px_, lo, hi: [px_[j] / px_[lo - 1] for j in range(lo - 1, hi)]
+    ht = cstats(dd(lo0, a), hold(ds, px, lo0, a))
+    hb = cstats(dd(a, n), hold(ds, px, a, n))
+    print(f"BTC: {ds[0]}..{ds[-1]}, {n} days. Rules start {ds[lo0]}. TRAIN {ds[lo0]}..{ds[a - 1]}, BLIND {ds[a]}..{ds[-1]}.")
+    print(f"BTC hold: train {ht[0]:.0%} / {ht[1]:.0%}   BLIND {hb[0]:.1%} / {hb[1]:.0%}\n")
+    print(f"{'rule':16} | {'train CAGR':>10}{'maxDD':>6} | {'BLIND CAGR':>10}{'maxDD':>6}{'x money':>9}")
+    res = {}
+    for name, s_ in sg.items():
+        tc, _ = ccurve(ds, px, bl, s_, lo0, a)
+        bc, _ = ccurve(ds, px, bl, s_, a, n)
+        t, b = cstats(dd(lo0, a), tc), cstats(dd(a, n), bc)
+        res[name] = (t, b)
+        print(f"{name:16} | {t[0]:>10.1%}{t[1]:>6.0%} | {b[0]:>10.1%}{b[1]:>6.0%}{bc[-1]:>9.1f}")
+    ok = [k for k in res if res[k][0][1] <= ht[1]]
+    pick = max(ok, key=lambda k: res[k][0][0])
+    print(f"\nPICK (train only): {pick}. Rules tried: {len(res)}.\n")
+    s_ = sg[pick]
+
+    def grade(label, ds_, px_, s__, lo, hi, show_years=False):
+        bl_ = [cb(d) for d in ds_]
+        cv, pos = ccurve(ds_, px_, bl_, s__, lo, hi, 0)
+        late, _ = ccurve(ds_, px_, bl_, s__, lo, hi, 1)
+        dd_ = ds_[lo - 1:hi]
+        h = hold(ds_, px_, lo, hi)
+        hc, hm = cstats(dd_, h)
+        rc, rm = cstats(dd_, cv)
+        lc, lm = cstats(dd_, late)
+        hy, ry = yearly(ds_, h, lo), yearly(ds_, cv, lo)
+        yw = sum(ry[y] > hy[y] for y in hy)
+        yrs = (datetime.fromisoformat(ds_[hi - 1]) - datetime.fromisoformat(ds_[lo - 1])).days / 365.25
+        gin = [math.log(px_[j] / px_[j - 1]) for j in range(lo, hi)]
+        gout = [math.log(1 + bl_[j]) for j in range(lo, hi)]
+        (pc, pd), rnd, k = rand_base(pos, gin, gout, yrs, fee=CFEE)
+        pct = sum(r[0] < pc for r in rnd) / len(rnd)
+        both = sum(r[0] >= pc and r[1] <= pd for r in rnd)
+        okb = rc > hc and rm <= hm and yw > len(hy) / 2
+        print(f"{label:50}{ds_[lo]:>11}{hc:>7.1%}/{hm:>3.0%}{rc:>8.1%}/{rm:>3.0%}{yw:>6}/{len(hy)}{pct:>8.0%}{both:>6}{lc:>8.1%}/{lm:>3.0%}{sum(pos) / len(pos):>6.0%}{k / yrs:>6.1f}  {'PASS' if okb else 'fail'}")
+        if show_years:
+            print("    " + "  ".join(f"{y}: {ry[y] - 1:+.0%} vs {hy[y] - 1:+.0%}" for y in sorted(hy)))
+        return cv, hc, hm, rc, rm, okb
+    print(f"{'series (rule: ' + pick + ')':50}{'from':>11}{'hold':>11}{'rule':>12}{'years':>6}{'  rand':>8}{'both':>6}{'1 day late':>13}{'in':>6}{'sw/yr':>6}")
+    cvb = grade("BTC blind", ds, px, s_, a, n, True)
+    grade("BTC train (picked here, not blind)", ds, px, s_, lo0, a)
+    out = {"BTC": cvb}
+    e_ds, e_px = idx("eth")
+    es = csigs(e_px)[pick]
+    ea = max(next(i for i, d in enumerate(e_ds) if d >= ds[a]), 202)
+    out["ETH"] = grade("ETH, frozen rule, BTC blind dates", e_ds, e_px, es, ea, len(e_ds), True)
+    grade("ETH whole life from 2016 (coin unseen, dates not)", e_ds, e_px, es, 202, len(e_ds))
+    # basket: equal weight of the BASKET coins already trading that day, rebalanced daily (today's survivors: flattering, hindsight list)
+    days = ds
+    cl = {k: dict(zip(*idx(k))) for k in BASKET}
+    bpx = [1.0]
+    for j in range(1, n):
+        rs = [cl[k][days[j]] / cl[k][days[j - 1]] - 1 for k in BASKET if days[j] in cl[k] and days[j - 1] in cl[k]]
+        bpx.append(bpx[-1] * (1 + sum(rs) / len(rs)))
+    bs = csigs(bpx)[pick]
+    out["basket"] = grade("Top 10 equal weight basket (hindsight)", ds, bpx, bs, a, n, True)
+    print("    basket = BTC ETH XRP LTC BNB ADA DOGE SOL TRX LINK, whichever were trading each day, rebalanced daily. These are today's survivors, so hold and rule are both flattered.")
+    print("    columns: hold = 1x no fee; rule = headline, 0.25% a side; years = calendar years (200+ days) the rule beat hold; rand = share of 500 random in/out schedules (same days in, same switches) it beats;")
+    print("    both = randoms with a return at least as high and a no bigger drop; 1 day late = rule traded one more close later; in = share of days in the coin; sw/yr = switches a year.")
+    print(f"    Bar: more CAGR than hold on the blind half, no bigger worst drop, wins most blind years.")
+
+    # data check: Coin Metrics against Bitstamp (BTC) and Yahoo (ETH) over the same days
+    print("\nSOURCE CHECK, buy and hold CAGR over the same days:")
+    bs_ = {datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d"): r[1] for r in json.load(open(os.path.join(DATA, "bitstamp-btc.json")))}
+    cmb = dict(zip(ds, px))
+    com = [d for d in ds if d in bs_ and d >= "2011-09-01"]
+    print(f"  BTC {com[0]}..{com[-1]}: Coin Metrics {(cmb[com[-1]] / cmb[com[0]]) ** (365.25 / (datetime.fromisoformat(com[-1]) - datetime.fromisoformat(com[0])).days) - 1:.1%}, Bitstamp {(bs_[com[-1]] / bs_[com[0]]) ** (365.25 / (datetime.fromisoformat(com[-1]) - datetime.fromisoformat(com[0])).days) - 1:.1%}")
+    ye = {datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d"): r[1] for r in daily("ETH-USD")}
+    cme = dict(zip(e_ds, e_px))
+    com = [d for d in e_ds if d in ye]
+    yy = (datetime.fromisoformat(com[-1]) - datetime.fromisoformat(com[0])).days / 365.25
+    print(f"  ETH {com[0]}..{com[-1]}: Coin Metrics {(cme[com[-1]] / cme[com[0]]) ** (1 / yy) - 1:.1%}, Yahoo {(ye[com[-1]] / ye[com[0]]) ** (1 / yy) - 1:.1%}")
+
+    # sleeve: 5% in BTC trend or BTC hold, 95% Trend 2x S&P, blind window, monthly rebalance
+    print(f"\nSLEEVE IN CONTEXT, blind window {ds[a]}..{ds[-1]}. Rest = Trend 2x S&P (2x fund above its 200 day average, else T-bills, 0.8% fund gap off, 0.1% a switch).")
+    D = lev_data()
+    sd = D[0]
+    s0 = next(i for i, d in enumerate(sd) if d >= ds[a])
+    sv = lev_sim(D, 2.0, "200d", "bills", "etf", s0, len(sd), FEE, 0, 0.008)
+    lvl = {sd[s0 - 1 + k]: sv[k] for k in range(len(sv))}
+    cal, last = [], sv[0]
+    for d in ds[a - 1:]:
+        last = lvl.get(d, last)
+        cal.append(last)
+    first = next(i for i, v in enumerate(cal) if v is not None)
+    days_ = ds[a - 1 + first:]
+    sl = [v for v in cal[first:]]
+    cvt = cvb[0][first:]
+    hh = hold(ds, px, a, n)[first:]
+    def blend(w, ser):
+        eq_s, eq_c, cur, curve = 1 - w, w, days_[0][:7], [1.0]
+        for k in range(1, len(days_)):
+            eq_s *= sl[k] / sl[k - 1]
+            eq_c *= ser[k] / ser[k - 1]
+            if days_[k][:7] != cur:
+                cur = days_[k][:7]
+                tot = eq_s + eq_c
+                tr = abs(eq_c - w * tot)
+                tot -= tr * (CFEE + FEE)
+                eq_s, eq_c = (1 - w) * tot, w * tot
+            curve.append(eq_s + eq_c)
+        return curve
+    rows_ = [("100% Trend 2x S&P", blend(0.0, hh)), ("95% Trend 2x S&P + 5% BTC hold", blend(0.05, hh)), ("95% Trend 2x S&P + 5% BTC trend", blend(0.05, cvt)),
+             ("90% Trend 2x S&P + 10% BTC hold", blend(0.10, hh)), ("90% Trend 2x S&P + 10% BTC trend", blend(0.10, cvt))]
+    print(f"  {'portfolio':36}{'CAGR':>8}{'worst drop':>12}{'x money':>9}   (monthly rebalance, {CFEE:.2%} on the crypto side, {FEE:.1%} on the S&P side of every trade)")
+    for lab, cv in rows_:
+        c_, m_ = cstats(days_, cv)
+        print(f"  {lab:36}{c_:>8.1%}{m_:>12.0%}{cv[-1]:>9.1f}")
+    c_, m_ = cstats(days_, cvt)
+    print(f"  {'BTC trend alone':36}{c_:>8.1%}{m_:>12.0%}{cvt[-1]:>9.1f}")
+    c_, m_ = cstats(days_, hh)
+    print(f"  {'BTC hold alone':36}{c_:>8.1%}{m_:>12.0%}{hh[-1]:>9.1f}")
+    return out
+
+
 if __name__ == "__main__":
     if "--robust" in sys.argv:
         robust()
@@ -912,6 +1106,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--indexes" in sys.argv:
         trend_indexes()
+        sys.exit()
+    if "--crypto" in sys.argv:
+        crypto()
         sys.exit()
     century()
     if "--stocks" in sys.argv:

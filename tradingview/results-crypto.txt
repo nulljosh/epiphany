@@ -1,0 +1,44 @@
+TREND ON CRYPTO, 1x ONLY. Daily, 24/7, BTC from 2010-07-18 (Coin Metrics community PriceUSD, free), ETH from 2015-08-08 (same source).
+Rules: close above its 50, 100 or 200 day average, or 12 week (84 day) return above zero. Signal at one close, trade the next close, 0.25% per side (exchange-realistic),
+out of the coin = T-bills. Hold pays no fee. 1x only: a 2x crypto fund resets daily and decays too much in choppy years, so there is no leverage here.
+Pick on the FIRST half of BTC history (by date), by train CAGR among rules whose train worst drop is no bigger than hold's. Blind = second half. ETH and the basket reuse the frozen rule, same blind dates.
+Drops are daily closes only; intraday they were deeper.
+
+BTC: 2010-07-18..2026-09-30, 5919 days. Rules start 2011-02-05. TRAIN 2011-02-05..2018-12-01, BLIND 2018-12-02..2026-09-30.
+BTC hold: train 198% / 93%   BLIND 46.7% / 77%
+
+rule             | train CAGR maxDD | BLIND CAGR maxDD  x money
+50d average      |     259.9%   70% |      53.8%   60%     29.1
+100d average     |     231.5%   71% |      53.9%   46%     29.2
+200d average     |     214.7%   89% |      36.8%   54%     11.6
+12 week return   |     226.9%   76% |      40.4%   57%     14.2
+
+PICK (train only): 50d average. Rules tried: 4.
+
+series (rule: 50d average)                               from       hold        rule years    rand  both   1 day late    in sw/yr
+BTC blind                                          2018-12-02  46.7%/77%   53.8%/60%     4/8     98%     6   49.1%/58%   54%  18.8  fail
+    2019: +53% vs +94%  2020: +271% vs +305%  2021: +148% vs +60%  2022: -53% vs -64%  2023: +116% vs +155%  2024: +67% vs +121%  2025: +7% vs -6%  2026: +13% vs -4%
+BTC train (picked here, not blind)                 2011-02-05 198.0%/93%  259.9%/70%     4/8    100%     0  276.2%/70%   60%  17.5  fail
+ETH, frozen rule, BTC blind dates                  2018-12-02  49.2%/79%   58.5%/61%     4/8     97%     5   41.7%/68%   54%  19.8  fail
+    2019: +23% vs -2%  2020: +415% vs +475%  2021: +222% vs +399%  2022: -46% vs -68%  2023: +68% vs +91%  2024: -8% vs +46%  2025: +56% vs -11%  2026: +23% vs -10%
+ETH whole life from 2016 (coin unseen, dates not)  2016-02-26  77.7%/94%  108.0%/63%     6/11    100%     0   91.3%/68%   53%  19.3  PASS
+Top 10 equal weight basket (hindsight)             2018-12-02  77.7%/77%   75.7%/53%     4/8     97%     3   86.4%/48%   55%  21.6  fail
+    2019: +71% vs +51%  2020: +128% vs +277%  2021: +1372% vs +973%  2022: -40% vs -65%  2023: +109% vs +133%  2024: +37% vs +131%  2025: -24% vs -20%  2026: +14% vs -5%
+    basket = BTC ETH XRP LTC BNB ADA DOGE SOL TRX LINK, whichever were trading each day, rebalanced daily. These are today's survivors, so hold and rule are both flattered.
+    columns: hold = 1x no fee; rule = headline, 0.25% a side; years = calendar years (200+ days) the rule beat hold; rand = share of 500 random in/out schedules (same days in, same switches) it beats;
+    both = randoms with a return at least as high and a no bigger drop; 1 day late = rule traded one more close later; in = share of days in the coin; sw/yr = switches a year.
+    Bar: more CAGR than hold on the blind half, no bigger worst drop, wins most blind years.
+
+SOURCE CHECK, buy and hold CAGR over the same days:
+  BTC 2011-09-01..2026-09-30: Coin Metrics 84.4%, Bitstamp 84.4%
+  ETH 2017-11-09..2026-09-30: Coin Metrics 27.1%, Yahoo 27.0%
+
+SLEEVE IN CONTEXT, blind window 2018-12-02..2026-09-30. Rest = Trend 2x S&P (2x fund above its 200 day average, else T-bills, 0.8% fund gap off, 0.1% a switch).
+  portfolio                               CAGR  worst drop  x money   (monthly rebalance, 0.25% on the crypto side, 0.1% on the S&P side of every trade)
+  100% Trend 2x S&P                      17.1%         41%      3.4
+  95% Trend 2x S&P + 5% BTC hold         19.5%         41%      4.0
+  95% Trend 2x S&P + 5% BTC trend        19.4%         41%      4.0
+  90% Trend 2x S&P + 10% BTC hold        21.8%         41%      4.7
+  90% Trend 2x S&P + 10% BTC trend       21.7%         40%      4.7
+  BTC trend alone                        53.8%         60%     29.1
+  BTC hold alone                         46.7%         77%     20.1

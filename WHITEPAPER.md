@@ -435,6 +435,42 @@ costs were before 2000, it loses to the market outright. Momentum in stocks is
 real but most of it goes to trading costs. Leveraged trend on the index is the
 rule we would run, sized so a 44% drop is survivable, with eyes open about 1987.
 
+**A 24/7 sleeve: trend on crypto.** Joshua wants something that runs around the
+clock, and crypto is the obvious candidate, so we ran the same kind of test on
+Bitcoin (`century.py --crypto`, raw output in `tradingview/results-crypto.txt`).
+Daily prices from July 2010 (Coin Metrics, free; it matches Bitstamp on Bitcoin
+and Yahoo on Ethereum to a tenth of a point). Four rules: price above its 50, 100
+or 200 day average, or the 12 week return above zero. Signal at one close, trade
+the next, 0.25% a side, T-bills when out, no leverage (a 2x crypto fund resets
+daily and decays too much in choppy years). We picked on the first half of
+Bitcoin's life, 2011 to 2018, and the 50 day average won. Then the second half,
+December 2018 to now, which the pick never saw. Bitcoin: 53.8% a year with a 60%
+worst drop, against 46.7% and 77% for holding. That clears the first two parts of
+the bar. It misses the third: it beat holding in only 4 of 8 calendar years, a
+tie, not most. It wins the bear years (2022: -53% against -64%) and loses the big
+bull years, because it sits out about 46% of the days and switches 19 times a
+year. Against 500 random in and out schedules with the same time in the market and
+the same switches it beat 98%, and only 6 matched it on both return and drop. One
+day late it still made 49.1% with a 58% drop. The frozen rule on Ethereum did the
+same thing: 58.5% and a 61% drop against 49.2% and 79%, again 4 of 8 years, and it
+fell to 41.7% a year when traded a day late. An equal weight basket of ten coins
+(today's survivors, so flattering) did worse: 75.7% against 77.7% for holding,
+with a smaller drop, 53% against 77%. One honest wrinkle: the 100 day average made
+the same 53.9% a year on the blind half with only a 46% drop, but we would not have
+picked it.
+
+Sized small, it barely matters which Bitcoin rule you use. On the same blind
+dates, with the rest in Trend 2x S&P, rebalanced monthly: the S&P sleeve alone made
+17.1% with a 41% worst drop; 5% in Bitcoin held made 19.5% with a 41% drop; 5% in
+Bitcoin trend made 19.4% with a 41% drop. The 5% adds about 2.4 points a year
+either way and does not change the worst drop. The filter earns its keep on a big
+Bitcoin position, where it cuts the 77% drop to 60%, not on a 5% slice. On IBKR,
+spot Bitcoin and Ethereum trade 24/7 through Paxos or Zero Hash for 0.12% to 0.18%
+a trade for eligible Canadian clients (not Quebec); a paper account mirrors the
+live account's permissions, and we could not confirm that it fills crypto. The
+IBIT and ETHA funds trade only in US market hours. Verdict: a coin flip on the
+years, a real cut in the crash, not worth more than a small sleeve.
+
 **What could still be wrong.** The stock list is today's S&P 500. Companies
 that crashed and got kicked out are missing, and that makes buying dips look
 better than it really was. Prices are assumed to fill exactly, with no extra
@@ -470,10 +506,13 @@ files named above.
 | Trend 2x Dow, DIA real dividends | 2012 to now | 10.1% / 38% | 12.6% / 37% | fail |
 | Trend 2x FTSE 100, index plus yield | 2005 to now | -0.3% / 68% | 7.6% / 45% | fail |
 | Trend 2x UK, EWU real dividends | 2011 to now | -1.4% / 49% | 6.0% / 43% | fail |
+| Trend 1x Bitcoin, 50 day average, 0.25% a side | 2018 to now | 53.8% / 60% | 46.7% / 77% | fail (4 of 8 years) |
+| Trend 1x Ethereum, same frozen rule | 2018 to now | 58.5% / 61% | 49.2% / 79% | fail (4 of 8 years) |
+| Trend 1x top 10 coin basket, same frozen rule | 2018 to now | 75.7% / 53% | 77.7% / 77% | fail (less return) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
-off the matching fund. The Epiphany Kelly row has no drop figure and holding is
-the 429 stocks, so it is a different yardstick from the others. Two of 19 rows
+off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
+the 429 stocks, so it is a different yardstick from the others. Two of 22 rows
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
