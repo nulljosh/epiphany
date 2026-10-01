@@ -146,6 +146,23 @@ def summarize(port, nl, st):
     return f"{d:+.0f}".replace("-", "\u2212"), since, rows
 
 
+def hide_gateway(seen=set()):
+    """Hide the IB Gateway window once per Gateway launch; the menu bar is the UI. Needs Accessibility
+    permission, which macOS asks for the first time. Without it the window just stays put."""
+    try:
+        pid = int(subprocess.run(["pgrep", "-f", "java.*ibc/config.ini"], capture_output=True, text=True).stdout.split()[0])
+    except (IndexError, ValueError):
+        return
+    if pid in seen:
+        return
+    import ApplicationServices as AX
+    if not AX.AXIsProcessTrustedWithOptions({AX.kAXTrustedCheckOptionPrompt: True}):
+        return
+    # Gateway is up a few seconds before its window; retry next tick until the hide lands.
+    if AX.AXUIElementSetAttributeValue(AX.AXUIElementCreateApplication(pid), "AXHidden", True) == 0:
+        seen.add(pid)
+
+
 # Menu layout: (section header, rows in it). The first header is filled in with the start date.
 GROUPS = [("", 3), ("Positions", 2), ("Record", 2), (None, 1)]
 
@@ -279,6 +296,10 @@ def main():
             if not hasattr(self, "rows"):
                 self.build()
             self.ensure_runner()
+            try:
+                hide_gateway()
+            except Exception:
+                log(traceback.format_exc())
             self.title, since, rows = snapshot()
             rows = rows + [("", "", None)] * len(self.rows)
             for (item, fields), data in zip(self.rows, rows):
