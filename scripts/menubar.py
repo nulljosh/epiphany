@@ -17,6 +17,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 BEST = os.path.join(ROOT, "tradingview", "ibkr-best.json")
+# A file, not a flag in memory, so a pause survives a restart instead of quietly trading again.
+PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
 
 
 def spy_price():
@@ -88,7 +90,7 @@ def snapshot():
     rows += [
         ("High", money(rec["high"]), None),
         ("Low", money(rec["low"]), None),
-        ("Next trade", next_trade(st), None),
+        ("Next trade", "Paused" if os.path.exists(PAUSED) else next_trade(st), None),
     ]
     since = f"Since {datetime.fromisoformat(start['date']):%b %-d}" if start.get("date") else "Since start"
     return f"{d:+.0f}".replace("-", "\u2212"), since, rows
@@ -165,13 +167,30 @@ def main():
                     menu.addItem_(item)
                     self.rows.append((item, fields))
             menu.addItem_(NSMenuItem.separatorItem())
-            self.menu = [symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
+            self.toggle = rumps.MenuItem("", callback=self.pause)
+            self.menu = [self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
                          symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
             fill(*self.rows[0], "Starting...", "", None)
+            self.label_toggle()
+
+        def label_toggle(self):
+            paused = os.path.exists(PAUSED)
+            self.toggle.title = "Resume Trading" if paused else "Pause Trading"
+            symbol(self.toggle, "play.fill" if paused else "pause.fill")
+
+        def pause(self, _):
+            if os.path.exists(PAUSED):
+                os.remove(PAUSED)
+            else:
+                open(PAUSED, "w").close()
+                subprocess.run(["pkill", "-f", "[i]bkr-live.py"])
+                self.child = None
+            self.label_toggle()
+            self.tick(None)
 
         def ensure_runner(self):
             # The [i] keeps pgrep from matching its own command line. Start the runner if nothing is running it.
-            if subprocess.run(["pgrep", "-f", "[i]bkr-live.py"], capture_output=True).returncode != 0:
+            if not os.path.exists(PAUSED) and subprocess.run(["pgrep", "-f", "[i]bkr-live.py"], capture_output=True).returncode != 0:
                 out = open(LOG, "a")
                 self.child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=out, stderr=out)
 
