@@ -4,9 +4,11 @@
 Signals on the close, fills at the next open, 0.1% fee per side, long only.
 Settings are picked on 2012-2019 and scored blind on 2020-now.
 
-    python3 tradingview/backtest.py
+    python3 tradingview/backtest.py          # BTC
+    python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
 """
-import json, os, time, urllib.request
+import json, os, re, statistics, sys, time, urllib.request
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timezone
 
 FEE = 0.001
@@ -31,6 +33,38 @@ def fetch():
     os.makedirs(os.path.dirname(CACHE), exist_ok=True)
     json.dump(out, open(CACHE, "w"))
     return out
+
+
+def get(url):
+    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read()
+
+
+def fetch_yahoo(sym):
+    """Split- and dividend-adjusted daily bars, cached a day."""
+    path = os.path.expanduser(f"~/.cache/epiphany-bars/{sym}.json")
+    if os.path.exists(path) and time.time() - os.path.getmtime(path) < 86400:
+        return json.load(open(path))
+    try:
+        r = json.loads(get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?period1=0&period2=9999999999&interval=1d"))["chart"]["result"][0]
+        q, adj = r["indicators"]["quote"][0], r["indicators"]["adjclose"][0]["adjclose"]
+        out = []
+        for i, t in enumerate(r["timestamp"]):
+            o, h, l, c, a = q["open"][i], q["high"][i], q["low"][i], q["close"][i], adj[i]
+            if None not in (o, h, l, c, a) and c > 0:
+                f = a / c
+                out.append([t, o * f, h * f, l * f, a])
+    except Exception:
+        out = []
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    json.dump(out, open(path, "w"))
+    return out
+
+
+def sp500():
+    html = get("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies").decode()
+    table = html.split('id="constituents"')[1].split("</table>")[0]
+    rows = (re.search(r"<td[^>]*><a[^>]*>([A-Z.\-]+)</a>", row) for row in table.split("<tr")[2:])
+    return [m.group(1).replace(".", "-") for m in rows if m]
 
 
 def sma(x, n):
@@ -225,8 +259,42 @@ def check():
     assert m["mult"] > 1.5 and m["trades"] > 5 and m["mdd"] < 0.02, m
 
 
+def evaluate(bars):
+    """Pick each mode's setting on TRAIN, score it on TEST. Returns {mode: test metrics}."""
+    o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
+    tr, te = window(bars, *TRAIN), window(bars, *TEST)
+    out = {}
+    for mode, grid in GRID.items():
+        best = max(grid, key=lambda p: score(mode, p, bars, (o, h, l, c), *tr)["cagr"])
+        out[mode] = score(mode, best, bars, (o, h, l, c), *te)
+    return out
+
+
+def universe():
+    # ponytail: today's S&P 500 members only, so dead and dropped companies are missing (survivorship bias flatters Hold).
+    syms = sp500()
+    with ThreadPoolExecutor(8) as ex:
+        data = dict(zip(syms, ex.map(fetch_yahoo, syms)))
+    cutoff = datetime(2011, 1, 1, tzinfo=timezone.utc).timestamp()
+    ok = {s: b for s, b in data.items() if b and b[0][0] <= cutoff}
+    print(f"S&P 500: {len(syms)} listed, {len(ok)} with daily history back to 2011. Fee {FEE:.1%}/side.")
+    print(f"Settings picked per stock on {TRAIN[0]}..{TRAIN[1]}, scored blind {TEST[0]}..now.\n")
+    with ProcessPoolExecutor() as ex:
+        res = dict(zip(ok, ex.map(evaluate, ok.values(), chunksize=4)))
+    hold = {s: r["Hold"] for s, r in res.items()}
+    print(f"{'strategy':16}{'median CAGR':>12}{'median maxDD':>13}{'beat Hold':>10}{'shallower DD':>13}{'median trades':>14}")
+    for mode in GRID:
+        rows = [(r[mode], hold[s]) for s, r in res.items()]
+        med = lambda k: statistics.median(m[k] for m, _ in rows)
+        beat = sum(m["cagr"] > hd["cagr"] for m, hd in rows) / len(rows)
+        safer = sum(m["mdd"] < hd["mdd"] for m, hd in rows) / len(rows)
+        print(f"{mode:16}{med('cagr'):>12.1%}{med('mdd'):>13.0%}{beat:>10.0%}{safer:>13.0%}{med('trades'):>14.0f}")
+
+
 def main():
     check()
+    if sys.argv[1:] == ["sp500"]:
+        return universe()
     bars = fetch()
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
     tr, te = window(bars, *TRAIN), window(bars, *TEST)
