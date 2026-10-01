@@ -22,6 +22,7 @@ in tradingview/data/.
     python3 tradingview/century.py --voltarget # Trend 2x with exposure scaled to trailing realised vol (10/15/20% targets, 20/60 day), and a calm-market 2x/1x switch
     python3 tradingview/century.py --dual     # cross-asset dual momentum (stocks, bonds, gold vs bills) with a 10 month own-trend filter, with and without 2x on stocks
     python3 tradingview/century.py --seasonal # calendar overlays (turn of the month, Halloween, pre-holiday, skip Mondays), alone on 1x S&P and stacked on Trend 2x
+    python3 tradingview/century.py --sectors  # top 3 of 10 French industries (12 and 6 month momentum) while the market is above its 10 month average, 1x and 2x on margin, graded blind, then the 9 real SPDR sectors
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
@@ -2689,6 +2690,238 @@ def seasonal():
         print(f"  {lab:{W}} {'PASS' if res[lab][3] else 'FAIL'}")
 
 
+# ---------- sector momentum with a market trend filter (--sectors) ----------
+
+def sectors():
+    """Faber (2010) relative strength: each month hold the top 3 of the industries by trailing 12 (and 6) month return, equal weight, only while the
+    MARKET is above its 10 month average, else bills. Fixed from the literature, nothing picked. Ken French 10 industries (monthly, value weighted, from 1926),
+    then the 9 real SPDR sector funds with SPY as the market and BIL as cash. The 2x rows are a margin model: 2x the top 3 at bills + 1% when the filter is on."""
+    import random
+    ind, ff = french("10_Industry_Portfolios_CSV.zip", 0), french("F-F_Research_Data_Factors_CSV.zip", 0)
+    names = ["NoDur", "Durbl", "Manuf", "Enrgy", "HiTec", "Telcm", "Shops", "Hlth", "Utils", "Other"]
+    ms = [m for m in sorted(ff) if m in ind]
+    nm, n, split = len(ms), 10, ms.index("1976-01")
+    R = [ind[m] for m in ms]
+    assert all(len(r) == n and min(r) > -0.9 for r in R)
+    mk, rf = [ff[m][0] + ff[m][3] for m in ms], [ff[m][3] for m in ms]
+    lev, lv, sig = 1.0, [], []
+    for x in mk:
+        lev *= 1 + x
+        lv.append(lev)
+        sig.append(len(lv) >= 10 and lev > sum(lv[-10:]) / 10)  # market above its 10 month average at month end i
+
+    def cum(i, N, k):
+        x = 1.0
+        for j in range(i - N + 1, i + 1):
+            x *= 1 + R[j][k]
+        return x - 1
+    def top3(N):
+        return {i: sorted(range(n), key=lambda k: -cum(i, N, k))[:3] if sig[i] else None for i in range(11, nm)}
+    def wts(pk):
+        return {i: [1 / 3 if k in p else 0.0 for k in range(n)] if p else [0.0] * n for i, p in pk.items()}
+    def mrun(dec, L, delay=0, fee=FEE):
+        """Net monthly returns for months 12.. . dec[j] is decided at the end of month j and earns month j+1 (+delay). Fee on actual turnover."""
+        dw, out = [0.0] * n, []
+        for i in range(12, nm):
+            tg = [L * x for x in dec.get(i - 1 - delay, [0.0] * n)]
+            turn = sum(abs(a - b) for a, b in zip(tg, dw))
+            c = 1 - sum(tg)
+            er = sum(t * x for t, x in zip(tg, R[i])) + c * (rf[i] + (0.01 / 12 if c < -1e-9 else 0.0))
+            out.append((1 - fee * turn) * (1 + er) - 1)
+            dw = [t * (1 + x) / (1 + er) for t, x in zip(tg, R[i])]
+        return out
+    def grow(xs):
+        cv = [1.0]
+        for x in xs:
+            cv.append(cv[-1] * (1 + x))
+        return cv
+    def st(xs):
+        cv, pk, dd = grow(xs), 1.0, 0.0
+        for v in cv:
+            pk = max(pk, v)
+            dd = max(dd, 1 - v / pk)
+        return cv[-1] ** (12 / len(xs)) - 1, dd
+    mon = ms[12:]
+    sb = split - 12
+    def blind(xs): return xs[sb:]
+    def train(xs): return xs[:sb]
+    def decs(xs, sel):
+        out = {}
+        for m, x in zip(sel, xs):
+            out.setdefault(m[:3] + "0s", []).append(x)
+        return {d: grow(v)[-1] ** (12 / len(v)) - 1 for d, v in out.items() if len(v) >= 36}
+    def year(xs, sel, y):
+        v = [x for m, x in zip(sel, xs) if m[:4] == y]
+        return grow(v)[-1] - 1, st(v)[1]
+    selb = mon[sb:]
+    hold = mk[12:]
+    ew = mrun({i: [1 / n] * n for i in range(11, nm)}, 1)
+    ewf = mrun({i: [1 / n] * n if sig[i] else [0.0] * n for i in range(11, nm)}, 1)
+    hb, eb = st(blind(hold)), st(blind(ew))
+    dh, de = decs(blind(hold), selb), decs(blind(ew), selb)
+    dl = sorted(dh)
+    print("SECTOR MOMENTUM WITH A MARKET TREND FILTER, Ken French 10 industries (monthly, value weighted, survivorship free), Faber (2010) rule.")
+    print(f"Each month end: rank the 10 industries by trailing N month return, hold the top 3 equal weight for the next month, only while the MARKET (Mkt-RF + RF) is above its 10 month average, else T-bills (French RF).")
+    print(f"N = 12 and N = 6 both reported, nothing picked. {FEE:.1%} a side on actual turnover (drifted weights to new weights). 2x rows are a margin model: 2x the top 3, borrow at bills + 1%, rebalanced to 2x monthly, fee on the 2x notional traded.")
+    print(f"Train {mon[0]} to {ms[split - 1]} is context only. BLIND {ms[split]} to {ms[-1]}. Monthly resolution misses intramonth drops, so every worst drop reads a little kinder than a daily one.")
+    print(f"Market hold BLIND {hb[0]:.1%} / {hb[1]:.0%}, train {st(train(hold))[0]:.1%} / {st(train(hold))[1]:.0%}. Equal weight all 10, monthly: BLIND {eb[0]:.1%} / {eb[1]:.0%}, train {st(train(ew))[0]:.1%} / {st(train(ew))[1]:.0%}, decades vs hold {sum(de[d] > dh[d] for d in dl)}/{len(dl)}. EW10 with the same filter: BLIND {st(blind(ewf))[0]:.1%} / {st(blind(ewf))[1]:.0%} (what the filter alone does).\n")
+    rows = [("Top 3 by 12m, 1x", 12, 1), ("Top 3 by 6m, 1x", 6, 1), ("Top 3 by 12m, 2x margin", 12, 2), ("Top 3 by 6m, 2x margin", 6, 2)]
+    P = {N: top3(N) for N in (12, 6)}
+    D = {N: wts(P[N]) for N in (12, 6)}
+    rng = random.Random(7)
+    RND = {N: [wts(rp) for rp in (rand_picks(P[N], rng, n) for _ in range(300))] for N in (12, 6)}
+    res = {}
+    for lab, N, L in rows:
+        xs = mrun(D[N], L)
+        late = st(blind(mrun(D[N], L, delay=1)))
+        rr = [st(blind(mrun(w, L))) for w in RND[N]]
+        c, d = st(blind(xs))
+        dd = decs(blind(xs), selb)
+        res[lab] = dict(xs=xs, b=(c, d), tr=st(train(xs)), dd=dd, late=late, w=sum(dd[k] > dh[k] for k in dl), we=sum(dd[k] > de[k] for k in dl),
+                        beat=sum(r[0] < c for r in rr) / len(rr), both=sum(r[0] >= c and r[1] <= d for r in rr), mean=sum(r[0] for r in rr) / len(rr),
+                        ok=c > hb[0] and d <= hb[1] and sum(dd[k] > dh[k] for k in dl) > len(dl) / 2)
+    print(f"{'BLIND':26}{'BLIND':>13}{'vs hold':>9}{'vs EW10':>9} | decades won vs hold / EW10 | {'train':>12} | {'1 mo late':>11} | {'2008':>9}{'2022':>9} | random 300: beat / matched both / mean | bar vs hold")
+    for lab, N, L in rows:
+        x = res[lab]
+        print(f"{lab:26}{x['b'][0]:>7.1%} / {x['b'][1]:.0%}{x['b'][0] - hb[0]:>+9.1%}{x['b'][0] - eb[0]:>+9.1%} | {x['w']}/{len(dl)}  {x['we']}/{len(dl)}{'':16}| {x['tr'][0]:>6.1%}/{x['tr'][1]:.0%} | {x['late'][0]:>5.1%}/{x['late'][1]:.0%} | "
+              f"{year(blind(x['xs']), selb, '2008')[0]:>+9.1%}{year(blind(x['xs']), selb, '2022')[0]:>+9.1%} | {x['beat']:.0%} / {x['both']} / {x['mean']:.1%} | {'PASS' if x['ok'] else 'FAIL'}")
+    print(f"{'Market hold':26}{hb[0]:>7.1%} / {hb[1]:.0%}{'':27}| {'':27}| {st(train(hold))[0]:>6.1%}/{st(train(hold))[1]:.0%} | {'':11} | {year(blind(hold), selb, '2008')[0]:>+9.1%}{year(blind(hold), selb, '2022')[0]:>+9.1%}")
+    print(f"{'Equal weight all 10':26}{eb[0]:>7.1%} / {eb[1]:.0%}{'':27}| {'':27}| {st(train(ew))[0]:>6.1%}/{st(train(ew))[1]:.0%} | {'':11} | {year(blind(ew), selb, '2008')[0]:>+9.1%}{year(blind(ew), selb, '2022')[0]:>+9.1%}")
+    print(f"\n{'blind decade CAGR':26}" + "".join(f"{d:>8}" for d in dl))
+    print(f"{'Market hold':26}" + "".join(f"{dh[d]:>8.1%}" for d in dl))
+    print(f"{'Equal weight all 10':26}" + "".join(f"{de[d]:>8.1%}" for d in dl))
+    for lab, N, L in rows:
+        print(f"{lab:26}" + "".join(f"{res[lab]['dd'][d]:>8.1%}" for d in dl))
+    print(f"\nIn the market {sum(1 for i in range(sb + 12, nm) if sig[i - 1]) / (nm - split):.0%} of blind months. Industries held most often (12m, blind): "
+          + ", ".join(f"{names[k]} {c / sum(1 for i in range(split, nm) if P[12].get(i - 1)):.0%}" for k, c in sorted(((k, sum(1 for i in range(split, nm) if P[12].get(i - 1) and k in P[12][i - 1])) for k in range(n)), key=lambda t: -t[1])[:4]))
+    print(f"Average names changed a month while invested (12m / 6m): " + " / ".join(f"{sum(len(set(P[N][i]) - set(P[N][i - 1])) for i in range(split, nm) if P[N].get(i) and P[N].get(i - 1)) / max(1, sum(1 for i in range(split, nm) if P[N].get(i) and P[N].get(i - 1))):.2f}" for N in (12, 6)))
+    print("\nVERDICT on the model (bar = more CAGR than hold, drop no bigger, most of 6 decades):")
+    for lab, N, L in rows:
+        print(f"  {lab:26} {'PASS' if res[lab]['ok'] else 'FAIL'}")
+    print()
+    sectors_real()
+
+
+def rand_picks(pk, rng, n):
+    """Random top 3 with the strategy's own in/out schedule and the same number of names changed each month, so the fee drag matches."""
+    out, prev = {}, None
+    for i in sorted(pk):
+        if pk[i] is None:
+            out[i], prev = None, None
+        elif prev is None or pk.get(i - 1) is None:
+            out[i] = prev = rng.sample(range(n), 3)
+        else:
+            k = len(set(pk[i]) - set(pk[i - 1]))
+            out[i] = prev = rng.sample(prev, 3 - k) + rng.sample([x for x in range(n) if x not in prev], k)
+    return out
+
+
+def sectors_real():
+    """The same rule on the 9 real SPDR sector funds (XLB XLE XLF XLI XLK XLP XLU XLV XLY, adjusted close) with SPY as the market and BIL (T-bills before it began) as cash. Daily path, monthly decisions."""
+    from datetime import date
+    syms = ["XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"]
+    px = {s: {r[0]: r[2] for r in raw(s)} for s in syms + ["SPY", "BIL"]}
+    ds = sorted(set.intersection(*[set(px[s]) for s in syms + ["SPY"]]))
+    ds = [d for d in ds if d[:7] < date.today().strftime("%Y-%m")]  # drop the unfinished month
+    P = [[px[s][d] for d in ds] for s in syms]
+    bf, rb = bill_fn(), []
+    for i, d in enumerate(ds):
+        rb.append(px["BIL"][d] / px["BIL"][ds[i - 1]] - 1 if i and d in px["BIL"] and ds[i - 1] in px["BIL"] else bf(d))
+    last = {}  # month -> index of the last day
+    for i, d in enumerate(ds):
+        last[d[:7]] = i
+    mons = sorted(last)
+    first = {m: (last[mons[k - 1]] + 1 if k else 0) for k, m in enumerate(mons)}
+    spy = {}
+    for d in sorted(px["SPY"]):
+        spy[d[:7]] = px["SPY"][d]
+    sm = sorted(spy)
+    sg = {m: k >= 9 and spy[m] > sum(spy[x] for x in sm[k - 9:k + 1]) / 10 for k, m in enumerate(sm)}
+    n = len(syms)
+    def mom(j, N, k):
+        return P[k][last[mons[j]]] / P[k][last[mons[j - N]]] - 1
+    def dec(N, filt=True, top=True):
+        out = {}
+        for j in range(12, len(mons)):
+            if filt and not sg[mons[j]]:
+                out[mons[j]] = [0.0] * n
+            elif top:
+                t = sorted(range(n), key=lambda k: -mom(j, N, k))[:3]
+                out[mons[j]] = [1 / 3 if k in t else 0.0 for k in range(n)]
+            else:
+                out[mons[j]] = [1 / n] * n
+        return out
+    def run(D, L, delay=0, fee=FEE):
+        """Daily equity from the first held month (2000-01). Weights chosen at month end j hold month j+1 (+delay); fee on actual turnover; margin at bills + 1%."""
+        E, dw, cv = 1.0, [0.0] * n, []
+        for j in range(13, len(mons)):
+            m = mons[j]
+            a, b = first[m], last[m]
+            tg = [L * x for x in D.get(mons[j - 1 - delay], [0.0] * n)]
+            E *= 1 - fee * sum(abs(x - y) for x, y in zip(tg, dw))
+            c, carry = 1 - sum(tg), 1.0
+            for d in range(a, b + 1):
+                carry *= 1 + rb[d] + (0.01 / 252 if c < -1e-9 else 0.0)
+                v = 1 + sum(t * (P[k][d] / P[k][a - 1] - 1) for k, t in enumerate(tg) if t) + c * (carry - 1)
+                cv.append((ds[d], E * v))
+            dw = [t * P[k][b] / P[k][a - 1] / v for k, t in enumerate(tg)]
+            E *= v
+        return cv
+    def spyhold():
+        a = first[mons[13]]
+        return [(ds[d], px["SPY"][ds[d]] / px["SPY"][ds[a - 1]]) for d in range(a, len(ds))]
+    def dd_of(cv):
+        pk, worst = 1.0, 0.0
+        for _, v in cv:
+            pk = max(pk, v)
+            worst = max(worst, 1 - v / pk)
+        return worst
+    def per(cv, k):
+        out, prev = {}, 1.0
+        for d, v in cv:
+            e = out.setdefault(d[:k], [prev, v, 0])
+            e[1], e[2] = v, e[2] + 1
+            prev = v
+        return out
+    def yrs_(cv):
+        o = per(cv, 4)
+        return {y: e / s - 1 for y, (s, e, c) in o.items()}
+    def decs_(cv):
+        o = per(cv, 3)
+        return {y + "0s": (e / s) ** (252 / c) - 1 for y, (s, e, c) in o.items() if c >= 750}
+    stat = lambda cv: ((cv[-1][1]) ** (365.25 / (date.fromisoformat(cv[-1][0]) - date.fromisoformat(ds[first[mons[13]] - 1])).days) - 1, dd_of(cv))
+    sh, ew, ewf = spyhold(), run(dec(12, False, False), 1), run(dec(12, True, False), 1)
+    hs, es = stat(sh), stat(ew)
+    hy, hd, ey = yrs_(sh), decs_(sh), yrs_(ew)
+    ysl, dl = sorted(hy), sorted(hd)
+    print(f"REAL SPDR SECTOR CHECK, {date.today()}. XLB XLE XLF XLI XLK XLP XLU XLV XLY (Yahoo adjusted close, dividends in, fund fees in), {ds[first[mons[13]]]} to {ds[-1]}, {(date.fromisoformat(ds[-1]) - date.fromisoformat(ds[first[mons[13]]])).days / 365.25:.1f} years.")
+    print(f"Market = SPY adjusted month end against its 10 month average. Cash = BIL from {min(px['BIL'])}, the 3 month T-bill series before that. Same rule, same {FEE:.1%} a side on actual turnover, 2x = margin at bills + 1%.")
+    print("Worst drop is peak to trough on daily closes, so it reads harsher than the monthly French rows. 2000 starts the first month after 12 months of sector history. XLRE and XLC start later and are left out.")
+    print(f"{'':26}{'CAGR / worst drop':>19}{'vs SPY':>8}{'vs EW9':>8} | years won vs SPY / EW9 (of {len(ysl)}) | decades won vs SPY (of {len(dl)}) | {'1 mo late':>11} | {'2008':>8}{'2022':>8} | bar vs SPY")
+    ROWS = [("SPY hold", sh, None), ("Equal weight 9 sectors", ew, None), ("Equal weight 9 + filter", ewf, None),
+            ("Top 3 by 12m, 1x", run(dec(12), 1), run(dec(12), 1, 1)), ("Top 3 by 6m, 1x", run(dec(6), 1), run(dec(6), 1, 1)),
+            ("Top 3 by 12m, 2x margin", run(dec(12), 2), run(dec(12), 2, 1)), ("Top 3 by 6m, 2x margin", run(dec(6), 2), run(dec(6), 2, 1))]
+    out = {}
+    for lab, cv, lt in ROWS:
+        s, y, d = stat(cv), yrs_(cv), decs_(cv)
+        wy, wy2, wd = sum(y[k] > hy[k] for k in ysl), sum(y[k] > ey[k] for k in ysl), sum(d[k] > hd[k] for k in dl)
+        ok = s[0] > hs[0] and s[1] <= hs[1] + 1e-9 and wy > len(ysl) / 2 and wd > len(dl) / 2
+        tag = "reference" if lab == "SPY hold" else ("PASS" if ok else "FAIL")
+        ls = stat(lt) if lt else None
+        out[lab] = (s, d, ok)
+        print(f"{lab:26}{s[0]:>11.1%} / {s[1]:.0%}{s[0] - hs[0]:>+8.1%}{s[0] - es[0]:>+8.1%} | {wy:>2} / {wy2:<2}{'':29}| {wd}{'':27}| {f'{ls[0]:.1%}/{ls[1]:.0%}' if ls else '':>11} | {y.get('2008', float('nan')):>+8.1%}{y.get('2022', float('nan')):>+8.1%} | {tag}")
+    print(f"\n{'real decade CAGR':26}" + "".join(f"{d:>8}" for d in dl))
+    for lab, cv, lt in ROWS:
+        print(f"{lab:26}" + "".join(f"{out[lab][1][d]:>8.1%}" for d in dl))
+    print(f"\n{'calendar year returns':26}" + "".join(f"{y:>8}" for y in ysl))
+    for lab, cv, lt in ROWS:
+        y = yrs_(cv)
+        print(f"{lab:26}" + "".join(f"{y[k]:>+8.1%}" for k in ysl))
+    print("\nVERDICT on the real funds (bar = more CAGR than SPY, drop no bigger, most calendar years and most decades):")
+    for lab, cv, lt in ROWS[3:]:
+        print(f"  {lab:26} {'PASS' if out[lab][2] else 'FAIL'}")
+
+
 if __name__ == "__main__":
     if "--seasonal" in sys.argv:
         seasonal()
@@ -2719,6 +2952,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--indexes" in sys.argv:
         trend_indexes()
+        sys.exit()
+    if "--sectors" in sys.argv:
+        sectors()
         sys.exit()
     if "--crypto" in sys.argv:
         crypto()
