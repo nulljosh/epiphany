@@ -93,4 +93,24 @@ final class IndicatorTests: XCTestCase {
         XCTAssertEqual(ema[1].value, 55.0, accuracy: 0.001)
         XCTAssertEqual(ema[2].value, 32.5, accuracy: 0.001)
     }
+
+    // MARK: - Double 7s
+
+    func testDouble7sNeedsTwoHundredCloses() {
+        XCTAssertNil(Indicators.double7s(closes: (0..<150).map { 100 + Double($0) * 0.5 }))
+    }
+
+    func testDouble7sBuysADipInAnUptrend() {
+        var closes = (0..<250).map { 100 + Double($0) * 0.5 }
+        closes.append(closes.last! - 5)
+        XCTAssertEqual(Indicators.double7s(closes: closes), .buy)
+    }
+
+    func testDouble7sSellsATenDayHigh() {
+        XCTAssertEqual(Indicators.double7s(closes: (0..<250).map { 100 + Double($0) * 0.5 }), .sell)
+    }
+
+    func testDouble7sHoldsInADowntrend() {
+        XCTAssertEqual(Indicators.double7s(closes: (0..<250).map { 100 + Double($0) * 0.5 }.reversed()), .hold)
+    }
 }
