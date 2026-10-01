@@ -105,4 +105,4 @@ node scripts/tv-signal-agent.js --study Epiphany --broker ibkr --dry-run   # wat
 node scripts/tv-signal-agent.js --study Epiphany --broker ibkr             # paper orders
 ```
 
-`scripts/ibkr-order.py` refuses the live ports unless you pass `--live`. Stocks and ETFs only. Whole shares: SPY is about $760 a share, so a sleeve under that needs a cheaper ETF or IBKR's fractional orders.
+`scripts/ibkr-order.py` only trades demo and paper accounts (IDs starting with D) unless you pass `--live`. Stocks and ETFs only. Whole shares: SPY is about $760 a share, so a sleeve under that needs a cheaper ETF or IBKR's fractional orders.
