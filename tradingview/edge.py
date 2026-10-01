@@ -36,7 +36,7 @@ def panel():
     return days, list(data), O, H, L, C
 
 
-def simulate(days, C, pick, sched, lo, hi, lag=1):
+def simulate(days, C, pick, sched, lo, hi, lag=1, fee_rate=FEE):
     """pick(i) -> list of symbols to hold equally from close i on. Decided with data through i - lag."""
     vals, eq, rets, traded = {}, 1.0, [], 0.0
     for i in range(lo, hi):
@@ -55,7 +55,9 @@ def simulate(days, C, pick, sched, lo, hi, lag=1):
             names = pick(i - lag + 1 if lag else i + 1)
             target = {s: eq / len(names) for s in names} if names else {}
             turnover = sum(abs(target.get(s, 0) - vals.get(s, 0)) for s in set(target) | set(vals))
-            fee = turnover * FEE
+            fee = turnover * fee_rate
+            if rets and eq:  # the fee comes out of today's return, or it never reaches the score
+                rets[-1] = (1 + rets[-1]) * (1 - fee / eq) - 1
             traded += turnover / max(eq, 1e-12)
             eq -= fee
             vals = {s: v * (eq / sum(target.values())) for s, v in target.items()} if target else {}
@@ -73,7 +75,7 @@ def simulate(days, C, pick, sched, lo, hi, lag=1):
             "turnover": traded / years, "mult": mult}
 
 
-def build(days, syms, O, H, L, C):
+def build(days, syms, O, H, L, C, sizes=(20, 50)):
     """Strategy families: name -> {setting: (pick, sched, lag)}. pick(j) sees data up to index j-1."""
     month = lambda i: i > 0 and datetime.fromtimestamp(days[i] * DAY, timezone.utc).month != datetime.fromtimestamp(days[i - 1] * DAY, timezone.utc).month
     week = lambda i: i % 5 == 0
@@ -124,8 +126,8 @@ def build(days, syms, O, H, L, C):
         return g
     return {
         "EW basket": {(): (ew, month, 1)},
-        "Momentum 12-1": {(L, N): (mom(L, N), month, 1) for L in (126, 252) for N in (20, 50)},
-        "Momentum + trend": {(L, N): (trend(mom(L, N)), month, 1) for L in (126, 252) for N in (20, 50)},
+        "Momentum 12-1": {(L, N): (mom(L, N), month, 1) for L in (126, 252) for N in sizes},
+        "Momentum + trend": {(L, N): (trend(mom(L, N)), month, 1) for L in (126, 252) for N in sizes},
         "Low volatility": {(n, N): (lowvol(n, N), month, 1) for n in (63, 252) for N in (20, 50)},
         "Weekly reversal": {(N,): (rev(N), week, 1) for N in (20, 50)},
         "IBS next-day": {(N, c): (ibs(N, c), daily, 1) for N in (10, 20) for c in (0.1, 0.2)},
@@ -171,5 +173,45 @@ def main():
         print(f"Luck test {name}: random {N}-stock picks on the same schedule matched its Sharpe {beat:.0%} of the time.")
 
 
+def stress():
+    """Momentum + trend with settings fixed (126 day lookback, 20 names): other periods, fees, sizes."""
+    days, syms, O, H, L, C = panel()
+    spy = {r[0] // DAY: r[4] for r in fetch_yahoo("SPY")}
+    C["SPY"] = [spy.get(d) for d in days]
+    fam = build(days, syms, O, H, L, C, sizes=(20, 30, 50))
+    cell = lambda r: f"{r['cagr']:>6.1%} {r['mdd']:>4.0%}"
+    def run(name, key, a, b, fee=FEE):
+        pick, sched, lag = fam[name][key]
+        lo, hi = span(days, a, b)
+        return simulate(days, C, pick, sched, lo, hi, lag=lag, fee_rate=fee)
+    def spy_run(a, b):
+        lo, hi = span(days, a, b)
+        return simulate(days, C, lambda j: ["SPY"], lambda i: i == lo, lo, hi, fee_rate=0)
+    big = ("2099-01-01",)
+    print(f"{len(syms)} S&P 500 stocks, data from {datetime.fromtimestamp(days[0] * DAY, timezone.utc).date()}. Cells are CAGR then max drawdown.")
+    print("Momentum + trend = 126 day return skipping the latest 21, top N, only while the basket is above its 200 day average, monthly, per side fee.\n")
+    print("1. Other periods (20 names, 0.1% fee, settings fixed)")
+    print(f"{'period':12}{'mom+trend':>15}{'mom no filter':>15}{'EW basket':>15}{'SPY':>15}")
+    periods = [("2008-01-01", "2011-12-31"), ("2012-01-01", "2019-12-31"), ("2020-01-01", "2099-01-01")]
+    periods += [(f"{y}-01-01", f"{y}-12-31") for y in range(1994, datetime.now().year + 1)]
+    for a, b in periods:
+        tag = f"{a[:4]}-{'now' if b[:2] == '20' and b[:4] == '2099' else b[:4]}"
+        if span(days, a, b)[1] - span(days, a, b)[0] < 20:
+            continue
+        print(f"{tag:12}{cell(run('Momentum + trend', (126, 20), a, b)):>15}{cell(run('Momentum 12-1', (126, 20), a, b)):>15}{cell(run('EW basket', (), a, b)):>15}{cell(spy_run(a, b)):>15}")
+    print("\n2. Fees per side (20 names)")
+    for a, b in (("2008-01-01", "2011-12-31"), ("2012-01-01", "2019-12-31"), ("2020-01-01", "2099-01-01")):
+        spy_c = cell(spy_run(a, b))
+        for fee in (0.001, 0.002, 0.005):
+            r = run("Momentum + trend", (126, 20), a, b, fee)
+            print(f"{a[:4]}-{b[:4] if b[:4] != '2099' else 'now':4}  fee {fee:.1%}  {cell(r)}  turnover {r['turnover']:.0f}x/yr   SPY {spy_c}")
+    print("\n3. Holdings (0.1% fee)")
+    for a, b in (("2008-01-01", "2011-12-31"), ("2012-01-01", "2019-12-31"), ("2020-01-01", "2099-01-01")):
+        row = "  ".join(f"N={N}: {cell(run('Momentum + trend', (126, N), a, b))}" for N in (20, 30, 50))
+        print(f"{a[:4]}-{b[:4] if b[:4] != '2099' else 'now':4}  {row}   SPY {cell(spy_run(a, b))}")
+    print("\nSurvivorship: UNTESTED. No delisted constituents here. The EW basket column shares the same bias, so only the gap above it is momentum's own.")
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    stress() if "--stress" in sys.argv else main()

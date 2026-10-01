@@ -230,17 +230,31 @@ sits idle between trades, and that costs far more than the edge earns.
   holding, 7.1% against 6.2%, with a smaller worst drop (72% against 86%). But
   that win comes from the 1930s crash. Since 2000 and since 2020 holding earned
   more. So it is a way to sleep better, not a way to beat the market.
-- **One real lead, not a win yet: momentum with a market filter.** Across the 429
-  S&P 500 stocks (`tradingview/edge.py`), we held the 20 stocks with the best
+- **One real lead, still not a win: momentum with a market filter.** Across the
+  429 S&P 500 stocks (`tradingview/edge.py`), we held the 20 stocks with the best
   6 month returns (skipping the latest month), only while the whole stock basket
-  was above its 200 day average, rebalanced monthly, 0.1% fees. Settings were
-  picked on 2012 to 2019 and graded on 2020 to now: 19.6% a year with a 31% worst
-  drop, against 15.1% and 34% for SPY and 14.7% and 38% for an equal-weight
-  basket. That clears our bar (more return, no bigger drop). Do not trust it
-  yet: the stock list is today's winners (survivorship bias flatters momentum
-  most), it is one blind period that was friendly to momentum, it holds only 20
-  names, and it trades about 10 times a year. Next tests: other years, higher
-  fees, and stocks that were delisted. Mixed asset classes are still untested.
+  was above its 200 day average, rebalanced monthly. Settings were picked on 2012
+  to 2019 and graded on 2020 to now. We then stress tested it with the settings
+  frozen (`tradingview/results-momentum-stress.txt`). First, a bug: the fee was
+  never reaching the score, so the old 19.6% a year was fee free. At the real 0.1%
+  it is 18.4% with a 31% worst drop, against 15.1% and 34% for SPY. Other
+  periods: 2008 to 2011 it made 6.8% with a 29% drop while SPY made minus 1.4% and
+  fell 52%. 2012 to 2019 it made 23.4% with a 24% drop against SPY's 14.6% and
+  19%, so it took a bigger drop there. By calendar year since 1994 it beat SPY in
+  25 of 33 years, and in 13 of the 19 years since 2008. It lost money in 2008,
+  2011, 2022 and 2001, and 2022 and 2011 were years the filter did not save it.
+  Fees hurt but do not kill it: at 0.2% a side it makes 17.2% on 2020 to now, at
+  0.5% it makes 13.7%, which is below SPY. More names is worse, not safer: 30
+  holdings made 17.4% and 50 made 14.8% on 2020 to now. The filter does the real
+  work on drawdowns (without it 2008 fell 52% and 2020 to now fell 39%). The
+  survivorship problem is untested. We have no delisted stocks, and the 1990s
+  numbers (82% in 1995, 96% in 1999) are plainly the bias talking, since the list
+  is today's winners. The equal-weight basket shares that bias and made 14.6%
+  to 19% a year, so the part we can credit to momentum is the gap above it, about
+  4 points a year on 2012 to now, and even that is unproven. Verdict: it survives
+  the stress tests we could run and is the best thing we have found, but it is a
+  maybe, not a yes. We do not trade it until we test it on a list that includes
+  the stocks that died. Mixed asset classes are still untested.
   A daily dip-buying version looked even better (36% a year) but it fills at the
   same close it reads, which real orders cannot always do, so we do not count it.
 - **Many small trades a day lose.** We simulated the busiest idea we could: buy
