@@ -352,6 +352,28 @@ To check the fund model we ran it against the real SSO (2x) and UPRO (3x) since
 funds pay more than T-bills to borrow. Take that 0.8% off the 2x fund row and it
 still beats holding, at about 14.3%, the same as borrowing.
 
+**Does it survive a hard look?** (`century.py --robust`, raw output in
+`tradingview/results-leverage-robust.txt`, settings untouched.) Mostly, with
+two warnings. Against 1,000 random in and out schedules with the same time in
+the market and the same 338 switches, the rule's 15.1% beat 93% of them, so
+about a 7% chance by luck, and not one random schedule matched it on both
+return and worst drop (randoms fell 68% to 92% at the worst). Speed matters:
+trading one day late drops it to 13.0% with a 62% worst drop, worse than
+holding on the drop, and trading at the next open instead of the close gives
+14.4% with a 51% drop. A 0.25% fee per switch leaves 13.9%, 0.5% leaves
+12.0%, barely above the 12.1% of holding, and the borrowed version falls to
+8.1% there. With the 0.8% fund gap off the top the base case is 14.4%, still
+ahead. On other markets, price only and with T-bills as cash, it beat its own
+hold with no bigger drop in 5 of 8 (S&P, Nasdaq 100, Toronto, Nikkei, DAX), and
+lost badly on the Dow and the FTSE; the Nasdaq Composite earned more but fell
+further. In the crashes it was lucky as much as smart: 2008 it sat out flat
+(+1% against -37%), but in 1987 it was out by a hair (the S&P closed at 298.1
+under its 298.6 average on Oct 15, four days before the crash), and in March 2020
+and in 2022 it lost more than holding (-20% against -13%, and -31% against
+-18%) because it was still at 2x when the drops came. The worst single day was
+-13.7% against -20.5% for holding. Verdict: worth paper trading, not real money,
+and only with next-close trades and fees under 0.25%.
+
 Last, a check on momentum that cannot have survivorship bias: Ken French's
 monthly returns for all US stocks sorted into tenths by their past year,
 since 1927, value weighted, no trend filter. The top tenth beat the market by
