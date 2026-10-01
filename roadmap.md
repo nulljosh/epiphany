@@ -1,4 +1,5 @@
 ## 2026-10-01 brain dump (open)
+- [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Offline mode
 - [x] Smooth business news drawer drag animation (global-space drag, rubber band, velocity spring; feel-check on device)
 - [ ] Better event filtering on the map
@@ -226,3 +227,14 @@ it is recorded here.
 ## From Notes (2026-09-12)
 - [ ] Current location button works but no pin shown on map
 - [ ] Event/places need more detail (reviews etc.)
+
+## Trading benchmark (loop, 2026-10-01)
+Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
+- [ ] Port Monica Kelly (`tradingview/monica-kelly-strategy.pine`) into the engine, rule for rule, and score it next to the Surf modes
+- [ ] More assets: ETH, SPY, QQQ, GLD daily next to BTC, so one lucky asset can't carry the result
+- [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
+- [ ] Luck test: random entries with the same time in market, 1000 runs, report how often luck beats each strategy
+- [ ] Fee test: 0%, 0.1%, 0.25% per side
+- [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
+- [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
+- [ ] Fix the WHITEPAPER's dead `simBenchmark.js` reference
