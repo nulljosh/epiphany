@@ -61,5 +61,6 @@ try {
   await core.replay.stop();
 }
 execFileSync('magick', ['-delay', '10', '-loop', '0', `${dir}/*.png`, '-resize', '1100x', '-layers', 'Optimize', out]);
+fs.rmSync(dir, { recursive: true, force: true });
 console.log('frames', n, 'gif', out, (fs.statSync(out).size / 1e6).toFixed(1) + 'MB');
 process.exit(0);

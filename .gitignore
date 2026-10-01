@@ -175,3 +175,7 @@ ios/Configs/Secrets.xcconfig
 **/.asc/runs/
 **/.asc/reports/
 .asc/web-review/
+
+# Replay GIFs, ~3MB each, regenerate with tradingview/record-watchlist.mjs
+tradingview/replays/
+tradingview/replay-*.gif
