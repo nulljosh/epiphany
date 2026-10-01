@@ -180,3 +180,6 @@ ios/Configs/Secrets.xcconfig
 tradingview/replays/
 tradingview/replay-*.gif
 tradingview/ibkr-state.json
+
+# local Cloudflare dev state
+.wrangler/
