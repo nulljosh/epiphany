@@ -3,12 +3,14 @@
     uv run --with ib_async python3 -m unittest discover -s tests/py
 """
 import importlib.util, json, math, os, tempfile, unittest
+from datetime import datetime, timezone
 from types import SimpleNamespace as NS
 from unittest import mock
 
 spec = importlib.util.spec_from_file_location("menubar", os.path.join(os.path.dirname(__file__), "..", "..", "scripts", "menubar.py"))
 mb = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mb)
+REAL_BENCHMARKS = mb.benchmarks  # Base patches it out; the parser test needs the real one
 
 
 def pos(sym, pnl, cost=100.0, qty=1):
@@ -21,7 +23,7 @@ class Base(unittest.TestCase):
         d = self.dir.name
         patches = [mock.patch.object(mb, k, os.path.join(d, f)) for k, f in
                    (("BEST", "best.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
-        patches.append(mock.patch.object(mb, "spy_price", return_value=550.0))
+        patches.append(mock.patch.object(mb, "benchmarks", return_value={"S&P 500": 0.10, "Gold": -0.01}))
         for p in patches:
             p.start()
             self.addCleanup(p.stop)
@@ -58,7 +60,8 @@ class Summarize(Base):
         self.assertEqual(title, "+2.50%")
         self.assertEqual(since, "Since Sep 1")
         r = dict((l, v) for l, v, _ in rows)
-        self.assertEqual(r["SPY"], "+10.00%")
+        self.assertEqual(r["S&P 500  +10.00%"], "behind 7.50%")
+        self.assertEqual(r["Gold  \u22121.00%"], "ahead 3.50%")
         self.assertIn("Best · AAPL", r)
         self.assertIn("Worst · TSLA", r)
         self.assertEqual(mb.read_json(mb.BEST, {}), {"high": 20.0, "low": 20.0})
@@ -71,10 +74,23 @@ class Summarize(Base):
             self.assertEqual((title, since), ("+0.00%", "Since start"))
             self.assertTrue(all(isinstance(v, str) and "nan" not in v for _, v, _ in rows))
 
-    def test_spy_failure_reads_zero(self):
-        with mock.patch.object(mb, "spy_price", side_effect=OSError):
-            rows = mb.summarize([], 1.0, {"start": {"spy": 500}})[2]
-        self.assertEqual(dict((l, v) for l, v, _ in rows)["SPY"], "+0.00%")
+    def test_benchmark_failure_hides_rows(self):
+        with mock.patch.object(mb, "benchmarks", side_effect=OSError):
+            rows = mb.summarize([pos("X", 1)], 1.0, {"start": {"date": "2026-09-01"}})[2]
+        self.assertEqual(len(rows), 2 + len(mb.BENCH) + 4)
+        self.assertFalse(any("S&P" in l for l, _, _ in rows))
+
+    def test_benchmarks_parse_spark(self):
+        day = lambda d: datetime(2026, 9, d, 13, 30, tzinfo=timezone.utc).timestamp()
+        bars = lambda a, b: {"timestamp": [day(1), day(2)], "close": [a, b]}
+        fake = {s: bars(100, 110) for s in mb.ETFS} | {"GLD": bars(50, None), "BTC-USD": {"close": None}}
+        with mock.patch.object(mb, "yahoo", return_value=fake):
+            b = REAL_BENCHMARKS(datetime(2026, 9, 2, 10, 0))
+        self.assertAlmostEqual(b["S&P 500"], 0.10)
+        self.assertAlmostEqual(b["All 16 funds"], 0.10)
+        self.assertEqual(b["Gold"], 0.0)  # today's bar not in yet: last real close
+        self.assertNotIn("Bitcoin", b)
+        self.assertEqual(list(b)[:2], ["S&P 500", "All 16 funds"])
 
     def test_record_keeps_extremes(self):
         mb.write_json(mb.BEST, {"high": 50, "low": -30})

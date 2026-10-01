@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Epiphany Live: a menu bar app for the IBKR practice account. No Terminal, no Dock icon.
 
-The menu bar shows the holdings' return. The menu shows our positions versus SPY, the best and
+The menu bar shows the holdings' return. The menu shows our holdings against the S&P 500, the 16 funds we pick from, the Nasdaq, Dow,
+Russell 2000, TSX, gold and Bitcoin, the best and
 worst position, the record high and low, and when the daily trade runs next. It starts scripts/ibkr-live.py as a child (alerts, and the daily paper trade at 3:45pm New York,
 12:45pm Pacific) and stops it on Quit. Demo accounts only. Start it from ~/Applications/Epiphany Live.app.
 
@@ -10,7 +11,7 @@ worst position, the record high and low, and when the daily trade runs next. It 
 """
 import json, math, os, subprocess, sys, traceback, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from ib_async import IB
 
@@ -57,12 +58,6 @@ def log(msg):
         pass
 
 
-def spy_price():
-    url = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d"
-    r = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=10))
-    return r["chart"]["result"][0]["meta"]["regularMarketPrice"]
-
-
 def yahoo(path):
     req = urllib.request.Request("https://query1.finance.yahoo.com" + path, headers={"User-Agent": "Mozilla/5.0"})
     return json.load(urllib.request.urlopen(req, timeout=5))
@@ -97,6 +92,29 @@ def watch_line(sym, quote):
         return f"{sym}  \u2014"
     price, ch = quote
     return f"{sym}  {price:,.4f}  {pct(ch)}" if price < 1 else f"{sym}  {price:,.2f}  {pct(ch)}"  # currency pairs need the extra digits
+
+
+# ibkr-run.py's 16 funds: the basket Double 7s picks from. Holding all of them equally is the fair test of the picking.
+ETFS = ["SPY", "QQQ", "DIA", "IWM", "MDY", "EFA", "EEM", "XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"]
+BENCH = [("S&P 500", "SPY"), ("All 16 funds", None), ("Nasdaq 100", "QQQ"), ("Dow", "DIA"), ("Russell 2000", "IWM"),
+         ("TSX", "XIC.TO"), ("Gold", "GLD"), ("Bitcoin", "BTC-USD")]
+
+
+def benchmarks(start):
+    """{label: return from the last close before `start` to now}, in BENCH order, one Yahoo call. A missing symbol is left out."""
+    days = (datetime.now() - start).days
+    rng = next(r for d, r in ((2, "5d"), (25, "1mo"), (85, "3mo"), (175, "6mo"), (355, "1y"), (720, "2y"), (math.inf, "5y")) if days <= d)
+    syms = ",".join(sorted(set(ETFS) | {s for _, s in BENCH if s}))
+    ret = {}
+    for sym, d in yahoo(f"/v8/finance/spark?symbols={urllib.parse.quote(syms)}&range={rng}&interval=1d").items():
+        try:
+            before = [c for t, c in zip(d["timestamp"], d["close"]) if c and datetime.fromtimestamp(t, timezone.utc).date() < start.date()]
+            ret[sym] = next(c for c in reversed(d["close"]) if c) / before[-1] - 1
+        except (KeyError, TypeError, IndexError, StopIteration, ZeroDivisionError):
+            pass
+    if all(s in ret for s in ETFS):
+        ret[None] = sum(ret[s] for s in ETFS) / len(ETFS)
+    return {name: ret[s] for name, s in BENCH if s in ret}
 
 
 def safe(f, *a):
@@ -186,9 +204,11 @@ def summarize(port, nl, st):
     start = st.get("start") if isinstance(st.get("start"), dict) else {}
     d = nl - num(start["netLiquidation"]) if num(start.get("netLiquidation")) and nl is not None else 0.0
     try:
-        spy = spy_price() / num(start["spy"]) - 1 if num(start.get("spy")) else 0.0
+        bench = benchmarks(datetime.fromisoformat(start["date"]))
     except Exception:
-        spy = 0.0
+        bench = {}
+    spy = bench.get("S&P 500", 0.0)
+    ours = gain / cost if cost else 0.0
     # Own file, so it never races ibkr-live.py writing the state file.
     rec = read_json(BEST, {})
     rec = {"high": max(num(rec.get("high", d)), d), "low": min(num(rec.get("low", d)), d)}
@@ -198,9 +218,13 @@ def summarize(port, nl, st):
         log(f"could not save record: {e}")
     rows = [
         ("Account", f"{money(d)} CAD", d),
-        ("Holdings", pct(gain / cost if cost else 0.0), gain),
-        ("SPY", pct(spy), spy),
+        ("Holdings", pct(ours), gain),
     ]
+    # Each benchmark's return since the start, and how far our holdings are ahead of it or behind it.
+    for name, r in bench.items():
+        lead = ours - r
+        rows.append((f"{name}  {pct(r)}", f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}" if port else "", lead))
+    rows += [("", "", None)] * (len(BENCH) - len(bench))
     if port:
         ranked = sorted(port, key=lambda p: pnl[id(p)])
         for label, p in (("Best", ranked[-1]), ("Worst", ranked[0])):
@@ -217,9 +241,8 @@ def summarize(port, nl, st):
         since = f"Since {datetime.fromisoformat(start['date']):%b %-d}"
     except (KeyError, TypeError, ValueError):
         since = "Since start"
-    # The holdings' return, not the account's: most of the million sits in cash, so the account moves
-    # +0.00% forever. This is the strategy's score, and it lines up with the SPY row under it.
-    ours = gain / cost if cost else 0.0
+    # The title is the holdings' return, not the account's: most of the million sits in cash, so the account
+    # moves +0.00% forever. This is the strategy's score, and the benchmark rows line up against it.
     return pct(ours), since, rows, verdict(ours, spy) if port else None
 
 
@@ -241,7 +264,7 @@ def hide_gateway(seen=set()):
 
 
 # Menu layout: (section header, rows in it). The first header is filled in with the start date.
-GROUPS = [("", 3), ("Positions", 2), ("Record", 1), (None, 1)]
+GROUPS = [("", 2), ("Vs the market", len(BENCH)), ("Positions", 2), ("Record", 1), (None, 1)]
 
 
 def row_view():
@@ -249,16 +272,16 @@ def row_view():
     unlike a disabled menu item, and no hover highlight, since it isn't a button."""
     from AppKit import NSColor, NSFont, NSTextField, NSView, NSViewMinXMargin, NSViewWidthSizable, NSTextAlignmentRight
     size = NSFont.menuFontOfSize_(0).pointSize()
-    v = NSView.alloc().initWithFrame_(((0, 0), (268, 22)))
+    v = NSView.alloc().initWithFrame_(((0, 0), (290, 22)))
     v.setAutoresizingMask_(NSViewWidthSizable)
     label = NSTextField.labelWithString_("")
     label.setFont_(NSFont.systemFontOfSize_(size))
     label.setTextColor_(NSColor.labelColor())
-    label.setFrame_(((14, 3), (130, 16)))
+    label.setFrame_(((14, 3), (160, 16)))
     value = NSTextField.labelWithString_("")
     value.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0.3))  # semibold
     value.setAlignment_(NSTextAlignmentRight)
-    value.setFrame_(((116, 3), (138, 16)))
+    value.setFrame_(((150, 3), (126, 16)))
     value.setAutoresizingMask_(NSViewMinXMargin)
     v.addSubview_(label)
     v.addSubview_(value)
@@ -269,9 +292,9 @@ def chart_view():
     """A row with the symbol and today's move on top and today's line under it."""
     from AppKit import NSImageView
     v, label, value = row_view()
-    v.setFrameSize_((268, 46))
+    v.setFrameSize_((290, 46))
     label.setFrameOrigin_((14, 27))
-    value.setFrameOrigin_((116, 27))
+    value.setFrameOrigin_((150, 27))
     img = NSImageView.alloc().initWithFrame_(((14, 5), (240, 20)))
     v.addSubview_(img)
     return v, label, value, img
