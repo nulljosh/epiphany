@@ -128,3 +128,14 @@ export function double7s(values, lookback = 10) {
   }
   return { label: 'Hold', reasons: uptrend ? ['Uptrend, no dip yet'] : ['Below 200 day average'] };
 }
+
+// Trend 2x, the current trading rule (WHITEPAPER section 1): if the S&P 500 (SPY) closes above its 200 day
+// average, hold SSO (2x S&P 500); otherwise hold BIL (T-bills). Pass SPY daily closes, last one is today's.
+// Returns null until there are 200 closes.
+export function trend2x(closes) {
+  if (!Array.isArray(closes) || closes.length < 200) return null;
+  const last = closes[closes.length - 1];
+  const avg = sma(closes, 200);
+  const above = last > avg;
+  return { above, side: above ? '2x S&P' : 'T-bills', symbol: above ? 'SSO' : 'BIL', other: above ? 'BIL' : 'SSO', last, avg };
+}

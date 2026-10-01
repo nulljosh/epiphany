@@ -23,3 +23,22 @@ describe('double7s', () => {
     expect(double7s(v).label).toBe('Hold');
   });
 });
+
+import { trend2x } from './indicators.js';
+
+describe('trend2x', () => {
+  it('needs 200 closes', () => {
+    expect(trend2x(climb(150))).toBeNull();
+  });
+  it('holds SSO above the 200 day average', () => {
+    const t = trend2x(climb(250));
+    expect([t.symbol, t.other, t.side, t.above]).toEqual(['SSO', 'BIL', '2x S&P', true]);
+  });
+  it('holds BIL below it', () => {
+    const t = trend2x(climb(250).reverse());
+    expect([t.symbol, t.other, t.side, t.above]).toEqual(['BIL', 'SSO', 'T-bills', false]);
+  });
+  it('a close exactly at the average is not above', () => {
+    expect(trend2x(Array(250).fill(100)).symbol).toBe('BIL');
+  });
+});

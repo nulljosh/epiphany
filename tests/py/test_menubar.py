@@ -22,7 +22,7 @@ class Base(unittest.TestCase):
         self.dir = tempfile.TemporaryDirectory()
         d = self.dir.name
         patches = [mock.patch.object(mb, k, os.path.join(d, f)) for k, f in
-                   (("BEST", "best.json"), ("MOM", "mom.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
+                   (("BEST", "best.json"), ("TREND", "trend.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
         patches.append(mock.patch.object(mb, "benchmarks", return_value={"S&P 500": 0.10, "Gold": -0.01}))
         for p in patches:
             p.start()
@@ -110,32 +110,31 @@ class Summarize(Base):
         self.assertEqual(mb.verdict(0.0060, 0.0050), "even")  # ahead by a hair too
         self.assertEqual(mb.verdict(-0.01, 0.002), "down")
 
-    def test_momentum_rows_hidden_without_state(self):
+    def test_trend_rows_hidden_without_state(self):
         rows = mb.summarize([pos("X", 1)], 1.0, {})[2]
         self.assertEqual(rows[-4:-2], [("", "", None)] * 2)
         self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
 
-    def test_momentum_rows_with_state(self):
-        mom = {"start": {"date": "2026-09-01", "sleeve": 1000, "spy": 500}, "cash": 100.0, "holdings": {"AAA": 10}, "last": {"AAA": 90.0},
-               "lastRebalance": "2026-09"}
-        self.write(mb.MOM, json.dumps(mom))
-        rows = mb.summarize([pos("AAA", 1)], 1.0, {})[2]
+    def test_trend_rows_with_state(self):
+        tr = {"start": {"date": "2026-09-01", "sleeve": 1000, "spy": 500}, "cash": 100.0, "holdings": {"SSO": 10}, "last": {"SSO": 90.0}, "side": "SSO"}
+        self.write(mb.TREND, json.dumps(tr))
+        rows = mb.summarize([pos("SSO", 1)], 1.0, {})[2]
         r = dict((l, v) for l, v, _ in rows)
-        # cash 100 + 10 shares at the held price (marketPrice missing on the fake, so the last fill 90) = 1000 -> flat, S&P +10%
-        self.assertEqual(r["Momentum  +0.00%"], "behind 10.00%")
-        self.assertIn("Next rebalance", r)
+        # cash 100 + 10 shares at the last fill 90 = 1000 -> flat, S&P +10%
+        self.assertEqual(r["Trend 2x  +0.00%"], "behind 10.00%")
+        self.assertEqual(r["Holding"], "2x S&P")
         self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
 
-    def test_momentum_state_garbage_never_raises(self):
-        for bad in ('{"start": "x"}', '{"start": {"sleeve": 0}}', "[1]", '{"start": {"sleeve": 5, "date": "bad"}, "holdings": 3}'):
-            self.write(mb.MOM, bad)
-            self.assertEqual(len(mb.summarize([], None, {})[2]), sum(n for _, n in mb.GROUPS))
+    def test_trend_side_reads_bil_as_tbills(self):
+        tr = {"start": {"date": "2026-09-01", "sleeve": 1000}, "cash": 0.0, "holdings": {"BIL": 10}, "last": {"BIL": 100.0}}
+        self.write(mb.TREND, json.dumps(tr))
+        r = dict((l, v) for l, v, _ in mb.summarize([], None, {})[2])
+        self.assertEqual(r["Holding"], "T-bills")
 
-    def test_next_rebalance(self):
-        ny = lambda *a: datetime(*a, tzinfo=mb.ZoneInfo("America/New_York"))
-        self.assertEqual(mb.next_rebalance({}, ny(2026, 10, 1, 16, 0)), "Now")
-        self.assertIn(mb.next_rebalance({"lastRebalance": "2026-10"}, ny(2026, 10, 1, 16, 0)), ("Nov 2", "Nov 1"))
-        self.assertTrue(mb.next_rebalance({"lastRebalance": "2026-10"}, ny(2026, 10, 1, 16, 0)).endswith("Nov 2"))
+    def test_trend_state_garbage_never_raises(self):
+        for bad in ('{"start": "x"}', '{"start": {"sleeve": 0}}', "[1]", '{"start": {"sleeve": 5, "date": "bad"}, "holdings": 3}'):
+            self.write(mb.TREND, bad)
+            self.assertEqual(len(mb.summarize([], None, {})[2]), sum(n for _, n in mb.GROUPS))
 
     def test_paused(self):
         self.write(mb.PAUSED, "")

@@ -26,14 +26,19 @@ override a plan. The pipeline runs signal to execution and is paper only by
 default, so the strategy proves itself on real prices before it risks real
 money; going live is a separate opt in step, never the default.
 
-### 1. The rule: Double 7s
+### 1. The rule: Trend 2x
 
-Every trade follows one rule, picked because it held up best in the tests in
-section 5. If a fund closes above its 200 day average and at its lowest close
-of the last 10 days, buy it. If we hold it and it closes at its highest close
-of the last 10 days, sell it. Nothing else decides a trade. The code is
-`double7s()` in `src/utils/indicators.js` (server) and `decide()` in
-`scripts/ibkr-run.py` (Mac).
+Every trade follows one rule, the one that cleared our bar in section 5 on years
+it was not picked on. If the S&P 500 (SPY) closes above its 200 day average,
+hold SSO, a fund that moves twice as much as the S&P 500. If it closes below,
+hold BIL, a fund of T-bills. Check once a day, and trade only when the side
+changes. Nothing else decides a trade. The code is `trend2x()` in
+`src/utils/indicators.js` (server) and `scripts/ibkr-trend.py` (Mac).
+
+Double 7s, the rule we used before, buys a fund at a 10 day low inside an
+uptrend and sells it at a 10 day high. It is still in the code (`double7s()`)
+and still runs on the Mac's 16 funds (`decide()` in `scripts/ibkr-run.py`), but
+it no longer drives Autopilot.
 
 The app still shows a Monte Carlo bull probability (500 random price paths over
 30 days) and a Buy/Hold/Sell badge from RSI, MACD and moving averages. Those
@@ -44,27 +49,31 @@ Epiphany Kelly, lost money in testing (section 5) and was retired.
 
 Each position is a fixed slice: 10% of the strategy's money on the Mac runner,
 a per-trade dollar cap on the server. Whole shares only for stocks and funds.
-At most 10 positions at once on the Mac runner. No leverage.
+At most 10 positions at once on the Double 7s runner. Trend 2x holds one fund at a
+time, and its only leverage is the 2x fund itself.
 
 ### 3. Two places it runs
 
 - **Autopilot (server, Premium).** A user links a brokerage through SnapTrade,
   turns Autopilot on and sets a per-trade cap (`server/api/broker/autopilot.js`).
-  A weekday cron (`server/api/broker/morning-run.js`) runs the rule on a short
-  watchlist and trades for every enrolled user. Paper by default: the trades are
-  simulated and logged, no order leaves. Live mode is opt in, places real orders
-  through SnapTrade, is capped at $50 a trade and 20 fills, then flips the user
-  back to paper on its own.
-- **Epiphany Live (Mac).** `scripts/ibkr-live.py` runs the rule on 16 index and
-  sector funds once a day at 3:45pm New York through a local IB Gateway, on an
-  Interactive Brokers practice account. It refuses real accounts. The menu bar
-  app (`scripts/menubar.py`) runs it, keeps it alive, and scores it against the
+  A weekday cron (`server/api/broker/morning-run.js`) reads SPY against its 200
+  day average and moves every enrolled user toward SSO or BIL. Paper by default:
+  the trades are simulated and logged, no order leaves. Live mode is opt in,
+  places real orders through SnapTrade, is capped at $50 a trade and 20 fills,
+  then flips the user back to paper on its own.
+- **Epiphany Live (Mac).** `scripts/ibkr-live.py` runs Trend 2x as a $100k
+  sleeve (`scripts/ibkr-trend.py`) once a day between 3:45 and 4pm New York,
+  so the orders fill before the close, through a local IB Gateway on an
+  Interactive Brokers practice account. It refuses real accounts and only sells
+  shares its own state file says it owns. The old rule, Double 7s on 16 index
+  and sector funds, still runs beside it on the same account from the same
+  script at 3:45pm. The menu bar app (`scripts/menubar.py`) runs both, keeps
+  them alive, and scores Trend 2x against the S&P 500 and the rest against the
   S&P 500, the 16 funds held equally, the Nasdaq, Dow, Russell 2000, TSX, gold
   and Bitcoin.
 
-  A momentum sleeve (`scripts/ibkr-momentum.py`) was built to run beside it,
-  then switched off before its first trade: the momentum lead failed the
-  survivorship test in section 5. The script still runs by hand.
+  The momentum sleeve that was once built to run beside it was dropped: the
+  momentum lead failed the survivorship test in section 5.
 
 ### 4. Guardrails
 
