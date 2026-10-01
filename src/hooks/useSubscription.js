@@ -38,7 +38,8 @@ export function useSubscription(user) {
   const tier = accountTier || subscription?.tier;
 
   return {
-    isPro: tier === 'pro' || tier === 'premium',
+    // 'starter' is what the one $1 web purchase is stored as, and it unlocks everything Premium lists.
+    isPro: tier === 'pro' || tier === 'premium' || tier === 'starter',
     isStarter: tier === 'starter',
     isFree: !tier || tier === 'free',
     subscription: accountTier ? { ...subscription, tier: accountTier } : subscription,

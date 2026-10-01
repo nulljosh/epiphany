@@ -62,6 +62,14 @@ export default async function handler(req, res) {
           createdAt: new Date().toISOString(),
         });
 
+        // Tie the purchase to the account that started checkout, so closing the tab before the redirect
+        // back still unlocks it. client_reference_id is the signed-in email (see stripe.js checkout).
+        const email = session.client_reference_id;
+        if (email) {
+          const user = await kv.getStrict(`user:${email}`);
+          if (user && !user.stripe_customer_id) await kv.setStrict(`user:${email}`, { ...user, stripe_customer_id: customerId });
+        }
+
         console.log('[WEBHOOK] One-time purchase completed:', customerId);
         break;
       }
