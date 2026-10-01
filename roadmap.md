@@ -1,5 +1,6 @@
 ## 2026-10-01 brain dump (open)
 - [ ] Edge (h), from Joshua 2026-10-01: Kronos, the open-source candlestick foundation model (github.com/shiyu-coder/Kronos, MIT, AAAI 2026, fine-tune scripts shipped). Test it as a signal with the same bar as every other edge: frozen settings, blind second half, fees in, random baseline, vs Trend 2x. Resource: x.com/quantscience_/status/2100558909735887197
+- [ ] Submit iOS 2.5.15 (build 202610011630, already uploaded 2026-10-01) the moment 2.5.14 leaves review: CAD cash header, X-Epiphany-Client header, Swift 6 screenshot-mode fix.
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
 - [x] Autopilot is back on the web (2026-10-01): the Trade tab shows the Autopilot card (paper by default, live capped $50/trade, Premium only). The manual recommend-and-review flow stays off until its math converts USD to CAD.
