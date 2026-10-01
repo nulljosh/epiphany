@@ -448,6 +448,47 @@ against 6.7. On real funds from 2006 (SSO, SPY and BIL) Trend 2x made 12.5% / 43
 the pick 9.6% / 27% and the cousin 8.9% / 36%, holding 11.3% / 55%. Verdict:
 vol targeting is a lower risk Trend 2x, not a better one. Nothing changes.
 
+**Calendar overlays.** Seasonality is the most picked-over corner of finance, so
+this test gives it no room to be tuned (`century.py --seasonal`, raw output in
+`tradingview/results-seasonal.txt`). Four windows, each fixed from the paper it
+comes from: the turn of the month (the last trading day and the first 3,
+Lakonishok and Smidt 1988), sell in May (in November to April only, Bouman and
+Jacobsen 2002), the day before a holiday (Ariel 1990, found as the day before any
+gap of two or more weekdays in the price series) and skipping Mondays. Each runs
+two ways, alone on 1x S&P against holding (12.1% / 55%), and on top of Trend 2x
+against Trend 2x (14.4% / 44%), where the window decides 2x or 1x (bills on
+Mondays) and the 200 day rule stays on. Eight variants, nothing picked among
+them, same fund model and 0.1% fee on every dollar traded, graded on 1976 to now.
+All eight fail. Alone: turn of the month 5.9% / 21%, sell in May 10.0% / 36%,
+pre-holiday 3.5% / 16%, skip Mondays 1.9% / 71%, each winning at most 2 of 6
+decades. Stacked: 8.5% / 30%, 13.8% / 41%, 8.5% / 24% and 3.6% / 74%. The closest
+is sell in May on Trend 2x: smaller drop, 4 of 6 decades, but 0.6 of a point short
+on return, and it is short before fees too (14.9% against 15.1%). The effects are
+not noise. Against 300 random calendar masks with the same days in the market and
+the same number of switches, the windows beat 90% to 100% of them in 7 of 8
+variants (sell in May on Trend 2x beat 99%, turn of the month alone beat all
+300). They are just small. A window that is in the market a fifth of the time
+gives up too much of the market's gain: turn of the month alone made 8.4% before
+fees against 12.1% for holding. And the fee bill eats what is left. Turn of the
+month switches 24 times a year (41 dollars traded per dollar held on the stack)
+and loses 2.6 points to fees alone, 4.6 on the stack, pre-holiday 1.8 and 3.5,
+and skipping Mondays switches 95 times a year and pays 10 points, which turns
+the Monday effect (12.1% before fees, the same as holding) into 1.9%. Fee
+sensitivity, 0.05% / 0.1% / 0.25% a dollar traded: turn of the month alone 7.1%
+/ 5.9% / 2.1%, sell in May alone 10.1% / 10.0% / 9.7%, sell in May on Trend 2x
+14.3% / 13.8% / 12.2% (Trend 2x itself 14.8% / 14.4% / 13.2%), skipping Mondays
+6.8% / 1.9% / -11.7%. Nothing passes at any of the three, and sell in May stays
+0.5 to 1.0 points behind. Turn of the month on Trend 2x also loses to using
+less leverage: a plain 1.19x trend, the same average size, made 11.1% / 27%
+against its 8.5% / 30%. One day late changes little for sell in May (13.1% /
+37% on the stack) and hurts the short windows (turn of the month alone 5.2%,
+pre-holiday alone 2.5%, skipping Mondays alone -1.0%). On real funds from 2006
+(SSO, SPY, BIL) holding made 11.3% / 55% and Trend 2x 12.5% / 43%, and the
+overlays made 1.3%, 7.0%, 0.8% and -0.2% alone, and 4.0%, 10.7%, 5.8% and -1.5%
+stacked. Pre-holiday is only about 9 days a year in the data, too few to carry
+a fund. Verdict: the calendar is real and small, and costs more to trade than it
+pays. Nothing changes.
+
 **Dual momentum, with a trend filter and leverage.** The century run left one
 loose end: dual momentum made 13.5% with a 27% drop, but only because of gold in
 the 1970s. So we stacked it with the trend rule (`century.py --dual`, raw output
@@ -674,6 +715,14 @@ files named above.
 | Same, on the momentum tenth | 1976 to now | 17.4% / 59% | 14.3% / 51% | fail (bigger drop) |
 | Trend 2x S&P, exposure scaled to 20% target vol on 60 days (picked of 6 on 1929 to 1975) | 1976 to now | 11.3% / 29% | Trend 2x 14.4% / 44% | fail (less return, 1 of 6 decades; also behind holding's 12.1%) |
 | Trend 2x S&P, 2x only when 20 day vol is under its 1 year median, else 1x | 1976 to now | 10.3% / 38% | 14.4% / 44% | fail (less return, 2 of 6 decades) |
+| Turn of the month, 1x S&P on the last and first 3 days, bills else, 0.1% fee | 1976 to now | 5.9% / 21% | 12.1% / 55% | fail (less return, 2 of 6 decades; beats 100% of random masks, loses 2.6 points a year to fees) |
+| Sell in May, 1x S&P November to April, bills else | 1976 to now | 10.0% / 36% | 12.1% / 55% | fail (less return, 2 of 6 decades; beats 98% of random masks) |
+| Pre-holiday, 1x S&P the day before holiday gaps, bills else | 1976 to now | 3.5% / 16% | 12.1% / 55% | fail (less return, 1 of 6 decades) |
+| Skip Mondays, 1x S&P, bills Friday close to Monday close | 1976 to now | 1.9% / 71% | 12.1% / 55% | fail (less return, bigger drop, 0 of 6 decades; 95 switches a year) |
+| Trend 2x S&P, 2x on the turn of the month, else Trend 1x | 1976 to now | 8.5% / 30% | 14.4% / 44% | fail (less return, 1 of 6 decades; a plain 1.19x trend made 11.1% / 27%) |
+| Trend 2x S&P, 2x November to April, else Trend 1x | 1976 to now | 13.8% / 41% | 14.4% / 44% | fail (0.6 point less return, smaller drop, 4 of 6 decades; behind at every fee and on real funds, 10.7% / 43% against 12.5% / 43%) |
+| Trend 2x S&P, 2x on pre-holiday days, else Trend 1x | 1976 to now | 8.5% / 24% | 14.4% / 44% | fail (less return, 1 of 6 decades) |
+| Trend 2x S&P, bills on Mondays | 1976 to now | 3.6% / 74% | 14.4% / 44% | fail (less return, bigger drop, 0 of 6 decades) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -681,7 +730,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The two vol rows after them are graded against Trend 2x and both fail on return. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The two vol rows after them are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 

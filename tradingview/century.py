@@ -19,6 +19,7 @@ in tradingview/data/.
     python3 tradingview/century.py --out     # what Trend 2x holds when out: bills vs Treasuries, gold, 2x bonds, each with its own trend filter
     python3 tradingview/century.py --voltarget # Trend 2x with exposure scaled to trailing realised vol (10/15/20% targets, 20/60 day), and a calm-market 2x/1x switch
     python3 tradingview/century.py --dual     # cross-asset dual momentum (stocks, bonds, gold vs bills) with a 10 month own-trend filter, with and without 2x on stocks
+    python3 tradingview/century.py --seasonal # calendar overlays (turn of the month, Halloween, pre-holiday, skip Mondays), alone on 1x S&P and stacked on Trend 2x
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
@@ -1986,8 +1987,205 @@ def dual():
         r_ = real_res[nm]
         print(f"  {nm:{W}} vs SPY hold {'PASS' if r_['cagr'] > sh_['cagr'] and r_['mdd'] <= sh_['mdd'] else 'FAIL'}   vs Trend 2x real {'PASS' if r_['cagr'] > t2_['cagr'] and r_['mdd'] <= t2_['mdd'] else 'FAIL'}")
 
+# ---------- calendar overlays on Trend 2x (--seasonal) ----------
+
+def cal_masks(dates):
+    """Calendar windows from the literature, nothing tuned. mask[j] is True when the position held through day j's return (close j-1 to close j) is
+    the window's. Known in advance, so no signal lag. tom: last trading day of the month and the first 3 (Lakonishok and Smidt 1988). halloween: Nov to
+    Apr (Bouman and Jacobsen 2002). preholiday: the last trading day before a gap of 2 or more weekdays in the price series (Ariel 1990).
+    nomonday: every day but Monday (hold bills Friday close to Monday close)."""
+    from datetime import date, timedelta
+    n = len(dates)
+    ds = [date.fromisoformat(d) for d in dates]
+    tom, first, pre = [False] * n, 0, [False] * n
+    for j in range(n):
+        first = first + 1 if j and dates[j][:7] == dates[j - 1][:7] else 1
+        last = j + 1 < n and dates[j + 1][:7] != dates[j][:7]
+        tom[j] = first <= 3 or last
+        if j + 1 < n:
+            gap = sum((ds[j] + timedelta(days=k)).weekday() < 5 for k in range(1, (ds[j + 1] - ds[j]).days + 1))
+            pre[j] = gap >= 2
+    return {"tom": tom, "halloween": [d[5:7] in ("11", "12", "01", "02", "03", "04") for d in dates], "preholiday": pre,
+            "nomonday": [x.weekday() != 0 for x in ds]}
+
+
+def cal_tg(s, M, kind):
+    """Exposure wanted at each close k, to be earned on day k+2 (the engine reads tg[j-2-delay]). alone: 1x S&P in the window, bills out of it, no trend.
+    filter: Trend 2x in the window and Trend 1x outside it (bills when the 200 day signal is off). skip: Trend 2x, bills when the window is off."""
+    n = len(s)
+    m = M + [False, False]
+    if kind == "alone":
+        return [1.0 if m[k + 2] else 0.0 for k in range(n)]
+    if kind == "filter":
+        return [(2.0 if m[k + 2] else 1.0) if s[k] else 0.0 for k in range(n)]
+    return [2.0 if s[k] and m[k + 2] else 0.0 for k in range(n)]
+
+
+def rand_mask(M, lo, hi, rng):
+    """Random calendar mask on days lo..hi-1: same number of days on, same on-run lengths, same number of runs as M, placed at random."""
+    on, run = [], 0
+    for j in range(lo, hi):
+        if M[j]:
+            run += 1
+        elif run:
+            on.append(run)
+            run = 0
+    if run:
+        on.append(run)
+    R, extra = len(on), (hi - lo) - sum(on) - (len(on) - 1)
+    rng.shuffle(on)
+    p = sorted(rng.sample(range(extra + R), R))
+    gaps = [p[0]] + [p[i] - p[i - 1] - 1 + 1 for i in range(1, R)] + [extra + R - 1 - p[-1]]
+    out = [False] * len(M)
+    j = lo + gaps[0]
+    for i, L in enumerate(on):
+        for t in range(L):
+            out[j + t] = True
+        j += L + gaps[i + 1]
+    return out
+
+
+def seasonal():
+    import random
+    from itertools import accumulate
+    D = lev_data()
+    dates, c, sp, bill, bond, sigs = D
+    s = sigs["200d"]
+    n = len(dates)
+    lo = next(i for i, d in enumerate(dates) if d >= "1929-01-01")
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    hi = n
+    yrs_b = (hi - split) / 252
+    F = ([max(1 + 2 * sp[j] - bill[j] - (SWAP_EXP + GAP) / 252, 1e-12) for j in range(n)], [1 + sp[j] - PLAIN_EXP / 252 for j in range(n)], [1 + bill[j] for j in range(n)])
+    masks = cal_masks(dates)
+    print(f"CALENDAR OVERLAYS. Daily, {dates[lo]} to {dates[-1]}. Context (train) {dates[lo]}..{dates[split - 1]}, blind {dates[split]}..{dates[-1]}. Nothing is tuned: every window is fixed from the paper it comes from.")
+    print("Fund model as Trend 2x: S&P with dividends, 2x fund = daily reset, T-bill financing, 0.9% expense, 0.8% a year model gap taken off; plain fund 0.09%; bills when out.")
+    print(f"Fee {FEE:.1%} on every non-cash dollar traded, so a swap between the 1x and 2x fund (sell one, buy the other) pays it twice; fee sensitivity below. 'Trend' = 2x above the S&P 200 day average")
+    print("(signal read at close j-2, traded close j-1, earns day j). Calendar windows are known ahead and need no signal lag.")
+    print("Windows: tom = last trading day of the month plus the first 3 (Lakonishok and Smidt 1988); halloween = in Nov to Apr, out May to Oct (Bouman and Jacobsen 2002);")
+    print("preholiday = the last trading day before any gap of 2 or more weekdays in the price series (Ariel 1990, an approximation of NYSE holidays); nomonday = out Friday close to Monday close.")
+    print("Stacks always keep the trend gate: filter = Trend 2x inside the window, Trend 1x outside it; skip = Trend 2x, bills when the window is off. 'alone' = 1x S&P in the window, bills out, no trend.")
+    cnt = {k: sum(v[split:]) / yrs_b for k, v in masks.items()}
+    pre24 = [dates[j] for j in range(n) if masks["preholiday"][j] and dates[j].startswith("2024")]
+    print(f"Days a year in the window, blind: " + ", ".join(f"{k} {v:.0f}" for k, v in cnt.items()) + f"   (252 trading days a year). Pre-holiday days found in 2024: {', '.join(d[5:] for d in pre24)}.\n")
+
+    hold_tr = dstats(dates, lev_sim(D, 1.0, None, "bills", "margin", lo, split), lo)
+    hold_cv = lev_sim(D, 1.0, None, "bills", "margin", split, hi)
+    hold_b, hold_dec = dstats(dates, hold_cv, split), ddecades(dates, hold_cv, split)
+    decs = sorted(hold_dec)
+    tg2 = [2.0 if x else 0.0 for x in s]
+    t2_cv, t2_i = vt_run(F, tg2, split, hi)
+    t2_b, t2_dec = dstats(dates, t2_cv, split), ddecades(dates, t2_cv, split)
+    t2_tr = dstats(dates, vt_run(F, tg2, lo, split)[0], lo)
+    chk = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, FEE, 0, GAP), split)
+    assert abs(chk["cagr"] - t2_b["cagr"]) < 2e-3 and abs(chk["mdd"] - t2_b["mdd"]) < 2e-3, (chk, t2_b)
+    print(f"Check: this engine's Trend 2x blind {t2_b['cagr']:.1%} / {t2_b['mdd']:.1%} matches lev_sim ({chk['cagr']:.1%} / {chk['mdd']:.1%}).")
+    print(f"Baselines. Standalone vs S&P hold: train {hold_tr['cagr']:.1%} / {hold_tr['mdd']:.0%}, BLIND {hold_b['cagr']:.1%} / {hold_b['mdd']:.1%} (no fees, no expense; the overlays pay the 0.09% fund expense, so they are a hair worse off).")
+    print(f"Stacked vs Trend 2x: train {t2_tr['cagr']:.1%} / {t2_tr['mdd']:.0%}, BLIND {t2_b['cagr']:.1%} / {t2_b['mdd']:.1%}.\n")
+
+    names = {"tom": "Turn of the month", "halloween": "Sell in May / Halloween", "preholiday": "Pre-holiday", "nomonday": "Skip Mondays"}
+    variants = [(f"{names[k]}, 1x alone", k, "alone", False) for k in names] + \
+               [(f"{names[k]}, stacked on Trend 2x", k, "filter" if k != "nomonday" else "skip", True) for k in names]
+    W = 46
+    res = {}
+    print("1. BLIND RESULTS, 0.1% fee. Bar: higher blind CAGR than the baseline, worst drop no bigger, more than half the decades won against it.")
+    print(f"{'overlay':{W}} | {'train CAGR':>10}{'maxDD':>6} | {'BLIND CAGR':>10}{'maxDD':>6} | {'decades':>7} | {'gross CAGR':>10} | {'in mkt':>6}{'mean e':>7} | {'switches/yr':>11}{'$ traded/yr':>12}{'fee drag':>9} | bar")
+    for lab, k, kind, stk in variants:
+        tg = cal_tg(s, masks[k], kind)
+        tr = dstats(dates, vt_run(F, tg, lo, split)[0], lo)
+        cv, (ev, trd, me, mi) = vt_run(F, tg, split, hi)
+        gross = dstats(dates, vt_run(F, tg, split, hi, fee=0.0)[0], split)
+        b, dec = dstats(dates, cv, split), ddecades(dates, cv, split)
+        base_b, base_dec = (t2_b, t2_dec) if stk else (hold_b, hold_dec)
+        won = sum(dec[d] > base_dec[d] for d in decs)
+        ok = b["cagr"] > base_b["cagr"] and b["mdd"] <= base_b["mdd"] and won > len(decs) / 2
+        why = ", ".join(x for x, f in (("less return", b["cagr"] <= base_b["cagr"]), ("bigger drop", b["mdd"] > base_b["mdd"]), (f"{won} of {len(decs)} decades", won <= len(decs) / 2)) if f)
+        res[lab] = (tg, b, dec, ok, cv, ev, trd, gross)
+        inm = sum(1 for x in tg[split - 2:hi - 2] if x > 0) / (hi - split)
+        print(f"{lab:{W}} | {tr['cagr']:>10.1%}{tr['mdd']:>6.0%} | {b['cagr']:>10.1%}{b['mdd']:>6.0%} | {won:>5}/{len(decs)} | {gross['cagr']:>10.1%} | {inm:>6.0%}{me:>7.2f} | {len(ev) / yrs_b:>11.1f}{trd / yrs_b:>12.1f}{gross['cagr'] - b['cagr']:>8.1%} | {'PASS' if ok else 'FAIL (' + why + ')'}")
+    t2_g = dstats(dates, vt_run(F, tg2, split, hi, fee=0.0)[0], split)
+    print(f"{'Trend 2x (reference)':{W}} | {t2_tr['cagr']:>10.1%}{t2_tr['mdd']:>6.0%} | {t2_b['cagr']:>10.1%}{t2_b['mdd']:>6.0%} | {'':>7} | {t2_g['cagr']:>10.1%} | {'':>6}{t2_i[2]:>7.2f} | {len(t2_i[0]) / yrs_b:>11.1f}{t2_i[1] / yrs_b:>12.1f}")
+    print(f"{'S&P hold (reference)':{W}} | {hold_tr['cagr']:>10.1%}{hold_tr['mdd']:>6.0%} | {hold_b['cagr']:>10.1%}{hold_b['mdd']:>6.0%}")
+    print("Variants tried: 8 (4 windows x alone and stacked), nothing picked among them. 'gross CAGR' = same rule at zero fee; fee drag = gross minus net, in points a year.")
+    print(f"\n{'blind decade CAGR':{W + 3}}" + "".join(f"{d:>8}" for d in decs))
+    print(f"{'S&P hold':{W + 3}}" + "".join(f"{hold_dec[d]:>8.1%}" for d in decs))
+    print(f"{'Trend 2x':{W + 3}}" + "".join(f"{t2_dec[d]:>8.1%}" for d in decs))
+    for lab, *_ in variants:
+        print(f"{lab:{W + 3}}" + "".join(f"{res[lab][2][d]:>8.1%}" for d in decs))
+
+    print("\n2. RANDOM CALENDAR MASKS: 300 random masks per overlay with the same days on, the same on-run lengths and the same number of runs (so the same switches and fee),")
+    print("   placed at random in the blind window, run through the same rule (alone, or on top of the same Trend gate), 0.1% fee.")
+    for lab, k, kind, stk in variants:
+        rng = random.Random(7)
+        out = []
+        for _ in range(300):
+            cvr = vt_run(F, cal_tg(s, rand_mask(masks[k], split, hi, rng), kind), split, hi)[0]
+            out.append((cvr[-1] ** (1 / yrs_b) - 1, max(1 - v / pk for v, pk in zip(cvr, accumulate(cvr, max)))))
+        b = res[lab][1]
+        cg, dd = sorted(r[0] for r in out), sorted(r[1] for r in out)
+        beat_c, beat_d = sum(r[0] < b["cagr"] for r in out), sum(r[1] > b["mdd"] for r in out)
+        both = sum(r[0] >= b["cagr"] and r[1] <= b["mdd"] for r in out)
+        print(f"  {lab:{W}} rule {b['cagr']:.1%} / {b['mdd']:.0%}.  random: median {cg[150]:.1%} (5th {cg[15]:.1%}, 95th {cg[285]:.1%}), median worst drop {dd[150]:.0%} (5th {dd[15]:.0%}, 95th {dd[285]:.0%}).  "
+              f"Rule return beats {beat_c / 3:.0f}% of randoms (percentile), drop smaller than {beat_d / 3:.0f}%, randoms matching both: {both} of 300")
+    print("\n   Same-leverage control for the stacks: Trend at one fixed L equal to the overlay's mean exposure while in, same engine (what you get from simply using less leverage).")
+    for lab, k, kind, stk in variants:
+        if not stk:
+            continue
+        tg = res[lab][0]
+        mi = sum(x for x in tg[split - 2:hi - 2] if x > 0) / max(1, sum(1 for x in tg[split - 2:hi - 2] if x > 0))
+        L = round(mi, 2)
+        bL = dstats(dates, vt_run(F, [L if x else 0.0 for x in s], split, hi)[0], split)
+        print(f"  {lab:{W}} mean exposure while in {L:.2f}: fixed {L}x trend {bL['cagr']:.1%} / {bL['mdd']:.1%}   (overlay {res[lab][1]['cagr']:.1%} / {res[lab][1]['mdd']:.1%})")
+
+    print("\n3. ONE DAY LATE (the 200 day signal and the calendar window both executed a day later), blind, 0.1% fee")
+    b1t = dstats(dates, vt_run(F, tg2, split, hi, delay=1)[0], split)
+    print(f"  {'Trend 2x (reference)':{W}} 1 day late {b1t['cagr']:.1%} / {b1t['mdd']:.1%}")
+    for lab, k, kind, stk in variants:
+        b1 = dstats(dates, vt_run(F, res[lab][0], split, hi, delay=1)[0], split)
+        print(f"  {lab:{W}} 1 day late {b1['cagr']:.1%} / {b1['mdd']:.1%}   (on time {res[lab][1]['cagr']:.1%} / {res[lab][1]['mdd']:.1%})")
+
+    print("\n4. FEE SENSITIVITY, blind, fee per dollar traded (a 1x/2x swap trades two dollars, so 0.05% here is a flat 0.1% per swap). Baselines pay the same fee.")
+    fees = (0.0005, 0.001, 0.0025)
+    print(f"{'':{W}}" + "".join(f"{f'fee {f:.2%}':>26}" for f in fees) + "   bar at each fee")
+    bt = [dstats(dates, vt_run(F, tg2, split, hi, fee=f)[0], split) for f in fees]
+    print(f"{'Trend 2x (baseline for stacks)':{W}}" + "".join(f"{x['cagr']:>17.1%} /{x['mdd']:>5.0%}   " for x in bt))
+    print(f"{'S&P hold (baseline for alone)':{W}}" + "".join(f"{hold_b['cagr']:>17.1%} /{hold_b['mdd']:>5.0%}   " for _ in fees))
+    for lab, k, kind, stk in variants:
+        cells, oks = [], []
+        for f, base in zip(fees, bt):
+            bf = dstats(dates, vt_run(F, res[lab][0], split, hi, fee=f)[0], split)
+            bb = base if stk else hold_b
+            cells.append(f"{bf['cagr']:>17.1%} /{bf['mdd']:>5.0%}   ")
+            oks.append("pass" if bf["cagr"] > bb["cagr"] and bf["mdd"] <= bb["mdd"] else "fail")
+        print(f"{lab:{W}}" + "".join(cells) + "   (return and drop only) " + " / ".join(oks))
+
+    print("\n5. REAL FUNDS FROM 2006 (SSO, SPY, BIL with the T-bill series before BIL began; the 200 day trend read off the real SPY), 0.1% fee")
+    r0 = next(i for i, d in enumerate(dates) if d >= "2006-07-03")
+    bil = real_rets(dates, "BIL")
+    fb0 = next(i for i, x in enumerate(bil) if x != 0.0)
+    bill_r = [bil[j] if j >= fb0 else bill[j] for j in range(n)]
+    spy, sso = real_rets(dates, "SPY"), real_rets(dates, "SSO")
+    FR = ([max(1 + x, 1e-12) for x in sso], [1 + x for x in spy], [1 + x for x in bill_r])
+    s_r = trend_of(spy)
+    sh_ = dstats(dates, vt_run(FR, [1.0] * n, r0, hi, fee=0.0)[0], r0)
+    t2r = dstats(dates, vt_run(FR, [2.0 if x else 0.0 for x in s_r], r0, hi)[0], r0)
+    print(f"  {'SPY hold':{W}} {sh_['cagr']:>6.1%} / {sh_['mdd']:.0%}")
+    print(f"  {'Trend 2x (SSO / BIL)':{W}} {t2r['cagr']:>6.1%} / {t2r['mdd']:.0%}")
+    for lab, k, kind, stk in variants:
+        rr = dstats(dates, vt_run(FR, cal_tg(s_r, masks[k], kind), r0, hi)[0], r0)
+        base, bn = (t2r, "Trend 2x real") if stk else (sh_, "SPY hold")
+        ok = rr["cagr"] > base["cagr"] and rr["mdd"] <= base["mdd"]
+        print(f"  {lab:{W}} {rr['cagr']:>6.1%} / {rr['mdd']:.0%}   vs {bn} {base['cagr']:.1%} / {base['mdd']:.0%}: {'PASS' if ok else 'FAIL'}")
+
+    print("\nVERDICT per overlay on the bar (0.1% fee, model):")
+    for lab, k, kind, stk in variants:
+        print(f"  {lab:{W}} {'PASS' if res[lab][3] else 'FAIL'}")
+
 
 if __name__ == "__main__":
+    if "--seasonal" in sys.argv:
+        seasonal()
+        sys.exit()
     if "--dual" in sys.argv:
         dual()
         sys.exit()
