@@ -37,6 +37,8 @@ final class EpiphanyAPI {
         config.httpCookieStorage = HTTPCookieStorage.shared
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
+        // Lets the server tell this paid app from a browser (see server/api/gates.js).
+        config.httpAdditionalHeaders = ["X-Epiphany-Client": "macos"]
         config.timeoutIntervalForRequest = 15
         config.timeoutIntervalForResource = 30
         session = URLSession(configuration: config)

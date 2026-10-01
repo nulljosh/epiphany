@@ -1,6 +1,6 @@
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
-- [ ] Next iOS/Mac build: send an explicit X-Epiphany-Client header (the server already accepts it) so the gate stops depending on the default User-Agent.
+- [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
 - [ ] Autopilot back on the web: Trade tab is off until the SnapTrade sync math is fixed; then drop the "web soon" notes from the Premium lists.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
 - [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.

@@ -12,6 +12,8 @@ final class WatchAPI: @unchecked Sendable {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10
         config.timeoutIntervalForResource = 15
+        // Lets the server tell this paid app from a browser (see server/api/gates.js).
+        config.httpAdditionalHeaders = ["X-Epiphany-Client": "watchos"]
         session = URLSession(configuration: config)
     }
 

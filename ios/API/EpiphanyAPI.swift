@@ -63,6 +63,8 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         config.httpCookieStorage = HTTPCookieStorage.shared
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
+        // Lets the server tell this paid app from a browser (see server/api/gates.js).
+        config.httpAdditionalHeaders = ["X-Epiphany-Client": "ios"]
         config.timeoutIntervalForRequest = 15
         config.timeoutIntervalForResource = 30
         session = URLSession(configuration: config)
