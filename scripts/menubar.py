@@ -49,14 +49,14 @@ def pct(x):
 
 
 def snapshot():
-    """(title, rows) describing the account right now. A row is (label, value, number that colors the value)."""
+    """(title, header, rows) describing the account right now. A row is (label, value, number that colors the value)."""
     ib = IB()
     try:
         ib.connect("127.0.0.1", 4002, clientId=23, timeout=8)
         port = [p for p in ib.portfolio() if p.position]
         nl = next((float(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
     except Exception:
-        return "!", [("Log in to IB Gateway", "", None)]
+        return "!", "IB Gateway", [("Log in to IB Gateway", "", None)]
     finally:
         if ib.isConnected():
             ib.disconnect()
@@ -74,15 +74,15 @@ def snapshot():
     rec = {"high": max(rec["high"], d), "low": min(rec["low"], d)}
     json.dump(rec, open(BEST, "w"))
     rows = [
-        (f"Since {start.get('date', '')[5:10] or 'start'}", f"{money(d)} CAD", d),
-        ("Positions", pct(gain / cost if cost else 0.0), gain),
+        ("Account", f"{money(d)} CAD", d),
+        ("Holdings", pct(gain / cost if cost else 0.0), gain),
         ("SPY", pct(spy), spy),
     ]
     if port:
         ranked = sorted(port, key=lambda p: p.unrealizedPNL)
         for label, p in (("Best", ranked[-1]), ("Worst", ranked[0])):
             basis = p.averageCost * p.position
-            rows.append((f"{label}  {p.contract.symbol}", f"{money(p.unrealizedPNL)}   {pct(p.unrealizedPNL / basis if basis else 0)}", p.unrealizedPNL))
+            rows.append((f"{label} \u00b7 {p.contract.symbol}", f"{money(p.unrealizedPNL)}   {pct(p.unrealizedPNL / basis if basis else 0)}", p.unrealizedPNL))
     else:
         rows += [("", "", None)] * 2  # keeps the slots lined up; empty rows are hidden
     rows += [
@@ -90,50 +90,84 @@ def snapshot():
         ("Low", money(rec["low"]), None),
         ("Next trade", next_trade(st), None),
     ]
-    return f"{d:+.0f}".replace("-", "\u2212"), rows
+    since = f"Since {datetime.fromisoformat(start['date']):%b %-d}" if start.get("date") else "Since start"
+    return f"{d:+.0f}".replace("-", "\u2212"), since, rows
 
 
-def style(item, label, value, n):
-    """Label left, value right-aligned in tabular digits, value green or red by sign. Empty rows hide."""
-    from AppKit import (NSAttributedString, NSColor, NSFont, NSFontAttributeName, NSForegroundColorAttributeName,
-                        NSMutableParagraphStyle, NSParagraphStyleAttributeName, NSTextAlignmentRight, NSTextTab)
-    mi = item._menuitem
-    mi.setHidden_(not label)
-    para = NSMutableParagraphStyle.alloc().init()
-    para.setTabStops_([NSTextTab.alloc().initWithTextAlignment_location_options_(NSTextAlignmentRight, 240, {})])
+# Menu layout: (section header, rows in it). The first header is filled in with the start date.
+GROUPS = [("", 3), ("Positions", 2), ("Record", 2), (None, 1)]
+
+
+def row_view():
+    """A non-clickable row: label left in secondary ink, value right in tabular digits. Full contrast on the glass,
+    unlike a disabled menu item, and no hover highlight, since it isn't a button."""
+    from AppKit import NSColor, NSFont, NSTextField, NSView, NSViewMinXMargin, NSViewWidthSizable, NSTextAlignmentRight
     size = NSFont.menuFontOfSize_(0).pointSize()
-    base = {NSParagraphStyleAttributeName: para, NSFontAttributeName: NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0)}
-    s = NSAttributedString.alloc().initWithString_attributes_(label, base).mutableCopy()
-    if value:
-        color = NSColor.secondaryLabelColor() if not n else NSColor.systemGreenColor() if n > 0 else NSColor.systemRedColor()
-        weight = NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0.23)  # medium
-        s.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(
-            "\t" + value, {**base, NSForegroundColorAttributeName: color, NSFontAttributeName: weight}))
-    mi.setAttributedTitle_(s)
+    v = NSView.alloc().initWithFrame_(((0, 0), (268, 22)))
+    v.setAutoresizingMask_(NSViewWidthSizable)
+    label = NSTextField.labelWithString_("")
+    label.setFont_(NSFont.systemFontOfSize_(size))
+    label.setTextColor_(NSColor.secondaryLabelColor())
+    label.setFrame_(((14, 3), (130, 16)))
+    value = NSTextField.labelWithString_("")
+    value.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0.23))  # medium
+    value.setAlignment_(NSTextAlignmentRight)
+    value.setFrame_(((116, 3), (138, 16)))
+    value.setAutoresizingMask_(NSViewMinXMargin)
+    v.addSubview_(label)
+    v.addSubview_(value)
+    return v, label, value
+
+
+def fill(item, fields, label, value, n):
+    from AppKit import NSColor
+    item.setHidden_(not label)
+    fields[0].setStringValue_(label)
+    fields[1].setStringValue_(value)
+    fields[1].setTextColor_(NSColor.labelColor() if not n else NSColor.systemGreenColor() if n > 0 else NSColor.systemRedColor())
 
 
 def main():
     if "--selftest" in sys.argv:
-        t, rows = snapshot()
-        print(t)
+        t, since, rows = snapshot()
+        print(t, "|", since)
         for label, value, _ in rows:
             print(f"  {label:<14}{value:>24}")
         return
     import rumps
+    from AppKit import NSImage, NSMenuItem
+
+    def symbol(item, name):
+        item._menuitem.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_(name, None))
+        return item
 
     class App(rumps.App):
         def __init__(self):
             super().__init__("Epiphany Live", title="..", icon=os.path.join(ROOT, "scripts", "menubar-icon.png"), template=True, quit_button=None)
-            self.rows = [rumps.MenuItem(f"row{i}") for i in range(8)]
-            r = self.rows
-            self.menu = [*r[:3], None, *r[3:5], None, *r[5:], None,
-                         rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])),
-                         rumps.MenuItem("Quit", callback=self.quit)]
-            style(r[0], "Starting...", "", None)
-            for row in r[1:]:
-                style(row, "", "", None)
             self.child = None
             self.ensure_runner()
+
+        def build(self):
+            # Built once rumps owns the NSMenu, so the native section headers and row views can go straight in.
+            menu = self._menu._menu
+            self.headers, self.rows = [], []
+            for header, n in GROUPS:
+                if self.headers or self.rows:
+                    menu.addItem_(NSMenuItem.separatorItem())
+                if header is not None:
+                    h = NSMenuItem.sectionHeaderWithTitle_(header)
+                    menu.addItem_(h)
+                    self.headers.append((h, len(self.rows), n))
+                for _ in range(n):
+                    view, *fields = row_view()
+                    item = NSMenuItem.alloc().init()
+                    item.setView_(view)
+                    menu.addItem_(item)
+                    self.rows.append((item, fields))
+            menu.addItem_(NSMenuItem.separatorItem())
+            self.menu = [symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
+                         symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
+            fill(*self.rows[0], "Starting...", "", None)
 
         def ensure_runner(self):
             # The [i] keeps pgrep from matching its own command line. Start the runner if nothing is running it.
@@ -143,10 +177,16 @@ def main():
 
         @rumps.timer(60)
         def tick(self, _):
+            if not hasattr(self, "rows"):
+                self.build()
             self.ensure_runner()
-            self.title, rows = snapshot()
-            for row, data in zip(self.rows, rows + [("", "", None)] * 8):
-                style(row, *data)
+            self.title, since, rows = snapshot()
+            rows = rows + [("", "", None)] * len(self.rows)
+            for (item, fields), data in zip(self.rows, rows):
+                fill(item, fields, *data)
+            for i, (h, first, n) in enumerate(self.headers):
+                h.setTitle_(since if i == 0 else GROUPS[i][0])
+                h.setHidden_(not any(r[0] for r in rows[first:first + n]))
 
         def quit(self, _):
             if self.child:
