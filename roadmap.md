@@ -242,3 +242,4 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 
 ## Ingested 2026-10-01
 - [ ] Refresh App Store and README screenshots, automatically every time the app changes.
+- [ ] Menu bar app for the live paper runner (rumps or SwiftBar): shows account change and SPY in the menu bar, Start and Stop, opens the log. Replaces the Desktop launcher
