@@ -66,6 +66,8 @@ We tested it on real history. Hundreds of stocks, index funds, Bitcoin, gold, oi
 
 One strategy passed. It's called Double 7s. When something that's been rising has its worst close in 10 days, buy. When it has its best close in 10 days, sell.
 
+![Double 7s replaying SPY day by day in TradingView: green arrows buy, red arrows sell](docs/double7s-spy.gif)
+
 | Tested on | Trades that made money | Average gain per trade | Trades |
 |---|---|---|---|
 | 429 S&P 500 stocks | 67% | 0.39% | 22,614 |
