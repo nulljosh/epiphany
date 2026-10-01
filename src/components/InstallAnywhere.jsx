@@ -31,7 +31,7 @@ export default function InstallAnywhere({ name, appUrl, appStoreUrl }) {
         <h2>Install it anywhere.</h2>
         <p className="xp-lead">
           {name} runs on every platform. On Windows, Linux and Android it installs straight from
-          the browser — no store, no download, no runtime. It gets a real window, its own icon,
+          the browser: no store, no download, no runtime. It gets a real window, its own icon,
           and keeps working offline.
         </p>
         <div className="xp-grid">
@@ -54,7 +54,7 @@ export default function InstallAnywhere({ name, appUrl, appStoreUrl }) {
             no browser chrome, works offline.
           </Card>
           <Card title="Linux" href={appUrl} label="Open & install">
-            Same as Windows — install the web app from Chrome or Chromium and it runs in its
+            Same as Windows: install the web app from Chrome or Chromium and it runs in its
             own window.
           </Card>
           <Card title="Web" href={appUrl} label="Open the web app">

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import './landing.css';
 import InstallAnywhere from '../components/InstallAnywhere';
 
-// Landing Page v2 — ported from the Claude Design handoff prototype
-// (epiphany-handoff.zip → Landing Page v2.html + screens.css). Demo data in
+// Landing Page v2 — ported from the design handoff prototype
+// (Landing Page v2.html + screens.css). Demo data in
 // the phone mockups and ticker is intentionally static, same as the prototype.
 
 const TICKER_DATA = [
@@ -26,9 +26,9 @@ const MKT_ROWS = [
 ];
 
 const PPL_NEWS = [
-  { title: 'OpenAI raises $40B at $300B valuation in largest startup funding round', meta: 'Reuters · 2h ago' },
-  { title: 'Altman on AGI timeline: "We\'re closer than most people think"', meta: 'Bloomberg · 1d ago' },
-  { title: 'GPT-5 launch: "The biggest model we\'ve ever shipped"', meta: 'The Verge · 3d ago' },
+  { title: 'Berkshire Hathaway discloses its latest portfolio changes', meta: 'Demo feed · 2h ago' },
+  { title: 'Buffett: "Be fearful when others are greedy"', meta: 'Demo feed · 1d ago' },
+  { title: 'Why patient investors tend to win', meta: 'Demo feed · 3d ago' },
 ];
 
 const SignalIcon = () => (
@@ -67,7 +67,7 @@ function TabBar({ active }) {
     { key: 'markets', icon: '📈', label: 'Markets' },
     { key: 'people', icon: '👤', label: 'People' },
     active === 'ai'
-      ? { key: 'ai', icon: '✦', label: 'AI', plain: true }
+      ? { key: 'ai', icon: '✦', label: 'Insights', plain: true }
       : { key: 'settings', icon: '⚙️', label: 'Settings' },
   ];
   return (
@@ -85,7 +85,7 @@ function TabBar({ active }) {
 }
 
 // ponytail: the device-frame mockups depict the native app, which follows
-// system appearance (see CLAUDE.md), so they should too — matchMedia rather
+// system appearance (see the repo notes), so they should too — matchMedia rather
 // than a CSS var because SVG fill attributes don't reliably pick up var().
 function usePrefersDark() {
   const [dark, setDark] = useState(() =>
@@ -190,7 +190,7 @@ function MapScreen() {
           {[
             { dot: '#5B9BE6', title: 'DAL 442 · 37,400 ft', sub: 'Delta Air Lines · Atlanta', when: 'now', border: true },
             { dot: '#30D158', title: 'Warriors vs Clippers', sub: 'Chase Center · 0.4 mi', when: '7:30 PM', border: true },
-            { dot: '#FF9F0A', title: 'Road closure — Mission St', sub: 'Construction · 0.2 mi', when: '2h ago', border: false },
+            { dot: '#FF9F0A', title: 'Road closure on Mission St', sub: 'Construction · 0.2 mi', when: '2h ago', border: false },
           ].map(({ dot, title, sub, when, border }) => (
             <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: border ? `1px solid rgba(${fg},0.08)` : 'none' }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />
@@ -273,8 +273,8 @@ function AiScreen() {
       <div className="ai-header">
         <div className="ai-icon">E</div>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Epiphany AI</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Powered by Claude · 10 tools</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Epiphany Insights</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Portfolio insights</div>
         </div>
       </div>
       <div className="ai-msgs">
@@ -286,7 +286,7 @@ function AiScreen() {
             <span className="tool-badge">get_news</span>
           </div>
           Markets are mixed. <strong style={{ color: '#fff' }}>NVDA leads</strong> the S&amp;P with +3.1% after strong datacenter guidance. BTC crossed $93K overnight.<br /><br />
-          Your portfolio is up <strong style={{ color: '#30D158' }}>+$1,240 (+1.0%)</strong>. Fear &amp; Greed sits at <strong style={{ color: '#FF9F0A' }}>42 (Fear)</strong> — historically a buying signal.
+          Your portfolio is up <strong style={{ color: '#30D158' }}>+$1,240 (+1.0%)</strong>. Fear &amp; Greed sits at <strong style={{ color: '#FF9F0A' }}>42 (Fear)</strong>, historically a buying signal.
         </div>
         <div className="bubble-user">Should I rebalance?</div>
         <div className="bubble-ai">
@@ -294,7 +294,7 @@ function AiScreen() {
             <span className="tool-badge">get_portfolio</span>
             <span className="tool-badge">kelly_criterion</span>
           </div>
-          Your tech is at <strong style={{ color: '#fff' }}>68%</strong> — above your 60% target. Kelly suggests trimming NVDA ~$2,400 and rotating into XAU.<br /><br />
+          Your tech is at <strong style={{ color: '#fff' }}>68%</strong>, above your 60% target. Kelly suggests trimming NVDA ~$2,400 and rotating into XAU.<br /><br />
           <span style={{ color: 'rgba(255,255,255,0.45)' }}>Want me to model the impact?</span>
         </div>
       </div>
@@ -315,20 +315,20 @@ function PeopleScreen() {
       </div>
       <div className="search-bar">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
-        <span>Sam Altman</span>
+        <span>Warren Buffett</span>
       </div>
       <div className="profile-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-          <div className="avatar">SA</div>
+          <div className="avatar">WB</div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Sam Altman</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>CEO, OpenAI · San Francisco</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Warren Buffett</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>Chairman, Berkshire Hathaway · Omaha</div>
           </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           <div className="social-chip">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-            @sama
+            X
           </div>
           <div className="social-chip">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
@@ -412,7 +412,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         <ul className="lp-nav-links">
           <li><a href="#markets">Markets</a></li>
           <li><a href="#trading">Auto trader</a></li>
-          <li><a href="#mcp">Plugin</a></li>
           <li><a href="#pricing">Pricing</a></li>
         </ul>
         <div className="lp-nav-cta">
@@ -425,7 +424,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       <header className="lp-hero" ref={heroRef}>
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
-        <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities — with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
+        <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities, with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
         <div className="lp-hero-actions">
           <a className="lp-btn-glass glass-pill" href="#markets">See what&rsquo;s inside</a>
           <a className="lp-btn-glass glass-pill" href="https://apps.apple.com/app/id6779522175">Download on the App Store</a>
@@ -460,7 +459,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             <p className="lp-showcase-sub">Net worth tracking, market quotes, and a signal on every position.</p>
             <ul className="lp-showcase-points">
               <li>Fear &amp; Greed, macro pulse, and anomaly detection</li>
-              <li>RSI, MACD, Bollinger — the full indicator suite</li>
+              <li>RSI, MACD, Bollinger, the full indicator suite</li>
               <li>Read-only brokerage sync via SnapTrade</li>
             </ul>
             <p style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', marginTop: '1.5rem' }}>Educational and informational only. Not investment advice.</p>
@@ -479,14 +478,14 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Auto trader</div>
           <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>It trades by a written rule.</h2>
           <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>
-            Autopilot buys and sells paper money for you, so a plan decides instead of fear or excitement. The rule we are rolling in is called Double 7s: in a rising market, buy when the price closes at a 10 day low, sell when it closes at a 10 day high.
+            Autopilot buys and sells paper money for you with our proprietary trading algorithm, so a plan decides instead of fear or excitement.
           </p>
         </div>
         <div className="lp-grid lp-reveal">
           <div className="lp-cell glass">
             <div className="lp-cell-tag">67%</div>
             <div className="lp-cell-name">of 22,614 stock trades made money</div>
-            <div className="lp-cell-desc">429 S&amp;P 500 stocks, graded on years the rule never saw. Fees included.</div>
+            <div className="lp-cell-desc">429 S&amp;P 500 stocks, graded on years the algorithm never saw. Fees included.</div>
           </div>
           <div className="lp-cell glass">
             <div className="lp-cell-tag">77%</div>
@@ -500,45 +499,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           </div>
         </div>
         <p className="lp-reveal" style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', textAlign: 'center', margin: '1.5rem auto 0', maxWidth: '36rem' }}>
-          It smooths the ride, it does not beat buying and holding. Paper trading only. Educational and informational only. Not investment advice.{' '}
-          <a href="https://github.com/nulljosh/epiphany/blob/main/WHITEPAPER.md#5-benchmark-does-it-work" target="_blank" rel="noreferrer">Read every result, including the failures.</a>
-        </p>
-      </section>
-
-      {/* ─── MCP PLUGIN ─── */}
-      <section className="lp-section" id="mcp" style={{ paddingTop: 0 }}>
-        <div className="lp-grid-head lp-reveal">
-          <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Claude plugin</div>
-          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Let Claude run your charts.</h2>
-          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>
-            Epiphany plugs into TradingView through MCP, the standard way to give Claude tools. Ask in plain English. Claude reads your chart, tests a strategy, and watches it play out.
-          </p>
-        </div>
-        <div className="lp-grid lp-reveal">
-          <div className="lp-cell glass">
-            <div className="lp-cell-tag">Read</div>
-            <div className="lp-cell-name">Your live chart and watchlist</div>
-            <div className="lp-cell-desc">Prices, indicators, and every symbol on your list.</div>
-          </div>
-          <div className="lp-cell glass">
-            <div className="lp-cell-tag">Test</div>
-            <div className="lp-cell-name">Years of history in seconds</div>
-            <div className="lp-cell-desc">Run the strategy on your whole watchlist, each symbol from its first day.</div>
-          </div>
-          <div className="lp-cell glass">
-            <div className="lp-cell-tag">Watch</div>
-            <div className="lp-cell-name">Replay it day by day</div>
-            <div className="lp-cell-desc">Green arrows buy, red arrows sell. See every trade as it would have happened.</div>
-          </div>
-          <div className="lp-cell glass">
-            <div className="lp-cell-tag">Trade</div>
-            <div className="lp-cell-name">Signals to the auto trader</div>
-            <div className="lp-cell-desc">A new buy or sell mark on the chart becomes a paper order. Practice mode first.</div>
-          </div>
-        </div>
-        <p className="lp-reveal" style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', textAlign: 'center', margin: '1.5rem auto 0', maxWidth: '36rem' }}>
-          Runs on your Mac with the TradingView desktop app. Open source: the Epiphany strategy, the benchmark and the bot are in the{' '}
-          <a href="https://github.com/nulljosh/epiphany/tree/main/tradingview" target="_blank" rel="noreferrer">tradingview folder</a>.
+          It smooths the ride, it does not beat buying and holding. Paper trading only. Educational and informational only. Not investment advice.
         </p>
       </section>
 
@@ -589,7 +550,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         <ul className="lp-footer-links">
           <li><a href="#markets">Markets</a></li>
           <li><a href="#trading">Auto trader</a></li>
-          <li><a href="#mcp">Plugin</a></li>
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="/terms.md" target="_blank">Terms</a></li>
           <li><a href="/privacy.md" target="_blank">Privacy</a></li>
