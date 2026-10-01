@@ -45,6 +45,19 @@ struct ContentView: View {
             }
         }
         .task {
+            if CommandLine.arguments.contains("UITEST_DEMO") {
+                // Screenshots only: sample user and portfolio, public market data, no network login.
+                appState.user = DemoData.user
+                appState.financeData = DemoData.finance
+                appState.financeDataLoaded = true
+                async let s: Void = appState.loadStocks()
+                async let c: Void = appState.loadCommodities()
+                async let k: Void = appState.loadCrypto()
+                async let fg: Void = appState.loadFearGreed()
+                _ = await (s, c, k, fg)
+                appState.portfolio = Portfolio(financeData: DemoData.finance, stocks: appState.stocks)
+                return
+            }
             if CommandLine.arguments.contains("UITEST_SNAPSHOT"),
                let email = ProcessInfo.processInfo.environment["SNAPSHOT_EMAIL"],
                let password = ProcessInfo.processInfo.environment["SNAPSHOT_PASSWORD"] {
