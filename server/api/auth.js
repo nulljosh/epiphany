@@ -5,6 +5,7 @@ import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
 import { supabaseRequest, supabaseConfigured } from './supabase.js';
 import { verifyAppleIdentityToken } from './_apple-jwt.js';
 import { sendEmail } from './_email.js';
+import { effectiveTier } from './gates.js';
 import { checkRateLimit } from './_ratelimit.js';
 
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
@@ -75,7 +76,7 @@ function publicUser(user) {
     email: user?.email,
     name: user?.name || user?.fullName || null,
     verified: user?.verified ?? false,
-    tier: user?.tier || 'free',
+    tier: effectiveTier(user?.email, user?.tier),
     // The purchase handler stores it snake_case; read both so a paid account shows as paid on any device.
     stripeCustomerId: user?.stripeCustomerId || user?.stripe_customer_id || null,
     watchlist: user?.watchlist || null,

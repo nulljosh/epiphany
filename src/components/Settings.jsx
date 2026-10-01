@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 import { fileToBase64 } from '../utils/helpers';
+import { usePremium, showPricing } from '../context/PremiumContext.js';
 
 const BASE_NAV = [
   { id: 'account', label: 'Account' },
@@ -47,6 +48,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
 
   // Read-only brokerage sync via SnapTrade. One button: registers the user, opens the
   // hosted connection portal if nothing is linked, otherwise pulls holdings + cash.
+  const isPro = usePremium();
   const [brokerSyncing, setBrokerSyncing] = useState(false);
   const [brokerSnapshot, setBrokerSnapshot] = useState(null);
   const [brokerMsg, setBrokerMsg] = useState(null);
@@ -65,6 +67,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   };
 
   const handleBrokerSync = async ({ auto = false, force = false, action = null } = {}) => {
+    // Free keeps one portfolio; linking another is Premium.
+    if (action === 'connect-additional' && !isPro) { setBrokerMsg({ error: false, text: 'Connecting another brokerage is a Premium feature. $1, once.' }); showPricing(); return; }
     setBrokerSyncing(true); if (!auto) setBrokerMsg(null);
     try {
       const res = await fetch('/api/broker/sync', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force, ...(action ? { action } : {}) }) });

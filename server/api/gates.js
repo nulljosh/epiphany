@@ -2,6 +2,11 @@ import { getKv } from './_kv.js';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
 
+// The tier the client should show: admin accounts are comped Pro, everyone else is what their record says.
+export function effectiveTier(email, tier) {
+  return isAdmin(email) ? 'pro' : (tier || 'free');
+}
+
 export function isAdmin(email) {
   return ADMIN_EMAILS.includes(email);
 }
