@@ -117,6 +117,16 @@ def next_trade(st):
     return f"{day} {t:%-I:%M %p}"
 
 
+# How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
+EVEN = (-0.001, 0.0025)
+
+
+def verdict(ours, spy):
+    """'up' if the holdings beat SPY by more than a hair, 'down' if they trail it, 'even' in between."""
+    d = ours - spy
+    return "up" if d > EVEN[1] else "down" if d < EVEN[0] else "even"
+
+
 def money(x):
     return f"{x:+,.2f}".replace("-", "\u2212")
 
@@ -126,14 +136,14 @@ def pct(x):
 
 
 def snapshot():
-    """(title, header, rows) describing the account right now. A row is (label, value, number that colors the value)."""
+    """(title, header, rows, verdict) describing the account right now. A row is (label, value, number that colors the value)."""
     ib = IB()
     try:
         ib.connect("127.0.0.1", 4002, clientId=23, timeout=8)
         port = [p for p in ib.portfolio() if p.position]
         nl = next((num(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
     except Exception:
-        return "!", "IB Gateway", [("Log in to IB Gateway", "", None)]
+        return "!", "IB Gateway", [("Log in to IB Gateway", "", None)], None
     finally:
         try:
             if ib.isConnected():
@@ -184,7 +194,8 @@ def summarize(port, nl, st):
         since = "Since start"
     # The holdings' return, not the account's: most of the million sits in cash, so the account moves
     # +0.00% forever. This is the strategy's score, and it lines up with the SPY row under it.
-    return pct(gain / cost if cost else 0.0), since, rows
+    ours = gain / cost if cost else 0.0
+    return pct(ours), since, rows, verdict(ours, spy) if port else None
 
 
 def hide_gateway(seen=set()):
@@ -266,6 +277,17 @@ def spark(closes, prev, color, w=240, h=20):
     return NSImage.imageWithSize_flipped_drawingHandler_((w, h), False, draw)
 
 
+def tinted(icon, color):
+    """The template icon filled with one color. Drawn at display time, so system colors follow the menu bar."""
+    from AppKit import NSCompositingOperationSourceAtop, NSImage, NSRectFillUsingOperation
+    def draw(rect):
+        icon.drawInRect_(rect)
+        color.set()
+        NSRectFillUsingOperation(rect, NSCompositingOperationSourceAtop)
+        return True
+    return NSImage.imageWithSize_flipped_drawingHandler_(icon.size(), False, draw)
+
+
 def ink(light, dark):
     """Deeper green and red on light glass, where the system ones wash out; the system ones on dark."""
     from AppKit import NSAppearanceNameAqua, NSAppearanceNameDarkAqua, NSColor
@@ -287,8 +309,8 @@ def fill(item, fields, label, value, n):
 
 def main():
     if "--selftest" in sys.argv:
-        t, since, rows = snapshot()
-        print(t, "|", since)
+        t, since, rows, v = snapshot()
+        print(t, "|", since, "|", v)
         for label, value, _ in rows:
             print(f"  {label:<14}{value:>24}")
         return
@@ -312,6 +334,7 @@ def main():
         def __init__(self):
             super().__init__("Epiphany Live", title="..", icon=os.path.join(ROOT, "scripts", "menubar-icon.png"), template=True, quit_button=None)
             self.child = None
+            self.plain = self._icon_nsimage
             try:
                 self.ensure_runner()
             except Exception:
@@ -396,7 +419,8 @@ def main():
                 hide_gateway()
             except Exception:
                 log(traceback.format_exc())
-            self.title, since, rows = snapshot()
+            self.title, since, rows, v = snapshot()
+            self.paint(v)
             rows = rows + [("", "", None)] * len(self.rows)
             for (item, fields), data in zip(self.rows, rows):
                 fill(item, fields, *data)
@@ -416,6 +440,14 @@ def main():
                     continue
                 fill(item, fields[:2], name, pct(ch), ch)
                 fields[2].setImage_(spark(closes, prev, UP if ch >= 0 else DOWN))
+
+        def paint(self, v):
+            """Green when we beat SPY, yellow when we're level with it, red when we trail. Plain when unknown."""
+            from AppKit import NSColor
+            color = {"up": NSColor.systemGreenColor(), "even": NSColor.systemYellowColor(), "down": NSColor.systemRedColor()}.get(v)
+            self._icon_nsimage = tinted(self.plain, color) if color else self.plain
+            if hasattr(self, "_nsapp"):
+                self._nsapp.setStatusBarIcon()
 
         def quit(self, _):
             if self.child:

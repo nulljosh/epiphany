@@ -54,7 +54,7 @@ class Json(Base):
 class Summarize(Base):
     def test_normal_account(self):
         self.write(mb.STATE, json.dumps({"start": {"netLiquidation": 1000, "spy": 500, "date": "2026-09-01"}}))
-        title, since, rows = mb.summarize([pos("AAPL", 10), pos("TSLA", -5)], 1020.0, mb.read_json(mb.STATE, {}))
+        title, since, rows, _ = mb.summarize([pos("AAPL", 10), pos("TSLA", -5)], 1020.0, mb.read_json(mb.STATE, {}))
         self.assertEqual(title, "+2.50%")
         self.assertEqual(since, "Since Sep 1")
         r = dict((l, v) for l, v, _ in rows)
@@ -67,7 +67,7 @@ class Summarize(Base):
         # NaN P&L before market data, zero cost basis, broken state, corrupt record file, no net liquidation.
         self.write(mb.BEST, "not json")
         for st in ({}, {"start": "oops"}, {"start": {"netLiquidation": "x", "spy": 0, "date": "nope"}}):
-            title, since, rows = mb.summarize([pos("X", math.nan, cost=0)], None, st)
+            title, since, rows, _ = mb.summarize([pos("X", math.nan, cost=0)], None, st)
             self.assertEqual((title, since), ("+0.00%", "Since start"))
             self.assertTrue(all(isinstance(v, str) and "nan" not in v for _, v, _ in rows))
 
@@ -87,6 +87,12 @@ class Summarize(Base):
             self.assertEqual(mb.chart_symbols(rows), [("SPY", "SPY"), ("XYZ", "XYZ \u00b7 Top gainer"), ("IWM", "IWM")])
         with mock.patch.object(mb, "top_gainer", return_value=None):
             self.assertEqual(mb.chart_symbols([]), [("SPY", "SPY")])
+
+    def test_verdict_bands(self):
+        self.assertEqual(mb.verdict(0.012, 0.005), "up")
+        self.assertEqual(mb.verdict(0.0017, 0.0020), "even")  # trailing by a hair is a tie
+        self.assertEqual(mb.verdict(0.0060, 0.0050), "even")  # ahead by a hair too
+        self.assertEqual(mb.verdict(-0.01, 0.002), "down")
 
     def test_paused(self):
         self.write(mb.PAUSED, "")
