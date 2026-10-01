@@ -411,7 +411,8 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         <a className="lp-logo" href="#" onClick={(e) => e.preventDefault()}><img src="/epiphany-icon.svg" alt="Epiphany" />Epiphany</a>
         <ul className="lp-nav-links">
           <li><a href="#markets">Markets</a></li>
-          <li><a href="#portfolio">Portfolio</a></li>
+          <li><a href="#trading">Auto trader</a></li>
+          <li><a href="#mcp">Plugin</a></li>
           <li><a href="#pricing">Pricing</a></li>
         </ul>
         <div className="lp-nav-cta">
@@ -472,67 +473,73 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         </div>
       </section>
 
-      {/* ─── SIMULATOR ─── */}
-      <section className="lp-section" id="simulator" style={{ paddingTop: 0 }}>
-        <div className="lp-showcase">
-          <div className="lp-showcase-copy lp-reveal">
-            <div className="lp-eyebrow">Simulator</div>
-            <h2 className="lp-showcase-headline">Trade without the risk.</h2>
-            <p className="lp-showcase-sub">A 60fps paper-trading simulator with Kelly-criterion sizing, edge detection, and P&amp;L tracking. Practice the read before you act on it.</p>
-            <ul className="lp-showcase-points">
-              <li>Kelly criterion position sizing</li>
-              <li>Real-time P&amp;L tracking and edge detection</li>
-              <li>High-frequency paper trading engine</li>
-            </ul>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', marginTop: '1.5rem' }}>Simulated trading only. No real funds, no real orders.</p>
-          </div>
-          <div className="lp-showcase-phone lp-reveal">
-            <Phone>
-              <img src="/screenshots/screenshot-portfolio-new.png" alt="Portfolio tab" style={{ width: '100%', height: '100%', borderRadius: 'inherit' }} />
-            </Phone>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── SCREENS GALLERY ─── */}
-      <section className="lp-section" style={{ paddingTop: 0 }}>
+      {/* ─── AUTO TRADER ─── */}
+      <section className="lp-section" id="trading" style={{ paddingTop: 0 }}>
         <div className="lp-grid-head lp-reveal">
-          <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Every screen</div>
-          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Built for daily use.</h2>
-        </div>
-        <div className="lp-screens-gallery lp-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '2rem', maxWidth: '560px', margin: '2rem auto 0' }}>
-          <div style={{ borderRadius: '1rem', overflow: 'hidden', background: '#0a0e15', aspectRatio: '9/20' }}>
-            <img src="/screenshots/screenshot-markets-new.png" alt="Markets ticker" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-          <div style={{ borderRadius: '1rem', overflow: 'hidden', background: '#0a0e15', aspectRatio: '9/20' }}>
-            <img src="/screenshots/screenshot-settings-new.png" alt="Settings" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-        </div>
-      </section>
-
-      {/* ─── AND MORE ─── */}
-      <section className="lp-section" style={{ paddingTop: 0 }}>
-        <div className="lp-grid-head lp-reveal">
-          <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>And more</div>
-          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Also inside.</h2>
+          <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Auto trader</div>
+          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>It trades by a written rule.</h2>
+          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>
+            Autopilot buys and sells paper money for you, so a plan decides instead of fear or excitement. The rule we are rolling in is called Double 7s: in a rising market, buy when the price closes at a 10 day low, sell when it closes at a 10 day high.
+          </p>
         </div>
         <div className="lp-grid lp-reveal">
           <div className="lp-cell glass">
-            <div className="lp-cell-tag">Finances</div>
-            <div className="lp-cell-name">Your whole financial life</div>
-            <div className="lp-cell-desc">Budgets, spending analysis, and long-term TFSA/RDSP forecasts.</div>
+            <div className="lp-cell-tag">67%</div>
+            <div className="lp-cell-name">of 22,614 stock trades made money</div>
+            <div className="lp-cell-desc">429 S&amp;P 500 stocks, graded on years the rule never saw. Fees included.</div>
           </div>
           <div className="lp-cell glass">
-            <div className="lp-cell-tag">Alerts</div>
-            <div className="lp-cell-name">Smart trading signals</div>
-            <div className="lp-cell-desc">Real-time notifications for price movements, anomalies, and market events.</div>
+            <div className="lp-cell-tag">77%</div>
+            <div className="lp-cell-name">on the S&amp;P 500 itself</div>
+            <div className="lp-cell-desc">Tested across 49 years it never saw, with a smaller worst drop than buy and hold.</div>
           </div>
           <div className="lp-cell glass">
-            <div className="lp-cell-tag">Analytics</div>
-            <div className="lp-cell-name">Deep portfolio insights</div>
-            <div className="lp-cell-desc">Risk analysis, correlation matrices, and historical performance tracking.</div>
+            <div className="lp-cell-tag">73%</div>
+            <div className="lp-cell-name">on index funds when fear is high</div>
+            <div className="lp-cell-desc">Only buying when the VIX spikes made it a little better.</div>
           </div>
         </div>
+        <p className="lp-reveal" style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', textAlign: 'center', margin: '1.5rem auto 0', maxWidth: '36rem' }}>
+          It smooths the ride, it does not beat buying and holding. Paper trading only. Educational and informational only. Not investment advice.{' '}
+          <a href="https://github.com/nulljosh/epiphany/blob/main/WHITEPAPER.md#5-benchmark-does-it-work" target="_blank" rel="noreferrer">Read every result, including the failures.</a>
+        </p>
+      </section>
+
+      {/* ─── MCP PLUGIN ─── */}
+      <section className="lp-section" id="mcp" style={{ paddingTop: 0 }}>
+        <div className="lp-grid-head lp-reveal">
+          <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Claude plugin</div>
+          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Let Claude run your charts.</h2>
+          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>
+            Epiphany plugs into TradingView through MCP, the standard way to give Claude tools. Ask in plain English. Claude reads your chart, tests a strategy, and watches it play out.
+          </p>
+        </div>
+        <div className="lp-grid lp-reveal">
+          <div className="lp-cell glass">
+            <div className="lp-cell-tag">Read</div>
+            <div className="lp-cell-name">Your live chart and watchlist</div>
+            <div className="lp-cell-desc">Prices, indicators, and every symbol on your list.</div>
+          </div>
+          <div className="lp-cell glass">
+            <div className="lp-cell-tag">Test</div>
+            <div className="lp-cell-name">Years of history in seconds</div>
+            <div className="lp-cell-desc">Run the strategy on your whole watchlist, each symbol from its first day.</div>
+          </div>
+          <div className="lp-cell glass">
+            <div className="lp-cell-tag">Watch</div>
+            <div className="lp-cell-name">Replay it day by day</div>
+            <div className="lp-cell-desc">Green arrows buy, red arrows sell. See every trade as it would have happened.</div>
+          </div>
+          <div className="lp-cell glass">
+            <div className="lp-cell-tag">Trade</div>
+            <div className="lp-cell-name">Signals to the auto trader</div>
+            <div className="lp-cell-desc">A new buy or sell mark on the chart becomes a paper order. Practice mode first.</div>
+          </div>
+        </div>
+        <p className="lp-reveal" style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', textAlign: 'center', margin: '1.5rem auto 0', maxWidth: '36rem' }}>
+          Runs on your Mac with the TradingView desktop app. Open source: the Epiphany strategy, the benchmark and the bot are in the{' '}
+          <a href="https://github.com/nulljosh/epiphany/tree/main/tradingview" target="_blank" rel="noreferrer">tradingview folder</a>.
+        </p>
       </section>
 
       {/* ─── PRICING ─── */}
@@ -581,7 +588,8 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         <div className="lp-footer-logo"><img src="/epiphany-icon.svg" alt="" />Epiphany</div>
         <ul className="lp-footer-links">
           <li><a href="#markets">Markets</a></li>
-          <li><a href="#simulator">Simulator</a></li>
+          <li><a href="#trading">Auto trader</a></li>
+          <li><a href="#mcp">Plugin</a></li>
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="/terms.md" target="_blank">Terms</a></li>
           <li><a href="/privacy.md" target="_blank">Privacy</a></li>
