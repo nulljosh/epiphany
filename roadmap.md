@@ -237,13 +237,10 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
 - [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
-- [x] App Store price set to $1.00 upfront on 2026-10-01 (Joshua ran it, automation is blocked on price changes), landing copy updated
 - [ ] Drop the in-app Stripe unlock path now that the app is a paid download, and decide what to do about the web paywall gate
 
 ## Ingested 2026-10-01
 - [ ] Refresh App Store and README screenshots, automatically every time the app changes.
-- [x] Menu bar app (Epiphany Live, scripts/menubar.py) Liquid Glass with section headers, best/worst position, account change vs SPY, record high/low, Open Log, Cmd-Q
-- [x] Menu bar app: Pause/Resume Trading toggle, survives restarts
 - [ ] Sample-data mode for screenshots (launch argument, a wealthy demo portfolio) so fastlane can refresh iPhone, Mac and Watch shots without a login; then refresh README and landing screenshots
 - [ ] Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
 - [ ] Screenshot run: UITEST_DEMO mode is in (ios/Models/DemoData.swift), the app compiles, but `fastlane screenshots` failed at SwiftCompile of ContentView.swift under its own derived data and produced no images. Reproduce with the lane's xcodebuild line, fix, rerun, then refresh README and landing shots
