@@ -640,6 +640,39 @@ versions made 8.0% and 8.7%, and QUAL plus VTV made 12.6% / 35.4%. Verdict: one
 model pass against holding, no real fund pass, so the paper Quality sleeve stays
 plain QUAL with no filter and no momentum blend.
 
+**The low volatility anomaly.** The old complaint is that calm stocks earn as
+much as wild ones, so per unit of risk they pay too well (Ang and others, 2006;
+Baker, Bradley and Wurgler, 2011; Frazzini and Pedersen's betting against beta,
+2014). We tried it on Ken French's tenths of all US stocks, value weighted, long
+only, monthly: the calmest tenth by 60 day variance and the lowest tenth by beta
+(`century.py --lowvol`, raw output in `tradingview/results-lowvol.txt`). Both
+files start in 1963, so the unseen half is 1976 to now again and a tuning half
+would be only 12 and a half years. Nothing is tuned: every setting is fixed, with
+the usual 30% a year turnover at 0.1% a side. The variance tenth re-sorts every
+month, so its real turnover is higher; at 100% a year it loses about 0.2 point
+more. Held at 1x, variance made 11.5% with a 34% worst drop and beta 12.2% with
+39%, against the market's 12.3% and 50%. Smaller drops, a little less return, 3 of
+6 decades each, so both fail on return. The case for them is real: 2022 was -0.7%
+and -0.8% against -19.9%, and return per unit of risk is better (Sharpe 0.65 and
+0.69 against 0.56). They also leaned on the long fall in rates, and in the 2020s
+made 8.8% and 10.1% against the market's 15.3%. With the market 10 month filter
+(bills when out) they fall to 9.9% / 29% and 10.5% / 21%, 1 of 6 decades, and beat
+only 64% and 65% of 300 random in and out schedules. Acting a month late made them
+better, not worse (10.5% and 11.2%), which says the timing is noise. The papers'
+own fix is leverage, so we ran 1.5x on margin at bills plus 1% (fixed from
+Frazzini and Pedersen's logic, not tuned): variance 14.1% / 49% and beta 15.2% /
+54%. The variance row beats the market on return with a drop just inside it but
+wins only 3 of 6 decades; the beta row wins 4 of 6 and falls 54%. Both fail:
+leverage buys back the return and gives the smaller drop away again. On real funds
+from October 2011 (USMV and SPLV against SPY, BIL as bills) USMV made 11.5% / 33.1%
+against SPY's 15.0% / 33.7% and SPLV 9.8% / 36.3%, each winning 5 of 16 years. USMV
+with the SPY filter made 7.5% / 21%, USMV at 1.5x made 15.7% / 47.4% (0.7 point
+ahead of SPY with a drop 14 points bigger) and SPLV at 1.5x made 12.9% / 51.8%. None
+of the five real fund rows passes. Verdict: six fails on the model, five on real
+funds, so no sleeve. USMV at 1x gives up 3.5 points a year for a worst drop that was
+the same. The 1.5x version needs margin, which the paper account can do and
+Autopilot cannot, and it only ties SPY on return while falling much further.
+
 **A 24/7 sleeve: trend on crypto.** Joshua wants something that runs around the
 clock, and crypto is the obvious candidate, so we ran the same kind of test on
 Bitcoin (`century.py --crypto`, raw output in `tradingview/results-crypto.txt`).
@@ -752,6 +785,12 @@ files named above.
 | Trend 2x S&P, 2x November to April, else Trend 1x | 1976 to now | 13.8% / 41% | 14.4% / 44% | fail (0.6 point less return, smaller drop, 4 of 6 decades; behind at every fee and on real funds, 10.7% / 43% against 12.5% / 43%) |
 | Trend 2x S&P, 2x on pre-holiday days, else Trend 1x | 1976 to now | 8.5% / 24% | 14.4% / 44% | fail (less return, 1 of 6 decades) |
 | Trend 2x S&P, bills on Mondays | 1976 to now | 3.6% / 74% | 14.4% / 44% | fail (less return, bigger drop, 0 of 6 decades) |
+| Low variance tenth, 1x | 1976 to now | 11.5% / 34% | 12.3% / 50% | fail (0.9 point less return, 3 of 6 decades; Sharpe 0.65 against 0.56, 2022 -0.7%; real USMV from 2011 11.5% / 33% against SPY 15.0% / 34%) |
+| Low beta tenth, 1x | 1976 to now | 12.2% / 39% | 12.3% / 50% | fail (0.1 point less return, 3 of 6 decades; 2022 -0.8%; no low beta fund) |
+| Low variance tenth only while the market is above its 10 month average, bills else, 1x | 1976 to now | 9.9% / 29% | 12.3% / 50% | fail (2.4 points less return, 1 of 6 decades; beats 64% of random schedules, better a month late; real USMV with the SPY filter 7.5% / 21% against SPY 15.0% / 34%) |
+| Low beta tenth with the same filter, 1x | 1976 to now | 10.5% / 21% | 12.3% / 50% | fail (1.9 points less return, 1 of 6 decades; beats 65% of random schedules, better a month late) |
+| Low variance tenth at 1.5x, margin at bills + 1% | 1976 to now | 14.1% / 49% | 12.3% / 50% | fail (3 of 6 decades; real USMV at 1.5x 15.7% / 47% against SPY 15.0% / 34%, SPLV at 1.5x 12.9% / 52%) |
+| Low beta tenth at 1.5x, margin at bills + 1% | 1976 to now | 15.2% / 54% | 12.3% / 50% | fail (bigger drop; 4 of 6 decades) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -759,7 +798,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 
