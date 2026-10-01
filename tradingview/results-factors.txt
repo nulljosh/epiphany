@@ -48,3 +48,16 @@ TRADABILITY (names from memory, not checked against a live listing)
   Investment (lowest asset growth tenth)   no clean fund; nearest are QUAL or the Dimensional and Avantis profitability tilts. 2x: no 2x fund; 2x only by margin.
   Momentum (top tenth, prior 12-2)         MTUM, PDP. 2x: no 2x fund; 2x only by margin.
   Market: SPY, and SSO is the 2x fund Trend 2x already uses.
+
+REAL FUND CHECK, 2026-10-01. QUAL (iShares MSCI USA Quality Factor) against SPY, Yahoo daily adjusted close (dividends in),
+2013-07-18 (QUAL's first day) to 2026-10-01, 13.2 years. Worst drop is peak to trough on daily closes, so it reads harsher than the monthly French rows.
+                                           CAGR / worst drop
+  QUAL                                     13.6% / 34%
+  SPY                                      14.0% / 34%
+  Calendar years won by QUAL: 6 of 14 (2013 from July and 2026 to date are partial)
+    won:  2013 +13.5 vs +10.5, 2015 +5.4 vs +1.2, 2017 +22.3 vs +21.7, 2019 +33.9 vs +31.2, 2023 +30.9 vs +26.2, 2026 +13.2 vs +12.9
+    lost: 2014 +11.3 vs +13.5, 2016 +8.7 vs +12.0, 2018 -5.7 vs -4.6, 2020 +17.0 vs +18.3, 2021 +26.9 vs +28.7, 2022 -20.5 vs -18.2, 2024 +22.3 vs +24.9, 2025 +12.7 vs +17.7
+  Read: the real fund trails SPY by 0.4 point a year and ties it on the worst drop (34% both, 2020). The French tenth read +1.3 points and a 9 point
+  smaller drop (13.6%/41% against 12.3%/50%), so most of that edge did not make it into the fund. QUAL holds the whole market tilted toward
+  quality, not the top tenth, and it pays a 0.15% fee. Stop rule was more than 1 point a year behind with a bigger drop: not met (0.4 behind, same drop),
+  so the Quality paper sleeve ships (scripts/ibkr-quality.py), as a test of a tilt that is close to a tie, not as a proven edge.

@@ -22,7 +22,7 @@ class Base(unittest.TestCase):
         self.dir = tempfile.TemporaryDirectory()
         d = self.dir.name
         patches = [mock.patch.object(mb, k, os.path.join(d, f)) for k, f in
-                   (("BEST", "best.json"), ("TREND", "trend.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
+                   (("BEST", "best.json"), ("TREND", "trend.json"), ("QUALITY", "quality.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
         patches.append(mock.patch.object(mb, "benchmarks", return_value={"S&P 500": 0.10, "Gold": -0.01}))
         for p in patches:
             p.start()
@@ -77,7 +77,7 @@ class Summarize(Base):
     def test_benchmark_failure_hides_rows(self):
         with mock.patch.object(mb, "benchmarks", side_effect=OSError):
             rows = mb.summarize([pos("X", 1)], 1.0, {"start": {"date": "2026-09-01"}})[2]
-        self.assertEqual(len(rows), 2 + len(mb.BENCH) + 6)
+        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
         self.assertFalse(any("S&P" in l for l, _, _ in rows))
 
     def test_benchmarks_parse_spark(self):
@@ -112,8 +112,35 @@ class Summarize(Base):
 
     def test_trend_rows_hidden_without_state(self):
         rows = mb.summarize([pos("X", 1)], 1.0, {})[2]
-        self.assertEqual(rows[-4:-2], [("", "", None)] * 2)
+        self.assertEqual(rows[-5:-3], [("", "", None)] * 2)
         self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
+
+    def test_quality_row_hidden_without_state(self):
+        rows = mb.summarize([pos("X", 1)], 1.0, {})[2]
+        self.assertEqual(rows[-3], ("", "", None))
+        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
+        self.assertEqual(mb.GROUPS[-3], ("Quality", 1))
+
+    def test_quality_row_with_state(self):
+        q = {"start": {"date": "2026-09-01", "sleeve": 1000, "spy": 500}, "cash": 50.0, "holdings": {"QUAL": 5}, "last": {"QUAL": 190.0}}
+        self.write(mb.QUALITY, json.dumps(q))
+        rows = mb.summarize([], None, {})[2]
+        # cash 50 + 5 shares at the last fill 190 = 1000 -> flat, S&P +10%
+        self.assertEqual(rows[-3], ("Quality  +0.00%", "behind 10.00%", -0.10))
+        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
+
+    def test_quality_row_uses_live_price_and_can_lead(self):
+        q = {"start": {"date": "2026-09-01", "sleeve": 1000}, "cash": 0.0, "holdings": {"QUAL": 5}, "last": {"QUAL": 200.0}}
+        self.write(mb.QUALITY, json.dumps(q))
+        row = mb.quality_rows([NS(contract=NS(symbol="QUAL"), marketPrice=250.0)], mb.read_json(mb.QUALITY, {}))[0]
+        self.assertEqual(row[:2], ("Quality  +25.00%", "ahead 15.00%"))
+
+    def test_quality_state_garbage_never_raises(self):
+        for bad in ('{"start": "x"}', '{"start": {"sleeve": 0}}', "[1]", '{"start": {"sleeve": 5, "date": "bad"}, "holdings": 3}'):
+            self.write(mb.QUALITY, bad)
+            rows = mb.summarize([], None, {})[2]
+            self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
+            self.assertEqual(rows[-3], ("", "", None))
 
     def test_trend_rows_with_state(self):
         tr = {"start": {"date": "2026-09-01", "sleeve": 1000, "spy": 500}, "cash": 100.0, "holdings": {"SSO": 10}, "last": {"SSO": 90.0}, "side": "SSO"}

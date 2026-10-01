@@ -19,6 +19,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 TREND = os.path.join(ROOT, "tradingview", "ibkr-trend.json")
+QUALITY = os.path.join(ROOT, "tradingview", "ibkr-quality.json")
 BEST = os.path.join(ROOT, "tradingview", "ibkr-best.json")
 # A file, not a flag in memory, so a pause survives a restart instead of quietly trading again.
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
@@ -161,30 +162,48 @@ def next_trade(st):
     return f"{day} {t:%-I:%M %p}"
 
 
-def trend_rows(port, mst):
-    """Two rows for the Trend 2x sleeve: its return since its start against the S&P 500, and the side it holds now.
-    No state file, or one that is not usable yet, gives two empty rows (hidden)."""
-    empty = [("", "", None)] * 2
+def sleeve_score(port, mst):
+    """(return since the sleeve's start, lead over the S&P 500 or None) for one sleeve's state file, or None when the
+    file is missing or not usable yet. Value is its cash plus its shares at the live price, else the last fill."""
     try:
         start = mst["start"]
         base = num(start["sleeve"])
         if not base:
-            return empty
+            return None
         px = {p.contract.symbol: num(getattr(p, "marketPrice", 0)) for p in port}
         last = mst.get("last", {}) if isinstance(mst.get("last"), dict) else {}
         value = num(mst.get("cash")) + sum(num(q) * (px.get(s) or num(last.get(s))) for s, q in mst.get("holdings", {}).items())
         ret = value / base - 1
     except (KeyError, TypeError, AttributeError):
-        return empty
+        return None
     try:
         spy = benchmarks(datetime.fromisoformat(start["date"])).get("S&P 500")
     except Exception:
         spy = None
-    lead = ret - spy if spy is not None else None
+    return ret, None if spy is None else ret - spy
+
+
+def trend_rows(port, mst):
+    """Two rows for the Trend 2x sleeve: its return since its start against the S&P 500, and the side it holds now.
+    No state file, or one that is not usable yet, gives two empty rows (hidden)."""
+    score = sleeve_score(port, mst)
+    if score is None:
+        return [("", "", None)] * 2
+    ret, lead = score
     held = mst.get("holdings") if isinstance(mst.get("holdings"), dict) else {}
     side = "2x S&P" if held.get("SSO") else "T-bills" if held.get("BIL") else "Cash"
     return [(f"Trend 2x  {pct(ret)}", "" if lead is None else f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}", ret if lead is None else lead),
             ("Holding", side, None)]
+
+
+def quality_rows(port, qst):
+    """One row for the Quality sleeve (QUAL, bought once): its return since the buy against the S&P 500.
+    No state file, or one that is not usable yet, gives one empty row (hidden)."""
+    score = sleeve_score(port, qst)
+    if score is None:
+        return [("", "", None)]
+    ret, lead = score
+    return [(f"Quality  {pct(ret)}", "" if lead is None else f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}", ret if lead is None else lead)]
 
 
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
@@ -261,6 +280,7 @@ def summarize(port, nl, st):
     else:
         rows += [("", "", None)] * 2  # keeps the slots lined up; empty rows are hidden
     rows += trend_rows(port, read_json(TREND, {}))
+    rows += quality_rows(port, read_json(QUALITY, {}))
     rows += [
         ("High / Low", f"{rec['high']:+,.0f} / {rec['low']:+,.0f}".replace("-", "\u2212"), None),
         ("Next trade", "Paused" if os.path.exists(PAUSED) else next_trade(st), None),
@@ -292,7 +312,7 @@ def hide_gateway(seen=set()):
 
 
 # Menu layout: (section header, rows in it). The first header is filled in with the start date.
-GROUPS = [("", 2), ("Vs the market", len(BENCH)), ("Positions", 2), ("Trend 2x", 2), ("Record", 1), (None, 1)]
+GROUPS = [("", 2), ("Vs the market", len(BENCH)), ("Positions", 2), ("Trend 2x", 2), ("Quality", 1), ("Record", 1), (None, 1)]
 
 
 def row_view():
