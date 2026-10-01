@@ -23,6 +23,7 @@ in tradingview/data/.
     python3 tradingview/century.py --dual     # cross-asset dual momentum (stocks, bonds, gold vs bills) with a 10 month own-trend filter, with and without 2x on stocks
     python3 tradingview/century.py --seasonal # calendar overlays (turn of the month, Halloween, pre-holiday, skip Mondays), alone on 1x S&P and stacked on Trend 2x
     python3 tradingview/century.py --sectors  # top 3 of 10 French industries (12 and 6 month momentum) while the market is above its 10 month average, 1x and 2x on margin, graded blind, then the 9 real SPDR sectors
+    python3 tradingview/century.py --assets   # 1x trend (10 month / 200 day average, else bills) on its own for Treasuries, gold, commodities, oil, silver, copper, century series then real funds, plus an 80/20 blend with Trend 2x
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
@@ -2922,6 +2923,293 @@ def sectors_real():
         print(f"  {lab:26} {'PASS' if out[lab][2] else 'FAIL'}")
 
 
+# ---------- single-asset trend following on non-stock assets (--assets) ----------
+
+AS_SMA_M, AS_DRAWS = 10, 300  # Faber (2007): 10 month average on the monthly century series, 200 day on daily funds. Nothing is tuned.
+AS_FUNDS = [("IEF (10y Treasuries)", "IEF"), ("TLT (20y Treasuries)", "TLT"), ("GLD (gold)", "GLD"), ("DBC (broad commodities)", "DBC"),
+            ("GSG (broad commodities)", "GSG"), ("USO (crude oil)", "USO"), ("SLV (silver)", "SLV"), ("CPER (copper)", "CPER")]
+AS_FUTS = [("S&P GSCI index + bills", "^SPGSCI"), ("Crude front month + bills", "CL=F"), ("Silver front month + bills", "SI=F"), ("Copper front month + bills", "HG=F")]
+
+
+def as_cash():
+    """Monthly T-bill return: FRED TB3MS from 1934, Ken French's RF before."""
+    tb = {r[0][:7]: float(r[1]) / 100 / 12 for r in rows("tb3ms.csv") if r[1] not in ("", ".")}
+    rf = {m: v[3] for m, v in french("F-F_Research_Data_Factors_CSV.zip").items()}
+    return {m: tb.get(m, rf.get(m, 0.0)) for m in set(tb) | set(rf)}
+
+
+def as_monthly_series():
+    """{name: {month: return}} after fund expenses (IEF/TLT 0.15%, GLD 0.40%): 10y and 20y Treasuries priced off GS10 yields, gold from the century file."""
+    sh = {r[0][:7]: float(r[5]) for r in rows("shiller.csv")}
+    y = {k: v / 100 for k, v in sh.items() if v > 0 and k < "1953-04"}
+    y.update({r[0][:7]: float(r[1]) / 100 for r in rows("gs10.csv") if r[1] not in ("", ".")})
+    yk = sorted(y)
+    gm = to_rets({r[0][:7]: float(r[1]) for r in rows("gold.csv")})
+    cut = lambda d, e: {m: v - e / 12 for m, v in d.items() if m >= "1926-01"}
+    return {"10y Treasuries": cut({yk[i]: bond_ret(y[yk[i - 1]], y[yk[i]]) for i in range(1, len(yk))}, OUT_EXP["ief"]),
+            "20y Treasuries": cut({yk[i]: bond_ret(y[yk[i - 1]], y[yk[i]], 20.0) for i in range(1, len(yk))}, OUT_EXP["tlt"]),
+            "Gold": cut(gm, OUT_EXP["gold"])}
+
+
+def am_sig(ms, r):
+    """Month-end trend signal: the asset's total return index closes above its 10 month average (this month included)."""
+    lv, out = [], []
+    for m in ms:
+        lv.append((lv[-1] if lv else 1.0) * (1 + r[m]))
+        out.append(len(lv) >= AS_SMA_M and lv[-1] > sum(lv[-AS_SMA_M:]) / AS_SMA_M)
+    return out
+
+
+def am_sim(ms, r, cash, sg, lo, hi, mode="trend", fee=FEE, delay=0, mask=None):
+    """Month t earns the asset if the signal at the end of month t-1-delay said so, else bills. Fee on every switch. mode hold/bills ignore the signal."""
+    eq, pos, cv = 1.0, mode == "hold", [1.0]
+    for t in range(lo, hi):
+        want = {"hold": True, "bills": False}.get(mode) if mode != "trend" else (mask[t - lo] if mask is not None else sg[t - 1 - delay])
+        if want != pos:
+            eq *= 1 - fee
+            pos = want
+        eq *= 1 + (r[ms[t]] if pos else cash[ms[t]])
+        cv.append(eq)
+    return cv
+
+
+def as_year(dates, cv, lo, yr):
+    """Return and worst drop over one calendar year of a curve whose cv[0] is the close before dates[lo]; None if the curve does not cover it."""
+    ks = [k for k in range(1, len(cv)) if dates[lo + k - 1][:4] == yr]
+    if not ks or ks[0] - 1 < 0 or dates[lo + ks[0] - 1][5:7] != "01" and dates[lo + ks[0] - 1][:4] == dates[lo][:4]:
+        return None
+    seg = cv[ks[0] - 1:ks[-1] + 1]
+    pk, mdd = seg[0], 0.0
+    for v in seg:
+        pk = max(pk, v)
+        mdd = max(mdd, 1 - v / pk)
+    return seg[-1] / seg[0] - 1, mdd
+
+
+def as_eval(name, dates, r, bill, sg, lo, hi, daily_=True, ms=None):
+    """All the numbers for one asset on one window. Daily: dates are days, r/bill daily lists, sg per-day trend, signal read at close j-2. Monthly: dates = ms, r/bill dicts, sg per month."""
+    import math
+    if daily_:
+        sim = lambda mode="trend", **kw: as_dsim(r, bill, sg, lo, hi, mode, **kw)
+        st = lambda cv: dstats(dates, cv, lo)
+        decf = lambda cv: ddecades(dates, cv, lo)
+        yrs = (datetime.fromisoformat(dates[hi - 1]) - datetime.fromisoformat(dates[lo - 1])).days / 365.25
+        pos = [sg[j - 2] for j in range(lo, hi)]
+        gin, gout = [math.log(1 + r[j]) for j in range(lo, hi)], [math.log(1 + bill[j]) for j in range(lo, hi)]
+        lateN = 21
+    else:
+        sim = lambda mode="trend", **kw: am_sim(ms, r, bill, sg, lo, hi, mode, **kw)
+        st = stats
+        decf = lambda cv: decade_rows(ms[:hi], cv, lo)
+        yrs = (hi - lo) / 12
+        pos = [sg[t - 1] for t in range(lo, hi)]
+        gin, gout = [math.log(1 + r[ms[t]]) for t in range(lo, hi)], [math.log(1 + bill[ms[t]]) for t in range(lo, hi)]
+        lateN = 1
+    tr, hd, bl = sim(), sim("hold"), sim("bills")
+    s_t, s_h, s_b = st(tr), st(hd), st(bl)
+    d_t, d_h = decf(tr), decf(hd)
+    won = sum(d_t[d] > d_h[d] for d in d_h)
+    ct, rs, k = rand_base(pos, gin, gout, yrs, AS_DRAWS, 7, FEE)
+    beat = sum(ct[0] > x[0] for x in rs) / len(rs)
+    both = sum(x[0] >= ct[0] and x[1] <= ct[1] for x in rs)
+    late = st(sim(delay=lateN))
+    late1 = st(sim(delay=1)) if daily_ else None
+    out = {"name": name, "t": s_t, "h": s_h, "b": s_b, "won": won, "nd": len(d_h), "dec_t": d_t, "dec_h": d_h, "beat": beat, "both": both,
+           "late": late, "late1": late1, "in": sum(pos) / len(pos), "sw": k / yrs, "tr": tr, "hd": hd, "yrs": yrs, "k": k}
+    out["pass"] = s_t["cagr"] > s_h["cagr"] and s_t["mdd"] <= s_h["mdd"] and won > len(d_h) / 2
+    if daily_:
+        yt, yh = yearly(dates, tr, lo), yearly(dates, hd, lo)
+        out["yw"], out["yn"] = sum(yt[y] > yh[y] for y in yh), len(yh)
+        out["y08"], out["y22"] = (as_year(dates, tr, lo, "2008"), as_year(dates, hd, lo, "2008")), (as_year(dates, tr, lo, "2022"), as_year(dates, hd, lo, "2022"))
+    else:
+        for yr in ("08", "22"):
+            def yret(cv, yr=yr):
+                ix = [t - lo for t in range(lo, hi) if ms[t][:4] == "20" + yr]
+                if len(ix) < 12:
+                    return None
+                sg_ = cv[ix[0]:ix[-1] + 2]
+                pk, mdd = sg_[0], 0.0
+                for v in sg_:
+                    pk = max(pk, v)
+                    mdd = max(mdd, 1 - v / pk)
+                return sg_[-1] / sg_[0] - 1, mdd
+            out["y" + yr] = (yret(tr), yret(hd))
+    return out
+
+
+def as_dsim(r, bill, sg, lo, hi, mode="trend", fee=FEE, delay=0):
+    """Daily 1x trend sleeve: in the asset while it closed above its 200 day average two closes ago, else bills; fee on every switch."""
+    eq, pos, cv = 1.0, mode == "hold", [1.0]
+    for j in range(lo, hi):
+        want = sg[j - 2 - delay] if mode == "trend" else mode == "hold"
+        if want != pos:
+            eq *= 1 - fee
+            pos = want
+        eq *= 1 + (r[j] if pos else bill[j])
+        cv.append(eq)
+    return cv
+
+
+def as_valid_trend(rets, first):
+    """200 day trend on a return series that is zero before the fund exists: false until 200 real days are in the average."""
+    sg = trend_of(rets)
+    return [s and i >= first + 199 for i, s in enumerate(sg)]
+
+
+def as_series_rets(dates, sym, bill, kind):
+    """(returns on the S&P calendar, index of the first day the series exists). fund: Yahoo adjusted close. fut: index or front month price return plus bills (fully collateralised)."""
+    if kind == "fund":
+        r = real_rets(dates, sym)
+        d0 = raw(sym)[0][0]
+        return r, next(i for i, d in enumerate(dates) if d >= d0)
+    bars = daily(sym)
+    px = {datetime.fromtimestamp(b[0], timezone.utc).strftime("%Y-%m-%d"): b[1] for b in bars}
+    first = next(i for i, d in enumerate(dates) if d >= min(px))
+    prev, out = None, []
+    for i, d in enumerate(dates):
+        out.append((px[d] / prev - 1 + bill[i]) if d in px and prev else (bill[i] if prev else 0.0))
+        if d in px:
+            prev = px[d]
+    return out, first
+
+
+def as_fmt(e, w=30):
+    t, h, b = e["t"], e["h"], e["b"]
+    f = lambda x: f"{x[0]:+.0%}/{x[1]:.0%}" if x else "n/a"
+    return (f"{e['name']:{w}} | {t['cagr']:>6.1%} {t['mdd']:>4.0%} | {h['cagr']:>6.1%} {h['mdd']:>4.0%} | {b['cagr']:>5.1%} | {e['won']}/{e['nd']} | "
+            f"{f(e['y08'][0]):>8} {f(e['y08'][1]):>8} | {f(e['y22'][0]):>8} {f(e['y22'][1]):>8} | {e['beat']:>4.0%} {e['both']:>3} | {e['late']['cagr']:>6.1%} {e['late']['mdd']:>4.0%} | "
+            f"{e['in']:>4.0%} {e['sw']:>4.1f} | {'PASS' if e['pass'] else 'FAIL'}")
+
+
+def me_rets(dates, cv, lo):
+    """Month-end returns of a daily curve (cv[0] is the close before dates[lo]); the first and any unfinished month are dropped."""
+    val = {}
+    for k in range(len(cv)):
+        val[dates[lo + k - 1][:7]] = cv[k]
+    ks = sorted(val)
+    return {ks[i]: val[ks[i]] / val[ks[i - 1]] - 1 for i in range(1, len(ks) - 1)}
+
+
+def assets():
+    D = lev_data()
+    dates, bill = D[0], D[3]
+    hi = len(dates)
+    cash = as_cash()
+    ser = as_monthly_series()
+    HDR = (f"{'asset':30} | {'TREND':>11} | {'HOLD':>11} | {'bills':>5} | {'dec':>3} | {'2008 trend':>8} {'2008 hold':>8} | {'2022 trend':>8} {'2022 hold':>8} | "
+           f"{'beats':>4} {'=':>3} | {'late':>11} | {'in':>4} {'sw/y':>4} | bar")
+    print("SINGLE ASSET TREND FOLLOWING, 1x, long only. Fixed rule (Faber 2007), nothing tuned, nothing picked: hold the asset while it closes above its")
+    print(f"10 month average (monthly century series) or 200 day average (daily funds), else T-bills. {FEE:.1%} per switch. Daily: signal at close j-2, trade close j-1, earn day j.")
+    print(f"Monthly: signal at month end t-1 earns month t. Columns: TREND CAGR/worst drop, HOLD the asset, T-bills CAGR, decades the trend beat holding, calendar 2008 and 2022 (return/drop),")
+    print(f"'beats' = share of {AS_DRAWS} random in/out schedules (same days in the market, same number of switches) the trend CAGR beats, '=' = randoms matching on CAGR and drop,")
+    print("late = signal acted on 1 month late, in = share of time in the asset, sw/y = switches a year. Bar: more CAGR than holding, no bigger worst drop, most decades won.\n")
+
+    # ----- monthly century series -----
+    print("A. CENTURY SERIES (monthly, after fund expenses). Treasuries: par bond priced off GS10 yields (20y = parallel shift of the 10y yield, 10y coupon). Gold: datahub")
+    print("monthly price, fixed at $20.67/$35 until 1971 and private ownership banned until 1974, so its pre-1976 half is not tradable history. Train = 1929 to 1975, blind = 1976 on.\n")
+    res_m, sig_m = {}, {}
+    for nm, r in ser.items():
+        ms = sorted(m for m in r if m in cash and m >= "1926-01")
+        end = ms[-1]
+        sg = am_sig(ms, r)
+        sig_m[nm] = (ms, sg)
+        a, b = ms.index("1929-01"), ms.index("1976-01")
+        print(f"{nm}: series {ms[0]} to {end}")
+        print(HDR)
+        e0 = as_eval(nm + " TRAIN 1929-1975", ms, r, cash, sg, a, b, False, ms)
+        e1 = as_eval(nm + " BLIND 1976-" + end, ms, r, cash, sg, b, len(ms), False, ms)
+        res_m[nm] = (e0, e1)
+        for e in (e0, e1):
+            print(as_fmt(e))
+        print(f"  blind decades, trend / hold: " + "  ".join(f"{d} {e1['dec_t'][d]:.1%}/{e1['dec_h'][d]:.1%}" for d in sorted(e1["dec_h"])))
+        print(f"  blind: {e1['k']} switches, hold's worst drop {e1['h']['mdd']:.0%}, trend returns {e1['t']['cagr'] - e1['b']['cagr']:+.1%} a year over bills, hold {e1['h']['cagr'] - e1['b']['cagr']:+.1%}.\n")
+
+    # ----- daily real funds and indexes -----
+    print("B. REAL FUNDS AND DAILY INDEXES (daily, Yahoo adjusted closes with distributions; the window starts when 200 days of the fund exist, all of it unseen, nothing was tuned).")
+    print("Index and front month rows = price return plus T-bills (fully collateralised long); front month continuous contracts are NOT roll adjusted, so they are indicative only.\n")
+    print(HDR)
+    res_d, daily_cv = {}, {}
+    for kind, lst in (("fund", AS_FUNDS), ("fut", AS_FUTS)):
+        for nm, sym in lst:
+            try:
+                r, first = as_series_rets(dates, sym, bill, kind)
+            except Exception as ex:
+                print(f"{nm:30} | no data ({ex})")
+                continue
+            sg = as_valid_trend(r, first)
+            lo = first + 201
+            e = as_eval(f"{nm} {dates[lo][:4]}-", dates, r, bill, sg, lo, hi)
+            res_d[sym] = (e, lo)
+            daily_cv[sym] = (me_rets(dates, e["tr"], lo), me_rets(dates, e["hd"], lo), me_rets(dates, as_dsim(r, bill, sg, lo, hi, "bills"), lo))
+            print(as_fmt(e))
+    print(f"\n  1 day late CAGR/drop and calendar years won vs holding (real funds and indexes):")
+    for sym, (e, lo) in res_d.items():
+        print(f"  {e['name']:30} 1 day late {e['late1']['cagr']:.1%} / {e['late1']['mdd']:.0%}   years won {e['yw']}/{e['yn']}   decades: " +
+              "  ".join(f"{d} {e['dec_t'][d]:.1%}/{e['dec_h'][d]:.1%}" for d in sorted(e["dec_h"])))
+
+    # ----- real fund check for the century series -----
+    print("\nC. REAL FUND CHECK for the century rows (same bar on the fund over its own life; the model row must also pass):")
+    pair = {"10y Treasuries": "IEF", "20y Treasuries": "TLT", "Gold": "GLD"}
+    verdict = {}
+    for nm, (e0, e1) in res_m.items():
+        fe = res_d[pair[nm]][0]
+        ok = e1["pass"] and fe["pass"]
+        verdict[nm] = ok
+        why = [x for x, c in (("less return", fe["t"]["cagr"] <= fe["h"]["cagr"]), ("bigger drop", fe["t"]["mdd"] > fe["h"]["mdd"]), (f"{fe['won']} of {fe['nd']} decades", fe["won"] <= fe["nd"] / 2)) if c]
+        print(f"  {nm:16} model {'PASS' if e1['pass'] else 'FAIL'} ({e1['t']['cagr']:.1%} / {e1['t']['mdd']:.0%} vs hold {e1['h']['cagr']:.1%} / {e1['h']['mdd']:.0%}); "
+              f"{pair[nm]} {'PASS' if fe['pass'] else 'FAIL'} ({fe['t']['cagr']:.1%} / {fe['t']['mdd']:.0%} vs hold {fe['h']['cagr']:.1%} / {fe['h']['mdd']:.0%}"
+              f"{', ' + ', '.join(why) if why else ''}) => {'PASS' if ok else 'FAIL'}")
+    print("\n  Daily rows with no model behind them (fund life only) pass or fail on that one line in section B:")
+    for sym, (e, lo) in res_d.items():
+        if sym not in pair.values():
+            print(f"  {e['name']:30} {'PASS' if e['pass'] else 'FAIL'}")
+
+    # ----- the portfolio question -----
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    cv2 = lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, FEE, 0, GAP)
+    r2 = me_rets(dates, cv2, split)
+    print(f"\nD. THE PORTFOLIO QUESTION. 80% Trend 2x S&P + 20% of a trend sleeve, rebalanced monthly (rebalance cost ignored), from the month-end series. Trend 2x from the daily")
+    print(f"model ({GAP:.1%} gap, 0.9% expense) sampled at month ends, so its worst drop here is the month-end one, a little under the daily 44%. Controls: 20% bills (just less leverage), 20% the asset held.")
+    srcs = {}
+    for nm, (ms, sg) in sig_m.items():
+        b = ms.index("1976-01")
+        cvm = am_sim(ms, ser[nm], cash, sg, b, len(ms))
+        srcs[nm] = ({ms[b + i]: cvm[i + 1] / cvm[i] - 1 for i in range(len(cvm) - 1)},
+                    {ms[b + i]: x for i, x in enumerate((lambda c: [c[i + 1] / c[i] - 1 for i in range(len(c) - 1)])(am_sim(ms, ser[nm], cash, sg, b, len(ms), "hold")))})
+    for sym, (mt, mh, mb) in daily_cv.items():
+        srcs[res_d[sym][0]["name"]] = (mt, mh)
+    passing = [nm for nm, ok in verdict.items() if ok] + [res_d[s][0]["name"] for s, (e, lo) in res_d.items() if s not in pair.values() and e["pass"]]
+    def run(rs, mo):
+        cv = [1.0]
+        for m in mo:
+            cv.append(cv[-1] * (1 + rs[m]))
+        return cv
+    print(f"\n  {'sleeve (20%)':32}{'months':>7} | {'Trend 2x alone':>16} | {'80/20 trend sleeve':>20} | {'80/20 asset held':>18} | {'80/20 bills':>14} | decades won vs Trend 2x | bar (return up, drop not up)")
+    best, best_c = None, -1
+    for nm, (mt, mh) in srcs.items():
+        mo = sorted(m for m in mt if m in r2 and m in cash)
+        if len(mo) < 60:
+            continue
+        base = {m: r2[m] for m in mo}
+        mix = lambda rs: {m: 0.8 * r2[m] + 0.2 * rs[m] for m in mo}
+        sb, st_, sh_, sbl = stats(run(base, mo)), stats(run(mix(mt), mo)), stats(run(mix(mh), mo)), stats(run(mix({m: cash[m] for m in mo}), mo))
+        dd = lambda rs: decade_rows(mo, run(rs, mo), 0)
+        d0, d1 = dd(base), dd(mix(mt))
+        w = sum(d1[d] > d0[d] for d in d0)
+        ok = st_["cagr"] > sb["cagr"] and st_["mdd"] <= sb["mdd"] + 1e-9
+        tag = "yes" if ok else "no"
+        if nm in passing:
+            tag += " [passing sleeve]"
+            if st_["cagr"] - sb["cagr"] > best_c:
+                best, best_c = nm, st_["cagr"] - sb["cagr"]
+        print(f"  {nm:32}{len(mo):>7} | {sb['cagr']:>9.1%} / {sb['mdd']:.0%} | {st_['cagr']:>10.1%} / {st_['mdd']:.0%}   | {sh_['cagr']:>9.1%} / {sh_['mdd']:.0%}  | {sbl['cagr']:>6.1%} / {sbl['mdd']:.0%} | {w}/{len(d0)} | {tag}")
+    print(f"\n  Passing sleeves (model and real fund both clear the bar): {', '.join(passing) or 'NONE'}.")
+    if best:
+        print(f"  Best passing sleeve by CAGR added to Trend 2x: {best}.")
+    else:
+        print("  No sleeve passes, so there is no best passing sleeve to blend; the table above is the blend of every candidate for the record.")
+
+
 if __name__ == "__main__":
     if "--seasonal" in sys.argv:
         seasonal()
@@ -2958,6 +3246,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--crypto" in sys.argv:
         crypto()
+        sys.exit()
+    if "--assets" in sys.argv:
+        assets()
         sys.exit()
     century()
     if "--stocks" in sys.argv:

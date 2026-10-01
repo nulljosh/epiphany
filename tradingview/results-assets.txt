@@ -1,0 +1,99 @@
+SINGLE ASSET TREND FOLLOWING, 1x, long only. Fixed rule (Faber 2007), nothing tuned, nothing picked: hold the asset while it closes above its
+10 month average (monthly century series) or 200 day average (daily funds), else T-bills. 0.1% per switch. Daily: signal at close j-2, trade close j-1, earn day j.
+Monthly: signal at month end t-1 earns month t. Columns: TREND CAGR/worst drop, HOLD the asset, T-bills CAGR, decades the trend beat holding, calendar 2008 and 2022 (return/drop),
+'beats' = share of 300 random in/out schedules (same days in the market, same number of switches) the trend CAGR beats, '=' = randoms matching on CAGR and drop,
+late = signal acted on 1 month late, in = share of time in the asset, sw/y = switches a year. Bar: more CAGR than holding, no bigger worst drop, most decades won.
+
+A. CENTURY SERIES (monthly, after fund expenses). Treasuries: par bond priced off GS10 yields (20y = parallel shift of the 10y yield, 10y coupon). Gold: datahub
+monthly price, fixed at $20.67/$35 until 1971 and private ownership banned until 1974, so its pre-1976 half is not tradable history. Train = 1929 to 1975, blind = 1976 on.
+
+10y Treasuries: series 1926-07 to 2026-09
+asset                          |       TREND |        HOLD | bills | dec | 2008 trend 2008 hold | 2022 trend 2022 hold | beats   = |        late |   in sw/y | bar
+10y Treasuries TRAIN 1929-1975 |   3.1%   5% |   2.9%   9% |  2.4% | 3/5 |      n/a      n/a |      n/a      n/a |  97%   2 |   2.7%   6% |  82%  0.9 | PASS
+10y Treasuries BLIND 1976-2026-09 |   6.4%  12% |   6.2%  25% |  4.3% | 4/6 |  +19%/4%  +19%/4% |   -1%/3% -15%/18% |  95%   0 |   5.6%  13% |  71%  1.4 | PASS
+  blind decades, trend / hold: 1970s 5.0%/4.2%  1980s 12.9%/12.6%  1990s 8.7%/7.8%  2000s 5.2%/6.5%  2010s 3.2%/3.8%  2020s 1.6%/-1.0%
+  blind: 73 switches, hold's worst drop 25%, trend returns +2.1% a year over bills, hold +1.8%.
+
+20y Treasuries: series 1926-07 to 2026-09
+asset                          |       TREND |        HOLD | bills | dec | 2008 trend 2008 hold | 2022 trend 2022 hold | beats   = |        late |   in sw/y | bar
+20y Treasuries TRAIN 1929-1975 |   3.1%   9% |   2.4%  19% |  2.4% | 4/5 |      n/a      n/a |      n/a      n/a |  98%   0 |   2.6%  12% |  70%  1.2 | PASS
+20y Treasuries BLIND 1976-2026-09 |   7.6%  18% |   6.3%  44% |  4.3% | 4/6 |  +29%/7%  +32%/7% |   -3%/5% -27%/31% |  99%   0 |   5.7%  26% |  64%  1.6 | PASS
+  blind decades, trend / hold: 1970s 4.8%/2.6%  1980s 14.7%/13.4%  1990s 10.9%/8.4%  2000s 6.2%/7.8%  2010s 4.2%/4.8%  2020s 1.4%/-3.9%
+  blind: 79 switches, hold's worst drop 44%, trend returns +3.2% a year over bills, hold +2.0%.
+
+Gold: series 1926-07 to 2026-08
+asset                          |       TREND |        HOLD | bills | dec | 2008 trend 2008 hold | 2022 trend 2022 hold | beats   = |        late |   in sw/y | bar
+Gold TRAIN 1929-1975           |   4.4%  21% |   3.7%  25% |  2.4% | 4/5 |      n/a      n/a |      n/a      n/a |  96%   8 |   4.3%  21% |  29%  1.1 | PASS
+Gold BLIND 1976-2026-08        |  10.3%  24% |   6.6%  65% |  4.3% | 4/6 |  +4%/13%  +1%/22% |   +2%/6%  +0%/15% | 100%   0 |   9.7%  27% |  58%  1.3 | PASS
+  blind decades, trend / hold: 1970s 37.9%/34.0%  1980s 12.1%/-1.4%  1990s 0.1%/-4.0%  2000s 12.5%/14.4%  2010s 3.5%/2.3%  2020s 16.5%/17.3%
+  blind: 68 switches, hold's worst drop 65%, trend returns +6.0% a year over bills, hold +2.3%.
+
+B. REAL FUNDS AND DAILY INDEXES (daily, Yahoo adjusted closes with distributions; the window starts when 200 days of the fund exist, all of it unseen, nothing was tuned).
+Index and front month rows = price return plus T-bills (fully collateralised long); front month continuous contracts are NOT roll adjusted, so they are indicative only.
+
+asset                          |       TREND |        HOLD | bills | dec | 2008 trend 2008 hold | 2022 trend 2022 hold | beats   = |        late |   in sw/y | bar
+IEF (10y Treasuries) 2003-     |   1.7%  15% |   3.0%  24% |  1.7% | 1/3 |  +14%/7%  +18%/6% |   +1%/1% -15%/18% |  48%  33 |   1.5%  13% |  68%  8.9 | FAIL
+TLT (20y Treasuries) 2003-     |   1.1%  44% |   2.6%  48% |  1.7% | 1/3 | +24%/12%  +34%/7% |   -3%/5% -31%/37% |  51% 129 |   1.6%  30% |  58% 11.2 | FAIL
+GLD (gold) 2005-               |   7.5%  37% |  10.8%  46% |  1.8% | 1/3 |  -7%/23%  +5%/29% |  -9%/17%  -1%/21% |  59%  55 |   7.2%  37% |  68%  7.6 | FAIL
+DBC (broad commodities) 2006-  |   5.0%  40% |   2.7%  76% |  1.6% | 2/3 | +16%/21% -32%/58% | +11%/26% +19%/23% |  98%   3 |   5.6%  43% |  56%  8.8 | PASS
+GSG (broad commodities) 2007-  |   1.9%  67% |  -0.6%  90% |  1.5% | 1/2 |  +1%/30% -46%/66% | +12%/27% +24%/25% |  79%  51 |   3.6%  58% |  54%  9.1 | FAIL
+USO (crude oil) 2007-          |  -0.3%  80% |  -4.5%  98% |  1.6% | 1/2 | +15%/26% -56%/75% |  +8%/37% +29%/32% |  67%  57 |   5.1%  65% |  51% 10.1 | FAIL
+SLV (silver) 2007-             |   3.3%  64% |   7.2%  76% |  1.5% | 1/2 | +12%/22% -24%/57% |  -8%/18%  +2%/33% |  44% 112 |   3.7%  69% |  55%  8.5 | FAIL
+CPER (copper) 2012-            |  -1.0%  47% |   3.5%  55% |  1.8% | 0/2 |      n/a      n/a |  -5%/10% -15%/35% |  18% 119 |   2.3%  31% |  52%  8.9 | FAIL
+S&P GSCI index + bills 1984-   |   5.1%  42% |   6.6%  73% |  3.3% | 1/5 | +12%/24% -42%/65% |  +4%/30% +11%/29% |  65%   3 |   5.6%  44% |  63%  8.6 | FAIL
+Crude front month + bills 2001- |   1.6%  74% |   6.5%  93% |  1.8% | 0/3 | +14%/25% -53%/77% | +22%/27%  +9%/42% |  34%  55 |   8.5%  51% |  59% 11.1 | FAIL
+Silver front month + bills 2001- |   5.5%  68% |  12.9%  74% |  1.8% | 0/3 | +13%/22% -23%/57% |  -3%/15%  +4%/34% |  27% 129 |   7.5%  66% |  62% 10.5 | FAIL
+Copper front month + bills 2001- |   8.5%  58% |  11.1%  69% |  1.8% | 1/3 |  -1%/15% -53%/69% | -10%/14% -13%/35% |  73%  59 |   9.0%  44% |  62%  7.7 | FAIL
+
+  1 day late CAGR/drop and calendar years won vs holding (real funds and indexes):
+  IEF (10y Treasuries) 2003-     1 day late 1.9% / 14%   years won 8/22   decades: 2000s 2.2%/4.7%  2010s 2.5%/4.4%  2020s 0.1%/-0.6%
+  TLT (20y Treasuries) 2003-     1 day late 1.8% / 40%   years won 5/22   decades: 2000s 0.9%/4.1%  2010s 5.5%/7.2%  2020s -4.8%/-5.1%
+  GLD (gold) 2005-               1 day late 8.4% / 34%   years won 6/20   decades: 2000s 14.6%/22.8%  2010s 3.0%/2.9%  2020s 9.8%/15.8%
+  DBC (broad commodities) 2006-  1 day late 4.4% / 47%   years won 9/19   decades: 2000s 14.2%/2.3%  2010s -0.9%/-4.0%  2020s 10.2%/13.6%
+  GSG (broad commodities) 2007-  1 day late 2.3% / 68%   years won 7/18   decades: 2010s -6.9%/-6.5%  2020s 12.7%/12.6%
+  USO (crude oil) 2007-          1 day late -1.7% / 85%   years won 6/19   decades: 2010s -10.8%/-10.6%  2020s 7.9%/5.8%
+  SLV (silver) 2007-             1 day late 3.4% / 69%   years won 6/19   decades: 2010s 0.6%/0.1%  2020s 10.1%/19.4%
+  CPER (copper) 2012-            1 day late 1.4% / 37%   years won 5/13   decades: 2010s -5.5%/-4.3%  2020s 4.1%/12.8%
+  S&P GSCI index + bills 1984-   1 day late 5.4% / 50%   years won 13/41   decades: 1980s 3.5%/8.0%  1990s 3.0%/4.3%  2000s 14.0%/13.5%  2010s -1.9%/-1.3%  2020s 7.9%/11.3%
+  Crude front month + bills 2001- 1 day late 3.6% / 61%   years won 5/24   decades: 2000s 12.9%/15.0%  2010s -6.4%/-2.0%  2020s 0.5%/9.3%
+  Silver front month + bills 2001- 1 day late 5.8% / 67%   years won 6/24   decades: 2000s 7.5%/19.6%  2010s -0.6%/1.2%  2020s 12.4%/23.6%
+  Copper front month + bills 2001- 1 day late 8.1% / 58%   years won 11/24   decades: 2000s 25.0%/22.4%  2010s -3.7%/-1.2%  2020s 8.2%/16.8%
+
+C. REAL FUND CHECK for the century rows (same bar on the fund over its own life; the model row must also pass):
+  10y Treasuries   model PASS (6.4% / 12% vs hold 6.2% / 25%); IEF FAIL (1.7% / 15% vs hold 3.0% / 24%, less return, 1 of 3 decades) => FAIL
+  20y Treasuries   model PASS (7.6% / 18% vs hold 6.3% / 44%); TLT FAIL (1.1% / 44% vs hold 2.6% / 48%, less return, 1 of 3 decades) => FAIL
+  Gold             model PASS (10.3% / 24% vs hold 6.6% / 65%); GLD FAIL (7.5% / 37% vs hold 10.8% / 46%, less return, 1 of 3 decades) => FAIL
+
+  Daily rows with no model behind them (fund life only) pass or fail on that one line in section B:
+  DBC (broad commodities) 2006-  PASS
+  GSG (broad commodities) 2007-  FAIL
+  USO (crude oil) 2007-          FAIL
+  SLV (silver) 2007-             FAIL
+  CPER (copper) 2012-            FAIL
+  S&P GSCI index + bills 1984-   FAIL
+  Crude front month + bills 2001- FAIL
+  Silver front month + bills 2001- FAIL
+  Copper front month + bills 2001- FAIL
+
+D. THE PORTFOLIO QUESTION. 80% Trend 2x S&P + 20% of a trend sleeve, rebalanced monthly (rebalance cost ignored), from the month-end series. Trend 2x from the daily
+model (0.8% gap, 0.9% expense) sampled at month ends, so its worst drop here is the month-end one, a little under the daily 44%. Controls: 20% bills (just less leverage), 20% the asset held.
+
+  sleeve (20%)                     months |   Trend 2x alone |   80/20 trend sleeve |   80/20 asset held |    80/20 bills | decades won vs Trend 2x | bar (return up, drop not up)
+  10y Treasuries                      609 |     14.4% / 40% |      13.2% / 31%   |     13.1% / 32%  |  12.7% / 32% | 2/6 | no
+  20y Treasuries                      609 |     14.4% / 40% |      13.5% / 32%   |     13.2% / 35%  |  12.7% / 32% | 2/6 | no
+  Gold                                608 |     14.4% / 40% |      14.2% / 33%   |     13.5% / 32%  |  12.8% / 32% | 3/6 | no
+  IEF (10y Treasuries) 2003-          280 |     12.7% / 36% |      10.8% / 30%   |     11.1% / 32%  |  10.8% / 29% | 0/3 | no
+  TLT (20y Treasuries) 2003-          280 |     12.7% / 36% |      10.8% / 31%   |     11.2% / 36%  |  10.8% / 29% | 0/3 | no
+  GLD (gold) 2005-                    252 |     12.3% / 36% |      11.9% / 31%   |     12.6% / 30%  |  10.5% / 29% | 1/3 | no
+  DBC (broad commodities) 2006-       238 |     12.7% / 36% |      11.6% / 28%   |     11.1% / 31%  |  10.8% / 29% | 1/3 | no [passing sleeve]
+  GSG (broad commodities) 2007-       232 |     12.1% / 36% |      10.6% / 27%   |     10.2% / 33%  |  10.3% / 29% | 1/2 | no
+  USO (crude oil) 2007-               236 |     12.5% / 36% |      10.7% / 28%   |     10.4% / 39%  |  10.7% / 29% | 0/2 | no
+  SLV (silver) 2007-                  235 |     12.9% / 36% |      11.7% / 33%   |     12.8% / 31%  |  10.9% / 29% | 0/2 | no
+  CPER (copper) 2012-                 169 |     16.5% / 36% |      13.3% / 31%   |     14.4% / 31%  |  13.8% / 29% | 0/2 | no
+  S&P GSCI index + bills 1984-        503 |     14.5% / 40% |      13.2% / 28%   |     13.6% / 31%  |  12.6% / 32% | 1/5 | no
+  Crude front month + bills 2001-     303 |     12.3% / 36% |      11.0% / 26%   |     12.7% / 35%  |  10.5% / 29% | 1/3 | no
+  Silver front month + bills 2001-    303 |     12.3% / 36% |      11.7% / 32%   |     13.5% / 30%  |  10.5% / 29% | 2/3 | no
+  Copper front month + bills 2001-    303 |     12.3% / 36% |      12.1% / 32%   |     12.8% / 32%  |  10.5% / 29% | 1/3 | no
+
+  Passing sleeves (model and real fund both clear the bar): DBC (broad commodities) 2006-.
+  Best passing sleeve by CAGR added to Trend 2x: DBC (broad commodities) 2006-.

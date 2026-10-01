@@ -740,6 +740,40 @@ live account's permissions, and we could not confirm that it fills crypto. The
 IBIT and ETHA funds trade only in US market hours. Verdict: a coin flip on the
 years, a real cut in the crash, not worth more than a small sleeve.
 
+**Trend on the other assets, one at a time.** Everything above keeps the S&P in the
+box. The other question is whether the same plain rule works on assets that are
+not stocks, each as its own sleeve (`century.py --assets`, raw output in
+`tradingview/results-assets.txt`). The rule is Faber's (2007) and nothing is
+tuned: hold the asset while it closes above its 10 month average (200 day on
+daily funds), else T-bills, 1x, 0.1% a switch. On the century series, 10 and 20
+year Treasuries priced off yields and gold, from 1976 to now, it looks good.
+10 year: 6.4% a year with a 12% worst drop against holding's 6.2% and 25%, 4 of 6
+decades. 20 year: 7.6% and 18% against 6.3% and 44%. Gold: 10.3% and 24% against
+6.6% and 65%. Each beat at least 95% of 300 random in and out schedules with the
+same time in the market, and in 2022 the Treasuries lost 1% and 3% against 15%
+and 27% for holding. Then the real funds from 2002 (IEF, TLT) and 2004 (GLD), where
+all three fail: IEF 1.7% / 15% against 3.0% / 24%, TLT 1.1% / 44% against 2.6% /
+48%, GLD 7.5% / 37% against 10.8% / 46%, each 1 of 3 decades. The 200 day rule
+switches 7 to 11 times a year and those years were mostly a bond and gold bull
+market, so the trend sat out rallies it paid for. The century result leans on
+the 1980s and 1990s (gold fell, bonds paid) and does not repeat on the funds.
+Bond trend is also gone a month late (5.6% and 5.7% against 6.2% and 6.3%).
+Commodities have no long fund history. DBC from 2006 passes alone: 5.0% / 40%
+against 2.7% / 76%, 2 of 3 decades, beating 98% of random schedules, and 2008 was
++16% against -32%. But the longer S&P GSCI index from 1984 (plus bills) fails
+(5.1% / 42% against 6.6% / 73%, 1 of 5 decades), and so do GSG, USO (crude), SLV
+(silver) and CPER (copper), and so do the front month crude, silver and copper
+series, which are not roll adjusted and only indicative. One fund passing against
+five and an index failing is a coincidence of one 20 year window, not an edge.
+The 80/20 question: put 20% in the best passing trend sleeve and keep 80% in
+Trend 2x. From the month-end series every blend gives up return. DBC: 11.6% / 28%
+against Trend 2x alone at 12.7% / 36% from 2006. Gold trend from 1976: 14.2% /
+33% against 14.4% / 40%. The control tells the story: 20% in plain bills gives
+12.8% / 32%, so most of the smaller drop is just less leverage, and the sleeves
+add 0.5 to 1.4 points over bills, not enough to beat Trend 2x. Verdict: no non
+stock sleeve. If one ever runs it would be GLD or TLT behind the trend rule, but
+both fail on the real fund today.
+
 **What could still be wrong.** The stock list is today's S&P 500. Companies
 that crashed and got kicked out are missing, and that makes buying dips look
 better than it really was. Prices are assumed to fill exactly, with no extra
@@ -826,6 +860,16 @@ files named above.
 | Same, 6 month return | 1976 to now | 11.7% / 24% | 12.3% / 50% | fail (less return, 1 of 6 decades; real 7.3% / 22%, fail) |
 | Same, 12 month return, 2x on margin at bills + 1% | 1976 to now | 18.9% / 54% | 12.3% / 50% | fail on the model (4 points bigger drop, 5 of 6 decades); passes on real SPDR sectors from 2000 (11.7% / 46% against SPY 8.2% / 55%, 15 of 27 years, 2 of 3 decades); needs margin |
 | Same, 6 month return, 2x on margin | 1976 to now | 16.4% / 53% | 12.3% / 50% | fail (bigger drop, 4 of 6 decades; real 10.7% / 43%, 1 of 3 decades) |
+| Trend 1x 10y Treasuries, 10 month average, bills else, 0.1% a switch | 1976 to now | 6.4% / 12% | 6.2% / 25% | pass on the model (4 of 6 decades), fails on real IEF from 2002 (1.7% / 15% against 3.0% / 24%, 1 of 3 decades; beats 95% of random schedules, loses to holding a month late) |
+| Trend 1x 20y Treasuries, same rule | 1976 to now | 7.6% / 18% | 6.3% / 44% | pass on the model (4 of 6), fails on real TLT from 2002 (1.1% / 44% against 2.6% / 48%, 1 of 3 decades; 2022 -3% against -27%) |
+| Trend 1x gold, same rule | 1976 to now | 10.3% / 24% | 6.6% / 65% | pass on the model (4 of 6), fails on real GLD from 2004 (7.5% / 37% against 10.8% / 46%, 1 of 3 decades; beats 100% of random schedules) |
+| Trend 1x DBC broad commodities, 200 day average | 2006 to now | 5.0% / 40% | 2.7% / 76% | pass on the one fund (2 of 3 decades, beats 98% of random schedules, 2008 +16% against -32%); the S&P GSCI index from 1984 fails (5.1% / 42% against 6.6% / 73%, 1 of 5 decades), so a one window result |
+| Trend 1x GSG broad commodities | 2007 to now | 1.9% / 67% | -0.6% / 90% | fail (1 of 2 decades) |
+| Trend 1x USO crude oil | 2007 to now | -0.3% / 80% | -4.5% / 98% | fail (1 of 2 decades; front month crude 1.6% / 74% against 6.5% / 93%, 0 of 3) |
+| Trend 1x SLV silver | 2007 to now | 3.3% / 64% | 7.2% / 76% | fail (less return, 1 of 2 decades; front month silver 5.5% / 68% against 12.9% / 74%) |
+| Trend 1x CPER copper | 2012 to now | -1.0% / 47% | 3.5% / 55% | fail (less return, 0 of 2 decades; front month copper 8.5% / 58% against 11.1% / 69%) |
+| 80% Trend 2x S&P + 20% DBC trend, monthly | 2006 to now | 11.6% / 28% | Trend 2x alone 12.7% / 36% | fail (less return, 1 of 3 decades; 20% in bills gives 10.8% / 29%) |
+| 80% Trend 2x S&P + 20% gold trend, monthly | 1976 to now | 14.2% / 33% | Trend 2x alone 14.4% / 40% | fail (0.2 point less return, 3 of 6 decades; 20% in bills gives 12.8% / 32%; gold fails on real GLD anyway) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -833,7 +877,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The four sector momentum rows at the very bottom are graded against holding the market on the French industries and against SPY on the real SPDR funds; none passes on both. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The four sector momentum rows at the very bottom are graded against holding the market on the French industries and against SPY on the real SPDR funds; none passes on both. The eight single asset trend rows after those are graded against holding that asset: the three century rows pass on the model and fail on the real fund, DBC passes alone and nothing else in commodities does. The two blend rows are graded against Trend 2x alone, and both fail on return. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 
