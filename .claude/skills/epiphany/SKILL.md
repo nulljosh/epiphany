@@ -28,3 +28,16 @@ Skipping the merge step wipes unrelated fields (this happened before — see pro
 ## Scope
 
 This only edits `portfolio:<userId>` (holdings, debt, budget, spending, accounts). It does not touch `user:<email>` (auth/profile) or sessions — don't extend it to those without checking how session/auth state is structured first.
+
+## Trading benchmark and paper trading
+
+The autopilot trades Double 7s (`double7s()` in `src/utils/indicators.js`, mirrored in `Shared/Indicators.swift`), on paper only. Results live in `WHITEPAPER.md` section 5. Do not claim it beats the S&P 500: it does not.
+
+```bash
+python3 tradingview/backtest.py sp500        # 429 S&P 500 stocks, tuned on 2012-2019, graded blind 2020-now
+python3 tradingview/backtest.py portfolio    # one account over 16 ETFs vs SPY
+uv run --with ib_async python3 scripts/ibkr-run.py        # plan and scoreboard against IB Gateway (demo account), sends nothing
+uv run --with ib_async python3 scripts/ibkr-run.py --go   # send today's paper orders
+```
+
+IB Gateway must be logged in on port 4002 (it does not save the password, so never restart it without telling Joshua). The runner refuses real accounts without `--live`. App Store price changes are blocked for automation: Joshua runs `asc pricing schedule create` himself.
