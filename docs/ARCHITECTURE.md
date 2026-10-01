@@ -44,7 +44,7 @@ Epiphany is a personal intelligence dashboard for your money, location, and mark
 | `server/api/statements.js` | Bank statements parsing. User uploads CSV files; the backend normalizes them into a standard format |
 | `server/api/watchlist.js` | GET/POST favorite stock symbols per user. Stored in Supabase. Validation: 1-5 uppercase letters/digits |
 | `server/api/alerts.js` | Price alerts (alert when AAPL > 300 or < 250). Stored in Supabase. Checked in cron or on-demand |
-| `server/api/broker/` | SnapTrade multi-broker sync (read-only). POST /api/broker/sync pulls holdings + balances from connected Wealthsimple/Alpaca/IBKR, stores snapshot in KV. GET returns the latest snapshot. Wealthsimple OAuth, Alpaca API key, IBKR coming. Paper trading via Alpaca (`/api/broker/signal`). Morning run (`/api/broker/morning-run.js`) is a cron job running weekday opens, autopilot trades |
+| `server/api/broker/` | SnapTrade multi-broker sync (read-only). POST /api/broker/sync pulls holdings + balances from connected Wealthsimple/Alpaca/IBKR, stores snapshot in KV. GET returns the latest snapshot. Wealthsimple OAuth, Alpaca API key, IBKR coming. Paper trading via Alpaca (`/api/broker/signal`). Morning run (`/api/broker/morning-run.js`) is a cron job running weekday opens, autopilot trades on Double 7s. `autopilot.js` stores per-user Autopilot settings (Premium) |
 
 ## People, ontology, events
 
@@ -209,6 +209,15 @@ Epiphany is a personal intelligence dashboard for your money, location, and mark
 | `scripts/rotate-keys.sh` | Rotate Stripe/Supabase/Upstash secrets. Not automated; manual run only |
 | `scripts/sync-version-badges.js` + `scripts/sync-version.sh` | Keep README version badge, package.json, and CLAUDE.md in sync |
 | `scripts/tv-signal-agent.js` | TradingView webhook agent. Receives alerts and places Alpaca paper orders |
+| `scripts/ibkr-run.py` | Double 7s on 16 index and sector ETFs through local IB Gateway (port 4002). Prints the plan; `--go` sends DAY market orders, 10% of `--sleeve` each, max 10 positions. Refuses non-demo accounts unless `--live`. Writes `tradingview/ibkr-state.json` |
+| `scripts/ibkr-live.py` | Long-running runner: polls the account every 60s, macOS notifications on moves, runs `ibkr-run.py --go` once a day at 3:45pm New York, logs to `~/Library/Logs/EpiphanyIBKR.log` |
+| `scripts/ibkr-order.py` + `scripts/ibkr-watch.py` | One manual paper order; one-shot account watch. Debug helpers for the Gateway connection |
+| `scripts/menubar.py` | Epiphany Live menu bar app (rumps + AppKit). Title is the holdings' return; menu shows account change, holdings vs S&P 500, the 16-fund basket, Nasdaq, Dow, Russell, TSX, gold, Bitcoin (one Yahoo spark call), best/worst position, record high/low, next trade, intraday sparklines, phone watchlist, Pause/Resume. Starts and supervises `ibkr-live.py`, hides the Gateway window, single instance via `tradingview/menubar.lock`. Tests: `tests/py/test_menubar.py` |
+| `scripts/build-menubar-app.sh` | Builds `~/Applications/Epiphany Live.app`, a no-Dock launcher that restarts `menubar.py` if it dies |
+| `scripts/com.heyitsmejosh.epiphany-live.plist` | launchd job that runs `ibkr-live.py` without the menu bar app |
+| `tradingview/backtest.py` | Strategy research: replays rules on daily prices (watchlist, S&P 500 stocks, 16 ETFs, S&P since 1928, BTC, portfolio mode), next-day fills, 0.1% fee per side, tuned 2012-2019 and graded blind 2020-now. Results in `tradingview/results-*.txt` |
+| `tradingview/edge.py` | Cross-sectional momentum with a market trend filter on S&P 500 stocks; `--stress` runs blind periods, fee levels and holding counts |
+| `tradingview/intraday.py` | 5-minute dip-buy simulation on the 16 ETFs; shows fees eat it |
 
 ## External services
 
