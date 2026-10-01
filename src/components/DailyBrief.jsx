@@ -39,7 +39,7 @@ export default function DailyBrief({ t, font, dark, isPro }) {
         justifyContent: 'space-between',
         gap: 8,
       }}>
-        <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.textSecondary }}>Daily Brief · Pro</span>
+        <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.textSecondary }}>Daily Brief · Premium</span>
         <button
           onClick={() => window.dispatchEvent(new Event('epiphany:show-pricing'))}
           style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: 6, color: t.textSecondary, cursor: 'pointer', fontSize: 10, padding: '3px 8px', fontFamily: font }}
