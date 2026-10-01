@@ -1,4 +1,5 @@
 import { sumDebt, sumReceivable } from '../utils/debtPayoff';
+import { FX_SYMBOL, quoteCurrency, toCad } from '../utils/currency';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   DEMO_HOLDINGS, DEMO_ACCOUNTS, DEMO_BUDGET, DEMO_DEBT,
@@ -131,8 +132,7 @@ export function usePortfolio(stocks, isAuthenticated) {
   // Holdings whose symbols aren't in the main stocks feed (e.g. broker-synced
   // RL) get a one-shot quote fetch so they don't render as $0.
   useEffect(() => {
-    const missing = holdings
-      .map(h => h.symbol)
+    const missing = [...holdings.map(h => h.symbol), ...(holdings.length ? [FX_SYMBOL] : [])]
       .filter(s => s && !stocks?.[s] && !extraQuotes[s]);
     if (missing.length === 0) return;
     let cancelled = false;
@@ -177,7 +177,12 @@ export function usePortfolio(stocks, isAuthenticated) {
     });
   }, [holdings, stocks, extraQuotes]);
 
-  const stocksValue = useMemo(() => valuedHoldings.reduce((sum, h) => sum + h.value, 0), [valuedHoldings]);
+  // Holdings are priced in their listing currency (mostly USD); cash is CAD. Sum both in CAD.
+  const usdPerCad = (stocks?.[FX_SYMBOL] ?? extraQuotes[FX_SYMBOL])?.price ?? null;
+  const stocksValue = useMemo(
+    () => valuedHoldings.reduce((sum, h) => sum + (toCad(h.value, quoteCurrency(h.symbol), usdPerCad) ?? 0), 0),
+    [valuedHoldings, usdPerCad],
+  );
   const cashValue = useMemo(() => accounts.reduce((sum, a) => sum + (a.cash ?? a.balance), 0), [accounts]);
   const totalDebt = useMemo(() => sumDebt(debt), [debt]);
   const totalReceivable = useMemo(() => sumReceivable(debt), [debt]);
