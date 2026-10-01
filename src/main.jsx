@@ -5,7 +5,7 @@ import App from './App.jsx'
 import { ErrorBoundary } from './ErrorBoundary.jsx'
 import { migrateStorageKeys } from './utils/migrateStorageKey.js'
 
-window.__MONICA_BUILD__ = __MONICA_BUILD__;
+window.__EPIPHANY_BUILD__ = __EPIPHANY_BUILD__;
 
 migrateStorageKeys();
 

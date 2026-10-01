@@ -152,6 +152,30 @@ describe('Auth API', () => {
       expect(res.data.error).toContain('Invalid email format');
     });
 
+    it('should reject emails carrying markup', async () => {
+      const { req, res } = createReqRes({
+        action: 'register',
+        body: { email: '<script>alert(1)</script>@example.test', password: 'password123' },
+      });
+
+      await handler(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.data.error).toContain('Invalid email format');
+    });
+
+    it('should accept an email with a trailing space from autofill', async () => {
+      const { req, res } = createReqRes({
+        action: 'register',
+        body: { email: 'Space@Example.test ', password: 'password123' },
+      });
+
+      await handler(req, res);
+
+      expect(res.status).not.toHaveBeenCalledWith(400);
+      expect(res.data.user.email).toBe('space@example.test');
+    });
+
     it('should reject emails without domain', async () => {
       const { req, res } = createReqRes({
         action: 'register',

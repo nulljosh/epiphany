@@ -41,8 +41,8 @@ const VERIFY_TTL = 24 * 60 * 60; // 24 hours
 const RESET_TTL = 60 * 60; // 1 hour
 const DEFAULT_BASE_URL = 'https://epiphany.heyitsmejosh.com';
 
-// Email validation: simplified RFC 5322
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Email validation: simplified RFC 5322, minus characters that only show up in injection attempts
+const EMAIL_REGEX = /^[^\s@<>"'`,;()\[\]\\]+@[^\s@<>"'`,;()\[\]\\]+\.[^\s@<>"'`,;()\[\]\\]+$/;
 
 function isValidEmail(email) {
   return EMAIL_REGEX.test(email) && email.length <= 254;
@@ -489,7 +489,8 @@ export default async function handler(req, res) {
 
   // POST: register
   if (action === 'register') {
-    const { email, password } = req.body || {};
+    const { email: rawEmail, password } = req.body || {};
+    const email = typeof rawEmail === 'string' ? rawEmail.trim() : rawEmail; // autofill often adds a trailing space
     if (!email || !password) {
       return errorResponse(res, 400, 'Email and password required');
     }
@@ -554,7 +555,8 @@ export default async function handler(req, res) {
 
   // POST: login
   if (action === 'login') {
-    const { email, password } = req.body || {};
+    const { email: rawEmail, password } = req.body || {};
+    const email = typeof rawEmail === 'string' ? rawEmail.trim() : rawEmail; // autofill often adds a trailing space
     if (!email || !password) {
       return errorResponse(res, 400, 'Email and password required');
     }
@@ -692,7 +694,8 @@ export default async function handler(req, res) {
 
   // POST: forgot-password
   if (action === 'forgot-password') {
-    const { email } = req.body || {};
+    const { email: rawEmail } = req.body || {};
+    const email = typeof rawEmail === 'string' ? rawEmail.trim() : rawEmail;
     const genericMsg = 'If an account exists with that email, a reset link has been generated.';
     if (!email) {
       return errorResponse(res, 400, 'Email is required');

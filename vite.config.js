@@ -2,7 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import compression from 'vite-plugin-compression'
+import { readFileSync } from 'node:fs'
 import { getStatementsPayload } from './server/api/statements-data.js'
+
+const APP_VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 
 const PROD_API = 'https://epiphany.heyitsmejosh.com';
 
@@ -36,7 +39,8 @@ function localStatementsPlugin() {
 export default defineConfig({
   base: '/',
   define: {
-    '__MONICA_BUILD__': JSON.stringify(new Date().toISOString()),
+    '__EPIPHANY_BUILD__': JSON.stringify(new Date().toISOString()),
+    '__APP_VERSION__': JSON.stringify(APP_VERSION),
   },
   build: {},
   plugins: [
