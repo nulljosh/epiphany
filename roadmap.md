@@ -1,7 +1,6 @@
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Offline mode
-- [x] Smooth business news drawer drag animation (global-space drag, rubber band, velocity spring; feel-check on device)
 - [ ] Better event filtering on the map
 - [ ] More info on event tap
 - [ ] Map events still slow to load (profile loadData fan-out)
@@ -230,18 +229,11 @@ it is recorded here.
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
-- [x] Port Epiphany Kelly (`tradingview/epiphany-kelly-strategy.pine`) into the engine, rule for rule, and score it next to the Surf modes
-- [x] Epiphany Kelly freeze fixed in Pine and the engine (learn after 10 trades, 1% floor)
-- [x] More assets: every S&P 500 stock with history back to 2011 (`backtest.py sp500`), next to BTC
 - [ ] ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
 - [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
 - [ ] Luck test: random entries with the same time in market, 1000 runs, report how often luck beats each strategy
 - [ ] Fee test: 0%, 0.1%, 0.25% per side
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
-- [x] Fix the WHITEPAPER's dead `simBenchmark.js` reference
-- [x] Edge found: Double 7s, 67% win rate, +0.39%/trade after fees, 22,614 blind S&P 500 trades (WHITEPAPER section 5)
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
-- [x] Double 7s drives the server autopilot (`morning-run.js` via `double7s()` in `src/utils/indicators.js`), paper only
-- [x] `double7s()` mirrored in `Shared/Indicators.swift` (iOS, macOS, watchOS) with XCTests, logic verified standalone
 - [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
