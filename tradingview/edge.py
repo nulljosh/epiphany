@@ -46,8 +46,11 @@ def simulate(days, C, pick, sched, lo, hi, lag=1):
                 a, b = C[s][i - 1], C[s][i]
                 vals[s] = v * (b / a) if a and b else v
                 new += vals[s]
-            rets.append(new / eq - 1 if eq else 0.0)
-            eq = new if vals else eq
+            if vals:  # in cash the day's return is 0, not -100%
+                rets.append(new / eq - 1 if eq else 0.0)
+                eq = new
+            else:
+                rets.append(0.0)
         if sched(i):
             names = pick(i - lag + 1 if lag else i + 1)
             target = {s: eq / len(names) for s in names} if names else {}

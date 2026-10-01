@@ -1,0 +1,15 @@
+429 S&P 500 stocks, 10111 days. Fee 0.1% per dollar traded.
+Pick on 2012-01-01..2019-12-31 by Sharpe, score blind 2020-01-01..now.
+
+strategy              setting | train Sharpe | TEST CAGR  maxDD  Sharpe  turnover/yr
+EW basket                  () |         1.44 |     14.7%    38%    0.78           1x
+Momentum 12-1       (126, 50) |         1.41 |     17.4%    41%    0.76          10x
+Momentum + trend    (126, 20) |         1.34 |     19.6%    31%    0.82          10x
+Low volatility       (63, 50) |         1.48 |      9.5%    32%    0.65           7x
+Weekly reversal         (20,) |         1.29 |     17.0%    59%    0.65          93x
+IBS next-day        (20, 0.1) |         1.65 |     15.4%    38%    0.71         469x
+IBS at-close*       (20, 0.2) |         1.43 |     36.1%    44%    1.29         478x
+
+* fills at the same close the signal reads; needs market-on-close orders placed minutes before the bell.
+Luck test Momentum + trend: random 20-stock picks on the same schedule matched its Sharpe 30% of the time.
+Luck test IBS at-close*: random 20-stock picks on the same schedule matched its Sharpe 0% of the time.

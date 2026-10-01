@@ -230,6 +230,19 @@ sits idle between trades, and that costs far more than the edge earns.
   holding, 7.1% against 6.2%, with a smaller worst drop (72% against 86%). But
   that win comes from the 1930s crash. Since 2000 and since 2020 holding earned
   more. So it is a way to sleep better, not a way to beat the market.
+- **One real lead, not a win yet: momentum with a market filter.** Across the 429
+  S&P 500 stocks (`tradingview/edge.py`), we held the 20 stocks with the best
+  6 month returns (skipping the latest month), only while the whole stock basket
+  was above its 200 day average, rebalanced monthly, 0.1% fees. Settings were
+  picked on 2012 to 2019 and graded on 2020 to now: 19.6% a year with a 31% worst
+  drop, against 15.1% and 34% for SPY and 14.7% and 38% for an equal-weight
+  basket. That clears our bar (more return, no bigger drop). Do not trust it
+  yet: the stock list is today's winners (survivorship bias flatters momentum
+  most), it is one blind period that was friendly to momentum, it holds only 20
+  names, and it trades about 10 times a year. Next tests: other years, higher
+  fees, and stocks that were delisted. Mixed asset classes are still untested.
+  A daily dip-buying version looked even better (36% a year) but it fills at the
+  same close it reads, which real orders cannot always do, so we do not count it.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
 - **Our original strategy, Epiphany Kelly, does not work.** Its buy signal wins
