@@ -243,3 +243,5 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 ## Ingested 2026-10-01
 - [ ] Refresh App Store and README screenshots, automatically every time the app changes.
 - [ ] Menu bar app for the live paper runner (rumps or SwiftBar): shows account change and SPY in the menu bar, Start and Stop, opens the log. Replaces the Desktop launcher
+- [ ] Sample-data mode for screenshots (launch argument, a wealthy demo portfolio) so fastlane can refresh iPhone, Mac and Watch shots without a login; then refresh README and landing screenshots
+- [ ] Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
