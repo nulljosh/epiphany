@@ -179,3 +179,4 @@ ios/Configs/Secrets.xcconfig
 # Replay GIFs, ~3MB each, regenerate with tradingview/record-watchlist.mjs
 tradingview/replays/
 tradingview/replay-*.gif
+tradingview/ibkr-state.json
