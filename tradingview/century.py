@@ -13,10 +13,12 @@ in tradingview/data/.
     python3 tradingview/century.py            # full run, writes nothing, print to stdout
     python3 tradingview/century.py --stocks   # also re-grade edge.py's stock momentum lead, halves split
     python3 tradingview/century.py --leverage # S&P above its average at L x leverage, daily since 1928; French momentum deciles
+    python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
+    python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
 """
 import csv, json, os, statistics, sys
 from datetime import datetime, timezone
-from backtest import FEE, fetch, fetch_yahoo
+from backtest import FEE, fetch, fetch_yahoo, get
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
@@ -718,12 +720,198 @@ def robust():
         print(f"  {lab}: " + "   ".join(f"{nm} {window(dl, cv, a_, b_)[0]:+.0%} (drop {window(dl, cv, a_, b_)[1]:.0%})" for nm, cv in cvs.items()))
 
 
+# ---------- Trend 2x on other indexes, with dividends (--indexes) ----------
+
+GAP = 0.008  # measured SSO model gap, a year, taken off while in the fund
+
+
+def raw(sym):
+    """Yahoo [date, close, adjusted close]. Close has splits but no dividends; adjusted close has both. Cached in tradingview/data/."""
+    path = os.path.join(DATA, f"yahoo-raw-{sym.replace('^', '').replace('=', '_')}.json")
+    if os.path.exists(path):
+        return json.load(open(path))
+    import urllib.parse
+    r = json.loads(get(f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(sym)}?period1=-1400000000&period2=9999999999&interval=1d"))["chart"]["result"][0]
+    cl, adj = r["indicators"]["quote"][0]["close"], r["indicators"]["adjclose"][0]["adjclose"]
+    out = [[datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d"), round(c, 6), round(a, 6)] for t, c, a in zip(r["timestamp"], cl, adj) if c and a]
+    json.dump(out, open(path, "w"))
+    return out
+
+
+def yield_est(sym, a="0000", b="9999"):
+    """Dividend yield a year of a fund, from its own adjusted close against its plain close, between dates a and b."""
+    rs = [r for r in raw(sym) if a <= r[0] <= b]
+    yrs = (datetime.fromisoformat(rs[-1][0]) - datetime.fromisoformat(rs[0][0])).days / 365.25
+    return ((rs[-1][2] / rs[0][2]) / (rs[-1][1] / rs[0][1])) ** (1 / yrs) - 1
+
+
+def bill_fn():
+    tb = {r[0][:7]: float(r[1]) / 100 for r in rows("tb3ms.csv") if r[1] not in ("", ".")}
+    rf = {m: v[3] * 12 for m, v in french("F-F_Research_Data_Factors_CSV.zip").items()}
+    return lambda d: tb.get(d[:7], rf.get(d[:7], tb[max(tb)])) / 252
+
+
+def idx_series(kind, sym, etf=None):
+    """(dates, price the signal reads, daily total return). index+yield: index price plus the flat yield measured on etf.
+    etf: the fund's plain close for the signal, its adjusted close (real dividends) for the return. tr: an index that already reinvests dividends."""
+    if kind == "etf":
+        rs = raw(sym)
+        ds, sig, adj = [r[0] for r in rs], [r[1] for r in rs], [r[2] for r in rs]
+        y = 0.0
+    else:
+        bars = daily(sym)
+        ds = [datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d") for r in bars]
+        sig = adj = [r[1] for r in bars]
+        y = yield_est(etf) if kind == "index+yield" else 0.0
+    return ds, sig, [0.0] + [adj[i] / adj[i - 1] - 1 + y / 252 for i in range(1, len(adj))]
+
+
+def trend_pos(sig, a, delay=0):
+    n = len(sig)
+    sg, run = [False] * n, sum(sig[:200])
+    for i in range(200, n):
+        run += sig[i] - sig[i - 200]
+        sg[i] = sig[i] > run / 200
+    return [sg[j - 2 - delay] for j in range(a, n)]
+
+
+def yearly(dates, cv, a):
+    out = {}
+    for k in range(1, len(cv)):
+        e = out.setdefault(dates[a + k - 1][:4], [cv[k - 1], cv[k], 0])
+        e[1], e[2] = cv[k], e[2] + 1
+    return {y: e / s for y, (s, e, n) in out.items() if n >= 200}
+
+
+def rand_base(pos, gin, gout, yrs, draws=500, seed=7):
+    """Same random in/out schedules as --robust: same days in the market, same number of switches. Returns (CAGR, drop) of the rule and a list for the randoms."""
+    import math, random
+    lf = math.log(1 - FEE)
+    def path(p):
+        cum = pk = worst = 0.0
+        prev = p[0]
+        for gi, go, x in zip(gin, gout, p):
+            if x != prev:
+                cum += lf
+                prev = x
+            cum += gi if x else go
+            if cum > pk:
+                pk = cum
+            elif pk - cum > worst:
+                worst = pk - cum
+        return math.exp(cum / yrs) - 1, 1 - math.exp(-worst)
+    n, n_in = len(pos), sum(pos)
+    k = sum(pos[i] != pos[i - 1] for i in range(1, n))
+    segs = k + 1
+    n_si = (segs + 1) // 2 if pos[0] else segs // 2
+    n_so = segs - n_si
+    def comp(total, m):
+        cuts = sorted(random.sample(range(1, total), m - 1))
+        return [b - a for a, b in zip([0] + cuts, cuts + [total])]
+    random.seed(seed)
+    res = []
+    for _ in range(draws):
+        ins, outs = comp(n_in, n_si), comp(n - n_in, n_so)
+        p, st, ii, oo = [], pos[0], 0, 0
+        for _ in range(segs):
+            if st:
+                p += [True] * ins[ii]; ii += 1
+            else:
+                p += [False] * outs[oo]; oo += 1
+            st = not st
+        res.append(path(p))
+    return path(pos), res, k
+
+
+def trend_indexes():
+    import math
+    bill = bill_fn()
+    print("TREND 2x ON OTHER INDEXES, WITH DIVIDENDS. Rule fixed, nothing tuned: 2x while the index closes above its 200 day average, T-bills below,")
+    print(f"signal at the close, trade the next close, {FEE:.1%} a switch, daily-reset 2x fund model ({SWAP_EXP:.1%} expense, T-bill financing) with the measured {GAP:.1%} a year SSO gap")
+    print("taken off while in the fund. Cash is the US T-bill for every market. Blind = each series' second half by date. Bar: more CAGR than hold on the blind half,")
+    print("no bigger worst drop, wins most blind decades.\n")
+    print("DIVIDEND YIELDS (the fund's own adjusted close against its plain close, a year):")
+    ylds = {e: yield_est(e) for e in ("QQQ", "XIU.TO", "EWJ", "DIA", "EWU")}
+    for e, y in ylds.items():
+        rs = raw(e)
+        print(f"  {e:8}{y:6.2%}   {rs[0][0]}..{rs[-1][0]}")
+    print("  The index rows add that yield flat on every day the index is held (hold and rule alike). ^GDAXI is a total return index already (Yahoo's DAX is the performance index).")
+    print("  ISF.L (the FTSE 100 fund) is not dividend adjusted on Yahoo (0.03% a year), so the FTSE rows use EWU (MSCI UK, USD) instead.\n")
+    sets = [("Nasdaq 100", [("index+yield", "^NDX", "QQQ", "^NDX price + QQQ yield"), ("etf", "QQQ", None, "QQQ real dividends")]),
+            ("TSX", [("index+yield", "^GSPTSE", "XIU.TO", "^GSPTSE price + XIU yield"), ("etf", "XIU.TO", None, "XIU.TO real dividends")]),
+            ("Nikkei 225", [("index+yield", "^N225", "EWJ", "^N225 price + EWJ yield"), ("etf", "EWJ", None, "EWJ real dividends, USD")]),
+            ("DAX", [("tr", "^GDAXI", None, "^GDAXI (total return)"), ("etf", "EWG", None, "EWG real dividends, USD")]),
+            ("Dow", [("index+yield", "^DJI", "DIA", "^DJI price + DIA yield"), ("etf", "DIA", None, "DIA real dividends")]),
+            ("FTSE 100", [("index+yield", "^FTSE", "EWU", "^FTSE price + EWU yield"), ("etf", "EWU", None, "EWU real dividends, USD")])]
+    print(f"{'series':30}{'blind from':>11}{'hold':>11}{'rule':>11}{'rule-0.8%':>12}{'decades':>9}{'years':>8}{'random':>8}{'1 day late':>13}  verdict")
+    verdicts = {}
+    for name, variants in sets:
+        for kind, sym, etf, label in variants:
+            ds, sig, ret = idx_series(kind, sym, etf)
+            d0, d1 = datetime.fromisoformat(ds[0]), datetime.fromisoformat(ds[-1])
+            mid = (d0 + (d1 - d0) / 2).strftime("%Y-%m-%d")
+            a = next(i for i, d in enumerate(ds) if d >= mid)
+            n = len(ds)
+            bl = [bill(ds[j]) for j in range(a, n)]
+            r_, dd = ret[a:], [ds[a - 1]] + ds[a:]
+            hold = [1.0]
+            for x in r_:
+                hold.append(hold[-1] * (1 + x))
+            pos = trend_pos(sig, a)
+            rule = legs([0.0] * len(r_), r_, bl, pos, pos, FEE, GAP)
+            late = legs([0.0] * len(r_), r_, bl, trend_pos(sig, a, 1), trend_pos(sig, a, 1), FEE, GAP)
+            raw_rule = legs([0.0] * len(r_), r_, bl, pos, pos, FEE)
+            hc, hm = cstats(dd, hold)
+            rc, rm = cstats(dd, rule)
+            lc, lm = cstats(dd, late)
+            xc, xm = cstats(dd, raw_rule)
+            hdec, rdec = ddecades(ds, hold, a), ddecades(ds, rule, a)
+            won = sum(rdec[d] > hdec[d] for d in hdec)
+            hy, ry = yearly(ds, hold, a), yearly(ds, rule, a)
+            ywon = sum(ry[y] > hy[y] for y in hy)
+            yrs = (datetime.fromisoformat(ds[-1]) - datetime.fromisoformat(ds[a - 1])).days / 365.25
+            gin = [math.log(max(1 + 2 * r_[i] - bl[i] - (SWAP_EXP + GAP) / 252, 1e-12)) for i in range(len(r_))]
+            gout = [math.log(1 + b) for b in bl]
+            (pc, pd), res, k = rand_base(pos, gin, gout, yrs)
+            pct = sum(r[0] < pc for r in res) / len(res)
+            both = sum(r[0] >= pc and r[1] <= pd for r in res)
+            ok = rc > hc and rm <= hm and won > len(hdec) / 2
+            verdicts[(name, kind)] = (label, ds[a], hc, hm, rc, rm, won, len(hdec), ywon, len(hy), pct, both, lc, lm, ok, k / yrs, xc, xm)
+            print(f"{label[:29]:30}{ds[a]:>11}{hc:>7.1%}/{hm:>3.0%}{xc:>7.1%}/{xm:>3.0%}{rc:>8.1%}/{rm:>3.0%}{won:>6}/{len(hdec)}{ywon:>5}/{len(hy)}{pct:>8.0%}{lc:>8.1%}/{lm:>3.0%}  {'PASS' if ok else 'fail'}")
+    print("\n  columns: hold = 1x with dividends; rule = fund model; rule-0.8% = the headline, gap taken off; decades/years = blind decades (3+ years) and calendar years the headline beat hold;")
+    print("  random = share of 500 random schedules (same days in, same switches, gap off) the headline beats; 1 day late = headline traded one close later.")
+    print("\nRANDOM BASELINE, matched on both return and drop (of 500):")
+    for key, v in verdicts.items():
+        print(f"  {v[0]:30} beats {v[10]:.0%} of random on return; randoms with both a higher return and a no bigger drop: {v[11]} of 500; {v[14] and 'pass' or 'fail'}; {v[15]:.1f} switches a year")
+    print("\nMODEL VS REAL 2x FUNDS, always invested, T-bill financing + 0.9% expense, from the fund's first day (underlying = index price + the ETF's yield over the same window)")
+    for fund, idx, etf in (("QLD", "^NDX", "QQQ"), ("DDM", "^DJI", "DIA"), ("SSO", "^GSPC", "SPY")):
+        fr = raw(fund)
+        ur = {datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d"): r[1] for r in daily(idx)}
+        ds = [r[0] for r in fr if r[0] in ur]
+        y = yield_est(etf, ds[0], ds[-1])
+        mv, rv, em, er = [1.0], [1.0], 1.0, 1.0
+        f = {r[0]: r[2] for r in fr}
+        for i in range(1, len(ds)):
+            r = ur[ds[i]] / ur[ds[i - 1]] - 1 + y / 252
+            em *= 1 + 2 * r - bill(ds[i]) - SWAP_EXP / 252
+            er = f[ds[i]] / f[ds[0]]
+            mv.append(em); rv.append(er)
+        mc, mm = cstats(ds, mv)
+        rc, rm = cstats(ds, rv)
+        print(f"  {fund:4} {ds[0]}..{ds[-1]}  yield {y:.2%}  model {mc:.1%} / worst {mm:.0%}   real {rc:.1%} / worst {rm:.0%}   gap {mc - rc:+.1%} a year")
+    print("  HXU.TO (2x TSX 60) and HQU.TO are not served by Yahoo any more (delisted), so the TSX model could not be checked against a real fund.")
+    return verdicts
+
+
 if __name__ == "__main__":
     if "--robust" in sys.argv:
         robust()
         sys.exit()
     if "--leverage" in sys.argv:
         leverage()
+        sys.exit()
+    if "--indexes" in sys.argv:
+        trend_indexes()
         sys.exit()
     century()
     if "--stocks" in sys.argv:

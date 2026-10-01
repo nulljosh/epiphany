@@ -383,6 +383,48 @@ and in 2022 it lost more than holding (-20% against -13%, and -31% against
 -13.7% against -20.5% for holding. Verdict: worth paper trading, not real money,
 and only with next-close trades and fees under 0.25%.
 
+**Does it work on other indexes, with dividends?** The earlier other-markets
+check left dividends out, so we reran it with them in (`century.py --indexes`,
+raw output in `tradingview/results-trend-indexes.txt`). Same rule, nothing
+tuned, same 0.1% fee, same 0.8% fund gap off the top, and each series graded
+on its own second half by date. Real dividends come from the funds' adjusted
+closes (QQQ, XIU.TO, EWJ, EWG, DIA, EWU). Where the fund is younger than the
+index we also ran the index price plus a flat yield measured off that fund:
+0.6% for the Nasdaq 100 (QQQ), 2.4% for the TSX (XIU), 1.5% for the Nikkei
+(EWJ), 2.1% for the Dow (DIA) and 3.8% for the FTSE (EWU). The DAX is a total
+return index already, so its earlier row had dividends all along. The bar is
+the old one: more return than holding, no bigger worst drop, and a win in most
+blind decades. Against the real 2x funds the model runs 0.7% a year too kind
+for QLD (Nasdaq 100) and for DDM (Dow), the same as SSO over the same years, so
+the 0.8% we take off is about right. The TSX fund, HXU.TO, is gone from Yahoo,
+so the TSX model has no real fund to check against.
+
+- **Nasdaq 100: passes on the long test, fails on the real one.** On the index
+  plus yield from 2006, the rule made 20.3% a year against 15.8% for holding,
+  with a 41% worst drop against 53%. It won 2 of 3 decades and 13 of 19 years,
+  beat 70% of random schedules, and no random schedule matched it on both
+  return and drop. One day late it still made 19.3%, with a 52% drop. But on
+  QQQ's own real dividends from 2012 it made 27.8% against 20.1% and fell 42%
+  against 35%, so it misses the drop bar. The honest read is a lead, not a pass.
+- **TSX: fails.** From 2003 it made 9.4% against 10.1%, with a 43% drop against
+  49%. On XIU from 2013 it made 11.4% against 11.2% with the same 34% drop and
+  won only 1 of 2 decades. It beat about half of random schedules, a coin flip.
+- **Nikkei: fails.** From 1995 it made 6.0% against 5.8% but fell 68% against
+  63%. On EWJ (dollars, from 2011) it lost outright, 3.2% against 7.8%.
+- **DAX: fails.** From 2007 it made 5.0% against 6.4%. Its earlier win came
+  from the whole history since 1988, not the second half. On EWG it made 3.6%
+  against 5.5%.
+- **Dow: fails.** From 2009 it made 9.8% against 13.4%, and beat only 2% of
+  random schedules, so a random in and out did better. DIA says the same, 10.1%
+  against 12.6%.
+- **FTSE: fails.** From 2005 it lost money, -0.3% a year with a 68% drop, while
+  holding made 7.6% with a 45% drop. EWU says the same, -1.4% against 6.0%.
+
+So the S&P result is not general. One index clears the long test, none clears
+both, and the strongest case is the Nasdaq 100, the one index the rule shares
+a lot with the S&P. If we paper trade a second sleeve it is QLD (2x Nasdaq 100,
+US listed), on paper only. There is no TSX sleeve to run.
+
 Last, a check on momentum that cannot have survivorship bias: Ken French's
 monthly returns for all US stocks sorted into tenths by their past year,
 since 1927, value weighted, no trend filter. The top tenth beat the market by
@@ -399,6 +441,43 @@ better than it really was. Prices are assumed to fill exactly, with no extra
 slippage beyond the fee. And we haven't yet checked how often random trades
 would do just as well. Until those are done, treat this as a strong lead, not
 a promise.
+
+#### Scoreboard
+
+Every edge we have tried, graded blind, against holding over the same years.
+The bar is three things at once: more yearly return than holding, no bigger
+worst drop, and a win in most blind decades. The numbers come from the results
+files named above.
+
+| Edge | Blind years | Blind return / worst drop | Holding | Pass |
+|---|---|---|---|---|
+| Double 7s, one account over 16 index funds | 2020 to now | 2.7% / 35% | SPY 15.1% / 34% | fail |
+| Epiphany Kelly on 429 stocks | 2020 to now | -2.0% typical year | 9.1% | fail |
+| Trend only, S&P above its 12 month average | 1949 to now | 11.4% / 23% | 11.7% / 51% | fail (less return) |
+| Dual momentum, stocks, bonds, gold | 1949 to now | 13.5% / 27% | 11.7% / 51% | fail (2 of 8 unseen decades) |
+| Stock momentum, point in time S&P 500 | 2020 to now | 9.8% / 35% | SPY 15.1% / 34% | fail |
+| French momentum top tenth, 0.1% costs | 1976 to now | 15.9% / 52% | 12.3% / 50% | fail (bigger drop) |
+| Trend 2x S&P, 2x fund above 200 day average | 1976 to now | 14.4% / 44% | 12.1% / 55% | pass (5 of 6 decades) |
+| Trend 2x Nasdaq 100, index plus yield | 2006 to now | 20.3% / 41% | 15.8% / 53% | pass (2 of 3 decades) |
+| Trend 2x Nasdaq 100, QQQ real dividends | 2012 to now | 27.8% / 42% | 20.1% / 35% | fail (bigger drop) |
+| Trend 2x TSX, index plus yield | 2003 to now | 9.4% / 43% | 10.1% / 49% | fail (less return) |
+| Trend 2x TSX, XIU real dividends | 2013 to now | 11.4% / 34% | 11.2% / 35% | fail (1 of 2 decades) |
+| Trend 2x Nikkei, index plus yield | 1995 to now | 6.0% / 68% | 5.8% / 63% | fail (bigger drop) |
+| Trend 2x Japan, EWJ real dividends | 2011 to now | 3.2% / 49% | 7.8% / 33% | fail |
+| Trend 2x DAX, total return index | 2007 to now | 5.0% / 54% | 6.4% / 55% | fail (less return) |
+| Trend 2x Germany, EWG real dividends | 2011 to now | 3.6% / 48% | 5.5% / 47% | fail |
+| Trend 2x Dow, index plus yield | 2009 to now | 9.8% / 38% | 13.4% / 37% | fail |
+| Trend 2x Dow, DIA real dividends | 2012 to now | 10.1% / 38% | 12.6% / 37% | fail |
+| Trend 2x FTSE 100, index plus yield | 2005 to now | -0.3% / 68% | 7.6% / 45% | fail |
+| Trend 2x UK, EWU real dividends | 2011 to now | -1.4% / 49% | 6.0% / 43% | fail |
+
+The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
+off the matching fund. The Epiphany Kelly row has no drop figure and holding is
+the 429 stocks, so it is a different yardstick from the others. Two of 19 rows
+pass, and they are the same bet twice: trend at 2x on the S&P and the
+Nasdaq 100. The only rule we paper trade is the first. The Nasdaq 100 stays a
+lead until its real-dividend half stops falling further than holding.
+
 
 ### Broker abstraction
 

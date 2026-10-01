@@ -1,0 +1,50 @@
+TREND 2x ON OTHER INDEXES, WITH DIVIDENDS. Rule fixed, nothing tuned: 2x while the index closes above its 200 day average, T-bills below,
+signal at the close, trade the next close, 0.1% a switch, daily-reset 2x fund model (0.9% expense, T-bill financing) with the measured 0.8% a year SSO gap
+taken off while in the fund. Cash is the US T-bill for every market. Blind = each series' second half by date. Bar: more CAGR than hold on the blind half,
+no bigger worst drop, wins most blind decades.
+
+DIVIDEND YIELDS (the fund's own adjusted close against its plain close, a year):
+  QQQ      0.63%   1999-03-10..2026-10-01
+  XIU.TO   2.44%   1999-10-04..2026-10-01
+  EWJ      1.48%   1996-03-18..2026-10-01
+  DIA      2.10%   1998-01-20..2026-10-01
+  EWU      3.81%   1996-03-18..2026-10-01
+  The index rows add that yield flat on every day the index is held (hold and rule alike). ^GDAXI is a total return index already (Yahoo's DAX is the performance index).
+  ISF.L (the FTSE 100 fund) is not dividend adjusted on Yahoo (0.03% a year), so the FTSE rows use EWU (MSCI UK, USD) instead.
+
+series                         blind from       hold       rule   rule-0.8%  decades   years  random   1 day late  verdict
+^NDX price + QQQ yield         2006-04-03  15.8%/53%  21.0%/41%   20.3%/41%     2/3   13/19     70%   19.3%/52%  PASS
+QQQ real dividends             2012-12-19  20.1%/35%  28.6%/41%   27.8%/42%     2/2   10/13     54%   29.9%/43%  fail
+^GSPTSE price + XIU yield      2003-02-13  10.1%/49%  10.1%/42%    9.4%/43%     2/3   10/23     50%    7.4%/51%  fail
+XIU.TO real dividends          2013-04-02  11.2%/35%  12.1%/34%   11.4%/34%     1/2    7/12     52%    8.8%/39%  fail
+^N225 price + EWJ yield        1995-11-20   5.8%/63%   6.5%/67%    6.0%/68%     2/4   15/30     89%    4.3%/65%  fail
+EWJ real dividends, USD        2011-06-27   7.8%/33%   3.7%/48%    3.2%/49%     0/2    6/14     37%    2.4%/49%  fail
+^GDAXI (total return)          2007-05-16   6.4%/55%   5.6%/53%    5.0%/54%     0/2    9/18     65%    3.3%/52%  fail
+EWG real dividends, USD        2011-06-27   5.5%/47%   4.1%/48%    3.6%/48%     1/2    7/14     62%    2.5%/56%  fail
+^DJI price + DIA yield         2009-05-18  13.4%/37%  10.5%/38%    9.8%/38%     0/2    5/16      2%    9.9%/48%  fail
+DIA real dividends             2012-05-29  12.6%/37%  10.9%/38%   10.1%/38%     1/2    5/13      7%   10.6%/48%  fail
+^FTSE price + EWU yield        2005-05-18   7.6%/45%   0.3%/66%   -0.3%/68%     1/3    3/20      5%    0.4%/67%  fail
+EWU real dividends, USD        2011-06-27   6.0%/43%  -0.9%/47%   -1.4%/49%     0/2    5/14     19%   -3.6%/64%  fail
+
+  columns: hold = 1x with dividends; rule = fund model; rule-0.8% = the headline, gap taken off; decades/years = blind decades (3+ years) and calendar years the headline beat hold;
+  random = share of 500 random schedules (same days in, same switches, gap off) the headline beats; 1 day late = headline traded one close later.
+
+RANDOM BASELINE, matched on both return and drop (of 500):
+  ^NDX price + QQQ yield         beats 70% of random on return; randoms with both a higher return and a no bigger drop: 0 of 500; pass; 6.1 switches a year
+  QQQ real dividends             beats 54% of random on return; randoms with both a higher return and a no bigger drop: 0 of 500; fail; 4.0 switches a year
+  ^GSPTSE price + XIU yield      beats 50% of random on return; randoms with both a higher return and a no bigger drop: 0 of 500; fail; 7.5 switches a year
+  XIU.TO real dividends          beats 52% of random on return; randoms with both a higher return and a no bigger drop: 28 of 500; fail; 7.6 switches a year
+  ^N225 price + EWJ yield        beats 89% of random on return; randoms with both a higher return and a no bigger drop: 7 of 500; fail; 7.8 switches a year
+  EWJ real dividends, USD        beats 37% of random on return; randoms with both a higher return and a no bigger drop: 97 of 500; fail; 10.4 switches a year
+  ^GDAXI (total return)          beats 65% of random on return; randoms with both a higher return and a no bigger drop: 3 of 500; fail; 6.0 switches a year
+  EWG real dividends, USD        beats 62% of random on return; randoms with both a higher return and a no bigger drop: 2 of 500; fail; 8.6 switches a year
+  ^DJI price + DIA yield         beats 2% of random on return; randoms with both a higher return and a no bigger drop: 23 of 500; fail; 7.5 switches a year
+  DIA real dividends             beats 7% of random on return; randoms with both a higher return and a no bigger drop: 23 of 500; fail; 7.9 switches a year
+  ^FTSE price + EWU yield        beats 5% of random on return; randoms with both a higher return and a no bigger drop: 209 of 500; fail; 10.9 switches a year
+  EWU real dividends, USD        beats 19% of random on return; randoms with both a higher return and a no bigger drop: 66 of 500; fail; 9.2 switches a year
+
+MODEL VS REAL 2x FUNDS, always invested, T-bill financing + 0.9% expense, from the fund's first day (underlying = index price + the ETF's yield over the same window)
+  QLD  2006-06-21..2026-10-01  yield 0.78%  model 26.1% / worst 83%   real 25.4% / worst 83%   gap +0.7% a year
+  DDM  2006-06-21..2026-10-01  yield 2.22%  model 14.5% / worst 82%   real 13.8% / worst 82%   gap +0.7% a year
+  SSO  2006-06-21..2026-10-01  yield 1.84%  model 16.4% / worst 85%   real 15.7% / worst 85%   gap +0.7% a year
+  HXU.TO (2x TSX 60) and HQU.TO are not served by Yahoo any more (delisted), so the TSX model could not be checked against a real fund.
