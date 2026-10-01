@@ -8,6 +8,7 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
     python3 tradingview/backtest.py etfs     # index and sector ETFs
     python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
+    python3 tradingview/backtest.py sp-century  # S&P 500 index since 1927, per decade
     python3 tradingview/backtest.py watchlist  # live TradingView watchlist via the MCP, each symbol from its first bar
 """
 import json, os, re, statistics, subprocess, sys, time, urllib.parse, urllib.request
@@ -442,8 +443,31 @@ def watchlist():
     universe(list(data), f"TradingView watchlist ({len(tv)})", origin=True, data=data)
 
 
+def sp_century():
+    """S&P 500 index since 1927: picked on the first half (to ~1977), graded blind on the rest, one row per decade."""
+    bars = fetch_yahoo("^GSPC")
+    o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
+    tr, te = halves(bars)
+    day = lambda i: datetime.fromtimestamp(bars[i][0], timezone.utc).date()
+    show = ["Hold", "Two MA", "Donchian", "Supertrend+RSI", "RSI2 pullback", "Cumulative RSI", "Double 7s"]
+    picks = {m: max(GRID[m], key=lambda p: score(m, p, bars, (o, h, l, c), *tr)["cagr"]) for m in show}
+    print(f"S&P 500 index, {day(0)} to {day(len(bars) - 1)}. Picked on {day(tr[0])}..{day(tr[1] - 1)}, blind from {day(te[0])}.")
+    print("Before 1962 the data is closes only, so high/low strategies are blind there. Fee 0.1%/side.\n")
+    print(f"{'decade':8}" + "".join(f"{m[:14]:>15}" for m in show))
+    for y in range(1930, datetime.now(timezone.utc).year + 1, 10):
+        lo, hi = window(bars, f"{y}-01-01", f"{y + 9}-12-31")
+        print(f"{str(y) + 's':8}" + "".join(f"{score(m, picks[m], bars, (o, h, l, c), lo, hi)['cagr']:>15.1%}" for m in show))
+    for name, (lo, hi) in (("blind", te), ("all", (200, len(bars)))):
+        rows = [score(m, picks[m], bars, (o, h, l, c), lo, hi) for m in show]
+        print(f"{name + ' win':8}" + "".join(f"{(sum(x > 0 for x in r['rets']) / max(len(r['rets']), 1)):>15.0%}" for r in rows))
+        print(f"{name + ' n':8}" + "".join(f"{len(r['rets']):>15}" for r in rows))
+        print(f"{name + ' dd':8}" + "".join(f"{r['mdd']:>15.0%}" for r in rows))
+
+
 def main():
     check()
+    if sys.argv[1:] == ["sp-century"]:
+        return sp_century()
     if sys.argv[1:] == ["watchlist"]:
         return watchlist()
     if sys.argv[1:] == ["sp500"]:

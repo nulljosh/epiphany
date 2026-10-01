@@ -73,7 +73,7 @@ One strategy passed. It's called Double 7s. When something that's been rising ha
 | Our TradingView watchlist, every symbol from its first day | 69% | 0.62% | 3,508 |
 | Bitcoin | 71% | | 104 |
 
-Two out of three trades make money, after fees, on years the strategy never saw. Only buying when fear is high (the VIX is spiking) lifts that to 73% on index funds.
+Two out of three trades make money, after fees, on years the strategy never saw. Only buying when fear is high (the VIX is spiking) lifts that to 73% on index funds. On the S&P 500 itself, graded on 49 years it never saw (1977 to now), the RSI(2) dip buy made money on 77% of trades.
 
 What it won't do is beat buying and holding. It's in the market a few days at a time, so most of the year the cash sits still. You get a smoother ride, not a bigger one.
 

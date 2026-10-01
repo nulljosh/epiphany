@@ -122,6 +122,23 @@ day average) has its worst close in 10 days, buy. When it has its best close in
 The watchlist row reads the symbols straight off our TradingView watchlist
 (`backtest.py watchlist`), so the test follows whatever is on the list.
 
+**Nearly 100 years of the S&P 500.** The index itself, tuned on 1928 to 1977
+and graded on 1977 to now, 49 years it never saw
+(`backtest.py sp-century`):
+
+| Strategy | Trades that made money | Trades | Worst drop |
+|---|---|---|---|
+| RSI(2) pullback | 77% | 377 | 37% |
+| Cumulative RSI | 75% | 243 | 30% |
+| Double 7s | 74% | 327 | 31% |
+| Buy and hold | | | 57% |
+
+Buying dips works best on the whole market, not on single stocks. It got
+through the 2000s at about +3% a year while holding lost 2.5% a year. Two
+things to know: this index leaves out dividends, which makes holding look a
+few percent a year worse than it really was, and before 1962 the data is
+closing prices only.
+
 **Everything else we tried,** on the 429 S&P 500 stocks, 2020 to now:
 
 | Strategy | Trades that made money | Average gain per trade | Typical yearly return |
@@ -149,7 +166,8 @@ The watchlist row reads the symbols straight off our TradingView watchlist
 - **Monica does not work yet.** Its buy signal loses money. Its bet sizing has
   a bug: one early loss before any win sets the bet to zero forever. It stays
   paper only until both are fixed.
-- **80% is not there yet.** The best so far is 73%. Stacking extra filters on
+- **80% is not there yet.** The best so far is 77%, RSI(2) on the S&P 500
+  index over 49 unseen years. Stacking extra filters on
   top made things worse, not better.
 
 **What could still be wrong.** The stock list is today's S&P 500. Companies
