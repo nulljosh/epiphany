@@ -6,7 +6,7 @@
 During US market hours it watches the account and pops a macOS notification when our positions move another
 --step percent, or the account moves another --abs from the first run. At 3:45pm New York (12:45pm
 Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per day so the orders fill today. If the Gateway logs out it tells you once, and
-tells you again when it is back. Between 3:45 and 4pm it also runs scripts/ibkr-trend.py --go (Trend 2x) once per day. Demo accounts only (the runner refuses real ones). Logs to
+tells you again when it is back. Between 3:45 and 4pm it also runs scripts/ibkr-trend.py --go (Trend 2x) once per day, and scripts/ibkr-quality.py --go (buy QUAL once) until that state file has a start. Demo accounts only (the runner refuses real ones). Logs to
 ~/Library/Logs/EpiphanyIBKR.log. It is a normal foreground process: closing the terminal stops it.
 """
 import argparse, json, os, re, subprocess, sys
@@ -17,6 +17,7 @@ from ib_async import IB
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
 TREND = os.path.join(ROOT, "tradingview", "ibkr-trend.json")
+QUALITY = os.path.join(ROOT, "tradingview", "ibkr-quality.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 ET = ZoneInfo("America/New_York")
 
@@ -81,6 +82,11 @@ while True:
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-trend.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("trend side", "trend plan:", "Filled", "Submitted", "PreSubmitted"))]
             note("Trend run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Trend run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
+        # Quality: one buy of QUAL, ever. Same window, and it stops the moment its state file has a start.
+        if weekday and (15, 45) <= t < (16, 0) and not state(QUALITY).get("start"):
+            r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-quality.py", "--go"], cwd=ROOT, capture_output=True, text=True)
+            lines = [l for l in r.stdout.splitlines() if l.startswith(("quality", "Filled", "Submitted", "PreSubmitted"))]
+            note("Quality run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Quality run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
     except Exception as e:
         if not down:
             note(f"Gateway problem: {str(e)[:80]}")

@@ -75,6 +75,15 @@ time, and its only leverage is the 2x fund itself.
   The momentum sleeve that was once built to run beside it was dropped: the
   momentum lead failed the survivorship test in section 5.
 
+  A third sleeve, Quality, is a test of a tilt, not an edge. `scripts/ibkr-quality.py`
+  buys $50,000 of QUAL once, the iShares fund nearest the most profitable tenth
+  in section 5, and holds it. No timing, no rebalance, no sells. It runs once,
+  in the same 3:45 to 4pm window, and stops the moment its state file
+  (`tradingview/ibkr-quality.json`) has a start date. The menu bar scores it
+  against the S&P 500 from that day. On real prices since 2013 QUAL trails SPY
+  by 0.4 point a year, so a tie is the likely answer. A year of paper results
+  will say.
+
 ### 4. Guardrails
 
 - **Paper first.** Both places start on practice money. Real money is a
@@ -529,8 +538,10 @@ tenth), QUAL for profitability, MTUM for momentum, and IWC for micro caps (IWM
 and VB are small caps, not the same thing). Investment has no clean fund. A 2x
 fund exists only for small caps (UWM, 2x the Russell 2000, not the tenth we
 tested); the rest would be 2x by margin or not at all. Fund names are from
-memory, not checked against live listings, and we did not test QUAL against the
-real fund. These factors were well known by 1976, so the blind half is blind to
+memory, not checked against live listings. We did test QUAL against the real
+fund: from its first day in July 2013 it made 13.6% a year with a 34% worst drop
+and SPY made 14.0% with 34%, so the fund trails by 0.4 point and wins 6 of 14
+calendar years, and most of the tenth's edge did not survive the fund. These factors were well known by 1976, so the blind half is blind to
 us, not to the idea. Verdict: nothing beats Trend 2x, which stays the one rule
 we paper trade. Profitability at 1x through QUAL is the only new thing that
 clears the bar, and only against holding, so at most a small paper only sleeve
