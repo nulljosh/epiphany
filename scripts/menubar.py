@@ -18,6 +18,7 @@ from ib_async import IB
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
+MOM = os.path.join(ROOT, "tradingview", "ibkr-momentum.json")
 BEST = os.path.join(ROOT, "tradingview", "ibkr-best.json")
 # A file, not a flag in memory, so a pause survives a restart instead of quietly trading again.
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
@@ -160,6 +161,44 @@ def next_trade(st):
     return f"{day} {t:%-I:%M %p}"
 
 
+def next_rebalance(mst, now=None):
+    """When ibkr-live.py rebalances the momentum sleeve: the first weekday at or after 3:45pm New York in a month it has not run."""
+    ny = now or datetime.now(ZoneInfo("America/New_York"))
+    run = ny.replace(hour=15, minute=45, second=0, microsecond=0)
+    if mst.get("lastRebalance") == f"{ny:%Y-%m}":
+        run = (run.replace(day=1) + timedelta(days=32)).replace(day=1)
+    elif ny.weekday() < 5 and ny >= run:
+        return "Now"
+    while run.weekday() >= 5:
+        run += timedelta(days=1)
+    t = run.astimezone()
+    return f"Today {t:%-I:%M %p}" if t.date() == datetime.now().date() else f"{t:%b %-d}"
+
+
+def momentum_rows(port, mst):
+    """Two rows for the momentum sleeve: its return since its start against the S&P 500, and the next rebalance.
+    No state file, or one that is not usable yet, gives two empty rows (hidden)."""
+    empty = [("", "", None)] * 2
+    try:
+        start = mst["start"]
+        base = num(start["sleeve"])
+        if not base:
+            return empty
+        px = {p.contract.symbol: num(getattr(p, "marketPrice", 0)) for p in port}
+        last = mst.get("last", {}) if isinstance(mst.get("last"), dict) else {}
+        value = num(mst.get("cash")) + sum(num(q) * (px.get(s) or num(last.get(s))) for s, q in mst.get("holdings", {}).items())
+        ret = value / base - 1
+    except (KeyError, TypeError, AttributeError):
+        return empty
+    try:
+        spy = benchmarks(datetime.fromisoformat(start["date"])).get("S&P 500")
+    except Exception:
+        spy = None
+    lead = ret - spy if spy is not None else None
+    return [(f"Momentum  {pct(ret)}", "" if lead is None else f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}", ret if lead is None else lead),
+            ("Next rebalance", next_rebalance(mst), None)]
+
+
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
 EVEN = (-0.001, 0.0025)
 
@@ -233,6 +272,7 @@ def summarize(port, nl, st):
             rows.append((f"{label} \u00b7 {p.contract.symbol}", f"{money(u)}   {pct(u / basis if basis else 0)}", u))
     else:
         rows += [("", "", None)] * 2  # keeps the slots lined up; empty rows are hidden
+    rows += momentum_rows(port, read_json(MOM, {}))
     rows += [
         ("High / Low", f"{rec['high']:+,.0f} / {rec['low']:+,.0f}".replace("-", "\u2212"), None),
         ("Next trade", "Paused" if os.path.exists(PAUSED) else next_trade(st), None),
@@ -264,7 +304,7 @@ def hide_gateway(seen=set()):
 
 
 # Menu layout: (section header, rows in it). The first header is filled in with the start date.
-GROUPS = [("", 2), ("Vs the market", len(BENCH)), ("Positions", 2), ("Record", 1), (None, 1)]
+GROUPS = [("", 2), ("Vs the market", len(BENCH)), ("Positions", 2), ("Momentum", 2), ("Record", 1), (None, 1)]
 
 
 def row_view():

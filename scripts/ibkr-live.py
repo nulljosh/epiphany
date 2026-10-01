@@ -5,7 +5,7 @@
 
 During US market hours it watches the account and pops a macOS notification when our positions move another
 --step percent, or the account moves another --abs from the first run. At 3:45pm New York (12:45pm
-Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per day so the orders fill today. If the Gateway logs out it tells you once, and
+Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per day so the orders fill today. Once a month, at the first 3:45pm on a weekday, it also runs scripts/ibkr-momentum.py --go (the momentum sleeve). If the Gateway logs out it tells you once, and
 tells you again when it is back. Demo accounts only (the runner refuses real ones). Logs to
 ~/Library/Logs/EpiphanyIBKR.log. It is a normal foreground process: closing the terminal stops it.
 """
@@ -16,6 +16,7 @@ from ib_async import IB
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
+MOM = os.path.join(ROOT, "tradingview", "ibkr-momentum.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 ET = ZoneInfo("America/New_York")
 
@@ -35,11 +36,18 @@ def note(msg):
     subprocess.run(["osascript", "-e", f"display notification {json.dumps(msg)} with title \"Epiphany practice account\""], check=False)
 
 
+def json_or(default, path):
+    try:
+        return json.load(open(path))
+    except (OSError, ValueError):
+        return default
+
+
 def state():
     return json.load(open(STATE)) if os.path.exists(STATE) else {}
 
 
-ib, level, alevel, down, closed_for = IB(), 0, 0, False, None
+ib, level, alevel, down, closed_for, mom_tried = IB(), 0, 0, False, None, None
 while True:
     now = datetime.now(ET)
     today, t, weekday = now.date().isoformat(), (now.hour, now.minute), now.weekday() < 5
@@ -72,6 +80,12 @@ while True:
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-run.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("plan:", "Filled", "Submitted", "PreSubmitted", "scoreboard"))]
             note("Daily run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Daily run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
+        # Momentum sleeve: once a month, the first weekday at or after 3:45pm New York. A failure retries tomorrow, not every minute.
+        if weekday and t >= (15, 45) and json_or({}, MOM).get("lastRebalance") != f"{now:%Y-%m}" and mom_tried != today:
+            mom_tried = today
+            r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-momentum.py", "--go"], cwd=ROOT, capture_output=True, text=True)
+            lines = [l for l in r.stdout.splitlines() if l.startswith(("momentum plan:", "Filled", "Submitted", "PreSubmitted", "momentum rebalanced"))]
+            note("Momentum run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Momentum run failed: " + (r.stderr.strip().splitlines() or r.stdout.strip().splitlines() or ["see log"])[-1][:120])
     except Exception as e:
         if not down:
             note(f"Gateway problem: {str(e)[:80]}")
