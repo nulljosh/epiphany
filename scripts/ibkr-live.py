@@ -4,8 +4,8 @@
     caffeinate -i uv run --with ib_async python3 scripts/ibkr-live.py      # Ctrl-C to stop
 
 During US market hours it watches the account and pops a macOS notification when our positions move another
---step percent, or the account moves another --abs from the first run. After the close (4:15pm New York,
-1:15pm Pacific) it runs scripts/ibkr-run.py --go once per day. If the Gateway logs out it tells you once, and
+--step percent, or the account moves another --abs from the first run. At 3:45pm New York (12:45pm
+Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per day so the orders fill today. If the Gateway logs out it tells you once, and
 tells you again when it is back. Demo accounts only (the runner refuses real ones). Logs to
 ~/Library/Logs/EpiphanyIBKR.log. It is a normal foreground process: closing the terminal stops it.
 """
@@ -68,7 +68,7 @@ while True:
         if weekday and t >= (16, 5) and closed_for != today:
             note(f"Market closed: positions {pct:+.2f}% (${gain:+.2f}), account {nl - start:+,.2f} since the start" if start and nl is not None else f"Market closed: positions {pct:+.2f}%")
             closed_for = today
-        if weekday and t >= (16, 15) and state().get("lastGo") != today:
+        if weekday and t >= (15, 45) and state().get("lastGo") != today:  # after 4pm it still runs, and the orders wait for the next open
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-run.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("plan:", "Filled", "Submitted", "PreSubmitted", "scoreboard"))]
             note("Daily run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Daily run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
