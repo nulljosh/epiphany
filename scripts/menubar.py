@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Epiphany Live: a menu bar app for the IBKR practice account. No Terminal, no Dock icon.
 
-The menu bar shows the account change since the first run. The menu shows our positions versus SPY, the best and
+The menu bar shows the holdings' return. The menu shows our positions versus SPY, the best and
 worst position, the record high and low, and when the daily trade runs next. It starts scripts/ibkr-live.py as a child (alerts, and the daily paper trade at 3:45pm New York,
 12:45pm Pacific) and stops it on Quit. Demo accounts only. Start it from ~/Applications/Epiphany Live.app.
 
@@ -9,6 +9,7 @@ worst position, the record high and low, and when the daily trade runs next. It 
     uv run --with ib_async python3 scripts/menubar.py --selftest              # print what the menu would say
 """
 import json, math, os, subprocess, sys, traceback, urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from ib_async import IB
@@ -71,6 +72,14 @@ def intraday(sym):
     """Today's 5 minute closes and yesterday's close for one symbol."""
     r = yahoo(f"/v8/finance/chart/{sym}?interval=5m&range=1d")["chart"]["result"][0]
     return [c for c in r["indicators"]["quote"][0]["close"] if c is not None], num(r["meta"].get("chartPreviousClose"))
+
+
+def safe(f, *a):
+    """f(*a), or None if it raises."""
+    try:
+        return f(*a)
+    except Exception:
+        return None
 
 
 def top_gainer():
@@ -166,15 +175,16 @@ def summarize(port, nl, st):
     else:
         rows += [("", "", None)] * 2  # keeps the slots lined up; empty rows are hidden
     rows += [
-        ("High", money(rec["high"]), None),
-        ("Low", money(rec["low"]), None),
+        ("High / Low", f"{rec['high']:+,.0f} / {rec['low']:+,.0f}".replace("-", "\u2212"), None),
         ("Next trade", "Paused" if os.path.exists(PAUSED) else next_trade(st), None),
     ]
     try:
         since = f"Since {datetime.fromisoformat(start['date']):%b %-d}"
     except (KeyError, TypeError, ValueError):
         since = "Since start"
-    return f"{d:+.0f}".replace("-", "\u2212"), since, rows
+    # The holdings' return, not the account's: most of the million sits in cash, so the account moves
+    # +0.00% forever. This is the strategy's score, and it lines up with the SPY row under it.
+    return pct(gain / cost if cost else 0.0), since, rows
 
 
 def hide_gateway(seen=set()):
@@ -195,7 +205,7 @@ def hide_gateway(seen=set()):
 
 
 # Menu layout: (section header, rows in it). The first header is filled in with the start date.
-GROUPS = [("", 3), ("Positions", 2), ("Record", 2), (None, 1)]
+GROUPS = [("", 3), ("Positions", 2), ("Record", 1), (None, 1)]
 
 
 def row_view():
@@ -394,10 +404,12 @@ def main():
                 h.setTitle_(since if i == 0 else GROUPS[i][0])
                 h.setHidden_(not any(r[0] for r in rows[first:first + n]))
             syms = chart_symbols(rows)
+            # In parallel, so four slow fetches freeze the menu for one timeout, not four.
+            with ThreadPoolExecutor(4) as ex:
+                data = list(ex.map(lambda s: safe(intraday, s[0]), syms))
             for i, (item, fields) in enumerate(self.charts):
                 try:
-                    sym, name = syms[i]
-                    closes, prev = intraday(sym)
+                    (_, name), (closes, prev) = syms[i], data[i]
                     ch = closes[-1] / prev - 1
                 except Exception:  # no symbol, no data yet, or Yahoo down: hide the row
                     fill(item, fields[:2], "", "", None)

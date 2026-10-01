@@ -55,7 +55,7 @@ class Summarize(Base):
     def test_normal_account(self):
         self.write(mb.STATE, json.dumps({"start": {"netLiquidation": 1000, "spy": 500, "date": "2026-09-01"}}))
         title, since, rows = mb.summarize([pos("AAPL", 10), pos("TSLA", -5)], 1020.0, mb.read_json(mb.STATE, {}))
-        self.assertEqual(title, "+20")
+        self.assertEqual(title, "+2.50%")
         self.assertEqual(since, "Since Sep 1")
         r = dict((l, v) for l, v, _ in rows)
         self.assertEqual(r["SPY"], "+10.00%")
@@ -68,7 +68,7 @@ class Summarize(Base):
         self.write(mb.BEST, "not json")
         for st in ({}, {"start": "oops"}, {"start": {"netLiquidation": "x", "spy": 0, "date": "nope"}}):
             title, since, rows = mb.summarize([pos("X", math.nan, cost=0)], None, st)
-            self.assertEqual((title, since), ("+0", "Since start"))
+            self.assertEqual((title, since), ("+0.00%", "Since start"))
             self.assertTrue(all(isinstance(v, str) and "nan" not in v for _, v, _ in rows))
 
     def test_spy_failure_reads_zero(self):
