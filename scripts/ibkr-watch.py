@@ -4,7 +4,7 @@
 
     uv run --with ib_async python3 scripts/ibkr-watch.py
 """
-import argparse
+import argparse, json, os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from ib_async import IB
@@ -12,10 +12,13 @@ from ib_async import IB
 ap = argparse.ArgumentParser()
 ap.add_argument("--step", type=float, default=1.0, help="percent move that triggers a line")
 ap.add_argument("--port", type=int, default=4002)
+ap.add_argument("--abs", type=float, default=20.0, help="account currency move (e.g. CAD) from the first run that triggers a line")
 ap.add_argument("--poll", type=int, default=60, help="seconds between checks")
 a = ap.parse_args()
 
-ib, level, down = IB(), 0, False
+STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tradingview", "ibkr-state.json")
+start_nl = json.load(open(STATE))["start"]["netLiquidation"] if os.path.exists(STATE) else None
+ib, level, alevel, down = IB(), 0, 0, False
 print("watching practice account", flush=True)
 while True:
     now = datetime.now(ZoneInfo("America/New_York"))
@@ -34,6 +37,12 @@ while True:
         if (now.hour, now.minute) >= (16, 5):
             print(f"MARKET CLOSED: positions {pct:+.2f}% (${gain:+.2f} on ${cost:,.0f}); best {best.contract.symbol} {best.unrealizedPNL:+.2f}, worst {worst.contract.symbol} {worst.unrealizedPNL:+.2f}", flush=True)
             break
+        nl = next((float(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
+        if start_nl and nl is not None:
+            alvl = int((nl - start_nl) / a.abs)
+            if alvl != alevel:
+                print(f"{'UP' if alvl > alevel else 'DOWN'}: account {nl - start_nl:+,.2f} since the start ({nl:,.2f})", flush=True)
+                alevel = alvl
         lvl = int(pct / a.step)
         if lvl != level:
             print(f"{'UP' if lvl > level else 'DOWN'}: positions {pct:+.2f}% (${gain:+.2f} on ${cost:,.0f}); best {best.contract.symbol} {best.unrealizedPNL:+.2f}, worst {worst.contract.symbol} {worst.unrealizedPNL:+.2f}", flush=True)
