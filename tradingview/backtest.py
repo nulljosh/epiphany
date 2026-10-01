@@ -8,6 +8,7 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
     python3 tradingview/backtest.py etfs     # index and sector ETFs
     python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
+    python3 tradingview/backtest.py trend-spy  # hold the index only above its 200 day average, with and without leverage
     python3 tradingview/backtest.py portfolio  # Double 7s as one account over the index ETFs
     python3 tradingview/backtest.py sp-century  # S&P 500 index since 1927, per decade
     python3 tradingview/backtest.py watchlist  # live TradingView watchlist via the MCP, each symbol from its first bar
@@ -536,8 +537,47 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
             print(f"{label:14}{lb:>9}{curve[-1][0]:>11,.0f}{cagr:>7.1%}{mdd:>11.0%}{wins / max(trades, 1):>9.0%}{trades / yrs:>10.0f}{inv:>13.0%} | {hold[0]:>14.1%}{hold[1]:>15.0%}")
 
 
+def trend_spy(sma_len=200, margin=0.05):
+    """Faber-style timing: hold the index only while it closes above its `sma_len` day average, else cash (0%).
+    Signal from yesterday's close, acted on today (one extra day of lag, conservative). 0.1% per switch.
+    Leverage borrows at `margin` a year. Price index before 1993 has no dividends, SPY after has them."""
+    data = {"S&P 500 index, 1928 on (price only)": fetch_yahoo("^GSPC"), "SPY, 1993 on (with dividends)": fetch_yahoo("SPY")}
+    spans = (("whole history", "1900-01-01"), ("2000 on", "2000-01-01"), ("2020 on", "2020-01-01"))
+    print(f"Hold only while above the {sma_len} day average. Fee {FEE:.1%}/switch, margin {margin:.0%}, cash earns 0%.\n")
+    print(f"{'series':40}{'period':14}{'strategy':>10}{'CAGR':>7}{'worst drop':>11}{'invested':>9}{'switches':>9}")
+    for name, bars in data.items():
+        c = [r[4] for r in bars]
+        a = sma(c, sma_len)
+        for label, start in spans:
+            idx0 = next((i for i, r in enumerate(bars) if datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d") >= start), 0)
+            idx0 = max(idx0, sma_len + 3)
+            if idx0 >= len(bars) - 50:
+                continue
+            for mode, lev in (("hold", None), ("trend 1.0x", 1.0), ("trend 1.5x", 1.5)):
+                eq, peak, mdd, inv, sw, pos = 1.0, 1.0, 0.0, 0, 0, 0
+                for i in range(idx0, len(bars)):
+                    r = c[i] / c[i - 1] - 1
+                    if lev is None:
+                        eq *= 1 + r
+                    else:
+                        want = 1 if c[i - 2] > a[i - 2] else 0
+                        if want != pos:
+                            eq *= 1 - FEE * lev
+                            sw, pos = sw + 1, want
+                        if pos:
+                            eq *= 1 + lev * r - (lev - 1) * margin / 252
+                            inv += 1
+                    peak = max(peak, eq)
+                    mdd = max(mdd, 1 - eq / peak)
+                yrs = (bars[-1][0] - bars[idx0][0]) / 31557600
+                share = 1.0 if lev is None else inv / (len(bars) - idx0)
+                print(f"{name:40}{label:14}{mode:>10}{eq ** (1 / yrs) - 1:>7.1%}{mdd:>11.0%}{share:>9.0%}{sw:>9}")
+
+
 def main():
     check()
+    if sys.argv[1:] == ["trend-spy"]:
+        return trend_spy()
     if sys.argv[1:] == ["portfolio"]:
         return portfolio()
     if sys.argv[1:] == ["sp-century"]:
