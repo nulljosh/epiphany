@@ -8,9 +8,9 @@
 // bearing; keep it, since the KV lock is also what protects against a second
 // platform ever being armed by mistake.
 //
-// Signals are computed once per watchlist symbol from 6 months of daily closes
+// Signals are computed once per watchlist symbol from 1 year of daily closes
 // (drift/vol estimated from log returns, SMA20/50 momentum tilt, GBM Monte
-// Carlo bull probability), then executed per user: paper mode logs simulated
+// Carlo bull probability, logged for context; the buy/sell itself is Double 7s), then executed per user: paper mode logs simulated
 // fills against a KV position book. Live mode (real orders through the user's
 // linked SnapTrade brokerage) exists below but is unreachable -- autopilot.js
 // forces mode to 'paper' until live execution is vetted further.
@@ -18,6 +18,7 @@ import { getKv } from '../_kv.js';
 import { verifyCronSecret } from '../_shared-secret.js';
 import { isProByEmail } from '../gates.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
+import { double7s } from '../../../src/utils/indicators.js';
 
 const WATCHLIST = ['AAPL', 'NVDA', 'MSFT', 'SPY', 'QQQ'];
 const SIGNAL_THRESHOLD = 0.55; // bull prob > 55% = buy, < 45% = sell
@@ -48,7 +49,7 @@ function monteCarlo(price, mu, sigma, paths = 500, days = 30) {
 }
 
 async function getDailyCloses(symbol) {
-  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=6mo`);
+  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1y`);
   if (!r.ok) return null;
   const j = await r.json();
   const result = j?.chart?.result?.[0];
@@ -73,7 +74,9 @@ function buildSignal(closes, price) {
   const momentum = sma(closes, 20) / sma(closes, 50) - 1;
   prob += Math.max(-MOMENTUM_TILT_CAP, Math.min(MOMENTUM_TILT_CAP, momentum * 2));
 
-  const signal = prob > SIGNAL_THRESHOLD ? 'buy' : prob < 1 - SIGNAL_THRESHOLD ? 'sell' : null;
+  // Trades follow Double 7s (WHITEPAPER section 5). The Monte Carlo odds above stay in the log for context only.
+  const d7 = double7s(closes);
+  const signal = d7?.label === 'Buy' ? 'buy' : d7?.label === 'Sell' ? 'sell' : null;
   return { prob: Number(prob.toFixed(3)), momentum: Number(momentum.toFixed(4)), signal };
 }
 

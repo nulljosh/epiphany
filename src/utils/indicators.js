@@ -110,3 +110,21 @@ export function signal(values) {
   const label = score >= 2 ? 'Long' : score <= -2 ? 'Short' : 'Hold';
   return { label, score, reasons };
 }
+
+// Double 7s, our benchmarked entry rule (WHITEPAPER section 5): in an uptrend (close above the 200 day average),
+// buy a close at the lowest in `lookback` days, sell a close at the highest. 10 days won the benchmark.
+// Closes only, so it works on the same series as signal(). Returns null until there are 200 closes.
+export function double7s(values, lookback = 10) {
+  if (!Array.isArray(values) || values.length < 200 || lookback < 2) return null;
+  const last = values[values.length - 1];
+  const trend = sma(values, 200);
+  const window = values.slice(-lookback);
+  const uptrend = last > trend;
+  if (uptrend && last <= Math.min(...window)) {
+    return { label: 'Buy', reasons: [`Uptrend (above 200 day average)`, `${lookback} day low`] };
+  }
+  if (last >= Math.max(...window)) {
+    return { label: 'Sell', reasons: [`${lookback} day high`] };
+  }
+  return { label: 'Hold', reasons: uptrend ? ['Uptrend, no dip yet'] : ['Below 200 day average'] };
+}
