@@ -673,6 +673,37 @@ funds, so no sleeve. USMV at 1x gives up 3.5 points a year for a worst drop that
 the same. The 1.5x version needs margin, which the paper account can do and
 Autopilot cannot, and it only ties SPY on return while falling much further.
 
+**Sector momentum, with a market trend filter.** The standard way to buy the
+strongest corner of the market is Faber's relative strength rule (2010): each
+month hold the top 3 sectors by trailing return, equal weight, and only while the
+market is above its 10 month average, else bills. We ran it two ways with the
+settings fixed from the paper, 12 and 6 month returns both reported, nothing picked
+(`century.py --sectors`, raw output in `tradingview/results-sectors.txt`). First on
+Ken French's 10 industries, monthly, from 1926 (tuned on nothing, 1927 to 1975 is
+context, 1976 to now is blind), 0.1% a side on the turnover it actually does.
+Then on the real SPDR sector funds (XLB, XLE, XLF, XLI, XLK, XLP, XLU, XLV, XLY)
+from 2000, with SPY as the market and BIL as cash. The third version stacks the
+Trend 2x lesson on top: the top 3 at 2x when the filter is on, which is a margin
+model at bills plus 1%, because no 2x sector fund is worth using. Against holding
+at 12.3% / 50%, 12 months at 1x made 12.9% / 27% (6 months 11.7% / 24%), 2008 was
++1.5% against -36.7% and 2022 was -2.2% against -19.9%. It beat all 300 random
+top 3 picks run through the same filter with the same number of names changed each
+month (they averaged 10.2%), so the ranking is real, but most of the safety is the
+filter: all 10 industries with the same filter made 10.7% / 23%. The 12 month row
+won 3 of 6 decades, which is not most, so it fails the bar, and the 6 month row won
+1. At 2x the 12 month version made 18.9% / 54% and won 5 of 6 decades, but its drop
+is 4 points bigger than holding's, and the 6 month version made 16.4% / 53%. On the
+real funds from 2000 SPY made 8.2% with a 55% drop. The 1x rows made 7.8% / 24% and
+7.3% / 22%, a smoother ride and less money, and equal weight sectors with the filter
+made 7.9% / 21%. At 2x the 12 month row made 11.7% / 46%, ahead of SPY on return and
+drop, in 15 of 27 years and 2 of 3 decades, a pass; the 6 month row won only 1 of 3
+decades. One month late the real rows made more, not less (9.8% for 12 months at
+1x), which says the timing is noisy at this speed. Verdict: nothing passes on the
+model and the real funds together, since the one real pass (12 months at 2x) fails
+the model on the drop and needs margin. No sector sleeve on the paper account. The
+12 month 1x version is the only one that could run as nine monthly ETF trades, and
+on real funds it gave up 0.4 of a point a year for a drop less than half of SPY's.
+
 **A 24/7 sleeve: trend on crypto.** Joshua wants something that runs around the
 clock, and crypto is the obvious candidate, so we ran the same kind of test on
 Bitcoin (`century.py --crypto`, raw output in `tradingview/results-crypto.txt`).
@@ -791,6 +822,10 @@ files named above.
 | Low beta tenth with the same filter, 1x | 1976 to now | 10.5% / 21% | 12.3% / 50% | fail (1.9 points less return, 1 of 6 decades; beats 65% of random schedules, better a month late) |
 | Low variance tenth at 1.5x, margin at bills + 1% | 1976 to now | 14.1% / 49% | 12.3% / 50% | fail (3 of 6 decades; real USMV at 1.5x 15.7% / 47% against SPY 15.0% / 34%, SPLV at 1.5x 12.9% / 52%) |
 | Low beta tenth at 1.5x, margin at bills + 1% | 1976 to now | 15.2% / 54% | 12.3% / 50% | fail (bigger drop; 4 of 6 decades) |
+| Top 3 of 10 French industries by 12 month return, only while the market is above its 10 month average, 1x | 1976 to now | 12.9% / 27% | 12.3% / 50% | fail (3 of 6 decades; ranking beats 100% of 300 random picks; 2008 +1.5%, 2022 -2.2%; real SPDR sectors from 2000 7.8% / 24% against SPY 8.2% / 55%, fail on return) |
+| Same, 6 month return | 1976 to now | 11.7% / 24% | 12.3% / 50% | fail (less return, 1 of 6 decades; real 7.3% / 22%, fail) |
+| Same, 12 month return, 2x on margin at bills + 1% | 1976 to now | 18.9% / 54% | 12.3% / 50% | fail on the model (4 points bigger drop, 5 of 6 decades); passes on real SPDR sectors from 2000 (11.7% / 46% against SPY 8.2% / 55%, 15 of 27 years, 2 of 3 decades); needs margin |
+| Same, 6 month return, 2x on margin | 1976 to now | 16.4% / 53% | 12.3% / 50% | fail (bigger drop, 4 of 6 decades; real 10.7% / 43%, 1 of 3 decades) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -798,7 +833,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The four sector momentum rows at the very bottom are graded against holding the market on the French industries and against SPY on the real SPDR funds; none passes on both. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 
