@@ -412,6 +412,39 @@ and made only 12.2% to 13.2% on real fund returns. Verdict: nothing replaces BIL
 yet. The one worth running on paper beside it is IEF held only above its own 200
 day average, BIL otherwise.
 
+**Dual momentum, with a trend filter and leverage.** The century run left one
+loose end: dual momentum made 13.5% with a 27% drop, but only because of gold in
+the 1970s. So we stacked it with the trend rule (`century.py --dual`, raw output
+in `tradingview/results-dual.txt`). Each month hold whichever of stocks, 10 year
+Treasuries and gold rose most over 12 months, if it beat bills, and only if it
+also sits above its own 10 month average, else bills. Four variants, settings
+fixed from the literature and nothing tuned: (1) that rule, (2) the same with 2x
+on stocks when stocks win (daily-reset fund model, gap off), (3) variant 1 with
+gold removed, (4) variant 2 with gold removed. Signal at month end, trade the
+next day's close, 0.1% a switch, daily since 1929, graded on 1976 to now.
+Against holding at 12.1% / 55% and Trend 2x with bills at 14.4% / 44%:
+
+| Variant | Blind return / worst drop | Decades beat hold / Trend 2x | 2022 | Real funds from 2006 |
+|---|---|---|---|---|
+| 1 Dual plus own trend | 12.3% / 33% | 2 of 6 / 2 of 6 | -20% | 7.0% / 30% |
+| 2 Same, 2x stocks | 12.3% / 61% | 2 of 6 / 2 of 6 | -35% | 7.6% / 49% |
+| 3 Variant 1, no gold | 9.4% / 33% | 1 of 6 / 2 of 6 | -16% | 6.6% / 22% |
+| 4 Variant 2, no gold | 10.1% / 59% | 1 of 6 / 2 of 6 | -31% | 8.6% / 44% |
+
+None clears the bar. Variant 1 beats holding by 0.2 of a point with a drop of 33%
+against 55%, and 2008 was +17% against -37%, but it wins only 2 of 6 decades and
+it is 2.1 points behind Trend 2x. Its 1970s were 36.8% a year, the gold decade, and
+without gold that decade is 7.2%, so the lead was gold again. The trend filter
+did not help the plain rule (12.8% without it), and 2x on top of it did not add
+return, only a 61% drop, because the signal reads one month end and a leveraged
+reversal gets a month to run. Variant 1 beat 84% of 300 random orders of its own
+holding periods and none matched it on both return and drop, so the timing is
+real, just too small. One month late it makes 11.7% / 35%. On the real funds from
+July 2006 (SPY, SSO, IEF, GLD, BIL) every variant makes 6.6% to 8.6%, against
+11.3% / 55% for SPY and 13.0% / 43% for Trend 2x on the same funds. Verdict: out.
+It is a smoother ride than holding, not more money, and Trend 2x stays the only
+rule we paper trade.
+
 **Does it work on other indexes, with dividends?** The earlier other-markets
 check left dividends out, so we reran it with them in (`century.py --indexes`,
 raw output in `tradingview/results-trend-indexes.txt`). Same rule, nothing
@@ -548,6 +581,10 @@ files named above.
 | Same, gold half only above its own 200 day average | 1976 to now | 14.8% / 42% | 14.4% / 44% | pass on the model (4 of 6), fails on real GLD from 2006 |
 | Trend 2x S&P, 2x 10y Treasuries in a bond uptrend, else bills | 1976 to now | 17.0% / 45% | 14.4% / 44% | fail (0.8 point bigger drop) |
 | Trend 2x S&P, 2x 20y Treasuries in a bond uptrend, else bills | 1976 to now | 19.3% / 45% | 14.4% / 44% | fail (1.0 point bigger drop) |
+| Dual momentum + own 10 month trend, stocks, bonds, gold | 1976 to now | 12.3% / 33% | 12.1% / 55% | fail (2 of 6 decades; also 2.1 points behind Trend 2x) |
+| Same, 2x stocks when stocks win | 1976 to now | 12.3% / 61% | 12.1% / 55% | fail (bigger drop, 2 of 6 decades) |
+| Dual + own trend, no gold | 1976 to now | 9.4% / 33% | 12.1% / 55% | fail (less return, 1 of 6 decades) |
+| Same, 2x stocks, no gold | 1976 to now | 10.1% / 59% | 12.1% / 55% | fail (less return, bigger drop, 1 of 6 decades) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -555,7 +592,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 

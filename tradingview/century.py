@@ -16,6 +16,7 @@ in tradingview/data/.
     python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
     python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
     python3 tradingview/century.py --out     # what Trend 2x holds when out: bills vs Treasuries, gold, 2x bonds, each with its own trend filter
+    python3 tradingview/century.py --dual     # cross-asset dual momentum (stocks, bonds, gold vs bills) with a 10 month own-trend filter, with and without 2x on stocks
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
@@ -1347,7 +1348,258 @@ def out_asset():
         print(f"{nm:{W}} | {c:>6.1%}{dd:>6.0%} | {w8[0]:>+6.0%} ({w8[1]:>3.0%}) | {w22[0]:>+6.0%} ({w22[1]:>3.0%})")
 
 
+# ---------- cross-asset dual momentum, trend filter and leverage (--dual) ----------
+
+DUAL_L, DUAL_SMA = 12, 10  # fixed from the literature: 12 month lookback (Antonacci), 10 month average (Faber). Nothing is tuned.
+
+
+def dual_targets(dates, rets, assets, sma):
+    """Month-end signal. Hold the asset with the best 12 month total return if it beat bills, and (when sma) it also sits above its own
+    10 month average of month-end levels; else bills. Returns (month-end day indexes, state decided at each)."""
+    tr = {}
+    for k, r in rets.items():
+        v, out = 1.0, []
+        for x in r:
+            v *= 1 + x
+            out.append(v)
+        tr[k] = out
+    me = [i for i in range(len(dates)) if i + 1 == len(dates) or dates[i + 1][:7] != dates[i][:7]]
+    tgt = []
+    for q, e in enumerate(me):
+        if q < DUAL_L:
+            tgt.append("bills")
+            continue
+        ret = {a: tr[a][e] / tr[a][me[q - DUAL_L]] - 1 for a in list(assets) + ["bills"]}
+        w = max(assets, key=lambda a: ret[a])
+        ok = ret[w] > ret["bills"]
+        if ok and sma:
+            ok = tr[w][e] > sum(tr[w][me[q - i]] for i in range(sma)) / sma
+        tgt.append(w if ok else "bills")
+    return me, tgt
+
+
+def dual_q(me, lo, hi):
+    """For each day j, the index of the latest month-end e <= j-2: signal at that close, trade the next close, earn from the day after."""
+    out, q = [], -1
+    for j in range(lo, hi):
+        while q + 1 < len(me) and me[q + 1] <= j - 2:
+            q += 1
+        out.append(q)
+    return out
+
+
+def dual_F(D, M, gap):
+    """Daily growth factor of each holding. stocks2 = daily-reset 2x fund model (0.9% expense plus the model gap, T-bill financing)."""
+    sp, bill = D[2], D[3]
+    return {"stocks": [1 + x for x in sp],
+            "stocks2": [max(1 + 2 * sp[j] - bill[j] - (SWAP_EXP + gap) / 252, 1e-12) for j in range(len(sp))],
+            "bonds": [1 + x for x in M["ief"]], "gold": [1 + x for x in M["gold"]], "bills": [1 + x for x in bill]}
+
+
+DUAL_FR = {"stocks": 1.0, "stocks2": 1.0, "bonds": 1.0, "gold": 1.0, "bills": 0.0}  # share of the dollar that pays the fee on a switch
+
+
+def dual_path(F, st, lo, fee=FEE):
+    eq, prev, cv = 1.0, None, [1.0]
+    for n, s in enumerate(st):
+        if s != prev:
+            eq *= 1 - fee * (DUAL_FR[s] + (DUAL_FR[prev] if prev else 0.0))
+            prev = s
+        eq *= F[s][lo + n]
+        cv.append(eq)
+    return cv
+
+
+def dual_fast(F, st, lo, yrs, fee=FEE):
+    eq = pk = 1.0
+    mdd, prev = 0.0, None
+    for n, s in enumerate(st):
+        if s != prev:
+            eq *= 1 - fee * (DUAL_FR[s] + (DUAL_FR[prev] if prev else 0.0))
+            prev = s
+        eq *= F[s][lo + n]
+        if eq > pk:
+            pk = eq
+        elif 1 - eq / pk > mdd:
+            mdd = 1 - eq / pk
+    return eq ** (1 / yrs) - 1, mdd
+
+
+def run_shuffle(seq, rng):
+    """Same holding runs (state and length in months), random order, no two neighbours alike: same time in each asset, same switches."""
+    runs = []
+    for s in seq:
+        if runs and runs[-1][0] == s:
+            runs[-1][1] += 1
+        else:
+            runs.append([s, 1])
+    for _ in range(2000):
+        rem, out, prev = [r[:] for r in runs], [], None
+        while rem:
+            cand = [i for i, r in enumerate(rem) if r[0] != prev]
+            if not cand:
+                break
+            out.append(rem.pop(rng.choice(cand)))
+            prev = out[-1][0]
+        if not rem:
+            return [s for s, n in out for _ in range(n)], len(runs) - 1
+    rng.shuffle(runs)
+    return [s for s, n in runs for _ in range(n)], len(runs) - 1
+
+
+def dual():
+    import random
+    D = lev_data()
+    dates = D[0]
+    lo = next(i for i, d in enumerate(dates) if d >= "1929-01-01")
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    hi = len(dates)
+    M = out_data(D)
+    yrs_b = (datetime.fromisoformat(dates[hi - 1]) - datetime.fromisoformat(dates[split - 1])).days / 365.25
+    rets = {"stocks": D[2], "bonds": M["ief"], "gold": M["gold"], "bills": D[3]}
+    F, F0 = dual_F(D, M, GAP), dual_F(D, M, 0.0)
+    print(f"CROSS-ASSET DUAL MOMENTUM, TREND FILTER, LEVERAGE. Daily engine on the --out series: S&P 500 with dividends (stocks), 10y Treasury priced off GS10 (bonds, IEF 0.15% off),")
+    print(f"gold monthly price spread over the days (GLD 0.40% off), T-bills. Signal at each month end, traded at the next day's close, earns from the day after (first close of next month).")
+    print(f"{FEE:.1%} a switch on every non-cash dollar bought or sold. 2x = daily-reset 2x fund model, T-bill financing, {SWAP_EXP:.1%} expense, {GAP:.1%} a year model gap taken off.")
+    print(f"Fixed from the literature, nothing tuned: {DUAL_L} month lookback, {DUAL_SMA} month average. Train {dates[lo]}..{dates[split - 1]}, BLIND {dates[split]}..{dates[-1]}.")
+    print("Gold is a fixed price (one revaluation, Jan 1934, +69%) until 1971 and private gold was banned until 1974, so the train half of any gold row is not tradable history.")
+    print("Plain stocks carry no expense in any row, as in the S&P hold rows.\n")
+
+    specs = {  # name -> (assets, own 10 month filter, 2x on stocks)
+        "Dual, no filter (reference)": (["stocks", "bonds", "gold"], False, False),
+        "1 Dual + own trend": (["stocks", "bonds", "gold"], True, False),
+        "2 Dual + own trend, 2x stocks": (["stocks", "bonds", "gold"], True, True),
+        "3 Dual + own trend, no gold": (["stocks", "bonds"], True, False),
+        "4 Same, 2x stocks, no gold": (["stocks", "bonds"], True, True),
+    }
+    sig = D[5]["200d"]
+    hold_st = ["stocks"] * (hi - split)
+    base_st = ["stocks2" if sig[j - 2] else "bills" for j in range(split, hi)]
+    base_tr = ["stocks2" if sig[j - 2] else "bills" for j in range(lo, split)]
+    W = 31
+    names = list(specs)
+    hold = lev_sim(D, 1.0, None, "bills", "margin", split, hi)
+    hold_tr = lev_sim(D, 1.0, None, "bills", "margin", lo, split)
+    base = dual_path(F, base_st, split)
+    chk = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, FEE, 0, GAP), split)
+    bs = dstats(dates, base, split)
+    assert abs(chk["cagr"] - bs["cagr"]) < 2e-3 and abs(chk["mdd"] - bs["mdd"]) < 2e-3, (chk, bs)
+    print(f"Trend 2x bills rebuilt in this engine: {bs['cagr']:.1%} / {bs['mdd']:.1%}; lev_sim says {chk['cagr']:.1%} / {chk['mdd']:.1%}.\n")
+
+    cur, late, tr, nog, share, sw, qs_, tg_ = {}, {}, {}, {}, {}, {}, {}, {}
+    k0 = None
+    for nm, (assets, sma, lev) in specs.items():
+        me, tgt = dual_targets(dates, rets, assets, DUAL_SMA if sma else 0)
+        mp = (lambda s: "stocks2" if s == "stocks" and lev else s)
+        qa, qb = dual_q(me, lo, split), dual_q(me, split, hi)
+        mk = lambda qs, dl=0: [mp(tgt[q - dl]) if q - dl >= 0 else "bills" for q in qs]
+        st_b = mk(qb)
+        cur[nm] = dual_path(F, st_b, split)
+        late[nm] = dstats(dates, dual_path(F, mk(qb, 1), split), split)
+        tr[nm] = dstats(dates, dual_path(F, mk(qa), lo), lo)
+        nog[nm] = dstats(dates, dual_path(F0, st_b, split), split)
+        share[nm] = {s: sum(x == s for x in st_b) / len(st_b) for s in ("stocks", "stocks2", "bonds", "gold", "bills")}
+        sw[nm] = sum(st_b[i] != st_b[i - 1] for i in range(1, len(st_b))) / yrs_b
+        qs_[nm], tg_[nm] = qb, (me, tgt, mp)
+    bl = {nm: dstats(dates, cur[nm], split) for nm in names}
+    dec = {nm: ddecades(dates, cur[nm], split) for nm in names}
+    dec["S&P hold"], dec["Trend 2x, bills"] = ddecades(dates, hold, split), ddecades(dates, base, split)
+    decs = sorted(dec["S&P hold"])
+    h, b0 = dstats(dates, hold, split), bs
+    tr["S&P hold"], tr["Trend 2x, bills"] = dstats(dates, hold_tr, lo), dstats(dates, dual_path(F, base_tr, lo), lo)
+    late["Trend 2x, bills"] = dstats(dates, dual_path(F, ["stocks2" if sig[j - 3] else "bills" for j in range(split, hi)], split), split)
+    nog_b = dstats(dates, dual_path(F0, base_st, split), split)
+
+    print(f"{'rule':{W}} | {'train CAGR':>10}{'maxDD':>6} | {'BLIND CAGR':>10}{'maxDD':>6}{'no gap':>8} | {'beat hold':>9} {'beat T2x':>8} | {'1 late (T2x: 1 day)':>19} | {'switches/yr':>11}")
+    print(f"{'S&P hold':{W}} | {tr['S&P hold']['cagr']:>10.1%}{tr['S&P hold']['mdd']:>6.0%} | {h['cagr']:>10.1%}{h['mdd']:>6.0%}{h['cagr']:>8.1%} | {'-':>9} {'':>8} | {'':>19} |")
+    print(f"{'Trend 2x, bills (14.4/44 bar)':{W}} | {tr['Trend 2x, bills']['cagr']:>10.1%}{tr['Trend 2x, bills']['mdd']:>6.0%} | {b0['cagr']:>10.1%}{b0['mdd']:>6.0%}{nog_b['cagr']:>8.1%} | "
+          f"{sum(dec['Trend 2x, bills'][d] > dec['S&P hold'][d] for d in decs):>7}/{len(decs)} {'-':>8} | {late['Trend 2x, bills']['cagr']:>14.1%} /{late['Trend 2x, bills']['mdd']:>3.0%}  | {sum(base_st[i] != base_st[i - 1] for i in range(1, len(base_st))) / yrs_b:>11.1f}")
+    for nm in names:
+        wh, wt = (sum(dec[nm][d] > dec[o][d] for d in decs) for o in ("S&P hold", "Trend 2x, bills"))
+        print(f"{nm:{W}} | {tr[nm]['cagr']:>10.1%}{tr[nm]['mdd']:>6.0%} | {bl[nm]['cagr']:>10.1%}{bl[nm]['mdd']:>6.0%}{nog[nm]['cagr']:>8.1%} | {wh:>7}/{len(decs)} {wt:>6}/{len(decs)} | "
+              f"{late[nm]['cagr']:>14.1%} /{late[nm]['mdd']:>3.0%}  | {sw[nm]:>11.1f}")
+
+    print(f"\n{'blind decade CAGR':{W}}" + "".join(f"{d:>8}" for d in decs))
+    for nm in ["S&P hold", "Trend 2x, bills"] + names:
+        print(f"{nm:{W}}" + "".join(f"{dec[nm][d]:>8.1%}" for d in decs))
+
+    print("\nTIME HELD, blind days")
+    print(f"{'':{W}}{'stocks':>8}{'2x stocks':>10}{'bonds':>8}{'gold':>8}{'bills':>8}")
+    for nm in names:
+        s_ = share[nm]
+        print(f"{nm:{W}}{s_['stocks']:>8.0%}{s_['stocks2']:>10.0%}{s_['bonds']:>8.0%}{s_['gold']:>8.0%}{s_['bills']:>8.0%}")
+
+    dl = dates[split - 1:hi]
+    wins = (("2008 (calendar year)", "2008-01-01", "2008-12-31"), ("2022 (calendar year)", "2022-01-01", "2022-12-31"),
+            ("Mar 2020 (Feb 19 to Apr 30)", "2020-02-19", "2020-04-30"))
+    print("\nSTRESS, blind: return over the window (worst drop inside it)")
+    print(f"{'':{W}}" + "".join(f"{w[0][:17]:>20}" for w in wins))
+    for nm, cv in [("S&P hold", hold), ("Trend 2x, bills", base)] + [(n_, cur[n_]) for n_ in names]:
+        print(f"{nm:{W}}" + "".join(f"{window(dl, cv, a, b)[0]:>+12.0%} ({window(dl, cv, a, b)[1]:>3.0%})  " for _, a, b in wins))
+
+    print("\nRANDOM BASELINE (300 random orders of the rule's own blind holding runs: same months in each asset, same switches, no neighbours alike)")
+    rng = random.Random(7)
+    for nm in names:
+        me, tgt, mp = tg_[nm]
+        qb = qs_[nm]
+        k0, k1 = qb[0], qb[-1]
+        seq = tgt[k0:k1 + 1]
+        wins_c = both = 0
+        for _ in range(300):
+            sh, k = run_shuffle(seq, rng)
+            c, d_ = dual_fast(F, [mp(sh[q - k0]) for q in qb], split, yrs_b)
+            wins_c += c < bl[nm]["cagr"]
+            both += c >= bl[nm]["cagr"] and d_ <= bl[nm]["mdd"]
+        print(f"  {nm:{W}} {bl[nm]['cagr']:.1%} / {bl[nm]['mdd']:.0%} beats {wins_c / 300:.0%} of randoms ({k} run changes), randoms matching on return and worst drop: {both} of 300")
+
+    print(f"\nBAR vs S&P hold ({h['cagr']:.1%} / {h['mdd']:.1%}): blind CAGR higher, worst drop no bigger, more than half the blind decades won.")
+    print(f"BAR vs Trend 2x with bills ({b0['cagr']:.1%} / {b0['mdd']:.1%}): same three tests.")
+    for nm in names:
+        for lab, ref, rd in (("S&P hold", h, dec["S&P hold"]), ("Trend 2x", b0, dec["Trend 2x, bills"])):
+            w = sum(dec[nm][d] > rd[d] for d in decs)
+            pas = bl[nm]["cagr"] > ref["cagr"] and bl[nm]["mdd"] <= ref["mdd"] and w > len(decs) / 2
+            why = "" if pas else " (" + ", ".join(x for x, c in (("less return", bl[nm]["cagr"] <= ref["cagr"]), ("bigger drop", bl[nm]["mdd"] > ref["mdd"]), (f"{w} of {len(decs)} decades", w <= len(decs) / 2)) if c) + ")"
+            print(f"  {nm:{W}} vs {lab:9} {bl[nm]['cagr']:.1%} / {bl[nm]['mdd']:.1%}, won {w}/{len(decs)}: {'PASS' if pas else 'FAIL'}{why}")
+
+    # real funds, from the first full month after SSO launched (June 2006)
+    r0 = next(i for i, d in enumerate(dates) if d >= "2006-07-03")
+    for sym in ("BIL",):
+        raw(sym)
+    bil = real_rets(dates, "BIL")
+    first_bil = next(i for i, x in enumerate(bil) if x != 0.0)
+    bill_r = [bil[j] if j >= first_bil else D[3][j] for j in range(hi)]
+    rr = {"stocks": real_rets(dates, "SPY"), "bonds": real_rets(dates, "IEF"), "gold": real_rets(dates, "GLD"), "bills": bill_r}
+    sso = real_rets(dates, "SSO")
+    FR = {"stocks": [1 + x for x in rr["stocks"]], "stocks2": [max(1 + x, 1e-12) for x in sso], "bonds": [1 + x for x in rr["bonds"]],
+          "gold": [1 + x for x in rr["gold"]], "bills": [1 + x for x in bill_r]}
+    print(f"\nREAL FUNDS CHECK, {dates[r0]} on (first full month after SSO launched; real adjusted closes: SPY, SSO for 2x, IEF, GLD, BIL, with the T-bill series before BIL began {dates[first_bil]}). Signals read off the real funds.")
+    print(f"{'rule':{W}} | {'real CAGR':>9}{'maxDD':>6} | {'2008':>12} | {'2022':>12} | {'model, same window':>20}")
+    dl2 = dates[r0 - 1:hi]
+    rows_ = [("SPY hold", dual_path(FR, ["stocks"] * (hi - r0), r0), dual_path(F, ["stocks"] * (hi - r0), r0)),
+             ("Trend 2x (SSO / BIL)", dual_path(FR, ["stocks2" if sig[j - 2] else "bills" for j in range(r0, hi)], r0),
+              dual_path(F, ["stocks2" if sig[j - 2] else "bills" for j in range(r0, hi)], r0))]
+    real_res = {}
+    for nm, (assets, sma, lev) in specs.items():
+        me, tgt = dual_targets(dates, rr, assets, DUAL_SMA if sma else 0)
+        st = [("stocks2" if s == "stocks" and lev else s) for s in (tgt[q] if q >= 0 else "bills" for q in dual_q(me, r0, hi))]
+        mo = [("stocks2" if s == "stocks" and lev else s) for s in (tg_[nm][1][q] if q >= 0 else "bills" for q in dual_q(tg_[nm][0], r0, hi))]
+        rows_.append((nm, dual_path(FR, st, r0), dual_path(F, mo, r0)))
+    for nm, cv, mcv in rows_:
+        s_, ms = dstats(dates, cv, r0), dstats(dates, mcv, r0)
+        w8, w22 = window(dl2, cv, "2008-01-01", "2008-12-31"), window(dl2, cv, "2022-01-01", "2022-12-31")
+        real_res[nm] = s_
+        print(f"{nm:{W}} | {s_['cagr']:>9.1%}{s_['mdd']:>6.0%} | {w8[0]:>+6.0%} ({w8[1]:>3.0%}) | {w22[0]:>+6.0%} ({w22[1]:>3.0%}) | {ms['cagr']:>12.1%} /{ms['mdd']:>4.0%}")
+    sh_, t2_ = real_res["SPY hold"], real_res["Trend 2x (SSO / BIL)"]
+    print("  Real-fund bar: higher CAGR and no bigger drop than SPY hold, and than Trend 2x on the same funds.")
+    for nm in names:
+        r_ = real_res[nm]
+        print(f"  {nm:{W}} vs SPY hold {'PASS' if r_['cagr'] > sh_['cagr'] and r_['mdd'] <= sh_['mdd'] else 'FAIL'}   vs Trend 2x real {'PASS' if r_['cagr'] > t2_['cagr'] and r_['mdd'] <= t2_['mdd'] else 'FAIL'}")
+
+
 if __name__ == "__main__":
+    if "--dual" in sys.argv:
+        dual()
+        sys.exit()
     if "--out" in sys.argv:
         out_asset()
         sys.exit()
