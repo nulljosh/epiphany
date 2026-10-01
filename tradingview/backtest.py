@@ -118,11 +118,19 @@ def supertrend(h, l, c, n, m):
 
 # ponytail: per-process global, the market (SPY above its 200 day average) aligned to the bars being scored.
 MARKET, MK = {}, []
+VIX, VX = {}, []  # VIX close over its 10 day average, by day
 
 
-def set_market(m):
-    global MARKET
-    MARKET = m
+def set_market(m, v=None):
+    global MARKET, VIX
+    MARKET, VIX = m, v or {}
+
+
+def vix_stretch():
+    vix = fetch_yahoo("^VIX")
+    c = [r[4] for r in vix]
+    a = sma(c, 10)
+    return {r[0] // 86400: c[i] / a[i] for i, r in enumerate(vix) if a[i]}
 
 
 def market_up():
@@ -191,6 +199,14 @@ def signals(mode, p, o, h, l, c):
             return [base[i] and mk[i] for i in range(N)], [i >= n and c[i] >= max(c[i - n + 1:i + 1]) for i in range(N)]
         if mode == "D7 stacked":
             return [base[i] and mk[i] and r[i] is not None and r[i] < 10 and ibs[i] < 0.3 for i in range(N)], up_day
+    if mode == "D7 + VIX fear":  # Double 7s, only when fear is up: VIX 5%+ over its 10 day average
+        t, n, vx = sma(c, 200), p[0], VX or [0] * N
+        return ([i >= n and t[i] is not None and c[i] > t[i] and c[i] <= min(c[i - n + 1:i + 1]) and vx[i] >= 1.05 for i in range(N)],
+                [i >= n and c[i] >= max(c[i - n + 1:i + 1]) for i in range(N)])
+    if mode == "VIX stretch":  # Connors: uptrend, VIX stretched 3 days running, out when RSI(2) recovers
+        t, r, vx = sma(c, 200), rsi(c, 2), VX or [0] * N
+        return ([i >= 2 and t[i] is not None and c[i] > t[i] and min(vx[i - 2:i + 1]) >= 1.05 for i in range(N)],
+                [r[i] is not None and r[i] > p[0] for i in range(N)])
     if mode == "IBS + trend":
         t = sma(c, 200)
         ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
@@ -304,6 +320,8 @@ GRID = {
     "D7 + RSI2": [(5,), (7,), (10,)],
     "D7 + market": [(5,), (7,), (10,)],
     "D7 stacked": [(5,), (7,), (10,)],
+    "D7 + VIX fear": [(5,), (7,), (10,)],
+    "VIX stretch": [(65,), (70,), (80,)],
     "Monica Kelly": [()],   # as shipped, no tuning
     "Monica all-in": [()],  # same signal, whole account per trade
 }
@@ -338,7 +356,9 @@ def halves(bars):
 def evaluate(bars, split=False):
     """Pick each mode's setting on TRAIN, score it on TEST. Returns {mode: test metrics}."""
     global MK
+    global VX
     MK = [MARKET.get(r[0] // 86400, False) for r in bars] if MARKET else []
+    VX = [VIX.get(r[0] // 86400, 0) for r in bars] if VIX else []
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
     tr, te = halves(bars) if split else (window(bars, *TRAIN), window(bars, *TEST))
     out = {}
@@ -370,7 +390,7 @@ def universe(syms=None, label="S&P 500", origin=False, data=None):
         ok = {s: b for s, b in data.items() if b and b[0][0] <= cutoff}
         print(f"{label}: {len(syms)} listed, {len(ok)} with daily history back to 2011. Fee {FEE:.1%}/side.")
         print(f"Settings picked per stock on {TRAIN[0]}..{TRAIN[1]}, scored blind {TEST[0]}..now.\n")
-    with ProcessPoolExecutor(initializer=set_market, initargs=(market_up(),)) as ex:
+    with ProcessPoolExecutor(initializer=set_market, initargs=(market_up(), vix_stretch())) as ex:
         res = dict(zip(ok, ex.map(evaluate, ok.values(), [origin] * len(ok), chunksize=1 if origin else 4)))
     hold = {s: r["Hold"] for s, r in res.items()}
     print(f"{'strategy':16}{'median CAGR':>12}{'median maxDD':>13}{'beat Hold':>10}{'win rate':>9}{'avg trade':>10}{'trades':>8}")
