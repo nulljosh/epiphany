@@ -91,6 +91,10 @@ See [CLAUDE.md](CLAUDE.md) for dev, test, and build commands.
 
 Deploy: Cloudflare Workers (`npm run deploy`)
 
+## Credits
+
+Chart control is built on [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) by tradesdontlie (MIT). Full notice in [THIRD_PARTY.md](THIRD_PARTY.md).
+
 ## License
 
 Apache 2.0, 2026, Joshua Trommel
