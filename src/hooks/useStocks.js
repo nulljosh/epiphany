@@ -41,7 +41,9 @@ const DEFAULT_SYMBOLS = [
   // AI / memory & infra
   'DELL', 'PENG', 'DRAM', 'SNDK', 'IREN', 'MU', 'NBIS', 'CRDO',
   // Commodity futures
-  'GC=F', 'SI=F', 'CL=F',
+  'GC=F', 'SI=F', 'CL=F', 'HG=F', 'NG=F',
+  // Phone watchlist
+  'KODK', 'RL', 'IGV', 'IAU', 'XIC.TO',
   // Volatility
   '^VIX',
   // Cramer tracker ETFs + benchmark
@@ -82,7 +84,8 @@ export const SECTOR_MAP = {
   // REITs
   AMT: 'REITs', PLD: 'REITs',
   // Commodities
-  'GC=F': 'Commodities', 'SI=F': 'Commodities',
+  'GC=F': 'Commodities', 'SI=F': 'Commodities', 'HG=F': 'Commodities', 'NG=F': 'Commodities',
+  KODK: 'Industrials', RL: 'Consumer', IGV: 'ETFs', IAU: 'ETFs', 'XIC.TO': 'ETFs',
   // ETFs
   SPY: 'ETFs', SJIM: 'ETFs', LJIM: 'ETFs', IWM: 'ETFs',
   // Volatility

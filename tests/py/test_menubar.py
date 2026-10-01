@@ -129,3 +129,21 @@ class NextTrade(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Watchlist(unittest.TestCase):
+    def test_line_formats_and_tolerates_missing(self):
+        self.assertEqual(mb.watch_line("PLTR", (190.04, 0.016)), "PLTR  190.04  +1.60%")
+        self.assertEqual(mb.watch_line("DIS", (101.36, -0.0337)), "DIS  101.36  −3.37%")
+        self.assertEqual(mb.watch_line("SPCX", None), "SPCX  —")
+
+    def test_quotes_batches_and_skips_empty(self):
+        calls = []
+        def fake(path):
+            calls.append(path)
+            return {"PLTR": {"fulldayPrice": 190.04, "fulldayChangePercent": 1.6}, "BAD": {"fulldayPrice": None}}
+        with mock.patch.object(mb, "yahoo", fake):
+            q = mb.watch_quotes(mb.WATCH)
+        self.assertEqual(len(calls), 2)  # 36 symbols, 20 per call
+        self.assertAlmostEqual(q["PLTR"][1], 0.016)
+        self.assertNotIn("BAD", q)

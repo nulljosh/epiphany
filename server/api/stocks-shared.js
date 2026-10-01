@@ -25,6 +25,8 @@ export const DEFAULT_SYMBOLS = [
   'SPCX', 'RKLB',
   // AI / memory & infra
   'DELL', 'PENG', 'DRAM', 'SNDK', 'IREN', 'MU', 'NBIS', 'CRDO',
+  // Phone watchlist
+  'KODK', 'RL', 'IGV', 'IAU', 'SBUX', 'KO', 'NKE',
 ].join(',');
 
 export const YAHOO_HEADERS = {
