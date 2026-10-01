@@ -101,7 +101,7 @@ GROUPS = [("", 3), ("Positions", 2), ("Record", 2), (None, 1)]
 
 
 def row_view():
-    """A non-clickable row: label left in secondary ink, value right in tabular digits. Full contrast on the glass,
+    """A non-clickable row: label left, value right in tabular digits. Full contrast on the glass,
     unlike a disabled menu item, and no hover highlight, since it isn't a button."""
     from AppKit import NSColor, NSFont, NSTextField, NSView, NSViewMinXMargin, NSViewWidthSizable, NSTextAlignmentRight
     size = NSFont.menuFontOfSize_(0).pointSize()
@@ -109,10 +109,10 @@ def row_view():
     v.setAutoresizingMask_(NSViewWidthSizable)
     label = NSTextField.labelWithString_("")
     label.setFont_(NSFont.systemFontOfSize_(size))
-    label.setTextColor_(NSColor.secondaryLabelColor())
+    label.setTextColor_(NSColor.labelColor())
     label.setFrame_(((14, 3), (130, 16)))
     value = NSTextField.labelWithString_("")
-    value.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0.23))  # medium
+    value.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0.3))  # semibold
     value.setAlignment_(NSTextAlignmentRight)
     value.setFrame_(((116, 3), (138, 16)))
     value.setAutoresizingMask_(NSViewMinXMargin)
@@ -121,12 +121,23 @@ def row_view():
     return v, label, value
 
 
+def ink(light, dark):
+    """Deeper green and red on light glass, where the system ones wash out; the system ones on dark."""
+    from AppKit import NSAppearanceNameAqua, NSAppearanceNameDarkAqua, NSColor
+    light = NSColor.colorWithSRGBRed_green_blue_alpha_(*light, 1)
+    return NSColor.colorWithName_dynamicProvider_(None, lambda ap: dark if ap.bestMatchFromAppearancesWithNames_(
+        [NSAppearanceNameAqua, NSAppearanceNameDarkAqua]) == NSAppearanceNameDarkAqua else light)
+
+
 def fill(item, fields, label, value, n):
     from AppKit import NSColor
+    global UP, DOWN
+    if "UP" not in globals():
+        UP, DOWN = ink((0.0, 0.47, 0.2), NSColor.systemGreenColor()), ink((0.75, 0.08, 0.12), NSColor.systemRedColor())
     item.setHidden_(not label)
     fields[0].setStringValue_(label)
     fields[1].setStringValue_(value)
-    fields[1].setTextColor_(NSColor.labelColor() if not n else NSColor.systemGreenColor() if n > 0 else NSColor.systemRedColor())
+    fields[1].setTextColor_(NSColor.labelColor() if not n else UP if n > 0 else DOWN)
 
 
 def main():
