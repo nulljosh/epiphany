@@ -242,3 +242,4 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [x] Fix the WHITEPAPER's dead `simBenchmark.js` reference
 - [x] Edge found: Double 7s, 67% win rate, +0.39%/trade after fees, 22,614 blind S&P 500 trades (WHITEPAPER section 5)
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
+- [ ] Integrate Double 7s into the app: `src/utils/indicators.js` gets a `double7s(bars)` signal (above SMA200, 10-day low = buy, 10-day high = sell), autopilot (`server/api/broker/autopilot.js`, morning-run) and the Buy/Hold/Sell badge use it instead of the Monica entry; mirror in `ios/Helpers/Indicators.swift` and `Shared/Autopilot.swift`; paper only, same gates
