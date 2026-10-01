@@ -1,0 +1,21 @@
+Hold only while above the 200 day average. Fee 0.1%/switch, margin 5%, cash earns 0%.
+
+series                                  period          strategy   CAGR worst drop invested switches
+S&P 500 index, 1928 on (price only)     whole history       hold   6.2%        86%     100%        0
+S&P 500 index, 1928 on (price only)     whole history trend 1.0x   6.3%        55%      68%      589
+S&P 500 index, 1928 on (price only)     whole history trend 1.5x   7.1%        72%      68%      589
+S&P 500 index, 1928 on (price only)     2000 on             hold   6.4%        57%     100%        0
+S&P 500 index, 1928 on (price only)     2000 on       trend 1.0x   4.9%        25%      72%      193
+S&P 500 index, 1928 on (price only)     2000 on       trend 1.5x   5.0%        35%      72%      193
+S&P 500 index, 1928 on (price only)     2020 on             hold  13.6%        34%     100%        0
+S&P 500 index, 1928 on (price only)     2020 on       trend 1.0x   8.8%        25%      79%       41
+S&P 500 index, 1928 on (price only)     2020 on       trend 1.5x  10.6%        35%      79%       41
+SPY, 1993 on (with dividends)           whole history       hold  10.8%        55%     100%        0
+SPY, 1993 on (with dividends)           whole history trend 1.0x   8.2%        25%      77%      215
+SPY, 1993 on (with dividends)           whole history trend 1.5x   9.7%        36%      77%      215
+SPY, 1993 on (with dividends)           2000 on             hold   8.2%        55%     100%        0
+SPY, 1993 on (with dividends)           2000 on       trend 1.0x   6.3%        25%      74%      185
+SPY, 1993 on (with dividends)           2000 on       trend 1.5x   7.1%        36%      74%      185
+SPY, 1993 on (with dividends)           2020 on             hold  15.2%        34%     100%        0
+SPY, 1993 on (with dividends)           2020 on       trend 1.0x  10.9%        25%      80%       37
+SPY, 1993 on (with dividends)           2020 on       trend 1.5x  13.7%        36%      80%       37

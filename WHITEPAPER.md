@@ -221,6 +221,15 @@ sits idle between trades, and that costs far more than the edge earns.
   long position does in an uptrend, so a high win rate is not the same as
   beating the market. Bigger positions did not help either: 25%, 50% and 100%
   per position all earned less.
+- **Trend timing halves the crashes, not the return.** We held SPY only while it
+  closed above its 200 day average, and sat in cash otherwise
+  (`backtest.py trend-spy`, cash earning nothing, fees included). Since 1993 that
+  made 8.2% a year against 10.8% for holding, but the worst drop fell from 55% to
+  25%. With 1.5x borrowed money it made 9.7% with a 36% drop. Over the S&P 500
+  index since 1928 (prices only, no dividends) the 1.5x version did earn more than
+  holding, 7.1% against 6.2%, with a smaller worst drop (72% against 86%). But
+  that win comes from the 1930s crash. Since 2000 and since 2020 holding earned
+  more. So it is a way to sleep better, not a way to beat the market.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
 - **Our original strategy, Epiphany Kelly, does not work.** Its buy signal wins
