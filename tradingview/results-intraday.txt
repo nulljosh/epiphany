@@ -1,0 +1,8 @@
+16 ETFs, 60 trading days of 5-minute bars, $10,000 per trade, IBKR commissions plus 1 cent/share spread.
+
+ buy< exit> trades/day win rate gross $/trade net $/trade  net $/day fees % of gross
+    5    50        127      40%          0.08       -3.79       -479            4814
+   10    60        127      41%         -0.05       -3.91       -495             nan
+   10    80        113      43%         -0.21       -4.07       -458             nan
+   20    70        130      43%         -0.07       -3.92       -511             nan
+   30    70        141      42%         -0.07       -3.93       -553             nan
