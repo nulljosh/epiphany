@@ -317,6 +317,51 @@ and that is the trade we would choose on purpose. Every asset above trades on
 IBKR as a US ETF: SPY, IEF and TLT, GLD, VEU, EEM, VNQ, DBC, USO, SLV, CPER,
 UUP, IBIT and ETHA.
 
+**Spending the smaller crash on leverage.** Trend rules cut the worst drop
+roughly in half, so the next idea was to spend that safety on borrowed money
+(Gayed and Bilello, "Leverage for the Long Run", 2016). Hold the S&P 500 at L
+times while it sits above its average, and T-bills or 10 year Treasuries when it
+does not (`century.py --leverage`, raw output in
+`tradingview/results-leverage.txt`). Daily since 1929, using the index close plus
+Shiller's dividend yield spread across the days. Two ways to pay for the
+leverage: borrow at the T-bill rate plus 1%, or hold a 2x fund that resets daily
+and charges 0.9% a year. The signal is read at one close and traded at the next,
+with a 0.1% fee on every dollar moved. We tried 32 settings (L of 1, 1.25, 1.5 or
+2, a 200 day or 10 month average, bills or Treasuries, two cost models), picked
+on 1929 to 1975 only, and graded on 1976 to now.
+
+| Rule, picked blind | Yearly return 1976 to now | Worst drop | Decades it beat the S&P |
+|---|---|---|---|
+| Hold the S&P 500, dividends in | 12.1% | 55% | |
+| 2x borrowed, above 200 day average, else T-bills | 14.3% | 44% | 4 of 6 |
+| 2x fund, above 200 day average, else T-bills | 15.1% | 44% | 5 of 6 |
+| Top momentum tenth of all US stocks, 0.1% costs | 15.9% | 52% | 5 of 6 |
+| Same, 0.5% costs | 10.5% | 63% | 2 of 6 |
+
+This is the first rule that clears our bar: more money than holding, a smaller
+worst drop, and a win in most unseen decades. The catches are real. 2x was the
+top of the range we tried, so the pick sat at the edge. The one decade it lost
+was 1976 to 1979, when choppy markets kept tripping the signal (4.1% against
+9.5%), and the 1987 crash still landed at full 2x because one day is faster than
+any average. The 10 month version, the one most people quote, failed the bar on
+the blind half. And the paper was written with this same history in view, so
+the blind half is blind to us, not to the idea.
+
+To check the fund model we ran it against the real SSO (2x) and UPRO (3x) since
+2010. It came out 0.8% a year too kind for SSO and 1.7% for UPRO, because real
+funds pay more than T-bills to borrow. Take that 0.8% off the 2x fund row and it
+still beats holding, at about 14.3%, the same as borrowing.
+
+Last, a check on momentum that cannot have survivorship bias: Ken French's
+monthly returns for all US stocks sorted into tenths by their past year,
+since 1927, value weighted, no trend filter. The top tenth beat the market by
+3.6 points a year from 1976 on if trading costs 0.1%, but fell 52% against 50%,
+so it misses the bar on the drop. The French data does not show turnover, so we
+assumed half the portfolio changes every month. At 0.5% a trade, closer to what
+costs were before 2000, it loses to the market outright. Momentum in stocks is
+real but most of it goes to trading costs. Leveraged trend on the index is the
+rule we would run, sized so a 44% drop is survivable, with eyes open about 1987.
+
 **What could still be wrong.** The stock list is today's S&P 500. Companies
 that crashed and got kicked out are missing, and that makes buying dips look
 better than it really was. Prices are assumed to fill exactly, with no extra
