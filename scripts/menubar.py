@@ -59,7 +59,7 @@ def main():
 
     class App(rumps.App):
         def __init__(self):
-            super().__init__("Epiphany Live", title="..", quit_button=None)
+            super().__init__("Epiphany Live", title="..", icon=os.path.join(ROOT, "scripts", "menubar-icon.png"), template=True, quit_button=None)
             self.rows = [rumps.MenuItem(x, callback=None) for x in ("Starting...", " ")]
             self.menu = [*self.rows, None, rumps.MenuItem("Quit", callback=self.quit)]
             self.child = None
