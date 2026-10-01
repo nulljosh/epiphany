@@ -679,7 +679,6 @@ struct SituationView: View {
         }
         .overlay(alignment: .top) { errorOverlay }
         .overlay(alignment: .topLeading) { mapSearchBar }
-        .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottom) { statusOverlay }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
         .overlay(alignment: .bottomTrailing) { currentLocationButton }
@@ -735,9 +734,8 @@ struct SituationView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 12)
         }
-        .padding(.bottom, 12)
     }
 
     @ViewBuilder
@@ -1123,6 +1121,10 @@ struct SituationView: View {
             searchField
             if !searchCompleter.results.isEmpty {
                 searchSuggestions
+            } else {
+                // Filters live under the search field; at the bottom they sat
+                // behind the floating tab bar.
+                venueCategoryBar.padding(.horizontal, -12)
             }
         }
         .padding(.horizontal, 12)
@@ -1137,7 +1139,7 @@ struct SituationView: View {
             TextField("Search", text: $mapSearch)
                 .textFieldStyle(.plain)
                 .font(.system(size: 15))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .submitLabel(.search)
                 .autocorrectionDisabled()
                 .onSubmit { Task { await geocodeAndFly() } }
@@ -1167,34 +1169,39 @@ struct SituationView: View {
                 Button {
                     Task { await flyTo(completion) }
                 } label: {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(completion.title)
-                            .font(.system(size: 14))
-                            .foregroundStyle(.white)
-                        if !completion.subtitle.isEmpty {
-                            Text(completion.subtitle)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
+                    HStack(spacing: 10) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.white, .red)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(completion.title)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            if !completion.subtitle.isEmpty {
+                                Text(completion.subtitle)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
+                    .padding(.vertical, 9)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 if index < min(searchCompleter.results.count, 6) - 1 {
-                    Divider().opacity(0.3)
+                    Divider().padding(.leading, 42)
                 }
             }
         }
-        .frame(width: 230, alignment: .leading)
-        // Opaque surface, not material -- the map used to bleed through and made
-        // the suggestions hard to read.
-        .background {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(white: 0.12))
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // Opaque adaptive surface: the old fixed near-black box put grey
+        // subtitles on black in light mode. System colors keep both modes legible.
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
     }
 
     private func flyTo(_ completion: MKLocalSearchCompletion) async {
