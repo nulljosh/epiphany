@@ -10,7 +10,28 @@ const DEDUP_THRESHOLD = 0.6;
 // directly with 3 retries (~3s). A warm KV entry returns instantly without
 // touching either upstream. Mirrors the L2 pattern in stocks-free.js.
 const KV_FRESH_MS = 15 * 60 * 1000;  // serve instantly, no refetch
-const KV_STALE_SEC = 60 * 60;        // KV entry lifetime
+const KV_STALE_SEC = 24 * 60 * 60;   // KV entry lifetime; stale entries are served instantly while a refresh runs
+
+// Stale-while-revalidate: GDELT routinely hangs to its 8s timeout, so a
+// cache miss meant a 9-10s spinner in the app. Any stale entry is now
+// returned at once and the upstream fetch runs after the response via the
+// Worker's waitUntil (worker/index.js sets globalThis.__waitUntil).
+// ponytail: per-isolate dedupe set, KV lock if refresh storms show up.
+const refreshing = new Set();
+const NOOP_RES = { setHeader() { return this; }, status() { return this; }, json() { return this; }, end() { return this; } };
+function serveStaleAndRefresh(req, res, key, entry) {
+  if (!refreshing.has(key) && globalThis.__waitUntil) {
+    refreshing.add(key);
+    globalThis.__waitUntil(
+      handler({ ...req, __refresh: true }, NOOP_RES).finally(() => refreshing.delete(key)),
+    );
+  }
+  res.setHeader('Cache-Control', 's-maxage=60');
+  return res.status(200).json({
+    ...entry.data,
+    meta: buildMeta('stale', { cached: true, source: 'kv', cacheAgeMs: Date.now() - entry.ts }),
+  });
+}
 
 async function kvReadNews(key) {
   const kv = await getKv();
@@ -346,6 +367,9 @@ async function handleStockNews(req, res, query) {
 
   // L2 Upstash — serve instantly while fresh, no upstream call
   const kvHit = await kvReadNews(kvKey);
+  if (!req.__refresh && kvHit?.data && Date.now() - kvHit.ts >= KV_FRESH_MS) {
+    return serveStaleAndRefresh(req, res, kvKey, kvHit);
+  }
   if (kvHit && kvHit.ts && Date.now() - kvHit.ts < KV_FRESH_MS) {
     cacheSet(cacheKey, kvHit);
     res.setHeader('Cache-Control', 's-maxage=300');
@@ -444,6 +468,9 @@ export default async function handler(req, res) {
   // The geo/general path previously had no KV layer, so every cold lambda
   // hit GDELT + Google directly (~3s). This mirrors the stock path.
   const kvHit = await kvReadNews(kvKey);
+  if (!req.__refresh && kvHit?.data && Date.now() - kvHit.ts >= KV_FRESH_MS) {
+    return serveStaleAndRefresh(req, res, kvKey, kvHit);
+  }
   if (kvHit && kvHit.ts && Date.now() - kvHit.ts < KV_FRESH_MS) {
     cacheSet(cacheKey, kvHit);
     res.setHeader('Cache-Control', 's-maxage=300');
