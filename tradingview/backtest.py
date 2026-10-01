@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay surf-strategies.pine (plus Supertrend+RSI) on Bitstamp BTC daily history since 2011.
+"""Replay surf-strategies.pine (plus Supertrend+RSI and Monica Kelly) on Bitstamp BTC daily history since 2011.
 
 Signals on the close, fills at the next open, 0.1% fee per side, long only.
 Settings are picked on 2012-2019 and scored blind on 2020-now.
@@ -126,6 +126,72 @@ def run(bars, enter, exit_, lo, hi):
     return {"mult": eq, "cagr": eq ** (1 / years) - 1, "mdd": mdd, "trades": trades}
 
 
+def stdev(x, n):
+    m = sma(x, n)
+    return [None if m[i] is None else (sum((v - m[i]) ** 2 for v in x[i - n + 1:i + 1]) / n) ** 0.5 for i in range(len(x))]
+
+
+def monica(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.025, rising=5,
+           stop=0.017, tgt=0.05, trig=0.02, trail=0.03, frac=0.25, cap=0.10):
+    """monica-kelly-strategy.pine, rule for rule. Stop/target are resting orders from the prior close,
+    filled TradingView style: gap fills at the open, otherwise the extreme nearer the open is hit first."""
+    o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
+    sf, ss, sd = sma(c, fast), sma(c, slow), stdev(c, fast)
+    def entry(i):
+        if i < max(slow, 11) or ss[i] is None:
+            return False
+        up = sum(c[i - j + 1] > c[i - j] for j in range(1, 11))
+        return ((c[i] - sf[i]) / sf[i] >= strength and (c[i - 1] - sf[i - 1]) / sf[i - 1] > 0
+                and sd[i] / sf[i] < volcap and up >= rising and c[i] > ss[i])
+    def kelly(pnls):
+        wins = [x for x in pnls if x > 0]
+        n = len(pnls)
+        wr = len(wins) / n if n > 10 else 0.55
+        aw = sum(wins) / max(len(wins), 1)
+        al = abs(sum(x for x in pnls if x <= 0)) / max(n - len(wins), 1)
+        rr = aw / al if al > 0 else 2.94
+        return 0.0 if rr == 0 else max(0.0, min((rr * wr - (1 - wr)) / rr * frac, cap))
+    cash, units, entry_px, cost, pending, orders = 1.0, 0.0, 0.0, 0.0, False, None
+    pnls, peak, mdd, trades, eq = [], 1.0, 0.0, 0, 1.0
+    for i in range(lo, hi):
+        if units and orders:
+            sp, tp = orders
+            if o[i] <= sp or o[i] >= tp:
+                fill = o[i]
+            else:
+                high_first = h[i] - o[i] <= o[i] - l[i]
+                hits = [(tp, h[i] >= tp), (sp, l[i] <= sp)] if high_first else [(sp, l[i] <= sp), (tp, h[i] >= tp)]
+                fill = next((px for px, hit in hits if hit), None)
+            if fill is not None:
+                proceeds = units * fill * (1 - FEE)
+                cash, units, orders = cash + proceeds, 0.0, None
+                pnls.append(proceeds - cost)
+        if pending and not units:
+            size = cash * (kelly(pnls) if sized else 1.0)
+            units, entry_px, cost, cash, trades = size * (1 - FEE) / o[i], o[i], size, cash - size, trades + 1
+        pending = False
+        if units:
+            sp, tp = entry_px * (1 - stop), entry_px * (1 + tgt)
+            if (c[i] - entry_px) / entry_px > trig:
+                sp = max(sp, c[i] * (1 - trail))
+            orders = (sp, tp)
+        elif entry(i) and (not sized or kelly(pnls) > 0):
+            pending = True
+        eq = cash + units * c[i]
+        peak = max(peak, eq)
+        mdd = max(mdd, 1 - eq / peak)
+    years = (bars[hi - 1][0] - bars[lo][0]) / 31557600
+    return {"mult": eq, "cagr": eq ** (1 / years) - 1, "mdd": mdd, "trades": trades}
+
+
+def score(mode, p, bars, ohlc, lo, hi):
+    if mode == "Monica Kelly":
+        return monica(bars, lo, hi)
+    if mode == "Monica all-in":
+        return monica(bars, lo, hi, sized=False)
+    return run(bars, *signals(mode, p, *ohlc), lo, hi)
+
+
 GRID = {
     "Hold": [()],
     "Single MA": [(n,) for n in (20, 50, 100, 150, 200)],
@@ -134,6 +200,8 @@ GRID = {
     "Donchian": [(n,) for n in (10, 20, 55, 100)],
     "IBS": [(0.1, 0.9), (0.2, 0.8), (0.3, 0.7)],
     "Supertrend+RSI": [(10, 2), (10, 3), (14, 3), (20, 4)],
+    "Monica Kelly": [()],   # as shipped, no tuning
+    "Monica all-in": [()],  # same signal, whole account per trade
 }
 
 
@@ -151,6 +219,10 @@ def check():
     assert abs(hold["mult"] - 1.01 ** 399 * (1 - FEE)) / hold["mult"] < 0.02, hold
     for mode in ("Single MA", "Two MA", "Donchian", "Supertrend+RSI"):
         assert run(bars, *signals(mode, GRID[mode][0], o, h, l, c), 0, 400)["mult"] > 1, mode
+    # Gentle 0.5%/day climb: Monica enters, rides to the 5% target, repeats, never loses.
+    slow = [[i * 86400, 100 * 1.005 ** i, 100 * 1.005 ** i * 1.001, 100 * 1.005 ** i * 0.999, 100 * 1.005 ** i] for i in range(400)]
+    m = monica(slow, 0, 400, sized=False)
+    assert m["mult"] > 1.5 and m["trades"] > 5 and m["mdd"] < 0.02, m
 
 
 def main():
@@ -163,9 +235,9 @@ def main():
     print(f"Pick on {day(tr[0])}..{day(tr[1] - 1)}, score blind on {day(te[0])}..{day(te[1] - 1)}.\n")
     print(f"{'strategy':16}{'setting':>14} | {'train CAGR':>10} {'maxDD':>6} | {'TEST CAGR':>10} {'maxDD':>6} {'x money':>8} {'trades':>6}")
     for mode, grid in GRID.items():
-        best = max(grid, key=lambda p: run(bars, *signals(mode, p, o, h, l, c), *tr)["cagr"])
-        sig = signals(mode, best, o, h, l, c)
-        a, b = run(bars, *sig, *tr), run(bars, *sig, *te)
+        ohlc = (o, h, l, c)
+        best = max(grid, key=lambda p: score(mode, p, bars, ohlc, *tr)["cagr"])
+        a, b = score(mode, best, bars, ohlc, *tr), score(mode, best, bars, ohlc, *te)
         print(f"{mode:16}{str(best):>14} | {a['cagr']:>10.0%} {a['mdd']:>6.0%} | {b['cagr']:>10.0%} {b['mdd']:>6.0%} {b['mult']:>8.1f} {b['trades']:>6}")
 
 
