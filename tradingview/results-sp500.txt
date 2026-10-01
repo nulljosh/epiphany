@@ -1,0 +1,19 @@
+S&P 500: 503 listed, 429 with daily history back to 2011. Fee 0.1%/side.
+Settings picked per stock on 2012-01-01..2019-12-31, scored blind 2020-01-01..now.
+
+strategy         median CAGR median maxDD beat Hold win rate avg trade  trades
+Hold                    9.1%          50%        0%       0%     0.00%       0
+Single MA               1.8%          43%       14%      24%     0.90%   18760
+Two MA                  2.1%          44%       15%      37%     2.82%    6509
+Three MA                1.4%          35%       16%      40%     1.06%   11669
+Donchian                2.5%          41%       14%      41%     3.21%    5057
+IBS                     6.1%          38%       33%      61%     0.50%   52697
+Supertrend+RSI          2.6%          40%       18%      42%     1.59%   11534
+RSI2 pullback           0.5%          25%       13%      65%     0.25%   19156
+IBS + trend             0.9%          31%       16%      60%     0.16%   47678
+RSI2 exit high          0.8%          21%       13%      64%     0.27%   20653
+Cumulative RSI          0.6%          23%       11%      65%     0.25%   17091
+Double 7s               0.7%          37%       14%      67%     0.39%   22614
+IBS + RSI2              0.9%          22%       14%      64%     0.27%   20475
+Monica Kelly           -0.0%           0%       13%      30%    -0.03%   13245
+Monica all-in          -2.0%          34%        7%      30%    -0.07%   43701

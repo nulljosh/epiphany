@@ -3,7 +3,7 @@
 // Polls live TradingView chart for Monica Kelly entry signals, fires orders.
 //
 // Usage:
-//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple] [--study Monica|Surf] [--dry-run]
+//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple] [--study Monica|Epiphany] [--dry-run]
 //
 // Requires:
 //   - TradingView Desktop running with --remote-debugging-port=9222

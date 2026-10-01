@@ -41,7 +41,7 @@ standard normal draw. The bull probability is the share of the 500 paths that cl
 above the current price, because a single point forecast hides how much the paths
 disagree with each other; the spread across 500 runs is the actual signal. That
 probability becomes the raw conviction score. This runs in the in app simulator at
-60fps (`src/utils/simBenchmark.js`) across the full asset universe, and in the
+60fps across the full asset universe, and in the
 weekday morning cron (`server/api/broker/morning-run.js`).
 
 ### 2. Technical signal (entry filter)
@@ -89,6 +89,57 @@ The strategy is shared with a backtestable Pine Script port
 (`tradingview/monica-kelly-strategy.pine`) so the same rules can be validated on
 years of TradingView history instead of trusted on faith from a few weeks of
 paper trading.
+
+### 5. Benchmark
+
+We stopped trusting the strategy on faith and ran it against history. So did
+every popular alternative. The engine is `tradingview/backtest.py`, plain Python,
+no dependencies. The rules keep it honest. Signals read the close and fill at the
+next open. Every trade pays 0.1% each way. Long only. Settings are picked on
+2012 to 2019, then scored blind on 2020 to now.
+
+The data is Bitstamp BTC daily since 2011, plus every S&P 500 stock with history
+back to 2011 (429 of 503), split and dividend adjusted. Raw output lives in
+`tradingview/results-sp500.txt` and `tradingview/results-btc.txt`. Rerun with
+`python3 tradingview/backtest.py sp500`.
+
+The bar for an edge: at least 66% of trades win, the average trade makes money
+after fees, and it holds on years it never saw.
+
+S&P 500, blind 2020 to now:
+
+| Strategy | Win rate | Avg trade | Median CAGR | Median max drop | Trades |
+|---|---|---|---|---|---|
+| **Double 7s** | **67%** | **+0.39%** | 0.7% | 37% | 22,614 |
+| RSI(2) pullback | 65% | +0.25% | 0.5% | 25% | 19,156 |
+| Cumulative RSI | 65% | +0.25% | 0.6% | 23% | 17,091 |
+| IBS dip buy | 61% | +0.50% | 6.1% | 38% | 52,697 |
+| Donchian breakout | 41% | +3.21% | 2.5% | 41% | 5,057 |
+| Two MA crossover | 37% | +2.82% | 2.1% | 44% | 6,509 |
+| Monica, all in | 30% | -0.07% | -2.0% | 34% | 43,701 |
+| Buy and hold | | | 9.1% | 50% | |
+
+What it says:
+
+- **Double 7s is the edge.** Buy a stock in an uptrend (above its 200 day
+  average) when it closes at a 10 day low. Sell when it closes at a 10 day high.
+  It won 67% of 22,614 trades it was never tuned on. It is the only strategy
+  that clears all three bars. On BTC since 2011 it won 72% of its trades.
+- **The edge is per trade, not per year.** One stock only triggers a few times a
+  year, so the money sits idle and the yearly return is small. The way to use it
+  is many stocks at once, so the cash is always working. That portfolio test is
+  next.
+- **Trend following never beat holding.** Moving averages, breakouts and
+  Supertrend all cut the worst drops and gave back most of the gain. On BTC from
+  2020, holding made 11.7x with a 77% drop. Donchian made 9.5x with 43%.
+- **Monica, as shipped, does not work.** Its entry signal loses money (30% win
+  rate). Its Kelly sizing has a bug: one early loss with no wins sets the bet to
+  zero, and it never trades again. It stays paper only until both are fixed.
+
+Caveats, said plainly. The stock list is today's S&P 500, so companies that
+fell out are missing, and that flatters dip buying most of all. There is no
+slippage beyond the fee. A luck test (random entries, same time in the market)
+is still to run. Until those are done, this is a strong lead, not a promise.
 
 ### Broker abstraction
 

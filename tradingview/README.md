@@ -77,14 +77,14 @@ The Monica simulator uses balance-dependent Kelly fractions:
 
 The TradingView versions use a single configurable fraction (default 25%) since account equity is static per session.
 
-## Surf Strategies (surf-strategies.pine)
+## Epiphany (epiphany.pine)
 
 The five strategies from agents.surf that run on a single chart: Single MA, Two MA, Three MA, Donchian breakout and IBS mean reversion. Pick one from the Strategy input. Long only. The other 96 need options chains, cross-sections or bond curves, so they don't fit one chart.
 
 To trade it, launch TradingView with `--remote-debugging-port=9222`, add the strategy, then:
 
 ```
-node scripts/tv-signal-agent.js --study Surf --dry-run
+node scripts/tv-signal-agent.js --study Epiphany --dry-run
 ```
 
 The agent fires only on labels that appear after it starts. Drop `--dry-run` to hit the Alpaca paper endpoint.
