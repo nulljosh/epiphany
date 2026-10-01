@@ -175,7 +175,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
           {[
             { key: 'free', name: 'Free', price: '$0', period: 'forever', plan: null, features: ['Live map and news', '1 portfolio', 'Delayed market data', 'Basic Buy / Hold / Sell signals'] },
-            { key: 'starter', name: 'Premium', price: '$1', period: 'one-time', plan: 'starter', label: 'Get Premium for $1, once', recommended: true, features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Price alerts', 'Autopilot on paper money (in the app, back on the web soon)', 'Daily Brief', 'People tracker'] },
+            { key: 'starter', name: 'Premium', price: '$1', period: 'one-time', plan: 'starter', label: 'Get Premium for $1, once', recommended: true, features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Price alerts', 'Autopilot on paper money (app now, web soon)', 'Daily Brief', 'People tracker'] },
           ].map(tier => (
             <div key={tier.key} style={{
               ...glassCard,

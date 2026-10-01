@@ -531,7 +531,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
               <li>Full indicator suite</li>
               <li>Read-only brokerage sync</li>
               <li>Price alerts</li>
-              <li>Autopilot on paper money (in the app now, back on the web soon)</li>
+              <li>Autopilot on paper money (app now, web soon)</li>
               <li>Daily Brief</li>
               <li>People tracker</li>
               <li>Every future update</li>
