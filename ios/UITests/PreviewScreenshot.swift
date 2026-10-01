@@ -11,16 +11,15 @@ final class PreviewScreenshot: XCTestCase {
         let app = XCUIApplication()
         setupSnapshot(app)
         app.launchArguments.append("UITEST_SNAPSHOT")
-        // Credentials come from .env.accounts.local DEMO_EMAIL/DEMO_PASSWORD.
-        // No fallback account: an empty demo login silently produced screenshots
-        // with no portfolio and no settings data. Fail the run instead.
+        // Real login only if SNAPSHOT_EMAIL/SNAPSHOT_PASSWORD are passed (TEST_RUNNER_ prefix). Otherwise the app
+        // fills in sample data (UITEST_DEMO), so no account or password is needed.
         let env = ProcessInfo.processInfo.environment
-        guard let email = env["SNAPSHOT_EMAIL"], let password = env["SNAPSHOT_PASSWORD"] else {
-            XCTFail("SNAPSHOT_EMAIL/SNAPSHOT_PASSWORD not set (pass via TEST_RUNNER_ prefix)")
-            return app
+        if let email = env["SNAPSHOT_EMAIL"], let password = env["SNAPSHOT_PASSWORD"] {
+            app.launchEnvironment["SNAPSHOT_EMAIL"] = email
+            app.launchEnvironment["SNAPSHOT_PASSWORD"] = password
+        } else {
+            app.launchArguments.append("UITEST_DEMO")
         }
-        app.launchEnvironment["SNAPSHOT_EMAIL"] = email
-        app.launchEnvironment["SNAPSHOT_PASSWORD"] = password
         app.launch()
 
         // Wait for UI to settle: location fix arrives, map re-centers, tiles fetch.
