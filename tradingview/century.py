@@ -389,7 +389,7 @@ def lev_data():
     return dates, c, sp, bill, bond, {"200d": s200, "10m": s10}
 
 
-def lev_sim(D, L, sig, out, model, lo, hi):
+def lev_sim(D, L, sig, out, model, lo, hi, fee=FEE, delay=0, gap=0.0):
     """Daily equity. Signal read at close j-2, traded at close j-1, earns day j. Fee on every dollar traded.
     margin: L x stock, borrow (L-1) at T-bill + 1%, rebalanced to L each month.
     etf: (L-1) in a daily-reset 2x fund (T-bill financing, 0.9% expense) + (2-L) in a plain fund, rebalanced monthly."""
@@ -398,14 +398,14 @@ def lev_sim(D, L, sig, out, model, lo, hi):
     eq, pos, curve = 1.0, None, [1.0]
     S = Dt = a = b = 0.0
     for j in range(lo, hi):
-        want = s[j - 2] if s else True
+        want = s[j - 2 - delay] if s else True
         newm = dates[j][:7] != dates[j - 1][:7]
         if want != pos or (want and newm):  # switch, or monthly rebalance while in
             if pos is None or want != pos:
                 traded = eq * (L if model == "margin" else 1.0) + (eq if out == "bonds" and pos is not None else 0)
             else:  # rebalance drift back to target
                 traded = abs(S - L * eq) if model == "margin" else abs(a - (L - 1) * eq)
-            eq *= 1 - FEE * traded / eq
+            eq *= 1 - fee * traded / eq
             pos = want
             S, Dt = L * eq, (L - 1) * eq
             a, b = (L - 1) * eq, (2 - L) * eq
@@ -415,7 +415,7 @@ def lev_sim(D, L, sig, out, model, lo, hi):
                 Dt *= 1 + bill[j] + 0.01 / 252
                 eq = max(S - Dt, 1e-12)
             else:
-                a *= 1 + 2 * sp[j] - bill[j] - SWAP_EXP / 252
+                a *= 1 + 2 * sp[j] - bill[j] - (SWAP_EXP + gap) / 252
                 b *= 1 + sp[j] - PLAIN_EXP / 252
                 eq = max(a + b, 1e-12)
         else:
@@ -530,7 +530,198 @@ def leverage():
         print(f"  {n:24}" + "".join(f"{x:>8.1%}" for x in out))
 
 
+def legs(on, idn, bill, p_on, p_id, fee, gap=0.0):
+    """Two legs a day (overnight, intraday), 2x fund model: in = 2r - bill - expense, out = bill. Fee on every change of position."""
+    cv, eq, prev = [1.0], 1.0, p_on[0]
+    for j in range(len(on)):
+        for r, p in ((on[j], p_on[j]), (idn[j], p_id[j])):
+            if p != prev:
+                eq *= 1 - fee
+                prev = p
+            eq *= max(1 + 2 * r - bill[j] / 2 - (SWAP_EXP + gap) / 504, 1e-12) if p else 1 + bill[j] / 2
+        cv.append(eq)
+    return cv
+
+
+def cstats(dates, cv):
+    yrs = (datetime.fromisoformat(dates[-1]) - datetime.fromisoformat(dates[0])).days / 365.25
+    pk, mdd = cv[0], 0.0
+    for v in cv:
+        pk = max(pk, v)
+        mdd = max(mdd, 1 - v / pk)
+    return (cv[-1] / cv[0]) ** (1 / yrs) - 1, mdd
+
+
+def window(dates, cv, a, b):
+    """Return and worst drop inside [a, b]; cv[k] is the close of dates[k]."""
+    ks = [k for k, d in enumerate(dates) if a <= d <= b]
+    seg = cv[ks[0] - 1:ks[-1] + 1] if ks[0] else cv[:ks[-1] + 1]
+    pk, mdd = seg[0], 0.0
+    for v in seg:
+        pk = max(pk, v)
+        mdd = max(mdd, 1 - v / pk)
+    return seg[-1] / seg[0] - 1, mdd
+
+
+def robust():
+    import random
+    D = lev_data()
+    dates, c, sp, bill, bond, sigs = D
+    s = sigs["200d"]
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    hi = len(dates)
+    print(f"ROBUSTNESS OF THE PICK (2x S&P above 200 day average, else T-bills; signal at close, trade next close). Blind {dates[split]}..{dates[-1]}.")
+    print("Settings fixed, nothing re-tuned. 'fund' = daily-reset 2x model (T-bill financing + 0.9% expense), 'margin' = L x index, T-bill + 1%.\n")
+    # 1. random baseline
+    print("1. RANDOM BASELINE: 1000 random in/out schedules, same days in the market, same number of switches, fund model, 0.1% a switch")
+    pos = [s[j - 2] for j in range(split, hi)]
+    gin = [__import__("math").log(max(1 + 2 * sp[j] - bill[j] - SWAP_EXP / 252, 1e-12)) for j in range(split, hi)]
+    gout = [__import__("math").log(1 + bill[j]) for j in range(split, hi)]
+    lf = __import__("math").log(1 - FEE)
+    yrs = (datetime.fromisoformat(dates[hi - 1]) - datetime.fromisoformat(dates[split - 1])).days / 365.25
+    def path(p):
+        cum = pk = worst = 0.0
+        prev = p[0]
+        for g_in, g_out, x in zip(gin, gout, p):
+            if x != prev:
+                cum += lf
+                prev = x
+            cum += g_in if x else g_out
+            if cum > pk:
+                pk = cum
+            elif pk - cum > worst:
+                worst = pk - cum
+        m = __import__("math")
+        return m.exp(cum / yrs) - 1, 1 - m.exp(-worst)
+    n = len(pos)
+    n_in = sum(pos)
+    k = sum(pos[i] != pos[i - 1] for i in range(1, n))
+    rc, rd = path(pos)
+    print(f"  rule: {rc:.1%} a year, worst drop {rd:.0%}, in market {n_in / n:.0%} of days, {k} switches ({k / yrs:.1f} a year)")
+    segs = k + 1
+    n_si = (segs + 1) // 2 if pos[0] else segs // 2
+    n_so = segs - n_si
+    def comp(total, m):
+        cuts = sorted(random.sample(range(1, total), m - 1))
+        return [b - a for a, b in zip([0] + cuts, cuts + [total])]
+    random.seed(7)
+    res = []
+    for _ in range(1000):
+        ins, outs = comp(n_in, n_si), comp(n - n_in, n_so)
+        p, st = [], pos[0]
+        ii = oo = 0
+        for _ in range(segs):
+            if st:
+                p += [True] * ins[ii]; ii += 1
+            else:
+                p += [False] * outs[oo]; oo += 1
+            st = not st
+        res.append(path(p))
+    cg = sorted(r[0] for r in res)
+    dd = sorted(r[1] for r in res)
+    beat_c = sum(r[0] < rc for r in res)
+    beat_d = sum(r[1] > rd for r in res)
+    both = sum(r[0] >= rc and r[1] <= rd for r in res)
+    print(f"  random: median {cg[500]:.1%} a year (5th {cg[50]:.1%}, 95th {cg[950]:.1%}), median worst drop {dd[500]:.0%} (5th {dd[50]:.0%}, 95th {dd[950]:.0%})")
+    print(f"  rule return beats {beat_c / 10:.1f}% of random schedules (p about {(1000 - beat_c) / 1000:.3f}); rule drop smaller than {beat_d / 10:.1f}%; randoms matching both: {both} of 1000")
+    # 2. execution
+    print("\n2. EXECUTION AND FEES (blind, 2x 200d bills). SSO gap = 0.8% a year taken off while in the fund.")
+    hold = lev_sim(D, 1.0, None, "bills", "margin", split, hi)
+    hc, hd = dstats(dates, hold, split)["cagr"], dstats(dates, hold, split)["mdd"]
+    print(f"  S&P hold: {hc:.1%} / {hd:.0%}")
+    print(f"  {'case':32}{'fund CAGR/maxDD':>18}{'fund - 0.8%':>14}{'margin CAGR/maxDD':>20}")
+    for lab, fee, dl in (("base (0.1%, next close)", FEE, 0), ("1 day later", FEE, 1), ("2 days later", FEE, 2), ("fee 0.25%", 0.0025, 0), ("fee 0.5%", 0.005, 0),
+                         ("fee 0.5% + 2 days later", 0.005, 2)):
+        f = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, fee, dl), split)
+        g = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, fee, dl, 0.008), split)
+        m = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "margin", split, hi, fee, dl), split)
+        print(f"  {lab:32}{f['cagr']:>11.1%} /{f['mdd']:>4.0%}{g['cagr']:>9.1%} /{g['mdd']:>4.0%}{m['cagr']:>13.1%} /{m['mdd']:>4.0%}")
+    bars = fetch_yahoo("^GSPC")
+    od = [datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d") for r in bars]
+    om = {d: r for d, r in zip(od, bars)}
+    flat = sum(1 for r in bars if r[1] == r[4]) / len(bars)
+    kk = [r[1] == r[4] for r in bars]
+    first = next((od[i] for i in range(len(od) - 250) if od[i] >= LEV_SPLIT and sum(kk[i:i + 250]) < 12), None)
+    st = next(i for i in range(split, hi) if dates[i] >= (first or "9999") and dates[i - 1] in om)
+    print(f"  next OPEN: Yahoo ^GSPC opens equal the close on {flat:.0%} of all days (old bars are close only), so open trading is tested from {dates[st]}.")
+    on = [om[dates[j]][1] / c[j - 1] - 1 + (sp[j] - (c[j] / c[j - 1] - 1)) for j in range(st, hi)]
+    idn = [c[j] / om[dates[j]][1] - 1 for j in range(st, hi)]
+    bl = [bill[j] for j in range(st, hi)]
+    dl = dates[st:hi]
+    hp = [True] * len(dl)
+    hold_o = legs(on, idn, bl, hp, hp, 0.0)
+    hold_o = [1.0]
+    e = 1.0
+    for a_, b_ in zip(on, idn):
+        e *= (1 + a_) * (1 + b_); hold_o.append(e)
+    d0 = [dates[st - 1]] + dl
+    hc2, hd2 = cstats(d0, hold_o)
+    cl = [s[j - 2] for j in range(st, hi)]
+    op = [s[j - 1] for j in range(st, hi)]
+    print(f"  from {dates[st]}: hold {hc2:.1%} / {hd2:.0%}")
+    for lab, po, pi in (("fund, trade next close", cl, cl), ("fund, trade next open", cl, op)):
+        a_, b_ = cstats(d0, legs(on, idn, bl, po, pi, FEE))
+        a2, b2 = cstats(d0, legs(on, idn, bl, po, pi, FEE, 0.008))
+        print(f"  {lab:32}{a_:>11.1%} /{b_:>4.0%}{a2:>9.1%} /{b2:>4.0%}")
+    # 3. other markets
+    print("\n3. OTHER MARKETS, same rule, 2x fund model, 0.1% a switch, own buy and hold. PRICE ONLY (Yahoo adjusted closes, no dividends added;")
+    print("   hold gets none either). Cash is the US T-bill for every market. Blind = 1976 on or the series' full history where shorter (200 days burn-in).")
+    tb = {r[0][:7]: float(r[1]) / 100 for r in rows("tb3ms.csv") if r[1] not in ("", ".")}
+    rf = {m: v[3] * 12 for m, v in french("F-F_Research_Data_Factors_CSV.zip").items()}
+    def bl_of(d):
+        return tb.get(d[:7], rf.get(d[:7], tb[max(tb)])) / 252
+    print(f"  {'index':10}{'from':>12}{'hold CAGR/maxDD':>18}{'rule CAGR/maxDD':>18}   beats hold, no bigger drop?")
+    won = tot = 0
+    for sym in ("^GSPC", "^NDX", "^IXIC", "^DJI", "^GSPTSE", "^N225", "^FTSE", "^GDAXI"):
+        b = daily(sym)
+        if not b:
+            print(f"  {sym:10} no data"); continue
+        ds = [datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d") for r in b]
+        px = [r[1] for r in b]
+        sg = [False] * len(px)
+        run = sum(px[:200])
+        for i in range(200, len(px)):
+            run += px[i] - px[i - 200]
+            sg[i] = px[i] > run / 200
+        a = next(i for i, d in enumerate(ds) if d >= LEV_SPLIT)
+        a = max(a, 202)
+        r_ = [px[j] / px[j - 1] - 1 for j in range(a, len(px))]
+        bb = [bl_of(ds[j]) for j in range(a, len(px))]
+        pp = [sg[j - 2] for j in range(a, len(px))]
+        dd_ = [ds[a - 1]] + ds[a:]
+        hcv = [1.0]
+        for x in r_:
+            hcv.append(hcv[-1] * (1 + x))
+        rcv = legs([0.0] * len(r_), r_, bb, pp, pp, FEE)  # whole day in the intraday leg
+        hcg, hmd = cstats(dd_, hcv)
+        rcg, rmd = cstats(dd_, rcv)
+        ok = rcg > hcg and rmd <= hmd
+        tot += 1; won += ok
+        print(f"  {sym:10}{dd_[0]:>12}{hcg:>11.1%} /{hmd:>4.0%}{rcg:>11.1%} /{rmd:>4.0%}   {'YES' if ok else 'no'}{'' if rcg > hcg else ' (lower return)' if rmd <= hmd else ' (lower return and bigger drop)' if rcg <= hcg and rmd > hmd else ''}")
+        if rcg > hcg and rmd > hmd:
+            print(f"{'':10}   (more return, bigger drop)")
+    print(f"  Markets where the rule beats hold with no bigger worst drop: {won} of {tot} (the first row is the S&P without dividends, so not independent).")
+    # 4. worst cases
+    print("\n4. WORST CASES, blind, base settings (fund model, margin model, hold)")
+    cvs = {"hold": hold, "fund": lev_sim(D, 2.0, "200d", "bills", "etf", split, hi), "margin": lev_sim(D, 2.0, "200d", "bills", "margin", split, hi)}
+    dl = dates[split - 1:hi]
+    for nm, cv in cvs.items():
+        rets = [cv[k] / cv[k - 1] - 1 for k in range(1, len(cv))]
+        w = min(range(len(rets)), key=rets.__getitem__)
+        mo = {}
+        for k in range(1, len(cv)):
+            mo.setdefault(dl[k][:7], [cv[k - 1], cv[k]])[1] = cv[k]
+        wm = min(mo, key=lambda m: mo[m][1] / mo[m][0])
+        print(f"  {nm:7} worst day {dl[w + 1]} {rets[w]:+.1%}   worst month {wm} {mo[wm][1] / mo[wm][0] - 1:+.1%}")
+    for lab, a_, b_ in (("1987 crash (Sep 1 to Dec 31 1987)", "1987-09-01", "1987-12-31"), ("2008 (calendar year)", "2008-01-01", "2008-12-31"),
+                        ("Mar 2020 (Feb 19 to Apr 30)", "2020-02-19", "2020-04-30"), ("2022 (calendar year)", "2022-01-01", "2022-12-31")):
+        print(f"  {lab}: " + "   ".join(f"{nm} {window(dl, cv, a_, b_)[0]:+.0%} (drop {window(dl, cv, a_, b_)[1]:.0%})" for nm, cv in cvs.items()))
+
+
 if __name__ == "__main__":
+    if "--robust" in sys.argv:
+        robust()
+        sys.exit()
     if "--leverage" in sys.argv:
         leverage()
         sys.exit()
