@@ -1,0 +1,198 @@
+{
+ "NYSE:IBM": {
+  "trades": 325,
+  "wins": 222,
+  "net_pct": 0.47241204900000155,
+  "max_dd_pct": 0.6189726249465639,
+  "profit_factor": 1.0533902540553384
+ },
+ "NASDAQ:SHOO": {
+  "trades": 192,
+  "wins": 145,
+  "net_pct": 11.71343033050002,
+  "max_dd_pct": 0.7174833099983637,
+  "profit_factor": 1.4193964489069475
+ },
+ "BLACKBULL:WTI": {
+  "trades": 30,
+  "wins": 20,
+  "net_pct": 0.16709031806499933,
+  "max_dd_pct": 0.4271140453495379,
+  "profit_factor": 1.163648775108585
+ },
+ "NASDAQ:DUOL": {
+  "trades": 17,
+  "wins": 12,
+  "net_pct": 0.5763341525000002,
+  "max_dd_pct": 0.3588587512923747,
+  "profit_factor": 1.6236090372180179
+ },
+ "NASDAQ:NVDA": {
+  "trades": 177,
+  "wins": 119,
+  "net_pct": 23.110668675,
+  "max_dd_pct": 0.7927848923458148,
+  "profit_factor": 2.3412468757980642
+ },
+ "NASDAQ:PLTR": {
+  "trades": 26,
+  "wins": 20,
+  "net_pct": 3.6058624555,
+  "max_dd_pct": 0.3386103251893193,
+  "profit_factor": 2.287555249503973
+ },
+ "NASDAQ:SBUX": {
+  "trades": 205,
+  "wins": 151,
+  "net_pct": 13.742691623500013,
+  "max_dd_pct": 0.44308927597795744,
+  "profit_factor": 1.9703579940055744
+ },
+ "BITSTAMP:BTCUSD": {
+  "trades": 102,
+  "wins": 72,
+  "net_pct": 4.6904934687400015,
+  "max_dd_pct": 0.706875865827031,
+  "profit_factor": 1.6558304105073578
+ },
+ "TVC:DXY": {
+  "trades": 223,
+  "wins": 142,
+  "net_pct": -0.1878527715300006,
+  "max_dd_pct": 0.36935538651814853,
+  "profit_factor": 0.8406204146508822
+ },
+ "NASDAQ:META": {
+  "trades": 96,
+  "wins": 73,
+  "net_pct": 7.1742940520000005,
+  "max_dd_pct": 0.3318013217910804,
+  "profit_factor": 2.6397736295233205
+ },
+ "OANDA:XAGUSD": {
+  "trades": 311,
+  "wins": 159,
+  "net_pct": -0.4797020270242007,
+  "max_dd_pct": 0.8799506976319619,
+  "profit_factor": 0.8968001531997625
+ },
+ "NYSE:JPM": {
+  "trades": 304,
+  "wins": 196,
+  "net_pct": 0.2972948585000035,
+  "max_dd_pct": 0.6664898119999991,
+  "profit_factor": 1.0651910982078452
+ },
+ "NASDAQ:TSLA": {
+  "trades": 77,
+  "wins": 47,
+  "net_pct": 0.6012684175000003,
+  "max_dd_pct": 0.6857020588163873,
+  "profit_factor": 1.0885084944016166
+ },
+ "OANDA:XAUUSD": {
+  "trades": 372,
+  "wins": 196,
+  "net_pct": 2.918309815102002,
+  "max_dd_pct": 0.2769601696519997,
+  "profit_factor": 1.5202233635323412
+ },
+ "NYSE:T": {
+  "trades": 226,
+  "wins": 153,
+  "net_pct": 1.649823779000002,
+  "max_dd_pct": 0.4540182882380312,
+  "profit_factor": 1.3358946569012575
+ },
+ "CAPITALCOM:SPX500": {
+  "trades": 250,
+  "wins": 143,
+  "net_pct": -0.11008808150000086,
+  "max_dd_pct": 0.1395596684374672,
+  "profit_factor": 0.7258833003097322
+ },
+ "CAPITALCOM:US30": {
+  "trades": 77,
+  "wins": 58,
+  "net_pct": 0.3980454954999994,
+  "max_dd_pct": 0.3445387786741942,
+  "profit_factor": 1.7074935202378227
+ },
+ "PEPPERSTONE:NAS100": {
+  "trades": 84,
+  "wins": 67,
+  "net_pct": 1.0855432615,
+  "max_dd_pct": 0.2822492516531689,
+  "profit_factor": 2.2205206856204716
+ },
+ "NASDAQ:MRNA": {
+  "trades": 35,
+  "wins": 26,
+  "net_pct": 5.144869661500001,
+  "max_dd_pct": 0.4203959262374752,
+  "profit_factor": 2.0566389445453557
+ },
+ "NASDAQ:AMZN": {
+  "trades": 174,
+  "wins": 121,
+  "net_pct": 10.054540412000007,
+  "max_dd_pct": 0.66209269895111,
+  "profit_factor": 1.8684744320546094
+ },
+ "NYSE:GS": {
+  "trades": 146,
+  "wins": 102,
+  "net_pct": 0.7012933184999994,
+  "max_dd_pct": 0.5397121779126971,
+  "profit_factor": 1.2729780849984424
+ },
+ "NASDAQ:HOOD": {
+  "trades": 26,
+  "wins": 17,
+  "net_pct": 0.7739396985,
+  "max_dd_pct": 0.41868862525267075,
+  "profit_factor": 1.5467548646032514
+ },
+ "OANDA:XCUUSD": {
+  "trades": 123,
+  "wins": 82,
+  "net_pct": 0.9435483410824985,
+  "max_dd_pct": 0.586054967065466,
+  "profit_factor": 1.2494914541198094
+ },
+ "NASDAQ:AAPL": {
+  "trades": 271,
+  "wins": 183,
+  "net_pct": 0.6549185785000016,
+  "max_dd_pct": 0.92943021486851,
+  "profit_factor": 1.1103134351698984
+ },
+ "NYSE:MS": {
+  "trades": 190,
+  "wins": 136,
+  "net_pct": 4.710645637499992,
+  "max_dd_pct": 0.595626233599777,
+  "profit_factor": 1.4503078735026274
+ },
+ "NASDAQ:GOOGL": {
+  "trades": 142,
+  "wins": 101,
+  "net_pct": 3.258090795999999,
+  "max_dd_pct": 0.43955874087344265,
+  "profit_factor": 1.9987246315412188
+ },
+ "XETR:DBK": {
+  "trades": 183,
+  "wins": 122,
+  "net_pct": -0.12891243575000116,
+  "max_dd_pct": 0.8097942910229257,
+  "profit_factor": 0.9743648290194601
+ },
+ "NYSE:DIS": {
+  "trades": 349,
+  "wins": 214,
+  "net_pct": 2.1113694965000045,
+  "max_dd_pct": 0.5346283463286929,
+  "profit_factor": 1.1908097490314384
+ }
+}
