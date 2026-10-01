@@ -43,5 +43,7 @@ jobs:
       - name: Benchmark engine self-check and script syntax
         run: |
           python3 -c "import sys; sys.path.insert(0, 'tradingview'); import backtest; backtest.check()"
-          python3 -m py_compile scripts/ibkr-order.py scripts/ibkr-run.py
+          python3 -m py_compile scripts/ibkr-order.py scripts/ibkr-run.py scripts/menubar.py
+          python3 -m venv /tmp/venv && /tmp/venv/bin/pip install -q ib_async
+          /tmp/venv/bin/python -m unittest discover -s tests/py -v
           for f in scripts/tv-signal-agent.js tradingview/record-replay.mjs tradingview/record-watchlist.mjs tradingview/stats-watchlist.mjs tradingview/watchlist.mjs; do node --check "$f"; done

@@ -18,7 +18,11 @@ cat > "$APP/Contents/MacOS/launcher" <<'LAUNCH'
 #!/bin/zsh
 export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin"
 cd "$HOME/Documents/Code/epiphany" || exit 1
-exec caffeinate -i "$HOME/.local/bin/uv" run --quiet --with rumps --with ib_async python3 scripts/menubar.py
+# Quit exits 0 and ends the loop; a crash exits non-zero and the app comes back after a short pause.
+until caffeinate -i "$HOME/.local/bin/uv" run --quiet --with rumps --with ib_async python3 scripts/menubar.py; do
+  echo "$(date '+%F %T') menubar: exited $?, restarting" >> "$HOME/Library/Logs/EpiphanyIBKR.log"
+  sleep 5
+done
 LAUNCH
 chmod +x "$APP/Contents/MacOS/launcher"
 codesign --force --sign - "$APP" 2>&1 | tail -1

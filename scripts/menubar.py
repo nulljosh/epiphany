@@ -8,7 +8,7 @@ worst position, the record high and low, and when the daily trade runs next. It 
     uv run --with rumps --with ib_async python3 scripts/menubar.py            # the app
     uv run --with ib_async python3 scripts/menubar.py --selftest              # print what the menu would say
 """
-import json, os, subprocess, sys, urllib.request
+import json, math, os, subprocess, sys, traceback, urllib.request
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from ib_async import IB
@@ -19,6 +19,41 @@ LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 BEST = os.path.join(ROOT, "tradingview", "ibkr-best.json")
 # A file, not a flag in memory, so a pause survives a restart instead of quietly trading again.
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
+
+
+def read_json(path, default):
+    """A missing or half-written file reads as the default instead of crashing every tick."""
+    try:
+        with open(path) as f:
+            v = json.load(f)
+        return v if isinstance(v, type(default)) else default
+    except (OSError, ValueError):
+        return default
+
+
+def write_json(path, value):
+    # Write then rename, so a crash mid-write never leaves a corrupt file behind.
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(value, f)
+    os.replace(tmp, path)
+
+
+def num(x):
+    """IB reports NaN until market data arrives; treat that, None and junk as 0."""
+    try:
+        x = float(x)
+    except (TypeError, ValueError):
+        return 0.0
+    return x if math.isfinite(x) else 0.0
+
+
+def log(msg):
+    try:
+        with open(LOG, "a") as f:
+            f.write(f"{datetime.now():%Y-%m-%d %H:%M:%S} menubar: {msg}\n")
+    except OSError:
+        pass
 
 
 def spy_price():
@@ -56,35 +91,47 @@ def snapshot():
     try:
         ib.connect("127.0.0.1", 4002, clientId=23, timeout=8)
         port = [p for p in ib.portfolio() if p.position]
-        nl = next((float(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
+        nl = next((num(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
     except Exception:
         return "!", "IB Gateway", [("Log in to IB Gateway", "", None)]
     finally:
-        if ib.isConnected():
-            ib.disconnect()
-    cost = sum(p.averageCost * p.position for p in port)
-    gain = sum(p.unrealizedPNL for p in port)
-    st = json.load(open(STATE)) if os.path.exists(STATE) else {}
-    start = st.get("start", {})
-    d = nl - start["netLiquidation"] if start.get("netLiquidation") and nl is not None else 0.0
+        try:
+            if ib.isConnected():
+                ib.disconnect()
+        except Exception:
+            pass
+    return summarize(port, nl, read_json(STATE, {}))
+
+
+def summarize(port, nl, st):
+    """The pure half of snapshot(): positions, net liquidation and runner state in, menu text out."""
+    pnl = {id(p): num(p.unrealizedPNL) for p in port}
+    cost = sum(num(p.averageCost) * num(p.position) for p in port)
+    gain = sum(pnl.values())
+    start = st.get("start") if isinstance(st.get("start"), dict) else {}
+    d = nl - num(start["netLiquidation"]) if num(start.get("netLiquidation")) and nl is not None else 0.0
     try:
-        spy = spy_price() / start["spy"] - 1 if start.get("spy") else 0.0
+        spy = spy_price() / num(start["spy"]) - 1 if num(start.get("spy")) else 0.0
     except Exception:
         spy = 0.0
     # Own file, so it never races ibkr-live.py writing the state file.
-    rec = json.load(open(BEST)) if os.path.exists(BEST) else {"high": d, "low": d}
-    rec = {"high": max(rec["high"], d), "low": min(rec["low"], d)}
-    json.dump(rec, open(BEST, "w"))
+    rec = read_json(BEST, {})
+    rec = {"high": max(num(rec.get("high", d)), d), "low": min(num(rec.get("low", d)), d)}
+    try:
+        write_json(BEST, rec)
+    except OSError as e:
+        log(f"could not save record: {e}")
     rows = [
         ("Account", f"{money(d)} CAD", d),
         ("Holdings", pct(gain / cost if cost else 0.0), gain),
         ("SPY", pct(spy), spy),
     ]
     if port:
-        ranked = sorted(port, key=lambda p: p.unrealizedPNL)
+        ranked = sorted(port, key=lambda p: pnl[id(p)])
         for label, p in (("Best", ranked[-1]), ("Worst", ranked[0])):
-            basis = p.averageCost * p.position
-            rows.append((f"{label} \u00b7 {p.contract.symbol}", f"{money(p.unrealizedPNL)}   {pct(p.unrealizedPNL / basis if basis else 0)}", p.unrealizedPNL))
+            basis = num(p.averageCost) * num(p.position)
+            u = pnl[id(p)]
+            rows.append((f"{label} \u00b7 {p.contract.symbol}", f"{money(u)}   {pct(u / basis if basis else 0)}", u))
     else:
         rows += [("", "", None)] * 2  # keeps the slots lined up; empty rows are hidden
     rows += [
@@ -92,7 +139,10 @@ def snapshot():
         ("Low", money(rec["low"]), None),
         ("Next trade", "Paused" if os.path.exists(PAUSED) else next_trade(st), None),
     ]
-    since = f"Since {datetime.fromisoformat(start['date']):%b %-d}" if start.get("date") else "Since start"
+    try:
+        since = f"Since {datetime.fromisoformat(start['date']):%b %-d}"
+    except (KeyError, TypeError, ValueError):
+        since = "Since start"
     return f"{d:+.0f}".replace("-", "\u2212"), since, rows
 
 
@@ -158,7 +208,10 @@ def main():
         def __init__(self):
             super().__init__("Epiphany Live", title="..", icon=os.path.join(ROOT, "scripts", "menubar-icon.png"), template=True, quit_button=None)
             self.child = None
-            self.ensure_runner()
+            try:
+                self.ensure_runner()
+            except Exception:
+                log(traceback.format_exc())
 
         def build(self):
             # Built once rumps owns the NSMenu, so the native section headers and row views can go straight in.
@@ -190,16 +243,22 @@ def main():
             symbol(self.toggle, "play.fill" if paused else "pause.fill")
 
         def pause(self, _):
-            if os.path.exists(PAUSED):
-                os.remove(PAUSED)
-            else:
-                open(PAUSED, "w").close()
-                subprocess.run(["pkill", "-f", "[i]bkr-live.py"])
-                self.child = None
-            self.label_toggle()
+            try:
+                if os.path.exists(PAUSED):
+                    os.remove(PAUSED)
+                else:
+                    open(PAUSED, "w").close()
+                    subprocess.run(["pkill", "-f", "[i]bkr-live.py"])
+                    self.child = None
+                self.label_toggle()
+            except Exception:
+                log(traceback.format_exc())
             self.tick(None)
 
         def ensure_runner(self):
+            if self.child and self.child.poll() is not None:
+                log(f"runner exited with {self.child.returncode}, restarting")
+                self.child = None  # reaped, so it doesn't linger as a zombie
             # The [i] keeps pgrep from matching its own command line. Start the runner if nothing is running it.
             if not os.path.exists(PAUSED) and subprocess.run(["pgrep", "-f", "[i]bkr-live.py"], capture_output=True).returncode != 0:
                 out = open(LOG, "a")
@@ -207,6 +266,16 @@ def main():
 
         @rumps.timer(60)
         def tick(self, _):
+            # An exception escaping a timer can take the whole app down, so nothing gets past here.
+            try:
+                self.refresh()
+            except Exception:
+                log(traceback.format_exc())
+                self.title = "!"
+                if hasattr(self, "rows"):
+                    fill(*self.rows[0], "Error, see Open Log", "", None)
+
+        def refresh(self):
             if not hasattr(self, "rows"):
                 self.build()
             self.ensure_runner()
