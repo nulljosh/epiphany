@@ -421,6 +421,33 @@ and made only 12.2% to 13.2% on real fund returns. Verdict: nothing replaces BIL
 yet. The one worth running on paper beside it is IEF held only above its own 200
 day average, BIL otherwise.
 
+**Scaling the 2x by volatility.** The crashes above hit Trend 2x while it was
+still at full size (-20% in March 2020, -31% in 2022), so we tried sizing it by
+how choppy the market is (`century.py --voltarget`, raw output in
+`tradingview/results-voltarget.txt`). Same rule, same fund model and fees, but
+while the S&P is above its 200 day average the sleeve holds min(2x, target vol
+divided by the trailing realised vol), anywhere from 0 to 2x, as a mix of SSO,
+SPY and bills, and only trades when the exposure has drifted more than 0.25 off
+target. We tried targets of 10%, 15% and 20% on a 20 or 60 day vol (6 combos),
+plus one cousin with no knob: 2x when the 20 day vol is under its own one year
+median, else 1x. That is 7 in all. Picked on 1929 to 1975 only, the winner was a
+20% target on 60 days. On the blind half it made 11.3% with a 29% worst drop,
+against 14.4% / 44% for Trend 2x and 12.1% / 55% for holding, and won 1 of 6
+decades against Trend 2x and 2 of 6 against holding. The calm 2x cousin made
+10.3% / 38% and won 2 of 6. Both fail. What they do buy is a gentler ride: 2022
+was -20% instead of -31% (holding lost 18%), 1987 was -19% and -12% instead of
+-27%, and the March 2020 drop shrank to 22% and 13%. But no variant of the six
+reached Trend 2x on return, the best being 11.8%, and the price is average size:
+the 20%/60 pick sits at 1.56x while in against 2x. A plain fixed 1.56x trend,
+with no vol read, made 12.7% / 36% on the same days, so the vol timing lost to
+simply using less leverage. Against 300 random shuffles of its own holding runs
+the pick beat 74% on return (about a 1 in 4 chance of luck), which is not an
+edge. One day late it made 10.1% / 43%. Turnover is higher than Trend 2x, 7.9
+dollars traded per dollar held a year for the pick and 24 for the calm cousin
+against 6.7. On real funds from 2006 (SSO, SPY and BIL) Trend 2x made 12.5% / 43%,
+the pick 9.6% / 27% and the cousin 8.9% / 36%, holding 11.3% / 55%. Verdict:
+vol targeting is a lower risk Trend 2x, not a better one. Nothing changes.
+
 **Dual momentum, with a trend filter and leverage.** The century run left one
 loose end: dual momentum made 13.5% with a 27% drop, but only because of gold in
 the 1970s. So we stacked it with the trend rule (`century.py --dual`, raw output
@@ -645,6 +672,8 @@ files named above.
 | Same, on the profitability tenth | 1976 to now | 14.6% / 56% | 14.3% / 51% | fail (bigger drop) |
 | Same, on the investment tenth | 1976 to now | 15.8% / 61% | 14.3% / 51% | fail (bigger drop) |
 | Same, on the momentum tenth | 1976 to now | 17.4% / 59% | 14.3% / 51% | fail (bigger drop) |
+| Trend 2x S&P, exposure scaled to 20% target vol on 60 days (picked of 6 on 1929 to 1975) | 1976 to now | 11.3% / 29% | Trend 2x 14.4% / 44% | fail (less return, 1 of 6 decades; also behind holding's 12.1%) |
+| Trend 2x S&P, 2x only when 20 day vol is under its 1 year median, else 1x | 1976 to now | 10.3% / 38% | 14.4% / 44% | fail (less return, 2 of 6 decades) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -652,7 +681,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The two vol rows after them are graded against Trend 2x and both fail on return. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 
