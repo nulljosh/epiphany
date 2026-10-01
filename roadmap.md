@@ -5,7 +5,8 @@
 - [ ] Autopilot back on the web: Trade tab is off until the SnapTrade sync math is fixed; then drop the "web soon" notes from the Premium lists.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
 - [x] Web net worth now sums in CAD (USD holdings converted with CADUSD=X), 2026-10-01. Holdings were already clean on the real snapshot.
-- [ ] Same CAD conversion on iOS (PortfolioView cashTotal) and Mac (MarketsView netWorth); they still add USD holdings to CAD balances.
+- [x] Account totals convert USD holdings and USD cash to CAD at sync (server), Mac net worth no longer double-counts balances (2026-10-01).
+- [ ] iOS Portfolio header splits Cash/Holdings by subtracting USD holdings from the CAD total; show the server's cash instead. Ships with the next iOS build.
 - [ ] Trade tab back on the web: data checked and net worth fixed; needs Joshua's one look at a fresh force-sync before switching it on (it can place live orders).
 - [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.

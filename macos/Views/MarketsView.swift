@@ -235,7 +235,9 @@ struct MarketsView: View {
                         let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
                         let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
                         let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
-                        let netWorth = (portfolio.holdings.isEmpty ? 0 : portfolio.totalValue) + totalBalance - totalDebt
+                        // totalValue is already the sum of account balances (holdings folded in server-side),
+                        // or the holdings value when there are no accounts. Adding totalBalance on top counted it twice.
+                        let netWorth = portfolio.totalValue - totalDebt
 
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {

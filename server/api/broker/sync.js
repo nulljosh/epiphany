@@ -10,6 +10,18 @@ import { getKv } from '../_kv.js';
 import { getSessionUser, errorResponse } from '../auth-helpers.js';
 import { isPro } from '../gates.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
+import { YAHOO_HEADERS } from '../stocks-shared.js';
+
+// CADUSD=X: US dollars per Canadian dollar, so account totals can be summed in CAD.
+async function usdPerCad() {
+  try {
+    const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/CADUSD=X?range=1d&interval=1d', { headers: YAHOO_HEADERS, signal: AbortSignal.timeout(5000) });
+    const price = (await r.json())?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    return price > 0 ? price : null;
+  } catch {
+    return null;
+  }
+}
 
 // Register, and if SnapTrade already has this user (code 1010) but we lost the
 // secret, delete the orphan and register again. The user re-links their broker.
@@ -84,7 +96,7 @@ export default async function handler(req, res) {
 
     const since = new Date(Date.now() - 2 * 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
     const [rawHoldings, balance, snapAccounts, connections, activities] = await Promise.all([
-      adapter.getHoldings(), adapter.getBalance(), adapter.getAccounts(), adapter.listConnections().catch(() => []),
+      adapter.getHoldings(), adapter.getBalance(), usdPerCad().then(fx => adapter.getAccounts({ usdPerCad: fx })), adapter.listConnections().catch(() => []),
       adapter.getActivities({ startDate: since }).catch(() => []),
     ]);
     // Activities give what /positions doesn't: cost basis (for gain/loss on

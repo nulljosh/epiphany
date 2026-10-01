@@ -271,7 +271,11 @@ export class SnapTradeAdapter {
   // One row per linked account: id, name, type, and total balance (cash +
   // holdings market value). This is what should be persisted/displayed --
   // getBalance()/getHoldings() alone only give partial, unmerged pictures.
-  async getAccounts() {
+  // Account totals in CAD. Wealthsimple accounts are CAD but hold USD-listed stocks and USD
+  // cash lines; adding those raw made net worth read low. usdPerCad is CADUSD=X (USD per CAD).
+  // ponytail: only USD is converted; with no rate the old raw sum is kept rather than dropping value.
+  async getAccounts({ usdPerCad = null } = {}) {
+    const toCad = (amount, currency) => (currency === 'USD' && usdPerCad > 0 ? amount / usdPerCad : amount);
     const accounts = await this.listAccounts();
     const out = [];
     for (const acct of accounts) {
@@ -284,7 +288,7 @@ export class SnapTradeAdapter {
           query: { userId: this.userId, userSecret: this.userSecret },
         }),
       ]);
-      const cash = (balances ?? []).reduce((sum, b) => sum + Number(b.cash ?? 0), 0);
+      const cash = (balances ?? []).reduce((sum, b) => sum + toCad(Number(b.cash ?? 0), b.currency?.code), 0);
       const holdingsValue = (positions ?? []).reduce((sum, pos) => {
         const units = Number(pos.units ?? 0);
         // SnapTrade reports price 0/null for thinly-synced symbols (see getHoldings).
@@ -292,7 +296,7 @@ export class SnapTradeAdapter {
         // to average purchase price (cost basis) instead of dropping the value.
         const price = Number(pos.price) > 0 ? Number(pos.price)
           : Number(pos.average_purchase_price) > 0 ? Number(pos.average_purchase_price) : 0;
-        return sum + price * units;
+        return sum + toCad(price * units, pos.currency?.code ?? pos.symbol?.symbol?.currency?.code);
       }, 0);
       out.push({
         id: acct.id,
@@ -300,6 +304,7 @@ export class SnapTradeAdapter {
         type: SnapTradeAdapter.inferAccountType(name),
         balance: cash + holdingsValue,
         cash,
+        currency: usdPerCad > 0 ? 'CAD' : null,
       });
     }
     return out;
