@@ -1,0 +1,71 @@
+VOLATILITY TARGETING ON TOP OF TREND 2x. Daily, 1929-01-02 to 2026-10-01. Pick on 1929-01-02..1975-12-31, blind 1976-01-02..2026-10-01.
+Base: 2x S&P fund above its 200 day average, T-bills below. Daily-reset fund model, 0.9% expense, 0.8% a year model gap off the 2x fund, S&P with
+dividends, 0.1% on every non-cash dollar traded, signal read at one close and traded at the next. Exposure e between 0 and 2 is a mix: below 1x the plain
+fund (0.09%) and bills, 1x to 2x the 2x fund and the plain fund. Rebalance only when the exposure held is 0.25 off target (or the position flips in/out).
+Realised vol = trailing std of daily S&P returns, annualised. Pick rule as --leverage: best train CAGR whose train worst drop is no bigger than hold's.
+
+Check: this engine's Trend 2x blind 14.4% / 44.0% matches lev_sim (14.4% / 44.0%).
+S&P hold: train 7.7% / 84%   BLIND 12.1% / 55.3%.  Trend 2x BLIND 14.4% / 44.0%
+
+rule                   | train CAGR maxDD | BLIND CAGR  maxDD | vs T2x vs hold | turnover/yr rebal/yr mean e  e in
+vol target 10%, 20d    |       7.7%   28% |       8.9%  22.2% |    2/6     1/6 |         8.1     14.8   0.67  0.91
+vol target 10%, 60d    |       8.0%   19% |       8.8%  16.1% |    2/6     1/6 |         5.1      8.4   0.61  0.83
+vol target 15%, 20d    |      10.2%   36% |      10.4%  28.8% |    1/6     2/6 |        12.5     17.7   0.97  1.31
+vol target 15%, 60d    |      10.5%   31% |      10.3%  21.3% |    1/6     2/6 |         7.1      9.2   0.91  1.23
+vol target 20%, 20d    |      12.2%   48% |      11.8%  29.4% |    1/6     2/6 |        11.9     15.3   1.19  1.61
+vol target 20%, 60d    |      12.3%   39% |      11.3%  29.0% |    1/6     2/6 |         7.9      9.5   1.15  1.56
+2x in calm, else 1x    |       8.5%   61% |      10.3%  38.0% |    2/6     2/6 |        24.4     15.5   1.18  1.60
+Trend 2x (reference)   |                   |      14.4%  44.0% |                 |         6.7      6.7   1.48  2.00
+
+Combos tried: 7 (3 vol targets x 2 windows = 6 picked among, plus the 1 regime switch, which has no knob to pick).
+Pick rule: best train CAGR whose train worst drop is no bigger than hold's (84%): vol target 20%, 60d  (train 12.3% / 39%).
+Hindsight only: best blind CAGR of the six is vol target 20%, 20d at 11.8% / 29.4%.
+Hindsight check, combos clearing the bar against Trend 2x on the blind half: none
+
+blind decade CAGR                    1970s   1980s   1990s   2000s   2010s   2020s
+S&P hold                              9.5%   17.4%   18.1%   -1.0%   13.5%   15.5%
+Trend 2x                              5.2%   25.0%   20.1%    2.8%   13.2%   16.5%
+vol target 10%, 20d                   5.6%   16.3%   12.1%    3.2%    5.8%    8.5%
+vol target 10%, 60d                   5.9%   15.6%   12.1%    3.0%    7.0%    7.5%
+vol target 15%, 20d                   5.6%   18.8%   14.2%    2.8%    8.4%   10.5%
+vol target 15%, 60d                   5.2%   18.0%   14.0%    3.1%    9.2%    9.7%
+vol target 20%, 20d                   5.6%   21.9%   15.4%    2.4%   10.2%   12.7%
+PICK vol target 20%, 60d              4.1%   19.7%   15.0%    3.2%   10.7%   11.2%
+2x in calm, else 1x                   6.4%   18.8%   13.9%    3.7%    6.2%   11.5%
+
+BAR vs Trend 2x (blind CAGR higher, worst drop no bigger, more than half the decades won), and vs S&P hold, 0.8% gap off:
+  PICK vol target 20%, 60d    blind 11.3% / 29.0%   vs Trend 2x 14.4% / 44.0%, won 1/6: FAIL (less return, 1 of 6 decades)   vs hold 12.1% / 55.3%, won 2/6: FAIL
+  2x in calm, else 1x         blind 10.3% / 38.0%   vs Trend 2x 14.4% / 44.0%, won 2/6: FAIL (less return, 2 of 6 decades)   vs hold 12.1% / 55.3%, won 2/6: FAIL
+
+SKEPTIC 1. CONSTANT LEVERAGE AT THE SAME AVERAGE: Trend at a fixed L (the rule's mean exposure while in), same engine, same band
+  PICK vol target 20%, 60d    mean exposure while in 1.56: constant 1.56x trend blind 12.7% / 35.5%   (rule 11.3% / 29.0%)
+  2x in calm, else 1x         mean exposure while in 1.60: constant 1.6x trend blind 12.9% / 36.3%   (rule 10.3% / 38.0%)
+
+SKEPTIC 2. RANDOM BASELINE: 300 random orders of the rule's own holding runs (same days at each exposure, same mean exposure, same number
+rebalances, per-dollar fee scaled up so the total fee paid matches the rule's; shuffled runs that land next to an equal run trade nothing), blind.
+Trend 2x gets the same treatment (random in/out order, same switches).
+  Trend 2x                    rule 14.4% / 44%, turnover 6.7/yr.  random: median 10.8% (5th 7.3%, 95th 14.6%), median worst drop 84% (5th 66%, 95th 93%), turnover 3.3/yr.  Rule return beats 94%, drop smaller than 100%, randoms matching both: 0 of 300
+  PICK vol target 20%, 60d    rule 11.3% / 29%, turnover 7.9/yr.  random: median 10.1% (5th 7.5%, 95th 12.9%), median worst drop 74% (5th 56%, 95th 86%), turnover 7.1/yr.  Rule return beats 74%, drop smaller than 100%, randoms matching both: 0 of 300
+  2x in calm, else 1x         rule 10.3% / 38%, turnover 24.4/yr.  random: median 8.4% (5th 5.4%, 95th 11.8%), median worst drop 77% (5th 59%, 95th 89%), turnover 14.8/yr.  Rule return beats 84%, drop smaller than 100%, randoms matching both: 0 of 300
+
+SKEPTIC 3. ONE DAY LATE (both the 200 day signal and the vol read a day later), blind
+  Trend 2x                    1 day late 12.3% / 62.5%   2 days late 13.0% / 58.9%
+  PICK vol target 20%, 60d    1 day late 10.1% / 43.4%   2 days late 10.0% / 47.4%
+  2x in calm, else 1x         1 day late 9.4% / 42.7%   2 days late 9.2% / 42.6%
+
+STRESS, blind, return over the window (worst drop inside it). S&P hold, Trend 2x, then each variant.
+                             1987 (Sep 1 to Dec 3  2008 (calendar year)  Mar 2020 (Feb 19 to   2022 (calendar year)
+S&P hold                            -24% (32%)           -37% (48%)           -13% (34%)           -18% (25%)  
+Trend 2x                            -27% (27%)            +1% ( 0%)           -20% (24%)           -31% (32%)  
+PICK vol target 20%, 60d            -19% (20%)            +1% ( 0%)           -20% (22%)           -20% (21%)  
+2x in calm, else 1x                 -12% (14%)            +1% ( 0%)           -11% (13%)           -16% (17%)  
+
+REAL FUNDS CHECK, 2006-07-03 on (real adjusted closes: SSO, SPY, BIL with the T-bill series before BIL began 2007-06-01). Trend and vol read off the real SPY.
+                            |   CAGR maxDD |         2008 |     Mar 2020 |         2022 |   model, same window | turnover/yr
+SPY hold                    |  11.3%   55% |   -37% (48%) |   -13% (34%) |   -18% (24%) |        11.3% / 55% | -
+Trend 2x (SSO / BIL)        |  12.5%   43% |    -4% ( 5%) |   -19% (23%) |   -34% (35%) |        13.0% / 41% | 5.8
+PICK vol target 20%, 60d    |   9.6%   27% |    -1% ( 3%) |   -19% (22%) |   -21% (22%) |        10.0% / 29% | 7.5
+2x in calm, else 1x         |   8.9%   36% |    -4% ( 5%) |   -10% (12%) |   -20% (21%) |         8.5% / 38% | 21.1
+  Real-fund bar: higher CAGR and no bigger drop than SPY hold, and than Trend 2x on the same funds.
+  PICK vol target 20%, 60d    vs SPY hold FAIL   vs Trend 2x real FAIL
+  2x in calm, else 1x         vs SPY hold FAIL   vs Trend 2x real FAIL

@@ -17,6 +17,7 @@ in tradingview/data/.
     python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
     python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
     python3 tradingview/century.py --out     # what Trend 2x holds when out: bills vs Treasuries, gold, 2x bonds, each with its own trend filter
+    python3 tradingview/century.py --voltarget # Trend 2x with exposure scaled to trailing realised vol (10/15/20% targets, 20/60 day), and a calm-market 2x/1x switch
     python3 tradingview/century.py --dual     # cross-asset dual momentum (stocks, bonds, gold vs bills) with a 10 month own-trend filter, with and without 2x on stocks
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
@@ -1484,6 +1485,260 @@ def out_asset():
         print(f"{nm:{W}} | {c:>6.1%}{dd:>6.0%} | {w8[0]:>+6.0%} ({w8[1]:>3.0%}) | {w22[0]:>+6.0%} ({w22[1]:>3.0%})")
 
 
+# ---------- volatility targeting on top of Trend 2x (--voltarget) ----------
+
+VT_BAND = 0.25  # rebalance only when the exposure held is this far from the target
+
+
+def vt_weights(e):
+    """(2x fund share, plain fund share) of the dollar for exposure e in [0, 2]: plain fund and bills below 1x, 2x fund and plain fund from 1x to 2x."""
+    return (0.0, e) if e <= 1 else (e - 1, 2 - e)
+
+
+def vt_cost(levels):
+    """Non-cash dollars traded per dollar held when walking the exposure levels from all cash (no drift, so it is a clean yardstick)."""
+    prev = tot = 0.0
+    for e in levels:
+        a0, b0 = vt_weights(prev)
+        a1, b1 = vt_weights(e)
+        tot += abs(a1 - a0) + abs(b1 - b0)
+        prev = e
+    return tot
+
+
+def vol_roll(sp, w):
+    """Annualised std of the trailing w daily returns, known at that day's close; None until w returns exist."""
+    out, s1, s2 = [None] * len(sp), 0.0, 0.0
+    for i in range(1, len(sp)):
+        s1 += sp[i]
+        s2 += sp[i] * sp[i]
+        if i > w:
+            s1 -= sp[i - w]
+            s2 -= sp[i - w] * sp[i - w]
+        if i >= w:
+            out[i] = (max(s2 - s1 * s1 / w, 0.0) / (w - 1)) ** 0.5 * 252 ** 0.5
+    return out
+
+
+def vt_targets(sp, s, kind, par):
+    """Exposure wanted at each close (0 = all bills). trend: 2 above the 200 day average. vol: min(2, target / realised vol) above it, par = (target, window).
+    regime: 2 when the 20 day vol is under its own trailing 1 year median, else 1, above the average."""
+    import bisect
+    if kind == "trend":
+        return [2.0 if x else 0.0 for x in s]
+    if kind == "vol":
+        v = vol_roll(sp, par[1])
+        return [min(2.0, par[0] / v[i]) if s[i] and v[i] else 0.0 for i in range(len(sp))]
+    v = vol_roll(sp, 20)
+    win, out = [], [0.0] * len(sp)
+    for i in range(len(sp)):
+        if v[i] is None:
+            continue
+        bisect.insort(win, v[i])
+        if i - 20 >= 252:
+            old = v[i - 252]
+            win.pop(bisect.bisect_left(win, old))
+        if s[i]:
+            out[i] = 1.0 if len(win) < 252 else (2.0 if v[i] < (win[125] + win[126]) / 2 else 1.0)
+    return out
+
+
+def vt_run(F, tg, lo, hi, delay=0, fee=FEE, band=VT_BAND, plan=None):
+    """Daily equity of a mix of a 2x fund, a plain fund and bills. F = (2x fund, plain fund, bills) daily growth factors. The target read at close
+    j-2-delay is traded at close j-1 and earns day j, but only when the position flips between in and out or the exposure held has drifted more than band
+    from it. Fee on every non-cash dollar bought or sold. plan {day: exposure} forces rebalances at exactly those days instead (random baselines).
+    Returns the curve and (events, non-cash dollars traded per dollar, mean exposure held, mean exposure while in)."""
+    f2, f1, fb = F
+    A = B = 0.0
+    C = eq = 1.0
+    pos, x = None, 0.0
+    curve, ev, traded, esum, isum, idays = [1.0], [], 0.0, 0.0, 0.0, 0
+    for j in range(lo, hi):
+        if plan is None:
+            e = tg[j - 2 - delay]
+            do = (e > 0) != pos or (pos and abs(e - x) > band)
+        else:
+            e = plan.get(j)
+            do = e is not None
+        if do:
+            w2, w1 = vt_weights(e)
+            t = abs(w2 * eq - A) + abs(w1 * eq - B)
+            traded += t / eq
+            eq *= 1 - fee * t / eq
+            A, B = w2 * eq, w1 * eq
+            C = eq - A - B
+            pos, x = e > 0, e
+            ev.append((j, e))
+        esum += x
+        if x > 0:
+            isum += x
+            idays += 1
+        A *= f2[j]
+        B *= f1[j]
+        C *= fb[j]
+        eq = A + B + C
+        x = (2 * A + B) / eq
+        curve.append(eq)
+    return curve, (ev, traded, esum / (hi - lo), isum / idays if idays else 0.0)
+
+
+def vt_random(F, ev, lo, hi, draws=300, seed=7):
+    """Shuffle the rule's own holding runs (exposure, length): same days at each exposure, same number of rebalances, so the same mean exposure.
+    Each draw's fee is scaled so its turnover matches the rule's. Returns [(cagr, worst drop, dollars traded a year)]."""
+    import random
+    segs = [(e, (ev[k + 1][0] if k + 1 < len(ev) else hi) - j) for k, (j, e) in enumerate(ev)]
+    t_rule = vt_cost([e for e, _ in segs])
+    rng, out = random.Random(seed), []
+    for _ in range(draws):
+        p = segs[:]
+        rng.shuffle(p)
+        plan, j = {}, lo
+        for e, n in p:
+            plan[j] = e
+            j += n
+        cv, info = vt_run(F, None, lo, hi, plan=plan, fee=FEE * t_rule / max(vt_cost([e for e, _ in p]), 1e-9))
+        out.append((cv[-1] ** (1 / ((hi - lo) / 252)) - 1, max(1 - v / pk for v, pk in zip(cv, __import__("itertools").accumulate(cv, max))), info[1]))
+    return out
+
+
+def voltarget():
+    D = lev_data()
+    dates, c, sp, bill, bond, sigs = D
+    s = sigs["200d"]
+    lo = next(i for i, d in enumerate(dates) if d >= "1929-01-01")
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    hi = len(dates)
+    n = len(dates)
+    F = ([max(1 + 2 * sp[j] - bill[j] - (SWAP_EXP + GAP) / 252, 1e-12) for j in range(n)], [1 + sp[j] - PLAIN_EXP / 252 for j in range(n)], [1 + bill[j] for j in range(n)])
+    yrs_b = (hi - split) / 252
+    print(f"VOLATILITY TARGETING ON TOP OF TREND 2x. Daily, {dates[lo]} to {dates[-1]}. Pick on {dates[lo]}..{dates[split - 1]}, blind {dates[split]}..{dates[-1]}.")
+    print("Base: 2x S&P fund above its 200 day average, T-bills below. Daily-reset fund model, 0.9% expense, 0.8% a year model gap off the 2x fund, S&P with")
+    print(f"dividends, {FEE:.1%} on every non-cash dollar traded, signal read at one close and traded at the next. Exposure e between 0 and 2 is a mix: below 1x the plain")
+    print(f"fund (0.09%) and bills, 1x to 2x the 2x fund and the plain fund. Rebalance only when the exposure held is {VT_BAND} off target (or the position flips in/out).")
+    print("Realised vol = trailing std of daily S&P returns, annualised. Pick rule as --leverage: best train CAGR whose train worst drop is no bigger than hold's.\n")
+    hold_tr = dstats(dates, lev_sim(D, 1.0, None, "bills", "margin", lo, split), lo)
+    hold_cv = lev_sim(D, 1.0, None, "bills", "margin", split, hi)
+    hold_b, hold_dec = dstats(dates, hold_cv, split), ddecades(dates, hold_cv, split)
+    decs = sorted(hold_dec)
+    tg2 = vt_targets(sp, s, "trend", None)
+    t2_cv, t2_i = vt_run(F, tg2, split, hi)
+    t2_b, t2_dec = dstats(dates, t2_cv, split), ddecades(dates, t2_cv, split)
+    chk = dstats(dates, lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, FEE, 0, GAP), split)
+    assert abs(chk["cagr"] - t2_b["cagr"]) < 2e-3 and abs(chk["mdd"] - t2_b["mdd"]) < 2e-3, (chk, t2_b)
+    print(f"Check: this engine's Trend 2x blind {t2_b['cagr']:.1%} / {t2_b['mdd']:.1%} matches lev_sim ({chk['cagr']:.1%} / {chk['mdd']:.1%}).")
+    print(f"S&P hold: train {hold_tr['cagr']:.1%} / {hold_tr['mdd']:.0%}   BLIND {hold_b['cagr']:.1%} / {hold_b['mdd']:.1%}.  Trend 2x BLIND {t2_b['cagr']:.1%} / {t2_b['mdd']:.1%}\n")
+    combos = [("vol", (T, w)) for T in (0.10, 0.15, 0.20) for w in (20, 60)] + [("regime", None)]
+    def name(k):
+        return f"vol target {k[1][0]:.0%}, {k[1][1]}d" if k[0] == "vol" else "2x in calm, else 1x"
+    res, W = {}, 22
+    print(f"{'rule':{W}} | {'train CAGR':>10}{'maxDD':>6} | {'BLIND CAGR':>10}{'maxDD':>7} | {'vs T2x':>6}{'vs hold':>8} | {'turnover/yr':>11}{'rebal/yr':>9}{'mean e':>7}{'e in':>6}")
+    for k in combos:
+        tg = vt_targets(sp, s, *k)
+        tr = dstats(dates, vt_run(F, tg, lo, split)[0], lo)
+        cv, (ev, trd, me, mi) = vt_run(F, tg, split, hi)
+        b, dec = dstats(dates, cv, split), ddecades(dates, cv, split)
+        w2, wh = sum(dec[d] > t2_dec[d] for d in decs), sum(dec[d] > hold_dec[d] for d in decs)
+        res[k] = (tr, b, dec, w2, wh, cv, ev, trd, me, mi, tg)
+        print(f"{name(k):{W}} | {tr['cagr']:>10.1%}{tr['mdd']:>6.0%} | {b['cagr']:>10.1%}{b['mdd']:>7.1%} | {w2:>4}/{len(decs)}{wh:>6}/{len(decs)} | {trd / yrs_b:>11.1f}{len(ev) / yrs_b:>9.1f}{me:>7.2f}{mi:>6.2f}")
+    print(f"{'Trend 2x (reference)':{W}} | {'':>17} | {t2_b['cagr']:>10.1%}{t2_b['mdd']:>7.1%} | {'':>15} | {t2_i[1] / yrs_b:>11.1f}{len(t2_i[0]) / yrs_b:>9.1f}{t2_i[2]:>7.2f}{t2_i[3]:>6.2f}")
+    print(f"\nCombos tried: {len(combos)} (3 vol targets x 2 windows = 6 picked among, plus the 1 regime switch, which has no knob to pick).")
+    vts = [k for k in combos if k[0] == "vol"]
+    ok = [k for k in vts if res[k][0]["mdd"] <= hold_tr["mdd"]]
+    pk = max(ok, key=lambda k: res[k][0]["cagr"])
+    print(f"Pick rule: best train CAGR whose train worst drop is no bigger than hold's ({hold_tr['mdd']:.0%}): {name(pk)}  (train {res[pk][0]['cagr']:.1%} / {res[pk][0]['mdd']:.0%}).")
+    best = max(vts, key=lambda k: res[k][1]["cagr"])
+    print(f"Hindsight only: best blind CAGR of the six is {name(best)} at {res[best][1]['cagr']:.1%} / {res[best][1]['mdd']:.1%}.")
+    clear = [name(k) for k in combos if res[k][1]["cagr"] > t2_b["cagr"] and res[k][1]["mdd"] <= t2_b["mdd"] and res[k][3] > len(decs) / 2]
+    print(f"Hindsight check, combos clearing the bar against Trend 2x on the blind half: {clear or 'none'}")
+
+    print(f"\n{'blind decade CAGR':{W + 12}}" + "".join(f"{d:>8}" for d in decs))
+    print(f"{'S&P hold':{W + 12}}" + "".join(f"{hold_dec[d]:>8.1%}" for d in decs))
+    print(f"{'Trend 2x':{W + 12}}" + "".join(f"{t2_dec[d]:>8.1%}" for d in decs))
+    for k in combos:
+        tag = ("PICK " if k == pk else "") + name(k)
+        print(f"{tag:{W + 12}}" + "".join(f"{res[k][2][d]:>8.1%}" for d in decs))
+
+    # real funds, 2006 on
+    r0 = next(i for i, d in enumerate(dates) if d >= "2006-07-03")
+    bil = real_rets(dates, "BIL")
+    fb0 = next(i for i, x in enumerate(bil) if x != 0.0)
+    bill_r = [bil[j] if j >= fb0 else bill[j] for j in range(n)]
+    spy, sso = real_rets(dates, "SPY"), real_rets(dates, "SSO")
+    FR = ([max(1 + x, 1e-12) for x in sso], [1 + x for x in spy], [1 + x for x in bill_r])
+    s_r = trend_of(spy)
+    dl_r = dates[r0 - 1:hi]
+
+    # the two variants graded in detail: the pick and the regime switch
+    details = [("PICK " + name(pk), pk), (name(("regime", None)), ("regime", None))]
+    wins = (("1987 (Sep 1 to Dec 31)", "1987-09-01", "1987-12-31"), ("2008 (calendar year)", "2008-01-01", "2008-12-31"),
+            ("Mar 2020 (Feb 19 to Apr 30)", "2020-02-19", "2020-04-30"), ("2022 (calendar year)", "2022-01-01", "2022-12-31"))
+    dl = dates[split - 1:hi]
+    print("\nBAR vs Trend 2x (blind CAGR higher, worst drop no bigger, more than half the decades won), and vs S&P hold, 0.8% gap off:")
+    verdict = {}
+    for lab, k in details:
+        tr, b, dec, w2, wh, cv, ev, trd, me, mi, tg = res[k]
+        pas2 = b["cagr"] > t2_b["cagr"] and b["mdd"] <= t2_b["mdd"] and w2 > len(decs) / 2
+        pash = b["cagr"] > hold_b["cagr"] and b["mdd"] <= hold_b["mdd"] and wh > len(decs) / 2
+        why = ", ".join(x for x, f in (("less return", b["cagr"] <= t2_b["cagr"]), ("bigger drop", b["mdd"] > t2_b["mdd"]), (f"{w2} of {len(decs)} decades", w2 <= len(decs) / 2)) if f)
+        verdict[lab] = pas2
+        print(f"  {lab:{W + 5}} blind {b['cagr']:.1%} / {b['mdd']:.1%}   vs Trend 2x {t2_b['cagr']:.1%} / {t2_b['mdd']:.1%}, won {w2}/{len(decs)}: {'PASS' if pas2 else 'FAIL'}{'' if pas2 else ' (' + why + ')'}"
+              f"   vs hold {hold_b['cagr']:.1%} / {hold_b['mdd']:.1%}, won {wh}/{len(decs)}: {'PASS' if pash else 'FAIL'}")
+    print("\nSKEPTIC 1. CONSTANT LEVERAGE AT THE SAME AVERAGE: Trend at a fixed L (the rule's mean exposure while in), same engine, same band")
+    for lab, k in details:
+        mi = res[k][9]
+        tgL = [round(mi, 2) if x else 0.0 for x in s]
+        cvL = vt_run(F, tgL, split, hi)[0]
+        bL = dstats(dates, cvL, split)
+        print(f"  {lab:{W + 5}} mean exposure while in {mi:.2f}: constant {round(mi, 2)}x trend blind {bL['cagr']:.1%} / {bL['mdd']:.1%}   (rule {res[k][1]['cagr']:.1%} / {res[k][1]['mdd']:.1%})")
+    print("\nSKEPTIC 2. RANDOM BASELINE: 300 random orders of the rule's own holding runs (same days at each exposure, same mean exposure, same number")
+    print("rebalances, per-dollar fee scaled up so the total fee paid matches the rule's; shuffled runs that land next to an equal run trade nothing), blind.")
+    print("Trend 2x gets the same treatment (random in/out order, same switches).")
+    for lab, tgk, cvk, evk, trd in (("Trend 2x", None, t2_cv, t2_i[0], t2_i[1]),) + tuple((lab, None, res[k][5], res[k][6], res[k][7]) for lab, k in details):
+        rs = vt_random(F, evk, split, hi)
+        rc = dstats(dates, cvk, split)
+        cg, dd = sorted(r[0] for r in rs), sorted(r[1] for r in rs)
+        beat_c, beat_d = sum(r[0] < rc["cagr"] for r in rs), sum(r[1] > rc["mdd"] for r in rs)
+        both = sum(r[0] >= rc["cagr"] and r[1] <= rc["mdd"] for r in rs)
+        tm = sorted(r[2] for r in rs)[len(rs) // 2] / yrs_b
+        print(f"  {lab:{W + 5}} rule {rc['cagr']:.1%} / {rc['mdd']:.0%}, turnover {trd / yrs_b:.1f}/yr.  random: median {cg[150]:.1%} (5th {cg[15]:.1%}, 95th {cg[285]:.1%}), median worst drop "
+              f"{dd[150]:.0%} (5th {dd[15]:.0%}, 95th {dd[285]:.0%}), turnover {tm:.1f}/yr.  Rule return beats {beat_c / 3:.0f}%, drop smaller than {beat_d / 3:.0f}%, randoms matching both: {both} of 300")
+    print("\nSKEPTIC 3. ONE DAY LATE (both the 200 day signal and the vol read a day later), blind")
+    for lab, k in (("Trend 2x", None),) + tuple(details):
+        tg = tg2 if k is None else res[k][10]
+        b1 = dstats(dates, vt_run(F, tg, split, hi, delay=1)[0], split)
+        b2 = dstats(dates, vt_run(F, tg, split, hi, delay=2)[0], split)
+        print(f"  {lab:{W + 5}} 1 day late {b1['cagr']:.1%} / {b1['mdd']:.1%}   2 days late {b2['cagr']:.1%} / {b2['mdd']:.1%}")
+    print(f"\nSTRESS, blind, return over the window (worst drop inside it). S&P hold, Trend 2x, then each variant.")
+    print(f"{'':{W + 5}}" + "".join(f"{w[0][:20]:>22}" for w in wins))
+    for lab, cv in (("S&P hold", hold_cv), ("Trend 2x", t2_cv)) + tuple((lab, res[k][5]) for lab, k in details):
+        print(f"{lab:{W + 5}}" + "".join(f"{window(dl, cv, a, b)[0]:>+13.0%} ({window(dl, cv, a, b)[1]:>3.0%})  " for _, a, b in wins))
+
+    print(f"\nREAL FUNDS CHECK, {dates[r0]} on (real adjusted closes: SSO, SPY, BIL with the T-bill series before BIL began {dates[fb0]}). Trend and vol read off the real SPY.")
+    print(f"{'':{W + 5}} | {'CAGR':>6}{'maxDD':>6} | {'2008':>12} | {'Mar 2020':>12} | {'2022':>12} | {'model, same window':>20} | turnover/yr")
+    rows_ = [("SPY hold", vt_run(FR, [1.0] * n, r0, hi, fee=0.0), vt_run(F, [1.0] * n, r0, hi, fee=0.0), False)]
+    tgr = vt_targets(spy, s_r, "trend", None)
+    rows_.append(("Trend 2x (SSO / BIL)", vt_run(FR, tgr, r0, hi), vt_run(F, tg2, r0, hi), True))
+    for lab, k in details:
+        if k[0] == "vol":
+            tgr = vt_targets(spy, s_r, "vol", k[1])
+        else:
+            tgr = vt_targets(spy, s_r, "regime", None)
+        rows_.append((lab, vt_run(FR, tgr, r0, hi), vt_run(F, res[k][10], r0, hi), True))
+    real_res = {}
+    for nm, (cv, inf), (mcv, _), show in rows_:
+        inf = inf if show else None
+        sr, sm = dstats(dates, cv, r0), dstats(dates, mcv, r0)
+        real_res[nm] = sr
+        w8, w20, w22 = (window(dl_r, cv, a, b) for a, b in (("2008-01-01", "2008-12-31"), ("2020-02-19", "2020-04-30"), ("2022-01-01", "2022-12-31")))
+        tov = f"{inf[1] / ((hi - r0) / 252):.1f}" if inf else "-"
+        print(f"{nm:{W + 5}} | {sr['cagr']:>6.1%}{sr['mdd']:>6.0%} | {w8[0]:>+6.0%} ({w8[1]:>3.0%}) | {w20[0]:>+6.0%} ({w20[1]:>3.0%}) | {w22[0]:>+6.0%} ({w22[1]:>3.0%}) | {sm['cagr']:>12.1%} /{sm['mdd']:>4.0%} | {tov}")
+    sh_, t2r = real_res["SPY hold"], real_res["Trend 2x (SSO / BIL)"]
+    print("  Real-fund bar: higher CAGR and no bigger drop than SPY hold, and than Trend 2x on the same funds.")
+    for lab, _ in details:
+        r_ = real_res[lab]
+        print(f"  {lab:{W + 5}} vs SPY hold {'PASS' if r_['cagr'] > sh_['cagr'] and r_['mdd'] <= sh_['mdd'] else 'FAIL'}   vs Trend 2x real {'PASS' if r_['cagr'] > t2r['cagr'] and r_['mdd'] <= t2r['mdd'] else 'FAIL'}")
+
+
 # ---------- cross-asset dual momentum, trend filter and leverage (--dual) ----------
 
 DUAL_L, DUAL_SMA = 12, 10  # fixed from the literature: 12 month lookback (Antonacci), 10 month average (Faber). Nothing is tuned.
@@ -1738,6 +1993,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--out" in sys.argv:
         out_asset()
+        sys.exit()
+    if "--voltarget" in sys.argv:
+        voltarget()
         sys.exit()
     if "--robust" in sys.argv:
         robust()
