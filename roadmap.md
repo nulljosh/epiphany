@@ -237,4 +237,5 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
 - [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
-- [ ] **Needs Joshua:** set the App Store price to $1.00 upfront in App Store Connect (the $1.00 US price point exists). The automation was blocked as a real-world transaction. After it lands, update the landing copy to say $1 on iPhone and Mac, and drop the in-app Stripe unlock path
+- [x] App Store price set to $1.00 upfront on 2026-10-01 (Joshua ran it, automation is blocked on price changes), landing copy updated
+- [ ] Drop the in-app Stripe unlock path now that the app is a paid download, and decide what to do about the web paywall gate
