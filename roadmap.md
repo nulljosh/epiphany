@@ -232,7 +232,8 @@ it is recorded here.
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
 - [x] Port Monica Kelly (`tradingview/monica-kelly-strategy.pine`) into the engine, rule for rule, and score it next to the Surf modes
 - [ ] Monica Kelly bricks itself: one early loss with no wins makes reward/risk 0, Kelly 0, and it never trades again (Pine and engine both). Fix in the Pine and in `server/api/broker/autopilot.js` if it shares the math
-- [ ] More assets: ETH, SPY, QQQ, GLD daily next to BTC, so one lucky asset can't carry the result
+- [x] More assets: every S&P 500 stock with history back to 2011 (`backtest.py sp500`), next to BTC
+- [ ] ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
 - [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
 - [ ] Luck test: random entries with the same time in market, 1000 runs, report how often luck beats each strategy
 - [ ] Fee test: 0%, 0.1%, 0.25% per side
