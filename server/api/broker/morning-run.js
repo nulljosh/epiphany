@@ -8,9 +8,9 @@
 // bearing; keep it, since the KV lock is also what protects against a second
 // platform ever being armed by mistake.
 //
-// Signals are computed once per watchlist symbol from 1 year of daily closes
-// (drift/vol estimated from log returns, SMA20/50 momentum tilt, GBM Monte
-// Carlo bull probability, logged for context; the buy/sell itself is Double 7s), then executed per user: paper mode logs simulated
+// The rule is Trend 2x (WHITEPAPER section 1): one signal from SPY's daily closes. Above its 200 day
+// average the target is SSO (2x S&P 500), below it BIL (T-bills). Each user is sized to the target and the
+// other side is sold, so a switch only happens when the side changes. Paper mode logs simulated
 // fills against a KV position book. Live mode (real orders through the user's
 // linked SnapTrade brokerage) exists below but is unreachable -- autopilot.js
 // forces mode to 'paper' until live execution is vetted further.
@@ -18,35 +18,18 @@ import { getKv } from '../_kv.js';
 import { verifyCronSecret } from '../_shared-secret.js';
 import { isProByEmail } from '../gates.js';
 import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
-import { double7s } from '../../../src/utils/indicators.js';
+import { trend2x } from '../../../src/utils/indicators.js';
 
-const WATCHLIST = ['AAPL', 'NVDA', 'MSFT', 'SPY', 'QQQ'];
-const SIGNAL_THRESHOLD = 0.55; // bull prob > 55% = buy, < 45% = sell
-const MOMENTUM_TILT_CAP = 0.08;
+const TREND_SYMBOL = 'SPY';
 const TRADE_LOG_LIMIT = 100;
 
-// Live mode: full watchlist, hard-capped per-trade notional and total fill
+// Live mode: hard-capped per-trade notional and total fill
 // count -- once the cap is hit, auto-flips the user back to paper instead of
 // trading unsupervised forever. Raise/replace once live execution is trusted
 // further.
 const LIVE_PROBE_ORDER_SYMBOL = 'BTC';
-const LIVE_PROBE_PRICE_SYMBOL = 'BTC-USD'; // Yahoo ticker for the price/signal series
 const LIVE_MAX_NOTIONAL = 50; // hard $ cap per live trade, overrides user setting
 const LIVE_PROBE_TRADE_CAP = 20;
-
-// GBM Monte Carlo — 500 paths, 30-day horizon, params estimated per symbol.
-function monteCarlo(price, mu, sigma, paths = 500, days = 30) {
-  let bull = 0;
-  for (let p = 0; p < paths; p++) {
-    let s = price;
-    for (let d = 0; d < days; d++) {
-      const z = Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
-      s *= Math.exp((mu - 0.5 * sigma * sigma) + sigma * z);
-    }
-    if (s > price) bull++;
-  }
-  return bull / paths;
-}
 
 async function getDailyCloses(symbol) {
   const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1y`);
@@ -58,26 +41,16 @@ async function getDailyCloses(symbol) {
   return closes.length >= 60 && price ? { closes, price } : null;
 }
 
-function sma(values, n) {
-  const slice = values.slice(-n);
-  return slice.reduce((a, b) => a + b, 0) / slice.length;
-}
-
-function buildSignal(closes, price) {
-  const rets = [];
-  for (let i = 1; i < closes.length; i++) rets.push(Math.log(closes[i] / closes[i - 1]));
-  const mu = rets.reduce((a, b) => a + b, 0) / rets.length;
-  const sigma = Math.sqrt(rets.reduce((a, b) => a + (b - mu) ** 2, 0) / (rets.length - 1));
-
-  let prob = monteCarlo(price, mu, sigma);
-  // Momentum tilt: SMA20 above SMA50 nudges bullish, below nudges bearish.
-  const momentum = sma(closes, 20) / sma(closes, 50) - 1;
-  prob += Math.max(-MOMENTUM_TILT_CAP, Math.min(MOMENTUM_TILT_CAP, momentum * 2));
-
-  // Trades follow Double 7s (WHITEPAPER section 5). The Monte Carlo odds above stay in the log for context only.
-  const d7 = double7s(closes);
-  const signal = d7?.label === 'Buy' ? 'buy' : d7?.label === 'Sell' ? 'sell' : null;
-  return { prob: Number(prob.toFixed(3)), momentum: Number(momentum.toFixed(4)), signal };
+// Today's price replaces the last close (the cron runs inside the session), then the rule reads the series.
+// Returns the two trend signals: buy the target side, sell the other, or [] without enough history.
+function buildTrendSignals(data, prices) {
+  const series = [...data.closes.slice(0, -1), data.price];
+  const t = trend2x(series);
+  if (!t) return { trend: null, signals: [] };
+  const signals = [];
+  if (prices[t.other]) signals.push({ symbol: t.other, signal: 'sell', price: prices[t.other], trend: true });
+  if (prices[t.symbol]) signals.push({ symbol: t.symbol, signal: 'buy', price: prices[t.symbol], trend: true });
+  return { trend: t, signals };
 }
 
 async function appendTrades(kv, userId, trades) {
@@ -95,9 +68,11 @@ async function runPaper(kv, userId, signals, maxNotional) {
     let qty = isCrypto
       ? Number((maxNotional / sig.price).toFixed(8))
       : Math.floor(maxNotional / sig.price);
+    const held = pos[sig.symbol] || 0;
     if (sig.signal === 'sell') {
-      const held = pos[sig.symbol] || 0;
       qty = isCrypto ? Math.min(qty, held) : Math.min(qty, Math.floor(held));
+    } else if (sig.trend) {
+      qty = Math.max(0, qty - Math.floor(held)); // already on this side: top up to the cap, never stack daily
     }
     if (qty <= 0 || (!isCrypto && qty < 1)) continue;
     pos[sig.symbol] = (pos[sig.symbol] || 0) + (sig.signal === 'buy' ? qty : -qty);
@@ -126,9 +101,11 @@ async function runLive(kv, userId, signals, maxNotional) {
       let qty = isCrypto
         ? Number((maxNotional / sig.price).toFixed(8))
         : Math.floor(maxNotional / sig.price);
+      const held = holdings.filter((h) => h.symbol === sig.symbol).reduce((s, h) => s + h.shares, 0);
       if (sig.signal === 'sell') {
-        const held = holdings.filter((h) => h.symbol === sig.symbol).reduce((s, h) => s + h.shares, 0);
         qty = isCrypto ? Math.min(qty, held) : Math.min(qty, Math.floor(held));
+      } else if (sig.trend) {
+        qty = Math.max(0, qty - Math.floor(held)); // already on this side: top up to the cap, never stack daily
       }
       if (qty <= 0 || (!isCrypto && qty < 1)) continue;
       const order = await adapter.placeOrder({ accountId, symbol: sig.symbol, side: sig.signal, qty });
@@ -152,13 +129,6 @@ async function runLive(kv, userId, signals, maxNotional) {
 
   await appendTrades(kv, userId, trades);
   return trades;
-}
-
-async function getLiveProbeSignal() {
-  const data = await getDailyCloses(LIVE_PROBE_PRICE_SYMBOL);
-  if (!data) return null;
-  const sig = buildSignal(data.closes, data.price);
-  return { symbol: LIVE_PROBE_ORDER_SYMBOL, price: data.price, ...sig };
 }
 
 async function executeForUser(kv, userId, signals) {
@@ -193,6 +163,14 @@ async function executeForUser(kv, userId, signals) {
   return { userId, mode: 'live', trades, liveCount: liveCount + filled };
 }
 
+async function getPrice(symbol) {
+  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`);
+  if (!r.ok) return null;
+  const result = (await r.json())?.chart?.result?.[0];
+  const closes = (result?.indicators?.quote?.[0]?.close || []).filter((c) => typeof c === 'number');
+  return result?.meta?.regularMarketPrice ?? closes[closes.length - 1] ?? null;
+}
+
 function marketOpenNow() {
   const et = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const day = et.getDay();
@@ -221,26 +199,19 @@ export default async function handler(req, res) {
     await kv.set(hourKey, 1, { ex: 7200 });
   }
 
-  const signals = [];
-  for (const symbol of WATCHLIST) {
-    try {
-      const data = await getDailyCloses(symbol);
-      if (!data) { signals.push({ symbol, skipped: true }); continue; }
-      const sig = buildSignal(data.closes, data.price);
-      console.log(`[MORNING-RUN] ${symbol} $${data.price} bull=${(sig.prob * 100).toFixed(1)}% mom=${sig.momentum} → ${sig.signal || 'hold'}`);
-      signals.push({ symbol, price: data.price, ...sig });
-    } catch (err) {
-      console.error(`[MORNING-RUN] ${symbol}:`, err.message);
-      signals.push({ symbol, error: err.message });
+  // One signal: SPY against its 200 day average. SSO and BIL prices come with it.
+  let trend = null;
+  let actionable = [];
+  try {
+    const spy = await getDailyCloses(TREND_SYMBOL);
+    const [sso, bil] = await Promise.all(['SSO', 'BIL'].map((sym) => getPrice(sym)));
+    if (spy && sso && bil) {
+      ({ trend, signals: actionable } = buildTrendSignals(spy, { SSO: sso, BIL: bil }));
     }
+    console.log(`[MORNING-RUN] SPY $${spy?.price} vs 200d ${trend ? trend.avg.toFixed(2) : 'n/a'} -> ${trend ? trend.symbol : 'hold'}`);
+  } catch (err) {
+    console.error('[MORNING-RUN] trend signal:', err.message);
   }
-
-  const actionable = signals.filter((s) => s.signal && s.price);
-  // Paper mode also trades BTC (fractional-qty friendly, matches the live probe
-  // symbol) so a sub-$1 cap has something to actually buy -- whole-share stocks
-  // never clear the floor() at penny notional caps.
-  const btcSignal = await getLiveProbeSignal();
-  if (btcSignal?.signal) actionable.push(btcSignal);
 
   const enrolled = (await kv.get('autopilot:users')) || [];
   const results = [];
@@ -253,5 +224,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(200).json({ ok: true, signals, users: results.length, results, runAt: new Date().toISOString() });
+  return res.status(200).json({ ok: true, rule: 'trend2x', trend: trend && { side: trend.side, target: trend.symbol, last: trend.last, avg: trend.avg }, signals: actionable, users: results.length, results, runAt: new Date().toISOString() });
 }
