@@ -5,7 +5,7 @@
 
 During US market hours it watches the account and pops a macOS notification when our positions move another
 --step percent, or the account moves another --abs from the first run. At 3:45pm New York (12:45pm
-Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per day so the orders fill today. Once a month, at the first 3:45pm on a weekday, it also runs scripts/ibkr-momentum.py --go (the momentum sleeve). If the Gateway logs out it tells you once, and
+Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per day so the orders fill today. Once a month, at the first weekday 3:45 to 4pm, it also runs scripts/ibkr-momentum.py --go (the momentum sleeve). If the Gateway logs out it tells you once, and
 tells you again when it is back. Demo accounts only (the runner refuses real ones). Logs to
 ~/Library/Logs/EpiphanyIBKR.log. It is a normal foreground process: closing the terminal stops it.
 """
@@ -80,8 +80,10 @@ while True:
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-run.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("plan:", "Filled", "Submitted", "PreSubmitted", "scoreboard"))]
             note("Daily run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Daily run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
-        # Momentum sleeve: once a month, the first weekday at or after 3:45pm New York. A failure retries tomorrow, not every minute.
-        if weekday and t >= (15, 45) and json_or({}, MOM).get("lastRebalance") != f"{now:%Y-%m}" and mom_tried != today:
+        # Momentum sleeve: once a month, the first weekday 3:45 to 4pm New York. Only before the close, so the orders fill
+        # while the script waits and the state books them; after 4pm they'd sit unfilled and the sleeve would book nothing.
+        # A failure retries tomorrow, not every minute.
+        if weekday and (15, 45) <= t < (16, 0) and json_or({}, MOM).get("lastRebalance") != f"{now:%Y-%m}" and mom_tried != today:
             mom_tried = today
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-momentum.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("momentum plan:", "Filled", "Submitted", "PreSubmitted", "momentum rebalanced"))]
