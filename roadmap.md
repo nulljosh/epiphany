@@ -242,7 +242,8 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 
 ## Ingested 2026-10-01
 - [ ] Refresh App Store and README screenshots, automatically every time the app changes.
-- [ ] Menu bar app (Epiphany Live, scripts/menubar.py) shows best/worst position, high/low, next trade, Open Log. Missing: Start/Stop buttons
+- [x] Menu bar app (Epiphany Live, scripts/menubar.py) Liquid Glass with section headers, best/worst position, account change vs SPY, record high/low, Open Log, Cmd-Q
+- [ ] Menu bar app: Start/Stop buttons to pause/resume trading
 - [ ] Sample-data mode for screenshots (launch argument, a wealthy demo portfolio) so fastlane can refresh iPhone, Mac and Watch shots without a login; then refresh README and landing screenshots
 - [ ] Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
 - [ ] Screenshot run: UITEST_DEMO mode is in (ios/Models/DemoData.swift), the app compiles, but `fastlane screenshots` failed at SwiftCompile of ContentView.swift under its own derived data and produced no images. Reproduce with the lane's xcodebuild line, fix, rerun, then refresh README and landing shots
