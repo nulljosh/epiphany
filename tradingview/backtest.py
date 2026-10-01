@@ -137,6 +137,14 @@ def signals(mode, p, o, h, l, c):
     if mode == "IBS":
         ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
         return [x < p[0] for x in ibs], [x > p[1] for x in ibs]
+    if mode == "RSI2 pullback":  # Connors: dip inside an uptrend, out on the bounce
+        r, t, x = rsi(c, 2), sma(c, 200), sma(c, p[1])
+        return ([t[i] is not None and r[i] is not None and c[i] > t[i] and r[i] < p[0] for i in range(N)],
+                [x[i] is not None and c[i] > x[i] for i in range(N)])
+    if mode == "IBS + trend":
+        t = sma(c, 200)
+        ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
+        return [t[i] is not None and c[i] > t[i] and ibs[i] < p[0] for i in range(N)], [x > p[1] for x in ibs]
     if mode == "Supertrend+RSI":
         up, r = supertrend(h, l, c, p[0], p[1]), rsi(c)
         return [up[i] and r[i] is not None and r[i] > 50 for i in range(N)], [not up[i] for i in range(N)]
@@ -145,19 +153,20 @@ def signals(mode, p, o, h, l, c):
 
 def run(bars, enter, exit_, lo, hi):
     """Equity curve over bars[lo:hi]. Decide on close i, fill at open i+1."""
-    eq, cash, units, peak, mdd, trades = 1.0, 1.0, 0.0, 1.0, 0.0, 0
+    eq, cash, units, peak, mdd, trades, cost, rets = 1.0, 1.0, 0.0, 1.0, 0.0, 0, 0.0, []
     for i in range(lo, hi):
         o, c = bars[i][1], bars[i][4]
         if i > lo:  # act on yesterday's signal at today's open
             if units == 0 and enter[i - 1]:
-                units, cash, trades = cash * (1 - FEE) / o, 0.0, trades + 1
+                units, cost, cash, trades = cash * (1 - FEE) / o, cash, 0.0, trades + 1
             elif units > 0 and exit_[i - 1]:
                 cash, units = units * o * (1 - FEE), 0.0
+                rets.append(cash / cost - 1)
         eq = cash + units * c
         peak = max(peak, eq)
         mdd = max(mdd, 1 - eq / peak)
     years = (bars[hi - 1][0] - bars[lo][0]) / 31557600
-    return {"mult": eq, "cagr": eq ** (1 / years) - 1, "mdd": mdd, "trades": trades}
+    return {"mult": eq, "cagr": eq ** (1 / years) - 1, "mdd": mdd, "trades": trades, "rets": rets}
 
 
 def stdev(x, n):
@@ -186,7 +195,7 @@ def monica(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.0
         rr = aw / al if al > 0 else 2.94
         return 0.0 if rr == 0 else max(0.0, min((rr * wr - (1 - wr)) / rr * frac, cap))
     cash, units, entry_px, cost, pending, orders = 1.0, 0.0, 0.0, 0.0, False, None
-    pnls, peak, mdd, trades, eq = [], 1.0, 0.0, 0, 1.0
+    pnls, rets, peak, mdd, trades, eq = [], [], 1.0, 0.0, 0, 1.0
     for i in range(lo, hi):
         if units and orders:
             sp, tp = orders
@@ -200,6 +209,7 @@ def monica(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.0
                 proceeds = units * fill * (1 - FEE)
                 cash, units, orders = cash + proceeds, 0.0, None
                 pnls.append(proceeds - cost)
+                rets.append(proceeds / cost - 1)
         if pending and not units:
             size = cash * (kelly(pnls) if sized else 1.0)
             units, entry_px, cost, cash, trades = size * (1 - FEE) / o[i], o[i], size, cash - size, trades + 1
@@ -215,7 +225,7 @@ def monica(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.0
         peak = max(peak, eq)
         mdd = max(mdd, 1 - eq / peak)
     years = (bars[hi - 1][0] - bars[lo][0]) / 31557600
-    return {"mult": eq, "cagr": eq ** (1 / years) - 1, "mdd": mdd, "trades": trades}
+    return {"mult": eq, "cagr": eq ** (1 / years) - 1, "mdd": mdd, "trades": trades, "rets": rets}
 
 
 def score(mode, p, bars, ohlc, lo, hi):
@@ -234,6 +244,8 @@ GRID = {
     "Donchian": [(n,) for n in (10, 20, 55, 100)],
     "IBS": [(0.1, 0.9), (0.2, 0.8), (0.3, 0.7)],
     "Supertrend+RSI": [(10, 2), (10, 3), (14, 3), (20, 4)],
+    "RSI2 pullback": [(5, 5), (10, 5), (10, 10), (15, 5)],
+    "IBS + trend": [(0.1, 0.7), (0.2, 0.8), (0.2, 0.5)],
     "Monica Kelly": [()],   # as shipped, no tuning
     "Monica all-in": [()],  # same signal, whole account per trade
 }
@@ -282,13 +294,15 @@ def universe():
     with ProcessPoolExecutor() as ex:
         res = dict(zip(ok, ex.map(evaluate, ok.values(), chunksize=4)))
     hold = {s: r["Hold"] for s, r in res.items()}
-    print(f"{'strategy':16}{'median CAGR':>12}{'median maxDD':>13}{'beat Hold':>10}{'shallower DD':>13}{'median trades':>14}")
+    print(f"{'strategy':16}{'median CAGR':>12}{'median maxDD':>13}{'beat Hold':>10}{'win rate':>9}{'avg trade':>10}{'trades':>8}")
     for mode in GRID:
         rows = [(r[mode], hold[s]) for s, r in res.items()]
         med = lambda k: statistics.median(m[k] for m, _ in rows)
         beat = sum(m["cagr"] > hd["cagr"] for m, hd in rows) / len(rows)
-        safer = sum(m["mdd"] < hd["mdd"] for m, hd in rows) / len(rows)
-        print(f"{mode:16}{med('cagr'):>12.1%}{med('mdd'):>13.0%}{beat:>10.0%}{safer:>13.0%}{med('trades'):>14.0f}")
+        pooled = [x for m, _ in rows for x in m["rets"]]
+        win = sum(x > 0 for x in pooled) / max(len(pooled), 1)
+        avg = statistics.mean(pooled) if pooled else 0
+        print(f"{mode:16}{med('cagr'):>12.1%}{med('mdd'):>13.0%}{beat:>10.0%}{win:>9.0%}{avg:>10.2%}{len(pooled):>8}")
 
 
 def main():
