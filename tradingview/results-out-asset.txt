@@ -1,0 +1,104 @@
+WHAT TO HOLD WHEN OUT. Fixed rule: Trend 2x S&P (2x fund above 200 day average, signal at close, trade next close, 0.1% a switch,
+daily-reset 2x fund model with 0.9% expense, 0.8% a year model gap taken off). Pick on 1929-01-02..1975-12-31, blind 1976-01-02..2026-10-01.
+Out-assets, daily, net of fund expenses (IEF 0.15%, TLT 0.15%, GLD 0.40%). IEF-like = 10y Treasury priced off GS10 yields. TLT-like = 20y par bond
+repriced off the same GS10 yield (parallel shift, 10y coupon). Gold = monthly price series (fixed at $20.67/$35 until 1971, private ownership banned
+until 1974, so its train half is not a real test) spread over the month. 2x bond = daily-reset 2x of that bond, T-bill financing, 0.9% expense + gap.
+'own trend' = hold it only while its own total return index is above its 200 day average, else bills (signal timing as the stock rule).
+The 50/50 mix is half bills, half gold, rebalance cost ignored. Fee counted on every non-cash dollar bought or sold.
+
+MODEL VS REAL FUNDS, 2006-01-03 on, always invested (Yahoo adjusted closes)
+  IEF  model 2.6% / worst 25%   real 3.0% / worst 24%   gap -0.4% a year
+  TLT  model 2.3% / worst 44%   real 2.4% / worst 48%   gap -0.1% a year
+  GLD  model 10.5% / worst 40%   real 10.1% / worst 46%   gap +0.4% a year
+
+Baseline matches lev_sim (etf, 2x, 200d, bills, gap 0.8%): 14.4% / 44%. Without the gap it is 15.1% / 44%, the --leverage row.
+
+out-asset                    | train CAGR maxDD | BLIND CAGR maxDD  no gap | won vs bills |   1 day late
+T-bills (baseline)           |      14.0%   80% |      14.4%   44%   15.1% |         -/  |   12.3% /62%
+IEF-like 10y                 |      13.9%   80% |      15.0%   50%   15.7% |         3/6 |   13.0% /61%
+IEF-like 10y, own trend      |      14.3%   80% |      15.6%   45%   16.3% |         5/6 |   13.5% /63%
+TLT-like 20y                 |      13.9%   80% |      15.6%   55%   16.3% |         3/6 |   13.6% /60%
+TLT-like 20y, own trend      |      14.8%   79% |      16.8%   45%   17.5% |         5/6 |   14.6% /63%
+Gold                         |      13.6%   81% |      14.1%   52%   14.8% |         4/6 |   12.1% /65%
+Gold, own trend              |      15.7%   80% |      15.5%   41%   16.2% |         4/6 |   13.3% /64%
+50/50 bills+gold             |      13.8%   81% |      14.3%   43%   14.9% |         4/6 |   12.2% /64%
+50/50 bills+gold, own trend  |      14.5%   80% |      14.8%   42%   15.5% |         4/6 |   12.7% /64%
+2x IEF-like, bond uptrend    |      14.6%   80% |      17.0%   45%   17.9% |         5/6 |   14.8% /63%
+2x TLT-like, bond uptrend    |      15.6%   79% |      19.3%   45%   20.2% |         5/6 |   17.0% /63%
+
+blind decade CAGR              1970s   1980s   1990s   2000s   2010s   2020s
+T-bills (baseline)              5.2%   25.0%   20.1%    2.8%   13.2%   16.5%
+IEF-like 10y                    2.2%   25.7%   19.6%    5.7%   15.4%   14.6%
+IEF-like 10y, own trend         3.5%   25.2%   20.7%    5.8%   15.5%   17.4%
+TLT-like 20y                    1.1%   26.1%   19.5%    7.6%   17.5%   13.8%
+TLT-like 20y, own trend         4.2%   25.8%   21.4%    7.5%   17.4%   18.4%
+Gold                           13.3%   14.7%   19.9%    4.8%   15.4%   18.1%
+Gold, own trend                11.9%   22.0%   19.5%    5.7%   14.5%   18.9%
+50/50 bills+gold                9.2%   19.8%   20.0%    3.8%   14.3%   17.3%
+50/50 bills+gold, own trend     8.7%   22.9%   19.7%    4.3%   13.9%   17.7%
+2x IEF-like, bond uptrend       2.1%   25.4%   21.4%    8.9%   18.2%   18.5%
+2x TLT-like, bond uptrend       3.3%   26.5%   22.8%   12.2%   22.1%   20.5%
+
+STRESS, blind, rule with each out-asset: return over the window (worst drop inside it)
+                               2008 (calendar ye   2022 (calendar ye   Mar 2020 (Feb 19 
+S&P hold                            -37% (48%)          -18% (25%)          -13% (34%)  
+T-bills (baseline)                   +1% ( 0%)          -31% (32%)          -20% (24%)  
+IEF-like 10y                        +19% ( 4%)          -41% (42%)          -15% (24%)  
+IEF-like 10y, own trend             +19% ( 4%)          -31% (32%)          -15% (24%)  
+TLT-like 20y                        +32% ( 7%)          -47% (49%)           -9% (24%)  
+TLT-like 20y, own trend             +31% ( 7%)          -31% (32%)           -9% (24%)  
+Gold                                 +1% (22%)          -35% (38%)          -16% (24%)  
+Gold, own trend                      +9% (10%)          -32% (33%)          -16% (24%)  
+50/50 bills+gold                     +1% (11%)          -33% (35%)          -18% (24%)  
+50/50 bills+gold, own trend          +5% ( 5%)          -31% (33%)          -18% (24%)  
+2x IEF-like, bond uptrend           +38% ( 8%)          -31% (32%)           -8% (24%)  
+2x TLT-like, bond uptrend           +65% (14%)          -31% (32%)           +4% (24%)  
+
+The out-assets alone in those windows (always held, no stocks), return (worst drop):
+IEF-like                            +19% ( 4%)          -15% (18%)           +9% ( 0%)  
+TLT-like                            +32% ( 7%)          -27% (31%)          +18% ( 0%)  
+Gold                                 +1% (22%)           +0% (15%)           +6% ( 0%)  
+50/50 bills+gold                     +1% (11%)           +1% ( 7%)           +3% ( 0%)  
+T-bills                              +1% ( 0%)           +2% ( 0%)           +0% ( 0%)  
+  Stock rule out of the S&P on 253 of 253 days in 2008.
+  Stock rule out of the S&P on 211 of 251 days in 2022.
+
+RANDOM BASELINE where the switch schedule differs (500 random asset/bills schedules, same stock schedule, same asset days among the out days, same asset switches)
+  IEF-like 10y, own trend      15.6% beats 100% of random schedules (36 asset/bills flips), randoms matching on return and worst drop: 0 of 500
+  TLT-like 20y, own trend      16.8% beats 100% of random schedules (46 asset/bills flips), randoms matching on return and worst drop: 0 of 500
+  Gold, own trend              15.5% beats 99% of random schedules (37 asset/bills flips), randoms matching on return and worst drop: 1 of 500
+  50/50 bills+gold, own trend  14.8% beats 98% of random schedules (37 asset/bills flips), randoms matching on return and worst drop: 2 of 500
+  2x IEF-like, bond uptrend    17.0% beats 100% of random schedules (36 asset/bills flips), randoms matching on return and worst drop: 0 of 500
+  2x TLT-like, bond uptrend    19.3% beats 100% of random schedules (46 asset/bills flips), randoms matching on return and worst drop: 0 of 500
+  The unfiltered rows share the baseline's stock in/out schedule exactly; only the asset held when out differs, so there is nothing to shuffle.
+
+PICK on the train half: best train CAGR whose train worst drop is no bigger than the bills baseline's (80%); must also beat its train CAGR (14.0%).
+  train pick: Gold, own trend
+  Gold's train half is a fixed price (one revaluation, Jan 1934, +69%) until 1971, and private gold was banned until 1974, so its train edge is not tradable history. From 1935 on: gold own trend 19.4% / 54% against bills 17.8% / 54%.
+  train pick with gold set aside: 2x TLT-like, bond uptrend
+
+BAR vs Trend 2x with bills (14.4% / 44.0%): blind CAGR higher, worst drop no bigger, more than half the decades won.
+  IEF-like 10y                 15.0% / 49.8%, won 3/6: FAIL (bigger drop, 3 of 6 decades)
+  IEF-like 10y, own trend      15.6% / 44.6%, won 5/6: FAIL (bigger drop)
+  TLT-like 20y                 15.6% / 54.9%, won 3/6: FAIL (bigger drop, 3 of 6 decades)
+  TLT-like 20y, own trend      16.8% / 44.6%, won 5/6: FAIL (bigger drop)
+  Gold                         14.1% / 52.5%, won 4/6: FAIL (less return, bigger drop)
+  Gold, own trend              15.5% / 41.1%, won 4/6: PASS   [train pick]
+  50/50 bills+gold             14.3% / 42.6%, won 4/6: FAIL (less return)
+  50/50 bills+gold, own trend  14.8% / 41.7%, won 4/6: PASS
+  2x IEF-like, bond uptrend    17.0% / 44.8%, won 5/6: FAIL (bigger drop)
+  2x TLT-like, bond uptrend    19.3% / 45.0%, won 5/6: FAIL (bigger drop)
+
+REAL FUNDS CHECK, 2006-01-03 on (Yahoo adjusted closes for IEF, TLT, GLD; 2x rows run the 2x fund model on the real fund's returns). Same fixed rule, gap taken off.
+out-asset                    |   CAGR maxDD |         2008 |         2022
+T-bills (baseline)           |  12.5%   41% |    +1% ( 0%) |   -31% (32%)
+IEF-like 10y                 |  12.4%   48% |   +18% ( 6%) |   -40% (41%)
+IEF-like 10y, own trend      |  12.8%   42% |   +14% ( 7%) |   -31% (32%)
+TLT-like 20y                 |  11.1%   56% |   +34% ( 7%) |   -50% (50%)
+TLT-like 20y, own trend      |  12.5%   40% |   +24% (12%) |   -31% (32%)
+Gold                         |  14.8%   43% |    +5% (29%) |   -36% (41%)
+Gold, own trend              |  12.5%   45% |    -7% (23%) |   -39% (41%)
+50/50 bills+gold             |  13.8%   42% |    +5% (15%) |   -33% (35%)
+50/50 bills+gold, own trend  |  12.7%   44% |    -5% (15%) |   -34% (36%)
+2x IEF-like, bond uptrend    |  13.2%   42% |   +27% (14%) |   -31% (32%)
+2x TLT-like, bond uptrend    |  12.2%   47% |   +46% (22%) |   -31% (32%)
