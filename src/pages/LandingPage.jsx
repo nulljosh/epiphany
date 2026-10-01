@@ -507,8 +507,8 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       <section className="lp-section" id="pricing" style={{ paddingTop: 0 }}>
         <div className="lp-grid-head lp-reveal">
           <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Pricing</div>
-          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Start free. Pay once if you want more.</h2>
-          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>One dollar, one time, on the App Store or on the web. No subscription, no ads, nothing to cancel.</p>
+          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Free on the web. $1 for the rest.</h2>
+          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>Try it free in your browser. Unlock everything for one dollar, once. Or get the app on the App Store for one dollar. No subscription, no ads.</p>
         </div>
         <div className="lp-pricing lp-reveal">
           <div className="lp-price-card glass">
@@ -523,9 +523,8 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             <button className="lp-price-btn glass-pill" onClick={register}>Start free</button>
           </div>
           <div className="lp-price-card glass premium">
-            <div className="lp-price-tier">Paid</div>
-            <div className="lp-price-num">$1<span> one-time</span></div>
-            <div style={{ fontSize: 13, color: 'rgba(var(--lp-ink),0.45)', marginTop: -8 }}>Same price on iPhone, Mac and the web</div>
+            <div className="lp-price-tier">Premium</div>
+            <div className="lp-price-num">$1<span> once, on the web</span></div>
             <ul className="lp-price-feats">
               <li>Everything in Free</li>
               <li>Real-time market data</li>
@@ -537,11 +536,22 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
               <li>People tracker</li>
               <li>Every future update</li>
             </ul>
-            <button className="lp-price-btn solid" onClick={registerPaid}>Get Epiphany</button>
+            <button className="lp-price-btn solid" onClick={registerPaid}>Unlock for $1</button>
+          </div>
+          <div className="lp-price-card glass">
+            <div className="lp-price-tier">The app</div>
+            <div className="lp-price-num">$1<span> on the App Store</span></div>
+            <ul className="lp-price-feats">
+              <li>iPhone and Mac</li>
+              <li>Everything in the app, no upgrades</li>
+              <li>Native maps, widgets and Apple Watch</li>
+              <li>Every future update</li>
+            </ul>
+            <a className="lp-price-btn glass-pill" href="https://apps.apple.com/app/id6779522175" style={{ textDecoration: 'none', textAlign: 'center' }}>Get it on the App Store</a>
           </div>
         </div>
         <p className="lp-reveal" style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', textAlign: 'center', margin: '1.5rem auto 0', maxWidth: '36rem' }}>
-          Autopilot trades paper money only. Educational and informational only. Not investment advice.
+          A web upgrade and the App Store app are separate purchases. Autopilot trades paper money only. Educational and informational only. Not investment advice.
         </p>
       </section>
 
