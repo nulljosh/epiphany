@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.heyitsmejosh.epiphany-live</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/caffeinate</string><string>-i</string>
+    <string>/Users/joshua/.local/bin/uv</string><string>run</string><string>--quiet</string>
+    <string>--with</string><string>ib_async</string><string>python3</string><string>scripts/ibkr-live.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/joshua/Documents/Code/epiphany</string>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/homebrew/bin:/Users/joshua/.local/bin:/usr/bin:/bin</string></dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>/Users/joshua/Library/Logs/EpiphanyIBKR.out</string>
+  <key>StandardErrorPath</key><string>/Users/joshua/Library/Logs/EpiphanyIBKR.out</string>
+</dict>
+</plist>
