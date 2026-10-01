@@ -243,7 +243,7 @@ def stdev(x, n):
 
 
 def epiphany_kelly(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.025, rising=5,
-           stop=0.017, tgt=0.05, trig=0.02, trail=0.03, frac=0.25, cap=0.10):
+           stop=0.017, tgt=0.05, trig=0.02, trail=0.03, frac=0.25, cap=0.10, floor=0.01):
     """epiphany-kelly-strategy.pine, rule for rule. Stop/target are resting orders from the prior close,
     filled TradingView style: gap fills at the open, otherwise the extreme nearer the open is hit first."""
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
@@ -255,13 +255,17 @@ def epiphany_kelly(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, vo
         return ((c[i] - sf[i]) / sf[i] >= strength and (c[i - 1] - sf[i - 1]) / sf[i - 1] > 0
                 and sd[i] / sf[i] < volcap and up >= rising and c[i] > ss[i])
     def kelly(pnls):
+        # Learn win rate and reward/risk from the strategy's own closed trades, but only once there are 10+ trades
+        # with at least one win and one loss. Before that, use the 55% / 2.94 defaults. The old version divided by
+        # zero after an early loss with no wins and never traded again. The floor keeps it trading, so it keeps learning.
         wins = [x for x in pnls if x > 0]
-        n = len(pnls)
-        wr = len(wins) / n if n > 10 else 0.55
-        aw = sum(wins) / max(len(wins), 1)
-        al = abs(sum(x for x in pnls if x <= 0)) / max(n - len(wins), 1)
-        rr = aw / al if al > 0 else 2.94
-        return 0.0 if rr == 0 else max(0.0, min((rr * wr - (1 - wr)) / rr * frac, cap))
+        losses = [x for x in pnls if x <= 0]
+        if len(pnls) >= 10 and wins and losses:
+            wr = len(wins) / len(pnls)
+            rr = (sum(wins) / len(wins)) / (abs(sum(losses)) / len(losses))
+        else:
+            wr, rr = 0.55, 2.94
+        return max(floor, min((rr * wr - (1 - wr)) / rr * frac, cap))
     cash, units, entry_px, cost, pending, orders = 1.0, 0.0, 0.0, 0.0, False, None
     pnls, rets, peak, mdd, trades, eq = [], [], 1.0, 0.0, 0, 1.0
     for i in range(lo, hi):

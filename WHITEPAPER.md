@@ -215,9 +215,13 @@ sits idle between trades, and that costs far more than the edge earns.
   more often, not a way to make more money.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
-- **Epiphany Kelly (the original rule) does not work yet.** Its buy signal loses money. Its bet sizing has
-  a bug: one early loss before any win sets the bet to zero forever. It stays
-  paper only until both are fixed.
+- **Our original strategy, Epiphany Kelly, does not work.** Its buy signal wins
+  30% of the time and loses money on average. It also had a bug: after one early
+  loss with no wins, its bet size dropped to zero and it never traded again. That
+  is fixed (it now learns only after 10 trades and always bets at least 1%), and
+  the corrected version just proves the point. It trades 43,701 times on the
+  S&P 500 stocks and earns about nothing, because it learns the signal is bad
+  and shrinks its bets. Double 7s replaced it as the autopilot rule.
 - **80% is not there yet.** The best so far is 77%, RSI(2) on the S&P 500
   index over 49 unseen years. Stacking extra filters on
   top made things worse, not better.

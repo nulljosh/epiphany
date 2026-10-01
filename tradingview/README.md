@@ -106,3 +106,14 @@ node scripts/tv-signal-agent.js --study Epiphany --broker ibkr             # pap
 ```
 
 `scripts/ibkr-order.py` only trades demo and paper accounts (IDs starting with D) unless you pass `--live`. Stocks and ETFs only. Whole shares: SPY is about $760 a share, so a sleeve under that needs a cheaper ETF or IBKR's fractional orders.
+
+## Running it daily on IBKR
+
+`scripts/ibkr-run.py` runs Double 7s on 16 index and sector ETFs through IB Gateway. It does not need TradingView or the MCP, only the Gateway logged in and an internet connection.
+
+```
+uv run --with ib_async python3 scripts/ibkr-run.py        # show the plan and the account, send nothing
+uv run --with ib_async python3 scripts/ibkr-run.py --go   # send today's orders
+```
+
+Run it once per trading day. It does not schedule itself. Each position is 10% of `--sleeve` (default $10,000), whole shares only, demo and paper accounts only unless you pass `--live`. It prints your account value and how much it has changed since the first run, and keeps a local log in `tradingview/ibkr-state.json`.
