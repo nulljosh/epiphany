@@ -239,3 +239,6 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
 - [x] App Store price set to $1.00 upfront on 2026-10-01 (Joshua ran it, automation is blocked on price changes), landing copy updated
 - [ ] Drop the in-app Stripe unlock path now that the app is a paid download, and decide what to do about the web paywall gate
+
+## Ingested 2026-10-01
+- [ ] Refresh App Store and README screenshots, automatically every time the app changes.
