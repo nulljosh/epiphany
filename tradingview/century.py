@@ -15,6 +15,7 @@ in tradingview/data/.
     python3 tradingview/century.py --leverage # S&P above its average at L x leverage, daily since 1928; French momentum deciles
     python3 tradingview/century.py --factors  # Ken French long-only factor tilts (value, size, quality, investment, momentum), alone and stacked on Trend 2x, graded blind
     python3 tradingview/century.py --quality  # French quality tenth with a 1x market trend filter, plus quality + momentum and quality + value blends, graded blind, then QUAL/MTUM/VTV real-fund check
+    python3 tradingview/century.py --lowvol   # French lowest variance and lowest beta tenths: 1x, with a market trend filter, and at 1.5x on margin, graded blind, then USMV/SPLV real-fund check
     python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
     python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
     python3 tradingview/century.py --out     # what Trend 2x holds when out: bills vs Treasuries, gold, 2x bonds, each with its own trend filter
@@ -910,6 +911,273 @@ def quality_real():
     print(f"\n{'calendar year returns':50}" + "".join(f"{y:>8}" for y in ys))
     for nm, x in ROWS:
         print(f"{nm:50}" + "".join(f"{C[nm][y]:>+8.1%}" for y in ys))
+
+
+def lowvol():
+    """Low volatility anomaly on Ken French tenths, all fixed in advance: lowest variance tenth and lowest beta tenth, long only, value weighted,
+    at 1x, with the market 10 month trend filter, and at 1.5x on margin (bills + 1%). Graded blind against holding the market and plain quality."""
+    import math
+    ff = french("F-F_Research_Data_Factors_CSV.zip", 0)
+    def lo(name):
+        s = {m: v[5] for m, v in french(name, 0).items()}  # columns: Lo 20, Qnt 2-4, Hi 20, then Lo 10, Dec 2-9, Hi 10
+        assert all(x > -0.9 for x in s.values()), name
+        return s
+    LV, LB = lo("Portfolios_Formed_on_VAR_CSV.zip"), lo("Portfolios_Formed_on_BETA_CSV.zip")
+    Q = {m: v[-1] for m, v in french("Portfolios_Formed_on_OP_CSV.zip", 0).items()}
+    TURN, HI_TURN, STRESS, LEV, MARGIN, split = 0.30, 1.0, 0.005, 1.5, 0.01, "1976-01"
+    ms = sorted(ff)
+    mk = {m: ff[m][0] + ff[m][3] for m in ms}
+    rf = {m: ff[m][3] for m in ms}
+    lev, sig, L = 1.0, [], []
+    for m in ms:
+        lev *= 1 + mk[m]
+        L.append(lev)
+        sig.append(len(L) >= 10 and lev > sum(L[-10:]) / 10)
+    pos = {ms[i]: sig[i - 1] for i in range(1, len(ms))}  # month end t decides month t+1
+    late = {ms[i]: sig[max(i - 2, 0)] for i in range(1, len(ms))}  # one month later than that
+    ms = ms[1:]
+    def stats(cv):
+        yrs, peak, mdd = (len(cv) - 1) / 12, cv[0], 0.0
+        for v in cv:
+            peak = max(peak, v)
+            mdd = max(mdd, 1 - v / peak)
+        return (cv[-1] / cv[0]) ** (1 / yrs) - 1, mdd
+    def grow(xs):
+        cv = [1.0]
+        for x in xs:
+            cv.append(cv[-1] * (1 + x))
+        return cv
+    def decs(sel, rets):
+        out = {}
+        for m, x in zip(sel, rets):
+            out.setdefault(m[:3] + "0s", []).append(x)
+        return {d: grow(xs)[-1] ** (12 / len(xs)) - 1 for d, xs in out.items() if len(xs) >= 36}
+    def year(sel, rets, y):
+        xs = [x for m, x in zip(sel, rets) if m[:4] == y]
+        cv = grow(xs)
+        return cv[-1] - 1, stats(cv)[1] if len(cv) > 2 else 0.0
+    def sharpe(sel, rets):
+        ex = [x - rf[m] for m, x in zip(sel, rets)]
+        mu = sum(ex) / len(ex)
+        return mu * 12 / (math.sqrt(sum((x - mu) ** 2 for x in ex) / (len(ex) - 1)) * math.sqrt(12))
+    def roll(r, mr, w=120):
+        cl, cm = [0.0], [0.0]
+        for a, b in zip(r, mr):
+            cl.append(cl[-1] + math.log(1 + a)); cm.append(cm[-1] + math.log(1 + b))
+        d = [math.exp((cl[i + w] - cl[i]) / (w / 12)) - math.exp((cm[i + w] - cm[i]) / (w / 12)) for i in range(len(r) - w + 1)]
+        return sum(x > 0 for x in d) / len(d), min(d), len(d)
+    def run(sel, net, side, p=None):
+        """Monthly returns. With p: hold net while p says in, else bills; each switch costs `side`."""
+        if p is None:
+            return [net[m] for m in sel]
+        prev, rets = p[sel[0]], []
+        for m in sel:
+            r = net[m] if p[m] else rf[m]
+            if p[m] != prev:
+                r = (1 + r) * (1 - side) - 1
+                prev = p[m]
+            rets.append(r)
+        return rets
+    def series(src, lv, side, turn):
+        """Monthly net return of a tenth at lv x. Turnover cost scales with lv; borrowing the extra (lv-1) costs bills + 1%; re-levering to lv x each month end costs `side` on the dollars moved."""
+        tq = turn / 12 * 2 * side
+        out = {}
+        for m, f in src.items():
+            if lv == 1.0:
+                out[m] = f - tq
+                continue
+            c = rf[m] + MARGIN / 12
+            pos_ = lv * (1 + f)
+            eq = pos_ - (lv - 1) * (1 + c)
+            out[m] = (eq - 1) - lv * tq - side * abs(lv * eq - pos_)
+        return out
+    VAR = [
+        ("0 Quality tenth, plain (reference)", Q, False, 1.0),
+        ("1 Low variance tenth, 1x", LV, False, 1.0),
+        ("2 Low beta tenth, 1x", LB, False, 1.0),
+        ("3 Low variance + market trend filter, 1x", LV, True, 1.0),
+        ("4 Low beta + market trend filter, 1x", LB, True, 1.0),
+        ("5 Low variance at 1.5x, margin at bills + 1%", LV, False, LEV),
+        ("6 Low beta at 1.5x, margin at bills + 1%", LB, False, LEV),
+    ]
+    ok = [m for m in ms if m in Q and m in LV and m in LB]
+    sel_f = ok
+    sel_b = [m for m in ok if m >= split]
+    sel_t = [m for m in ok if m < split]
+    mk_f, mk_b, mk_t = [mk[m] for m in sel_f], [mk[m] for m in sel_b], [mk[m] for m in sel_t]
+    mh, mh_dec, mfull, mtrain = stats(grow(mk_b)), decs(sel_b, mk_b), stats(grow(mk_f)), stats(grow(mk_t))
+    mh_fdec = decs(sel_f, mk_f)
+    dl, dlf = sorted(mh_dec), sorted(mh_fdec)
+    def verdict(c, d, won, h, hd):
+        return c > h[0] and d <= h[1] + 1e-9 and won > len(hd) / 2
+
+    res = {}
+    for nm, src, filt, lv in VAR:
+        net = series(src, lv, FEE, TURN)
+        p = pos if filt else None
+        r_b, r_f, r_t = run(sel_b, net, FEE, p), run(sel_f, net, FEE, p), run(sel_t, net, FEE, p)
+        res[nm] = dict(net=net, p=p, r=r_b, rf_=r_f, b=stats(grow(r_b)), dd=decs(sel_b, r_b), fdd=decs(sel_f, r_f), full=stats(grow(r_f)), tr=stats(grow(r_t)),
+                       sh=sharpe(sel_b, r_b), roll=roll(r_f, mk_f),
+                       st=stats(grow(run(sel_b, series(src, lv, STRESS, TURN), STRESS, p))),
+                       ht=stats(grow(run(sel_b, series(src, lv, FEE, HI_TURN), FEE, p))),
+                       late=stats(grow(run(sel_b, net, FEE, late))) if filt else None)
+    q0 = res[VAR[0][0]]
+
+    print("LOW VOLATILITY on Ken French tenths (value weighted, survivorship free): lowest variance tenth and lowest beta tenth of all US stocks, long only, monthly.")
+    print("French files used: Portfolios_Formed_on_VAR (10 Portfolios Formed on Variance: total return variance over the last 60 days, re-sorted every month end) and")
+    print("  Portfolios_Formed_on_BETA (10 Portfolios Formed on Beta: Scholes-Williams beta on 60 months, re-sorted every June). Both start 1963-07, so the unseen half is 1976-now and the")
+    print(f"  'train' stretch 1963-07 to 1975-12 is only {len(sel_t) / 12:.1f} years. Nothing is tuned anywhere, so train is just one more window, not a tuning set. Plain quality (top operating profit tenth) is the in-house yardstick.")
+    print(f"Costs: every tenth {TURN:.0%} yearly one way turnover at {FEE:.1%} a side = {TURN * 2 * FEE:.2%} a year. The variance tenth is re-sorted monthly, so its real turnover is surely higher than a yearly sort: the '100% turnover' column")
+    print(f"  charges {HI_TURN:.0%} a year ({HI_TURN * 2 * FEE:.1%} a year) as a sensitivity, not a pick. Stress = {STRESS:.1%} a side. Trend filter = hold the tenth only while the MARKET (Mkt-RF + RF cumulative) is above its 10 month")
+    print(f"  average, else T-bills (French RF); month end t decides month t+1; {FEE:.1%} fee on each switch; no leverage. Late = signal acts one month later.")
+    print(f"1.5x rows ({LEV}x fixed from Frazzini and Pedersen's logic, not tuned): 1.5 x tenth return - 0.5 x (T-bill + {MARGIN:.0%} a year margin), turnover cost x1.5, re-levered to 1.5x every month end paying {FEE:.1%} a side on the dollars moved. No fund fee (margin on the tenth itself).")
+    print("  Monthly resolution misses intramonth drops, so every worst drop reads a little kinder than a daily one. Sharpe = excess over French RF, annualised, blind.\n")
+    print(f"Market hold: BLIND {mh[0]:.1%} / {mh[1]:.0%}, Sharpe {sharpe(sel_b, mk_b):.2f}.  Full {sel_f[0]} to {sel_f[-1]}: {mfull[0]:.1%} / {mfull[1]:.0%}.  Train {sel_t[0]} to {sel_t[-1]}: {mtrain[0]:.1%} / {mtrain[1]:.0%}.\n")
+
+    print(f"{'BLIND 1976-now':46}{'BLIND':>10}{'vs hold':>9}{'vs plain Q':>11}{'Sharpe':>7} | decades won vs hold / Q (of {len(dl)}) | {'0.5% stress':>11} | {'100% turn':>10} | {'1 mo late':>10} | bar: vs hold / vs plain Q")
+    for nm, src, filt, lv in VAR:
+        x = res[nm]
+        b = x["b"]
+        w = [sum(x["dd"][d] > h[d] for d in dl) for h in (mh_dec, q0["dd"])]
+        x["w"], x["v"] = w, [verdict(b[0], b[1], w[0], mh, dl), verdict(b[0], b[1], w[1], q0["b"], dl)]
+        late_s = f"{x['late'][0]:.1%}/{x['late'][1]:.0%}" if x["late"] else "n/a"
+        print(f"{nm:46}{b[0]:>5.1%}/{b[1]:.0%}{b[0] - mh[0]:>+9.1%}{b[0] - q0['b'][0]:>+11.1%}{x['sh']:>7.2f} | {w[0]}/{len(dl)}   {w[1]}/{len(dl)}{'':23}| {x['st'][0]:>6.1%}/{x['st'][1]:.0%} | {x['ht'][0]:>5.1%}/{x['ht'][1]:.0%} | {late_s:>10} | "
+              + " / ".join("PASS" if y else "FAIL" for y in x["v"]))
+    print(f"{'Market hold':46}{mh[0]:>5.1%}/{mh[1]:.0%}{'':9}{'':11}{sharpe(sel_b, mk_b):>7.2f}")
+
+    print(f"\n{'ALL WINDOWS':46}{'train ' + sel_t[0] + ' to 1975':>26}{'full ' + sel_f[0] + ' to now':>26} | decades won vs hold (of {len(dlf)}) | rolling 10 year windows beating market, worst gap")
+    print(f"{'Market hold':46}{mtrain[0]:>17.1%}/{mtrain[1]:.0%}{mfull[0]:>17.1%}/{mfull[1]:.0%}")
+    for nm, src, filt, lv in VAR:
+        x = res[nm]
+        wf = sum(x["fdd"][d] > mh_fdec[d] for d in dlf)
+        x["wf"] = wf
+        print(f"{nm:46}{x['tr'][0]:>17.1%}/{x['tr'][1]:.0%}{x['full'][0]:>17.1%}/{x['full'][1]:.0%} | {wf}/{len(dlf)}{'':26}| {x['roll'][0]:.0%} of {x['roll'][2]} windows, worst {x['roll'][1]:+.1%} a year")
+
+    print(f"\n{'blind decade CAGR':46}" + "".join(f"{d:>8}" for d in dl))
+    print(f"{'Market hold':46}" + "".join(f"{mh_dec[d]:>8.1%}" for d in dl))
+    for nm, *_ in VAR:
+        print(f"{nm:46}" + "".join(f"{res[nm]['dd'][d]:>8.1%}" for d in dl))
+    print(f"\n{'full span decade CAGR (1960s from 1963-07)':46}" + "".join(f"{d:>8}" for d in dlf))
+    print(f"{'Market hold':46}" + "".join(f"{mh_fdec[d]:>8.1%}" for d in dlf))
+    for nm, *_ in VAR:
+        print(f"{nm:46}" + "".join(f"{res[nm]['fdd'][d]:>8.1%}" for d in dlf))
+
+    print(f"\n{'CRASH YEARS, return / worst drop inside the year':46}{'2008':>16}{'2022':>16}{'2000-2002':>16}")
+    def line(nm, sel, r):
+        a, b = year(sel, r, "2008"), year(sel, r, "2022")
+        xs = [x for m, x in zip(sel, r) if "2000" <= m[:4] <= "2002"]
+        c = (grow(xs)[-1] - 1, stats(grow(xs))[1])
+        print(f"{nm:46}{a[0]:>9.1%}/{a[1]:.0%}{b[0]:>9.1%}/{b[1]:.0%}{c[0]:>9.1%}/{c[1]:.0%}")
+    line("Market hold", sel_b, mk_b)
+    for nm, *_ in VAR:
+        line(nm, sel_b, res[nm]["r"])
+
+    print(f"\n{'RANDOM BASELINE, 300 random in/out schedules':46} same months in the market, same number of switches, same tenth returns")
+    for nm, src, filt, lv in VAR:
+        if not filt:
+            continue
+        net = res[nm]["net"]
+        gin = [math.log(max(1 + net[m], 1e-6)) for m in sel_b]; gout = [math.log(1 + rf[m]) for m in sel_b]
+        p = [pos[m] for m in sel_b]
+        (rc, rd), rnd, kk = rand_base(p, gin, gout, len(sel_b) / 12, draws=300, seed=7)
+        assert abs(rc - res[nm]["b"][0]) < 5e-4, (nm, rc, res[nm]["b"][0])
+        beat = sum(x[0] < rc for x in rnd) / len(rnd); both = sum(x[0] >= rc and x[1] <= rd for x in rnd)
+        mean_c = sum(x[0] for x in rnd) / len(rnd)
+        print(f"{nm:46} in market {sum(p) / len(p):.0%} of months, {kk} switches; beat {beat:.0%} of random on CAGR, {both} matched both CAGR and drop; random mean {mean_c:.1%}")
+
+    print("\nVERDICT MODEL (bar = more CAGR than the comparison, drop no bigger, most of 6 blind decades):")
+    for nm, *_ in VAR[1:]:
+        x = res[nm]
+        print(f"  {nm:46} vs hold {'PASS' if x['v'][0] else 'FAIL'}   vs plain quality {'PASS' if x['v'][1] else 'FAIL'}")
+    print()
+    lowvol_real()
+
+
+def lowvol_real():
+    """The same rows on real funds: USMV and SPLV against SPY from USMV's first day, BIL as bills, daily adjusted closes."""
+    from datetime import date
+    syms = ["USMV", "SPLV", "SPY", "BIL"]
+    px = {}
+    for s in syms:
+        px[s] = {datetime.fromtimestamp(x[0], timezone.utc).strftime("%Y-%m-%d"): x[4] for x in fetch_yahoo(s)}
+        assert px[s], "no Yahoo data for " + s
+    ds = sorted(set.intersection(*[set(px[s]) for s in syms]))
+    r = {s: [px[s][ds[i]] / px[s][ds[i - 1]] - 1 for i in range(1, len(ds))] for s in syms}
+    days = ds[1:]
+    spy = px["SPY"]
+    last = {}
+    for d in sorted(spy):
+        last[d[:7]] = spy[d]
+    mon = sorted(last)
+    sg = {}
+    for i, m in enumerate(mon):
+        sg[m] = i >= 9 and last[m] > sum(last[x] for x in mon[i - 9:i + 1]) / 10
+    prevm = {mon[i]: mon[i - 1] for i in range(1, len(mon))}
+    on = [sg.get(prevm.get(d[:7]), False) for d in days]
+    on_late = [sg.get(prevm.get(prevm.get(d[:7])), False) for d in days]
+    MARGIN, LEV = 0.01, 1.5
+
+    def trend(e, sw):
+        out, prev = [], sw[0]
+        for i in range(len(days)):
+            x = e[i] if sw[i] else r["BIL"][i]
+            if sw[i] != prev:
+                x = (1 + x) * (1 - FEE) - 1
+                prev = sw[i]
+            out.append(x)
+        return out
+    def lever(e):
+        """1.5x on margin at BIL + 1%, drifts through the month, re-levered each month end paying FEE on the dollars moved."""
+        out, p, debt, cur, prev_eq = [], LEV, LEV - 1, None, 1.0
+        for i, d in enumerate(days):
+            if d[:7] != cur:
+                if cur is not None:
+                    eq = p - debt
+                    eq -= FEE * abs(LEV * eq - p)
+                    p, debt = LEV * eq, (LEV - 1) * eq
+                cur = d[:7]
+            p *= 1 + e[i]
+            debt *= 1 + r["BIL"][i] + MARGIN / 252
+            out.append((p - debt) / prev_eq - 1)
+            prev_eq = p - debt
+        return out
+    ROWS = [("SPY hold", r["SPY"]), ("USMV, 1x", r["USMV"]), ("SPLV, 1x", r["SPLV"]),
+            ("USMV + SPY 10 month trend filter, 1x", trend(r["USMV"], on)), ("Same, signal one month late", trend(r["USMV"], on_late)),
+            ("USMV at 1.5x, margin at BIL + 1%", lever(r["USMV"])), ("SPLV at 1.5x, margin at BIL + 1%", lever(r["SPLV"]))]
+    d0 = date.fromisoformat(ds[0]); yrs = (date.fromisoformat(days[-1]) - d0).days / 365.25
+    def st(x):
+        cv, pk, dd = 1.0, 1.0, 0.0
+        for v in x:
+            cv *= 1 + v
+            pk = max(pk, cv)
+            dd = max(dd, 1 - cv / pk)
+        return cv ** (1 / yrs) - 1, dd
+    def sh(x):
+        ex = [a - b for a, b in zip(x, r["BIL"])]
+        mu = sum(ex) / len(ex)
+        return mu * 252 / ((sum((a - mu) ** 2 for a in ex) / (len(ex) - 1)) ** 0.5 * 252 ** 0.5)
+    def cal(x):
+        out = {}
+        for d, v in zip(days, x):
+            out[d[:4]] = out.get(d[:4], 1.0) * (1 + v)
+        return {y: v - 1 for y, v in out.items()}
+    ys = sorted(cal(r["SPY"]))
+    C = {nm: cal(x) for nm, x in ROWS}
+    S = {nm: st(x) for nm, x in ROWS}
+    spy_s = S["SPY hold"]
+    print(f"REAL FUND CHECK, {date.today()}. USMV (iShares MSCI USA Min Vol), SPLV (Invesco S&P 500 Low Volatility), SPY, BIL (bills), Yahoo daily adjusted close (dividends in, fund fees in), {ds[0]} (USMV's first day) to {days[-1]}, {yrs:.1f} years.")
+    print(f"SPLV also trades from 2011-05 but is cut to the common window. Trend filter on SPY month ends against its 10 month average, applied to the next month's days, {FEE:.1%} on each switch, BIL when out. 1.5x rows borrow at BIL + {MARGIN:.0%},")
+    print(f"drift through the month, re-lever every month end paying {FEE:.1%} on the dollars moved. Worst drop is peak to trough on daily closes, so it reads harsher than the monthly French rows. Years 2011 (from October) and the last year are partial.")
+    print(f"{'':42}{'CAGR / worst drop':>20}{'vs SPY':>9}{'Sharpe':>7} | years won vs SPY (of {len(ys)}) | bar vs SPY | 2022")
+    for nm, x in ROWS:
+        c = S[nm]
+        w1 = sum(C[nm][y] > C["SPY hold"][y] for y in ys)
+        okb = c[0] > spy_s[0] and c[1] <= spy_s[1] + 1e-9 and w1 > len(ys) / 2
+        tag = "reference" if nm == "SPY hold" else ("PASS" if okb else "FAIL")
+        print(f"{nm:42}{c[0]:>12.1%} / {c[1]:.1%}{c[0] - spy_s[0]:>+9.1%}{sh(x):>7.2f} | {w1:>2}{'':22}| {tag:9} | {C[nm].get('2022', float('nan')):+.1%}")
+    print(f"\n{'calendar year returns':42}" + "".join(f"{y:>8}" for y in ys))
+    for nm, x in ROWS:
+        print(f"{nm:42}" + "".join(f"{C[nm][y]:>+8.1%}" for y in ys))
 
 
 def legs(on, idn, bill, p_on, p_id, fee, gap=0.0):
@@ -2445,6 +2713,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--quality" in sys.argv:
         quality()
+        sys.exit()
+    if "--lowvol" in sys.argv:
+        lowvol()
         sys.exit()
     if "--indexes" in sys.argv:
         trend_indexes()
