@@ -1,5 +1,9 @@
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
+- [ ] Stripe $0 coupon checkout end to end on Epiphany (code SGFJ5Z8B, 3 uses): needs a signed-in account, then confirm Pro unlocks and the webhook delivers (`/stripe-audit`). Never tested live.
+- [ ] Promo code box on Sparkjar, Healstack and Talli checkouts (`allow_promotion_codes`), so each can be tested at $0. Only Epiphany has it.
+- [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
+- [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
 - [ ] Better event filtering on the map
 - [ ] More info on event tap
