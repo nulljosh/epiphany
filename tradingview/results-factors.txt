@@ -1,0 +1,50 @@
+KEN FRENCH LONG-ONLY FACTOR TILTS. Monthly, value weighted, survivorship free (CRSP). Top or bottom tenth of all US stocks sorted on each trait.
+Market = Mkt-RF + RF. Blind 1976-01 to 2026-08. No settings were picked: every rule below is fixed in advance, so there is no train half to tune on.
+Costs: value, size, quality, investment rebalance once a year in the French construction, assumed 30% yearly turnover, charged 0.1% a side
+  = 0.06% a year. Momentum keeps the existing 100% a month turnover, 0.1% a month. Stress row: 0.5% a side on the same turnover.
+Stack = hold the tenth at 2x only while the MARKET is above its 10 month average (month-end levels, decided at month end, earns the next month), else T-bills (French RF).
+  2x month = 2 x tenth return - RF - 0.9%/12 expense - 0.8%/12 real-fund gap. Costs double at 2x. 0.1% fee on every switch. This is monthly and coarser than a daily-reset fund.
+  Monthly resolution misses intramonth drops, so every worst drop here reads a little kinder than a daily one.
+
+Market hold: BLIND 12.3% / 50%   Trend 2x on the market (monthly model): BLIND 14.3% / 51%, decades won vs hold 3/6
+  (the daily 200 day Trend 2x in --leverage made 14.4% / 44%; the 10 month rule on a monthly series is a different, coarser rule)
+
+UNLEVERED, long only                       series | full span       factor       market |  BLIND factor       market | decades | 0.5% stress | bar vs hold / vs Trend 2x
+Value (top book-to-market tenth)          1926-08 |            12.4%/91%   10.4%/84% |    15.8%/70%   12.3%/50% | 4/6     |  15.5%/70% | FAIL / FAIL
+Size (smallest tenth)                     1926-08 |            12.1%/89%   10.4%/84% |    12.3%/62%   12.3%/50% | 2/6     |  12.1%/62% | FAIL / FAIL
+Quality (top operating profit tenth)      1963-07 |            12.0%/52%   10.9%/50% |    13.6%/41%   12.3%/50% | 4/6     |  13.4%/41% | PASS / FAIL
+Investment (lowest asset growth tenth)    1963-07 |            12.9%/56%   10.9%/50% |    14.5%/56%   12.3%/50% | 4/6     |  14.2%/57% | FAIL / FAIL
+Momentum (top tenth, prior 12-2)          1927-01 |            15.5%/77%   10.3%/84% |    15.9%/52%   12.3%/50% | 5/6     |  10.5%/63% | FAIL / FAIL
+
+blind decade CAGR, unlevered               1970s   1980s   1990s   2000s   2010s   2020s
+Market                                     13.2%   16.9%   18.0%   -0.4%   13.6%   15.3%
+Value (top book-to-market tenth)           27.0%   23.5%   17.2%    7.2%    8.0%   21.6%
+Size (smallest tenth)                      37.1%   10.5%   13.2%    8.9%    8.6%   11.4%
+Quality (top operating profit tenth)       12.5%   16.1%   18.2%    3.3%   14.7%   18.8%
+Investment (lowest asset growth tenth)     32.5%   15.9%   18.1%    4.1%   12.0%   16.8%
+Momentum (top tenth, prior 12-2)           31.7%   17.3%   27.4%   -1.0%   13.9%   19.2%
+
+STACKED on Trend 2x (market above 10 month avg)    series |      full span   market T2x |   BLIND stack  vs hold   vs T2x | decades hold / T2x | random schedules (300): beaten, matched both | bar vs hold / vs Trend 2x
+Market (Trend 2x itself)                          1926-08 |    13.1%/74%   13.1%/74% |    14.3%/51%    +2.0%    +0.0% | 3/6  0/6   | beat 70%, 0 matched, 76 switches | FAIL / itself
+Value (top book-to-market tenth)                  1926-08 |    14.1%/99%   13.1%/74% |    20.9%/71%    +8.6%    +6.6% | 5/6  5/6   | beat 92%, 1 matched, 76 switches | FAIL / FAIL
+Size (smallest tenth)                             1926-08 |    14.2%/98%   13.1%/74% |    13.6%/83%    +1.3%    -0.7% | 3/6  3/6   | beat 74%, 38 matched, 76 switches | FAIL / FAIL
+Quality (top operating profit tenth)              1963-07 |    13.9%/56%   13.1%/51% |    14.6%/56%    +2.3%    +0.3% | 3/6  3/6   | beat 38%, 4 matched, 76 switches | FAIL / FAIL
+Investment (lowest asset growth tenth)            1963-07 |    14.2%/61%   13.1%/51% |    15.8%/61%    +3.5%    +1.5% | 3/6  3/6   | beat 54%, 10 matched, 76 switches | FAIL / FAIL
+Momentum (top tenth, prior 12-2)                  1927-01 |    18.6%/85%   13.2%/74% |    17.4%/59%    +5.0%    +3.0% | 4/6  3/6   | beat 63%, 0 matched, 76 switches | FAIL / FAIL
+
+blind decade CAGR, stacked                         1970s   1980s   1990s   2000s   2010s   2020s
+Market hold                                        13.2%   16.9%   18.0%   -0.4%   13.6%   15.3%
+Market (Trend 2x itself)                            8.2%   15.8%   18.4%   10.5%   13.2%   17.4%
+Value (top book-to-market tenth)                   25.9%   24.2%   22.7%   24.8%    5.3%   30.0%
+Size (smallest tenth)                              39.1%    6.9%   19.2%   15.3%    6.2%   10.9%
+Quality (top operating profit tenth)                7.7%   13.3%   17.2%   11.3%   13.8%   23.4%
+Investment (lowest asset growth tenth)             31.6%   14.4%   19.9%   17.0%    8.4%   12.9%
+Momentum (top tenth, prior 12-2)                   25.6%   12.4%   36.5%   10.2%   14.7%    8.9%
+
+TRADABILITY (names from memory, not checked against a live listing)
+  Value (top book-to-market tenth)         VTV or IWD (Russell 1000 Value, much milder than the top tenth); RPV is purer. 2x: no 2x fund; 2x only by margin.
+  Size (smallest tenth)                    IWC (micro cap) is the match; IWM or VB are small cap, not micro. 2x: UWM is 2x Russell 2000 (TNA, URTY 3x), not micro cap.
+  Quality (top operating profit tenth)     QUAL (MSCI USA Quality), SPHQ. 2x: no 2x fund; 2x only by margin.
+  Investment (lowest asset growth tenth)   no clean fund; nearest are QUAL or the Dimensional and Avantis profitability tilts. 2x: no 2x fund; 2x only by margin.
+  Momentum (top tenth, prior 12-2)         MTUM, PDP. 2x: no 2x fund; 2x only by margin.
+  Market: SPY, and SSO is the 2x fund Trend 2x already uses.

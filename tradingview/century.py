@@ -13,6 +13,7 @@ in tradingview/data/.
     python3 tradingview/century.py            # full run, writes nothing, print to stdout
     python3 tradingview/century.py --stocks   # also re-grade edge.py's stock momentum lead, halves split
     python3 tradingview/century.py --leverage # S&P above its average at L x leverage, daily since 1928; French momentum deciles
+    python3 tradingview/century.py --factors  # Ken French long-only factor tilts (value, size, quality, investment, momentum), alone and stacked on Trend 2x, graded blind
     python3 tradingview/century.py --robust   # random baseline, execution, fees and crashes for the leveraged pick
     python3 tradingview/century.py --indexes  # the same fixed 2x trend rule on Nasdaq 100, TSX, Nikkei, DAX, Dow, FTSE with dividends
     python3 tradingview/century.py --out     # what Trend 2x holds when out: bills vs Treasuries, gold, 2x bonds, each with its own trend filter
@@ -533,6 +534,141 @@ def leverage():
             sel = [m for m in ms if m[:3] + "0s" == d and m >= "1976-01"]
             out.append(mstats(grow([f(m) for m in sel]))[0])
         print(f"  {n:24}" + "".join(f"{x:>8.1%}" for x in out))
+
+FACTOR_ETFS = [
+    ("Value (top book-to-market tenth)", "VTV or IWD (Russell 1000 Value, much milder than the top tenth); RPV is purer", "no 2x fund; 2x only by margin"),
+    ("Size (smallest tenth)", "IWC (micro cap) is the match; IWM or VB are small cap, not micro", "UWM is 2x Russell 2000 (TNA, URTY 3x), not micro cap"),
+    ("Quality (top operating profit tenth)", "QUAL (MSCI USA Quality), SPHQ", "no 2x fund; 2x only by margin"),
+    ("Investment (lowest asset growth tenth)", "no clean fund; nearest are QUAL or the Dimensional and Avantis profitability tilts", "no 2x fund; 2x only by margin"),
+    ("Momentum (top tenth, prior 12-2)", "MTUM, PDP", "no 2x fund; 2x only by margin"),
+]
+
+
+def factors():
+    """Long-only Ken French factor tilts: top/bottom value-weighted tenth, monthly, graded blind, alone and stacked on Trend 2x."""
+    import math
+    ff = french("F-F_Research_Data_Factors_CSV.zip", 0)
+    mom = french("10_Portfolios_Prior_12_2_CSV.zip", 0)
+    def tenth(name, hi):
+        return {m: v[-1 if hi else len(v) - 10] for m, v in french(name, 0).items()}
+    TURN, SIDE, MOMT, STRESS = 0.30, FEE, 1.0, 0.005  # yearly one-way turnover, fee per side, momentum dollars traded a month, stress fee per side
+    F = {
+        "Value (top book-to-market tenth)": (tenth("Portfolios_Formed_on_BE-ME_CSV.zip", True), TURN / 12 * 2),
+        "Size (smallest tenth)": (tenth("Portfolios_Formed_on_ME_CSV.zip", False), TURN / 12 * 2),
+        "Quality (top operating profit tenth)": (tenth("Portfolios_Formed_on_OP_CSV.zip", True), TURN / 12 * 2),
+        "Investment (lowest asset growth tenth)": (tenth("Portfolios_Formed_on_INV_CSV.zip", False), TURN / 12 * 2),
+        "Momentum (top tenth, prior 12-2)": ({m: v[9] for m, v in mom.items()}, MOMT),
+    }
+    for nm, (s, _) in F.items():
+        assert all(x > -0.9 for x in s.values()), nm
+    ms = sorted(ff)
+    mk = {m: ff[m][0] + ff[m][3] for m in ms}
+    rf = {m: ff[m][3] for m in ms}
+    GAPM = (SWAP_EXP + GAP) / 12  # 2x fund expense plus the measured real-fund gap, a month
+    lev, sig = 1.0, []
+    L = []
+    for m in ms:
+        lev *= 1 + mk[m]
+        L.append(lev)
+        sig.append(len(L) >= 10 and lev > sum(L[-10:]) / 10)
+    pos = {ms[i]: sig[i - 1] for i in range(1, len(ms))}  # month-end t decides month t+1
+    ms = ms[1:]
+
+    def stats(cv):
+        yrs, peak, mdd = (len(cv) - 1) / 12, cv[0], 0.0
+        for v in cv:
+            peak = max(peak, v)
+            mdd = max(mdd, 1 - v / peak)
+        return (cv[-1] / cv[0]) ** (1 / yrs) - 1, mdd
+    def grow(xs):
+        cv = [1.0]
+        for x in xs:
+            cv.append(cv[-1] * (1 + x))
+        return cv
+    def decs(sel, rets):
+        out = {}
+        for m, x in zip(sel, rets):
+            out.setdefault(m[:3] + "0s", []).append(x)
+        return {d: grow(xs)[-1] ** (12 / len(xs)) - 1 for d, xs in out.items() if len(xs) >= 36}
+    def stack(sel, fin):
+        """Month by month: 2x model while the market is above its 10 month average, bills otherwise, house fee on each switch."""
+        eq, prev, rets = 1.0, pos[sel[0]], []
+        for m in sel:
+            r = fin[m] if pos[m] else rf[m]
+            if pos[m] != prev:
+                r = (1 + r) * (1 - FEE) - 1
+                prev = pos[m]
+            rets.append(r)
+        return rets
+    def verdict(c, d, won, h, hd):
+        return c > h[0] and d <= h[1] and won > len(hd) / 2
+    def fin_of(f, tm, fee=SIDE):
+        return {m: 2 * (f[m] - tm * fee) - rf[m] - GAPM for m in f}
+
+    split = "1976-01"
+    print("KEN FRENCH LONG-ONLY FACTOR TILTS. Monthly, value weighted, survivorship free (CRSP). Top or bottom tenth of all US stocks sorted on each trait.")
+    print(f"Market = Mkt-RF + RF. Blind {split} to {ms[-1]}. No settings were picked: every rule below is fixed in advance, so there is no train half to tune on.")
+    print(f"Costs: value, size, quality, investment rebalance once a year in the French construction, assumed {TURN:.0%} yearly turnover, charged {SIDE:.1%} a side")
+    print(f"  = {TURN * 2 * SIDE:.2%} a year. Momentum keeps the existing {MOMT:.0%} a month turnover, {MOMT * SIDE:.1%} a month. Stress row: {STRESS:.1%} a side on the same turnover.")
+    print(f"Stack = hold the tenth at 2x only while the MARKET is above its 10 month average (month-end levels, decided at month end, earns the next month), else T-bills (French RF).")
+    print(f"  2x month = 2 x tenth return - RF - {SWAP_EXP:.1%}/12 expense - {GAP:.1%}/12 real-fund gap. Costs double at 2x. {FEE:.1%} fee on every switch. This is monthly and coarser than a daily-reset fund.")
+    print("  Monthly resolution misses intramonth drops, so every worst drop here reads a little kinder than a daily one.\n")
+
+    sel_b = [m for m in ms if m >= split]
+    mk_b = [mk[m] for m in sel_b]
+    mh_b, mh_dec = stats(grow(mk_b)), decs(sel_b, mk_b)
+    t2m_b = stack(sel_b, fin_of(mk, 0.0))
+    t2_b, t2_dec = stats(grow(t2m_b)), decs(sel_b, t2m_b)
+    dl = sorted(mh_dec)
+    print(f"Market hold: BLIND {mh_b[0]:.1%} / {mh_b[1]:.0%}   Trend 2x on the market (monthly model): BLIND {t2_b[0]:.1%} / {t2_b[1]:.0%}, decades won vs hold {sum(t2_dec[d] > mh_dec[d] for d in dl)}/{len(dl)}")
+    print(f"  (the daily 200 day Trend 2x in --leverage made 14.4% / 44%; the 10 month rule on a monthly series is a different, coarser rule)\n")
+
+    rows_out = []
+    print(f"{'UNLEVERED, long only':40}{'series':>9} | {'full span':>8}{'factor':>13}{'market':>13} | {'BLIND factor':>13}{'market':>13} | decades | {'0.5% stress':>11} | bar vs hold / vs Trend 2x")
+    store = {}
+    for nm, (f, tm) in F.items():
+        fm = sorted(f)
+        full = [m for m in ms if m in f]
+        net = {m: f[m] - tm * SIDE for m in f}
+        a = stats(grow([net[m] for m in full])); mfull = stats(grow([mk[m] for m in full]))
+        sel = [m for m in sel_b if m in f]
+        r = [net[m] for m in sel]
+        b, dd = stats(grow(r)), decs(sel, r)
+        won = sum(dd[d] > mh_dec[d] for d in dl); won2 = sum(dd[d] > t2_dec[d] for d in dl)
+        stx = stats(grow([f[m] - tm * STRESS for m in sel]))
+        v1, v2 = verdict(b[0], b[1], won, mh_b, dl), verdict(b[0], b[1], won2, t2_b, dl)
+        print(f"{nm:40}{full[0]:>9} | {'':8}{a[0]:>8.1%}/{a[1]:.0%}{mfull[0]:>8.1%}/{mfull[1]:.0%} | {b[0]:>8.1%}/{b[1]:.0%}{mh_b[0]:>8.1%}/{mh_b[1]:.0%} | {won}/{len(dl)}     | {stx[0]:>6.1%}/{stx[1]:.0%} | {'PASS' if v1 else 'FAIL'} / {'PASS' if v2 else 'FAIL'}")
+        store[nm] = (dd, b, v1)
+    print(f"\n{'blind decade CAGR, unlevered':40}" + "".join(f"{d:>8}" for d in dl))
+    print(f"{'Market':40}" + "".join(f"{mh_dec[d]:>8.1%}" for d in dl))
+    for nm in F:
+        print(f"{nm:40}" + "".join(f"{store[nm][0][d]:>8.1%}" for d in dl))
+
+    print(f"\n{'STACKED on Trend 2x (market above 10 month avg)':48}{'series':>9} | {'full span':>14}{'market T2x':>13} | {'BLIND stack':>13}{'vs hold':>9}{'vs T2x':>9} | decades hold / T2x | random schedules (300): beaten, matched both | bar vs hold / vs Trend 2x")
+    cases = [("Market (Trend 2x itself)", mk, 0.0)] + [(nm, F[nm][0], F[nm][1]) for nm in F]
+    for nm, f, tm in cases:
+        fin = fin_of(f, tm)
+        full = [m for m in ms if m in f]
+        sf = stats(grow(stack(full, fin))); tf = stats(grow(stack(full, fin_of(mk, 0.0))))
+        sel = [m for m in sel_b if m in f]
+        r = stack(sel, fin)
+        b, dd = stats(grow(r)), decs(sel, r)
+        w1 = sum(dd[d] > mh_dec[d] for d in dl); w2 = sum(dd[d] > t2_dec[d] for d in dl)
+        v1, v2 = verdict(b[0], b[1], w1, mh_b, dl), verdict(b[0], b[1], w2, t2_b, dl)
+        gin = [math.log(max(1 + fin[m], 1e-6)) for m in sel]; gout = [math.log(1 + rf[m]) for m in sel]
+        (rc, rd), rnd, k = rand_base([pos[m] for m in sel], gin, gout, len(sel) / 12, draws=300, seed=7)
+        beat = sum(x[0] < rc for x in rnd) / len(rnd); both = sum(x[0] >= rc and x[1] <= rd for x in rnd)
+        assert abs(rc - b[0]) < 5e-4, (nm, rc, b[0])
+        print(f"{nm:48}{full[0]:>9} | {sf[0]:>8.1%}/{sf[1]:.0%} {tf[0]:>7.1%}/{tf[1]:.0%} | {b[0]:>8.1%}/{b[1]:.0%} {b[0] - mh_b[0]:>+8.1%} {b[0] - t2_b[0]:>+8.1%} | {w1}/{len(dl)}  {w2}/{len(dl)}   | beat {beat:.0%}, {both} matched, {k} switches | {'PASS' if v1 else 'FAIL'} / {('PASS' if v2 else 'FAIL') if f is not mk else 'itself'}")
+        store["S" + nm] = dd
+    print(f"\n{'blind decade CAGR, stacked':48}" + "".join(f"{d:>8}" for d in dl))
+    print(f"{'Market hold':48}" + "".join(f"{mh_dec[d]:>8.1%}" for d in dl))
+    for nm, f, tm in cases:
+        print(f"{nm:48}" + "".join(f"{store['S' + nm][d]:>8.1%}" for d in dl))
+    print("\nTRADABILITY (names from memory, not checked against a live listing)")
+    for nm, etf, two in FACTOR_ETFS:
+        print(f"  {nm:40} {etf}. 2x: {two}.")
+    print("  Market: SPY, and SSO is the 2x fund Trend 2x already uses.")
 
 
 def legs(on, idn, bill, p_on, p_id, fee, gap=0.0):
@@ -1608,6 +1744,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--leverage" in sys.argv:
         leverage()
+        sys.exit()
+    if "--factors" in sys.argv:
+        factors()
         sys.exit()
     if "--indexes" in sys.argv:
         trend_indexes()

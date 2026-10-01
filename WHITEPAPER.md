@@ -497,6 +497,45 @@ costs were before 2000, it loses to the market outright. Momentum in stocks is
 real but most of it goes to trading costs. Leveraged trend on the index is the
 rule we would run, sized so a 44% drop is survivable, with eyes open about 1987.
 
+**Factor tilts, long only.** One more place to look, again on Ken French's
+monthly returns (all US stocks, value weighted, survivorship free), now sorted
+on other traits: cheapest tenth on book to market, smallest tenth by size, most
+profitable tenth, the tenth that grows its assets least, and the momentum tenth
+from above (`century.py --factors`, raw output in
+`tradingview/results-factors.txt`). Five fixed bets, nothing tuned. The first
+four rebalance once a year in the French build, so we assumed 30% of the
+portfolio turns over a year and charged 0.1% a side, which comes to 0.06% a
+year. Momentum keeps its 50% a month. Graded 1976 to now against the market's
+12.3% a year and 50% worst drop: value 15.8% with a 70% drop, size 12.3% with
+62%, profitability 13.6% with 41%, investment 14.5% with 56%. Only
+profitability clears the bar: more than holding, a smaller drop, 4 of 6
+decades. Value and investment paid more but fell further, and the smallest tenth
+(micro caps, which nobody could buy at those weights) paid nothing extra.
+
+Then the stack: hold each tenth at 2x only while the market is above its 10
+month average, else T-bills, with the 0.9% fund cost and the 0.8% real-fund gap
+taken off. It runs month by month, so it is coarser than a daily fund and its
+worst drops read kinder than they would live. On that footing Trend 2x on the
+market made 14.3% with a 51% drop, a point worse than holding on the drop and
+only 3 of 6 decades, so even the base rule just misses the bar in this model.
+Stacked on a factor, everything but size beat it on return (value 20.9%,
+momentum 17.4%, investment 15.8%, profitability 14.6%, size 13.6%) and every row
+fell further (71%, 59%, 61%, 56% and 83% against 51%). Against 300 random in and
+out schedules of the same length, value beat 92% and the rest 38% to 74%, so the
+timing added little to most of them. None passes either bar.
+
+Tradability: the cash funds are VTV or IWD for value (milder than the top
+tenth), QUAL for profitability, MTUM for momentum, and IWC for micro caps (IWM
+and VB are small caps, not the same thing). Investment has no clean fund. A 2x
+fund exists only for small caps (UWM, 2x the Russell 2000, not the tenth we
+tested); the rest would be 2x by margin or not at all. Fund names are from
+memory, not checked against live listings, and we did not test QUAL against the
+real fund. These factors were well known by 1976, so the blind half is blind to
+us, not to the idea. Verdict: nothing beats Trend 2x, which stays the one rule
+we paper trade. Profitability at 1x through QUAL is the only new thing that
+clears the bar, and only against holding, so at most a small paper only sleeve
+beside Trend 2x, not a replacement.
+
 **A 24/7 sleeve: trend on crypto.** Joshua wants something that runs around the
 clock, and crypto is the obvious candidate, so we ran the same kind of test on
 Bitcoin (`century.py --crypto`, raw output in `tradingview/results-crypto.txt`).
@@ -585,6 +624,16 @@ files named above.
 | Same, 2x stocks when stocks win | 1976 to now | 12.3% / 61% | 12.1% / 55% | fail (bigger drop, 2 of 6 decades) |
 | Dual + own trend, no gold | 1976 to now | 9.4% / 33% | 12.1% / 55% | fail (less return, 1 of 6 decades) |
 | Same, 2x stocks, no gold | 1976 to now | 10.1% / 59% | 12.1% / 55% | fail (less return, bigger drop, 1 of 6 decades) |
+| Long only value, top book-to-market tenth, 0.06% a year costs | 1976 to now | 15.8% / 70% | 12.3% / 50% | fail (bigger drop) |
+| Long only size, smallest tenth | 1976 to now | 12.3% / 62% | 12.3% / 50% | fail (bigger drop, 2 of 6 decades) |
+| Long only profitability, top tenth | 1976 to now | 13.6% / 41% | 12.3% / 50% | pass vs holding (4 of 6 decades); fails vs Trend 2x on return |
+| Long only investment, lowest asset growth tenth | 1976 to now | 14.5% / 56% | 12.3% / 50% | fail (bigger drop) |
+| Trend 2x on the French market, 10 month average, monthly model | 1976 to now | 14.3% / 51% | 12.3% / 50% | fail (1 point bigger drop, 3 of 6 decades) |
+| Same, on the value tenth | 1976 to now | 20.9% / 71% | Trend 2x market 14.3% / 51% | fail (bigger drop) |
+| Same, on the size tenth | 1976 to now | 13.6% / 83% | 14.3% / 51% | fail (less return, bigger drop) |
+| Same, on the profitability tenth | 1976 to now | 14.6% / 56% | 14.3% / 51% | fail (bigger drop) |
+| Same, on the investment tenth | 1976 to now | 15.8% / 61% | 14.3% / 51% | fail (bigger drop) |
+| Same, on the momentum tenth | 1976 to now | 17.4% / 59% | 14.3% / 51% | fail (bigger drop) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -592,7 +641,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 
