@@ -1,0 +1,66 @@
+LEVERAGE FOR THE LONG RUN. Daily, 1929-01-02 to 2026-10-01. Pick on 1929-01-02..1975-12-31, blind 1976-01-02..2026-10-01.
+S&P: ^GSPC daily close plus Shiller monthly dividend yield / 252 a day (yield carried forward past mid 2023).
+T-bills: FRED TB3MS from 1934, Ken French RF before. 'bonds' = 10y Treasury priced from Shiller/FRED GS10 yields,
+monthly return spread evenly over the month's trading days. Fee 0.1% per dollar traded on every switch and rebalance.
+margin = L x index, borrow at T-bill + 1%, rebalanced monthly. etf = (L-1) daily-reset 2x fund (T-bill financing +
+0.9% expense) + (2-L) plain fund (0.09%), monthly rebalance. Signal at close, trade next close.
+
+S&P hold (no fees): train 7.7% / 84%   BLIND 12.1% / 55%
+
+model      L signal   out | train CAGR maxDD | BLIND CAGR maxDD | decades won (blind)
+margin   1.0   200d bills |       9.2%   52% |      10.3%   23% | 2/6
+margin   1.0   200d bonds |       9.2%   53% |      10.9%   33% | 2/6
+margin   1.0    10m bills |       8.5%   50% |      10.4%   33% | 1/6
+margin   1.0    10m bonds |       9.0%   48% |      11.7%   34% | 2/6
+margin  1.25   200d bills |      10.6%   61% |      11.4%   28% | 2/6
+margin  1.25   200d bonds |      10.5%   61% |      12.0%   38% | 2/6
+margin  1.25    10m bills |       9.6%   60% |      11.5%   41% | 1/6
+margin  1.25    10m bonds |      10.1%   58% |      12.8%   41% | 2/6
+margin   1.5   200d bills |      11.8%   68% |      12.4%   34% | 2/6
+margin   1.5   200d bonds |      11.8%   68% |      13.1%   43% | 2/6
+margin   1.5    10m bills |      10.6%   68% |      12.5%   49% | 2/6
+margin   1.5    10m bonds |      11.1%   66% |      13.9%   49% | 2/6
+margin   2.0   200d bills |      14.0%   80% |      14.3%   44% | 4/6
+margin   2.0   200d bonds |      14.0%   79% |      14.9%   51% | 4/6
+margin   2.0    10m bills |      12.4%   80% |      14.3%   64% | 2/6
+margin   2.0    10m bonds |      12.9%   79% |      15.6%   64% | 4/6
+etf      1.0   200d bills |       9.2%   52% |      10.2%   23% | 2/6
+etf      1.0   200d bonds |       9.1%   53% |      10.8%   33% | 2/6
+etf      1.0    10m bills |       8.4%   50% |      10.3%   33% | 1/6
+etf      1.0    10m bonds |       8.9%   48% |      11.6%   34% | 2/6
+etf     1.25   200d bills |      10.6%   61% |      11.5%   28% | 2/6
+etf     1.25   200d bonds |      10.6%   61% |      12.2%   38% | 2/6
+etf     1.25    10m bills |       9.6%   60% |      11.5%   40% | 1/6
+etf     1.25    10m bonds |      10.1%   58% |      12.8%   40% | 2/6
+etf      1.5   200d bills |      12.0%   68% |      12.8%   34% | 2/6
+etf      1.5   200d bonds |      12.0%   69% |      13.4%   42% | 2/6
+etf      1.5    10m bills |      10.6%   68% |      12.5%   46% | 2/6
+etf      1.5    10m bonds |      11.1%   67% |      13.8%   46% | 2/6
+etf      2.0   200d bills |      14.6%   80% |      15.1%   44% | 5/6
+etf      2.0   200d bonds |      14.5%   79% |      15.7%   50% | 4/6
+etf      2.0    10m bills |      12.4%   80% |      14.3%   59% | 2/6
+etf      2.0    10m bonds |      12.9%   80% |      15.7%   59% | 3/6
+
+Combos tried: 32 (16 per cost model). Pick rule: best train CAGR whose train worst drop is no bigger than hold's (84%).
+
+blind decade CAGR                    1970s   1980s   1990s   2000s   2010s   2020s
+S&P hold                              9.5%   17.4%   18.1%   -1.0%   13.5%   15.5%
+PICK margin (2.0, '200d', 'bills')    4.1%   24.9%   20.2%    2.5%   13.4%   16.4%   blind 14.3%/44%, won 4/6: CLEARS THE BAR
+PICK etf (2.0, '200d', 'bills')       5.7%   25.8%   20.9%    3.3%   13.9%   17.2%   blind 15.1%/44%, won 5/6: CLEARS THE BAR
+
+Hindsight check, any of the 32 combos clearing the bar on the blind half: [(2.0, '200d', 'bills', 'margin'), (2.0, '200d', 'bonds', 'margin'), (2.0, '200d', 'bills', 'etf'), (2.0, '200d', 'bonds', 'etf')]
+
+ETF MODEL VS REAL FUNDS, 2010 on, always invested (Yahoo adjusted closes)
+  SPY  1x  model 14.1% / worst 34%   real 14.2% / worst 34%   gap -0.0% a year
+  SSO  2x  model 23.7% / worst 59%   real 23.0% / worst 59%   gap +0.8% a year
+  UPRO 3x  model 31.1% / worst 77%   real 29.4% / worst 77%   gap +1.7% a year
+
+KEN FRENCH 10 PORTFOLIOS ON MOMENTUM (prior 12-2 months), value weighted, monthly, survivorship free (CRSP)
+  1927-01 to 2026-08. Market = Mkt-RF + RF. Turnover estimate: half the top decile replaced each month,
+  so 1.0 dollar traded per dollar held per month (sell + buy), charged at 0.1% (house fee) and at 0.5% (old spreads).
+  train 1927-1975: Market 8.3%/84%   Top decile, 0.1% cost 15.0%/77%   Top decile, 0.5% cost 9.6%/81%
+  BLIND 1976-now: Market 12.3%/50%   Top decile, 0.1% cost 15.9%/52%   Top decile, 0.5% cost 10.5%/63%
+  blind decade CAGR          1970s   1980s   1990s   2000s   2010s   2020s
+  Market                     13.2%   16.9%   18.0%   -0.4%   13.6%   15.3%
+  Top decile, 0.1% cost      31.7%   17.3%   27.4%   -1.0%   13.9%   19.2%
+  Top decile, 0.5% cost      25.7%   11.8%   21.5%   -5.7%    8.6%   13.7%
