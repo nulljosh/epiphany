@@ -1,0 +1,23 @@
+Index ETFs: 16 listed, 16 with daily history back to 2011. Fee 0.1%/side.
+Settings picked per stock on 2012-01-01..2019-12-31, scored blind 2020-01-01..now.
+
+strategy         median CAGR median maxDD beat Hold win rate avg trade  trades
+Hold                    9.9%          37%        0%       0%     0.00%       0
+Single MA               4.3%          28%        0%      25%     1.30%     522
+Two MA                  2.5%          33%        0%      43%     3.89%     143
+Three MA                2.2%          20%        0%      43%     1.49%     283
+Donchian                3.7%          25%        0%      52%     4.50%     115
+IBS                     7.9%          18%       19%      63%     0.47%    1835
+Supertrend+RSI          5.9%          28%        0%      48%     1.86%     390
+RSI2 pullback          -0.1%          31%        0%      68%     0.14%     836
+IBS + trend             2.6%          17%        0%      61%     0.14%    2188
+RSI2 exit high          0.6%          13%        0%      64%     0.16%     948
+Cumulative RSI          1.8%          14%        0%      67%     0.29%     764
+Double 7s               2.7%          33%        0%      71%     0.44%     807
+IBS + RSI2              1.8%          13%        0%      65%     0.23%     880
+D7 first up close       -0.0%          17%        0%      56%    -0.01%    1438
+D7 + RSI2               1.8%          12%        0%      66%     0.22%     776
+D7 + market             2.6%          31%        0%      72%     0.48%     786
+D7 stacked             -0.5%          13%        0%      54%    -0.08%     626
+Monica Kelly           -0.0%           0%        0%      33%     0.17%     387
+Monica all-in           1.6%          22%        0%      31%     0.14%    1393

@@ -6,6 +6,8 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
 
     python3 tradingview/backtest.py          # BTC
     python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
+    python3 tradingview/backtest.py etfs     # index and sector ETFs
+    python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
 """
 import json, os, re, statistics, sys, time, urllib.request
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -113,6 +115,22 @@ def supertrend(h, l, c, n, m):
     return up
 
 
+# ponytail: per-process global, the market (SPY above its 200 day average) aligned to the bars being scored.
+MARKET, MK = {}, []
+
+
+def set_market(m):
+    global MARKET
+    MARKET = m
+
+
+def market_up():
+    spy = fetch_yahoo("SPY")
+    c = [r[4] for r in spy]
+    a = sma(c, 200)
+    return {r[0] // 86400: a[i] is not None and c[i] > a[i] for i, r in enumerate(spy)}
+
+
 def signals(mode, p, o, h, l, c):
     """Return (enter, exit) boolean lists, same rules as epiphany.pine."""
     N = len(c)
@@ -158,6 +176,20 @@ def signals(mode, p, o, h, l, c):
         ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
         return ([t[i] is not None and r[i] is not None and c[i] > t[i] and ibs[i] < p[0] and r[i] < p[1] for i in range(N)],
                 [i > 0 and c[i] > h[i - 1] for i in range(N)])
+    if mode.startswith("D7"):  # Double 7s entry, tightened; p = (lookback,)
+        t, n, r = sma(c, 200), p[0], rsi(c, 2)
+        ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
+        mk = MK or [True] * N
+        base = [i >= n and t[i] is not None and c[i] > t[i] and c[i] <= min(c[i - n + 1:i + 1]) for i in range(N)]
+        up_day = [i > 0 and c[i] > c[i - 1] for i in range(N)]
+        if mode == "D7 first up close":
+            return base, up_day
+        if mode == "D7 + RSI2":
+            return [base[i] and r[i] is not None and r[i] < 10 for i in range(N)], [i > 0 and c[i] > h[i - 1] for i in range(N)]
+        if mode == "D7 + market":
+            return [base[i] and mk[i] for i in range(N)], [i >= n and c[i] >= max(c[i - n + 1:i + 1]) for i in range(N)]
+        if mode == "D7 stacked":
+            return [base[i] and mk[i] and r[i] is not None and r[i] < 10 and ibs[i] < 0.3 for i in range(N)], up_day
     if mode == "IBS + trend":
         t = sma(c, 200)
         ibs = [(c[i] - l[i]) / (h[i] - l[i]) if h[i] > l[i] else 0.5 for i in range(N)]
@@ -267,6 +299,10 @@ GRID = {
     "Cumulative RSI": [(20, 70), (35, 65), (35, 70)],
     "Double 7s": [(5,), (7,), (10,)],
     "IBS + RSI2": [(0.25, 10), (0.25, 20), (0.5, 10)],
+    "D7 first up close": [(5,), (7,), (10,)],
+    "D7 + RSI2": [(5,), (7,), (10,)],
+    "D7 + market": [(5,), (7,), (10,)],
+    "D7 stacked": [(5,), (7,), (10,)],
     "Monica Kelly": [()],   # as shipped, no tuning
     "Monica all-in": [()],  # same signal, whole account per trade
 }
@@ -294,6 +330,8 @@ def check():
 
 def evaluate(bars):
     """Pick each mode's setting on TRAIN, score it on TEST. Returns {mode: test metrics}."""
+    global MK
+    MK = [MARKET.get(r[0] // 86400, False) for r in bars] if MARKET else []
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
     tr, te = window(bars, *TRAIN), window(bars, *TEST)
     out = {}
@@ -303,16 +341,19 @@ def evaluate(bars):
     return out
 
 
-def universe():
+ETFS = ["SPY", "QQQ", "DIA", "IWM", "MDY", "EFA", "EEM", "XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"]
+
+
+def universe(syms=None, label="S&P 500"):
     # ponytail: today's S&P 500 members only, so dead and dropped companies are missing (survivorship bias flatters Hold).
-    syms = sp500()
+    syms = syms or sp500()
     with ThreadPoolExecutor(8) as ex:
         data = dict(zip(syms, ex.map(fetch_yahoo, syms)))
     cutoff = datetime(2011, 1, 1, tzinfo=timezone.utc).timestamp()
     ok = {s: b for s, b in data.items() if b and b[0][0] <= cutoff}
-    print(f"S&P 500: {len(syms)} listed, {len(ok)} with daily history back to 2011. Fee {FEE:.1%}/side.")
+    print(f"{label}: {len(syms)} listed, {len(ok)} with daily history back to 2011. Fee {FEE:.1%}/side.")
     print(f"Settings picked per stock on {TRAIN[0]}..{TRAIN[1]}, scored blind {TEST[0]}..now.\n")
-    with ProcessPoolExecutor() as ex:
+    with ProcessPoolExecutor(initializer=set_market, initargs=(market_up(),)) as ex:
         res = dict(zip(ok, ex.map(evaluate, ok.values(), chunksize=4)))
     hold = {s: r["Hold"] for s, r in res.items()}
     print(f"{'strategy':16}{'median CAGR':>12}{'median maxDD':>13}{'beat Hold':>10}{'win rate':>9}{'avg trade':>10}{'trades':>8}")
@@ -326,10 +367,32 @@ def universe():
         print(f"{mode:16}{med('cagr'):>12.1%}{med('mdd'):>13.0%}{beat:>10.0%}{win:>9.0%}{avg:>10.2%}{len(pooled):>8}")
 
 
+def btc_years():
+    """Each strategy's return per calendar year on BTC, settings picked on TRAIN, each year starts flat."""
+    bars = fetch()
+    o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
+    tr = window(bars, *TRAIN)
+    show = ["Hold", "Donchian", "Supertrend+RSI", "Two MA", "RSI2 pullback", "Double 7s", "D7 + market"]
+    picks = {m: max(GRID[m], key=lambda p: score(m, p, bars, (o, h, l, c), *tr)["cagr"]) for m in show}
+    print("BTC, return per calendar year (settings picked on 2012-2019; 2020+ is blind). Fee 0.1%/side.\n")
+    print(f"{'year':6}" + "".join(f"{m[:14]:>15}" for m in show))
+    for y in range(2012, datetime.now(timezone.utc).year + 1):
+        lo, hi = window(bars, f"{y}-01-01", f"{y}-12-31")
+        print(f"{y:<6}" + "".join(f"{score(m, picks[m], bars, (o, h, l, c), lo, hi)['mult'] - 1:>15.0%}" for m in show))
+    lo, hi = window(bars, "2012-01-01", "2099-01-01")
+    rows = [score(m, picks[m], bars, (o, h, l, c), lo, hi) for m in show]
+    print(f"{'wins':6}" + "".join(f"{(sum(x > 0 for x in r['rets']) / max(len(r['rets']), 1)):>15.0%}" for r in rows))
+    print(f"{'trades':6}" + "".join(f"{len(r['rets']):>15}" for r in rows))
+
+
 def main():
     check()
     if sys.argv[1:] == ["sp500"]:
         return universe()
+    if sys.argv[1:] == ["etfs"]:
+        return universe(ETFS, "Index ETFs")
+    if sys.argv[1:] == ["btc-years"]:
+        return btc_years()
     bars = fetch()
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
     tr, te = window(bars, *TRAIN), window(bars, *TEST)
