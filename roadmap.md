@@ -230,8 +230,8 @@ it is recorded here.
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
-- [x] Port Monica Kelly (`tradingview/monica-kelly-strategy.pine`) into the engine, rule for rule, and score it next to the Surf modes
-- [ ] Monica Kelly bricks itself: one early loss with no wins makes reward/risk 0, Kelly 0, and it never trades again (Pine and engine both). Fix in the Pine and in `server/api/broker/autopilot.js` if it shares the math
+- [x] Port Epiphany Kelly (`tradingview/epiphany-kelly-strategy.pine`) into the engine, rule for rule, and score it next to the Surf modes
+- [ ] Epiphany Kelly bricks itself: one early loss with no wins makes reward/risk 0, Kelly 0, and it never trades again (Pine and engine both). Fix in the Pine and in `server/api/broker/autopilot.js` if it shares the math
 - [x] More assets: every S&P 500 stock with history back to 2011 (`backtest.py sp500`), next to BTC
 - [ ] ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
 - [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years

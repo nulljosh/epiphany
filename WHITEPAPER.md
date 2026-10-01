@@ -86,7 +86,7 @@ Kelly's inputs mean little when price is not trending either way.
 - **Audit**: a full per symbol trade log is written on every run.
 
 The strategy is shared with a backtestable Pine Script port
-(`tradingview/monica-kelly-strategy.pine`) so the same rules can be validated on
+(`tradingview/epiphany-kelly-strategy.pine`) so the same rules can be validated on
 years of TradingView history instead of trusted on faith from a few weeks of
 paper trading.
 
@@ -200,7 +200,7 @@ sits idle between trades, and that costs far more than the edge earns.
 | IBS dip buy | 61% | 0.50% | 6.1% |
 | Donchian breakout | 41% | 3.21% | 2.5% |
 | Moving average crossover | 37% | 2.82% | 2.1% |
-| Monica (our original strategy) | 30% | -0.07% | -2.0% |
+| Epiphany Kelly (our original strategy) | 30% | -0.07% | -2.0% |
 | Buy and hold | | | 9.1% |
 
 **What we learned.**
@@ -215,7 +215,7 @@ sits idle between trades, and that costs far more than the edge earns.
   more often, not a way to make more money.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
-- **Monica does not work yet.** Its buy signal loses money. Its bet sizing has
+- **Epiphany Kelly (the original rule) does not work yet.** Its buy signal loses money. Its bet sizing has
   a bug: one early loss before any win sets the bet to zero forever. It stays
   paper only until both are fixed.
 - **80% is not there yet.** The best so far is 77%, RSI(2) on the S&P 500

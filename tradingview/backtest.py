@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay epiphany.pine (plus Supertrend+RSI and Monica Kelly) on Bitstamp BTC daily history since 2011.
+"""Replay epiphany.pine (plus Supertrend+RSI and Epiphany Kelly) on Bitstamp BTC daily history since 2011.
 
 Signals on the close, fills at the next open, 0.1% fee per side, long only.
 Settings are picked on 2012-2019 and scored blind on 2020-now.
@@ -242,9 +242,9 @@ def stdev(x, n):
     return [None if m[i] is None else (sum((v - m[i]) ** 2 for v in x[i - n + 1:i + 1]) / n) ** 0.5 for i in range(len(x))]
 
 
-def monica(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.025, rising=5,
+def epiphany_kelly(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.025, rising=5,
            stop=0.017, tgt=0.05, trig=0.02, trail=0.03, frac=0.25, cap=0.10):
-    """monica-kelly-strategy.pine, rule for rule. Stop/target are resting orders from the prior close,
+    """epiphany-kelly-strategy.pine, rule for rule. Stop/target are resting orders from the prior close,
     filled TradingView style: gap fills at the open, otherwise the extreme nearer the open is hit first."""
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
     sf, ss, sd = sma(c, fast), sma(c, slow), stdev(c, fast)
@@ -297,10 +297,10 @@ def monica(bars, lo, hi, sized=True, fast=10, slow=20, strength=0.01, volcap=0.0
 
 
 def score(mode, p, bars, ohlc, lo, hi):
-    if mode == "Monica Kelly":
-        return monica(bars, lo, hi)
-    if mode == "Monica all-in":
-        return monica(bars, lo, hi, sized=False)
+    if mode == "Epiphany Kelly":
+        return epiphany_kelly(bars, lo, hi)
+    if mode == "Epiphany all-in":
+        return epiphany_kelly(bars, lo, hi, sized=False)
     return run(bars, *signals(mode, p, *ohlc), lo, hi)
 
 
@@ -324,8 +324,8 @@ GRID = {
     "D7 stacked": [(5,), (7,), (10,)],
     "D7 + VIX fear": [(5,), (7,), (10,)],
     "VIX stretch": [(65,), (70,), (80,)],
-    "Monica Kelly": [()],   # as shipped, no tuning
-    "Monica all-in": [()],  # same signal, whole account per trade
+    "Epiphany Kelly": [()],   # as shipped, no tuning
+    "Epiphany all-in": [()],  # same signal, whole account per trade
 }
 
 
@@ -343,9 +343,9 @@ def check():
     assert abs(hold["mult"] - 1.01 ** 399 * (1 - FEE)) / hold["mult"] < 0.02, hold
     for mode in ("Single MA", "Two MA", "Donchian", "Supertrend+RSI"):
         assert run(bars, *signals(mode, GRID[mode][0], o, h, l, c), 0, 400)["mult"] > 1, mode
-    # Gentle 0.5%/day climb: Monica enters, rides to the 5% target, repeats, never loses.
+    # Gentle 0.5%/day climb: Epiphany Kelly enters, rides to the 5% target, repeats, never loses.
     slow = [[i * 86400, 100 * 1.005 ** i, 100 * 1.005 ** i * 1.001, 100 * 1.005 ** i * 0.999, 100 * 1.005 ** i] for i in range(400)]
-    m = monica(slow, 0, 400, sized=False)
+    m = epiphany_kelly(slow, 0, 400, sized=False)
     assert m["mult"] > 1.5 and m["trades"] > 5 and m["mdd"] < 0.02, m
 
 

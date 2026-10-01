@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // TradingView MCP → Broker signal agent
-// Polls live TradingView chart for Monica Kelly entry signals, fires orders.
+// Polls live TradingView chart for Epiphany strategy entry signals, fires orders.
 //
 // Usage:
-//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple|ibkr] [--study Monica|Epiphany] [--dry-run]
+//   node scripts/tv-signal-agent.js [--broker alpaca|wealthsimple|ibkr] [--study Epiphany|"Epiphany Kelly"] [--dry-run]
 //
 // Requires:
 //   - TradingView Desktop running with --remote-debugging-port=9222
@@ -23,7 +23,7 @@ const SIGNAL_API = process.env.SIGNAL_API || 'http://localhost:3000';
 const DRY_RUN = process.argv.includes('--dry-run');
 const arg = (k, d) => process.argv.includes(k) ? process.argv[process.argv.indexOf(k) + 1] : d;
 const BROKER = arg('--broker', 'alpaca');
-const STUDY = arg('--study', 'Monica');
+const STUDY = arg('--study', 'Epiphany');
 
 // Import TradingView MCP core directly (bypasses MCP protocol overhead)
 const { connect } = await import(`${TV_MCP_PATH}/src/connection.js`);

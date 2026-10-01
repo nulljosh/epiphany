@@ -15,5 +15,5 @@ RSI2 exit high            (5,) |        13%    36% |         7%    29%      1.6 
 Cumulative RSI        (35, 65) |        14%    43% |         9%    34%      1.8     58
 Double 7s                (10,) |         8%    72% |        17%    35%      3.0     51
 IBS + RSI2           (0.5, 10) |        10%    41% |        10%    33%      1.9     56
-Monica Kelly                () |        -0%     0% |         0%     1%      1.0      3
-Monica all-in               () |         9%    15% |         1%    22%      1.0    112
+Epiphany Kelly                () |        -0%     0% |         0%     1%      1.0      3
+Epiphany all-in               () |         9%    15% |         1%    22%      1.0    112
