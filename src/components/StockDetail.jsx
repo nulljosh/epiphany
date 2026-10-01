@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createChart, ColorType, LineType, CrosshairMode, CandlestickSeries, BarSeries, LineSeries, AreaSeries, BaselineSeries, HistogramSeries } from 'lightweight-charts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 import { signal as computeSignal } from '../utils/indicators';
+import { usePremium, showPricing, PREMIUM_INDICATORS } from '../context/PremiumContext.js';
 
 const EMPTY = {};
 const CHART_TYPES = [
@@ -303,12 +304,15 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, []);
   useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, [symbol]);
 
+  const isPro = usePremium();
   const addIndicator = useCallback((key) => {
     const lib = INDICATOR_LIBRARY.find(i => i.key === key);
     if (!lib) return;
+    // ponytail: saved indicators from before the paywall stay; only adding new Premium ones is blocked.
+    if (!isPro && PREMIUM_INDICATORS.has(key)) { showPricing(); return; }
     const id = `${key}_${Date.now()}`;
     setActiveIndicators(prev => [...prev, { id, key, params: { ...lib.defaults } }]);
-  }, []);
+  }, [isPro]);
 
   const removeIndicator = useCallback((id) => {
     setActiveIndicators(prev => prev.filter(i => i.id !== id));
@@ -995,7 +999,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
               >
-                {ind.label}
+                {ind.label}{!isPro && PREMIUM_INDICATORS.has(ind.key) ? ' (Premium)' : ''}
               </button>
             ))}
             <div style={{ gridColumn: '1 / -1', fontSize: 10, fontWeight: 600, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 6, marginBottom: 2 }}>
@@ -1014,7 +1018,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
               >
-                {ind.label}
+                {ind.label}{!isPro && PREMIUM_INDICATORS.has(ind.key) ? ' (Premium)' : ''}
               </button>
             ))}
           </div>

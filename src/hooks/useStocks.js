@@ -296,7 +296,7 @@ const parseStockData = (raw) => {
   return Object.keys(stockMap).length > 0 ? stockMap : null;
 };
 
-export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true } = {}) {
+export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true, realtime = false } = {}) {
   const [stocks, setStocks] = useState(FALLBACK_DATA);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -418,7 +418,8 @@ export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true } = {}) {
     init();
   }, [fetchStocks, enabled]);
 
-  const pollInterval = isMarketHours() ? 120_000 : 600_000;
+  // Premium is real-time (30s); Free is the delayed feed (5 minutes).
+  const pollInterval = isMarketHours() ? (realtime ? 30_000 : 300_000) : 600_000;
   useVisibilityPolling(fetchStocks, pollInterval, [fetchStocks, enabled]);
 
   return {
