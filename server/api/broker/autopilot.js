@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const [settings, trades, pro] = await Promise.all([
       kv.get(key),
       kv.get(`trades:${session.userId}`),
-      isPro(session),
+      isPro(session, req),
     ]);
     const sanitized = settings ? {
       enabled: settings.enabled,
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
+  if (!(await isPro(session, req))) return errorResponse(res, 402, 'Premium required');
 
   const { enabled, mode, maxNotional, allocation, allowCrypto, allowOvernight } = req.body || {};
   const cap = Number(maxNotional);

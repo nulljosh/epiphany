@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
   const session = await getSessionUser(req);
   if (!session) return errorResponse(res, 401, 'Authentication required');
-  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
+  if (!(await isPro(session, req))) return errorResponse(res, 402, 'Premium required');
 
   // Rate limiting
   const rateKey = `${RATE_KEY}:${session.userId}`;

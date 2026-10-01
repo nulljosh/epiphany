@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   const session = await getSessionUser(req);
   if (!session) return errorResponse(res, 401, 'Authentication required');
-  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
+  if (!(await isPro(session, req))) return errorResponse(res, 402, 'Premium required');
 
   const kvKey = `${KV_PREFIX}:${session.userId}`;
 

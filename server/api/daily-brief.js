@@ -107,7 +107,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const session = await getSessionUser(req);
-  if (!(await isPro(session))) return errorResponse(res, 402, 'Premium required');
+  if (!(await isPro(session, req))) return errorResponse(res, 402, 'Premium required');
 
   const now = Date.now();
   if (cache.data && (now - cache.ts) < CACHE_TTL) {
