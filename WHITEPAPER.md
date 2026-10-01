@@ -213,6 +213,14 @@ sits idle between trades, and that costs far more than the edge earns.
   at worst against -72%). As one account over index funds the drop was no
   better (35% against 34%) and the return was far lower. It is a way to win
   more often, not a way to make more money.
+- **The high win rate is mostly the market going up.** To check, we parked the
+  idle cash in SPY instead of cash and only rotated into a dip when Double 7s
+  fired (`backtest.py portfolio`, parked). That lifted the account from 2.7% to
+  8.8% a year, but still well under SPY's 15.1%. So the dips we bought did
+  worse than just staying in SPY. Winning two of three trades is mostly what any
+  long position does in an uptrend, so a high win rate is not the same as
+  beating the market. Bigger positions did not help either: 25%, 50% and 100%
+  per position all earned less.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
 - **Our original strategy, Epiphany Kelly, does not work.** Its buy signal wins
