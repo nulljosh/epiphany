@@ -507,16 +507,18 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       <section className="lp-section" id="pricing" style={{ paddingTop: 0 }}>
         <div className="lp-grid-head lp-reveal">
           <div className="lp-eyebrow" style={{ color: 'var(--accent)' }}>Pricing</div>
-          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Start free.</h2>
+          <h2 className="lp-showcase-headline" style={{ marginBottom: 0 }}>Start free. Pay once if you want more.</h2>
+          <p className="lp-showcase-sub" style={{ maxWidth: '36rem', margin: '1rem auto 0' }}>One dollar, one time. No subscription, no ads, nothing to cancel.</p>
         </div>
         <div className="lp-pricing lp-reveal">
           <div className="lp-price-card glass">
             <div className="lp-price-tier">Free</div>
             <div className="lp-price-num">$0</div>
             <ul className="lp-price-feats">
+              <li>Live map and news</li>
               <li>1 portfolio</li>
-              <li>Delayed data</li>
-              <li>Basic signals</li>
+              <li>Delayed market data</li>
+              <li>Basic Buy / Hold / Sell signals</li>
             </ul>
             <button className="lp-price-btn glass-pill" onClick={register}>Start free</button>
           </div>
@@ -524,14 +526,22 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             <div className="lp-price-tier">Paid</div>
             <div className="lp-price-num">$1<span> one-time</span></div>
             <ul className="lp-price-feats">
-              <li>Real-time data</li>
+              <li>Everything in Free</li>
+              <li>Real-time market data</li>
               <li>Full indicator suite</li>
-              <li>Brokerage sync</li>
-              <li>Alerts</li>
+              <li>Read-only brokerage sync</li>
+              <li>Price and signal alerts</li>
+              <li>Autopilot: our trading algorithm, on paper money</li>
+              <li>Daily Brief</li>
+              <li>People tracker</li>
+              <li>Every future update</li>
             </ul>
             <button className="lp-price-btn solid" onClick={registerPaid}>Get Epiphany</button>
           </div>
         </div>
+        <p className="lp-reveal" style={{ fontSize: '0.85rem', color: 'rgba(var(--lp-ink),0.5)', textAlign: 'center', margin: '1.5rem auto 0', maxWidth: '36rem' }}>
+          Autopilot trades paper money only. Educational and informational only. Not investment advice.
+        </p>
       </section>
 
       {/* ─── FINAL CTA ─── */}
