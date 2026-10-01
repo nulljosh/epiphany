@@ -32,7 +32,7 @@ def snapshot():
         gain = sum(p.unrealizedPNL for p in port)
         nl = next((float(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
     except Exception:
-        return "E !", ["IB Gateway is not logged in", "Log in to the Gateway and this fixes itself"]
+        return "!", ["Log in to IB Gateway"]
     finally:
         if ib.isConnected():
             ib.disconnect()
@@ -44,10 +44,9 @@ def snapshot():
     except Exception:
         spy = 0.0
     pct = gain / cost if cost else 0.0
-    return f"E {d:+.0f}", [
-        f"Account {d:+,.2f} since {start.get('date', 'the start')[:10]}",
-        f"Our positions {pct:+.2%}, SPY {spy:+.2%}",
-        f"Last daily trade: {st.get('lastGo', 'none yet')}. Next: 12:45pm Pacific",
+    return f"{d:+.0f}", [
+        f"{d:+,.2f} CAD since {start.get('date', 'the start')[5:10]}",
+        f"Positions {pct:+.2%}   SPY {spy:+.2%}",
     ]
 
 
@@ -60,22 +59,24 @@ def main():
 
     class App(rumps.App):
         def __init__(self):
-            super().__init__("Epiphany Live", title="E", quit_button=None)
-            self.rows = [rumps.MenuItem(x, callback=None) for x in ("Starting...", " ", "  ")]
-            self.menu = [*self.rows, None, rumps.MenuItem("Open log", callback=self.open_log), rumps.MenuItem("Quit", callback=self.quit)]
+            super().__init__("Epiphany Live", title="..", quit_button=None)
+            self.rows = [rumps.MenuItem(x, callback=None) for x in ("Starting...", " ")]
+            self.menu = [*self.rows, None, rumps.MenuItem("Quit", callback=self.quit)]
             self.child = None
-            if subprocess.run(["pgrep", "-f", "scripts/ibkr-live.py"], capture_output=True).returncode != 0:
+            self.ensure_runner()
+
+        def ensure_runner(self):
+            # The [i] keeps pgrep from matching its own command line. Start the runner if nothing is running it.
+            if subprocess.run(["pgrep", "-f", "[i]bkr-live.py"], capture_output=True).returncode != 0:
                 out = open(LOG, "a")
-                self.child = subprocess.Popen(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=out, stderr=out)
+                self.child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=out, stderr=out)
 
         @rumps.timer(60)
         def tick(self, _):
+            self.ensure_runner()
             self.title, lines = snapshot()
             for row, text in zip(self.rows, lines + ["", ""]):
                 row.title = text or " "
-
-        def open_log(self, _):
-            subprocess.run(["open", "-a", "Console", LOG])
 
         def quit(self, _):
             if self.child:
