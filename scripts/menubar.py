@@ -96,7 +96,7 @@ def watch_line(sym, quote):
     if not quote:
         return f"{sym}  \u2014"
     price, ch = quote
-    return f"{sym}  {price:,.2f}  {pct(ch)}"
+    return f"{sym}  {price:,.4f}  {pct(ch)}" if price < 1 else f"{sym}  {price:,.2f}  {pct(ch)}"  # currency pairs need the extra digits
 
 
 def safe(f, *a):
