@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         try {
           const r = await fetch(`https://old.reddit.com/r/${sub}/hot.json?limit=5`, {
             signal: AbortSignal.timeout(6000),
-            headers: { 'User-Agent': 'Monica/4.2 (intelligence platform)' },
+            headers: { 'User-Agent': 'Epiphany/4.2 (intelligence platform)' },
           });
           if (!r.ok) return [];
           const data = await r.json();
