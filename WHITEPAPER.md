@@ -139,6 +139,57 @@ things to know: this index leaves out dividends, which makes holding look a
 few percent a year worse than it really was, and before 1962 the data is
 closing prices only.
 
+**TradingView's own numbers.** We also ran the strategy inside TradingView's
+Strategy Tester on every symbol on our watchlist, over each symbol's full
+history. That is a second, independent engine, so it checks our Python.
+28 symbols, 4,733 trades, 65% made money. It puts the whole account
+into every trade, which is harsher than the 10% per position we would use in
+practice, and it has no unseen years, so read it as a cross-check, not a test.
+
+| Symbol | Trades that made money | Trades | Total gain | Worst drop | Profit factor |
+|---|---|---|---|---|---|
+| NAS100 | 80% | 84 | 109% | 28% | 2.22 |
+| PLTR | 77% | 26 | 361% | 34% | 2.29 |
+| META | 76% | 96 | 717% | 33% | 2.64 |
+| SHOO | 76% | 192 | 1,171% | 72% | 1.42 |
+| Dow Jones | 75% | 77 | 40% | 34% | 1.71 |
+| MRNA | 74% | 35 | 514% | 42% | 2.06 |
+| SBUX | 74% | 205 | 1,374% | 44% | 1.97 |
+| MS | 72% | 190 | 471% | 60% | 1.45 |
+| GOOGL | 71% | 142 | 326% | 44% | 2.00 |
+| DUOL | 71% | 17 | 58% | 36% | 1.62 |
+| Bitcoin | 71% | 102 | 469% | 71% | 1.66 |
+| GS | 70% | 146 | 70% | 54% | 1.27 |
+| AMZN | 70% | 174 | 1,005% | 66% | 1.87 |
+| IBM | 68% | 325 | 47% | 62% | 1.05 |
+| T | 68% | 226 | 165% | 45% | 1.34 |
+| AAPL | 68% | 271 | 65% | 93% | 1.11 |
+| NVDA | 67% | 177 | 2,311% | 79% | 2.34 |
+| Oil (WTI) | 67% | 30 | 17% | 43% | 1.16 |
+| Copper | 67% | 123 | 94% | 59% | 1.25 |
+| DBK | 67% | 183 | -13% | 81% | 0.97 |
+| HOOD | 65% | 26 | 77% | 42% | 1.55 |
+| JPM | 64% | 304 | 30% | 67% | 1.07 |
+| US dollar index | 64% | 223 | -19% | 37% | 0.84 |
+| DIS | 61% | 349 | 211% | 53% | 1.19 |
+| TSLA | 61% | 77 | 60% | 69% | 1.09 |
+| S&P 500 index | 57% | 250 | -11% | 14% | 0.73 |
+| Gold | 53% | 372 | 292% | 28% | 1.52 |
+| Silver | 51% | 311 | -48% | 88% | 0.90 |
+
+Profit factor is total winnings divided by total losses, so above 1 means it
+made money overall. NVDA's +2,311% is mostly NVDA being one of the best
+stocks in history. The weak spots are worth knowing: the US dollar index, silver
+and the S&P 500 index (as a CFD) lost money, and gold barely won half its trades.
+
+**As one account, it loses to holding.** We ran Double 7s the way you would run
+it for real: one account spread across the 16 index and sector funds, 10% per
+position, fees both ways (`backtest.py portfolio`). From 2020 it won 71% of its
+trades but grew about 2.7% a year, against 15.1% for holding SPY. It was
+invested only 47% of the time, and its worst drop was 35% against SPY's 34%.
+A $500 account ended near $600. The edge is real per trade, but the money
+sits idle between trades, and that costs far more than the edge earns.
+
 **Everything else we tried,** on the 429 S&P 500 stocks, 2020 to now:
 
 | Strategy | Trades that made money | Average gain per trade | Typical yearly return |
@@ -157,10 +208,11 @@ closing prices only.
 - **Buying dips works more often than chasing trends.** Trend strategies made
   money on fewer than half their trades. They softened the crashes but gave
   back most of the gains.
-- **Nothing beat buying and holding on raw return.** Double 7s is a smoother
-  ride. On Bitcoin its worst year was -53% (2014) where holding's was -72%
-  (2018), and it was flat in 2022 when holding lost 65%. It also missed most of
-  the giant years.
+- **Nothing beat buying and holding on raw return.** On single stocks and the
+  S&P 500 index, Double 7s had smaller worst drops than holding (Bitcoin: -53%
+  at worst against -72%). As one account over index funds the drop was no
+  better (35% against 34%) and the return was far lower. It is a way to win
+  more often, not a way to make more money.
 - **Fear helps a little.** Only buying when the VIX is well above its recent
   average lifted index funds from 71% to 73%.
 - **Monica does not work yet.** Its buy signal loses money. Its bet sizing has

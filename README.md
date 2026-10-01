@@ -77,7 +77,7 @@ One strategy passed. It's called Double 7s. When something that's been rising ha
 
 Two out of three trades make money, after fees, on years the strategy never saw. Only buying when fear is high (the VIX is spiking) lifts that to 73% on index funds. On the S&P 500 itself, graded on 49 years it never saw (1977 to now), the RSI(2) dip buy made money on 77% of trades.
 
-What it won't do is beat buying and holding. It's in the market a few days at a time, so most of the year the cash sits still. You get a smoother ride, not a bigger one.
+What it won't do is beat buying and holding. It's in the market a few days at a time, so most of the year the cash sits still. Run as one account over index funds it grew about 2.7% a year, while just holding SPY grew 15%. TradingView's own Strategy Tester agrees on the win rate: 65% of 4,733 trades across our whole watchlist made money.
 
 The full story, including everything that failed, is in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark-does-it-work). Run it yourself: `python3 tradingview/backtest.py sp500`. The same strategies run live on a TradingView chart from `tradingview/epiphany.pine`.
 
