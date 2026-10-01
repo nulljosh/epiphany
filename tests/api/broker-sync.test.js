@@ -97,6 +97,32 @@ describe('broker/sync stale-userSecret self-heal', () => {
     expect(res.body.error).toBe('Brokerage temporarily unavailable');
     expect(res.body.error).not.toMatch(/network timeout/);
   });
+
+  it('uses the snapshot for sync but opens the portal for connect-additional', async () => {
+    mockKv();
+    const snapshot = { syncedAt: new Date().toISOString(), holdings: [] };
+    kvStore.set('broker:snapshot:u1', snapshot);
+    const loginLink = vi.fn(async () => 'https://broker.example/connect');
+    const listAccounts = vi.fn(async () => [{ id: 'acct1' }]);
+    vi.doMock('../../src/utils/brokers/snaptrade.js', () => ({
+      SnapTradeAdapter: class {
+        static isConfigured() { return true; }
+        listAccounts = listAccounts;
+        loginLink = loginLink;
+      },
+    }));
+    const { default: freshHandler } = await import('../../server/api/broker/sync.js');
+    const cached = mockRes();
+    await freshHandler({ method: 'POST', body: {} }, cached);
+    expect(cached.body.cached).toBe(true);
+    expect(listAccounts).not.toHaveBeenCalled();
+
+    const connected = mockRes();
+    await freshHandler({ method: 'POST', body: { action: 'connect-additional' } }, connected);
+    expect(connected.body.linkUrl).toBe('https://broker.example/connect');
+    expect(loginLink).toHaveBeenCalledOnce();
+    expect(kvStore.get('broker:snapshot:u1')).toEqual(snapshot);
+  });
 });
 
 describe('broker/sync', () => {
