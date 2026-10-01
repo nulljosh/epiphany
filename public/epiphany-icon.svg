@@ -1,26 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <rect width="200" height="200" rx="32" fill="#1a1a1a"></rect>
-  <g transform="translate(100,100)">
-    <polygon points="0,-62 54,-31 54,31 0,62 -54,31 -54,-31" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"></polygon>
-    <line x1="0" y1="0" x2="0" y2="-62" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"></line>
-    <line x1="0" y1="0" x2="54" y2="-31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"></line>
-    <line x1="0" y1="0" x2="54" y2="31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"></line>
-    <line x1="0" y1="0" x2="0" y2="62" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"></line>
-    <line x1="0" y1="0" x2="-54" y2="31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"></line>
-    <line x1="0" y1="0" x2="-54" y2="-31" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"></line>
-    <polygon points="0,-38 33,-19 33,19 0,38 -33,19 -33,-19" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"></polygon>
-    <polygon points="0,0 0,-62 -54,-31" fill="rgba(255,255,255,0.06)"></polygon>
-    <polygon points="0,0 -54,-31 -54,31" fill="rgba(255,255,255,0.04)"></polygon>
-    <polygon points="0,0 0,-62 54,-31" fill="rgba(255,255,255,0.08)"></polygon>
-    <polygon points="0,0 54,-31 54,31" fill="rgba(255,255,255,0.05)"></polygon>
-    <polygon points="0,0 54,31 0,62" fill="rgba(255,255,255,0.02)"></polygon>
-    <polygon points="0,0 0,62 -54,31" fill="rgba(255,255,255,0.03)"></polygon>
-    <circle cx="0" cy="0" r="3" fill="rgba(255,255,255,0.5)"></circle>
-    <circle cx="0" cy="-62" r="2" fill="rgba(255,255,255,0.3)"></circle>
-    <circle cx="54" cy="-31" r="2" fill="rgba(255,255,255,0.3)"></circle>
-    <circle cx="54" cy="31" r="2" fill="rgba(255,255,255,0.3)"></circle>
-    <circle cx="0" cy="62" r="2" fill="rgba(255,255,255,0.3)"></circle>
-    <circle cx="-54" cy="31" r="2" fill="rgba(255,255,255,0.3)"></circle>
-    <circle cx="-54" cy="-31" r="2" fill="rgba(255,255,255,0.3)"></circle>
+  <rect width="200" height="200" rx="40" fill="#0a0a0a"/>
+  <g stroke="#0A84FF" stroke-width="2" stroke-linecap="round">
+    <line x1="100" y1="48" x2="64" y2="74"/>
+    <line x1="100" y1="48" x2="136" y2="74"/>
+    <line x1="64" y1="74" x2="52" y2="108"/>
+    <line x1="136" y1="74" x2="148" y2="108"/>
+    <line x1="64" y1="74" x2="100" y2="100"/>
+    <line x1="136" y1="74" x2="100" y2="100"/>
+    <line x1="52" y1="108" x2="100" y2="100"/>
+    <line x1="148" y1="108" x2="100" y2="100"/>
+    <line x1="52" y1="108" x2="80" y2="148"/>
+    <line x1="148" y1="108" x2="120" y2="148"/>
+    <line x1="100" y1="100" x2="80" y2="148"/>
+    <line x1="100" y1="100" x2="120" y2="148"/>
+    <line x1="80" y1="148" x2="120" y2="148"/>
+  </g>
+  <g fill="#0A84FF">
+    <circle cx="100" cy="48" r="8"/>
+    <circle cx="64" cy="74" r="7"/>
+    <circle cx="136" cy="74" r="7"/>
+    <circle cx="52" cy="108" r="7"/>
+    <circle cx="100" cy="100" r="9"/>
+    <circle cx="148" cy="108" r="7"/>
+    <circle cx="80" cy="148" r="7"/>
+    <circle cx="120" cy="148" r="7"/>
   </g>
 </svg>
