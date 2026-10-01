@@ -342,8 +342,8 @@ This is the first rule that clears our bar: more money than holding, a smaller
 worst drop, and a win in most unseen decades. The catches are real. 2x was the
 top of the range we tried, so the pick sat at the edge. The one decade it lost
 was 1976 to 1979, when choppy markets kept tripping the signal (4.1% against
-9.5%), and the 1987 crash still landed at full 2x because one day is faster than
-any average. The 10 month version, the one most people quote, failed the bar on
+9.5%). It dodged the 1987 crash by luck, not design: the S&P closed half a point
+under its average two days before, and one day is faster than any average. The 10 month version, the one most people quote, failed the bar on
 the blind half. And the paper was written with this same history in view, so
 the blind half is blind to us, not to the idea.
 
