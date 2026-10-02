@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Premium autopilot controls — mirrors the web Trade tab's Autopilot card.
+/// Premium autopilot controls, mirrors the web Trade tab's Autopilot card.
 /// Settings live in /api/broker/autopilot; trades execute server-side hourly
 /// during market hours, so they keep running while the app is closed.
 struct AutopilotSection: View {

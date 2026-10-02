@@ -17,7 +17,7 @@ enum Palette {
     static let warningAmberAlt = Color(hex: "f5a623")
 
     // Category
-    // No teal/cyan/purple/indigo anywhere — standing house rule. Categorical
+    // No teal/cyan/purple/indigo anywhere, standing house rule. Categorical
     // slots stay distinguishable via hue + lightness within the allowed space
     // (warm, green, blue, pink, neutral). Kept in sync with ios/Helpers/Helpers.swift.
     static let slate = Color(hex: "8CA0B3")

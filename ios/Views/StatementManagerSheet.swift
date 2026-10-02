@@ -156,7 +156,8 @@ struct StatementManagerSheet: View {
         isUploading = true
         Task {
             do {
-                let text = PDFDocument(data: data)?.string ?? ""
+                // Off the main actor: PDFKit walks every page synchronously.
+                let text = await Task.detached { PDFDocument(data: data)?.string ?? "" }.value
                 let updatedStatements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64, text: text)
                 await MainActor.run {
                     isUploading = false

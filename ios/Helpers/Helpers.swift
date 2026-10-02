@@ -31,7 +31,7 @@ enum Palette {
     static let warningAmber = Color(hex: "FF851B")
 
     // Category (vibrant, dark-mode friendly)
-    // No teal/cyan/purple/indigo anywhere — standing house rule. Categorical
+    // No teal/cyan/purple/indigo anywhere, standing house rule. Categorical
     // slots stay distinguishable via hue + lightness within the allowed space
     // (warm, green, blue, pink, neutral).
     static let slate = Color(hex: "8CA0B3")

@@ -253,7 +253,11 @@ struct SituationView: View {
 
     private var roadEvents: [RoadEvent] {
         var out: [RoadEvent] = []
-        if showIncidents { out += activeIncidents.prefix(maxIncidentAnnotations).map { .incident($0) } }
+        if showIncidents {
+            // Both groups, as before the grid: road work first, then police, fire, closures.
+            out += activeIncidents.prefix(maxIncidentAnnotations).map { .incident($0) }
+            out += incidents.filter { $0.isInfrastructure }.prefix(15).map { .incident($0) }
+        }
         if showTraffic { out += (trafficData?.incidents ?? []).map { .traffic($0) } }
         return out
     }
@@ -502,7 +506,8 @@ struct SituationView: View {
     /// out, dense areas collapse into a count badge that zooms in on tap.
     private func venueClusters(for cat: VenueCategory) -> [MapCluster<MKMapItem>] {
         let span = visibleRegion?.span ?? currentRegion.span
-        return clusterByGrid(venueResults[cat] ?? [], in: span) { $0.placemark.location?.coordinate }
+        // Same cell size as the merged grid so pins keep their identity across the zoom crossover.
+        return clusterByGrid(venueResults[cat] ?? [], in: span, cellsAcross: 8) { $0.placemark.location?.coordinate }
     }
 
     private func eventClusterPin(_ count: Int, _ tint: Color, _ coordinate: CLLocationCoordinate2D) -> some View {
@@ -544,18 +549,7 @@ struct SituationView: View {
     }
 
     private func venueClusterPin(_ cat: VenueCategory, _ cluster: MapCluster<MKMapItem>) -> some View {
-        Button {
-            Haptics.impact(.light)
-            zoomInto(cluster.coordinate)
-        } label: {
-            Text("\(cluster.count)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.white)
-                .frame(minWidth: 26, minHeight: 26)
-                .background(cat.tint, in: Circle())
-                .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
-        }
-        .buttonStyle(.plain)
+        eventClusterPin(cluster.count, cat.tint, cluster.coordinate)
     }
 
     /// Halves the visible span around a cluster so a tap breaks it apart.

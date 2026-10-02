@@ -23,6 +23,8 @@ async function parsePdfBuffer(buffer) {
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error(`PDF parse timed out after ${PARSE_TIMEOUT_MS}ms`)), PARSE_TIMEOUT_MS);
   });
+  // The race only abandons the parse; swallow its late rejection so nothing is unhandled.
+  work.catch(() => {});
   try {
     return await Promise.race([work, timeout]);
   } finally {
@@ -48,13 +50,15 @@ export async function readPdfText(filePath) {
 }
 
 export async function summarizeStatementBuffer(buffer, filename, providedText = '') {
-  let text = '';
+  let transactions = [];
   try {
     // Native clients extract the text themselves (PDFKit), so the Worker never parses.
-    // PDFKit spaces columns differently, so if its text yields no rows, try our own pass.
-    text = providedText.trim() ? providedText : await parsePdfBuffer(buffer);
-    if (providedText.trim() && parseStatementText(text).length === 0) {
+    let text = providedText.trim() || await parsePdfBuffer(buffer);
+    transactions = parseStatementText(text);
+    // PDFKit lays columns out differently; if its text yields no rows, try our own pass.
+    if (transactions.length === 0 && providedText.trim()) {
       text = await parsePdfBuffer(buffer);
+      transactions = parseStatementText(text);
     }
   } catch (err) {
     // A PDF the parser cannot read is still a statement worth keeping. Returning a
@@ -65,7 +69,6 @@ export async function summarizeStatementBuffer(buffer, filename, providedText = 
     console.warn(`[PDF] Failed to parse ${filename}: ${err.message}`);
     return { transactions: [], spendingMonth: summarizeTransactions([], filename) };
   }
-  const transactions = parseStatementText(text);
   return {
     transactions,
     spendingMonth: summarizeTransactions(transactions, filename),

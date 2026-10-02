@@ -363,7 +363,7 @@ struct SituationView: View {
         }
     }
 
-    /// Groups the visible venue pins by the current span. Nothing is filtered out —
+    /// Groups the visible venue pins by the current span. Nothing is filtered out ,
     /// dense areas collapse into a count badge that zooms in on click.
     private var venueClusters: [MapCluster<MKMapItem>] {
         clusterByGrid(venueResults, in: visibleRegion.span) { $0.placemark.location?.coordinate }

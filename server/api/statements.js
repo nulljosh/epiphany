@@ -77,8 +77,9 @@ async function refreshStoredStatements(kv, statements) {
         statement?.spendingMonth?.version >= SUMMARY_VERSION &&
         statement?.spendingMonth?.month &&
         statement?.spendingMonth?.total != null &&
-        Array.isArray(statement?.transactions) &&
-        statement.transactions.length > 0
+        // A zero-row result from the current parser is final (a TFSA statement, say);
+        // requiring rows here made every GET re-parse it, up to 12s a time.
+        Array.isArray(statement?.transactions)
       ) {
         return statement;
       }
@@ -145,6 +146,9 @@ export default async function handler(req, res) {
       const filename = typeof req.body?.filename === 'string' ? req.body.filename : '';
       const contentBase64 = typeof req.body?.contentBase64 === 'string' ? req.body.contentBase64 : '';
       const providedText = typeof req.body?.text === 'string' ? req.body.text : '';
+      if (providedText.length > MAX_STATEMENT_BYTES) {
+        return errorResponse(res, 400, 'Statement text too large');
+      }
 
       if (!filename || !contentBase64) {
         return errorResponse(res, 400, 'filename and contentBase64 are required');

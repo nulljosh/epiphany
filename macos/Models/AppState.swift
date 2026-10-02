@@ -57,7 +57,7 @@ final class AppState {
             guard let comma = urlString.firstIndex(of: ","),
                   let data = Data(base64Encoded: String(urlString[urlString.index(after: comma)...])) else { return }
             Task { @MainActor in
-                // ponytail: no SVG rasterizer on macOS, same as before — an SVG
+                // ponytail: no SVG rasterizer on macOS, same as before, an SVG
                 // avatar simply falls back to the initial, it never did render here.
                 guard NSImage(data: data) != nil else { return }
                 avatarImageData = data
