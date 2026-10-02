@@ -943,6 +943,20 @@ The deflated Sharpe (Bailey and Lopez de Prado, 2014) is the chance the true edg
 
 Trend 2x is the better of the two. It beats holding by 3.4 points a year over 51 years, it beat 93% of random in and out schedules, and it halves the crash. But its t-stat is 1.6 and the bar for 148 tries is 3.6, so we cannot tell its edge from a lucky draw. Quality is weaker: 1.2 points a year on the model, and the fund you could actually buy, QUAL, trailed SPY. Verdict: Trend 2x survives weakly, keep it and watch it, because what it sells is a smaller crash for leverage, and that is real whether or not the extra return is. Quality is likely luck, switch the sleeve off.
 
+#### How often does it win? Monte Carlo on the real funds
+
+The luck tests above ask whether the edge is real. A different question is what a person holding it would feel. `tradingview/bootstrap.py` takes the real prices of SSO, BIL and SPY since 2008 (the first 200 days only warm up the average), applies the rule with a 0.05% fee on every flip, and resamples the strategy and SPY daily returns together in random blocks of about a month, so volatility clusters and the two stay correlated. 5000 runs per horizon, raw output in `tradingview/results-bootstrap.txt`.
+
+| Horizon | Chance Trend 2x beats SPY | Median gap | Worst 5% gap | Chance it loses money |
+|---|---|---|---|---|
+| 1 day | 53% | +0.0% | -1.9% | 42% |
+| 1 month | 56% | +0.6% | -7.9% | 38% |
+| 1 year | 59% | +4.4% | -24.7% | 25% |
+| 3 years | 65% | +16.1% | -45.9% | 13% |
+| 5 years | 69% | +34.3% | -66.5% | 7% |
+
+On the real history it made 16.1% a year against 12.0% for SPY. But a single day is close to a coin flip, and even over a year it beats the S&P only 59% of the time, with a bad draw trailing by a quarter. The edge shows up in years, not days, and the worst five percent of five year runs trail SPY by 66 points of total return. Judge the bot over years.
+
 ### Broker abstraction
 
 `src/utils/broker.js` defines one `BrokerAdapter` interface (`connect`, `placeOrder`,

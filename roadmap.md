@@ -1,5 +1,7 @@
 ## 2026-10-01 brain dump (open)
-- [ ] Edge (h), from Joshua 2026-10-01: Kronos, the open-source candlestick foundation model (github.com/shiyu-coder/Kronos, MIT, AAAI 2026, fine-tune scripts shipped). Test it as a signal with the same bar as every other edge: frozen settings, blind second half, fees in, random baseline, vs Trend 2x. Resource: x.com/quantscience_/status/2100558909735887197
+- [x] Edge (h), from Joshua 2026-10-01: Kronos, the open-source candlestick foundation model (github.com/shiyu-coder/Kronos, MIT, AAAI 2026, fine-tune scripts shipped). Test it as a signal with the same bar as every other edge: frozen settings, blind second half, fees in, random baseline, vs Trend 2x. Resource: x.com/quantscience_/status/2100558909735887197
+  - **2026-10-02 Kronos result, tested and closed (Kronos-mini, SPY, blind second half 16.8y, fees 0.05% a side, frozen: 400 bar lookback, 5 day horizon)**: Kronos 6.4% a year vs SPY hold 14.2%, 52% time in market, 39% of random runs beat it. Not an edge. The earlier segfault was pandas on Python 3.14, rebuilt on 3.12 and it runs at 0.05s a forecast. Same window, ideal Trend 2x (no ETF costs) made 17.1%, so the 7.5% quoted by the earlier luck-test agent is unverified.
+- [ ] Hook the Mac IBKR bot into the app's Autopilot (design 2026-10-02): the app side already stores `autopilot:{userId}` settings and `trades:{userId}` in KV (`server/api/broker/autopilot.js`, run by `morning-run.js` over SnapTrade), while the real runner is local (`scripts/ibkr-live.py`, state in `tradingview/ibkr-state.json`) and the two never talk. Smallest bridge: the runner POSTs each fill and the daily holdings-vs-SPY verdict to a new authed `/api/broker/ibkr-report` that appends to `trades:{userId}`, so the Autopilot screen shows real paper fills; and the runner reads `enabled` from `/api/broker/autopilot` as its kill switch before the 3:45pm run. TradingView MCP stays a research and chart tool (`tv-signal-agent.js`, webhook), not the execution path. Also fix the menu bar's SPY baseline: it uses the prior close (Sept 30) while fills happened mid-morning Oct 1, so SPY reads about 0.1 points low.
 - [ ] Submit iOS 2.5.15 (build 202610011630, already uploaded 2026-10-01) the moment 2.5.14 leaves review: CAD cash header, X-Epiphany-Client header, Swift 6 screenshot-mode fix.
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
@@ -236,7 +238,9 @@ it is recorded here.
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
 - [ ] ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
 - [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
-- [ ] Luck test: random entries with the same time in market, 1000 runs, report how often luck beats each strategy
+- [x] Luck test: random entries with the same time in market, 1000 runs, report how often luck beats each strategy
+  BTC, Double 7s (7d): 16.2%, Single MA/Trend 2x (200d): 12.5%, Hold: 0.0%
+  SPY & 16 ETFs, Double 7s (10d): 3.4%, Trend 2x (200d): 7.5%, Hold: 10.8% — random beat neither (0.0%)
 - [ ] Fee test: 0%, 0.1%, 0.25% per side
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
