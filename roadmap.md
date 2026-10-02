@@ -258,8 +258,8 @@ Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), p
 - [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
 - [ ] Markets list rows render blank in UITEST_DEMO mode
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
-- [ ] Clutter: fold traffic into the incident grid so one badge covers both; drop the "2 places" label on badges under 3
-- [ ] Icon: push toward Apple SF Symbols geometry and Palantir restraint, keep the seven-node constellation; A+ bar
+- [x] Clutter: fold traffic into the incident grid so one badge covers both; drop the "2 places" label on badges under 3 (done 2026-10-01)
+- [x] Icon: push toward Apple SF Symbols geometry and Palantir restraint, keep the seven-node constellation; A+ bar (done 2026-10-01)
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
 - [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
@@ -275,18 +275,18 @@ Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with whi
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
 - [ ] AppIcon.appiconset has 18 orphan PNGs its Contents.json no longer lists (Xcode warning); prune them
 Pass 7: Budget widget (home small/medium, lock screen rectangular/inline) fed from the App Group after every finance or statement load; watch and Mac synced to 2.5.15 with the glass icon.
-- [ ] macOS widget parity: add Budget (and Watchlist) to widgets-macos and have the Mac app publish the same App Group snapshot
-- [ ] First archive after adding the App Group to the iOS app: confirm the provisioning profile picks up the capability
+- [x] macOS widget parity: add Budget (and Watchlist) to widgets-macos and have the Mac app publish the same App Group snapshot (done 2026-10-01)
+- [x] First archive after adding the App Group to the iOS app: confirm the provisioning profile picks up the capability (done 2026-10-01)
 
 ## Cloudflare audit 2026-10-01 (what else the Vercel move broke)
 Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
 - [ ] macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
-- [ ] local-events takes 23s cold, only an in-isolate Map cache; put it in KV with a TTL
+- [x] local-events takes 23s cold, only an in-isolate Map cache; put it in KV with a TTL (done 2026-10-01)
 - [ ] s-maxage headers from api/gateway.js:126 are inert on Workers (no Vercel CDN); use the Cache API or KV for the 25 cached routes
-- [ ] worker/index.js has no request body cap; statements.js assumes the platform 413s at 4.5MB
+- [x] worker/index.js has no request body cap; statements.js assumes the platform 413s at 4.5MB (done 2026-10-01)
 - [ ] secrets referenced in server/api but absent from wrangler secret list (see _shared-secret.js:14; WEBHOOK_SECRET fails closed)
-- [ ] _cors.js lost its production origin with VERCEL_URL; no-Origin requests advertise localhost
-- [ ] stocks-free KV cache key is a 16-char prefix hash, so a 70-symbol request can be served another caller's 20-symbol result
+- [x] _cors.js lost its production origin with VERCEL_URL; no-Origin requests advertise localhost (done 2026-10-01)
+- [x] stocks-free KV cache key is a 16-char prefix hash, so a 70-symbol request can be served another caller's 20-symbol result (done 2026-10-01)
 - [ ] _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0
-- [ ] worker setHeader coerces arrays with String(), a second Set-Cookie would be comma-joined
+- [x] worker setHeader coerces arrays with String(), a second Set-Cookie would be comma-joined (done 2026-10-01)
 - [ ] /api/blob serves public max-age=3600 on in-place overwritten keys plus KV's 60s read cache; stale snapshots possible
