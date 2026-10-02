@@ -47,9 +47,9 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     private var cache: [String: (data: Any, time: Date)] = [:]
     private let cacheTTL: TimeInterval = 120 // 2 minutes
 
-    private func cached<T>(_ key: String) -> T? {
+    private func cached<T>(_ key: String, ttl: TimeInterval? = nil) -> T? {
         guard let entry = cache[key],
-              Date().timeIntervalSince(entry.time) < cacheTTL,
+              Date().timeIntervalSince(entry.time) < (ttl ?? cacheTTL),
               let value = entry.data as? T else { return nil }
         return value
     }
@@ -271,7 +271,8 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     }
 
     func fetchNews() async throws -> [NewsArticle] {
-        if let cached: [NewsArticle] = cached("news") { return cached }
+        // Headlines move slowly; a long TTL keeps the launch prefetch warm until Markets opens.
+        if let cached: [NewsArticle] = cached("news", ttl: 900) { return cached }
         let url = try makeURL("/api/news")
         let request = URLRequest(url: url)
         let data = try await perform(request)

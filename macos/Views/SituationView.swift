@@ -349,9 +349,7 @@ struct SituationView: View {
         .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }
-        .sheet(item: $selectedVenue) { item in
-            VenueDetailSheet(item: item)
-        }
+        .venueDetail($selectedVenue)
         .sheet(isPresented: $showPlaces) {
             NearbyPlacesSheet(center: visibleRegion.center) { place in
                 guard let coordinate = place.coordinate else { return }
@@ -1143,6 +1141,20 @@ private struct SnapshotWeatherAlert: Codable {
 }
 
 extension MKMapItem: @retroactive Identifiable {}
+
+private extension View {
+    // Apple's own place card: hours, ratings, photos, price. No API key. Older OS keeps our sheet.
+    @ViewBuilder
+    func venueDetail(_ item: Binding<MKMapItem?>) -> some View {
+        if #available(macOS 15, *) {
+            mapItemDetailSheet(item: item, displaysMap: false)
+        } else {
+            sheet(item: item) { venue in
+                VenueDetailSheet(item: venue)
+            }
+        }
+    }
+}
 
 private struct VenueDetailSheet: View {
     let item: MKMapItem

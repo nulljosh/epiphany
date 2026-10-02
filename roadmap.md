@@ -236,7 +236,7 @@ it is recorded here.
 
 ## From Notes (2026-09-12)
 - [ ] Current location button works but no pin shown on map
-- [ ] Event/places need more detail (reviews etc.)
+- [x] Event/places need more detail (reviews etc.). 2026-10-01: places now open Apple's own place card (hours, ratings, photos, price) on iOS 18+/macOS 15+, our sheet stays as the fallback. iOS+macOS builds green, not yet checked on a phone
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
@@ -258,3 +258,5 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [x] UI QA, iOS Markets: top right corner overlaps, filter and search button covered up (top bar ticker strip, KO US$86.10, sits over them). Screenshot: notes/attachments/2026-10-01/epiphany-1.png. Done 2026-10-01: ticker inset moved inside the NavigationStack (MarketsView.swift), builds; macOS/web don't share this layout. Ships with the next batch, 2.5.14 still in review
 - [x] UI QA, iOS Markets: Business News card should be more flush; it floats over the list and cuts rows (PLTR hidden under it). Screenshot: notes/attachments/2026-10-01/epiphany-2.png. Done 2026-10-01: dropped the extra 80pt bottom gap so the peek sits on the tab bar, builds; not verified on device. Next batch
 - [ ] Budget should read income statements dynamically instead of a typed Monthly Income ($1000 shown, real figure is higher); phone device debt should calculate dynamically too. Joshua's real numbers are in the wiki epiphany.md (personal data, repo is public). Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed (income 1650, Visa 5000). Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
+- [x] Business News loads just in time: warmed during the launch splash, news cache TTL 15 min so it is still warm at Markets. iOS build green
+- [ ] /api/venue-details returns HTTP 400 from Yelp (key set but rejected, Yelp Fusion went paid). Only the iOS 17 / macOS 14 fallback sheet uses it now; drop it or swap the source

@@ -23,6 +23,8 @@ struct EpiphanyApp: App {
             .task {
                 guard !hasStartedLaunchFlow else { return }
                 hasStartedLaunchFlow = true
+                // Warm the news cache during splash so the Markets drawer opens already filled.
+                Task { _ = try? await EpiphanyAPI.shared.fetchNews() }
 
                 // Restore auth DURING splash so login sheet never flashes.
                 await appState.restoreAuthentication()

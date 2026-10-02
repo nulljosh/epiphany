@@ -663,10 +663,7 @@ struct SituationView: View {
                 await refreshVenues()
             }
         }
-        .sheet(item: $selectedVenue) { venue in
-            VenueDetailSheet(item: venue)
-                .presentationDetents([.fraction(0.4), .medium])
-        }
+        .venueDetail($selectedVenue)
         .sheet(isPresented: $showPlaces) {
             NearbyPlacesSheet(center: visibleRegion?.center ?? currentRegion.center) { place in
                 guard let coordinate = place.coordinate else { return }
@@ -1729,6 +1726,21 @@ private struct SituationSnapshot: Codable {
 }
 
 extension MKMapItem: @retroactive Identifiable {}
+
+private extension View {
+    // Apple's own place card: hours, ratings, photos, price. No API key. Older OS keeps our sheet.
+    @ViewBuilder
+    func venueDetail(_ item: Binding<MKMapItem?>) -> some View {
+        if #available(iOS 18, *) {
+            mapItemDetailSheet(item: item, displaysMap: false)
+        } else {
+            sheet(item: item) { venue in
+                VenueDetailSheet(item: venue)
+                    .presentationDetents([.fraction(0.4), .medium])
+            }
+        }
+    }
+}
 
 private struct VenueDetailSheet: View {
     let item: MKMapItem
