@@ -6,7 +6,7 @@ The trading edge-hunt loop is complete. Tested 85 rules across 148 parameter set
 
 ## Where things stand
 
-Trend 2x ruling live on Autopilot server (morning-run.js). Paper trading runs weekdays at 12:45pm Pacific; at close Oct 2 holdings were Even (+0.93% vs S&P +1.02%, -0.09 points). Menu bar Epiphany Live fixed Oct 2 afternoon: stopped writing every runner log line twice (commit 813530a), scoreboard now keeps fully sold positions and waits up to 30s for fills before logging (commit 59c1d18). Menu bar benchmarks against eight indexes (S&P, Nasdaq, Dow, Russell, TSX, gold, Bitcoin, 16-fund basket). Net worth stores Canadian totals for mixed-currency accounts. IB Gateway auto-logs in at boot via IBC and Keychain. Quality factor judged luck and switched off. Momentum failed survivorship test.
+Trend 2x ruling live on Autopilot server (morning-run.js). Paper trading runs weekdays at 12:45pm Pacific; at close Oct 2 holdings were Trailing 0.12 points (+0.95% vs S&P +1.06%), basically a tie. Menu bar Epiphany Live fixed Oct 2 afternoon: stopped writing every runner log line twice (commit 813530a), scoreboard now keeps fully sold positions and waits up to 30s for fills before logging (commit 59c1d18). Menu bar benchmarks against eight indexes (S&P, Nasdaq, Dow, Russell, TSX, gold, Bitcoin, 16-fund basket). Net worth stores Canadian totals for mixed-currency accounts. IB Gateway auto-logs in at boot via IBC and Keychain. Quality factor judged luck and switched off. Momentum failed survivorship test.
 
 iOS 2.5.14 live. iOS 2.5.15 WAITING_FOR_REVIEW (place card, clustered map, Liquid Glass icon). macOS 2.5.3 live. macOS 2.5.15 WAITING_FOR_REVIEW (Liquid Glass icon, Budget widget, clustered map). watchOS honest average-move page. Next run: Monday 12:45pm PT.
 
