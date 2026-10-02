@@ -296,3 +296,9 @@ Bigger, parked:
 - [ ] Apple Watch complications for a chosen symbol with price, percent or market cap (day, medium): watchos/project.yml has a single application target and watchos/EpiphanyWatch.xcodeproj has one com.apple.product-type.application; grep for WidgetKit, accessoryCircular, accessoryCorner across watchos returns nothing, s
 - [ ] Earnings and dividend dates merged into the Portfolio financial calendar with Add to Calendar (hours, medium): Follow-up to the earnings quick win once nextEarnings is on the Stock model: ios/Views/PortfolioView.swift:555 buildCalendarEvents merges watchlist and holdings earnings dates, StockDetailView gets an EKEvent button. Lis
 Dropped on purpose: Copilot-style ML category prediction from amount, weekday and card: a per-user merchant ru; Rocket Money SMS assistant texting you about price increases and new subscriptions: needs ; Watch Duty evacuation orders subscribed by county: requires a regional evacuation-order fe; Citizen-style following an incident from first report to resolved: /api/incidents is an Op; Flightradar24 7700 emergency squawk alerts: needs continuous aircraft polling in the backg; Apple Maps-style full offline area download: MapKit exposes no tile download API and the C
+
+## Ingested 2026-10-02
+- [ ] GitHub release versions are stale.
+- [ ] Move the README GIF further down until the app is making money or beating the S&P 500.
+- [ ] Add the jobs report.
+- [ ] Add bonds to the markets list.
