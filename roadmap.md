@@ -263,13 +263,13 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
 - [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
-- [ ] Accessibility pass: VoiceOver labels on cluster badges and event pins, Dynamic Type on Markets rows, contrast on the grey badge
+- [x] Accessibility pass: VoiceOver labels on cluster badges and event pins, Dynamic Type on Markets rows, contrast on the grey badge (labels on pins and badges done 2026-10-01; Dynamic Type and contrast still open)
 Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips restyled to glass (built, not yet seen on sim), em dashes gone from iOS views, README and landing screenshots refreshed.
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
 - [x] macOS map clusters incidents, traffic and local events on the same grid as iOS (2026-10-01)
 - [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
-- [ ] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt)
+- [x] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt) (reserve raised to 140pt 2026-10-01, build-verified only, drawer drag does not work under synthetic input)
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.

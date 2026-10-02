@@ -315,9 +315,9 @@ struct MarketsView: View {
             switch self {
             case .peek: return 64
             case .medium: return totalHeight * 0.45
-            // Fills up to just under the top ticker strip (~top 10%) so a fully
-            // open drawer reads as "ticker bar + drawer", nothing in between.
-            case .large: return totalHeight - 80
+            // Fills up to just under the ticker, which now sits beneath the inline
+            // nav bar: status bar + nav bar + strip is about 140pt.
+            case .large: return totalHeight - 140
             }
         }
     }
