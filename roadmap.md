@@ -257,3 +257,10 @@ Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), p
 - [ ] Yelp key on Cloudflare returns 400, needs a fresh key from the Yelp developer portal (Chrome job), only adds review photos and ratings
 - [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
 - [ ] Markets list rows render blank in UITEST_DEMO mode
+Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
+- [ ] Clutter: fold traffic into the incident grid so one badge covers both; drop the "2 places" label on badges under 3
+- [ ] Icon: push toward Apple SF Symbols geometry and Palantir restraint, keep the seven-node constellation; A+ bar
+- [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
+- [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
+- [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
+- [ ] Accessibility pass: VoiceOver labels on cluster badges and event pins, Dynamic Type on Markets rows, contrast on the grey badge
