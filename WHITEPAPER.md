@@ -931,6 +931,23 @@ not the S&P, so they are variations on the first bet, not new edges. The four du
 lead until its real-dividend half stops falling further than holding.
 
 
+#### Are the winners luck?
+
+We tried about 148 things (84 Scoreboard rows plus the settings we picked among inside them) and two bets passed the bar: Trend 2x on the S&P, and Quality through the profitability tenth. A fair question is how many passes luck alone would give. `tradingview/audit.py` asks it three ways, on the blind years only (raw output in `tradingview/results-audit.txt`). The count is a floor, and most trials are near copies of each other, so the real number of independent bets is somewhere between 10 and 40.
+
+| Test | Trend 2x S&P | Quality tenth | Real QUAL |
+|---|---|---|---|
+| Blind years, monthly excess over holding | +3.4% a year | +1.2% a year | -0.3% a year |
+| t-stat on that excess (3.0 is the modern bar) | 1.6 | 1.5 | -0.4 |
+| Blind years that beat holding | 28 of 51 | 29 of 51 | 5 of 13 |
+| Chance of that by coin flip | 29% | 20% | 87% |
+| Deflated Sharpe, 148 trials | 0.06 | 0.05 | 0.02 |
+| Deflated Sharpe, 40 independent bets | 0.17 | 0.14 | 0.04 |
+
+The deflated Sharpe (Bailey and Lopez de Prado, 2014) is the chance the true edge over holding is above zero once you subtract what the luckiest of N trials would show anyway. Before the haircut both winners look fine (0.95 and 0.93). After it, neither does. Noise alone clears our three part bar 3% to 11% of the time, so among 10 to 40 independent bets we should expect 1 to 3 passes from luck. We found 2 or 3. That is what luck looks like.
+
+Trend 2x is the better of the two. It beats holding by 3.4 points a year over 51 years, it beat 93% of random in and out schedules, and it halves the crash. But its t-stat is 1.6 and the bar for 148 tries is 3.6, so we cannot tell its edge from a lucky draw. Quality is weaker: 1.2 points a year on the model, and the fund you could actually buy, QUAL, trailed SPY. Verdict: Trend 2x survives weakly, keep it and watch it, because what it sells is a smaller crash for leverage, and that is real whether or not the extra return is. Quality is likely luck, switch the sleeve off.
+
 ### Broker abstraction
 
 `src/utils/broker.js` defines one `BrokerAdapter` interface (`connect`, `placeOrder`,

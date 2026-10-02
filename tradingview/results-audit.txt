@@ -1,0 +1,95 @@
+MULTIPLE TESTING AUDIT of the two Scoreboard winners. Blind half only, monthly series.
+Winner 1: Trend 2x S&P (2x fund above 200 day average, else bills; fund gap 0.8% off, 0.1% fee, daily model rolled to months).
+  daily model check: blind 14.4% / 44% (paper 14.4% / 44%)
+  1976-01 to 2026-10, 610 months, benchmark = hold S&P with dividends.
+Winner 2: Quality, top operating profitability tenth (Ken French, value weighted, 0.06% a year costs) vs the market, 1976 to now.
+  1976-01 to 2026-08, 608 months. Real QUAL vs SPY is also shown (it is the tradable version).
+
+1. TRIAL COUNT
+  Scoreboard rows (parsed from WHITEPAPER.md): 84
+  +  25  century.py: 24 settings + 4 stock momentum settings, minus 3 that already have rows
+  +  31  leverage: 32 combos picked among, minus the 1 pick that has a row
+  +   5  voltarget: 7 combos, minus the 2 that have rows
+  +   3  crypto: 4 rules picked among, minus the 1 pick that has a row
+  N = 148 trials. This is a floor: the Double 7s and backtest.py tuning runs, the 5 Quality-upgrade picks
+  inside rows, and any run we threw away before writing it down are not counted. Many trials are near copies
+  (the same trend rule on the same S&P), so the effective number of independent bets is far lower. Both bounds are used below.
+
+   Cross-trial Sharpe variance, estimated by recomputing cheap Scoreboard trials on the blind half:
+   32 leverage combos + 7 French long only tenths = 39 trials
+   monthly information ratio (excess over hold): mean +0.017, sd 0.048, var 0.00228
+   monthly Sharpe (over bills):                  mean +0.162, sd 0.012, var 0.00015
+   Conservative (a floor on variance would flatter the winners): also run at 2x that variance.
+
+2. DEFLATED SHARPE RATIO (Bailey and Lopez de Prado 2014)
+   SR0 = expected best Sharpe of N trials with zero true skill. DSR = P(true Sharpe > 0) after that haircut.
+   Monthly Sharpe units. Skew and kurtosis (raw) are of the same monthly series.
+
+   Trend 2x S&P, excess over hold (IR): T=610 months (50.8 yrs), monthly SR 0.065 (annual 0.23), skew -0.02, kurtosis 3.94
+     N=1 (no haircut)       SR0 0.000 (annual 0.00)  DSR 0.946
+     N=148                  SR0 0.127 (annual 0.44)  DSR 0.064
+     N=148, 2x variance     SR0 0.180 (annual 0.62)  DSR 0.002
+     N=40 effective         SR0 0.104 (annual 0.36)  DSR 0.168
+     N=10 effective         SR0 0.075 (annual 0.26)  DSR 0.405
+   Trend 2x S&P, absolute (over bills): T=610 months (50.8 yrs), monthly SR 0.152 (annual 0.53), skew +0.06, kurtosis 4.31
+     N=1 (no haircut)       SR0 0.000 (annual 0.00)  DSR 1.000
+     N=148                  SR0 0.033 (annual 0.11)  DSR 0.998
+     N=148, 2x variance     SR0 0.046 (annual 0.16)  DSR 0.995
+     N=40 effective         SR0 0.027 (annual 0.09)  DSR 0.999
+     N=10 effective         SR0 0.019 (annual 0.07)  DSR 0.999
+
+   Quality tenth (French), excess over hold (IR): T=608 months (50.7 yrs), monthly SR 0.060 (annual 0.21), skew +0.24, kurtosis 5.17
+     N=1 (no haircut)       SR0 0.000 (annual 0.00)  DSR 0.932
+     N=148                  SR0 0.127 (annual 0.44)  DSR 0.049
+     N=148, 2x variance     SR0 0.180 (annual 0.62)  DSR 0.002
+     N=40 effective         SR0 0.104 (annual 0.36)  DSR 0.137
+     N=10 effective         SR0 0.075 (annual 0.26)  DSR 0.357
+   Quality tenth (French), absolute (over bills): T=608 months (50.7 yrs), monthly SR 0.181 (annual 0.63), skew -0.51, kurtosis 5.13
+     N=1 (no haircut)       SR0 0.000 (annual 0.00)  DSR 1.000
+     N=148                  SR0 0.033 (annual 0.11)  DSR 1.000
+     N=148, 2x variance     SR0 0.046 (annual 0.16)  DSR 0.999
+     N=40 effective         SR0 0.027 (annual 0.09)  DSR 1.000
+     N=10 effective         SR0 0.019 (annual 0.07)  DSR 1.000
+
+   QUAL real fund vs SPY, excess over hold (IR): T=159 months (13.2 yrs), monthly SR -0.033 (annual -0.11), skew -0.01, kurtosis 3.85
+     N=1 (no haircut)       SR0 0.000 (annual 0.00)  DSR 0.340
+     N=148                  SR0 0.127 (annual 0.44)  DSR 0.022
+     N=148, 2x variance     SR0 0.180 (annual 0.62)  DSR 0.004
+     N=40 effective         SR0 0.104 (annual 0.36)  DSR 0.042
+     N=10 effective         SR0 0.075 (annual 0.26)  DSR 0.087
+
+3. SIGN TESTS AND T-STATS (excess over hold, blind half)
+   Sign test: one sided binomial, P(at least this many wins by coin flip). Years with under 6 months are skipped; decades with under 36 months skipped.
+   t thresholds: plain 2.0, Harvey-Liu-Zhu about 3.0, Bonferroni two sided 5% over N=148 is 3.58 (over 40 effective: 3.23).
+
+   Trend 2x S&P: mean excess +3.36% a year, monthly t 1.61, Newey-West (6 lags) t 1.62
+     beat hold in 28 of 51 blind years (sign test p 0.288), 4 of 6 decades (p 0.344)
+     t vs 3.0: BELOW; vs Bonferroni N=148 (3.58): BELOW
+   Quality tenth (French): mean excess +1.20% a year, monthly t 1.49, Newey-West (6 lags) t 1.38
+     beat hold in 29 of 51 blind years (sign test p 0.201), 4 of 6 decades (p 0.344)
+     t vs 3.0: BELOW; vs Bonferroni N=148 (3.58): BELOW
+   QUAL real fund vs SPY: mean excess -0.33% a year, monthly t -0.41, Newey-West (6 lags) t -0.43
+     beat hold in 5 of 13 blind years (sign test p 0.867), 1 of 2 decades (p 0.750)
+     t vs 3.0: BELOW; vs Bonferroni N=148 (3.58): BELOW
+
+4. EXPECTED FALSE PASSES
+   Null pass rate p0 = chance a rule with NO true edge clears the 3 part bar (more return, no bigger drop, most decades).
+   Measured by Monte Carlo: demean each winner's monthly excess over hold, resample in 12 month blocks, add to the real
+   holding path, test the bar. 4000 draws each. The random schedule baselines in results-leverage-robust.txt,
+   results-quality.txt and friends say the same thing from the other side: random in and out timing almost never
+   matched a winner on return and drop (0 of 1000 for Trend 2x).
+   Trend 2x S&P: null pass rate 0.034
+   Quality tenth (French): null pass rate 0.106
+   Average p0 = 0.070. Observed passes: 2 (Trend 2x S&P and Trend 2x Nasdaq 100, the same bet), plus Quality (vs hold only, and the real fund fails).
+   all trials N  : expected false passes 10.3; P(at least 2 by luck) 1.00; P(at least 3) 1.00
+   40 effective  : expected false passes 2.8; P(at least 2 by luck) 0.77; P(at least 3) 0.53
+   10 effective  : expected false passes 0.7; P(at least 2 by luck) 0.15; P(at least 3) 0.03
+   Read: noise alone clears this bar about 3% to 11% of the time for rules shaped like our winners. Over the independent
+   bets (somewhere between 10 and 40) that is 1 to 3 false passes. We got 2 or 3. That is what luck looks like.
+   If all 148 trials were independent the luck count would be 10, and the observed 2 or 3 would sit below it, but they are
+   not independent, most are the same trend rule on the same index, so the effective number is the honest one to use.
+
+5. VERDICT INPUTS
+   Trend 2x S&P: IR DSR at N=148 0.06, 2x variance 0.00, 40 effective 0.17; t 1.61; years 28/51, decades 4/6
+   Quality tenth (French): IR DSR at N=148 0.05, 2x variance 0.00, 40 effective 0.14; t 1.49; years 29/51, decades 4/6
+   QUAL real fund vs SPY: IR DSR at N=148 0.02, 2x variance 0.00, 40 effective 0.04; t -0.41; years 5/13, decades 1/2
