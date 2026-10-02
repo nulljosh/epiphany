@@ -6,5 +6,6 @@ struct EpiphanyMacWidgets: WidgetBundle {
     var body: some Widget {
         PortfolioWidget()
         MarketsWidget()
+        BudgetWidget()
     }
 }

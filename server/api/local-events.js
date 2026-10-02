@@ -2,7 +2,10 @@
 import { overpassQuery } from './_overpass.js';
 // Fallbacks: Wikipedia GeoSearch (multi-point), OSM venues, Eventbrite, news RSS
 
+import { getKv } from './_kv.js';
+
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const KV_TTL_SEC = 30 * 60;
 const TIMEOUT_MS = 8000;
 const cache = new Map();
 
@@ -308,7 +311,15 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
-  const cached = cache.get(cacheKey);
+  let cached = cache.get(cacheKey);
+  // The in-isolate Map dies with the isolate; a cold request took 23s. KV carries it across.
+  if (!cached) {
+    try {
+      const kvClient = await getKv();
+      const hit = kvClient ? await kvClient.get(`local-events:${cacheKey}`) : null;
+      if (hit) { cached = { data: hit, ts: Date.now() }; cache.set(cacheKey, cached); }
+    } catch { /* cache only */ }
+  }
   if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({
@@ -356,6 +367,10 @@ export default async function handler(req, res) {
     });
 
     cache.set(cacheKey, { data: deduped, ts: Date.now() });
+    try {
+      const kvClient = await getKv();
+      if (kvClient) await kvClient.set(`local-events:${cacheKey}`, deduped, { ex: KV_TTL_SEC });
+    } catch { /* cache only */ }
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     const sources = [...new Set(deduped.map(e => e.source))];
     const degraded = deduped.length === 0;

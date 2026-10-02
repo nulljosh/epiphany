@@ -29,7 +29,11 @@ function makeRes() {
   const state = { status: 200, body: null, headersSent: false, done: null };
   const res = {
     get headersSent() { return state.headersSent; },
-    setHeader(k, v) { headers.set(k, String(v)); return res; },
+    setHeader(k, v) {
+      // Arrays (a second Set-Cookie) must append, not comma-join.
+      if (Array.isArray(v)) { headers.delete(k); v.forEach(x => headers.append(k, String(x))); } else headers.set(k, String(v));
+      return res;
+    },
     status(code) { state.status = code; return res; },
     json(payload) {
       if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
@@ -117,6 +121,10 @@ export default {
       });
     }
     if (url.pathname.startsWith('/api/')) {
+      // Vercel 413ed at 4.5MB; Workers accept 100MB, so cap bodies here.
+      if (Number(request.headers.get('content-length') || 0) > 8 * 1024 * 1024) {
+        return new Response(JSON.stringify({ error: 'Payload too large' }), { status: 413, headers: { 'Content-Type': 'application/json' } });
+      }
       try {
         return await handleApi(request, url);
       } catch (err) {

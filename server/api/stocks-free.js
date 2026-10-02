@@ -83,8 +83,9 @@ function getSymbolHash(symbolList) {
 function getKvKeys(symbolList) {
   const hash = getSymbolHash(symbolList);
   return {
-    fresh: `stocks:free:v2:${hash}`,
-    stale: `stocks:free:v2:stale:${hash}`,
+    // Count in the key: a 16-char prefix hash let a 70-symbol request hit a 20-symbol entry.
+    fresh: `stocks:free:v3:${symbolList.length}:${hash}`,
+    stale: `stocks:free:v3:stale:${symbolList.length}:${hash}`,
   };
 }
 
