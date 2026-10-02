@@ -640,6 +640,29 @@ versions made 8.0% and 8.7%, and QUAL plus VTV made 12.6% / 35.4%. Verdict: one
 model pass against holding, no real fund pass, so the paper Quality sleeve stays
 plain QUAL with no filter and no momentum blend.
 
+**Trend 2x and Quality as one portfolio.** The two edges that passed on the model
+are Trend 2x (14.4% / 44% on the daily rule) and the Quality tenth (13.6% / 41%),
+so we asked whether one account holding both beats either alone
+(`century.py --blend`, raw output in `tradingview/results-blend.txt`). Trend 2x's
+daily returns were compounded to month ends, which reads its drop kinder (40%).
+Weights were fixed in advance: 50/50, 70/30 and 30/70, rebalanced monthly (0.1% on
+the dollars traded) and also once a year. All six passed the bar on the blind
+years 1976 to now: 14.1% to 14.5% with a 32% to 36% drop, against 12.3% / 50% for
+holding, and a return to drop ratio of 0.40 to 0.45 against 0.36 for Trend 2x and
+0.33 for Quality. The 50/50 monthly blend made 14.3% / 33%, won 5 of 6 decades
+against holding, 4 against Trend 2x and 3 against Quality, and lost 15% in 2008
+(Trend 2x alone made 1%, Quality alone lost 30%) and 22% in 2022 (Trend 2x lost
+31%, Quality 13%). The two legs are not independent: their monthly returns
+correlate at 0.73, so the gain is a smoother ride, not more return. Against
+300 random 50/50 blends of Trend 2x with a random French tenth, the Quality blend
+beat 76% on return and 92% on return to drop, so Quality is a good partner but
+the benefit is mostly "two things instead of one", not Quality specifically. On the real funds from July 2013 (SSO and BIL
+as Trend 2x, plus QUAL, against SPY) the 50/50 blend made 14.4% / 27% against SPY's
+14.1% / 24%: a hair more return, a bigger drop, so the real-fund check fails for
+every weight. Verdict: model pass, real funds fail, no weight clears the whole
+bar. The paper account should not add a rebalance between the sleeves on this
+evidence; the model gain is real but small and does not survive the funds.
+
 **The low volatility anomaly.** The old complaint is that calm stocks earn as
 much as wild ones, so per unit of risk they pay too well (Ang and others, 2006;
 Baker, Bradley and Wurgler, 2011; Frazzini and Pedersen's betting against beta,
@@ -863,6 +886,7 @@ files named above.
 | Quality plus momentum tenths, 50/50 monthly | 1976 to now | 15.0% / 46% | 12.3% / 50% | pass on the model (5 of 6 decades, past Trend 2x 14.3% / 51% too), not past plain quality (drop 46% against 41%), 12.1% / 48% at 0.5% a side, fails on real QUAL plus MTUM from 2013 (14.8% / 34.1% against SPY 14.0% / 33.7%, 7 of 14 years) |
 | Same, with the market 10 month filter | 1976 to now | 12.3% / 28% | 12.3% / 50% | fail (no more return, 2 of 6 decades; real 8.7% / 30% against SPY 14.0% / 34%) |
 | Quality plus value tenths, 50/50 monthly | 1976 to now | 15.0% / 56% | 12.3% / 50% | fail (bigger drop; real QUAL plus VTV 12.6% / 35% against SPY 14.0% / 34%) |
+| Trend 2x + Quality tenth, 50/50 monthly rebalance (70/30 and 30/70 alike) | 1976 to now | 14.3% / 33% | 12.3% / 50% | pass on the model (5 of 6 decades, 14.1% to 14.5% across weights, return to drop 0.43 against 0.36 and 0.33 for the legs); real SSO/BIL plus QUAL from 2013 14.4% / 27% against SPY 14.1% / 24%, fail (bigger drop) |
 | Trend 2x S&P, exposure scaled to 20% target vol on 60 days (picked of 6 on 1929 to 1975) | 1976 to now | 11.3% / 29% | Trend 2x 14.4% / 44% | fail (less return, 1 of 6 decades; also behind holding's 12.1%) |
 | Trend 2x S&P, 2x only when 20 day vol is under its 1 year median, else 1x | 1976 to now | 10.3% / 38% | 14.4% / 44% | fail (less return, 2 of 6 decades) |
 | Turn of the month, 1x S&P on the last and first 3 days, bills else, 0.1% fee | 1976 to now | 5.9% / 21% | 12.1% / 55% | fail (less return, 2 of 6 decades; beats 100% of random masks, loses 2.6 points a year to fees) |
