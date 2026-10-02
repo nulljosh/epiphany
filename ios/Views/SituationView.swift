@@ -1732,13 +1732,58 @@ private extension View {
     @ViewBuilder
     func venueDetail(_ item: Binding<MKMapItem?>) -> some View {
         if #available(iOS 18, *) {
-            mapItemDetailSheet(item: item, displaysMap: false)
+            sheet(item: item) { venue in
+                PlaceCard(item: venue)
+                    .presentationDetents([.large])
+            }
         } else {
             sheet(item: item) { venue in
                 VenueDetailSheet(item: venue)
                     .presentationDetents([.fraction(0.4), .medium])
             }
         }
+    }
+}
+
+/// Look Around photo on top, Apple's own place card (hours, details, directions) below.
+@available(iOS 18, *)
+private struct PlaceCard: View {
+    let item: MKMapItem
+    @Environment(\.dismiss) private var dismiss
+    @State private var scene: MKLookAroundScene?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let scene {
+                LookAroundPreview(initialScene: scene)
+                    .frame(height: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding([.horizontal, .top], Spacing.lg)
+            }
+            AppleDetail(item: item) { dismiss() }
+        }
+        .task { scene = try? await MKLookAroundSceneRequest(mapItem: item).scene }
+    }
+}
+
+@available(iOS 18, *)
+private struct AppleDetail: UIViewControllerRepresentable {
+    let item: MKMapItem
+    let onDone: () -> Void
+
+    func makeUIViewController(context: Context) -> MKMapItemDetailViewController {
+        let vc = MKMapItemDetailViewController(mapItem: item, displaysMap: false)
+        vc.delegate = context.coordinator
+        return vc
+    }
+
+    func updateUIViewController(_ vc: MKMapItemDetailViewController, context: Context) {}
+    func makeCoordinator() -> Coordinator { Coordinator(onDone: onDone) }
+
+    final class Coordinator: NSObject, MKMapItemDetailViewControllerDelegate {
+        let onDone: () -> Void
+        init(onDone: @escaping () -> Void) { self.onDone = onDone }
+        func mapItemDetailViewControllerDidFinish(_ vc: MKMapItemDetailViewController) { onDone() }
     }
 }
 
