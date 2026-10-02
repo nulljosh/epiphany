@@ -267,7 +267,7 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips restyled to glass (built, not yet seen on sim), em dashes gone from iOS views, README and landing screenshots refreshed.
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [ ] macOS map does not cluster events; mirror the iOS grid
+- [x] macOS map clusters incidents, traffic and local events on the same grid as iOS (2026-10-01)
 - [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
 - [ ] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt)
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun

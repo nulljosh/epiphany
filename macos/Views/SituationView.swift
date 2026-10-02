@@ -232,26 +232,29 @@ struct SituationView: View {
                 }
             }
 
-            // Active incidents (construction, road works) -- prominent
-            ForEach(appState.situationIncidentsEnabled ? incidents.filter { !$0.isInfrastructure }.prefix(25).map { $0 } : []) { incident in
-                Annotation(incident.title, coordinate: incident.coordinate) {
-                    Button {
-                        selectedEvent = .incident(incident)
-                    } label: {
-                        mapPin(color: Palette.mapBlue, symbol: "cone.fill", size: 15)
+            // Road incidents and traffic share one grid, like iOS: a busy block is one badge.
+            ForEach(clusterByGrid(roadEvents, in: visibleRegion.span, cellsAcross: 8) { $0.coordinate }) { cluster in
+                if let event = cluster.single {
+                    switch event {
+                    case .incident(let incident):
+                        Annotation(incident.title, coordinate: cluster.coordinate) {
+                            Button { selectedEvent = .incident(incident) } label: {
+                                mapPin(color: Palette.mapBlue, symbol: "cone.fill", size: incident.isInfrastructure ? 10 : 15)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    case .traffic(let incident):
+                        Annotation(incident.title ?? "Traffic", coordinate: cluster.coordinate) {
+                            Button { selectedEvent = .trafficIncident(incident) } label: {
+                                mapPin(color: Palette.warningAmber, symbol: "car.fill", size: 15)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                    .buttonStyle(.plain)
-                }
-            }
-            // Infrastructure (police, fire, hospital) -- smaller
-            ForEach(appState.situationIncidentsEnabled ? incidents.filter { $0.isInfrastructure }.prefix(15).map { $0 } : []) { incident in
-                Annotation(incident.title, coordinate: incident.coordinate) {
-                    Button {
-                        selectedEvent = .incident(incident)
-                    } label: {
-                        mapPin(color: Palette.mapBlue, symbol: "cone.fill", size: 10)
+                } else {
+                    Annotation(cluster.count >= 3 ? "\(cluster.count) on the road" : "", coordinate: cluster.coordinate) {
+                        countBadge(cluster.count, tint: Palette.warningAmber, coordinate: cluster.coordinate)
                     }
-                    .buttonStyle(.plain)
                 }
             }
 
@@ -268,28 +271,17 @@ struct SituationView: View {
                 }
             }
 
-            ForEach(localEventAnnotations) { event in
-                if let coord = event.coordinate {
-                    Annotation(event.title, coordinate: coord) {
-                        Button {
-                            selectedEvent = .localEvent(event)
-                        } label: {
+            ForEach(clusterByGrid(localEventAnnotations, in: visibleRegion.span, cellsAcross: 8) { $0.coordinate }) { cluster in
+                if let event = cluster.single {
+                    Annotation(event.title, coordinate: cluster.coordinate) {
+                        Button { selectedEvent = .localEvent(event) } label: {
                             mapPin(color: Palette.slate, symbol: localEventSymbol(event), size: 15)
                         }
                         .buttonStyle(.plain)
                     }
-                }
-            }
-
-            ForEach(trafficIncidentAnnotations) { incident in
-                if let coord = incident.coordinate {
-                    Annotation(incident.title ?? "Traffic", coordinate: coord) {
-                        Button {
-                            selectedEvent = .trafficIncident(incident)
-                        } label: {
-                            mapPin(color: Palette.warningAmber, symbol: "car.fill", size: 15)
-                        }
-                        .buttonStyle(.plain)
+                } else {
+                    Annotation(cluster.count >= 3 ? "\(cluster.count) events" : "", coordinate: cluster.coordinate) {
+                        countBadge(cluster.count, tint: Palette.slate, coordinate: cluster.coordinate)
                     }
                 }
             }
@@ -383,17 +375,41 @@ struct SituationView: View {
     }
 
     private func venueClusterPin(_ cat: VenueCategory, _ cluster: MapCluster<MKMapItem>) -> some View {
+        countBadge(cluster.count, tint: cat.tint, coordinate: cluster.coordinate)
+    }
+
+    private func countBadge(_ count: Int, tint: Color, coordinate: CLLocationCoordinate2D) -> some View {
         Button {
-            zoomInto(cluster.coordinate)
+            zoomInto(coordinate)
         } label: {
-            Text("\(cluster.count)")
+            Text("\(count)")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.white)
                 .frame(minWidth: 26, minHeight: 26)
-                .background(cat.tint, in: Circle())
+                .background(tint, in: Circle())
                 .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
         }
         .buttonStyle(.plain)
+    }
+
+    private enum RoadEvent: Identifiable {
+        case incident(Incident), traffic(TrafficData.TrafficIncident)
+        var id: String {
+            switch self { case .incident(let i): return "i-\(i.id)"; case .traffic(let t): return "t-\(t.id)" }
+        }
+        var coordinate: CLLocationCoordinate2D? {
+            switch self { case .incident(let i): return i.coordinate; case .traffic(let t): return t.coordinate }
+        }
+    }
+
+    private var roadEvents: [RoadEvent] {
+        var out: [RoadEvent] = []
+        if appState.situationIncidentsEnabled {
+            out += incidents.filter { !$0.isInfrastructure }.prefix(25).map { .incident($0) }
+            out += incidents.filter { $0.isInfrastructure }.prefix(15).map { .incident($0) }
+        }
+        out += trafficIncidentAnnotations.map { .traffic($0) }
+        return out
     }
 
     /// Halves the visible span around a cluster so a click breaks it apart.
