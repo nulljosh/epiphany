@@ -5,3 +5,15 @@ horizon | chance Trend 2x beats SPY | median excess over the horizon | 5th perce
 1 year | 59% | +4.4% | -24.7% | 25%
 3 years | 65% | +16.1% | -45.9% | 13%
 5 years | 69% | +34.3% | -66.5% | 7%
+SPY hold 12.0%
+fee 0.00% per flip: 16.4% a year, worst drop -38%, flips 95
+fee 0.05% per flip: 16.1% a year, worst drop -38%, flips 95
+fee 0.25% per flip: 14.9% a year, worst drop -40%, flips 95
+fee 1.00% per flip: 10.6% a year, worst drop -50%, flips 95
+signal acted 0 extra days late: 16.1%, worst drop -38%
+signal acted 1 extra days late: 14.6%, worst drop -43%
+signal acted 2 extra days late: 13.6%, worst drop -41%
+signal acted 5 extra days late: 16.7%, worst drop -36%
+band of 0% around the average: 16.1%, worst drop -38%, flips 95
+band of 1% around the average: 14.8%, worst drop -40%, flips 55
+band of 2% around the average: 16.5%, worst drop -42%, flips 27
