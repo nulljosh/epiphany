@@ -277,3 +277,6 @@ Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips rest
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
 - [ ] AppIcon.appiconset has 18 orphan PNGs its Contents.json no longer lists (Xcode warning); prune them
+Pass 7: Budget widget (home small/medium, lock screen rectangular/inline) fed from the App Group after every finance or statement load; watch and Mac synced to 2.5.15 with the glass icon.
+- [ ] macOS widget parity: add Budget (and Watchlist) to widgets-macos and have the Mac app publish the same App Group snapshot
+- [ ] First archive after adding the App Group to the iOS app: confirm the provisioning profile picks up the capability
