@@ -75,14 +75,9 @@ time, and its only leverage is the 2x fund itself.
   The momentum sleeve that was once built to run beside it was dropped: the
   momentum lead failed the survivorship test in section 5.
 
-  A third sleeve, Quality, is a test of a tilt, not an edge. `scripts/ibkr-quality.py`
-  buys $50,000 of QUAL once, the iShares fund nearest the most profitable tenth
-  in section 5, and holds it. No timing, no rebalance, no sells. It runs once,
-  in the same 3:45 to 4pm window, and stops the moment its state file
-  (`tradingview/ibkr-quality.json`) has a start date. The menu bar scores it
-  against the S&P 500 from that day. On real prices since 2013 QUAL trails SPY
-  by 0.4 point a year, so a tie is the likely answer. A year of paper results
-  will say.
+  A Quality sleeve (`scripts/ibkr-quality.py`, buy QUAL once and hold) was
+  built, then switched off before its first trade: the luck audit at the end
+  of section 5 judged the Quality pass likely luck. The script still runs by hand.
 
 ### 4. Guardrails
 
