@@ -12,10 +12,15 @@ struct PortfolioGlance: View {
         stocks.reduce(0) { $0 + $1.change }
     }
 
+    // The Watch has no login, so this page is the market's top names, not the user's holdings.
+    private var averageChangePercent: Double {
+        stocks.isEmpty ? 0 : stocks.reduce(0) { $0 + $1.changePercent } / Double(stocks.count)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
-                Text("PORTFOLIO")
+                Text("TOP STOCKS")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -25,23 +30,19 @@ struct PortfolioGlance: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     VStack(spacing: 4) {
-                        Text(formatCurrency(portfolioValue))
+                        Text(formatPercent(averageChangePercent))
                             .font(.title2.bold())
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(averageChangePercent >= 0 ? Color.gain : Color.loss)
+                        Text("average move today")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
 
-                        HStack(spacing: 4) {
-                            Image(systemName: dayChange >= 0 ? "arrow.up.right" : "arrow.down.right")
-                                .font(.caption2)
-                            Text(formatChange(dayChange))
-                                .font(.caption)
-                        }
-                        .foregroundStyle(dayChange >= 0 ? Color.gain : Color.loss)
                     }
                     .frame(maxWidth: .infinity)
 
                     Divider()
 
-                    Text("TOP HOLDINGS")
+                    Text("LEADERS")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
