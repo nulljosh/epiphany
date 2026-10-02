@@ -10,7 +10,6 @@ from unittest import mock
 spec = importlib.util.spec_from_file_location("menubar", os.path.join(os.path.dirname(__file__), "..", "..", "scripts", "menubar.py"))
 mb = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mb)
-REAL_BENCHMARKS = mb.benchmarks  # Base patches it out; the parser test needs the real one
 
 
 def pos(sym, pnl, cost=100.0, qty=1):
@@ -22,8 +21,7 @@ class Base(unittest.TestCase):
         self.dir = tempfile.TemporaryDirectory()
         d = self.dir.name
         patches = [mock.patch.object(mb, k, os.path.join(d, f)) for k, f in
-                   (("BEST", "best.json"), ("TREND", "trend.json"), ("QUALITY", "quality.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
-        patches.append(mock.patch.object(mb, "benchmarks", return_value={"S&P 500": 0.10, "Gold": -0.01}))
+                   (("TREND", "trend.json"), ("STATE", "state.json"), ("PAUSED", "paused"), ("LOG", "log.txt"))]
         for p in patches:
             p.start()
             self.addCleanup(p.stop)
@@ -36,16 +34,16 @@ class Base(unittest.TestCase):
 
 class Json(Base):
     def test_missing_corrupt_and_wrong_type_read_as_default(self):
-        self.assertEqual(mb.read_json(mb.BEST, {}), {})
-        self.write(mb.BEST, '{"high": 1')
-        self.assertEqual(mb.read_json(mb.BEST, {}), {})
-        self.write(mb.BEST, "[1, 2]")
-        self.assertEqual(mb.read_json(mb.BEST, {}), {})
+        self.assertEqual(mb.read_json(mb.STATE, {}), {})
+        self.write(mb.STATE, '{"high": 1')
+        self.assertEqual(mb.read_json(mb.STATE, {}), {})
+        self.write(mb.STATE, "[1, 2]")
+        self.assertEqual(mb.read_json(mb.STATE, {}), {})
 
     def test_write_is_atomic_and_round_trips(self):
-        mb.write_json(mb.BEST, {"high": 2})
-        self.assertEqual(mb.read_json(mb.BEST, {}), {"high": 2})
-        self.assertFalse(os.path.exists(mb.BEST + ".tmp"))
+        mb.write_json(mb.STATE, {"high": 2})
+        self.assertEqual(mb.read_json(mb.STATE, {}), {"high": 2})
+        self.assertFalse(os.path.exists(mb.STATE + ".tmp"))
 
     def test_num(self):
         for bad in (None, "x", math.nan, math.inf):
@@ -53,60 +51,57 @@ class Json(Base):
         self.assertEqual(mb.num("1.5"), 1.5)
 
 
+ST = {"start": {"date": "2026-10-01"}}
+
+
 class Summarize(Base):
-    def test_normal_account(self):
-        self.write(mb.STATE, json.dumps({"start": {"netLiquidation": 1000, "spy": 500, "date": "2026-09-01"}}))
-        title, since, rows, _ = mb.summarize([pos("AAPL", 10), pos("TSLA", -5)], 1020.0, mb.read_json(mb.STATE, {}))
-        self.assertEqual(title, "+2.50%")
-        self.assertEqual(since, "Since Sep 1")
-        r = dict((l, v) for l, v, _ in rows)
-        self.assertEqual(r["S&P 500  +10.00%"], "behind 7.50%")
-        self.assertEqual(r["Gold  \u22121.00%"], "ahead 3.50%")
-        self.assertIn("Best · AAPL", r)
-        self.assertIn("Worst · TSLA", r)
-        self.assertEqual(mb.read_json(mb.BEST, {}), {"high": 20.0, "low": 20.0})
+    def run_with_spy(self, port, spy, mst=None):
+        with mock.patch.object(mb, "sp500", return_value=spy):
+            return mb.summarize(port, ST, mst or {})
+
+    def test_verdict_text_per_band(self):
+        port = [pos("XLE", 0.61, cost=100), pos("DIA", -0.40, cost=100)]  # holdings +0.105%
+        for spy, text, v in ((0.0, "Matching the market", "even"), (-0.01, "Beating the market", "up"), (0.02, "Trailing the market", "down")):
+            title, rows, got = self.run_with_spy(port, spy)
+            self.assertEqual((rows[0][0], got), (text, v))
+            self.assertEqual(title, "+0.10%")
+
+    def test_why_rows_beating_and_trailing(self):
+        port = [pos("XLE", 0.61, cost=100), pos("DIA", -0.40, cost=100), pos("SPY", 0.12, cost=100)]
+        _, rows, _ = self.run_with_spy(port, -0.0002)
+        self.assertEqual(rows[1][0], "Holdings +0.11% vs S&P 500 \u22120.02% since Oct 1")
+        self.assertEqual(rows[2][0], "XLE leads, up 0.61%")
+        _, rows, v = self.run_with_spy(port, 0.02)
+        self.assertEqual(v, "down")
+        self.assertEqual(rows[2][0], "DIA drags, down 0.40%")
+
+    def test_no_holdings(self):
+        title, rows, v = self.run_with_spy([], 0.05)
+        self.assertEqual((title, v, rows[0][0]), ("+0.00%", None, "No trades yet"))
+        self.assertTrue(all(not t for t, _ in rows[1:3]))
+
+    def test_yahoo_failure_hides_comparison(self):
+        with mock.patch.object(mb, "yahoo", side_effect=OSError):
+            title, rows, v = mb.summarize([pos("X", 1)], ST, {})
+        self.assertIsNone(v)
+        self.assertEqual(rows[0][0], "Market data unavailable")
+        self.assertTrue(all(not t for t, _ in rows[1:3]))
 
     def test_garbage_never_raises(self):
-        # NaN P&L before market data, zero cost basis, broken state, corrupt record file, no net liquidation.
-        self.write(mb.BEST, "not json")
-        for st in ({}, {"start": "oops"}, {"start": {"netLiquidation": "x", "spy": 0, "date": "nope"}}):
-            title, since, rows, _ = mb.summarize([pos("X", math.nan, cost=0)], None, st)
-            self.assertEqual((title, since), ("+0.00%", "Since start"))
-            self.assertTrue(all(isinstance(v, str) and "nan" not in v for _, v, _ in rows))
+        # NaN P&L before market data, zero cost basis, broken state, junk dates.
+        for st in ({}, {"start": "oops"}, {"start": {"date": "nope"}}):
+            title, rows, _ = mb.summarize([pos("X", math.nan, cost=0)], st, {})
+            self.assertEqual(title, "+0.00%")
+            self.assertEqual(len(rows), 4)
 
-    def test_benchmark_failure_hides_rows(self):
-        with mock.patch.object(mb, "benchmarks", side_effect=OSError):
-            rows = mb.summarize([pos("X", 1)], 1.0, {"start": {"date": "2026-09-01"}})[2]
-        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
-        self.assertFalse(any("S&P" in l for l, _, _ in rows))
-
-    def test_benchmarks_parse_spark(self):
+    def test_sp500_parses_spark(self):
         day = lambda d: datetime(2026, 9, d, 13, 30, tzinfo=timezone.utc).timestamp()
         bars = lambda a, b: {"timestamp": [day(1), day(2)], "close": [a, b]}
-        fake = {s: bars(100, 110) for s in mb.ETFS} | {"GLD": bars(50, None), "BTC-USD": {"close": None}}
-        with mock.patch.object(mb, "yahoo", return_value=fake):
-            b = REAL_BENCHMARKS(datetime(2026, 9, 2, 10, 0))
-        self.assertAlmostEqual(b["S&P 500"], 0.10)
-        self.assertAlmostEqual(b["All 16 funds"], 0.10)
-        self.assertEqual(b["Gold"], 0.0)  # today's bar not in yet: last real close
-        self.assertNotIn("Bitcoin", b)
-        self.assertEqual(list(b)[:2], ["S&P 500", "All 16 funds"])
-        # Today's bar blanked after the close: the live price wins, not yesterday's close (read +0.00% for everything).
-        fake["SPY"] = bars(100, None) | {"fulldayPrice": 105}
-        with mock.patch.object(mb, "yahoo", return_value=fake):
-            self.assertAlmostEqual(REAL_BENCHMARKS(datetime(2026, 9, 2, 10, 0))["S&P 500"], 0.05)
-
-    def test_record_keeps_extremes(self):
-        mb.write_json(mb.BEST, {"high": 50, "low": -30})
-        mb.summarize([], 1010.0, {"start": {"netLiquidation": 1000}})
-        self.assertEqual(mb.read_json(mb.BEST, {}), {"high": 50, "low": -30})
-
-    def test_chart_symbols_dedupe_and_label(self):
-        rows = [("Best \u00b7 IWM", "", 1), ("Worst \u00b7 SPY", "", -1)]
-        with mock.patch.object(mb, "top_gainer", return_value="XYZ"):
-            self.assertEqual(mb.chart_symbols(rows), [("SPY", "SPY"), ("XYZ", "XYZ \u00b7 Top gainer"), ("IWM", "IWM")])
-        with mock.patch.object(mb, "top_gainer", return_value=None):
-            self.assertEqual(mb.chart_symbols([]), [("SPY", "SPY")])
+        with mock.patch.object(mb, "yahoo", return_value={"SPY": bars(100, 110)}):
+            self.assertAlmostEqual(mb.sp500(datetime(2026, 9, 2, 10, 0)), 0.10)
+        # Today's bar blanked after the close: the live price wins, not yesterday's close (read +0.00%).
+        with mock.patch.object(mb, "yahoo", return_value={"SPY": bars(100, None) | {"fulldayPrice": 105}}):
+            self.assertAlmostEqual(mb.sp500(datetime(2026, 9, 2, 10, 0)), 0.05)
 
     def test_verdict_bands(self):
         self.assertEqual(mb.verdict(0.012, 0.005), "up")
@@ -114,62 +109,16 @@ class Summarize(Base):
         self.assertEqual(mb.verdict(0.0060, 0.0050), "even")  # ahead by a hair too
         self.assertEqual(mb.verdict(-0.01, 0.002), "down")
 
-    def test_trend_rows_hidden_without_state(self):
-        rows = mb.summarize([pos("X", 1)], 1.0, {})[2]
-        self.assertEqual(rows[-5:-3], [("", "", None)] * 2)
-        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
-
-    def test_quality_row_hidden_without_state(self):
-        rows = mb.summarize([pos("X", 1)], 1.0, {})[2]
-        self.assertEqual(rows[-3], ("", "", None))
-        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
-        self.assertEqual(mb.GROUPS[-3], ("Quality", 1))
-
-    def test_quality_row_with_state(self):
-        q = {"start": {"date": "2026-09-01", "sleeve": 1000, "spy": 500}, "cash": 50.0, "holdings": {"QUAL": 5}, "last": {"QUAL": 190.0}}
-        self.write(mb.QUALITY, json.dumps(q))
-        rows = mb.summarize([], None, {})[2]
-        # cash 50 + 5 shares at the last fill 190 = 1000 -> flat, S&P +10%
-        self.assertEqual(rows[-3], ("Quality  +0.00%", "behind 10.00%", -0.10))
-        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
-
-    def test_quality_row_uses_live_price_and_can_lead(self):
-        q = {"start": {"date": "2026-09-01", "sleeve": 1000}, "cash": 0.0, "holdings": {"QUAL": 5}, "last": {"QUAL": 200.0}}
-        self.write(mb.QUALITY, json.dumps(q))
-        row = mb.quality_rows([NS(contract=NS(symbol="QUAL"), marketPrice=250.0)], mb.read_json(mb.QUALITY, {}))[0]
-        self.assertEqual(row[:2], ("Quality  +25.00%", "ahead 15.00%"))
-
-    def test_quality_state_garbage_never_raises(self):
-        for bad in ('{"start": "x"}', '{"start": {"sleeve": 0}}', "[1]", '{"start": {"sleeve": 5, "date": "bad"}, "holdings": 3}'):
-            self.write(mb.QUALITY, bad)
-            rows = mb.summarize([], None, {})[2]
-            self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
-            self.assertEqual(rows[-3], ("", "", None))
-
-    def test_trend_rows_with_state(self):
-        tr = {"start": {"date": "2026-09-01", "sleeve": 1000, "spy": 500}, "cash": 100.0, "holdings": {"SSO": 10}, "last": {"SSO": 90.0}, "side": "SSO"}
-        self.write(mb.TREND, json.dumps(tr))
-        rows = mb.summarize([pos("SSO", 1)], 1.0, {})[2]
-        r = dict((l, v) for l, v, _ in rows)
-        # cash 100 + 10 shares at the last fill 90 = 1000 -> flat, S&P +10%
-        self.assertEqual(r["Trend 2x  +0.00%"], "behind 10.00%")
-        self.assertEqual(r["Holding"], "2x S&P")
-        self.assertEqual(len(rows), sum(n for _, n in mb.GROUPS))
-
-    def test_trend_side_reads_bil_as_tbills(self):
-        tr = {"start": {"date": "2026-09-01", "sleeve": 1000}, "cash": 0.0, "holdings": {"BIL": 10}, "last": {"BIL": 100.0}}
-        self.write(mb.TREND, json.dumps(tr))
-        r = dict((l, v) for l, v, _ in mb.summarize([], None, {})[2])
-        self.assertEqual(r["Holding"], "T-bills")
+    def test_trend_row_with_and_without_state(self):
+        self.assertEqual(self.run_with_spy([pos("X", 1)], 0.0)[1][3][0], "")
+        self.assertEqual(self.run_with_spy([pos("X", 1)], 0.0, {"holdings": {"SSO": 10}})[1][3][0], "Trend 2x: holding 2x S&P")
+        self.assertEqual(self.run_with_spy([pos("X", 1)], 0.0, {"holdings": {"BIL": 10}})[1][3][0], "Trend 2x: in T-bills, S&P below its 200-day")
+        # No holdings in the main account still shows what Trend 2x holds.
+        self.assertEqual(self.run_with_spy([], 0.0, {"holdings": {"SSO": 1}})[1][3][0], "Trend 2x: holding 2x S&P")
 
     def test_trend_state_garbage_never_raises(self):
-        for bad in ('{"start": "x"}', '{"start": {"sleeve": 0}}', "[1]", '{"start": {"sleeve": 5, "date": "bad"}, "holdings": 3}'):
-            self.write(mb.TREND, bad)
-            self.assertEqual(len(mb.summarize([], None, {})[2]), sum(n for _, n in mb.GROUPS))
-
-    def test_paused(self):
-        self.write(mb.PAUSED, "")
-        self.assertEqual(mb.summarize([], None, {})[2][-1][1], "Paused")
+        for bad in ({"start": "x"}, {"holdings": 3}, {"holdings": {}}, {}):
+            self.assertIsNone(mb.trend_row(bad))
 
     def test_gateway_down(self):
         with mock.patch.object(mb, "IB") as ib:
@@ -193,17 +142,6 @@ class SingleInstance(Base):
             self.assertIsNone(mb.hide_gateway())
 
 
-class NextTrade(unittest.TestCase):
-    def test_always_a_weekday_label(self):
-        for st in ({}, {"lastGo": "1999-01-01"}):
-            out = mb.next_trade(st)
-            self.assertTrue(out == "Now" or out.split()[0] in ("Today", "Mon", "Tue", "Wed", "Thu", "Fri"), out)
-
-
-if __name__ == "__main__":
-    unittest.main()
-
-
 class Watchlist(unittest.TestCase):
     def test_line_formats_and_tolerates_missing(self):
         self.assertEqual(mb.watch_line("PLTR", (190.04, 0.016)), "PLTR  190.04  +1.60%")
@@ -221,3 +159,7 @@ class Watchlist(unittest.TestCase):
         self.assertEqual(len(calls), 2)  # 36 symbols, 20 per call
         self.assertAlmostEqual(q["PLTR"][1], 0.016)
         self.assertNotIn("BAD", q)
+
+
+if __name__ == "__main__":
+    unittest.main()
