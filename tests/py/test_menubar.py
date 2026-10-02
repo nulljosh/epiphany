@@ -61,10 +61,9 @@ class Summarize(Base):
 
     def test_verdict_text_per_band(self):
         port = [pos("XLE", 0.61, cost=100), pos("DIA", -0.40, cost=100)]  # holdings +0.105%
-        for spy, text, v in ((0.0, "Matching the market", "even"), (-0.01, "Beating the market", "up"), (0.02, "Trailing the market", "down")):
+        for spy, text, v, bar in ((0.0, "Matching the market", "even", "Even +0.10%"), (-0.01, "Beating the market", "up", "Beating 1.10%"), (0.02, "Trailing the market", "down", "Trailing 1.90%")):
             title, rows, got = self.run_with_spy(port, spy)
-            self.assertEqual((rows[0][0], got), (text, v))
-            self.assertEqual(title, "+0.10%")
+            self.assertEqual((rows[0][0], got, title), (text, v, bar))
 
     def test_why_rows_beating_and_trailing(self):
         port = [pos("XLE", 0.61, cost=100), pos("DIA", -0.40, cost=100), pos("SPY", 0.12, cost=100)]

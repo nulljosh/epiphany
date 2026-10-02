@@ -112,6 +112,11 @@ def pct(x):
     return f"{x:+.2%}".replace("-", "\u2212")
 
 
+def lead_title(v, d):
+    """The menu bar title: are we beating the S&P or trailing it, and by how many points. `d` is holdings minus S&P."""
+    return {"up": "Beating", "down": "Trailing"}[v] + f" {abs(d):.2%}" if v != "even" else f"Even {pct(d)}"
+
+
 def snapshot():
     """(title, rows, verdict) describing the account right now. A row is (text, number that colors it)."""
     ib = IB()
@@ -149,8 +154,8 @@ def summarize(port, st, mst):
     cost = sum(num(p.averageCost) * num(p.position) for p in port)
     ours = sum(num(p.unrealizedPNL) for p in port) / cost if cost else 0.0
     start = st.get("start") if isinstance(st.get("start"), dict) else {}
-    # The title is the holdings' return, not the account's: most of the million sits in cash, so the account
-    # moves +0.00% forever. This is the strategy's score, and the verdict lines up against it.
+    # Until the S&P comparison arrives the title is the holdings' return, not the account's: most of the million
+    # sits in cash, so the account moves +0.00% forever. With it, the title is the lead over the S&P.
     title = pct(ours)
     trend = trend_row(mst)
     rows = [("No trades yet", None), ("", None), ("", None), (trend or "", None)]
@@ -164,6 +169,7 @@ def summarize(port, st, mst):
         rows[0] = ("Market data unavailable", None)
         return title, rows, None
     v = verdict(ours, spy)
+    title = lead_title(v, ours - spy)
     rows[0] = (VERDICT[v], SIGN[v])
     rows[1] = (f"Holdings {pct(ours)} vs S&P 500 {pct(spy)}{since}", None)
     ranked = sorted(port, key=lambda p: num(p.unrealizedPNL) / ((num(p.averageCost) * num(p.position)) or 1))
