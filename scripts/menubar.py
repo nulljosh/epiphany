@@ -197,11 +197,11 @@ def row_view(big=False):
     from AppKit import NSFont, NSTextField, NSView, NSViewWidthSizable
     size = NSFont.menuFontOfSize_(0).pointSize()
     h = 30 if big else 22
-    v = NSView.alloc().initWithFrame_(((0, 0), (320, h)))
+    v = NSView.alloc().initWithFrame_(((0, 0), (360, h)))
     v.setAutoresizingMask_(NSViewWidthSizable)
     label = NSTextField.labelWithString_("")
     label.setFont_(NSFont.systemFontOfSize_weight_(size + 5, 0.5) if big else NSFont.systemFontOfSize_(size))
-    label.setFrame_(((14, 4 if big else 3), (296, 22 if big else 16)))
+    label.setFrame_(((14, 4 if big else 3), (336, 22 if big else 16)))
     v.addSubview_(label)
     return v, label
 
