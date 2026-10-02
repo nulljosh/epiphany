@@ -126,7 +126,30 @@ export default {
         return new Response(JSON.stringify({ error: 'Payload too large' }), { status: 413, headers: { 'Content-Type': 'application/json' } });
       }
       try {
-        return await handleApi(request, url);
+        // The gateway's s-maxage header meant something on Vercel's CDN; here the
+        // Cache API is the edge cache, so public GETs are stored for that TTL.
+        const origin = request.headers.get('Origin');
+        const cacheable = request.method === 'GET' && (!origin || origin === url.origin);
+        const cacheKey = cacheable ? new Request(url.toString(), { method: 'GET' }) : null;
+        if (cacheKey) {
+          const hit = await caches.default.match(cacheKey);
+          if (hit) {
+            const out = new Response(hit.body, hit);
+            // Edge keeps it; browsers must not (the zone would stamp a 4h max-age on hits).
+            out.headers.set('Cache-Control', 'no-cache');
+            out.headers.set('X-Epiphany-Cache', 'hit');
+            return out;
+          }
+        }
+        const resp = await handleApi(request, url);
+        const ttl = Number((resp.headers.get('Cache-Control') || '').match(/s-maxage=(\d+)/)?.[1] || 0);
+        if (cacheKey && resp.status === 200 && ttl > 0 && !resp.headers.has('Set-Cookie')) {
+          const copy = new Response(resp.clone().body, resp);
+          copy.headers.set('Cache-Control', `public, s-maxage=${ttl}`);
+          ctx.waitUntil(caches.default.put(cacheKey, copy));
+        }
+        resp.headers.set('X-Epiphany-Cache', 'miss');
+        return resp;
       } catch (err) {
         console.error('[worker] api error:', err?.message, err?.stack?.split('\n')[1]);
         return Response.json({ error: 'Internal server error' }, { status: 500 });
