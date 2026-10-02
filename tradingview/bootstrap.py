@@ -7,8 +7,9 @@ random blocks (mean 21 trading days) so volatility clusters and their correlatio
 every flip, the signal is decided on the prior close. Cached bars come from ~/.cache/epiphany-bars/.
 
     python3 tradingview/bootstrap.py            # prints the table, 5000 runs a horizon, seed fixed
+    python3 tradingview/bootstrap.py --stress   # fees, a late signal and a band, on the real history
 """
-import json, os, numpy as np, pandas as pd
+import json, os, sys, numpy as np, pandas as pd
 
 def load(s):
     d = json.load(open(os.path.expanduser(f"~/.cache/epiphany-bars/{s}.json")))
@@ -32,6 +33,27 @@ def paths(days, runs, block=21):
     for t in range(1, days):
         idx[:, t] = np.where(new[:, t], jump[:, t], (idx[:, t - 1] + 1) % n)
     return idx
+
+ma = px.spy.rolling(200).mean()
+
+def stress(delay=0, fee=0.0005, band=0.0):
+    """CAGR, worst drop and flips of the same rule with a fee per flip, a signal acted on `delay` extra days late, or a +-band around the average."""
+    s = pd.Series(np.nan, index=px.index)
+    s[px.spy > ma * (1 + band)], s[px.spy < ma * (1 - band)] = 1.0, 0.0
+    s = s.ffill().fillna(0).shift(1 + delay).fillna(0)
+    x = (s * r.sso + (1 - s) * r.bil - fee * s.diff().abs().fillna(0)).values[ok]
+    eq = np.cumprod(1 + x)
+    return eq[-1] ** (252 / len(x)) - 1, (eq / np.maximum.accumulate(eq) - 1).min(), int(s.diff().abs().sum())
+
+if "--stress" in sys.argv:
+    print(f"SPY hold {(1+spy).prod()**(252/n)-1:.1%}")
+    for f in (0, 0.0005, 0.0025, 0.01):
+        c, d, k = stress(fee=f); print(f"fee {f:.2%} per flip: {c:.1%} a year, worst drop {d:.0%}, flips {k}")
+    for dl in (0, 1, 2, 5):
+        c, d, k = stress(delay=dl); print(f"signal acted {dl} extra days late: {c:.1%}, worst drop {d:.0%}")
+    for b in (0, 0.01, 0.02):
+        c, d, k = stress(band=b); print(f"band of {b:.0%} around the average: {c:.1%}, worst drop {d:.0%}, flips {k}")
+    sys.exit()
 
 print(f"{px.index[ok][0].date()} to {px.index[-1].date()}, {n} days. Real: Trend 2x {(1+strat).prod()**(252/n)-1:.1%} a year, SPY {(1+spy).prod()**(252/n)-1:.1%}")
 print("horizon | chance Trend 2x beats SPY | median excess over the horizon | 5th percentile excess | chance it loses money")

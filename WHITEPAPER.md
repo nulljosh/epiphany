@@ -957,6 +957,8 @@ The luck tests above ask whether the edge is real. A different question is what 
 
 On the real history it made 16.1% a year against 12.0% for SPY. But a single day is close to a coin flip, and even over a year it beats the S&P only 59% of the time, with a bad draw trailing by a quarter. The edge shows up in years, not days, and the worst five percent of five year runs trail SPY by 66 points of total return. Judge the bot over years.
 
+Does the result survive a worse world? `python3 tradingview/bootstrap.py --stress` reruns the same history. With a 0.25% cost on every flip it still makes 14.9% a year against 12.0% for SPY, and it only falls to 10.6%, under SPY, at a 1% cost per flip, which no ETF costs. Acting on the signal one, two or five days late gives 14.6%, 13.6% and 16.7%, so the edge does not hang on one lucky day. A band around the average cuts the flips from 95 to 27 but the return only wanders between 14.8% and 16.5%, which is noise, so we kept no band. We did not tune anything to these runs.
+
 ### Broker abstraction
 
 `src/utils/broker.js` defines one `BrokerAdapter` interface (`connect`, `placeOrder`,
