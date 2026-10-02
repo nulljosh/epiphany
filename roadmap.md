@@ -3,12 +3,7 @@
 - [ ] Submit iOS 2.5.15 (build 202610011630, already uploaded 2026-10-01) the moment 2.5.14 leaves review: CAD cash header, X-Epiphany-Client header, Swift 6 screenshot-mode fix.
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
-- [x] Autopilot is back on the web (2026-10-01): the Trade tab shows the Autopilot card (paper by default, live capped $50/trade, Premium only). The manual recommend-and-review flow stays off until its math converts USD to CAD.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
-- [x] Brokerage snapshot carries each holding's and cash line's currency and stores CAD totals (netWorthCad, balance.totalCad, usdPerCad, fxMissing flag; unconvertible amounts are flagged, never mixed), 2026-10-01.
-- [x] Web net worth now sums in CAD (USD holdings converted with CADUSD=X), 2026-10-01. Holdings were already clean on the real snapshot.
-- [x] Account totals convert USD holdings and USD cash to CAD at sync (server), Mac net worth no longer double-counts balances (2026-10-01).
-- [x] iOS Portfolio header now uses the server's CAD cash (compiles for iOS and Mac; ships with the next build). Next build also needs: version bump after 2.5.14 clears review.
 - [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
@@ -236,7 +231,6 @@ it is recorded here.
 
 ## From Notes (2026-09-12)
 - [ ] Current location button works but no pin shown on map
-- [x] Event/places need more detail (reviews etc.). 2026-10-01: places now open Apple's own place card (hours, ratings, photos, price) on iOS 18+/macOS 15+, our sheet stays as the fallback. iOS+macOS builds green, not yet checked on a phone
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
@@ -255,8 +249,5 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Sample-data mode for screenshots (launch argument, a wealthy demo portfolio) so fastlane can refresh iPhone, Mac and Watch shots without a login; then refresh README and landing screenshots
 - [ ] Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
 - [ ] Screenshot run: UITEST_DEMO mode is in (ios/Models/DemoData.swift), the app compiles, but `fastlane screenshots` failed at SwiftCompile of ContentView.swift under its own derived data and produced no images. Reproduce with the lane's xcodebuild line, fix, rerun, then refresh README and landing shots
-- [x] UI QA, iOS Markets: top right corner overlaps, filter and search button covered up (top bar ticker strip, KO US$86.10, sits over them). Screenshot: notes/attachments/2026-10-01/epiphany-1.png. Done 2026-10-01: ticker inset moved inside the NavigationStack (MarketsView.swift), builds; macOS/web don't share this layout. Ships with the next batch, 2.5.14 still in review
-- [x] UI QA, iOS Markets: Business News card should be more flush; it floats over the list and cuts rows (PLTR hidden under it). Screenshot: notes/attachments/2026-10-01/epiphany-2.png. Done 2026-10-01: dropped the extra 80pt bottom gap so the peek sits on the tab bar, builds; not verified on device. Next batch
 - [ ] Budget should read income statements dynamically instead of a typed Monthly Income ($1000 shown, real figure is higher); phone device debt should calculate dynamically too. Joshua's real numbers are in the wiki epiphany.md (personal data, repo is public). Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed (income 1650, Visa 5000). Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
-- [x] Business News loads just in time: warmed during the launch splash, news cache TTL 15 min so it is still warm at Markets. iOS build green
 - [ ] /api/venue-details returns HTTP 400 from Yelp (key set but rejected, Yelp Fusion went paid). Only the iOS 17 / macOS 14 fallback sheet uses it now; drop it or swap the source
