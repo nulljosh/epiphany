@@ -274,3 +274,4 @@ Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips rest
 - [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
 - [ ] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt)
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
+Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
