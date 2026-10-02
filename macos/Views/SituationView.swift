@@ -203,7 +203,7 @@ struct SituationView: View {
                 Annotation("Current Location", coordinate: currentLocation.coordinate) {
                     mapPin(
                         color: Palette.dangerRed,
-                        emoji: "\u{1F4CD}",
+                        symbol: "location.fill",
                         size: 25,
                         padding: 0
                     )
@@ -215,7 +215,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .earthquake(quake)
                     } label: {
-                        mapPin(color: .red, emoji: "\u{1F30B}", size: 15)
+                        mapPin(color: .red, symbol: "waveform.path.ecg", size: 15)
                     }
                     .buttonStyle(.plain)
                 }
@@ -226,7 +226,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .flight(flight)
                     } label: {
-                        mapPin(color: Palette.paleBlue, emoji: "\u{2708}\u{FE0F}", size: 15)
+                        mapPin(color: Palette.paleBlue, symbol: "airplane", size: 15)
                     }
                     .buttonStyle(.plain)
                 }
@@ -238,7 +238,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .incident(incident)
                     } label: {
-                        mapPin(color: Palette.mapBlue, emoji: "\u{1F6A7}", size: 15)
+                        mapPin(color: Palette.mapBlue, symbol: "cone.fill", size: 15)
                     }
                     .buttonStyle(.plain)
                 }
@@ -249,7 +249,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .incident(incident)
                     } label: {
-                        mapPin(color: Palette.mapBlue, emoji: "\u{1F6A7}", size: 10)
+                        mapPin(color: Palette.mapBlue, symbol: "cone.fill", size: 10)
                     }
                     .buttonStyle(.plain)
                 }
@@ -262,7 +262,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .crime(crime)
                     } label: {
-                        mapPin(color: Palette.dangerRed, emoji: "\u{1F6A8}", size: 15)
+                        mapPin(color: Palette.dangerRed, symbol: "light.beacon.max.fill", size: 15)
                     }
                     .buttonStyle(.plain)
                 }
@@ -274,7 +274,7 @@ struct SituationView: View {
                         Button {
                             selectedEvent = .localEvent(event)
                         } label: {
-                            mapPin(color: Palette.slate, emoji: localEventEmoji(event), size: 15)
+                            mapPin(color: Palette.slate, symbol: localEventSymbol(event), size: 15)
                         }
                         .buttonStyle(.plain)
                     }
@@ -287,7 +287,7 @@ struct SituationView: View {
                         Button {
                             selectedEvent = .trafficIncident(incident)
                         } label: {
-                            mapPin(color: Palette.warningAmber, emoji: "\u{1F6A6}", size: 15)
+                            mapPin(color: Palette.warningAmber, symbol: "car.fill", size: 15)
                         }
                         .buttonStyle(.plain)
                     }
@@ -610,27 +610,29 @@ struct SituationView: View {
         return (data.incidents ?? []).filter { $0.coordinate != nil }
     }
 
-    // Category-driven emoji so local events/places aren't a single flat pin.
-    private func localEventEmoji(_ event: LocalEvent) -> String {
+    // Same SF Symbols as the iOS map, no emoji.
+    private func localEventSymbol(_ event: LocalEvent) -> String {
         switch event.category {
-        case "place": return "\u{1F3DB}\u{FE0F}" // building
-        case "attraction": return "\u{2B50}\u{FE0F}" // star
-        case "recreation": return "\u{1F333}" // tree
-        case "community": return "\u{1F4E3}" // megaphone
-        case "education": return "\u{1F393}" // graduation cap
-        default: return "\u{1F4CD}" // pin
+        case "place": return "building.2.fill"
+        case "attraction": return "star.fill"
+        case "recreation": return "leaf.fill"
+        case "community": return "megaphone.fill"
+        case "education": return "graduationcap.fill"
+        default: return "mappin"
         }
     }
 
     private func mapPin(
         color: Color,
-        emoji: String,
+        symbol: String,
         size: CGFloat = 12,
         padding: CGFloat = 8
     ) -> some View {
-        Text(emoji)
-            .font(.system(size: size))
-            .padding(padding)
+        Image(systemName: symbol)
+            .font(.system(size: size * 0.8, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(max(padding, 5))
+            .background(color, in: Circle())
     }
 
     private func loadData(for region: MKCoordinateRegion) async {
