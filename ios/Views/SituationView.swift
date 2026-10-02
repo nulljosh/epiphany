@@ -240,12 +240,31 @@ struct SituationView: View {
     private let maxAnnotationsPerCategory = 50
     private let maxIncidentAnnotations = 25
 
+    /// One grid for road incidents and traffic together, so a busy intersection reads as one badge.
+    private enum RoadEvent: Identifiable {
+        case incident(Incident), traffic(TrafficData.TrafficIncident)
+        var id: String {
+            switch self { case .incident(let i): return "i-\(i.id)"; case .traffic(let t): return "t-\(t.id)" }
+        }
+        var coordinate: CLLocationCoordinate2D? {
+            switch self { case .incident(let i): return i.coordinate; case .traffic(let t): return t.coordinate }
+        }
+    }
+
+    private var roadEvents: [RoadEvent] {
+        var out: [RoadEvent] = []
+        if showIncidents { out += activeIncidents.prefix(maxIncidentAnnotations).map { .incident($0) } }
+        if showTraffic { out += (trafficData?.incidents ?? []).map { .traffic($0) } }
+        return out
+    }
+
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
-        if showIncidents {
-            // Same grid clustering as venues, so a busy intersection reads as one badge.
-            ForEach(eventClusters(Array(activeIncidents.prefix(maxIncidentAnnotations)))) { cluster in
-                if let incident = cluster.single {
+        let span = visibleRegion?.span ?? currentRegion.span
+        ForEach(clusterByGrid(roadEvents, in: span) { $0.coordinate }) { cluster in
+            if let event = cluster.single {
+                switch event {
+                case .incident(let incident):
                     Annotation(incident.title, coordinate: cluster.coordinate) {
                         Button {
                             Haptics.impact(.medium)
@@ -255,10 +274,20 @@ struct SituationView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                } else {
-                    Annotation("\(cluster.count) incidents", coordinate: cluster.coordinate) {
-                        eventClusterPin(cluster.count, .orange, cluster.coordinate)
+                case .traffic(let incident):
+                    Annotation(incident.title ?? "Traffic", coordinate: cluster.coordinate) {
+                        Button {
+                            Haptics.impact(.light)
+                            selectedEvent = .trafficIncident(incident)
+                        } label: {
+                            eventPin("car.fill", .orange)
+                        }
+                        .buttonStyle(.plain)
                     }
+                }
+            } else {
+                Annotation(cluster.count >= 3 ? "\(cluster.count) on the road" : "", coordinate: cluster.coordinate) {
+                    eventClusterPin(cluster.count, .orange, cluster.coordinate)
                 }
             }
         }
@@ -381,29 +410,6 @@ struct SituationView: View {
     }
 
     @MapContentBuilder
-    private var trafficAnnotations: some MapContent {
-        if showTraffic {
-            ForEach(eventClusters(trafficData?.incidents ?? [])) { cluster in
-                if let incident = cluster.single {
-                    Annotation(incident.title ?? "Traffic", coordinate: cluster.coordinate) {
-                        Button {
-                            Haptics.impact(.light)
-                            selectedEvent = .trafficIncident(incident)
-                        } label: {
-                            eventPin("car.fill", .orange)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                } else {
-                    Annotation("\(cluster.count) traffic", coordinate: cluster.coordinate) {
-                        eventClusterPin(cluster.count, .orange, cluster.coordinate)
-                    }
-                }
-            }
-        }
-    }
-
-    @MapContentBuilder
     private var wildfireAnnotations: some MapContent {
         if showWildfires {
             ForEach(wildfires) { fire in
@@ -453,7 +459,7 @@ struct SituationView: View {
                         venuePin(cat, item)
                     }
                 } else {
-                    Annotation("\(cluster.count) places", coordinate: cluster.coordinate) {
+                    Annotation(cluster.count >= 3 ? "\(cluster.count) places" : "", coordinate: cluster.coordinate) {
                         eventClusterPin(cluster.count, Color(.systemGray), cluster.coordinate)
                     }
                 }
@@ -497,11 +503,6 @@ struct SituationView: View {
     private func venueClusters(for cat: VenueCategory) -> [MapCluster<MKMapItem>] {
         let span = visibleRegion?.span ?? currentRegion.span
         return clusterByGrid(venueResults[cat] ?? [], in: span) { $0.placemark.location?.coordinate }
-    }
-
-    private func eventClusters<T>(_ items: [T]) -> [MapCluster<T>] where T: Identifiable {
-        let span = visibleRegion?.span ?? currentRegion.span
-        return clusterByGrid(items, in: span) { ($0 as? Incident)?.coordinate ?? ($0 as? TrafficData.TrafficIncident)?.coordinate }
     }
 
     private func eventClusterPin(_ count: Int, _ tint: Color, _ coordinate: CLLocationCoordinate2D) -> some View {
@@ -671,7 +672,6 @@ struct SituationView: View {
             weatherAnnotations
             crimeAnnotations
             localEventAnnotations
-            trafficAnnotations
             wildfireAnnotations
             aqiAnnotations
             venueAnnotations
