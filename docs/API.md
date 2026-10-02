@@ -92,7 +92,9 @@ which run inside the page and are not filtered.
 ## Webhooks
 
 `/webhook`, `/broker/webhook` and `/stripe-webhook` are signature-verified
-inbound endpoints. Not for client use.
+inbound endpoints. Not for client use. `/broker/ibkr-report` is the Mac IBKR runner's
+line into the app: POST appends its fills to the owner's trade log, GET returns the
+Autopilot switch as its kill switch. Secret-gated, and closed until `IBKR_REPORT_USER_ID` is set.
 
 ## WebMCP
 
