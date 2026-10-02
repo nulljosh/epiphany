@@ -959,6 +959,8 @@ On the real history it made 16.1% a year against 12.0% for SPY. But a single day
 
 Does the result survive a worse world? `python3 tradingview/bootstrap.py --stress` reruns the same history. With a 0.25% cost on every flip it still makes 14.9% a year against 12.0% for SPY, and it only falls to 10.6%, under SPY, at a 1% cost per flip, which no ETF costs. Acting on the signal one, two or five days late gives 14.6%, 13.6% and 16.7%, so the edge does not hang on one lucky day. A band around the average cuts the flips from 95 to 27 but the return only wanders between 14.8% and 16.5%, which is noise, so we kept no band. We did not tune anything to these runs.
 
+One more check asks whether the exact setting matters. `tradingview/pbo.py` runs the probability of backtest overfitting (Bailey, Borwein, Lopez de Prado and Zhu, 2014) on 18 ways to write the rule, with the average from 50 to 300 days and a band of 0%, 1% or 2%, on the real fund prices since 2008. Over 12,870 splits of the history, the variant that looked best in the past ranked in the bottom half of the other years 74% of the time. That sounds bad, and it is: choosing the best setting is noise here. The reason is that the family is flat. The best variant has a Sharpe of 0.82 and our plain 200 day rule has 0.79, while SPY has 0.69, and 15 of the 18 variants beat SPY. So the idea holds across settings, and no setting is special. That is why the rule keeps the textbook 200 days and we do not tune it.
+
 ### Broker abstraction
 
 `src/utils/broker.js` defines one `BrokerAdapter` interface (`connect`, `placeOrder`,

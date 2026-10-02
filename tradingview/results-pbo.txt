@@ -1,0 +1,4 @@
+18 variants, 4567 days from 2008-08-06, 12870 splits
+PBO 74.2%
+best variant on all days: average 100, band 1%, Sharpe 0.82; the 200 day, no band rule: 0.79
+SPY Sharpe over the same days 0.69; variants above it: 15 of 18; lowest variant 0.50
