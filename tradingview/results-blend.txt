@@ -1,0 +1,41 @@
+BLEND: Trend 2x and Quality as one portfolio. Monthly grid, blind 1976-01 to 2026-08 (608 months). Weights fixed in advance, nothing picked.
+Trend 2x = the daily --leverage rule (2x fund model above the 200 day average, bills below, 0.8% gap off), compounded to month ends. Quality = French top operating profitability tenth, 30% yearly turnover at 0.1% a side.
+Blends rebalance to target monthly or each January, 0.1% on the traded fraction (sold plus bought). Monthly resolution reads every drop a little kinder than daily.
+
+Correlation of the two legs' monthly returns: 0.73
+Market hold     12.3% / 50%   CAGR / drop 0.25
+Trend 2x        14.4% / 40%   CAGR / drop 0.36
+Quality         13.6% / 41%   CAGR / drop 0.33
+
+Crash years (return / worst drop inside the year)
+  Market hold              2008 -36.7%/38%   2022 -19.9%/25%   Mar 2020 -13.2%
+  Trend 2x                 2008 +1.4%/0%   2022 -30.8%/31%   Mar 2020 +4.3%
+  Quality                  2008 -30.1%/33%   2022 -13.2%/19%   Mar 2020 -11.7%
+
+Trend/Quality    rebal         BLIND  CAGR/DD | decades won vs hold / Trend 2x / Quality (of 6) | bar
+50/50          monthly   14.3% / 33%     0.43 | 5  4  3 | PASS
+  50/50 monthly            2008 -15.2%/17%   2022 -21.9%/22%   Mar 2020 -3.7%
+50/50           yearly   14.4% / 32%     0.45 | 5  4  3 | PASS
+70/30          monthly   14.4% / 36%     0.40 | 5  4  2 | PASS
+  70/30 monthly            2008 -8.8%/10%   2022 -25.4%/25%   Mar 2020 -0.5%
+70/30           yearly   14.5% / 35%     0.42 | 5  4  3 | PASS
+30/70          monthly   14.1% / 35%     0.41 | 5  4  3 | PASS
+  30/70 monthly            2008 -21.4%/24%   2022 -18.3%/21%   Mar 2020 -6.9%
+30/70           yearly   14.2% / 34%     0.42 | 5  4  3 | PASS
+Bar: CAGR above market hold with no bigger drop, AND CAGR/drop above BOTH legs, AND CAGR at least Quality's (13.6%).
+
+RANDOM BASELINE, 300 random 50/50 blends of Trend 2x with a random French tenth (random file of 7 cached, random tenth of 10), monthly rebalance
+  Trend 2x + Quality 50/50: 14.3% / 33%, CAGR/DD 0.43. Beats 76% of random on CAGR, 92% on CAGR/DD.
+  Random median 13.9% (best 15.7%); CAGR/DD median 0.35 (best 0.47). Quality's tenth is one of the 70 (file, tenth) pairs. The momentum tenths are charged only 0.1% a month here, generous to them.
+  best by CAGR/DD: Portfolios_Formed_on_OP_CSV.zip tenth 8: 14.7% / 31%
+  best by CAGR/DD: Portfolios_Formed_on_VAR_CSV.zip tenth 1: 13.3% / 29%
+  best by CAGR/DD: Portfolios_Formed_on_VAR_CSV.zip tenth 2: 14.5% / 32%
+
+REAL FUNDS from QUAL's first day: Trend 2x = SSO above the S&P 200 day average (signal j-2, trade j-1), BIL below, 0.1% a switch; QUAL; 50/50 monthly rebalance; vs SPY. Yahoo adjusted closes, monthly grid.
+  2013-07-18 to 2026-10-01, 13.2 years.  SPY 14.1% / 24%   SSO/BIL Trend 2x 14.7% / 36%   QUAL 13.5% / 28%
+  50/50 monthly : 14.4% / 27%  vs SPY +0.3%  vs SSO/BIL -0.3%  vs QUAL +0.9%  CAGR/DD 0.54 (SPY 0.59, T2x 0.41, QUAL 0.49)  real-fund check FAIL
+  50/50 yearly  : 14.4% / 27%  vs SPY +0.3%  vs SSO/BIL -0.3%  vs QUAL +0.9%  CAGR/DD 0.53 (SPY 0.59, T2x 0.41, QUAL 0.49)  real-fund check FAIL
+  70/30 monthly : 14.6% / 31%  vs SPY +0.5%  vs SSO/BIL -0.1%  vs QUAL +1.0%  CAGR/DD 0.48 (SPY 0.59, T2x 0.41, QUAL 0.49)  real-fund check FAIL
+  70/30 yearly  : 14.6% / 31%  vs SPY +0.5%  vs SSO/BIL -0.1%  vs QUAL +1.0%  CAGR/DD 0.47 (SPY 0.59, T2x 0.41, QUAL 0.49)  real-fund check FAIL
+  30/70 monthly : 14.1% / 27%  vs SPY +0.1%  vs SSO/BIL -0.5%  vs QUAL +0.6%  CAGR/DD 0.52 (SPY 0.59, T2x 0.41, QUAL 0.49)  real-fund check FAIL
+  30/70 yearly  : 14.1% / 27%  vs SPY +0.1%  vs SSO/BIL -0.5%  vs QUAL +0.6%  CAGR/DD 0.52 (SPY 0.59, T2x 0.41, QUAL 0.49)  real-fund check FAIL

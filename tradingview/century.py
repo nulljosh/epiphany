@@ -542,6 +542,160 @@ def leverage():
             out.append(mstats(grow([f(m) for m in sel]))[0])
         print(f"  {n:24}" + "".join(f"{x:>8.1%}" for x in out))
 
+def blend():
+    """Trend 2x and the Quality tenth as one portfolio, monthly grid, fixed weights. Blind 1976 to now, random-tenth baseline, real funds from QUAL's start."""
+    import random
+    from datetime import date
+    D = lev_data()
+    dates = D[0]
+    split = next(i for i, d in enumerate(dates) if d >= LEV_SPLIT)
+    hi = len(dates)
+    cv = lev_sim(D, 2.0, "200d", "bills", "etf", split, hi, gap=GAP)
+    last = {}
+    for k in range(1, len(cv)):
+        last[dates[split + k - 1][:7]] = cv[k]
+    prev, T = 1.0, {}
+    for m in sorted(last):
+        T[m] = last[m] / prev - 1
+        prev = last[m]
+    ff = french("F-F_Research_Data_Factors_CSV.zip", 0)
+    mk = {m: ff[m][0] + ff[m][3] for m in ff}
+    tq = 0.30 / 12 * 2 * FEE
+
+    def tenths(name, i=9):
+        return {m: v[len(v) - 10 + i] - tq for m, v in french(name, 0).items()}
+    Q = tenths("Portfolios_Formed_on_OP_CSV.zip")
+    full = [m for m in sorted(T) if m >= "1976-01" and m in Q and m in mk]
+    ms = full[:-1] if dates[-1][:7] == full[-1] and dates[-1] < full[-1] + "-28" else full  # drop a part month
+
+    def grow(xs):
+        c = [1.0]
+        for x in xs:
+            c.append(c[-1] * (1 + x))
+        return c
+
+    def dd_of(c):
+        pk, dd = 1.0, 0.0
+        for v in c:
+            pk = max(pk, v)
+            dd = max(dd, 1 - v / pk)
+        return dd
+
+    def st(xs):
+        c = grow(xs)
+        return c[-1] ** (12 / len(xs)) - 1, dd_of(c)
+
+    def decs(sel, xs):
+        o = {}
+        for m, x in zip(sel, xs):
+            o.setdefault(m[:3] + "0s", []).append(x)
+        return {d: grow(v)[-1] ** (12 / len(v)) - 1 for d, v in o.items() if len(v) >= 36}
+
+    def mix(sel, a, b, w, mode, fee=FEE):
+        """w in a, 1-w in b. mode m rebalances each month end, y each January. Fee on the traded fraction (sold plus bought)."""
+        va, vb, out = w, 1 - w, []
+        for i, m in enumerate(sel):
+            t = va + vb
+            cost = 0.0
+            if i and (mode == "m" or m[5:] == "01"):
+                cost = fee * 2 * abs(va / t - w)
+                va, vb = t * w, t * (1 - w)
+            va *= (1 + a[m]) * (1 - cost)
+            vb *= (1 + b[m]) * (1 - cost)
+            out.append((va + vb) / t - 1)
+        return out
+
+    mh, tr, ql = [mk[m] for m in ms], [T[m] for m in ms], [Q[m] for m in ms]
+    R = {"Market hold": mh, "Trend 2x": tr, "Quality": ql}
+    S = {k: st(v) for k, v in R.items()}
+    DC = {k: decs(ms, v) for k, v in R.items()}
+    dl = sorted(DC["Market hold"])
+    corr = statistics.correlation(tr, ql)
+    print(f"BLEND: Trend 2x and Quality as one portfolio. Monthly grid, blind {ms[0]} to {ms[-1]} ({len(ms)} months). Weights fixed in advance, nothing picked.")
+    print(f"Trend 2x = the daily --leverage rule (2x fund model above the 200 day average, bills below, {GAP:.1%} gap off), compounded to month ends. Quality = French top operating profitability tenth, 30% yearly turnover at {FEE:.1%} a side.")
+    print(f"Blends rebalance to target monthly or each January, {FEE:.1%} on the traded fraction (sold plus bought). Monthly resolution reads every drop a little kinder than daily.\n")
+    print(f"Correlation of the two legs' monthly returns: {corr:.2f}")
+    for k in S:
+        print(f"{k:14}{S[k][0]:>7.1%} / {S[k][1]:.0%}   CAGR / drop {S[k][0] / S[k][1]:.2f}")
+
+    def yr(xs, y):
+        v = [x for m, x in zip(ms, xs) if m[:4] == y]
+        return grow(v)[-1] - 1, dd_of(grow(v))
+
+    def line(nm, xs):
+        a, b = yr(xs, "2008"), yr(xs, "2022")
+        print(f"  {nm:24} 2008 {a[0]:+.1%}/{a[1]:.0%}   2022 {b[0]:+.1%}/{b[1]:.0%}   Mar 2020 {xs[ms.index('2020-03')]:+.1%}")
+    print("\nCrash years (return / worst drop inside the year)")
+    for k in R:
+        line(k, R[k])
+    W = [(0.5, "50/50"), (0.7, "70/30"), (0.3, "30/70")]
+    res = {}
+    print(f"\n{'Trend/Quality':14}{'rebal':>8}{'BLIND':>14}{'CAGR/DD':>9} | decades won vs hold / Trend 2x / Quality (of {len(dl)}) | bar")
+    for w, lab in W:
+        for mode, mn in (("m", "monthly"), ("y", "yearly")):
+            x = mix(ms, T, Q, w, mode)
+            b, dd = st(x), decs(ms, x)
+            won = [sum(dd[d] > DC[k][d] for d in dl) for k in ("Market hold", "Trend 2x", "Quality")]
+            rt = b[0] / b[1]
+            ok = (b[0] > S["Market hold"][0] and b[1] <= S["Market hold"][1] and rt > S["Trend 2x"][0] / S["Trend 2x"][1]
+                  and rt > S["Quality"][0] / S["Quality"][1] and b[0] >= S["Quality"][0])
+            res[(lab, mode)] = (x, b, ok)
+            print(f"{lab:14}{mn:>8}{b[0]:>8.1%} /{b[1]:>4.0%}{rt:>9.2f} | {won[0]}  {won[1]}  {won[2]} | {'PASS' if ok else 'FAIL'}")
+            if mode == "m":
+                line(lab + " monthly", x)
+    print(f"Bar: CAGR above market hold with no bigger drop, AND CAGR/drop above BOTH legs, AND CAGR at least Quality's ({S['Quality'][0]:.1%}).")
+
+    print("\nRANDOM BASELINE, 300 random 50/50 blends of Trend 2x with a random French tenth (random file of 7 cached, random tenth of 10), monthly rebalance")
+    files = ["Portfolios_Formed_on_OP_CSV.zip", "Portfolios_Formed_on_BE-ME_CSV.zip", "Portfolios_Formed_on_INV_CSV.zip", "Portfolios_Formed_on_ME_CSV.zip",
+             "Portfolios_Formed_on_BETA_CSV.zip", "Portfolios_Formed_on_VAR_CSV.zip", "10_Portfolios_Prior_12_2_CSV.zip"]
+    rng, pool = random.Random(7), []
+    for _ in range(300):
+        f, i = rng.choice(files), rng.randrange(10)
+        t = {m: v[i] - 0.001 for m, v in french(f, 0).items()} if f.startswith("10_P") else tenths(f, i)  # momentum tenth: 1 dollar a month traded would be 0.1%
+        sel = [m for m in ms if m in t]
+        pool.append((st(mix(sel, T, t, 0.5, "m")), f, i))
+    qb = res[("50/50", "m")][1]
+    qr = qb[0] / qb[1]
+    cg = sorted(p[0][0] for p in pool)
+    rt = sorted(p[0][0] / p[0][1] for p in pool)
+    print(f"  Trend 2x + Quality 50/50: {qb[0]:.1%} / {qb[1]:.0%}, CAGR/DD {qr:.2f}. Beats {sum(c < qb[0] for c in cg) / 300:.0%} of random on CAGR, {sum(c < qr for c in rt) / 300:.0%} on CAGR/DD.")
+    print(f"  Random median {cg[150]:.1%} (best {cg[-1]:.1%}); CAGR/DD median {rt[150]:.2f} (best {rt[-1]:.2f}). Quality's tenth is one of the 70 (file, tenth) pairs. The momentum tenths are charged only 0.1% a month here, generous to them.")
+    for p in sorted({(p[1], p[2]): p for p in pool}.values(), key=lambda p: -p[0][0] / p[0][1])[:3]:
+        print(f"  best by CAGR/DD: {p[1]} tenth {p[2] + 1}: {p[0][0]:.1%} / {p[0][1]:.0%}")
+
+    print("\nREAL FUNDS from QUAL's first day: Trend 2x = SSO above the S&P 200 day average (signal j-2, trade j-1), BIL below, 0.1% a switch; QUAL; 50/50 monthly rebalance; vs SPY. Yahoo adjusted closes, monthly grid.")
+    rr = {s: real_rets(dates, s) for s in ("SSO", "BIL", "QUAL", "SPY")}
+    a0 = next(i for i, d in enumerate(dates) if d >= min(r[0] for r in raw("QUAL")))
+    sg, pos, dt = D[5]["200d"], None, []
+    for j in range(a0, hi):
+        want = sg[j - 2]
+        x = rr["SSO"][j] if want else rr["BIL"][j]
+        if pos is not None and want != pos:
+            x = (1 + x) * (1 - FEE) - 1
+        pos = want
+        dt.append(x)
+
+    def monthly(xs):
+        o = {}
+        for j, x in zip(range(a0, hi), xs):
+            o[dates[j][:7]] = o.get(dates[j][:7], 1.0) * (1 + x)
+        return {m: v - 1 for m, v in o.items()}
+    RT, RQ, RS = monthly(dt), monthly(rr["QUAL"][a0:hi]), monthly(rr["SPY"][a0:hi])
+    rm = sorted(RT)
+    yrs = (date.fromisoformat(dates[-1]) - date.fromisoformat(dates[a0])).days / 365.25
+
+    def rst(xs):
+        c = grow(xs)
+        return c[-1] ** (1 / yrs) - 1, dd_of(c)
+    sp_, t_, q_ = rst([RS[m] for m in rm]), rst([RT[m] for m in rm]), rst([RQ[m] for m in rm])
+    print(f"  {dates[a0]} to {dates[-1]}, {yrs:.1f} years.  SPY {sp_[0]:.1%} / {sp_[1]:.0%}   SSO/BIL Trend 2x {t_[0]:.1%} / {t_[1]:.0%}   QUAL {q_[0]:.1%} / {q_[1]:.0%}")
+    for w, lab in W:
+        for mode, mn in (("m", "monthly"), ("y", "yearly")):
+            b = rst(mix(rm, RT, RQ, w, mode))
+            ok = b[0] > sp_[0] and b[1] <= sp_[1]
+            print(f"  {lab} {mn:8}: {b[0]:.1%} / {b[1]:.0%}  vs SPY {b[0] - sp_[0]:+.1%}  vs SSO/BIL {b[0] - t_[0]:+.1%}  vs QUAL {b[0] - q_[0]:+.1%}  CAGR/DD {b[0] / b[1]:.2f} (SPY {sp_[0] / sp_[1]:.2f}, T2x {t_[0] / t_[1]:.2f}, QUAL {q_[0] / q_[1]:.2f})  real-fund check {'PASS' if ok else 'FAIL'}")
+
+
 FACTOR_ETFS = [
     ("Value (top book-to-market tenth)", "VTV or IWD (Russell 1000 Value, much milder than the top tenth); RPV is purer", "no 2x fund; 2x only by margin"),
     ("Size (smallest tenth)", "IWC (micro cap) is the match; IWM or VB are small cap, not micro", "UWM is 2x Russell 2000 (TNA, URTY 3x), not micro cap"),
@@ -3442,6 +3596,9 @@ if __name__ == "__main__":
         sys.exit()
     if "--robust" in sys.argv:
         robust()
+        sys.exit()
+    if "--blend" in sys.argv:
+        blend()
         sys.exit()
     if "--leverage" in sys.argv:
         leverage()
