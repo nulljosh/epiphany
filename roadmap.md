@@ -258,38 +258,20 @@ Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), p
 - [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
 - [ ] Markets list rows render blank in UITEST_DEMO mode
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
-- [x] Clutter: fold traffic into the incident grid so one badge covers both; drop the "2 places" label on badges under 3 (done 2026-10-01)
-- [x] Icon: push toward Apple SF Symbols geometry and Palantir restraint, keep the seven-node constellation; A+ bar (done 2026-10-01)
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
 - [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
-- [x] Accessibility pass: VoiceOver labels on cluster badges and event pins, Dynamic Type on Markets rows, contrast on the grey badge (labels on pins and badges done 2026-10-01; Dynamic Type and contrast still open)
-Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips restyled to glass (built, not yet seen on sim), em dashes gone from iOS views, README and landing screenshots refreshed.
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [x] macOS map clusters incidents, traffic and local events on the same grid as iOS (2026-10-01)
 - [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
-- [x] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt) (reserve raised to 140pt 2026-10-01, build-verified only, drawer drag does not work under synthetic input)
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
-- [x] AppIcon.appiconset has 18 orphan PNGs its Contents.json no longer lists (Xcode warning); prune them (pruned 2026-10-01)
-Pass 7: Budget widget (home small/medium, lock screen rectangular/inline) fed from the App Group after every finance or statement load; watch and Mac synced to 2.5.15 with the glass icon.
-- [x] macOS widget parity: add Budget (and Watchlist) to widgets-macos and have the Mac app publish the same App Group snapshot (done 2026-10-01)
-- [x] First archive after adding the App Group to the iOS app: confirm the provisioning profile picks up the capability (done 2026-10-01)
 
 ## Cloudflare audit 2026-10-01 (what else the Vercel move broke)
 Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
 - [ ] macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
-- [x] local-events takes 23s cold, only an in-isolate Map cache; put it in KV with a TTL (done 2026-10-01)
-- [x] s-maxage headers from api/gateway.js:126 are inert on Workers (no Vercel CDN); use the Cache API or KV for the 25 cached routes (Cache API in worker/index.js 2026-10-01, hits in 0.07s)
-- [x] worker/index.js has no request body cap; statements.js assumes the platform 413s at 4.5MB (done 2026-10-01)
-- [x] secrets referenced in server/api but absent from wrangler secret list (see _shared-secret.js:14; WEBHOOK_SECRET fails closed) (checked 2026-10-01: all optional or legacy except WEBHOOK_SECRET, which /api/webhook needs; Joshua sets the value)
-- [x] _cors.js lost its production origin with VERCEL_URL; no-Origin requests advertise localhost (done 2026-10-01)
-- [x] stocks-free KV cache key is a 16-char prefix hash, so a 70-symbol request can be served another caller's 20-symbol result (done 2026-10-01)
 - [ ] _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0
-- [x] worker setHeader coerces arrays with String(), a second Set-Cookie would be comma-joined (done 2026-10-01)
-- [x] /api/blob serves public max-age=3600 on in-place overwritten keys plus KV's 60s read cache; stale snapshots possible (browser max-age 60 now, 2026-10-01)
 
 ## Competitor gaps (sweep 2026-10-01: Copilot, Monarch, Apple Stocks, Yahoo, Robinhood, Citizen, Google Maps)
 - [ ] Watchlist widget shows the user's real watchlist and works on the Lock Screen (vs Apple Stocks widget follows your actual ). ios/Models/AppState.swift:545 loadWatchlist: after `watchlist = try await ...fetchWatchlist()`, write `Array(watchlistSymbols)` to UserDefaults(suiteName: group.com.heyitsmejosh.epiphany) key `widget_watchlist` and call WidgetCenter.shared.reloadTimelines(ofKind: "WatchlistWidget") (kind constant at widgets-ios/Views/WatchlistWidget.swift:5). widgets-ios/Providers/WatchlistProvider.swift:25: replace the hardcoded `de
