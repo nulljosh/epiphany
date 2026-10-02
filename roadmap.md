@@ -265,12 +265,8 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 - [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
 - [ ] Accessibility pass: VoiceOver labels on cluster badges and event pins, Dynamic Type on Markets rows, contrast on the grey badge
 Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips restyled to glass (built, not yet seen on sim), em dashes gone from iOS views, README and landing screenshots refreshed.
-- [x] Statement upload hung on Cloudflare: pdf-parse never returned on a cold isolate (every upload since the Vercel move). Fixed 2026-10-01: unpdf with a 12s timeout on the server, iOS and macOS send PDFKit text so the Worker never parses. Deployed, cold upload 1.5s
-- [x] Statements: August 2026 Cash statement uploaded 2026-10-01 (169 rows). Second bug found on the way: the row regex only matched pdf-parse's mashed columns, unpdf and PDFKit space them, fixed with a test
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [x] Rate limiter reads cf-connecting-ip directly (the worker adapter already mapped it into req.socket, so the old "shared bucket" worry was wrong; harmless either way)
-- [x] macOS map pins are SF Symbol badges now (2026-10-01)
 - [ ] macOS map does not cluster events; mirror the iOS grid
 - [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
 - [ ] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt)
