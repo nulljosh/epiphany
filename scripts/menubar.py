@@ -152,7 +152,10 @@ def trend_row(mst):
 
 def summarize(port, st, mst):
     """The pure half of snapshot(): positions, runner state and Trend 2x state in, menu text out.
-    Rows: the verdict, up to two why rows, then the Trend 2x row. Empty text means hidden."""
+    Rows: the verdict, up to two why rows, then the Trend 2x row. Empty text means hidden.
+    The Trend 2x sleeve (SSO, BIL) stays out of the scoreboard: it is $100k that arrives at 3:45pm New York, so it
+    would swamp the day's Double 7s buys with a position that has had no time to move. It has its own row."""
+    port = [p for p in port if p.contract.symbol not in ("SSO", "BIL")]
     cost = sum(num(p.averageCost) * num(p.position) for p in port)
     ours = sum(num(p.unrealizedPNL) for p in port) / cost if cost else 0.0
     start = st.get("start") if isinstance(st.get("start"), dict) else {}

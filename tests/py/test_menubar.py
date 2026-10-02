@@ -74,6 +74,12 @@ class Summarize(Base):
         self.assertEqual(v, "down")
         self.assertEqual(rows[2][0], "DIA drags, down 0.40%")
 
+    def test_trend_sleeve_stays_out_of_the_scoreboard(self):
+        # $100k of SSO bought minutes ago must not drown the day old Double 7s buys: the score ignores it.
+        port = [pos("XLE", 0.61, cost=100), pos("SSO", 0.0, cost=100000), pos("BIL", 0.0, cost=100000)]
+        title, rows, v = self.run_with_spy(port, 0.0)
+        self.assertEqual((title, v), ("Beating 0.61%", "up"))
+
     def test_no_holdings(self):
         title, rows, v = self.run_with_spy([], 0.05)
         self.assertEqual((title, v, rows[0][0]), ("+0.00%", None, "No trades yet"))
