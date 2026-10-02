@@ -91,6 +91,10 @@ class Summarize(Base):
         self.assertEqual(b["Gold"], 0.0)  # today's bar not in yet: last real close
         self.assertNotIn("Bitcoin", b)
         self.assertEqual(list(b)[:2], ["S&P 500", "All 16 funds"])
+        # Today's bar blanked after the close: the live price wins, not yesterday's close (read +0.00% for everything).
+        fake["SPY"] = bars(100, None) | {"fulldayPrice": 105}
+        with mock.patch.object(mb, "yahoo", return_value=fake):
+            self.assertAlmostEqual(REAL_BENCHMARKS(datetime(2026, 9, 2, 10, 0))["S&P 500"], 0.05)
 
     def test_record_keeps_extremes(self):
         mb.write_json(mb.BEST, {"high": 50, "low": -30})

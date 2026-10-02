@@ -111,7 +111,9 @@ def benchmarks(start):
     for sym, d in yahoo(f"/v8/finance/spark?symbols={urllib.parse.quote(syms)}&range={rng}&interval=1d").items():
         try:
             before = [c for t, c in zip(d["timestamp"], d["close"]) if c and datetime.fromtimestamp(t, timezone.utc).date() < start.date()]
-            ret[sym] = next(c for c in reversed(d["close"]) if c) / before[-1] - 1
+            # Yahoo sometimes blanks today's bar after the close; its live price still has today, the last close doesn't.
+            now = num(d.get("fulldayPrice")) or next(c for c in reversed(d["close"]) if c)
+            ret[sym] = now / before[-1] - 1
         except (KeyError, TypeError, IndexError, StopIteration, ZeroDivisionError):
             pass
     if all(s in ret for s in ETFS):
