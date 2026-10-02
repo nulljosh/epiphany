@@ -69,6 +69,9 @@ targets:
       properties:
         com.apple.developer.applesignin:
           - Default
+        # Widgets read the Budget snapshot from this group; without it they show placeholders.
+        com.apple.security.application-groups:
+          - group.com.heyitsmejosh.epiphany
     dependencies:
       - target: EpiphanyWidgetsExtension
     buildToolPlugins:
