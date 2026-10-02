@@ -243,28 +243,22 @@ struct SituationView: View {
     @MapContentBuilder
     private var incidentAnnotations: some MapContent {
         if showIncidents {
-            ForEach(Array(activeIncidents.prefix(maxIncidentAnnotations))) { incident in
-                Annotation(incident.title, coordinate: incident.coordinate) {
-                    Button {
-                        Haptics.impact(.medium)
-                        selectedEvent = .incident(incident)
-                    } label: {
-                        eventPin(incidentSymbol(incident.title), incidentColor(incident.title))
+            // Same grid clustering as venues, so a busy intersection reads as one badge.
+            ForEach(eventClusters(Array(activeIncidents.prefix(maxIncidentAnnotations)))) { cluster in
+                if let incident = cluster.single {
+                    Annotation(incident.title, coordinate: cluster.coordinate) {
+                        Button {
+                            Haptics.impact(.medium)
+                            selectedEvent = .incident(incident)
+                        } label: {
+                            eventPin(incidentSymbol(incident.title), incidentColor(incident.title))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
-                }
-            }
-            ForEach(Array(infrastructureIncidents.prefix(15))) { incident in
-                Annotation(incident.title, coordinate: incident.coordinate) {
-                    Button {
-                        Haptics.impact(.light)
-                        selectedEvent = .incident(incident)
-                    } label: {
-                        eventPin(incidentSymbol(incident.title), incidentColor(incident.title))
-                            .font(.caption2)
-                            .opacity(0.7)
+                } else {
+                    Annotation("\(cluster.count) incidents", coordinate: cluster.coordinate) {
+                        eventClusterPin(cluster.count, .orange, cluster.coordinate)
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -274,9 +268,6 @@ struct SituationView: View {
         incidents.filter { !$0.isInfrastructure }
     }
 
-    private var infrastructureIncidents: [Incident] {
-        incidents.filter { $0.isInfrastructure }
-    }
 
     private func incidentSymbol(_ title: String) -> String {
         let t = title.lowercased()
@@ -392,9 +383,9 @@ struct SituationView: View {
     @MapContentBuilder
     private var trafficAnnotations: some MapContent {
         if showTraffic {
-            ForEach(trafficData?.incidents ?? []) { incident in
-                if let coord = incident.coordinate {
-                    Annotation(incident.title ?? "Traffic", coordinate: coord) {
+            ForEach(eventClusters(trafficData?.incidents ?? [])) { cluster in
+                if let incident = cluster.single {
+                    Annotation(incident.title ?? "Traffic", coordinate: cluster.coordinate) {
                         Button {
                             Haptics.impact(.light)
                             selectedEvent = .trafficIncident(incident)
@@ -402,6 +393,10 @@ struct SituationView: View {
                             eventPin("car.fill", .orange)
                         }
                         .buttonStyle(.plain)
+                    }
+                } else {
+                    Annotation("\(cluster.count) traffic", coordinate: cluster.coordinate) {
+                        eventClusterPin(cluster.count, .orange, cluster.coordinate)
                     }
                 }
             }
@@ -446,8 +441,40 @@ struct SituationView: View {
         }
     }
 
+    /// Zoomed out past this, every category shares one grid so a block shows one badge, not six.
+    private var isWideZoom: Bool { (visibleRegion?.span ?? currentRegion.span).latitudeDelta > 0.03 }
+
     @MapContentBuilder
     private var venueAnnotations: some MapContent {
+        if isWideZoom {
+            ForEach(mergedVenueClusters()) { cluster in
+                if let item = cluster.single, let cat = venueCategory(of: item) {
+                    Annotation(item.name ?? cat.label, coordinate: cluster.coordinate) {
+                        venuePin(cat, item)
+                    }
+                } else {
+                    Annotation("\(cluster.count) places", coordinate: cluster.coordinate) {
+                        eventClusterPin(cluster.count, Color(.systemGray), cluster.coordinate)
+                    }
+                }
+            }
+        } else {
+            perCategoryVenueAnnotations
+        }
+    }
+
+    private func mergedVenueClusters() -> [MapCluster<MKMapItem>] {
+        let span = visibleRegion?.span ?? currentRegion.span
+        let all = VenueCategory.allCases.filter { selectedVenueCategories.contains($0) }.flatMap { venueResults[$0] ?? [] }
+        return clusterByGrid(all, in: span, cellsAcross: 8) { $0.placemark.location?.coordinate }
+    }
+
+    private func venueCategory(of item: MKMapItem) -> VenueCategory? {
+        VenueCategory.allCases.first { venueResults[$0]?.contains(where: { $0 === item }) == true }
+    }
+
+    @MapContentBuilder
+    private var perCategoryVenueAnnotations: some MapContent {
         ForEach(VenueCategory.allCases, id: \.self) { cat in
             if selectedVenueCategories.contains(cat) {
                 ForEach(venueClusters(for: cat)) { cluster in
@@ -470,6 +497,26 @@ struct SituationView: View {
     private func venueClusters(for cat: VenueCategory) -> [MapCluster<MKMapItem>] {
         let span = visibleRegion?.span ?? currentRegion.span
         return clusterByGrid(venueResults[cat] ?? [], in: span) { $0.placemark.location?.coordinate }
+    }
+
+    private func eventClusters<T>(_ items: [T]) -> [MapCluster<T>] where T: Identifiable {
+        let span = visibleRegion?.span ?? currentRegion.span
+        return clusterByGrid(items, in: span) { ($0 as? Incident)?.coordinate ?? ($0 as? TrafficData.TrafficIncident)?.coordinate }
+    }
+
+    private func eventClusterPin(_ count: Int, _ tint: Color, _ coordinate: CLLocationCoordinate2D) -> some View {
+        Button {
+            Haptics.impact(.light)
+            zoomInto(coordinate)
+        } label: {
+            Text("\(count)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(minWidth: 26, minHeight: 26)
+                .background(tint, in: Circle())
+                .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
     }
 
     /// Round badge for event pins, same shape as venue pins. No emoji.
