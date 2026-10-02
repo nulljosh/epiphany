@@ -163,3 +163,13 @@ class Watchlist(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Names(unittest.TestCase):
+    def test_every_name_the_app_calls_exists(self):
+        # refresh() only runs inside AppKit, so the unit tests never execute it; a deleted helper crashed the live app.
+        import ast, builtins
+        tree = ast.parse(open(spec.origin).read())
+        defined = {n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.ClassDef))} | set(dir(builtins)) | set(vars(mb)) | {a.asname or a.name for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names}
+        called = {n.func.id for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+        self.assertEqual(called - defined, set())
