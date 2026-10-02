@@ -405,7 +405,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
   const login = (e) => { e.preventDefault(); onLogin(); };
 
   return (
-    <div className={`lp${zooming ? ' zooming' : ''}`}>
+    <div id="top" className={`lp${zooming ? ' zooming' : ''}`}>
       {/* ─── NAV ─── */}
       <nav className="lp-nav">
         <a className="lp-logo" href="#" onClick={(e) => e.preventDefault()}><img src="/epiphany-icon.svg" alt="Epiphany" />Epiphany</a>
@@ -566,21 +566,54 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
 
       {/* ─── FOOTER ─── */}
       <InstallAnywhere name="Epiphany" appUrl="https://epiphany.heyitsmejosh.com" appStoreUrl="https://apps.apple.com/app/id6779522175" />
-      <footer className="lp-footer">
-        <div className="lp-footer-logo"><img src="/epiphany-icon.svg" alt="" />Epiphany</div>
-        <ul className="lp-footer-links">
-          <li><a href="#markets">Markets</a></li>
-          <li><a href="#trading">Auto trader</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="/terms.md" target="_blank">Terms</a></li>
-          <li><a href="/privacy.md" target="_blank">Privacy</a></li>
-          <li><a href="https://github.com/nulljosh/epiphany/blob/main/docs/API.md" target="_blank" rel="noreferrer">API</a></li>
-        </ul>
-        <div style={{ fontSize: '0.8rem', color: 'rgba(var(--lp-ink),0.4)', marginTop: '1.5rem', lineHeight: 1.6 }}>
-          Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.
-        </div>
-        <div style={{ marginTop: '1rem', fontSize: '0.85rem' }}>© 2026 Epiphany</div>
-      </footer>
+      <footer className="lp-foot">
+  <div className="foot-rule" aria-hidden="true"><span>Epiphany</span><span>Your money, one page</span></div>
+  <nav className="foot-dir" aria-label="Footer">
+    <div className="foot-col">
+      <h3>Epiphany</h3>
+      <ul>
+        <li><a href="https://apps.apple.com/app/id6779522175">App Store</a></li>
+        <li><a href="https://epiphany.heyitsmejosh.com">Open the web app</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/roadmap.md">Roadmap</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/WHITEPAPER.md">Whitepaper</a></li>
+      </ul>
+    </div>
+    <div className="foot-col">
+      <h3>Explore</h3>
+      <ul>
+        <li><a href="#markets">Markets</a></li>
+        <li><a href="#trading">Auto trader</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#install-anywhere">Install anywhere</a></li>
+      </ul>
+    </div>
+    <div className="foot-col">
+      <h3>Developers</h3>
+      <ul>
+        <li><a href="https://github.com/nulljosh/epiphany">Source</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/docs/API.md">API reference</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/docs/ARCHITECTURE.md">Architecture</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/issues">Report a bug</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/CONTRIBUTING.md">Contributing</a></li>
+      </ul>
+    </div>
+    <div className="foot-col">
+      <h3>Project</h3>
+      <ul>
+        <li><a href="/privacy.md">Privacy</a></li>
+        <li><a href="/terms.md">Terms</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/SECURITY.md">Security</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/LICENSE">License (MIT)</a></li>
+        <li><a href="https://heyitsmejosh.com">Portfolio</a></li>
+        <li><a href="#top">Back to top</a></li>
+      </ul>
+    </div>
+  </nav>
+  <div className="foot-bar">
+    <p className="foot-meta">Epiphany{typeof __APP_VERSION__ !== 'undefined' ? ` v${__APP_VERSION__}` : ''} · MIT License · © 2026 Joshua Trommel · Made with <span aria-hidden="true">♥</span> in Vancouver, BC</p>
+    <p className="foot-meta foot-note">Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.</p>
+  </div>
+</footer>
     </div>
   );
 }

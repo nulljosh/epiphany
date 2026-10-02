@@ -722,3 +722,24 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .lp-ticker-wrap, .lp .lp-section, .lp .lp-final, .lp .lp-footer, .lp #install-anywhere { background: var(--lp-bg); }
 .lp.zooming { opacity: 0; transform: scale(1.04); transition: opacity 380ms ease, transform 380ms ease; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .lp.zooming { transition: none; } }
+
+
+/* footer directory, ported from Joshua Tree */
+.lp footer.lp-foot { background: var(--lp-bg); position: relative; max-width: none; display: block; margin: 0; padding: 56px 0 40px; border-top: 1px solid rgba(var(--lp-ink),0.1); text-align: left; font-size: 13px; }
+.lp footer.lp-foot .foot-rule { display: flex; align-items: center; gap: 16px; max-width: 880px; margin: 0 auto; padding: 0 20px 28px; font-size: 13px; letter-spacing: .06em; font-weight: 500; color: rgba(var(--lp-ink),0.6); }
+.lp footer.lp-foot .foot-rule::before { content: ""; order: 1; flex: 1; height: 1px; background: rgba(var(--lp-ink),0.1); }
+.lp footer.lp-foot .foot-rule > :first-child { order: 0; }
+.lp footer.lp-foot .foot-rule > :last-child { order: 2; }
+@media (max-width: 520px) { .lp footer.lp-foot .foot-rule { flex-wrap: wrap; justify-content: center; gap: 10px 16px; } .lp footer.lp-foot .foot-rule::before { order: -1; flex-basis: 100%; } }
+.lp .foot-dir { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 24px; max-width: 880px; margin: 0 auto; padding: 0 20px 28px; text-align: left; }
+.lp .foot-col h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: rgb(var(--lp-ink)); letter-spacing: 0.02em; }
+.lp .foot-col ul { list-style: none; margin: 0; padding: 0; }
+.lp .foot-col a { position: relative; display: inline-block; padding: 5px 0; margin: 0; color: rgba(var(--lp-ink),0.6); text-decoration: none; font-size: 13px; line-height: 1.35; }
+.lp .foot-col a::after { content: ""; position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100%; height: 44px; min-width: 44px; }
+.lp .foot-col a:hover { color: rgb(var(--lp-ink)); text-decoration: underline; }
+.lp .foot-bar { max-width: 880px; margin: 0 auto; padding: 18px 20px 0; border-top: 1px solid rgba(var(--lp-ink),0.1); }
+.lp .foot-bar .foot-meta { margin: 0; text-align: left; color: rgba(var(--lp-ink),0.6); font-size: 12.5px; line-height: 1.9; }
+.lp .foot-bar .foot-meta a { color: rgba(var(--lp-ink),0.6); }
+@media (max-width: 700px) { .lp .foot-dir { grid-template-columns: repeat(2, 1fr); } }
+
+.lp .foot-bar .foot-note { margin-top: 12px; font-size: 12px; opacity: .8; }
