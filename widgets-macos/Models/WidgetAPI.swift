@@ -65,6 +65,14 @@ struct WidgetAPI {
             .sorted { $0.symbol < $1.symbol } ?? []
     }
 
+    // MARK: - Budget (written by the app, read here)
+
+    static func cachedBudget() -> BudgetEntry? {
+        guard let d = defaults?.dictionary(forKey: "widget_budget"),
+              let income = d["income"] as? Double, let spent = d["spent"] as? Double else { return nil }
+        return BudgetEntry(date: .now, income: income, spent: spent, month: d["month"] as? String ?? "", isPlaceholder: false)
+    }
+
     // MARK: - Internal
 
     private static func fetch(_ path: String) async throws -> Data {

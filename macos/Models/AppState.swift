@@ -1,5 +1,6 @@
 import SwiftUI
 import LocalAuthentication
+import WidgetKit
 
 @MainActor
 @Observable
@@ -351,6 +352,16 @@ final class AppState {
         }
         financeDataLoaded = true
         portfolioFetchedAt = .now
+        publishBudgetSnapshot()
+    }
+
+    /// Widgets cannot use the app's session, so hand them the two budget numbers via the App Group.
+    func publishBudgetSnapshot() {
+        guard let defaults = UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany") else { return }
+        let income = financeData?.budget?.totalMonthlyIncome ?? 0
+        let latest = statements.compactMap(\.spendingMonth).max { $0.sortKey < $1.sortKey }
+        defaults.set(["income": income, "spent": latest?.total ?? 0, "month": latest?.month ?? ""], forKey: "widget_budget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "BudgetWidget")
     }
 
     func saveFinanceData() async {
@@ -370,6 +381,7 @@ final class AppState {
         guard isLoggedIn else { return }
         do {
             statements = try await EpiphanyAPI.shared.fetchStatements()
+            publishBudgetSnapshot()
         } catch {
             self.error = error.localizedDescription
         }
