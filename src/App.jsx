@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import { PremiumContext } from './context/PremiumContext.js';
 import { usePolymarket } from './hooks/usePolymarket';
 import { useLivePrices } from './hooks/useLivePrices';
@@ -10,11 +10,12 @@ import { useElapsedTime } from './hooks/useElapsedTime';
 import { useRunHistory } from './hooks/useRunHistory';
 import { useTradeShortcuts } from './hooks/useTradeShortcuts';
 import { usePredictionMarketTrading } from './hooks/usePredictionMarketTrading';
-import PricingPage from './components/PricingPage';
-import FinancePanel from './components/FinancePanel';
-import LiveMapBackdrop from './components/LiveMapBackdrop';
-import SituationMonitor from './components/SituationMonitor';
-import MarketsPanel from './components/MarketsPanel';
+const PricingPage = lazy(() => import('./components/PricingPage'));
+const FinancePanel = lazy(() => import('./components/FinancePanel'));
+// maplibre is 1MB; the shell paints first and the map fades in behind it.
+const LiveMapBackdrop = lazy(() => import('./components/LiveMapBackdrop'));
+const SituationMonitor = lazy(() => import('./components/SituationMonitor'));
+const MarketsPanel = lazy(() => import('./components/MarketsPanel'));
 import { useSubscription } from './hooks/useSubscription';
 import { useAuth } from './hooks/useAuth';
 import { useWatchlist } from './hooks/useWatchlist';
@@ -24,7 +25,7 @@ import AlertsPanel from './components/AlertsPanel';
 import { useWeather } from './hooks/useWeather';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import Settings from './components/Settings';
-import PeoplePanel from './components/PeoplePanel';
+const PeoplePanel = lazy(() => import('./components/PeoplePanel'));
 import CommandBar from './components/CommandBar';
 import AuthPage from './pages/AuthPage';
 import LandingPage from './pages/LandingPage';
@@ -765,7 +766,7 @@ const reset = useCallback(() => {
     return (
       <div className="epiphany-preauth">
         <div className="preauth-map" aria-hidden="true">
-          <LiveMapBackdrop dark mapLayers={PREAUTH_LAYERS} autoGeo={false} chrome={false} onMapReady={handleMapReady} />
+          <Suspense fallback={null}><LiveMapBackdrop dark mapLayers={PREAUTH_LAYERS} autoGeo={false} chrome={false} onMapReady={handleMapReady} /></Suspense>
         </div>
         <div className="preauth-content">
           {showLanding && !resetToken ? (
@@ -831,7 +832,7 @@ const reset = useCallback(() => {
 
   // Shared panel content rendered in both desktop and mobile layouts
   const renderPanelContent = () => (
-    <>
+    <Suspense fallback={null}>
       {activeTab === 'situation' && (
         <SituationMonitor
           dark={dark} t={t} font={font}
@@ -862,7 +863,7 @@ const reset = useCallback(() => {
       {activeTab === 'settings' && (
         <Settings {...settingsProps} />
       )}
-    </>
+    </Suspense>
   );
 
   return (
@@ -952,11 +953,11 @@ const reset = useCallback(() => {
 
       {/* Map cell */}
       <div className="epiphany-map" style={{ gridColumn: isMobileNav ? '1 / -1' : '1', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, background: 'var(--epiphany-bg)' }}>
-        <LiveMapBackdrop
+        <Suspense fallback={null}><LiveMapBackdrop
           dark={dark}
           mapLayers={mapLayers}
           onMapReady={handleMapReady}
-        />
+        /></Suspense>
         <MobileLayout
           t={t} dark={dark} isMobileNav={isMobileNav}
           activeTab={activeTab}

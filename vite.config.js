@@ -42,7 +42,18 @@ export default defineConfig({
     '__EPIPHANY_BUILD__': JSON.stringify(new Date().toISOString()),
     '__APP_VERSION__': JSON.stringify(APP_VERSION),
   },
-  build: {},
+  build: {
+    rollupOptions: {
+      output: {
+        // Maps and charts in their own chunks so the shell paints before they download.
+        manualChunks: {
+          maplibre: ['maplibre-gl', 'supercluster'],
+          charts: ['recharts', 'lightweight-charts'],
+          react: ['react', 'react-dom'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     compression({ algorithm: 'brotliCompress', ext: '.br' }),
