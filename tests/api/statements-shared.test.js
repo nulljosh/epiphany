@@ -220,3 +220,18 @@ describe('summarizeTransactions', () => {
     expect(june.month).not.toBe(july.month);
   });
 });
+
+describe('parseStatementText column layouts', () => {
+  // pdf-parse mashed the columns together; unpdf and PDFKit put spaces between
+  // them. One August 2026 upload parsed to zero rows until the regex allowed both.
+  const mashed = ['DATEPOSTED DATEDESCRIPTIONAMOUNT (CAD)BALANCE (CAD)', '2026-08-012026-08-01Interest earned$0.11$1,234.67', '2026-07-312026-08-01Compass Web–$6.10$1,228.57'].join('\n');
+  const spaced = ['DATE POSTED DATE DESCRIPTION AMOUNT (CAD) BALANCE (CAD)', '2026-08-01 2026-08-01 Interest earned $0.11 $1,234.67', '2026-07-31 2026-08-01 Compass Web –$6.10 $1,228.57'].join('\n');
+
+  it('reads the same rows from both layouts', () => {
+    const a = parseStatementText(mashed);
+    const b = parseStatementText(spaced);
+    expect(a).toHaveLength(2);
+    expect(b).toEqual(a);
+    expect(b[1]).toMatchObject({ date: '2026-07-31', postedDate: '2026-08-01', description: 'Compass Web', amount: -6.1, balance: 1228.57, category: 'transit' });
+  });
+});
