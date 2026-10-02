@@ -208,7 +208,7 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .earthquake(quake)
                     } label: {
-                        eventPin("waveform.path.ecg", .orange)
+                        eventPin("waveform.path.ecg", .orange, label: quake.place ?? "Earthquake")
                     }
                     .buttonStyle(.plain)
                 }
@@ -229,7 +229,7 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .flight(flight)
                     } label: {
-                        eventPin("airplane", .blue)
+                        eventPin("airplane", .blue, label: "Flight \(flight.callsign)")
                     }
                     .buttonStyle(.plain)
                 }
@@ -274,7 +274,7 @@ struct SituationView: View {
                             Haptics.impact(.medium)
                             selectedEvent = .incident(incident)
                         } label: {
-                            eventPin(incidentSymbol(incident.title), incidentColor(incident.title))
+                            eventPin(incidentSymbol(incident.title), incidentColor(incident.title), label: incident.title)
                         }
                         .buttonStyle(.plain)
                     }
@@ -284,7 +284,7 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .trafficIncident(incident)
                         } label: {
-                            eventPin("car.fill", .orange)
+                            eventPin("car.fill", .orange, label: incident.title ?? "Traffic")
                         }
                         .buttonStyle(.plain)
                     }
@@ -338,7 +338,7 @@ struct SituationView: View {
                             Haptics.impact(.medium)
                             selectedEvent = .weatherAlert(alert)
                         } label: {
-                            eventPin("cloud.bolt.rain.fill", .indigo)
+                            eventPin("cloud.bolt.rain.fill", .indigo, label: alert.title)
                         }
                         .buttonStyle(.plain)
                     }
@@ -356,7 +356,7 @@ struct SituationView: View {
                         Haptics.impact(.medium)
                         selectedEvent = .crime(crime)
                     } label: {
-                        eventPin("light.beacon.max.fill", .red)
+                        eventPin("light.beacon.max.fill", .red, label: crime.title)
                     }
                     .buttonStyle(.plain)
                 }
@@ -424,7 +424,7 @@ struct SituationView: View {
         if showWildfires {
             ForEach(wildfires) { fire in
                 Annotation("Wildfire", coordinate: fire.coordinate) {
-                    eventPin("flame.fill", .red)
+                    eventPin("flame.fill", .red, label: "Wildfire")
                 }
             }
         }
@@ -529,15 +529,18 @@ struct SituationView: View {
                 .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(count) nearby")
+        .accessibilityHint("Zooms in")
     }
 
     /// Round badge for event pins, same shape as venue pins. No emoji.
-    private func eventPin(_ symbol: String, _ tint: Color) -> some View {
+    private func eventPin(_ symbol: String, _ tint: Color, label: String = "Event") -> some View {
         Image(systemName: symbol)
             .font(.caption2.weight(.semibold))
             .foregroundStyle(.white)
             .padding(5)
             .background(tint, in: Circle())
+            .accessibilityLabel(label)
     }
 
     private func venuePin(_ cat: VenueCategory, _ item: MKMapItem) -> some View {
