@@ -717,13 +717,13 @@ struct SituationView: View {
     @ViewBuilder
     private var venueCategoryBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Button { showPlaces = true } label: {
                     Label("Places", systemImage: "list.bullet")
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10).padding(.vertical, 7)
-                        .background(Color.black.opacity(0.7), in: Capsule())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
+                        .liquidGlass(in: Capsule(), interactive: true, fallback: .ultraThinMaterial)
                 }
                 .buttonStyle(.plain)
                 ForEach(VenueCategory.allCases, id: \.self) { cat in
@@ -737,29 +737,29 @@ struct SituationView: View {
                             Task { await searchVenues(cat) }
                         }
                     } label: {
+                        // Apple Maps chips: glass when idle, the category colour only when on.
+                        let on = selectedVenueCategories.contains(cat)
                         HStack(spacing: 5) {
-                            if isSearchingVenues && selectedVenueCategories.contains(cat) {
+                            if isSearchingVenues && on {
                                 ProgressView().controlSize(.mini).tint(.white)
                             } else {
                                 Image(systemName: cat.icon)
                                     .font(.caption.weight(.semibold))
+                                    .foregroundStyle(on ? .white : cat.tint)
                             }
                             Text(cat.label)
                                 .font(.caption.weight(.semibold))
+                                .foregroundStyle(on ? .white : .primary)
                         }
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, 10)
                         .padding(.vertical, 7)
-                        .background(
-                            selectedVenueCategories.contains(cat) ? cat.tint : Color.black.opacity(0.6),
-                            in: Capsule()
-                        )
-                        .foregroundStyle(.white)
-                        .overlay(
-                            Capsule().stroke(
-                                selectedVenueCategories.contains(cat) ? Color.clear : Color.white.opacity(0.15),
-                                lineWidth: 1
-                            )
-                        )
+                        .background {
+                            if on {
+                                Capsule().fill(cat.tint)
+                            } else {
+                                Color.clear.liquidGlass(in: Capsule(), interactive: true, fallback: .ultraThinMaterial)
+                            }
+                        }
                     }
                     .buttonStyle(.plain)
                 }
