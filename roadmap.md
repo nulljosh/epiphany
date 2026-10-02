@@ -5,6 +5,7 @@
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
 - [x] Autopilot is back on the web (2026-10-01): the Trade tab shows the Autopilot card (paper by default, live capped $50/trade, Premium only). The manual recommend-and-review flow stays off until its math converts USD to CAD.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
+- [x] Brokerage snapshot carries each holding's and cash line's currency and stores CAD totals (netWorthCad, balance.totalCad, usdPerCad, fxMissing flag; unconvertible amounts are flagged, never mixed), 2026-10-01.
 - [x] Web net worth now sums in CAD (USD holdings converted with CADUSD=X), 2026-10-01. Holdings were already clean on the real snapshot.
 - [x] Account totals convert USD holdings and USD cash to CAD at sync (server), Mac net worth no longer double-counts balances (2026-10-01).
 - [x] iOS Portfolio header now uses the server's CAD cash (compiles for iOS and Mac; ships with the next build). Next build also needs: version bump after 2.5.14 clears review.

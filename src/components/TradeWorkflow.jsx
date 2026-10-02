@@ -65,15 +65,15 @@ export function AutopilotCard({ dark, t }) {
           )}
         </div>
         <div style={{ fontSize: 13, color: t.textSecondary, lineHeight: 1.5, marginBottom: 12 }}>
-          Buys and sells for you every market morning at 9:30 ET through your linked
-          brokerage — even when the app is closed.
+          Trend 2x: each market morning at 9:30 ET it holds SSO (2x S&P 500) while the S&P 500 is
+          above its 200-day average, and BIL (T-bills) when it is below.
         </div>
 
         {!state && !err && <div style={{ fontSize: 12, color: t.textTertiary }}>Loading…</div>}
 
         {state && !state.pro && (
           <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
-            <div style={{ fontSize: 12, color: t.textTertiary, marginBottom: 10 }}>🔒 Premium feature</div>
+            <div style={{ fontSize: 12, color: t.textTertiary, marginBottom: 10 }}>Premium feature</div>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('epiphany:show-pricing'))}
               style={{ ...pill(true), padding: '10px 20px', fontSize: 13 }}

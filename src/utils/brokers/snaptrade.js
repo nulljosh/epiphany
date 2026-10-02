@@ -12,6 +12,39 @@ import crypto from 'node:crypto';
 const BASE = 'https://api.snaptrade.com';
 const API = '/api/v1';
 
+// Convert one amount to CAD. Null currency is treated as CAD (the account base). USD needs
+// usdPerCad (CADUSD=X, USD per CAD). Anything that cannot be converted returns null so callers
+// flag it instead of silently summing mixed currencies.
+export function toBaseCad(amount, currency, usdPerCad) {
+  const cur = currency ? String(currency).toUpperCase() : 'CAD';
+  if (cur === 'CAD') return amount;
+  if (cur === 'USD' && usdPerCad > 0) return amount / usdPerCad;
+  return null;
+}
+
+// Add converted totals to a sync result. Never mixes: anything unconvertible is left out of the
+// CAD sums and reported in fxMissing so readers show native amounts with a flag.
+export function withCadTotals({ holdings, balance }, usdPerCad) {
+  let fxMissing = false;
+  const conv = (amount, currency) => {
+    const v = toBaseCad(amount, currency, usdPerCad);
+    if (v == null) fxMissing = true;
+    return v;
+  };
+  const outHoldings = holdings.map((h) => ({
+    ...h, marketValueCad: h.marketValue == null ? null : conv(h.marketValue, h.currency),
+  }));
+  const accounts = balance.accounts.map((a) => ({ ...a, cashCad: conv(a.cash, a.currency) }));
+  const cashCad = accounts.reduce((s, a) => s + (a.cashCad ?? 0), 0);
+  const holdingsCad = outHoldings.reduce((s, h) => s + (h.marketValueCad ?? 0), 0);
+  return {
+    holdings: outHoldings,
+    balance: { ...balance, accounts, totalCad: cashCad },
+    currency: 'CAD', usdPerCad: usdPerCad > 0 ? usdPerCad : null, fxMissing,
+    netWorthCad: cashCad + holdingsCad,
+  };
+}
+
 export class SnapTradeAdapter {
   constructor(config = {}) {
     this.name = 'snaptrade';
@@ -184,6 +217,7 @@ export class SnapTradeAdapter {
           marketValue: price != null ? price * units : null,
           account: acct.name || acct.id,
           accountId: acct.id,
+          currency: pos.currency?.code ?? pos.symbol?.symbol?.currency?.code ?? null,
         });
       }
     }
@@ -194,6 +228,7 @@ export class SnapTradeAdapter {
       const key = `${h.symbol}::${h.accountId}`;
       const prev = merged.get(key);
       if (!prev) { merged.set(key, { ...h }); continue; }
+      prev.currency = prev.currency ?? h.currency;
       prev.shares += h.shares;
       prev.marketValue = (prev.marketValue != null || h.marketValue != null)
         ? (prev.marketValue ?? 0) + (h.marketValue ?? 0) : null;
@@ -275,7 +310,8 @@ export class SnapTradeAdapter {
   // cash lines; adding those raw made net worth read low. usdPerCad is CADUSD=X (USD per CAD).
   // ponytail: only USD is converted; with no rate the old raw sum is kept rather than dropping value.
   async getAccounts({ usdPerCad = null } = {}) {
-    const toCad = (amount, currency) => (currency === 'USD' && usdPerCad > 0 ? amount / usdPerCad : amount);
+    // ponytail: with no rate the native amount is kept and the account is flagged (currency null).
+    const toCad = (amount, currency) => toBaseCad(amount, currency, usdPerCad) ?? amount;
     const accounts = await this.listAccounts();
     const out = [];
     for (const acct of accounts) {

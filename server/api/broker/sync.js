@@ -9,7 +9,7 @@
 import { getKv } from '../_kv.js';
 import { getSessionUser, errorResponse } from '../auth-helpers.js';
 import { isPro } from '../gates.js';
-import { SnapTradeAdapter } from '../../../src/utils/brokers/snaptrade.js';
+import { SnapTradeAdapter, withCadTotals } from '../../../src/utils/brokers/snaptrade.js';
 import { YAHOO_HEADERS } from '../stocks-shared.js';
 
 // CADUSD=X: US dollars per Canadian dollar, so account totals can be summed in CAD.
@@ -95,25 +95,28 @@ export default async function handler(req, res) {
     }
 
     const since = new Date(Date.now() - 2 * 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-    const [rawHoldings, balance, snapAccounts, connections, activities] = await Promise.all([
-      adapter.getHoldings(), adapter.getBalance(), usdPerCad().then(fx => adapter.getAccounts({ usdPerCad: fx })), adapter.listConnections().catch(() => []),
+    const fx = await usdPerCad();
+    const [rawHoldings, rawBalance, snapAccounts, connections, activities] = await Promise.all([
+      adapter.getHoldings(), adapter.getBalance(), adapter.getAccounts({ usdPerCad: fx }), adapter.listConnections().catch(() => []),
       adapter.getActivities({ startDate: since }).catch(() => []),
     ]);
     // Activities give what /positions doesn't: cost basis (for gain/loss on
     // synced holdings) and dividend income.
     const basis = SnapTradeAdapter.costBasisFromActivities(activities);
-    const holdings = rawHoldings.map(h => ({ ...h, costBasis: basis[h.symbol] ?? null }));
+    const { holdings: cadHoldings, balance, currency, usdPerCad: rate, fxMissing, netWorthCad } =
+      withCadTotals({ holdings: rawHoldings, balance: rawBalance }, fx);
+    const holdings = cadHoldings.map(h => ({ ...h, costBasis: basis[h.symbol] ?? null }));
     const yearAgo = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
     const dividends12m = activities
       .filter(a => a.type === 'DIVIDEND' && String(a.date) >= yearAgo)
       .reduce((sum, a) => sum + Math.abs(a.amount), 0);
     const snapshot = {
-      holdings, balance, accounts: snapAccounts, connections,
+      holdings, balance, accounts: snapAccounts, currency, usdPerCad: rate, fxMissing, netWorthCad, connections,
       activities: activities.slice(0, 50), dividends12m, syncedAt: new Date().toISOString(),
     };
     if (kv) await kv.set(snapshotKey, snapshot);
 
-    console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.total.toFixed(2)} cash`);
+    console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.totalCad.toFixed(2)} CAD cash${fxMissing ? ' (FX missing, flagged)' : ''}`);
     return res.status(200).json({ ok: true, linked: true, ...snapshot });
   } catch (err) {
     // Upstream detail stays in the logs; the clients (iOS/macOS/web) render
