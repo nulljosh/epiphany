@@ -1543,7 +1543,7 @@ struct PortfolioView: View {
         return thinnedMonthLabels(actualMonths + forecastMonths)
     }
 
-    // ponytail: labelling every month is what made the x-axis unreadable — at a
+    // ponytail: labelling every month is what made the x-axis unreadable, at a
     // year of data the "Jan Feb Mar…" run collides into mush. Keep at most
     // MAX_X_LABELS evenly-spaced labels (always including the last one) so the
     // remaining ones have room to render horizontally. Bars are unaffected;

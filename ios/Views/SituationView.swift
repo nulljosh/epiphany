@@ -499,7 +499,7 @@ struct SituationView: View {
     }
 
     /// Groups this category's pins by the current visible span. Nothing is filtered
-    /// out — dense areas collapse into a count badge that zooms in on tap.
+    /// out, dense areas collapse into a count badge that zooms in on tap.
     private func venueClusters(for cat: VenueCategory) -> [MapCluster<MKMapItem>] {
         let span = visibleRegion?.span ?? currentRegion.span
         return clusterByGrid(venueResults[cat] ?? [], in: span) { $0.placemark.location?.coordinate }
@@ -1880,7 +1880,7 @@ private struct VenueDetailSheet: View {
             .padding(Spacing.lg)
         }
         .task {
-            // Native Apple imagery — no API key. Nil in areas without coverage.
+            // Native Apple imagery, no API key. Nil in areas without coverage.
             scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
             loadingScene = false
         }

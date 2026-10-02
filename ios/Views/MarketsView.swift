@@ -547,7 +547,7 @@ struct MarketsView: View {
     private var fearGreedView: some View {
         Group {
             if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
-                // ponytail: was a grey material "island" — a stacked label block, a
+                // ponytail: was a grey material "island", a stacked label block, a
                 // right-aligned duplicate percentage, and a bar underneath. Now one
                 // horizontal row: label, score, rating on a single baseline with the
                 // bar flush beneath it, no backing fill and no duplicate number.

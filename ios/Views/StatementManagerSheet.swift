@@ -10,7 +10,7 @@ struct StatementManagerSheet: View {
     @State private var selectedStatement: Statement?
 
     // ponytail: rows come from `statements` (the API's source of truth), not from
-    // appState.financeData.spending — a freshly uploaded statement is always in the
+    // appState.financeData.spending, a freshly uploaded statement is always in the
     // former and only sometimes in the latter, which is why uploads looked like no-ops.
     private var sortedStatements: [Statement] {
         statements.sorted { ($0.spendingMonth?.sortKey ?? "") > ($1.spendingMonth?.sortKey ?? "") }
@@ -83,7 +83,7 @@ struct StatementManagerSheet: View {
             .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf], onCompletion: { result in
                 handleFileSelection(result)
             })
-            // ponytail: a real two-way binding — `.constant(uploadError != nil)` swallowed
+            // ponytail: a real two-way binding, `.constant(uploadError != nil)` swallowed
             // SwiftUI's dismissal write, so every upload failure was invisible.
             .alert("Upload Error", isPresented: Binding(
                 get: { uploadError != nil },
@@ -121,7 +121,7 @@ struct StatementManagerSheet: View {
 
     // ponytail: mirrors the server's cap. The real ceiling is Vercel's 4.5MB
     // serverless request-body limit, and we send the PDF base64-encoded (4/3
-    // inflation) — so 3MB of PDF. Above that the platform 413s before the handler
+    // inflation), so 3MB of PDF. Above that the platform 413s before the handler
     // runs, which is why oversized statements used to vanish with no error.
     private static let maxStatementBytes = 3 * 1024 * 1024
 
@@ -140,7 +140,7 @@ struct StatementManagerSheet: View {
                 let data = try Data(contentsOf: url)
                 guard data.count <= Self.maxStatementBytes else {
                     let mb = Double(data.count) / 1024 / 1024
-                    uploadError = String(format: "%@ is too large (%.1fMB) — statements must be under 3MB", url.lastPathComponent, mb)
+                    uploadError = String(format: "%@ is too large (%.1fMB), statements must be under 3MB", url.lastPathComponent, mb)
                     return
                 }
                 upload(data: data, filename: url.lastPathComponent)

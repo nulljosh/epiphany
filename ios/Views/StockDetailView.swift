@@ -190,8 +190,8 @@ struct StockDetailView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
 
-                // Trade temporarily disabled — crashed on tap; web side already disabled pending SnapTrade sync fix
-                Text("Trading is temporarily disabled — coming back soon")
+                // Trade temporarily disabled, crashed on tap; web side already disabled pending SnapTrade sync fix
+                Text("Trading is temporarily disabled, back soon")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
