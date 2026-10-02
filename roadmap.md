@@ -273,7 +273,7 @@ Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips rest
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
-- [ ] AppIcon.appiconset has 18 orphan PNGs its Contents.json no longer lists (Xcode warning); prune them
+- [x] AppIcon.appiconset has 18 orphan PNGs its Contents.json no longer lists (Xcode warning); prune them (pruned 2026-10-01)
 Pass 7: Budget widget (home small/medium, lock screen rectangular/inline) fed from the App Group after every finance or statement load; watch and Mac synced to 2.5.15 with the glass icon.
 - [x] macOS widget parity: add Budget (and Watchlist) to widgets-macos and have the Mac app publish the same App Group snapshot (done 2026-10-01)
 - [x] First archive after adding the App Group to the iOS app: confirm the provisioning profile picks up the capability (done 2026-10-01)
@@ -282,11 +282,11 @@ Pass 7: Budget widget (home small/medium, lock screen rectangular/inline) fed fr
 Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
 - [ ] macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
 - [x] local-events takes 23s cold, only an in-isolate Map cache; put it in KV with a TTL (done 2026-10-01)
-- [ ] s-maxage headers from api/gateway.js:126 are inert on Workers (no Vercel CDN); use the Cache API or KV for the 25 cached routes
+- [x] s-maxage headers from api/gateway.js:126 are inert on Workers (no Vercel CDN); use the Cache API or KV for the 25 cached routes (Cache API in worker/index.js 2026-10-01, hits in 0.07s)
 - [x] worker/index.js has no request body cap; statements.js assumes the platform 413s at 4.5MB (done 2026-10-01)
-- [ ] secrets referenced in server/api but absent from wrangler secret list (see _shared-secret.js:14; WEBHOOK_SECRET fails closed)
+- [x] secrets referenced in server/api but absent from wrangler secret list (see _shared-secret.js:14; WEBHOOK_SECRET fails closed) (checked 2026-10-01: all optional or legacy except WEBHOOK_SECRET, which /api/webhook needs; Joshua sets the value)
 - [x] _cors.js lost its production origin with VERCEL_URL; no-Origin requests advertise localhost (done 2026-10-01)
 - [x] stocks-free KV cache key is a 16-char prefix hash, so a 70-symbol request can be served another caller's 20-symbol result (done 2026-10-01)
 - [ ] _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0
 - [x] worker setHeader coerces arrays with String(), a second Set-Cookie would be comma-joined (done 2026-10-01)
-- [ ] /api/blob serves public max-age=3600 on in-place overwritten keys plus KV's 60s read cache; stale snapshots possible
+- [x] /api/blob serves public max-age=3600 on in-place overwritten keys plus KV's 60s read cache; stale snapshots possible (browser max-age 60 now, 2026-10-01)

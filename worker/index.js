@@ -116,7 +116,8 @@ export default {
       return new Response(body, {
         headers: {
           'Content-Type': guessType(key),
-          'Cache-Control': 'public, max-age=3600',
+          // Keys are overwritten in place (cron snapshot), so keep browsers short.
+          'Cache-Control': 'public, max-age=60',
         },
       });
     }
