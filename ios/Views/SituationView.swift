@@ -367,9 +367,11 @@ struct SituationView: View {
     @MapContentBuilder
     private var localEventAnnotations: some MapContent {
         if showLocalEvents {
-            ForEach(locatableLocalEvents) { event in
-                if let coord = event.coordinate {
-                    Annotation(event.title, coordinate: coord) {
+            // Same grid as venues; a dense city sent hundreds of single pins before.
+            let span = visibleRegion?.span ?? currentRegion.span
+            ForEach(clusterByGrid(locatableLocalEvents, in: span, cellsAcross: 8) { $0.coordinate }) { cluster in
+                if let event = cluster.single {
+                    Annotation(event.title, coordinate: cluster.coordinate) {
                         Button {
                             Haptics.impact(.light)
                             selectedEvent = .localEvent(event)
@@ -381,6 +383,10 @@ struct SituationView: View {
                                 .background(localEventTint(event), in: Circle())
                         }
                         .buttonStyle(.plain)
+                    }
+                } else {
+                    Annotation(cluster.count >= 3 ? "\(cluster.count) events" : "", coordinate: cluster.coordinate) {
+                        eventClusterPin(cluster.count, Color(.systemGray), cluster.coordinate)
                     }
                 }
             }
