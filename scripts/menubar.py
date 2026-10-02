@@ -340,7 +340,10 @@ def main():
             self.paint(v)
             for (item, label), (text, n) in zip(self.rows, rows + [("", None)] * len(self.rows)):
                 fill(item, label, text, n)
-            quotes = safe(watch_quotes) or {}
+            try:
+                quotes = watch_quotes()
+            except Exception:  # Yahoo down: dashes, not a crash
+                quotes = {}
             for sym in WATCH:
                 self.watch[sym].title = watch_line(sym, quotes.get(sym))
 
