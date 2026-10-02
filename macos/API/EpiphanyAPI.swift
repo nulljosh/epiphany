@@ -255,7 +255,7 @@ final class EpiphanyAPI {
         let connections: [Connection]?
     }
 
-    /// POST /api/broker/sync — returns linkUrl when no brokerage is linked yet,
+    /// POST /api/broker/sync, returns linkUrl when no brokerage is linked yet,
     /// otherwise refreshes and returns the linked snapshot. Pass action:
     /// "connect-additional" to link a second brokerage (Pro-gated).
     func syncBroker(action: String? = nil) async throws -> BrokerSyncResponse {
@@ -270,7 +270,7 @@ final class EpiphanyAPI {
         return try decode(BrokerSyncResponse.self, from: data)
     }
 
-    /// POST /api/broker/disconnect — removes the linked brokerage connection(s).
+    /// POST /api/broker/disconnect, removes the linked brokerage connection(s).
     func disconnectBroker() async throws {
         let url = try makeURL("/api/broker/disconnect")
         var request = URLRequest(url: url)
@@ -320,6 +320,8 @@ final class EpiphanyAPI {
         let url = try makeURL("/api/statements", query: ["action": "upload"])
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        // A server-side fallback parse can take 12s; the default 15s would call a landed upload a failure.
+        request.timeoutInterval = 45
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // Text comes from PDFKit on-device, so the server never has to parse the PDF.
         request.httpBody = try JSONEncoder().encode(["filename": filename, "contentBase64": contentBase64, "text": text])

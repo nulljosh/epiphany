@@ -44,7 +44,7 @@ struct NewsView: View {
                         description: Text("Pull to refresh or try again later.")
                     )
                     .refreshable {
-                        await loadNews()
+                        await loadNews(force: true)
                     }
                 } else {
                     List {
@@ -75,7 +75,7 @@ struct NewsView: View {
                         }
                     }
                     .refreshable {
-                        await loadNews()
+                        await loadNews(force: true)
                     }
                 }
             }
@@ -93,12 +93,12 @@ struct NewsView: View {
         }
     }
 
-    private func loadNews() async {
+    private func loadNews(force: Bool = false) async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            articles = try await EpiphanyAPI.shared.fetchNews()
+            articles = try await EpiphanyAPI.shared.fetchNews(force: force)
             error = nil
         } catch {
             self.error = error.localizedDescription

@@ -269,4 +269,8 @@ Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips rest
 - [x] Statements: August 2026 Cash statement uploaded 2026-10-01 (169 rows). Second bug found on the way: the row regex only matched pdf-parse's mashed columns, unpdf and PDFKit space them, fixed with a test
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [ ] Rate limiter now keys on cf-connecting-ip; before this every caller shared one bucket on Cloudflare
+- [x] Rate limiter reads cf-connecting-ip directly (the worker adapter already mapped it into req.socket, so the old "shared bucket" worry was wrong; harmless either way)
+- [ ] macOS map still draws emoji pins and does not cluster; mirror the iOS SF Symbol badges and grid (cross-platform rule)
+- [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
+- [ ] Markets news drawer at full height overlaps the ticker now that the ticker sits under the nav bar (DrawerState.large reserves 80pt)
+- [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun

@@ -37,7 +37,7 @@ private let editableCategories = [
     "subscriptions", "other", "uncategorized",
 ].sorted()
 
-// Kept in sync with the iOS map in ios/Views/PortfolioView.swift — this one had
+// Kept in sync with the iOS map in ios/Views/PortfolioView.swift, this one had
 // drifted and was missing most buckets, so those wedges all rendered grey.
 private let categoryColors: [String: Color] = [
     "housing": Palette.appleBlue,
@@ -793,7 +793,7 @@ struct PortfolioView: View {
         }
     }
 
-    // ponytail: extracted to its own property — inlining the button + progress +
+    // ponytail: extracted to its own property, inlining the button + progress +
     // fileImporter + alert into statementsContent pushed the type-checker over.
     private var statementImportRow: some View {
         HStack(spacing: 10) {
@@ -834,7 +834,7 @@ struct PortfolioView: View {
 
     // ponytail: mirrors the server's cap. The real ceiling is Vercel's 4.5MB
     // serverless request-body limit, and we send the PDF base64-encoded (4/3
-    // inflation) — so 3MB of PDF. Above that the platform 413s before the handler
+    // inflation), so 3MB of PDF. Above that the platform 413s before the handler
     // runs, which is why oversized statements used to vanish with no error.
     private static let maxStatementBytes = 3 * 1024 * 1024
 
@@ -853,7 +853,7 @@ struct PortfolioView: View {
                 guard data.count <= Self.maxStatementBytes else {
                     let mb = Double(data.count) / 1024 / 1024
                     statementUploadError = String(
-                        format: "%@ is too large (%.1fMB) — statements must be under 3MB",
+                        format: "%@ is too large (%.1fMB), statements must be under 3MB",
                         url.lastPathComponent, mb
                     )
                     return
@@ -870,10 +870,11 @@ struct PortfolioView: View {
         isUploadingStatement = true
         Task {
             do {
+                let text = await Task.detached { PDFDocument(data: data)?.string ?? "" }.value
                 let updated = try await EpiphanyAPI.shared.uploadStatement(
                     filename: filename,
                     contentBase64: contentBase64,
-                    text: PDFDocument(data: data)?.string ?? ""
+                    text: text
                 )
                 await MainActor.run {
                     isUploadingStatement = false
@@ -881,7 +882,7 @@ struct PortfolioView: View {
                 }
                 // ponytail: macOS's Statement model has no `spendingMonth` (iOS's does),
                 // so rather than port that field just to merge locally, re-pull finance
-                // from the server — it's the source of truth and this is one call.
+                // from the server, it's the source of truth and this is one call.
                 await appState.loadFinanceData()
             } catch {
                 await MainActor.run {
@@ -1405,7 +1406,7 @@ struct PortfolioView: View {
         var cumulative: Double = 0
         // ponytail: a debt with no minimum payment never pays off, so
         // debtMonthsToPayoff returns .infinity. Folding that in as 0 made the total
-        // read "Debt-free in now" — claiming the debt is already cleared when the
+        // read "Debt-free in now", claiming the debt is already cleared when the
         // truth is the payoff time is unknowable. Mirrors the web fix in
         // src/components/FinancePanel.jsx.
         var hasUnpayableDebt = false
@@ -1441,7 +1442,7 @@ struct PortfolioView: View {
             }
 
             if hasUnpayableDebt {
-                Text("Payoff time unknown — set a monthly payment on every debt")
+                Text("Payoff time unknown, set a monthly payment on every debt")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
             } else if let last = projections.last {
@@ -1529,7 +1530,7 @@ struct PortfolioView: View {
         return thinnedMonthLabels(actualMonths + forecastMonths)
     }
 
-    // ponytail: labelling every month is what made the x-axis unreadable — at a
+    // ponytail: labelling every month is what made the x-axis unreadable, at a
     // year of data the "Jan Feb Mar…" run collides into mush. Keep at most 6
     // evenly-spaced labels (always including the last one) so the remaining ones
     // have room to render horizontally. Bars are unaffected.

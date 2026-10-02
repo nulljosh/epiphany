@@ -270,9 +270,10 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return try decode(FearGreedResponse.self, from: data)
     }
 
-    func fetchNews() async throws -> [NewsArticle] {
+    func fetchNews(force: Bool = false) async throws -> [NewsArticle] {
         // Headlines move slowly; a long TTL keeps the launch prefetch warm until Markets opens.
-        if let cached: [NewsArticle] = cached("news", ttl: 900) { return cached }
+        // Pull-to-refresh passes force so the user always gets a fresh pull.
+        if !force, let cached: [NewsArticle] = cached("news", ttl: 900) { return cached }
         let url = try makeURL("/api/news")
         let request = URLRequest(url: url)
         let data = try await perform(request)
@@ -393,7 +394,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let upgradeRequired: Bool?
     }
 
-    /// POST /api/broker/sync — returns linkUrl when no brokerage is linked yet,
+    /// POST /api/broker/sync, returns linkUrl when no brokerage is linked yet,
     /// otherwise refreshes and returns the linked snapshot. Pass a SnapTrade
     /// broker slug (e.g. "WEALTHSIMPLE") to deep-link that brokerage's login.
     func syncBroker(broker: String? = nil, action: String? = nil) async throws -> BrokerSyncResponse {
@@ -413,7 +414,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return try decode(BrokerSyncResponse.self, from: data)
     }
 
-    /// POST /api/broker/disconnect — removes the linked brokerage connection(s)
+    /// POST /api/broker/disconnect, removes the linked brokerage connection(s)
     /// and clears the server-side snapshot.
     func disconnectBroker() async throws {
         let url = try makeURL("/api/broker/disconnect")
@@ -466,6 +467,8 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let url = try makeURL("/api/statements", query: ["action": "upload"])
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        // A server-side fallback parse can take 12s; the default 15s would call a landed upload a failure.
+        request.timeoutInterval = 45
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // Text comes from PDFKit on-device, so the server never has to parse the PDF.
         request.httpBody = try JSONEncoder().encode(["filename": filename, "contentBase64": contentBase64, "text": text])
