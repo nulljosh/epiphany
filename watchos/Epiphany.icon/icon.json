@@ -1,0 +1,89 @@
+{
+  "fill": {
+    "linear-gradient": [
+      "extended-srgb:0.071,0.078,0.094,1.0",
+      "extended-srgb:0.027,0.031,0.039,1.0"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.5,
+        "y": 0
+      },
+      "stop": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "glass": false,
+          "image-name": "dot.png",
+          "name": "Dot"
+        },
+        {
+          "glass": true,
+          "image-name": "hub.png",
+          "name": "Hub"
+        }
+      ],
+      "lighting": "individual",
+      "name": "Hub",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.45
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.35
+      }
+    },
+    {
+      "layers": [
+        {
+          "glass": true,
+          "image-name": "nodes.png",
+          "name": "Nodes"
+        }
+      ],
+      "lighting": "individual",
+      "name": "Nodes",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.4
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.35
+      }
+    },
+    {
+      "layers": [
+        {
+          "glass": true,
+          "image-name": "lines.png",
+          "name": "Lines",
+          "opacity": 0.75
+        }
+      ],
+      "lighting": "individual",
+      "name": "Lines",
+      "shadow": {
+        "kind": "none",
+        "opacity": 0.0
+      },
+      "specular": false,
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}

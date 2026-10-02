@@ -7,5 +7,6 @@ struct MonicaWidgets: WidgetBundle {
         PortfolioWidget()
         MarketsWidget()
         WatchlistWidget()
+        BudgetWidget()
     }
 }
