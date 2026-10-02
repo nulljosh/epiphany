@@ -1,4 +1,5 @@
 import Charts
+import PDFKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -871,7 +872,8 @@ struct PortfolioView: View {
             do {
                 let updated = try await EpiphanyAPI.shared.uploadStatement(
                     filename: filename,
-                    contentBase64: contentBase64
+                    contentBase64: contentBase64,
+                    text: PDFDocument(data: data)?.string ?? ""
                 )
                 await MainActor.run {
                     isUploadingStatement = false

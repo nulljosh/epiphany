@@ -462,12 +462,13 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return wrapper.statements
     }
 
-    func uploadStatement(filename: String, contentBase64: String) async throws -> [Statement] {
+    func uploadStatement(filename: String, contentBase64: String, text: String = "") async throws -> [Statement] {
         let url = try makeURL("/api/statements", query: ["action": "upload"])
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(["filename": filename, "contentBase64": contentBase64])
+        // Text comes from PDFKit on-device, so the server never has to parse the PDF.
+        request.httpBody = try JSONEncoder().encode(["filename": filename, "contentBase64": contentBase64, "text": text])
         let data = try await perform(request)
         let wrapper = try decode(StatementsWrapper.self, from: data)
         return wrapper.statements

@@ -7,7 +7,11 @@ export async function checkRateLimit(req, { prefix = 'rl', window = DEFAULT_WIND
   const kv = await getKv();
   if (!kv) return true;
 
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  // Cloudflare sets cf-connecting-ip; without it every caller shared one "unknown" bucket.
+  const ip = req.headers['cf-connecting-ip']
+    || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.socket?.remoteAddress
+    || 'unknown';
   const now = Date.now();
   const key = `${prefix}:${ip}`;
   const entry = await kv.get(key);

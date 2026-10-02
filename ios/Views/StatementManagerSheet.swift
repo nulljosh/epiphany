@@ -1,3 +1,4 @@
+import PDFKit
 import SwiftUI
 
 struct StatementManagerSheet: View {
@@ -155,7 +156,8 @@ struct StatementManagerSheet: View {
         isUploading = true
         Task {
             do {
-                let updatedStatements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64)
+                let text = PDFDocument(data: data)?.string ?? ""
+                let updatedStatements = try await EpiphanyAPI.shared.uploadStatement(filename: filename, contentBase64: contentBase64, text: text)
                 await MainActor.run {
                     isUploading = false
                     statements = updatedStatements
