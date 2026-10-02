@@ -12,7 +12,6 @@ iOS 2.5.14 live. iOS 2.5.15 WAITING_FOR_REVIEW (place card, clustered map, Liqui
 
 ## Next, in order
 
-1. Get Joshua's approval for Kronos candlestick-model test (frozen settings, blind second half, scored 6.4% vs SPY 14.2%, not an edge; pending Joshua's go-ahead).
 2. Check App Store review status for iOS/macOS 2.5.15 before making release decisions.
 3. Ship the X-Epiphany-Client header build once iOS/Mac reviews complete.
 4. Deploy additional Autopilot features when ready (Trend 2x server code if needed).
@@ -21,5 +20,5 @@ iOS 2.5.14 live. iOS 2.5.15 WAITING_FOR_REVIEW (place card, clustered map, Liqui
 ## Restart prompt
 
 ```text
-/loop Watch Trend 2x paper trading Monday-Friday 12:45pm PT. Read docs/LOOP-HANDOFF.md and roadmap.md. Report paper performance vs benchmarks at close, check iOS/macOS review status (2.5.15), get Joshua's call on Kronos test, verify menu bar stability post-crash.
+/loop Watch Trend 2x paper trading Monday-Friday 12:45pm PT. Read docs/LOOP-HANDOFF.md and roadmap.md. Report paper performance vs benchmarks at close, check iOS/macOS review status (2.5.15), verify menu bar stability post-crash.
 ```
