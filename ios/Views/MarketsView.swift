@@ -538,6 +538,10 @@ struct MarketsView: View {
                 .opacity(appState.isStockDataStale ? 0.65 : 1.0)
             }
         }
+        // The marquee is thousands of points wide; bound it here or the inset
+        // stretches the whole list off screen.
+        .containerRelativeFrame(.horizontal)
+        .clipped()
     }
 
     private var fearGreedView: some View {
