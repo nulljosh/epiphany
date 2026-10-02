@@ -1,26 +1,23 @@
 #!/usr/bin/env python3
 """Epiphany Live: a menu bar app for the IBKR practice account. No Terminal, no Dock icon.
 
-The menu bar shows the holdings' return. The menu shows our holdings against the S&P 500, the 16 funds we pick from, the Nasdaq, Dow,
-Russell 2000, TSX, gold and Bitcoin, the best and
-worst position, the record high and low, and when the daily trade runs next. It starts scripts/ibkr-live.py as a child (alerts, and the daily paper trade at 3:45pm New York,
-12:45pm Pacific) and stops it on Quit. Demo accounts only. Start it from ~/Applications/Epiphany Live.app.
+The menu bar shows the holdings' return. The menu says one thing: are we beating the market, matching it or trailing it,
+with a line or two on why (holdings against the S&P 500, the best or worst position, and what Trend 2x holds now).
+Under that sit the phone watchlist, Pause/Resume, Open Log and Quit. It starts scripts/ibkr-live.py as a child (alerts, and
+the daily paper trade at 3:45pm New York, 12:45pm Pacific) and stops it on Quit. Demo accounts only.
+Start it from ~/Applications/Epiphany Live.app.
 
     uv run --with rumps --with ib_async python3 scripts/menubar.py            # the app
     uv run --with ib_async python3 scripts/menubar.py --selftest              # print what the menu would say
 """
 import json, math, os, subprocess, sys, traceback, urllib.parse, urllib.request
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 from ib_async import IB
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE = os.path.join(ROOT, "tradingview", "ibkr-state.json")
 LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 TREND = os.path.join(ROOT, "tradingview", "ibkr-trend.json")
-QUALITY = os.path.join(ROOT, "tradingview", "ibkr-quality.json")
-BEST = os.path.join(ROOT, "tradingview", "ibkr-best.json")
 # A file, not a flag in memory, so a pause survives a restart instead of quietly trading again.
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
 
@@ -65,12 +62,6 @@ def yahoo(path):
     return json.load(urllib.request.urlopen(req, timeout=5))
 
 
-def intraday(sym):
-    """Today's 5 minute closes and yesterday's close for one symbol."""
-    r = yahoo(f"/v8/finance/chart/{sym}?interval=5m&range=1d")["chart"]["result"][0]
-    return [c for c in r["indicators"]["quote"][0]["close"] if c is not None], num(r["meta"].get("chartPreviousClose"))
-
-
 # Joshua's iPhone Stocks list, in his order.
 WATCH = ["KODK", "DUOL", "IBM", "RL", "SHOO", "PLTR", "IGV", "BTC-USD", "SI=F", "NVDA", "NET", "SBUX", "^XAX", "GC=F",
          "IAU", "^RUT", "^NDX", "^GSPC", "SPY", "^NYA", "KO", "^DJI", "^IXIC", "CADUSD=X", "XIC.TO", "^GSPTSE",
@@ -96,116 +87,15 @@ def watch_line(sym, quote):
     return f"{sym}  {price:,.4f}  {pct(ch)}" if price < 1 else f"{sym}  {price:,.2f}  {pct(ch)}"  # currency pairs need the extra digits
 
 
-# ibkr-run.py's 16 funds: the basket Double 7s picks from. Holding all of them equally is the fair test of the picking.
-ETFS = ["SPY", "QQQ", "DIA", "IWM", "MDY", "EFA", "EEM", "XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLU", "XLV", "XLY"]
-BENCH = [("S&P 500", "SPY"), ("All 16 funds", None), ("Nasdaq 100", "QQQ"), ("Dow", "DIA"), ("Russell 2000", "IWM"),
-         ("TSX", "XIC.TO"), ("Gold", "GLD"), ("Bitcoin", "BTC-USD")]
-
-
-def benchmarks(start):
-    """{label: return from the last close before `start` to now}, in BENCH order, one Yahoo call. A missing symbol is left out."""
+def sp500(start):
+    """The S&P 500's return (SPY) from the last close before `start` to now, one Yahoo call. Raises if Yahoo has nothing."""
     days = (datetime.now() - start).days
     rng = next(r for d, r in ((2, "5d"), (25, "1mo"), (85, "3mo"), (175, "6mo"), (355, "1y"), (720, "2y"), (math.inf, "5y")) if days <= d)
-    syms = ",".join(sorted(set(ETFS) | {s for _, s in BENCH if s}))
-    ret = {}
-    for sym, d in yahoo(f"/v8/finance/spark?symbols={urllib.parse.quote(syms)}&range={rng}&interval=1d").items():
-        try:
-            before = [c for t, c in zip(d["timestamp"], d["close"]) if c and datetime.fromtimestamp(t, timezone.utc).date() < start.date()]
-            # Yahoo sometimes blanks today's bar after the close; its live price still has today, the last close doesn't.
-            now = num(d.get("fulldayPrice")) or next(c for c in reversed(d["close"]) if c)
-            ret[sym] = now / before[-1] - 1
-        except (KeyError, TypeError, IndexError, StopIteration, ZeroDivisionError):
-            pass
-    if all(s in ret for s in ETFS):
-        ret[None] = sum(ret[s] for s in ETFS) / len(ETFS)
-    return {name: ret[s] for name, s in BENCH if s in ret}
-
-
-def safe(f, *a):
-    """f(*a), or None if it raises."""
-    try:
-        return f(*a)
-    except Exception:
-        return None
-
-
-def top_gainer():
-    """The biggest US stock gainer today, or None."""
-    try:
-        return yahoo("/v1/finance/screener/predefined/saved?scrIds=day_gainers&count=1")["finance"]["result"][0]["quotes"][0]["symbol"]
-    except Exception:
-        return None
-
-
-def chart_symbols(rows):
-    """(symbol, label) for SPY, today's top gainer, then the best and worst holding, each once."""
-    out, g = {"SPY": "SPY"}, top_gainer()
-    if g:
-        out.setdefault(g, f"{g} \u00b7 Top gainer")
-    for r in rows:
-        if " \u00b7 " in r[0]:
-            sym = r[0].split(" \u00b7 ")[1]
-            out.setdefault(sym, sym)
-    return list(out.items())[:4]
-
-
-def next_trade(st):
-    """When ibkr-live.py places the next daily trade, in local time."""
-    ny = datetime.now(ZoneInfo("America/New_York"))
-    run = ny.replace(hour=15, minute=45, second=0, microsecond=0)
-    if ny.weekday() < 5 and ny >= run and st.get("lastGo") != ny.date().isoformat():
-        return "Now"
-    if ny >= run or st.get("lastGo") == ny.date().isoformat():
-        run += timedelta(days=1)
-    while run.weekday() >= 5:
-        run += timedelta(days=1)
-    t = run.astimezone()
-    day = "Today" if t.date() == datetime.now().date() else f"{t:%a}"
-    return f"{day} {t:%-I:%M %p}"
-
-
-def sleeve_score(port, mst):
-    """(return since the sleeve's start, lead over the S&P 500 or None) for one sleeve's state file, or None when the
-    file is missing or not usable yet. Value is its cash plus its shares at the live price, else the last fill."""
-    try:
-        start = mst["start"]
-        base = num(start["sleeve"])
-        if not base:
-            return None
-        px = {p.contract.symbol: num(getattr(p, "marketPrice", 0)) for p in port}
-        last = mst.get("last", {}) if isinstance(mst.get("last"), dict) else {}
-        value = num(mst.get("cash")) + sum(num(q) * (px.get(s) or num(last.get(s))) for s, q in mst.get("holdings", {}).items())
-        ret = value / base - 1
-    except (KeyError, TypeError, AttributeError):
-        return None
-    try:
-        spy = benchmarks(datetime.fromisoformat(start["date"])).get("S&P 500")
-    except Exception:
-        spy = None
-    return ret, None if spy is None else ret - spy
-
-
-def trend_rows(port, mst):
-    """Two rows for the Trend 2x sleeve: its return since its start against the S&P 500, and the side it holds now.
-    No state file, or one that is not usable yet, gives two empty rows (hidden)."""
-    score = sleeve_score(port, mst)
-    if score is None:
-        return [("", "", None)] * 2
-    ret, lead = score
-    held = mst.get("holdings") if isinstance(mst.get("holdings"), dict) else {}
-    side = "2x S&P" if held.get("SSO") else "T-bills" if held.get("BIL") else "Cash"
-    return [(f"Trend 2x  {pct(ret)}", "" if lead is None else f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}", ret if lead is None else lead),
-            ("Holding", side, None)]
-
-
-def quality_rows(port, qst):
-    """One row for the Quality sleeve (QUAL, bought once): its return since the buy against the S&P 500.
-    No state file, or one that is not usable yet, gives one empty row (hidden)."""
-    score = sleeve_score(port, qst)
-    if score is None:
-        return [("", "", None)]
-    ret, lead = score
-    return [(f"Quality  {pct(ret)}", "" if lead is None else f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}", ret if lead is None else lead)]
+    d = yahoo(f"/v8/finance/spark?symbols=SPY&range={rng}&interval=1d")["SPY"]
+    before = [c for t, c in zip(d["timestamp"], d["close"]) if c and datetime.fromtimestamp(t, timezone.utc).date() < start.date()]
+    # Yahoo sometimes blanks today's bar after the close; its live price still has today, the last close doesn't.
+    now = num(d.get("fulldayPrice")) or next(c for c in reversed(d["close"]) if c)
+    return now / before[-1] - 1
 
 
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
@@ -218,82 +108,70 @@ def verdict(ours, spy):
     return "up" if d > EVEN[1] else "down" if d < EVEN[0] else "even"
 
 
-def money(x):
-    return f"{x:+,.2f}".replace("-", "\u2212")
-
-
 def pct(x):
     return f"{x:+.2%}".replace("-", "\u2212")
 
 
 def snapshot():
-    """(title, header, rows, verdict) describing the account right now. A row is (label, value, number that colors the value)."""
+    """(title, rows, verdict) describing the account right now. A row is (text, number that colors it)."""
     ib = IB()
     try:
         ib.connect("127.0.0.1", 4002, clientId=23, timeout=8)
         port = [p for p in ib.portfolio() if p.position]
-        nl = next((num(v.value) for v in ib.accountSummary() if v.tag == "NetLiquidation" and v.currency != "BASE"), None)
     except Exception:
-        return "!", "IB Gateway", [("Log in to IB Gateway", "", None)], None
+        return "!", [("Log in to IB Gateway", None)], None
     finally:
         try:
             if ib.isConnected():
                 ib.disconnect()
         except Exception:
             pass
-    return summarize(port, nl, read_json(STATE, {}))
+    return summarize(port, read_json(STATE, {}), read_json(TREND, {}))
 
 
-def summarize(port, nl, st):
-    """The pure half of snapshot(): positions, net liquidation and runner state in, menu text out."""
-    pnl = {id(p): num(p.unrealizedPNL) for p in port}
+VERDICT = {"up": "Beating the market", "even": "Matching the market", "down": "Trailing the market"}
+SIGN = {"up": 1, "even": 0, "down": -1}
+
+
+def trend_row(mst):
+    """What Trend 2x holds now, or None when its state file is missing or not usable yet."""
+    held = mst.get("holdings") if isinstance(mst.get("holdings"), dict) else {}
+    if held.get("SSO"):
+        return "Trend 2x: holding 2x S&P"
+    if held.get("BIL"):
+        return "Trend 2x: in T-bills, S&P below its 200-day"
+    return None
+
+
+def summarize(port, st, mst):
+    """The pure half of snapshot(): positions, runner state and Trend 2x state in, menu text out.
+    Rows: the verdict, up to two why rows, then the Trend 2x row. Empty text means hidden."""
     cost = sum(num(p.averageCost) * num(p.position) for p in port)
-    gain = sum(pnl.values())
+    ours = sum(num(p.unrealizedPNL) for p in port) / cost if cost else 0.0
     start = st.get("start") if isinstance(st.get("start"), dict) else {}
-    d = nl - num(start["netLiquidation"]) if num(start.get("netLiquidation")) and nl is not None else 0.0
-    try:
-        bench = benchmarks(datetime.fromisoformat(start["date"]))
-    except Exception:
-        bench = {}
-    spy = bench.get("S&P 500", 0.0)
-    ours = gain / cost if cost else 0.0
-    # Own file, so it never races ibkr-live.py writing the state file.
-    rec = read_json(BEST, {})
-    rec = {"high": max(num(rec.get("high", d)), d), "low": min(num(rec.get("low", d)), d)}
-    try:
-        write_json(BEST, rec)
-    except OSError as e:
-        log(f"could not save record: {e}")
-    rows = [
-        ("Account", f"{money(d)} CAD", d),
-        ("Holdings", pct(ours), gain),
-    ]
-    # Each benchmark's return since the start, and how far our holdings are ahead of it or behind it.
-    for name, r in bench.items():
-        lead = ours - r
-        rows.append((f"{name}  {pct(r)}", f"{'ahead' if lead >= 0 else 'behind'} {abs(lead):.2%}" if port else "", lead))
-    rows += [("", "", None)] * (len(BENCH) - len(bench))
-    if port:
-        ranked = sorted(port, key=lambda p: pnl[id(p)])
-        for label, p in (("Best", ranked[-1]), ("Worst", ranked[0])):
-            basis = num(p.averageCost) * num(p.position)
-            u = pnl[id(p)]
-            rows.append((f"{label} \u00b7 {p.contract.symbol}", f"{money(u)}   {pct(u / basis if basis else 0)}", u))
-    else:
-        rows += [("", "", None)] * 2  # keeps the slots lined up; empty rows are hidden
-    rows += trend_rows(port, read_json(TREND, {}))
-    rows += quality_rows(port, read_json(QUALITY, {}))
-    rows += [
-        ("High / Low", f"{rec['high']:+,.0f} / {rec['low']:+,.0f}".replace("-", "\u2212"), None),
-        ("Next trade", "Paused" if os.path.exists(PAUSED) else next_trade(st), None),
-    ]
-    try:
-        since = f"Since {datetime.fromisoformat(start['date']):%b %-d}"
-    except (KeyError, TypeError, ValueError):
-        since = "Since start"
     # The title is the holdings' return, not the account's: most of the million sits in cash, so the account
-    # moves +0.00% forever. This is the strategy's score, and the benchmark rows line up against it.
-    return pct(ours), since, rows, verdict(ours, spy) if port else None
+    # moves +0.00% forever. This is the strategy's score, and the verdict lines up against it.
+    title = pct(ours)
+    trend = trend_row(mst)
+    rows = [("No trades yet", None), ("", None), ("", None), (trend or "", None)]
+    if not port:
+        return title, rows, None
+    try:
+        began = datetime.fromisoformat(start["date"])
+        spy = sp500(began)
+        since = f" since {began:%b} {began.day}"
+    except Exception:  # Yahoo down, or no start date yet: no comparison, so no verdict
+        rows[0] = ("Market data unavailable", None)
+        return title, rows, None
+    v = verdict(ours, spy)
+    rows[0] = (VERDICT[v], SIGN[v])
+    rows[1] = (f"Holdings {pct(ours)} vs S&P 500 {pct(spy)}{since}", None)
+    ranked = sorted(port, key=lambda p: num(p.unrealizedPNL) / ((num(p.averageCost) * num(p.position)) or 1))
+    pick, word = (ranked[0], "drags") if v == "down" else (ranked[-1], "leads")
+    basis = num(pick.averageCost) * num(pick.position)
+    r = num(pick.unrealizedPNL) / basis if basis else 0.0
+    rows[2] = (f"{pick.contract.symbol} {word}, {'up' if r >= 0 else 'down'} {abs(r):.2%}", None)
+    return title, rows, v
 
 
 def hide_gateway(seen=set()):
@@ -313,66 +191,19 @@ def hide_gateway(seen=set()):
         seen.add(pid)
 
 
-# Menu layout: (section header, rows in it). The first header is filled in with the start date.
-GROUPS = [("", 2), ("Vs the market", len(BENCH)), ("Positions", 2), ("Trend 2x", 2), ("Quality", 1), ("Record", 1), (None, 1)]
-
-
-def row_view():
-    """A non-clickable row: label left, value right in tabular digits. Full contrast on the glass,
-    unlike a disabled menu item, and no hover highlight, since it isn't a button."""
-    from AppKit import NSColor, NSFont, NSTextField, NSView, NSViewMinXMargin, NSViewWidthSizable, NSTextAlignmentRight
+def row_view(big=False):
+    """A non-clickable row of plain text. Full contrast on the glass, unlike a disabled menu item,
+    and no hover highlight, since it isn't a button. The verdict row is bigger and bolder."""
+    from AppKit import NSFont, NSTextField, NSView, NSViewWidthSizable
     size = NSFont.menuFontOfSize_(0).pointSize()
-    v = NSView.alloc().initWithFrame_(((0, 0), (290, 22)))
+    h = 30 if big else 22
+    v = NSView.alloc().initWithFrame_(((0, 0), (320, h)))
     v.setAutoresizingMask_(NSViewWidthSizable)
     label = NSTextField.labelWithString_("")
-    label.setFont_(NSFont.systemFontOfSize_(size))
-    label.setTextColor_(NSColor.labelColor())
-    label.setFrame_(((14, 3), (160, 16)))
-    value = NSTextField.labelWithString_("")
-    value.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(size, 0.3))  # semibold
-    value.setAlignment_(NSTextAlignmentRight)
-    value.setFrame_(((150, 3), (126, 16)))
-    value.setAutoresizingMask_(NSViewMinXMargin)
+    label.setFont_(NSFont.systemFontOfSize_weight_(size + 5, 0.5) if big else NSFont.systemFontOfSize_(size))
+    label.setFrame_(((14, 4 if big else 3), (296, 22 if big else 16)))
     v.addSubview_(label)
-    v.addSubview_(value)
-    return v, label, value
-
-
-def chart_view():
-    """A row with the symbol and today's move on top and today's line under it."""
-    from AppKit import NSImageView
-    v, label, value = row_view()
-    v.setFrameSize_((290, 46))
-    label.setFrameOrigin_((14, 27))
-    value.setFrameOrigin_((150, 27))
-    img = NSImageView.alloc().initWithFrame_(((14, 5), (240, 20)))
-    v.addSubview_(img)
-    return v, label, value, img
-
-
-def spark(closes, prev, color, w=240, h=20):
-    """Today's line against a dotted line at yesterday's close. The x axis is the whole session (78 five
-    minute bars), so at noon the line stops halfway across."""
-    from AppKit import NSBezierPath, NSColor, NSImage
-    lo, hi = min(closes + [prev]), max(closes + [prev])
-    y = lambda v: 1.5 + (v - lo) / ((hi - lo) or 1) * (h - 3)
-
-    def draw(_):
-        base = NSBezierPath.bezierPath()
-        base.moveToPoint_((0, y(prev)))
-        base.lineToPoint_((w, y(prev)))
-        base.setLineDash_count_phase_([1, 3], 2, 0)
-        NSColor.tertiaryLabelColor().set()
-        base.stroke()
-        line = NSBezierPath.bezierPath()
-        line.setLineWidth_(1.5)
-        line.setLineJoinStyle_(1)  # round
-        for i, c in enumerate(closes):
-            (line.lineToPoint_ if i else line.moveToPoint_)((min(i, 77) * (w - 1) / 77, y(c)))
-        color.set()
-        line.stroke()
-        return True
-    return NSImage.imageWithSize_flipped_drawingHandler_((w, h), False, draw)
+    return v, label
 
 
 def tinted(icon, color):
@@ -394,23 +225,24 @@ def ink(light, dark):
         [NSAppearanceNameAqua, NSAppearanceNameDarkAqua]) == NSAppearanceNameDarkAqua else light)
 
 
-def fill(item, fields, label, value, n):
+def fill(item, label, text, n=None):
+    """Set a row's text. n colors it: positive green, negative red, zero plain. None is the quieter secondary color."""
     from AppKit import NSColor
     global UP, DOWN
     if "UP" not in globals():
         UP, DOWN = ink((0.0, 0.47, 0.2), NSColor.systemGreenColor()), ink((0.75, 0.08, 0.12), NSColor.systemRedColor())
-    item.setHidden_(not label)
-    fields[0].setStringValue_(label)
-    fields[1].setStringValue_(value)
-    fields[1].setTextColor_(NSColor.labelColor() if not n else UP if n > 0 else DOWN)
+    item.setHidden_(not text)
+    label.setStringValue_(text)
+    label.setTextColor_(NSColor.secondaryLabelColor() if n is None else NSColor.labelColor() if n == 0 else UP if n > 0 else DOWN)
 
 
 def main():
     if "--selftest" in sys.argv:
-        t, since, rows, v = snapshot()
-        print(t, "|", since, "|", v)
-        for label, value, _ in rows:
-            print(f"  {label:<14}{value:>24}")
+        t, rows, v = snapshot()
+        print(t, "|", v)
+        for text, _ in rows:
+            if text:
+                print(f"  {text}")
         return
     # One copy only. Exit 0 so the launcher's restart loop ends instead of stacking a second icon.
     import fcntl
@@ -439,31 +271,15 @@ def main():
                 log(traceback.format_exc())
 
         def build(self):
-            # Built once rumps owns the NSMenu, so the native section headers and row views can go straight in.
+            # Built once rumps owns the NSMenu, so the row views can go straight in.
             menu = self._menu._menu
-            self.headers, self.rows, self.charts = [], [], []
-            menu.addItem_(NSMenuItem.sectionHeaderWithTitle_("Today"))
-            for _ in range(4):
-                view, *fields = chart_view()
+            self.rows = []
+            for big in (True, False, False, False):
+                view, label = row_view(big)
                 item = NSMenuItem.alloc().init()
                 item.setView_(view)
-                item.setHidden_(True)
                 menu.addItem_(item)
-                self.charts.append((item, fields))
-            menu.addItem_(NSMenuItem.separatorItem())
-            for header, n in GROUPS:
-                if self.headers or self.rows:
-                    menu.addItem_(NSMenuItem.separatorItem())
-                if header is not None:
-                    h = NSMenuItem.sectionHeaderWithTitle_(header)
-                    menu.addItem_(h)
-                    self.headers.append((h, len(self.rows), n))
-                for _ in range(n):
-                    view, *fields = row_view()
-                    item = NSMenuItem.alloc().init()
-                    item.setView_(view)
-                    menu.addItem_(item)
-                    self.rows.append((item, fields))
+                self.rows.append((item, label))
             menu.addItem_(NSMenuItem.separatorItem())
             self.watch = symbol(rumps.MenuItem("Watchlist"), "list.bullet")
             for sym in WATCH:
@@ -471,7 +287,7 @@ def main():
             self.toggle = rumps.MenuItem("", callback=self.pause)
             self.menu = [self.watch, self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
                          symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
-            fill(*self.rows[0], "Starting...", "", None)
+            fill(*self.rows[0], "Starting...", 0)
             self.label_toggle()
 
         def label_toggle(self):
@@ -510,7 +326,7 @@ def main():
                 log(traceback.format_exc())
                 self.title = "!"
                 if hasattr(self, "rows"):
-                    fill(*self.rows[0], "Error, see Open Log", "", None)
+                    fill(*self.rows[0], "Error, see Open Log", -1)
 
         def refresh(self):
             if not hasattr(self, "rows"):
@@ -520,30 +336,13 @@ def main():
                 hide_gateway()
             except Exception:
                 log(traceback.format_exc())
-            self.title, since, rows, v = snapshot()
+            self.title, rows, v = snapshot()
             self.paint(v)
-            rows = rows + [("", "", None)] * len(self.rows)
-            for (item, fields), data in zip(self.rows, rows):
-                fill(item, fields, *data)
-            for i, (h, first, n) in enumerate(self.headers):
-                h.setTitle_(since if i == 0 else GROUPS[i][0])
-                h.setHidden_(not any(r[0] for r in rows[first:first + n]))
+            for (item, label), (text, n) in zip(self.rows, rows + [("", None)] * len(self.rows)):
+                fill(item, label, text, n)
             quotes = safe(watch_quotes) or {}
             for sym in WATCH:
                 self.watch[sym].title = watch_line(sym, quotes.get(sym))
-            syms = chart_symbols(rows)
-            # In parallel, so four slow fetches freeze the menu for one timeout, not four.
-            with ThreadPoolExecutor(4) as ex:
-                data = list(ex.map(lambda s: safe(intraday, s[0]), syms))
-            for i, (item, fields) in enumerate(self.charts):
-                try:
-                    (_, name), (closes, prev) = syms[i], data[i]
-                    ch = closes[-1] / prev - 1
-                except Exception:  # no symbol, no data yet, or Yahoo down: hide the row
-                    fill(item, fields[:2], "", "", None)
-                    continue
-                fill(item, fields[:2], name, pct(ch), ch)
-                fields[2].setImage_(spark(closes, prev, UP if ch >= 0 else DOWN))
 
         def paint(self, v):
             """Green when we beat SPY, yellow when we're level with it, red when we trail. Plain when unknown."""
