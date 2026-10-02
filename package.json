@@ -36,13 +36,13 @@
     "lightweight-charts": "^5.1.0",
     "linkedom": "^0.18.13",
     "maplibre-gl": "^5.18.0",
-    "pdf-parse": "^1.1.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.6.0",
     "resend": "^6.9.4",
     "stripe": "^20.3.1",
-    "supercluster": "^8.0.1"
+    "supercluster": "^8.0.1",
+    "unpdf": "^1.8.1"
   },
   "overrides": {
     "serialize-javascript": ">=7.0.4"

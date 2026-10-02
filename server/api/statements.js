@@ -144,6 +144,7 @@ export default async function handler(req, res) {
       }
       const filename = typeof req.body?.filename === 'string' ? req.body.filename : '';
       const contentBase64 = typeof req.body?.contentBase64 === 'string' ? req.body.contentBase64 : '';
+      const providedText = typeof req.body?.text === 'string' ? req.body.text : '';
 
       if (!filename || !contentBase64) {
         return errorResponse(res, 400, 'filename and contentBase64 are required');
@@ -153,7 +154,7 @@ export default async function handler(req, res) {
       if (buffer.length > MAX_STATEMENT_BYTES) {
         return errorResponse(res, 400, 'Statement too large (max 3MB)');
       }
-      const summary = await summarizeStatementBuffer(buffer, filename);
+      const summary = await summarizeStatementBuffer(buffer, filename, providedText);
       const spendingMonth = summary?.spendingMonth || summarizeTransactions([], filename);
       const transactions = summary?.transactions;
       const statements = await kv.get(statementsKey);
