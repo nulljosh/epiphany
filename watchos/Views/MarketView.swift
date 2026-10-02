@@ -8,9 +8,9 @@ struct MarketView: View {
 
     private let indexSymbols = ["SPY", "QQQ", "DIA"]
     private let indexNames: [String: String] = [
-        "SPY": "S&P 500",
-        "QQQ": "Nasdaq",
-        "DIA": "Dow Jones"
+        "SPY": "S&P 500 ETF",
+        "QQQ": "Nasdaq 100 ETF",
+        "DIA": "Dow ETF"
     ]
 
     var body: some View {
