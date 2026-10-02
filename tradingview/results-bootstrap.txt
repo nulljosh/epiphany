@@ -1,0 +1,7 @@
+2008-03-13 to 2026-10-01, 4668 days. Real: Trend 2x 16.1% a year, SPY 12.0%
+horizon | chance Trend 2x beats SPY | median excess over the horizon | 5th percentile excess | chance it loses money
+1 day | 53% | +0.0% | -1.9% | 42%
+1 month | 56% | +0.6% | -7.9% | 38%
+1 year | 59% | +4.4% | -24.7% | 25%
+3 years | 65% | +16.1% | -45.9% | 13%
+5 years | 69% | +34.3% | -66.5% | 7%
