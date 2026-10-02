@@ -774,6 +774,29 @@ add 0.5 to 1.4 points over bills, not enough to beat Trend 2x. Verdict: no non
 stock sleeve. If one ever runs it would be GLD or TLT behind the trend rule, but
 both fail on the real fund today.
 
+**Overnight only.** The old claim is that nearly all of the stock market's gain
+comes while it is closed (Cooper, Cliff and Gulen 2008; Lou, Polk and Skouras
+2019), so buy at the close, sell at the open and skip the trading day
+(`century.py --overnight`, raw output in `tradingview/results-overnight.txt`).
+The test uses SPY from 1993 with real opens. The index's own opens are useless,
+because Yahoo gives the prior close as the open on 60% of days before 2014. The
+split is real. Holding SPY grew 31.7x, the nights alone 25.2x and the trading
+days alone 1.26x, which is 10.1% a year against 0.7%, and nights won 23 of 33
+full years. The money is where it breaks. Blind on 2010 to now, holding made
+14.2% / 34%. Overnight only made 9.3% / 29% at zero fee, intraday only 6.0% /
+24%, and overnight only above the 200 day average 8.2% / 16%, with bills for
+the hours out. None beat holding even for free, so there is no break-even fee
+against holding. Two trades a day is 503 a year, and the average night earns
+3.6 hundredths of a percent, so costs eat it fast: overnight only makes 6.6%
+at 0.005% a side, 3.9% at 0.01%, loses 15% a year at 0.05% and 34% at 0.1%. With
+IBKR Pro ($1 minimum a side, $503 a year on a $100k sleeve at today's price,
+$1,080 across the blind years) plus half the spread at 0.01% a side, it makes
+2.8% against 1.5% for plain bills, and it stops beating bills at 0.015% a side.
+The trend filter buys a smooth ride (2008 +1.0%, March 2020 -8.2%, 2022 -4.7%,
+against -37%, -13% and -18% for holding) but beat only 55% of 300 random sets of
+the same number of nights on return: the smaller drop is just sitting in bills.
+Verdict: the overnight effect is real and unusable. Nothing changes.
+
 **What could still be wrong.** The stock list is today's S&P 500. Companies
 that crashed and got kicked out are missing, and that makes buying dips look
 better than it really was. Prices are assumed to fill exactly, with no extra
@@ -870,6 +893,9 @@ files named above.
 | Trend 1x CPER copper | 2012 to now | -1.0% / 47% | 3.5% / 55% | fail (less return, 0 of 2 decades; front month copper 8.5% / 58% against 11.1% / 69%) |
 | 80% Trend 2x S&P + 20% DBC trend, monthly | 2006 to now | 11.6% / 28% | Trend 2x alone 12.7% / 36% | fail (less return, 1 of 3 decades; 20% in bills gives 10.8% / 29%) |
 | 80% Trend 2x S&P + 20% gold trend, monthly | 1976 to now | 14.2% / 33% | Trend 2x alone 14.4% / 40% | fail (0.2 point less return, 3 of 6 decades; 20% in bills gives 12.8% / 32%; gold fails on real GLD anyway) |
+| Overnight only, SPY close to open, bills in the session, zero fee | 2010 to now | 9.3% / 29% | SPY 14.2% / 34% | fail (less return, 5 of 16 years; no break-even fee against holding; 2.8% / 30% at IBKR Pro plus half spread, 1.5% for bills) |
+| Intraday only, SPY open to close, bills overnight, zero fee | 2010 to now | 6.0% / 24% | 14.2% / 34% | fail (less return, 2 of 16 years; 0.8% at 0.01% a side) |
+| Overnight only while SPY is above its 200 day average, zero fee | 2010 to now | 8.2% / 16% | 14.2% / 34% | fail (less return, 4 of 16 years; beats 55% of random nights; 2.8% / 20% at IBKR Pro plus half spread; loses 12.5% a year at 0.05% a side) |
 
 The 2x rows take the 0.8% fund gap off. Index rows add a flat yield measured
 off the matching fund. The crypto rows count calendar years instead of decades. The Epiphany Kelly row has no drop figure and holding is
@@ -877,7 +903,7 @@ the 429 stocks, so it is a different yardstick from the others. Two of the first
 pass, and they are the same bet twice: trend at 2x on the S&P and the
 Nasdaq 100. The ten out-asset rows at the bottom swap what
 sits in the box when the rule is out and are graded against Trend 2x with bills,
-not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The four sector momentum rows at the very bottom are graded against holding the market on the French industries and against SPY on the real SPDR funds; none passes on both. The eight single asset trend rows after those are graded against holding that asset: the three century rows pass on the model and fail on the real fund, DBC passes alone and nothing else in commodities does. The two blend rows are graded against Trend 2x alone, and both fail on return. The only rule we paper trade is the first. The Nasdaq 100 stays a
+not the S&P, so they are variations on the first bet, not new edges. The four dual momentum rows at the very bottom are graded against holding the S&P, and none of them beats Trend 2x either. The ten factor rows at the very bottom use French's tenths: the first four are graded against holding the market, the stacked ones against Trend 2x on the same monthly French series (the momentum row is above). Only profitability at 1x passes, and only against holding. The four quality upgrade rows after them are graded against holding the market on the same French series: one passes on the model and none passes on the real funds. The two vol rows after those are graded against Trend 2x and both fail on return. The eight calendar rows at the very bottom use windows fixed from the literature, nothing tuned: the first four are graded against holding the S&P, the four stacked ones against Trend 2x, and all eight fail. The six low volatility rows after those are graded against holding the market on the French series, and all six fail on the model and on the real funds. The four sector momentum rows at the very bottom are graded against holding the market on the French industries and against SPY on the real SPDR funds; none passes on both. The eight single asset trend rows after those are graded against holding that asset: the three century rows pass on the model and fail on the real fund, DBC passes alone and nothing else in commodities does. The two blend rows are graded against Trend 2x alone, and both fail on return. The three overnight rows at the very bottom are graded against holding SPY from 2010 on real opens, years instead of decades, and all three fail at every fee from zero to 0.1% a side. The only rule we paper trade is the first. The Nasdaq 100 stays a
 lead until its real-dividend half stops falling further than holding.
 
 

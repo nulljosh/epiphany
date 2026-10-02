@@ -24,6 +24,7 @@ in tradingview/data/.
     python3 tradingview/century.py --seasonal # calendar overlays (turn of the month, Halloween, pre-holiday, skip Mondays), alone on 1x S&P and stacked on Trend 2x
     python3 tradingview/century.py --sectors  # top 3 of 10 French industries (12 and 6 month momentum) while the market is above its 10 month average, 1x and 2x on margin, graded blind, then the 9 real SPDR sectors
     python3 tradingview/century.py --assets   # 1x trend (10 month / 200 day average, else bills) on its own for Treasuries, gold, commodities, oil, silver, copper, century series then real funds, plus an 80/20 blend with Trend 2x
+    python3 tradingview/century.py --overnight # SPY close to open vs open to close since 1993: overnight only, intraday only, overnight only above the 200 day average, fees 0 to 0.1% a side and IBKR Pro, graded blind on 2010-now
     python3 tradingview/century.py --crypto   # 1x trend on BTC, ETH and a coin basket, daily, 0.25% a side, plus a 5% sleeve next to Trend 2x S&P
 """
 import csv, json, os, statistics, sys
@@ -3210,7 +3211,223 @@ def assets():
         print("  No sleeve passes, so there is no best passing sleeve to blend; the table above is the blend of every candidate for the record.")
 
 
+# ---------- overnight vs intraday (--overnight) ----------
+
+ON_SPLIT = "2010-01-01"  # first blind day; 1993-2009 is context
+ON_SHARE = 6.5 / 24      # share of a calendar day the market is open: cash earns the bill rate this share during the session, the rest overnight
+SLEEVE = 100_000.0       # IBKR Pro Fixed: $0.005 a share, $1 minimum, on a $100k sleeve
+SPREAD = 0.0001          # half the SPY bid-ask spread, a side
+ON_FEES = (0.0, 0.00005, 0.0001, 0.0005, 0.001)
+
+
+def oc(sym, since="0000"):
+    """Yahoo [date, adjusted open, adjusted close] (dividends in both), mirrored into tradingview/data/. Today's unfinished session is dropped."""
+    path = os.path.join(DATA, f"yahoo-oc-{sym.replace('^', '')}.json")
+    if os.path.exists(path):
+        return json.load(open(path))
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    out = []
+    for r in fetch_yahoo(sym):
+        d = datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d")
+        if since <= d < today:
+            out.append([d, round(r[1], 6), round(r[4], 6)])
+    json.dump(out, open(path, "w"))
+    return out
+
+
+def on_curve(on, idr, bill, mode, mask, fl):
+    """Equity at each close (cv[0] = 1). Day j runs close j-1 to close j. mode 'on': in SPY from close j-1 to open j, bills in the session;
+    'id': in SPY from open j to close j, bills overnight. mask[j] False = bills all day, no trades. fl[j] = fee a side, paid on the buy and the sell."""
+    cv, v = [1.0], 1.0
+    for j in range(1, len(on)):
+        if mask[j]:
+            leg = (1 + on[j]) * (1 + bill[j] * ON_SHARE) if mode == "on" else (1 + idr[j]) * (1 + bill[j] * (1 - ON_SHARE))
+            v *= leg * (1 - fl[j]) ** 2
+        else:
+            v *= 1 + bill[j]
+        cv.append(v)
+    return cv
+
+
+def on_years(dates, cv):
+    """{year: return}, close of the prior year to close of the year (the first and last years are partial), and {year: sessions}."""
+    last, cnt = {}, {}
+    for k, d in enumerate(dates):
+        last[d[:4]] = k
+        cnt[d[:4]] = cnt.get(d[:4], 0) + 1
+    out, prev = {}, 0
+    for y in sorted(last):
+        out[y], prev = cv[last[y]] / cv[prev] - 1, last[y]
+    return out, cnt
+
+
+def overnight():
+    import random
+    from itertools import accumulate
+    bars, rw = oc("SPY"), {r[0]: r[1] for r in raw("SPY")}
+    dates, o, c = [b[0] for b in bars], [b[1] for b in bars], [b[2] for b in bars]
+    n = len(dates)
+    split = next(i for i, d in enumerate(dates) if d >= ON_SPLIT)
+    on = [0.0] + [o[j] / c[j - 1] - 1 for j in range(1, n)]
+    idr = [0.0] + [c[j] / o[j] - 1 for j in range(1, n)]
+    bf = bill_fn()
+    bill = [bf(d) for d in dates]
+    sig, run = [False] * n, sum(c[:200])
+    for i in range(200, n):
+        run += c[i] - c[i - 200]
+        sig[i] = c[i] > run / 200
+    pc, last = [], 0.0  # unadjusted close, for share counts
+    for d in dates:
+        last = rw.get(d, last)
+        pc.append(last)
+    comm = [max(1.0, 0.005 * SLEEVE / pc[j - 1]) if j else 1.0 for j in range(n)]  # dollars a side at the day's price
+    fl_ib = [x / SLEEVE + SPREAD for x in comm]
+    sess = n - split
+    yrs_b = (datetime.fromisoformat(dates[-1]) - datetime.fromisoformat(dates[split - 1])).days / 365.25
+    all_on = [True] * n
+    m_c = [j >= 2 and sig[j - 2] for j in range(n)]  # signal read at close j-2, traded close j-1, earns the night into open j (house timing)
+    m_c0 = [sig[j - 1] if j else False for j in range(n)]  # same-day: read at close j-1 (needs a moc order before the close)
+    hold = [c[j] / c[0] for j in range(n)]
+    legs_on, legs_id = list(accumulate([1.0] + [1 + x for x in on[1:]], lambda a, b: a * b)), list(accumulate([1.0] + [1 + x for x in idr[1:]], lambda a, b: a * b))
+    sub = lambda cv: (dates[split - 1:], cv[split - 1:])
+    st = lambda cv: cstats(*sub(cv))
+    days_c = sum(m_c[split:])
+    print(f"OVERNIGHT VS INTRADAY, SPY daily open and close, {dates[0]} to {dates[-1]} (today's unfinished session dropped), Yahoo adjusted (dividends in; a dividend goes to the overnight leg, the ex-date open is where it drops).")
+    print(f"Context (train) {dates[0]}..{dates[split - 1]}, BLIND {dates[split]}..{dates[-1]} ({sess} sessions, {yrs_b:.1f} years). Nothing is tuned: three fixed rules, one 200 day filter, fees read off a ladder.")
+    print("Night = close j-1 to open j (weekends and holidays included). Session = open j to close j. Overnight leg compounds the nights, intraday leg the sessions; together they are exactly the buy and hold total return.")
+    print("Strategies: (a) in SPY every night, bills in the session; (b) in SPY every session, bills overnight; (c) (a) only when SPY closed above its 200 day average two closes ago (house timing: read j-2, trade j-1).")
+    print(f"Cash earns the 3 month bill rate (FRED), {ON_SHARE:.0%} of a day in the session and the rest overnight. Two trades a day for (a) and (b): buy then sell, a fee on each side, a side = fee x notional. SPY hold pays nothing.")
+    print(f"IBKR level: Pro Fixed $0.005 a share, $1 minimum, on a ${SLEEVE:,.0f} sleeve at the day's real SPY price (shares = sleeve / price), plus half the spread ({SPREAD:.2%}) a side. Exchange, clearing and SEC/FINRA sell fees are not modelled.\n")
+
+    print("1. DECOMPOSITION: gross, before cash and fees. Return in the year of SPY hold, the nights, and the sessions (the first and last years are partial).")
+    yh, cnt = on_years(dates, hold)
+    yo, yi = on_years(dates, legs_on)[0], on_years(dates, legs_id)[0]
+    print(f"  {'year':6}{'SPY hold':>10}{'overnight':>11}{'intraday':>10}   {'year':6}{'SPY hold':>10}{'overnight':>11}{'intraday':>10}")
+    ys = sorted(yh)
+    half = (len(ys) + 1) // 2
+    for i in range(half):
+        row = ""
+        for y in (ys[i], ys[i + half] if i + half < len(ys) else None):
+            row += f"  {y + ('*' if y and cnt[y] < 200 else ' '):6}{yh[y]:>10.1%}{yo[y]:>11.1%}{yi[y]:>10.1%}  " if y else ""
+        print(row)
+    print("  * partial year.")
+    ow = sum(yo[y] > yi[y] for y in ys if cnt[y] >= 200)
+    print(f"  Nights beat sessions in {ow} of {sum(cnt[y] >= 200 for y in ys)} full years.\n")
+    def leg(lo, hi):
+        f = lambda cv: (cv[hi] / cv[lo], (cv[hi] / cv[lo]) ** (365.25 / (datetime.fromisoformat(dates[hi]) - datetime.fromisoformat(dates[lo])).days) - 1)
+        return f(hold), f(legs_on), f(legs_id)
+    print(f"  {'period':26}{'SPY hold':>20}{'overnight leg':>20}{'intraday leg':>20}     (cumulative multiple, CAGR)")
+    for lab, lo, hi in (("full 1993-now", 0, n - 1), ("train 1993-2009", 0, split - 1), ("BLIND 2010-now", split - 1, n - 1)):
+        h, a_, b_ = leg(lo, hi)
+        print(f"  {lab:26}" + "".join(f"{f'{x[0]:.2f}x, {x[1]:.1%}':>20}" for x in (h, a_, b_)))
+    print(f"  Average night {sum(on[1:]) / (n - 1) * 1e4:.2f} bp, average session {sum(idr[1:]) / (n - 1) * 1e4:.2f} bp; blind: {sum(on[split:]) / sess * 1e4:.2f} bp and {sum(idr[split:]) / sess * 1e4:.2f} bp.")
+    g = oc("^GSPC", "1982-01-01")
+    fr = {}
+    for k in range(1, len(g)):
+        fr.setdefault(g[k][0][:4], []).append(abs(g[k][1] - g[k - 1][2]) < 1e-9)
+    y0 = next(y for y in sorted(fr) if all(sum(fr[z]) / len(fr[z]) < 0.1 for z in fr if z >= y))
+    pre = sum(sum(v) for y, v in fr.items() if y < y0) / max(1, sum(len(v) for y, v in fr.items() if y < y0))
+    gg = [r for r in g if r[0][:4] >= y0]
+    go = gi = 1.0
+    for k in range(1, len(gg)):
+        go *= gg[k][1] / gg[k - 1][2]
+        gi *= gg[k][2] / gg[k][1]
+    gy = (datetime.fromisoformat(gg[-1][0]) - datetime.fromisoformat(gg[0][0])).days / 365.25
+    print(f"  Cross-check ^GSPC price only (no dividends): Yahoo's opens equal the prior close {pre:.0%} of the time before {y0}, so there the nights read zero and the sessions carry everything; the honest test is SPY only.")
+    print(f"  From {y0}, where real opens start ({gg[0][0]} to {gg[-1][0]}): nights {go ** (1 / gy) - 1:.1%} a year, sessions {gi ** (1 / gy) - 1:.1%}, together {(go * gi) ** (1 / gy) - 1:.1%}. Same direction as SPY, with the dividend left out.\n")
+
+    def ev(mode, mask, fl):
+        cv = on_curve(on, idr, bill, mode, mask, fl)
+        return cv, st(cv), on_years(dates, cv)[0]
+    hb = st(hold)
+    yw = lambda yy: sum(yy[y] > yh[y] for y in ys if y >= ON_SPLIT[:4] and cnt[y] >= 200)
+    full = [y for y in ys if y >= ON_SPLIT[:4] and cnt[y] >= 200]
+    strat = [("(a) overnight only", "on", all_on), ("(b) intraday only", "id", all_on), ("(c) overnight, above 200 day", "on", m_c)]
+    levels = [(f"{f:.3%} a side", [f] * n) for f in ON_FEES] + [("IBKR Pro + half spread", fl_ib)]
+    print(f"2. BLIND {dates[split]}..{dates[-1]}: SPY hold {hb[0]:.1%} / {hb[1]:.1%} worst drop. Bar: more CAGR than hold, no bigger drop, more than half of the {len(full)} full years won. pass needs all three.")
+    print(f"   Trades a year: (a) and (b) {2 * sess / yrs_b:.0f}; (c) {2 * days_c / yrs_b:.0f} ({days_c / sess:.0%} of nights in).")
+    print(f"  {'':30}" + "".join(f"{lab:>28}" for lab, _ in levels))
+    res = {}
+    for name, mode, mask in strat:
+        cells = []
+        for lab, fl in levels:
+            cv, (cg, dd), yy = ev(mode, mask, fl)
+            w = yw(yy)
+            ok = cg > hb[0] and dd <= hb[1] and w > len(full) / 2
+            res[(name, lab)] = (cv, cg, dd, yy, ok)
+            cells.append(f"{cg:>9.1%} / {dd:>3.0%}  {w:>2}/{len(full)} {'PASS' if ok else 'fail'} ")
+        print(f"  {name:30}" + "".join(f"{x:>28}" for x in cells))
+    print(f"  Timing variant, (c) with the filter read at the same close (j-1, needs a market on close order before 4pm): " +
+          ", ".join(f"{lab.split(' ')[0] if 'IBKR' not in lab else 'IBKR'} {st(on_curve(on, idr, bill, 'on', m_c0, fl))[0]:.1%}" for lab, fl in levels))
+    print("  Reasons for each fail are in the cells: CAGR vs hold, drop vs hold, years won.\n")
+
+    print("3. BREAK-EVEN FEE: the constant fee a side at which blind CAGR just equals SPY hold's, by bisection (hold pays nothing). Second column: the fee at which the rule only just beats plain bills.")
+    bills_c = st(on_curve(on, idr, bill, "on", [False] * n, [0.0] * n))[0]
+    def bisect(mode, mask, target):
+        lo_, hi_ = 0.0, 0.01
+        for _ in range(40):
+            mid = (lo_ + hi_) / 2
+            lo_, hi_ = (mid, hi_) if st(on_curve(on, idr, bill, mode, mask, [mid] * n))[0] > target else (lo_, mid)
+        return lo_
+    be = {}
+    for name, mode, mask in strat:
+        f0 = st(on_curve(on, idr, bill, mode, mask, [0.0] * n))[0]
+        vb = bisect(mode, mask, bills_c)
+        be[name] = bisect(mode, mask, hb[0]) if f0 > hb[0] else None
+        head = f"none: even at zero fee it makes {f0:.1%} against hold's {hb[0]:.1%}" if be[name] is None else f"{be[name]:.4%} a side ({be[name] * 1e4:.2f} bp)"
+        print(f"  {name:30} vs hold: {head};  vs bills ({bills_c:.1%}): {vb:.4%} a side ({vb * 1e4:.2f} bp)")
+    print(f"  For scale: the IBKR level averages {sum(fl_ib[split:]) / sess:.4%} a side in the blind years, the half spread alone is {SPREAD:.2%}, and the average night earns {sum(on[split:]) / sess * 1e4:.2f} bp gross.")
+
+    print("\n4. BY YEAR, blind, return each year (SPY hold, then rules at zero fee and at the IBKR level)")
+    cols = [("(a) overnight only", "0.000% a side"), ("(a) overnight only", "IBKR Pro + half spread"), ("(b) intraday only", "0.000% a side"), ("(c) overnight, above 200 day", "0.000% a side"), ("(c) overnight, above 200 day", "IBKR Pro + half spread")]
+    print(f"  {'year':6}{'SPY hold':>9}" + "".join(f"{('(' + k[0][1] + ') ' + ('0' if k[1].startswith('0') else 'IBKR')):>10}" for k in cols))
+    for y in [y for y in ys if y >= ON_SPLIT[:4]]:
+        print(f"  {y + ('*' if cnt[y] < 200 else ' '):6}{yh[y]:>9.1%}" + "".join(f"{res[k][3][y]:>10.1%}" for k in cols))
+    print("  * partial year, not counted in years won.")
+
+    print("\n5. RANDOM BASELINE: 300 random sets of as many nights as (c) uses in the blind window (" + f"{days_c} of {sess}), same cost per night (every night is its own round trip, so no switch-count effect), bills the rest. Seed 7.")
+    for lab, fl in ((levels[0][0], levels[0][1]), (levels[-1][0], levels[-1][1])):
+        m_in = [(1 + on[j]) * (1 + bill[j] * ON_SHARE) * (1 - fl[j]) ** 2 for j in range(n)]
+        m_out = [1 + bill[j] for j in range(n)]
+        rng, outs = random.Random(7), []
+        for _ in range(300):
+            pick = set(rng.sample(range(split, n), days_c))
+            cvr = list(accumulate([1.0] + [m_in[j] if j in pick else m_out[j] for j in range(split, n)], lambda a, b: a * b))
+            outs.append(((cvr[-1]) ** (1 / yrs_b) - 1, max(1 - v / pk for v, pk in zip(cvr, accumulate(cvr, max)))))
+        cg, dd = sorted(r[0] for r in outs), sorted(r[1] for r in outs)
+        _, rc, rd, _, _ = res[("(c) overnight, above 200 day", lab)]
+        print(f"  {lab:24} (c) {rc:.1%} / {rd:.0%}. random: median {cg[150]:.1%} (5th {cg[15]:.1%}, 95th {cg[285]:.1%}), median drop {dd[150]:.0%} (5th {dd[15]:.0%}, 95th {dd[285]:.0%}). "
+              f"(c) CAGR beats {sum(r[0] < rc for r in outs) / 3:.0f}% of randoms, drop smaller than {sum(r[1] > rd for r in outs) / 3:.0f}%, randoms with more return and a smaller drop: {sum(r[0] >= rc and r[1] <= rd for r in outs)} of 300")
+    print("  (a) trades every night, so there is no random version of it: all 100% of nights is the only mask of that size.")
+
+    print("\n6. CRASHES, return / worst drop inside the window (2008 is in the train years, shown for the record)")
+    wins = (("2008 (calendar year)", "2008-01-01", "2008-12-31"), ("Mar 2020 (Feb 19 to Apr 30)", "2020-02-19", "2020-04-30"), ("2022 (calendar year)", "2022-01-01", "2022-12-31"))
+    print(f"  {'':30}" + "".join(f"{w[0]:>31}" for w in wins))
+    rowsw = [("SPY hold", hold)] + [(f"{nm} {tag}", res[(nm, lb)][0]) for nm, _, _ in strat for tag, lb in (("0", "0.000% a side"), ("IBKR", "IBKR Pro + half spread"))]
+    for lab, cv in rowsw:
+        cells = [window(dates, cv, a, b) for _, a, b in wins]
+        print(f"  {lab:30}" + "".join(f"{f'{r:.1%} / {d:.0%}':>31}" for r, d in cells))
+
+    print(f"\n7. IBKR PRO COST on a ${SLEEVE:,.0f} sleeve, blind years (before the spread). $0.005 a share with a $1 minimum: SPY at ${pc[-1]:,.0f} is {SLEEVE / pc[-1]:.0f} shares, $0.005 x {SLEEVE / pc[-1]:.0f} = ${0.005 * SLEEVE / pc[-1]:.2f}, so the $1 minimum applies.")
+    ac = sum(comm[split:]) / sess
+    print(f"  At today's price: $1.00 a side x {2 * sess / yrs_b:.0f} trades = ${2 * sess / yrs_b:,.0f} a year = {2 * sess / yrs_b / SLEEVE:.2%} of the sleeve for (a) or (b). Over the blind years SPY went from $110 to $760, so more shares and a higher average:")
+    for name, k in (("(a) and (b)", 2 * sess / yrs_b), ("(c)", 2 * days_c / yrs_b)):
+        print(f"  {name:12} {k:.0f} trades a year x ${ac:.2f} average a side = ${k * ac:,.0f} a year = {k * ac / SLEEVE:.2%} of the sleeve in commission; half spread at {SPREAD:.2%} a side adds ${k * SPREAD * SLEEVE:,.0f} = {k * SPREAD:.2%}")
+
+    print("\nVERDICT on the bar, blind (CAGR and drop vs SPY hold, most years), by fee level:")
+    for name, _, _ in strat:
+        cells = []
+        for lab, _ in levels:
+            _, cg, dd, yy, ok = res[(name, lab)]
+            why = ", ".join(x for x, f in (("less return", cg <= hb[0]), ("bigger drop", dd > hb[1]), (f"{yw(yy)} of {len(full)} years", yw(yy) <= len(full) / 2)) if f)
+            cells.append(f"{lab.split(' a side')[0]}: {'PASS' if ok else 'fail (' + why + ')'}")
+        print(f"  {name}   break-even fee {'none' if be[name] is None else format(be[name], '.4%') + ' a side'}\n    " + "\n    ".join(cells))
+
+
 if __name__ == "__main__":
+    if "--overnight" in sys.argv:
+        overnight()
+        sys.exit()
     if "--seasonal" in sys.argv:
         seasonal()
         sys.exit()
