@@ -266,6 +266,7 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 - [ ] Accessibility pass: VoiceOver labels on cluster badges and event pins, Dynamic Type on Markets rows, contrast on the grey badge
 Pass 3: Markets A- (list back, gap under ticker, names truncate), map chips restyled to glass (built, not yet seen on sim), em dashes gone from iOS views, README and landing screenshots refreshed.
 - [x] Statement upload hung on Cloudflare: pdf-parse never returned on a cold isolate (every upload since the Vercel move). Fixed 2026-10-01: unpdf with a 12s timeout on the server, iOS and macOS send PDFKit text so the Worker never parses. Deployed, cold upload 1.5s
-- [ ] Statements: Joshua's August file is the TFSA statement (trades, contributions), the budget parser reads the Wealthsimple Cash statement. Need August and April from the Cash account; verify on the phone after 2.5.15 ships
+- [x] Statements: August 2026 Cash statement uploaded 2026-10-01 (169 rows). Second bug found on the way: the row regex only matched pdf-parse's mashed columns, unpdf and PDFKit space them, fixed with a test
+- [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
 - [ ] Rate limiter now keys on cf-connecting-ip; before this every caller shared one bucket on Cloudflare

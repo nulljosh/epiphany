@@ -2,7 +2,9 @@ export const SUMMARY_VERSION = 4;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONEY_RE = /^[–-]?\$?[\d,]+\.\d{2}$/;
-const INLINE_RE = /^(\d{4}-\d{2}-\d{2})(\d{4}-\d{2}-\d{2})(.+?)([–−-]?\$?[\d,]+\.\d{2})(\$?[–−-]?[\d,]+\.\d{2})$/;
+// Columns arrive mashed together from pdf-parse and space-separated from unpdf
+// and PDFKit, so every gap is optional whitespace.
+const INLINE_RE = /^(\d{4}-\d{2}-\d{2})\s*(\d{4}-\d{2}-\d{2})\s*(.+?)\s*([–−-]?\$?[\d,]+\.\d{2})\s*(\$?[–−-]?[\d,]+\.\d{2})$/;
 
 const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
 const MONTH_NAMES = Object.keys(MONTHS).join('|');
