@@ -251,3 +251,9 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 - [ ] Screenshot run: UITEST_DEMO mode is in (ios/Models/DemoData.swift), the app compiles, but `fastlane screenshots` failed at SwiftCompile of ContentView.swift under its own derived data and produced no images. Reproduce with the lane's xcodebuild line, fix, rerun, then refresh README and landing shots
 - [ ] Budget should read income statements dynamically instead of a typed Monthly Income ($1000 shown, real figure is higher); phone device debt should calculate dynamically too. Joshua's real numbers are in the wiki epiphany.md (personal data, repo is public). Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed (income 1650, Visa 5000). Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
 - [ ] /api/venue-details returns HTTP 400 from Yelp (key set but rejected, Yelp Fusion went paid). Only the iOS 17 / macOS 14 fallback sheet uses it now; drop it or swap the source
+
+## QA loop 2026-10-01
+Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), place card A (Look Around nil on simulator only, works on device), Markets B (rows blank in demo, ticker fixed), Portfolio A-, Settings A.
+- [ ] Yelp key on Cloudflare returns 400, needs a fresh key from the Yelp developer portal (Chrome job), only adds review photos and ratings
+- [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
+- [ ] Markets list rows render blank in UITEST_DEMO mode
