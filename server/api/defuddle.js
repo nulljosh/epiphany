@@ -87,7 +87,8 @@ export default async function handler(req, res) {
         'Accept': 'text/html,application/xhtml+xml',
       },
       signal: controller.signal,
-      redirect: 'error',
+      // workerd rejects 'error'; a 3xx comes back as-is and fails the ok check below.
+      redirect: 'manual',
     });
 
     clearTimeout(timeoutId);

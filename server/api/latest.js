@@ -1,4 +1,4 @@
-import { list } from './_blob.js';
+import { get, list } from './_blob.js';
 import { applyCors } from './_cors.js';
 import { BLOB_PREFIX } from './stocks-shared.js';
 
@@ -19,20 +19,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // Fetch the blob content with a hard timeout
+    // Read straight from KV. A Worker cannot fetch() its own custom domain
+    // (Cloudflare answers 522), which is what killed this endpoint after Vercel.
     const blobUrl = blobs[0].url;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    console.log(`[LATEST] Fetching blob: ${blobs[0].pathname}`);
-    const response = await fetch(blobUrl, { signal: controller.signal });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Blob fetch returned HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
+    const raw = await get(blobs[0].pathname);
+    if (raw == null) throw new Error('Blob missing from KV');
+    const data = JSON.parse(raw);
 
     return res.status(200).json({
       cached: true,

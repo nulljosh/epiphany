@@ -1,4 +1,4 @@
-import { put, del, get as getBlob } from './_blob.js';
+import { put, del, getArrayBuffer } from './_blob.js';
 import { applyCors } from './_cors.js';
 import { getStatementsPayload, summarizeStatementBuffer } from './statements-data.js';
 import { getKv } from './_kv.js';
@@ -50,14 +50,9 @@ async function putStatementBlob(userId, recordId, buffer) {
 // KV base64 copy so statements uploaded before this migration still open.
 async function readStatementBuffer(kv, statement) {
   if (statement?.blobUrl) {
-    const result = await getBlob(statement.blobUrl, {
-      access: 'private',
-      token: process.env.EPIPHANY2_READ_WRITE_TOKEN,
-    });
-    if (!result?.stream) return null;
-    const chunks = [];
-    for await (const chunk of result.stream) chunks.push(chunk);
-    return Buffer.concat(chunks);
+    // The KV shim returns bytes, not a stream like @vercel/blob did.
+    const bytes = await getArrayBuffer(statement.blobUrl);
+    return bytes ? Buffer.from(bytes) : null;
   }
   const storedFile = await kv.get(`statement-file:${statement.id}`);
   if (!storedFile?.contentBase64) return null;
