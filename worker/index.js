@@ -104,6 +104,9 @@ export default {
     // URLs, so this route is what makes a stored blob.url resolvable.
     if (url.pathname.startsWith('/api/blob/')) {
       const key = decodeURIComponent(url.pathname.slice('/api/blob/'.length));
+      // Bank statements were access:private on Vercel Blob; nothing client-side
+      // reads them by URL, so they are never served here.
+      if (key.startsWith('statements/')) return new Response('Not found', { status: 404 });
       const body = await env.BLOB.get('blob:' + key, 'arrayBuffer');
       if (!body) return new Response('Not found', { status: 404 });
       return new Response(body, {

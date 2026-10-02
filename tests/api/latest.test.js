@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../server/api/latest.js';
-import { list } from '../../server/api/_blob.js';
+import { get, list } from '../../server/api/_blob.js';
 
 // Mock Vercel Blob
 vi.mock('../../server/api/_blob.js', () => ({
+  get: vi.fn(),
   list: vi.fn(async (opts) => ({
     blobs: [
       {
@@ -43,13 +44,8 @@ describe('Latest API', () => {
       return res;
     });
 
-    // Mock successful fetch
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockCacheData),
-      })
-    );
+    // The handler reads the snapshot straight from KV now, no self-fetch.
+    get.mockImplementation(async () => JSON.stringify(mockCacheData));
   });
 
   it('should set CORS headers', async () => {
@@ -183,11 +179,7 @@ describe('Latest API - Error Handling', () => {
   });
 
   it('should handle blob fetch timeout', async () => {
-    global.fetch = vi.fn(() => {
-      const c = new AbortController();
-      c.abort();
-      return Promise.reject(new Error('AbortError'));
-    });
+    get.mockRejectedValueOnce(new Error('AbortError'));
 
     await handler(req, res);
     
@@ -199,28 +191,17 @@ describe('Latest API - Error Handling', () => {
   });
 
   it('should handle blob HTTP errors', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 404,
-        json: () => Promise.resolve({}),
-      })
-    );
+    get.mockResolvedValueOnce(null);
 
     await handler(req, res);
     
     const response = res.json.mock.calls[0][0];
     expect(response.cached).toBe(false);
-    expect(response.error).toContain('404');
+    expect(response.error).toContain('missing');
   });
 
   it('should handle invalid JSON in cache', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.reject(new Error('Invalid JSON')),
-      })
-    );
+    get.mockResolvedValueOnce('not json');
 
     await handler(req, res);
     
@@ -230,9 +211,7 @@ describe('Latest API - Error Handling', () => {
   });
 
   it('should include timestamp on error', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.reject(new Error('Network error'))
-    );
+    get.mockRejectedValueOnce(new Error('Network error'));
 
     await handler(req, res);
     

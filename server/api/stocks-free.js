@@ -331,6 +331,8 @@ async function fetchYahooSymbol(symbol) {
   return null;
 }
 
+const PER_SYMBOL_FANOUT_MAX = 15;
+
 export default async function handler(req, res) {
   const parsed = parseSymbols(req.query.symbols, { max: 100, validate: false });
   if (parsed.error) {
@@ -362,8 +364,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try FMP batch first (single API call for all symbols)
-    let stocks = await fetchFmpBatch(symbolList);
+    // FMP is two subrequests per symbol; the default 70-symbol list (Watch, widgets)
+    // took 19s and 500ed on the Worker. Fan out only for short lists, else Yahoo batch.
+    let stocks = symbolList.length <= PER_SYMBOL_FANOUT_MAX ? await fetchFmpBatch(symbolList) : null;
     let source = 'fmp';
 
     // Supplement FMP fundamentals from Yahoo v7 when FMP omits them (free tier)

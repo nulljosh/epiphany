@@ -280,3 +280,16 @@ Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Ep
 Pass 7: Budget widget (home small/medium, lock screen rectangular/inline) fed from the App Group after every finance or statement load; watch and Mac synced to 2.5.15 with the glass icon.
 - [ ] macOS widget parity: add Budget (and Watchlist) to widgets-macos and have the Mac app publish the same App Group snapshot
 - [ ] First archive after adding the App Group to the iOS app: confirm the provisioning profile picks up the capability
+
+## Cloudflare audit 2026-10-01 (what else the Vercel move broke)
+Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
+- [ ] macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
+- [ ] local-events takes 23s cold, only an in-isolate Map cache; put it in KV with a TTL
+- [ ] s-maxage headers from api/gateway.js:126 are inert on Workers (no Vercel CDN); use the Cache API or KV for the 25 cached routes
+- [ ] worker/index.js has no request body cap; statements.js assumes the platform 413s at 4.5MB
+- [ ] secrets referenced in server/api but absent from wrangler secret list (see _shared-secret.js:14; WEBHOOK_SECRET fails closed)
+- [ ] _cors.js lost its production origin with VERCEL_URL; no-Origin requests advertise localhost
+- [ ] stocks-free KV cache key is a 16-char prefix hash, so a 70-symbol request can be served another caller's 20-symbol result
+- [ ] _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0
+- [ ] worker setHeader coerces arrays with String(), a second Set-Cookie would be comma-joined
+- [ ] /api/blob serves public max-age=3600 on in-place overwritten keys plus KV's 60s read cache; stale snapshots possible
