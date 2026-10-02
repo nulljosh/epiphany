@@ -80,6 +80,19 @@ class Summarize(Base):
         title, rows, v = self.run_with_spy(port, 0.0)
         self.assertEqual((title, v), ("Beating 0.61%", "up"))
 
+    def test_sold_positions_stay_in_the_score(self):
+        st = {**ST, "orders": [
+            {"symbol": "XLE", "side": "buy", "qty": 10, "status": "Filled", "fill": 50.0},
+            {"symbol": "XLE", "side": "sell", "qty": 10, "status": "Filled", "fill": 60.0},  # +100 on 500
+            {"symbol": "X", "side": "buy", "qty": 1, "status": "Filled", "fill": 100.0},  # still held, live numbers win
+            {"symbol": "SSO", "side": "buy", "qty": 5, "status": "Filled", "fill": 70.0},
+            {"symbol": "SSO", "side": "sell", "qty": 5, "status": "Filled", "fill": 99.0},  # Trend sleeve stays out
+            {"symbol": "Q", "side": "sell", "qty": 1, "status": "PreSubmitted", "fill": 0.0}]}
+        with mock.patch.object(mb, "sp500", return_value=0.0):
+            _, rows, _ = mb.summarize([pos("X", 0.0, cost=100.0)], st, {})
+        self.assertIn("Holdings +16.67%", rows[1][0])  # (0 + 100) / (100 + 500)
+        self.assertEqual(mb.closed("garbage", set()), (0, 0))
+
     def test_no_holdings(self):
         title, rows, v = self.run_with_spy([], 0.05)
         self.assertEqual((title, v, rows[0][0]), ("+0.00%", None, "No trades yet"))

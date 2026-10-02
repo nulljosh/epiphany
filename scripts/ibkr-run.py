@@ -75,7 +75,10 @@ try:
             o = MarketOrder(side.upper(), q)
             o.tif = "DAY"
             t = ib.placeOrder(c, o)
-            ib.sleep(3)
+            for _ in range(30):  # wait for the fill so the ledger records a price, not PreSubmitted @ 0
+                ib.sleep(1)
+                if t.isDone():
+                    break
             sent.append({"symbol": s, "side": side, "qty": q, "status": t.orderStatus.status, "fill": t.orderStatus.avgFillPrice})
             print(f"{t.orderStatus.status}: {side} {q} {s} @ {t.orderStatus.avgFillPrice}")
     elif plan:
