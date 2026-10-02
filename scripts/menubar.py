@@ -328,7 +328,7 @@ def main():
             # The [i] keeps pgrep from matching its own command line. Start the runner if nothing is running it.
             if not os.path.exists(PAUSED) and subprocess.run(["pgrep", "-f", "[i]bkr-live.py"], capture_output=True).returncode != 0:
                 out = open(LOG, "a")
-                self.child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=out, stderr=out)
+                self.child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=out)  # note() already writes the log; stderr keeps crashes
 
         @rumps.timer(60)
         def tick(self, _):
