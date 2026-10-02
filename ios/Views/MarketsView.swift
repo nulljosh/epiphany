@@ -169,6 +169,9 @@ struct MarketsView: View {
     private var mainNavigation: some View {
         NavigationStack {
             mainContent
+                // Inside the stack so the ticker sits under the nav bar; outside it
+                // the strip covered the filter and search buttons.
+                .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
                 .navigationDestination(item: $feedDest) { dest in
                     switch dest {
                     case .news: NewsView().environment(appState)
@@ -264,7 +267,6 @@ struct MarketsView: View {
         .onChange(of: drawerState) { _, state in
             if state != .peek { loadNewsIfNeeded() }
         }
-        .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
         .safeAreaInset(edge: .bottom, spacing: 0) { if isSearching { bottomSearchBar } }
         .onChange(of: isSearching) { _, active in appState.hideFloatingTabBar = active }
     }
@@ -348,7 +350,8 @@ struct MarketsView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
             )
-            .padding(.bottom, 80)
+            // Geometry already stops at the tab bar, so no extra bottom gap:
+            // the peek sits flush on the tab bar instead of floating over rows.
             .overlay(alignment: .top) {
                 Color.clear
                     .frame(height: 96)
