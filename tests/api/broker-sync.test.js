@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import handler from '../../server/api/broker/sync.js';
-import { SnapTradeAdapter } from '../../src/utils/brokers/snaptrade.js';
+import { SnapTradeAdapter, toBaseCad, withCadTotals } from '../../src/utils/brokers/snaptrade.js';
 
 function mockRes() {
   const res = { statusCode: null, body: null };
@@ -46,7 +46,8 @@ describe('broker/sync stale-userSecret self-heal', () => {
   it('re-registers and retries once on a 1083 stale-secret error, then succeeds', async () => {
     let listAccountsCalls = 0;
     mockKv();
-    vi.doMock('../../src/utils/brokers/snaptrade.js', () => ({
+    vi.doMock('../../src/utils/brokers/snaptrade.js', async () => ({
+      withCadTotals: (await vi.importActual('../../src/utils/brokers/snaptrade.js')).withCadTotals,
       SnapTradeAdapter: class {
         static isConfigured() { return true; }
         constructor() {}
@@ -59,7 +60,7 @@ describe('broker/sync stale-userSecret self-heal', () => {
           return [{ id: 'acct1' }];
         }
         async getHoldings() { return []; }
-        async getBalance() { return { total: 0 }; }
+        async getBalance() { return { total: 0, accounts: [] }; }
         async getAccounts() { return [{ id: 'acct1' }]; }
         async listConnections() { return []; }
         async getActivities() { return []; }
@@ -181,5 +182,34 @@ describe('SnapTradeAdapter', () => {
     const s2 = a._sign('/api/v1/accounts', 'clientId=x&timestamp=1', null);
     expect(s1).toBe(s2);
     expect(typeof s1).toBe('string');
+  });
+});
+
+describe('snapshot currency conversion', () => {
+  const holdings = [
+    { symbol: 'XIU.TO', shares: 10, marketValue: 400, currency: 'CAD' },
+    { symbol: 'SPY', shares: 1, marketValue: 500, currency: 'USD' },
+  ];
+  const balance = { total: 1200, accounts: [
+    { account: 'TFSA', currency: 'CAD', cash: 1000 },
+    { account: 'TFSA', currency: 'USD', cash: 200 },
+  ] };
+
+  it('sums a mixed CAD/USD snapshot in CAD', () => {
+    const r = withCadTotals({ holdings, balance }, 0.5); // 0.5 USD per CAD
+    expect(r.balance.totalCad).toBe(1400);   // 1000 + 200/0.5
+    expect(r.netWorthCad).toBe(1400 + 400 + 1000);
+    expect(r.fxMissing).toBe(false);
+    expect(r.currency).toBe('CAD');
+  });
+
+  it('missing FX never mixes currencies: USD is left out of CAD sums and flagged', () => {
+    const r = withCadTotals({ holdings, balance }, null);
+    expect(r.fxMissing).toBe(true);
+    expect(r.balance.totalCad).toBe(1000);
+    expect(r.netWorthCad).toBe(1400);
+    expect(r.holdings[1].marketValueCad).toBeNull();
+    expect(r.holdings[1].marketValue).toBe(500); // native amount kept
+    expect(toBaseCad(5, 'EUR', 0.7)).toBeNull();
   });
 });
