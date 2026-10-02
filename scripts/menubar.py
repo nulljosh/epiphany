@@ -87,15 +87,17 @@ def watch_line(sym, quote):
     return f"{sym}  {price:,.4f}  {pct(ch)}" if price < 1 else f"{sym}  {price:,.2f}  {pct(ch)}"  # currency pairs need the extra digits
 
 
-def sp500(start):
-    """The S&P 500's return (SPY) from the last close before `start` to now, one Yahoo call. Raises if Yahoo has nothing."""
+def sp500(start, entry=None):
+    """The S&P 500's return (SPY) from the last close before `start` to now, one Yahoo call. Raises if Yahoo has nothing.
+    With `entry`, the price we actually paid for SPY, it runs from there instead: our other buys filled mid morning,
+    so measuring the market from the night before gives it a head start we never had to beat."""
     days = (datetime.now() - start).days
     rng = next(r for d, r in ((2, "5d"), (25, "1mo"), (85, "3mo"), (175, "6mo"), (355, "1y"), (720, "2y"), (math.inf, "5y")) if days <= d)
     d = yahoo(f"/v8/finance/spark?symbols=SPY&range={rng}&interval=1d")["SPY"]
     before = [c for t, c in zip(d["timestamp"], d["close"]) if c and datetime.fromtimestamp(t, timezone.utc).date() < start.date()]
     # Yahoo sometimes blanks today's bar after the close; its live price still has today, the last close doesn't.
     now = num(d.get("fulldayPrice")) or next(c for c in reversed(d["close"]) if c)
-    return now / before[-1] - 1
+    return now / (entry or before[-1]) - 1
 
 
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
@@ -163,7 +165,9 @@ def summarize(port, st, mst):
         return title, rows, None
     try:
         began = datetime.fromisoformat(start["date"])
-        spy = sp500(began)
+        # Our own SPY lot is the cleanest record of where the market stood when we bought.
+        entry = next((num(p.averageCost) for p in port if p.contract.symbol == "SPY" and num(p.averageCost) > 0), None)
+        spy = sp500(began, entry)
         since = f" since {began:%b} {began.day}"
     except Exception:  # Yahoo down, or no start date yet: no comparison, so no verdict
         rows[0] = ("Market data unavailable", None)

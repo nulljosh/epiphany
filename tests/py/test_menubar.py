@@ -101,6 +101,9 @@ class Summarize(Base):
         # Today's bar blanked after the close: the live price wins, not yesterday's close (read +0.00%).
         with mock.patch.object(mb, "yahoo", return_value={"SPY": bars(100, None) | {"fulldayPrice": 105}}):
             self.assertAlmostEqual(mb.sp500(datetime(2026, 9, 2, 10, 0)), 0.05)
+        # Measured from our own fill, not the night before: 105 now against a 102.5 entry is +2.44%, not +5%.
+        with mock.patch.object(mb, "yahoo", return_value={"SPY": bars(100, None) | {"fulldayPrice": 105}}):
+            self.assertAlmostEqual(mb.sp500(datetime(2026, 9, 2, 10, 0), 102.5), 105 / 102.5 - 1)
 
     def test_verdict_bands(self):
         self.assertEqual(mb.verdict(0.012, 0.005), "up")
