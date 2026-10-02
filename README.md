@@ -61,6 +61,12 @@ Deploys to Cloudflare Workers (`npm run deploy`). Dev notes are in [CLAUDE.md](C
 
 For Claude Code: [`.claude/skills/epiphany`](.claude/skills/epiphany/SKILL.md) reads and edits portfolio data directly, and [`docs/API.md`](docs/API.md) lists the HTTP and agent tools.
 
+## How it ships
+
+`asc workflow run ship-ios VERSION=x.y.z` takes it from version bump to App Review. Apple is the one gate a person holds.
+
+<img src="docs/ship-graph.svg" width="600">
+
 ## Credits
 
 Chart control is built on [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) by tradesdontlie (MIT). Full notice in [THIRD_PARTY.md](THIRD_PARTY.md).
