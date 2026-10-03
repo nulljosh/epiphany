@@ -144,10 +144,14 @@ def crypto_step(st, btc, spy, today):
     return st
 
 
+def crypto_scores(st, btc, spy):
+    """(paper trader, buy-and-hold BTC, S&P) returns since the start."""
+    return (st["cash"] + st["qty"] * btc) / SLEEVE - 1, btc / st["start"]["btc"] - 1, spy / st["start"]["spy"] - 1
+
+
 def crypto_row(st, btc, spy):
     """(text, color number) for the menu: the paper trader, buy-and-hold BTC and the S&P, all since the start."""
-    ours = (st["cash"] + st["qty"] * btc) / SLEEVE - 1
-    hold, mkt = btc / st["start"]["btc"] - 1, spy / st["start"]["spy"] - 1
+    ours, hold, mkt = crypto_scores(st, btc, spy)
     began = datetime.fromisoformat(st["start"]["date"])
     return f"Crypto paper {pct(ours)} vs BTC {pct(hold)} vs S&P {pct(mkt)} since {began:%b} {began.day}", SIGN[verdict(ours, mkt)]
 
@@ -195,7 +199,8 @@ def ensure_gateway(force=False):
 def snapshot():
     """(title, rows, verdict) describing the account right now. A row is (text, number that colors it)."""
     if not gateway_up():
-        return "Idle", [("IB Gateway is off until 3:30pm New York", None), ("", None), ("", None), ("", None)], None
+        # Never idle: with Gateway asleep the crypto trader and both searches still work. refresh() swaps in the crypto score.
+        return "Training", [("Stocks wake at 3:30pm New York", None), ("Crypto paper trading, searches training", None), ("", None), ("", None)], None
     ib = IB()
     try:
         ib.connect("127.0.0.1", 4002, clientId=23, timeout=8)
@@ -487,6 +492,11 @@ def main():
                     st = crypto_step(read_json(CRYPTO_BOOK, {}), btc, spy, datetime.now(timezone.utc).date().isoformat())
                     write_json(CRYPTO_BOOK, st)
                     fill(*self.rows[4], *crypto_row(st, btc, spy))
+                    if not gateway_up():  # stocks are asleep, so the title is the crypto trader against the S&P
+                        ours, _, mkt = crypto_scores(st, btc, spy)
+                        v = verdict(ours, mkt)
+                        self.title = "Crypto " + lead_title(v, ours - mkt)
+                        self.paint(v)
             except Exception:
                 log(traceback.format_exc())
 
