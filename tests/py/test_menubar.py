@@ -187,6 +187,25 @@ class Watchlist(unittest.TestCase):
 
 
 
+class CryptoPaper(unittest.TestCase):
+    def step(self, st, btc, up, day="d1", spy=500.0):
+        with mock.patch.object(mb, "btc_above", return_value=up):
+            return mb.crypto_step(st, btc, spy, day)
+
+    def test_buys_when_above_sells_when_below_and_holds_within_a_day(self):
+        st = self.step({}, 100.0, True)
+        self.assertAlmostEqual(st["qty"], 10.0)  # all $1,000 in at 100
+        self.assertEqual(self.step(st, 50.0, False, day="d1")["qty"], 10.0)  # same day: no second decision
+        st = self.step(st, 200.0, False, day="d2")
+        self.assertEqual((st["qty"], st["cash"]), (0.0, 2000.0))
+
+    def test_row_compares_with_btc_and_the_sp500(self):
+        st = self.step({}, 100.0, True)
+        text, n = mb.crypto_row(st, 110.0, 500.0)  # +10% paper, +10% BTC, S&P flat
+        self.assertIn("+10.00% vs BTC +10.00% vs S&P +0.00%", text)
+        self.assertEqual(n, 1)
+
+
 class SpyAt(unittest.TestCase):
     def test_picks_the_last_bar_at_or_before_the_fill(self):
         t0 = datetime(2026, 10, 1, 10, 27).astimezone().timestamp()
