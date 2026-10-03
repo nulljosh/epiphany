@@ -1,10 +1,10 @@
 ## 2026-10-01 brain dump (open)
 - [ ] Hook the Mac IBKR bot into the app's Autopilot (design 2026-10-02): the app side already stores `autopilot:{userId}` settings and `trades:{userId}` in KV (`server/api/broker/autopilot.js`, run by `morning-run.js` over SnapTrade), while the real runner is local (`scripts/ibkr-live.py`, state in `tradingview/ibkr-state.json`) and the two never talk. Smallest bridge: the runner POSTs each fill and the daily holdings-vs-SPY verdict to a new authed `/api/broker/ibkr-report` that appends to `trades:{userId}`, so the Autopilot screen shows real paper fills; and the runner reads `enabled` from `/api/broker/autopilot` as its kill switch before the 3:45pm run. TradingView MCP stays a research and chart tool (`tv-signal-agent.js`, webhook), not the execution path. Also fix the menu bar's SPY baseline: it uses the prior close (Sept 30) while fills happened mid-morning Oct 1, so SPY reads about 0.1 points low.
-- [ ] Submit iOS 2.5.15 (build 202610011630, already uploaded 2026-10-01) the moment 2.5.14 leaves review: CAD cash header, X-Epiphany-Client header, Swift 6 screenshot-mode fix.
+- [x] (live READY_FOR_DISTRIBUTION, verified 2026-10-02 via asc) Submit iOS 2.5.15 (build 202610011630, already uploaded 2026-10-01) the moment 2.5.14 leaves review: CAD cash header, X-Epiphany-Client header, Swift 6 screenshot-mode fix.
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
-- [ ] Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
+- [x] (fixed 2026-10-02: now "$1 to unlock on the App Store") Landing says "$1 on the App Store" but the US price is Free with a $1 unlock, Canada is $1.00. Make the copy match.
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
 - [ ] Better event filtering on the map
