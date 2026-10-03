@@ -30,12 +30,16 @@ CASH, HOLDOUT = "BIL", "2023-01-01"
 COST, FIN, WARM = 0.0006, 0.005 / 252, 260
 LS, MS = (100, 150, 200, 250), (63, 126, 189, 252)
 Z, EULER = NormalDist(), 0.5772156649
-if "--crypto" in sys.argv:
+CRYPTO = "--crypto" in sys.argv
+if CRYPTO:
     # Same engine, a crypto universe, its own state and log so the deflation bar stays honest per search.
     # SPY stays column 0: it is the benchmark. ETH's Yahoo history (late 2017) sets the start.
     # ponytail: crypto trades 7 days, ETFs 5. Common days are weekdays, so a weekend move lands on Monday's return.
     UNI = ["SPY", "BTC-USD", "ETH-USD", "LTC-USD", "QQQ", "GLD", "TLT"]
     COST = 0.002  # crypto spreads and fees, not ETF-cheap
+    # Published crypto trend work (Grayscale, Quantpedia, 2025-26 papers) finds faster averages and fast/slow
+    # crossovers beat the equity-style 200 day. So the crypto search tries 20 to 200 day lines and crossovers.
+    LS, MS = (20, 50, 100, 150, 200), (21, 42, 63, 126, 189, 252)
     STATE = os.path.join(HERE, "..", "tradingview", "edge-state-crypto.json")
     LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdgeCrypto.log")
 
@@ -110,6 +114,9 @@ def weights(d, c):
         np.put_along_axis(sub, idx, (np.take_along_axis(sc, idx, 1) > 0) / k, 1)
         W[:, cols] = sub
         return W[last]
+    if c["fam"] == "cross":
+        W[:, cols] = (d.sma[c["fast"]][:, cols] > d.sma[c["slow"]][:, cols]) / len(cols)
+        return W[last]
     up = d.P[:, cols] > d.sma[c["L"]][:, cols]  # nan compares False
     if c["fam"] == "trend":
         W[:, cols] = up / len(cols)
@@ -125,10 +132,12 @@ def weights(d, c):
 
 
 def rand_cfg(rng):
-    fam, k = rng.choice(["trend", "mom", "voltrend"]), rng.randint(2, min(8, len(UNI)))
+    fam, k = rng.choice(["trend", "mom", "voltrend"] + (["cross"] if CRYPTO else [])), rng.randint(2, min(8, len(UNI)))
     c = {"fam": fam, "cols": sorted(rng.sample(range(len(UNI)), k))}
     if fam == "trend":
         c.update(L=rng.choice(LS), reb=rng.choice([1, 5, 21]))
+    elif fam == "cross":
+        c.update(fast=rng.choice([20, 50]), slow=rng.choice([100, 150, 200]), reb=rng.choice([1, 5, 21]))
     elif fam == "mom":
         c.update(m=rng.choice(MS), K=rng.randint(1, min(4, k)), reb=21)
     else:
@@ -141,13 +150,15 @@ def plain(c):
     when = {1: "daily", 5: "weekly", 21: "monthly"}[c["reb"]]
     if c["fam"] == "trend":
         return f"hold {t} in equal parts, each only while above its {c['L']}-day average, otherwise cash ({when} check)"
+    if c["fam"] == "cross":
+        return f"hold {t} in equal parts, each only while its {c['fast']}-day average is above its {c['slow']}-day average, otherwise cash ({when} check)"
     if c["fam"] == "mom":
         return f"each month hold the top {c['K']} of {t} by {c['m']}-day gain, only if it is rising, otherwise cash"
     return f"{t}, each only while above its {c['L']}-day average, calmer ones weighted more, sized to {c['tv']:.0%} swings (up to {c['lev']}x)"
 
 
 def label(c):
-    p = {"trend": f"trend{c.get('L')}", "mom": f"mom{c.get('m')} top{c.get('K')}", "voltrend": f"voltrend{c.get('L')} vol{c.get('tv')} x{c.get('lev')}"}[c["fam"]]
+    p = {"cross": f"cross{c.get('fast')}/{c.get('slow')}", "trend": f"trend{c.get('L')}", "mom": f"mom{c.get('m')} top{c.get('K')}", "voltrend": f"voltrend{c.get('L')} vol{c.get('tv')} x{c.get('lev')}"}[c["fam"]]
     return f"{p} reb{c['reb']} " + ",".join(UNI[i] for i in c["cols"])
 
 
