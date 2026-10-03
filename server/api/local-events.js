@@ -5,7 +5,8 @@ import { overpassQuery } from './_overpass.js';
 import { getKv } from './_kv.js';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const KV_TTL_SEC = 30 * 60;
+const KV_TTL_SEC = 24 * 60 * 60; // stale entries are served instantly while a background refresh runs
+const refreshing = new Set();
 const TIMEOUT_MS = 8000;
 const cache = new Map();
 
@@ -301,6 +302,50 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
+async function computeEvents(lat, lon, radius, cacheKey) {
+  const apiKey = process.env.PREDICTHQ_API_KEY;
+  const fetchers = [];
+  const attemptedSources = [];
+
+  // PredictHQ if key available
+  if (apiKey) {
+    attemptedSources.push('predicthq');
+    fetchers.push(fetchPredictHQ(lat, lon, radius, apiKey).catch(() => []));
+  }
+
+  // Free fallbacks (always run)
+  attemptedSources.push('eventbrite', 'wikipedia', 'openstreetmap');
+  fetchers.push(fetchEventbrite(lat, lon).catch(() => []));
+  fetchers.push(fetchWikipediaPlaces(lat, lon).catch(() => []));
+  fetchers.push(fetchOSMVenues(lat, lon).catch(() => []));
+
+  // News fallback with city name
+  const cityName = await reverseGeocode(lat, lon);
+  if (cityName) {
+    attemptedSources.push('news_rss');
+    fetchers.push(fetchEventNews(cityName).catch(() => []));
+  }
+
+  const results = await Promise.all(fetchers);
+  const events = results.flat();
+
+  // Deduplicate by title similarity
+  const seen = new Set();
+  const deduped = events.filter(e => {
+    const key = e.title.toLowerCase().slice(0, 30);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const entry = { data: deduped, ts: Date.now() };
+  cache.set(cacheKey, entry);
+  try {
+    const kvClient = await getKv();
+    if (kvClient) await kvClient.set(`local-events:${cacheKey}`, entry, { ex: KV_TTL_SEC });
+  } catch { /* cache only */ }
+  return { deduped, attemptedSources };
+}
+
 export default async function handler(req, res) {
   const lat = parseFloat(req.query.lat);
   const lon = parseFloat(req.query.lon);
@@ -317,60 +362,29 @@ export default async function handler(req, res) {
     try {
       const kvClient = await getKv();
       const hit = kvClient ? await kvClient.get(`local-events:${cacheKey}`) : null;
-      if (hit) { cached = { data: hit, ts: Date.now() }; cache.set(cacheKey, cached); }
+      if (hit) { cached = Array.isArray(hit) ? { data: hit, ts: 0 } : hit; cache.set(cacheKey, cached); }
     } catch { /* cache only */ }
   }
-  if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
+  const fresh = cached && (Date.now() - cached.ts) < CACHE_TTL_MS;
+  if (cached && !fresh && !refreshing.has(cacheKey) && globalThis.__waitUntil) {
+    // Stale: answer instantly from cache, refresh in the background (same pattern as news.js)
+    refreshing.add(cacheKey);
+    globalThis.__waitUntil(
+      computeEvents(lat, lon, radius, cacheKey).catch(() => {}).finally(() => refreshing.delete(cacheKey))
+    );
+  }
+  if (cached && (fresh || globalThis.__waitUntil)) {
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({
       events: cached.data,
       cached: true,
-      meta: buildMeta('cache', { cached: true, cacheAgeMs: Date.now() - cached.ts }),
+      meta: buildMeta(fresh ? 'cache' : 'stale', { cached: true, cacheAgeMs: Date.now() - cached.ts }),
     });
   }
 
   const apiKey = process.env.PREDICTHQ_API_KEY;
-
   try {
-    const fetchers = [];
-    const attemptedSources = [];
-
-    // PredictHQ if key available
-    if (apiKey) {
-      attemptedSources.push('predicthq');
-      fetchers.push(fetchPredictHQ(lat, lon, radius, apiKey).catch(() => []));
-    }
-
-    // Free fallbacks (always run)
-    attemptedSources.push('eventbrite', 'wikipedia', 'openstreetmap');
-    fetchers.push(fetchEventbrite(lat, lon).catch(() => []));
-    fetchers.push(fetchWikipediaPlaces(lat, lon).catch(() => []));
-    fetchers.push(fetchOSMVenues(lat, lon).catch(() => []));
-
-    // News fallback with city name
-    const cityName = await reverseGeocode(lat, lon);
-    if (cityName) {
-      attemptedSources.push('news_rss');
-      fetchers.push(fetchEventNews(cityName).catch(() => []));
-    }
-
-    const results = await Promise.all(fetchers);
-    const events = results.flat();
-
-    // Deduplicate by title similarity
-    const seen = new Set();
-    const deduped = events.filter(e => {
-      const key = e.title.toLowerCase().slice(0, 30);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    cache.set(cacheKey, { data: deduped, ts: Date.now() });
-    try {
-      const kvClient = await getKv();
-      if (kvClient) await kvClient.set(`local-events:${cacheKey}`, deduped, { ex: KV_TTL_SEC });
-    } catch { /* cache only */ }
+    const { deduped, attemptedSources } = await computeEvents(lat, lon, radius, cacheKey);
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     const sources = [...new Set(deduped.map(e => e.source))];
     const degraded = deduped.length === 0;
