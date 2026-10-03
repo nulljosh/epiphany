@@ -114,6 +114,9 @@ def weights(d, c):
         np.put_along_axis(sub, idx, (np.take_along_axis(sc, idx, 1) > 0) / k, 1)
         W[:, cols] = sub
         return W[last]
+    if c["fam"] == "ens":  # multi-timeframe: the share of the averages that price is above, so it scales in and out
+        W[:, cols] = sum(d.P[:, cols] > d.sma[L][:, cols] for L in LS) / len(LS) / len(cols)
+        return W[last]
     if c["fam"] == "cross":
         W[:, cols] = (d.sma[c["fast"]][:, cols] > d.sma[c["slow"]][:, cols]) / len(cols)
         return W[last]
@@ -132,10 +135,12 @@ def weights(d, c):
 
 
 def rand_cfg(rng):
-    fam, k = rng.choice(["trend", "mom", "voltrend"] + (["cross"] if CRYPTO else [])), rng.randint(2, min(8, len(UNI)))
+    fam, k = rng.choice(["trend", "mom", "voltrend"] + (["cross", "ens"] if CRYPTO else [])), rng.randint(2, min(8, len(UNI)))
     c = {"fam": fam, "cols": sorted(rng.sample(range(len(UNI)), k))}
     if fam == "trend":
         c.update(L=rng.choice(LS), reb=rng.choice([1, 5, 21]))
+    elif fam == "ens":
+        c.update(reb=rng.choice([1, 5, 21]))
     elif fam == "cross":
         c.update(fast=rng.choice([20, 50]), slow=rng.choice([100, 150, 200]), reb=rng.choice([1, 5, 21]))
     elif fam == "mom":
@@ -150,6 +155,8 @@ def plain(c):
     when = {1: "daily", 5: "weekly", 21: "monthly"}[c["reb"]]
     if c["fam"] == "trend":
         return f"hold {t} in equal parts, each only while above its {c['L']}-day average, otherwise cash ({when} check)"
+    if c["fam"] == "ens":
+        return f"hold {t} in equal parts, each scaled by how many of its {len(LS)} averages ({', '.join(map(str, LS))}-day) it is above, otherwise cash ({when} check)"
     if c["fam"] == "cross":
         return f"hold {t} in equal parts, each only while its {c['fast']}-day average is above its {c['slow']}-day average, otherwise cash ({when} check)"
     if c["fam"] == "mom":
@@ -158,7 +165,7 @@ def plain(c):
 
 
 def label(c):
-    p = {"cross": f"cross{c.get('fast')}/{c.get('slow')}", "trend": f"trend{c.get('L')}", "mom": f"mom{c.get('m')} top{c.get('K')}", "voltrend": f"voltrend{c.get('L')} vol{c.get('tv')} x{c.get('lev')}"}[c["fam"]]
+    p = {"ens": "ens" + str(len(LS)), "cross": f"cross{c.get('fast')}/{c.get('slow')}", "trend": f"trend{c.get('L')}", "mom": f"mom{c.get('m')} top{c.get('K')}", "voltrend": f"voltrend{c.get('L')} vol{c.get('tv')} x{c.get('lev')}"}[c["fam"]]
     return f"{p} reb{c['reb']} " + ",".join(UNI[i] for i in c["cols"])
 
 
