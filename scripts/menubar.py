@@ -23,6 +23,7 @@ TREND = os.path.join(ROOT, "tradingview", "ibkr-trend.json")
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
 EDGE = os.path.join(ROOT, "tradingview", "edge-state.json")
 EDGE_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdge.log")
+CRYPTO_BOOK = os.path.join(ROOT, "tradingview", "crypto-paper.json")
 EDGE_CRYPTO = os.path.join(ROOT, "tradingview", "edge-state-crypto.json")
 CRYPTO_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdgeCrypto.log")
 
@@ -115,6 +116,40 @@ def spy_at(when):
         return bars[-1] if bars else None
     except Exception:
         return None
+
+
+SLEEVE = 1000.0  # the paper account: 10% of a virtual $10,000, same as the app's crypto autopilot
+
+
+def btc_above(price):
+    """BTC against its 100 day average (today's price standing in for today's bar), one Yahoo call."""
+    d = yahoo("/v8/finance/chart/BTC-USD?interval=1d&range=1y")["chart"]["result"][0]
+    closes = [c for c in d["indicators"]["quote"][0]["close"] if c]
+    return price > sum((closes[:-1] + [price])[-100:]) / 100
+
+
+def crypto_step(st, btc, spy, today):
+    """The weekend paper trader. Crypto never closes, so this runs every tick, any day. Once per UTC day it asks
+    whether BTC is above its 100 day average: yes means all-in on BTC, no means cash. Same rule as the app's
+    crypto autopilot. The start prices of BTC and SPY are kept so the row can compare against both."""
+    if not st:
+        st = {"start": {"date": datetime.now().isoformat(timespec="minutes"), "btc": btc, "spy": spy}, "cash": SLEEVE, "qty": 0.0, "day": ""}
+    if st["day"] != today:
+        up = btc_above(btc)
+        if up and st["qty"] == 0:
+            st["qty"], st["cash"] = st["cash"] / btc, 0.0
+        elif not up and st["qty"] > 0:
+            st["cash"], st["qty"] = st["qty"] * btc, 0.0
+        st["day"] = today
+    return st
+
+
+def crypto_row(st, btc, spy):
+    """(text, color number) for the menu: the paper trader, buy-and-hold BTC and the S&P, all since the start."""
+    ours = (st["cash"] + st["qty"] * btc) / SLEEVE - 1
+    hold, mkt = btc / st["start"]["btc"] - 1, spy / st["start"]["spy"] - 1
+    began = datetime.fromisoformat(st["start"]["date"])
+    return f"Crypto paper {pct(ours)} vs BTC {pct(hold)} vs S&P {pct(mkt)} since {began:%b} {began.day}", SIGN[verdict(ours, mkt)]
 
 
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
@@ -346,7 +381,7 @@ def main():
             # Built once rumps owns the NSMenu, so the row views can go straight in.
             menu = self._menu._menu
             self.rows = []
-            for big in (True, False, False, False):
+            for big in (True, False, False, False, False):
                 view, label = row_view(big)
                 item = NSMenuItem.alloc().init()
                 item.setView_(view)
@@ -446,6 +481,14 @@ def main():
                 quotes = {}
             for sym in WATCH:
                 self.watch[sym].title = watch_line(sym, quotes.get(sym))
+            try:
+                if "BTC-USD" in quotes and "SPY" in quotes:
+                    btc, spy = quotes["BTC-USD"][0], quotes["SPY"][0]
+                    st = crypto_step(read_json(CRYPTO_BOOK, {}), btc, spy, datetime.now(timezone.utc).date().isoformat())
+                    write_json(CRYPTO_BOOK, st)
+                    fill(*self.rows[4], *crypto_row(st, btc, spy))
+            except Exception:
+                log(traceback.format_exc())
 
         def paint(self, v):
             """Green when we beat SPY, yellow when we're level with it, red when we trail. Plain when unknown."""
