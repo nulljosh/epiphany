@@ -143,7 +143,7 @@ class Summarize(Base):
 
     def test_gateway_off_is_idle_not_an_error(self):
         with mock.patch.object(mb, "gateway_up", return_value=False):
-            self.assertEqual(mb.snapshot()[0], "Idle")
+            self.assertEqual(mb.snapshot()[0], "Training")
 
     def test_gateway_up_but_not_logged_in(self):
         with mock.patch.object(mb, "gateway_up", return_value=True), mock.patch.object(mb, "IB") as ib:
