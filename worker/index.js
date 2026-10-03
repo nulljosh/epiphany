@@ -166,13 +166,14 @@ export default {
     try { Object.assign(process.env, env); } catch { /* see above */ }
     bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.heyitsmejosh.com', ctx);
 
-    const path = { '0 8 * * 1-5': 'cron', '30 14 * * 1-5': 'broker/morning-run', '0 12 * * *': 'supabase-ping' }[event.cron];
-    if (!path) return;
-
-    const url = new URL(`https://cron.local/api/${path}`);
-    const req = makeReq(new Request(url, { headers: { Authorization: `Bearer ${env.CRON_SECRET || ''}` } }), url, undefined, undefined);
-    const { res, state } = makeRes();
-    await gateway(req, res);
-    console.log(`[cron] ${event.cron} -> ${path} -> ${state.status}`);
+    // The daily 12:00 tick also runs crypto paper trading: crypto trades on weekends, the stock crons do not.
+    const paths = { '0 8 * * 1-5': ['cron'], '30 14 * * 1-5': ['broker/morning-run'], '0 12 * * *': ['supabase-ping', 'broker/crypto-paper'] }[event.cron] || [];
+    for (const path of paths) {
+      const url = new URL(`https://cron.local/api/${path}`);
+      const req = makeReq(new Request(url, { headers: { Authorization: `Bearer ${env.CRON_SECRET || ''}` } }), url, undefined, undefined);
+      const { res, state } = makeRes();
+      await gateway(req, res);
+      console.log(`[cron] ${event.cron} -> ${path} -> ${state.status}`);
+    }
   },
 };
