@@ -355,7 +355,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'lat and lon query params required' });
   }
 
-  const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  // 0.1 deg (~11km) key: both sources search a 50km radius, and per-1km keys missed on every pan
+  const cacheKey = `${lat.toFixed(1)},${lon.toFixed(1)}`;
   let cached = cache.get(cacheKey);
   // The in-isolate Map dies with the isolate; a cold request took 23s. KV carries it across.
   if (!cached) {
