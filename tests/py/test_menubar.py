@@ -141,8 +141,12 @@ class Summarize(Base):
         for bad in ({"start": "x"}, {"holdings": 3}, {"holdings": {}}, {}):
             self.assertIsNone(mb.trend_row(bad))
 
-    def test_gateway_down(self):
-        with mock.patch.object(mb, "IB") as ib:
+    def test_gateway_off_is_idle_not_an_error(self):
+        with mock.patch.object(mb, "gateway_up", return_value=False):
+            self.assertEqual(mb.snapshot()[0], "Idle")
+
+    def test_gateway_up_but_not_logged_in(self):
+        with mock.patch.object(mb, "gateway_up", return_value=True), mock.patch.object(mb, "IB") as ib:
             ib.return_value.connect.side_effect = ConnectionRefusedError
             ib.return_value.isConnected.return_value = False
             self.assertEqual(mb.snapshot()[0], "!")
@@ -181,6 +185,16 @@ class Watchlist(unittest.TestCase):
         self.assertAlmostEqual(q["PLTR"][1], 0.016)
         self.assertNotIn("BAD", q)
 
+
+
+class GatewayWindow(unittest.TestCase):
+    def test_window_is_weekday_afternoon_new_york(self):
+        from zoneinfo import ZoneInfo
+        ny = lambda d, h, m: datetime(2026, 10, d, h, m, tzinfo=ZoneInfo("America/New_York"))
+        self.assertTrue(mb.in_window(ny(5, 15, 30)))   # Monday 3:30pm
+        self.assertFalse(mb.in_window(ny(5, 9, 0)))    # login in the morning opens nothing
+        self.assertFalse(mb.in_window(ny(5, 16, 15)))
+        self.assertFalse(mb.in_window(ny(3, 15, 45)))  # Saturday
 
 if __name__ == "__main__":
     unittest.main()
