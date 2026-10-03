@@ -302,6 +302,11 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
+// A slow source (Overpass allows 20s) must not hold the whole response; late sources are dropped and
+// picked up by the next background refresh.
+const SOURCE_CAP_MS = 6000;
+const capped = (p) => Promise.race([p.catch(() => []), new Promise(r => setTimeout(() => r([]), SOURCE_CAP_MS))]);
+
 async function computeEvents(lat, lon, radius, cacheKey) {
   const apiKey = process.env.PREDICTHQ_API_KEY;
   const fetchers = [];
@@ -310,21 +315,18 @@ async function computeEvents(lat, lon, radius, cacheKey) {
   // PredictHQ if key available
   if (apiKey) {
     attemptedSources.push('predicthq');
-    fetchers.push(fetchPredictHQ(lat, lon, radius, apiKey).catch(() => []));
+    fetchers.push(capped(fetchPredictHQ(lat, lon, radius, apiKey)));
   }
 
   // Free fallbacks (always run)
   attemptedSources.push('eventbrite', 'wikipedia', 'openstreetmap');
-  fetchers.push(fetchEventbrite(lat, lon).catch(() => []));
-  fetchers.push(fetchWikipediaPlaces(lat, lon).catch(() => []));
-  fetchers.push(fetchOSMVenues(lat, lon).catch(() => []));
+  fetchers.push(capped(fetchEventbrite(lat, lon)));
+  fetchers.push(capped(fetchWikipediaPlaces(lat, lon)));
+  fetchers.push(capped(fetchOSMVenues(lat, lon)));
 
-  // News fallback with city name
-  const cityName = await reverseGeocode(lat, lon);
-  if (cityName) {
-    attemptedSources.push('news_rss');
-    fetchers.push(fetchEventNews(cityName).catch(() => []));
-  }
+  // News fallback with city name, geocoded inside the parallel set instead of before it
+  attemptedSources.push('news_rss');
+  fetchers.push(capped(reverseGeocode(lat, lon).then(city => (city ? fetchEventNews(city) : []))));
 
   const results = await Promise.all(fetchers);
   const events = results.flat();
@@ -338,6 +340,7 @@ async function computeEvents(lat, lon, radius, cacheKey) {
     return true;
   });
   const entry = { data: deduped, ts: Date.now() };
+  if (deduped.length === 0) return { deduped, attemptedSources };
   cache.set(cacheKey, entry);
   try {
     const kvClient = await getKv();
