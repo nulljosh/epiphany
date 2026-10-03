@@ -540,7 +540,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
           </div>
           <div className="lp-price-card glass">
             <div className="lp-price-tier">The app</div>
-            <div className="lp-price-num">$1<span> on the App Store</span></div>
+            <div className="lp-price-num">$1<span> to unlock on the App Store</span></div>
             <ul className="lp-price-feats">
               <li>iPhone and Mac</li>
               <li>Everything in the app, no upgrades</li>
