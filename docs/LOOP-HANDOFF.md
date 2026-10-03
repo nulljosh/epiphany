@@ -1,31 +1,29 @@
-# Epiphany loop handoff (2026-10-03, afternoon)
+# Epiphany loop handoff (2026-10-03, evening)
 
 ## What the loop is
 
-Edge hunt: find a trading strategy that beats both the S&P 500 and BTC on walk-forward backtests. Menu bar edge search engine backtests multi-timeframe ensemble strategies on 20-200 day crossovers, now with a --crypto flag for crypto pairs. Paper trading on Autopilot: Joshua's account at 10% of virtual $10k (Trend 2x); real live trading stays capped at $50 per trade until backtests show a durable edge. IB Gateway starts on-demand weekdays 3:30-4:15pm ET (improved power management). ibkr-live.py reports fills to the app and treats Autopilot toggle as kill switch.
+Hourly edge search loop stopped per Joshua 2026-10-03 evening. Goal stays: beat both the S&P 500 and BTC on walk-forward backtests. Menu bar edge search engine ran 400+ trials on stocks with --crypto flag searching 20-200 day crossovers and multi-timeframe ensembles. Menu bar runs three paper sleeves: BTC trend (100 day), BTC funding-carry (~11%/yr backtest, 16% to 7% decay), BTC/SPY/GLD inverse-vol blend (28 day rebalance, started 17% BTC, 58% SPY, 26% GLD). Stress test shows blend beats SPY on Sharpe across all eras and parameter settings but return edge is Bitcoin only. Paper trading on Autopilot: Joshua's account at 10% of virtual $10k; real live stays capped at $50 per trade. IB Gateway on-demand weekdays 3:30-4:15pm ET.
 
 ## Where things stand
 
-- Edge search 400+ trials on stocks: no leads beat S&P yet. New --crypto flag searching crypto pairs with multi-timeframe ensemble.
-- IB Gateway no longer auto-launches; menu bar starts it only on weekdays 3:30-4:15pm ET or on request.
-- ibkr-live.py reports fills to /api/broker/ibkr-report (8 backfilled), treats Autopilot toggle as kill switch.
-- Joshua's autopilot moved to paper trading; Trend 2x was buying zero at $1 cap, now sizes at 10% of $10k virtual account (real money untouched).
-- Crypto paper trader runs daily including weekends, tracking BTC above 100-day average, opt in via allowCrypto toggle.
-- Menu bar status line never idle: shows combined score vs S&P and BTC, BTC funding-carry paper sleeve (~11%/yr backtest), crypto daily results.
+- Edge search 400+ trials on stocks: no leads beat S&P yet. --crypto flag added; nothing beats both yet.
+- Menu bar now has three paper sleeves (BTC trend, funding-carry, inverse-vol blend).
+- Blend stress test: beats SPY on Sharpe all 3 eras and 9 parameter settings (1.17-1.39 vs 0.68); worst drop 23% vs SPY's 34%; without BTC made 8%/yr, capped 15% made 10.5%, both under SPY 13.8%.
+- Haiku research reviewed 7 crypto methods: funding carry and BTC trend credible but modest, others flagged decaying/backtest-only.
+- Joshua's autopilot on paper; Trend 2x at 10% of virtual $10k (was buying zero at $1 cap).
 - iOS 2.5.15 waiting for review; Mac 2.5.15 in review.
-- Docs updated (README, WHITEPAPER, docs/API.md, docs/ARCHITECTURE.md, architecture.svg).
-- Haiku research agent on crypto quant methods still running; research direction pending.
+- Docs updated (README, WHITEPAPER, API, ARCHITECTURE); carry and blend not yet in WHITEPAPER.
 
 ## Next, in order
 
-1. Await crypto-quant research direction from pending Haiku agent.
-2. If promising: run edge search on crypto for ~year on paper, monitor for a lead.
-3. If no lead found after year: pivot back to stock searches.
-4. Once a strategy beats both S&P and BTC on 12+ months paper: unlock live trading with full account (stays capped at $50/trade).
-5. iOS/Mac release: unhide Autopilot screen, native sync, live trading status.
+1. Forward-test paper results; better risk without return edge.
+2. Run edge search on crypto months/years on paper, watch for a lead beating both.
+3. If no lead: keep blend as risk management or pivot to stocks.
+4. Once strategy beats both S&P and BTC on 12+ months paper: unlock live trading.
+5. iOS/Mac release: unhide Autopilot screen, native sync, live status.
 
 ## Restart prompt
 
 ```
-/loop until beating both S&P and BTC (Epiphany 2026-10-03). Edge search 400+ trials on stocks/crypto with --crypto flag for multi-timeframe ensemble; nothing beats both yet. Paper trading: Joshua at 10% of $10k virtual (Trend 2x). Live stays capped $50/trade, real money waits. Haiku research agent on crypto quant methods still running (pending output). IB Gateway on-demand weekdays 3:30-4:15pm ET, ibkr-live.py reports fills and treats Autopilot toggle as kill switch. Menu bar status never idle, shows combined score vs S&P/BTC, funding-carry sleeve, crypto daily. iOS 2.5.15 waiting review, Mac in review. Docs updated. Loop ScheduleWakeup hourly. Next: crypto-quant research direction (pending), year of paper if promising or pivot to stocks, then release unlock at roadmap. Single Haiku agent for research, no fan-out, stop above 90 percent usage.
+/loop until we're beating both the S&P and BTC (Epiphany 2026-10-03). Loop stopped, goal stays. Menu bar: BTC trend (100 day), funding-carry (~11%/yr, 16-7% decay), inverse-vol blend (28 day rebalance, beats SPY on Sharpe all eras/params but return is Bitcoin only). Edge search 400+ trials on stocks/crypto --crypto flag, multi-timeframe ensembles, nothing beats both yet. Paper sleeves daily, stress tested. Paper trading: Joshua at 10% of $10k virtual (Trend 2x). Live capped $50/trade. Research: carry/trend credible, others flagged decaying. IB Gateway weekdays 3:30-4:15pm ET, ibkr-live.py reports and kill-switches on Autopilot toggle. iOS 2.5.15 waiting review, Mac in review. Docs updated (carry/blend not yet in WHITEPAPER). Next: forward-test paper, months/years to beat both, release unlock. Single agent if any, no fan-out, stop above 90 percent usage.
 ```
