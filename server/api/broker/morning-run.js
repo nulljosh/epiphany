@@ -30,6 +30,7 @@ const TRADE_LOG_LIMIT = 100;
 const LIVE_PROBE_ORDER_SYMBOL = 'BTC';
 const LIVE_MAX_NOTIONAL = 50; // hard $ cap per live trade, overrides user setting
 const LIVE_PROBE_TRADE_CAP = 20;
+const PAPER_BASE = 10000; // the virtual account paper trades size against
 
 async function getDailyCloses(symbol) {
   const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1y`);
@@ -138,9 +139,12 @@ async function executeForUser(kv, userId, signals) {
 
   const cap = Number(ap.maxNotional);
   const maxNotional = Number.isFinite(cap) && cap > 0 ? cap : 500;
+  const alloc = Number(ap.allocation) > 0 ? Number(ap.allocation) : 10;
 
   if (ap.mode !== 'live') {
-    const trades = await runPaper(kv, userId, signals, maxNotional);
+    // Paper sizes the position as allocation % of a virtual account. The old $1 default is not a choice and
+    // would buy zero shares, so it does not cap. A cap the user set above $1 still holds. Live is untouched.
+    const trades = await runPaper(kv, userId, signals, Math.min(cap > 1 ? cap : Infinity, (PAPER_BASE * alloc) / 100));
     return { userId, mode: ap.mode, trades };
   }
 
