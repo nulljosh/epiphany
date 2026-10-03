@@ -53,7 +53,8 @@ which run inside the page and are not filtered.
 | `/broker/positions` | GET | Live positions from the linked broker |
 | `/broker/sync` | POST | Pull fresh holdings |
 | `/broker/signal`, `/broker/ws-signal` | GET | Current trade signals |
-| `/broker/morning-run` | POST | Runs the morning strategy pass (also on cron) |
+| `/broker/morning-run` | POST | Runs the morning strategy pass (also on cron). Paper positions size as allocation % of a virtual $10,000 |
+| `/broker/crypto-paper` | GET | Crypto paper trading, daily on cron including weekends (Bearer CRON_SECRET). Holds BTC while above its 100 day average. Opt in with `allowCrypto`. Never places real orders |
 | `/broker/impact-test` | POST | Dry-run a strategy change |
 | `/broker/autopilot` | POST | `{enabled}` — **places real trades when enabled** |
 | `/broker/disconnect` | POST | `{broker}` — unlinks the account |
