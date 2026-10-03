@@ -27,7 +27,7 @@ Everything happening in your world, on one screen. The map, the markets, the peo
 - **Markets.** Stocks, crypto and commodities with a Buy, Hold or Sell read on each. Prediction markets too.
 - **Portfolio.** Holdings, net worth and where the money went. Read-only brokerage sync.
 - **People.** Search anyone and see how they connect.
-- **Autopilot.** Our trading algorithm, on paper money.
+- **Autopilot.** Our trading algorithm, on paper money. Stocks on weekdays, Bitcoin every day including weekends, scored against the S&P 500.
 
 Web, iOS, macOS, watchOS, Windows, Linux and Android. Free to start, $1 once for everything.
 
