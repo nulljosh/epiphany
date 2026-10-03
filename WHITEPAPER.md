@@ -48,7 +48,8 @@ Epiphany Kelly, lost money in testing (section 5) and was retired.
 ### 2. Sizing
 
 Each position is a fixed slice: 10% of the strategy's money on the Mac runner,
-a per-trade dollar cap on the server. Whole shares only for stocks and funds.
+10% of a virtual $10,000 for paper users on the server (a cap the user sets above $1 still holds), and
+a hard $50 per-trade cap for live. Whole shares only for stocks and funds.
 At most 10 positions at once on the Double 7s runner. Trend 2x holds one fund at a
 time, and its only leverage is the 2x fund itself.
 
@@ -61,6 +62,12 @@ time, and its only leverage is the 2x fund itself.
   the trades are simulated and logged, no order leaves. Live mode is opt in,
   places real orders through SnapTrade, is capped at $50 a trade and 20 fills,
   then flips the user back to paper on its own.
+- **Crypto paper (server, every day).** Crypto never closes, so the 12:00 UTC
+  cron (`server/api/broker/crypto-paper.js`) runs seven days a week, weekends
+  included. Rule: hold Bitcoin while it is above its 100 day average, otherwise
+  sit in cash. Paper only, never a real order, for users who turn on Crypto
+  weekends. The menu bar keeps its own copy and scores it against buy and hold
+  Bitcoin and the S&P 500.
 - **Epiphany Live (Mac).** `scripts/ibkr-live.py` runs Trend 2x as a $100k
   sleeve (`scripts/ibkr-trend.py`) once a day between 3:45 and 4pm New York,
   so the orders fill before the close, through a local IB Gateway on an
@@ -70,7 +77,13 @@ time, and its only leverage is the 2x fund itself.
   script at 3:45pm. The menu bar app (`scripts/menubar.py`) runs both, keeps
   them alive, and scores Trend 2x against the S&P 500 and the rest against the
   S&P 500, the 16 funds held equally, the Nasdaq, Dow, Russell 2000, TSX, gold
-  and Bitcoin.
+  and Bitcoin. IB Gateway no longer opens at login: the menu bar starts it from
+  3:30 to 4:15pm New York on weekdays, or on request. The runner reports its fills
+  to the app (`/api/broker/ibkr-report`) and treats the app's Autopilot switch as
+  its kill switch. Two edge searches run beside it, one on ETFs and one on a
+  crypto basket (`scripts/edge-search.py`, `--crypto`), backtests only: they pick
+  on old years, grade on held out years, and deflate for every try. Neither has
+  found a lead yet.
 
   The momentum sleeve that was once built to run beside it was dropped: the
   momentum lead failed the survivorship test in section 5.
@@ -88,6 +101,8 @@ time, and its only leverage is the 2x fund itself.
 - **Kill switch.** Turning Autopilot off, unlinking the brokerage, or Pause in
   the menu bar stops all orders. Pause is a file, so it survives a restart.
 - **Audit.** Every trade is logged with time, side, size and fill.
+- **Proof before money.** Nothing goes live until it has beaten the market on
+  paper, forward in time. A strategy that only wins a backtest stays a lead.
 
 The rules also exist as Pine Script (`tradingview/`) so they can be checked on
 TradingView's history, not trusted on a few weeks of paper trading.
