@@ -163,11 +163,10 @@ struct SettingsView: View {
                 // design). Hidden until a brokerage with real trade permission
                 // is wired up -- matches web, where the Trade tab is already
                 // disabled in FinancePanel.jsx. Re-enable by uncommenting.
-                // Section {
-                //     AutopilotSection()
-                //         .listRowInsets(EdgeInsets())
-                //         .listRowBackground(Color.clear)
-                // }
+                // Display-only status card: no manual orders, no live switch. The full AutopilotSection above stays hidden.
+                Section {
+                    PaperAutopilotCard()
+                }
 
                 Section("Appearance") {
                     AppearancePicker(rawTheme: $rawTheme)

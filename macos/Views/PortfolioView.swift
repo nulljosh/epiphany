@@ -174,9 +174,9 @@ struct PortfolioView: View {
                             tabSelector
                                 .padding(.top, 12)
 
-                            // ponytail: paper-trading only, hidden to match
-                            // iOS + web (Trade tab already disabled there).
-                            // AutopilotSection()
+                            // Display-only paper status, same card as iOS. The full AutopilotSection stays hidden.
+                            PaperAutopilotCard()
+                                .padding(.horizontal, 16)
 
                             tabContent
 

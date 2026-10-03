@@ -120,6 +120,7 @@ Epiphany is a personal intelligence dashboard for your money, location, and mark
 | `ios/Services/Store.swift` | StoreKit 2 wrapper for the one IAP (Premium). Validates receipt with server |
 | `ios/Helpers/` | SVGRasterizer (WKWebView-based SVG-to-UIImage), helpers (formatting, colors, palette), device-frame script for screenshots |
 | `Shared/` | 15 Swift files shared between iOS, macOS, watchOS. Data models: FinanceData, Portfolio, Holding, SituationData, NewsArticle, etc. Indicator calculations (SMA, EMA, RSI, MACD, Heikin Ashi). Shared UI components where applicable |
+| `Shared/PaperAutopilotCard.swift` | Display-only Autopilot status card on iOS (Settings) and macOS (Portfolio): running or off, paper or live, what runs when, last trade. No manual orders, no live switch, no enrollment, which stays on the web (App Review fallback, Guideline 3.2.1). The full `AutopilotSection` stays hidden. watchOS has no Autopilot screen |
 
 ## CLI
 
