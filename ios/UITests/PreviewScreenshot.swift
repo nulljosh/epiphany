@@ -29,7 +29,7 @@ final class PreviewScreenshot: XCTestCase {
         // isLoggedIn is true, so it is the login signal -- the old check watched
         // for a "Sign In" button that lives on a tab that isn't on screen yet, so
         // it always passed instantly and Portfolio was missing from the run.
-        _ = app.buttons["tab-portfolio"].waitForExistence(timeout: 30)
+        _ = app.tabBars.buttons["Portfolio"].waitForExistence(timeout: 30)
 
         let gotIt = app.buttons["Got it"]
         if gotIt.waitForExistence(timeout: 3) {
@@ -44,8 +44,8 @@ final class PreviewScreenshot: XCTestCase {
         var app = launchAuthenticated()
         snapshot("1-situation")
 
-        if app.buttons["tab-markets"].waitForExistence(timeout: 5) {
-            app.buttons["tab-markets"].tap()
+        if app.tabBars.buttons["Markets"].waitForExistence(timeout: 5) {
+            app.tabBars.buttons["Markets"].tap()
             sleep(2)
             snapshot("2-markets")
 
@@ -64,8 +64,8 @@ final class PreviewScreenshot: XCTestCase {
         // the stock-detail sheet (no close button, drag-to-dismiss proved flaky
         // in CI and produced duplicate screenshots instead of advancing tabs).
         app = launchAuthenticated()
-        if app.buttons["tab-portfolio"].waitForExistence(timeout: 5) {
-            app.buttons["tab-portfolio"].tap()
+        if app.tabBars.buttons["Portfolio"].waitForExistence(timeout: 5) {
+            app.tabBars.buttons["Portfolio"].tap()
             sleep(2)
             snapshot("4-portfolio")
         }
@@ -73,8 +73,8 @@ final class PreviewScreenshot: XCTestCase {
         // Settings shares this launch: Portfolio and Settings are both plain tabs
         // with no sheet in between, and a third relaunch was reliably failing with
         // "Simulator device failed to launch ...xctrunner".
-        if app.buttons["tab-settings"].waitForExistence(timeout: 5) {
-            app.buttons["tab-settings"].tap()
+        if app.tabBars.buttons["Settings"].waitForExistence(timeout: 5) {
+            app.tabBars.buttons["Settings"].tap()
             sleep(2)
             snapshot("5-settings")
         }

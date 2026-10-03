@@ -69,7 +69,7 @@ Update Epiphany iOS App Store screenshots
 
 Regenerated via fastlane snapshot, including 3-stock-detail.
 
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 )"
 
