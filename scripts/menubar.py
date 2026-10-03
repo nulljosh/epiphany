@@ -24,6 +24,7 @@ PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
 EDGE = os.path.join(ROOT, "tradingview", "edge-state.json")
 EDGE_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdge.log")
 CRYPTO_BOOK = os.path.join(ROOT, "tradingview", "crypto-paper.json")
+CARRY_BOOK = os.path.join(ROOT, "tradingview", "carry-paper.json")
 EDGE_CRYPTO = os.path.join(ROOT, "tradingview", "edge-state-crypto.json")
 CRYPTO_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdgeCrypto.log")
 
@@ -154,6 +155,31 @@ def crypto_row(st, btc, spy):
     ours, hold, mkt = crypto_scores(st, btc, spy)
     began = datetime.fromisoformat(st["start"]["date"])
     return f"Crypto paper {pct(ours)} vs BTC {pct(hold)} vs S&P {pct(mkt)} since {began:%b} {began.day}", SIGN[verdict(ours, mkt)]
+
+
+def funding_rates():
+    """The latest BTC perpetual funding payments from Binance, [(time in ms, rate)], oldest first."""
+    req = urllib.request.Request("https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=20", headers={"User-Agent": "Mozilla/5.0"})
+    return [(p["fundingTime"], float(p["fundingRate"])) for p in json.load(urllib.request.urlopen(req, timeout=5))]
+
+
+def carry_step(st, rates):
+    """The funding carry paper book: long spot Bitcoin, short the perpetual, so price cancels and only funding pays
+    (tradingview/funding_carry.py backtests it). Always on, 0.2% to open, then each 8 hour payment compounds in.
+    ponytail: ignores basis, margin and exchange risk, so it reads as an upper bound."""
+    if not st:
+        return {"eq": SLEEVE * (1 - 0.002), "last": rates[-1][0]}  # earns from the next payment on
+    for t, r in rates:
+        if t > st["last"]:
+            st["eq"] *= 1 + r
+            st["last"] = t
+    return st
+
+
+def combined_row(trend_eq, carry_eq, mkt):
+    """(text, color number): carry on its own, then both sleeves together, against the S&P."""
+    comb = (trend_eq + carry_eq) / (2 * SLEEVE) - 1
+    return f"Carry {pct(carry_eq / SLEEVE - 1)}, both {pct(comb)} vs S&P {pct(mkt)}", SIGN[verdict(comb, mkt)]
 
 
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
@@ -386,7 +412,7 @@ def main():
             # Built once rumps owns the NSMenu, so the row views can go straight in.
             menu = self._menu._menu
             self.rows = []
-            for big in (True, False, False, False, False):
+            for big in (True, False, False, False, False, False):
                 view, label = row_view(big)
                 item = NSMenuItem.alloc().init()
                 item.setView_(view)
@@ -492,10 +518,20 @@ def main():
                     st = crypto_step(read_json(CRYPTO_BOOK, {}), btc, spy, datetime.now(timezone.utc).date().isoformat())
                     write_json(CRYPTO_BOOK, st)
                     fill(*self.rows[4], *crypto_row(st, btc, spy))
-                    if not gateway_up():  # stocks are asleep, so the title is the crypto trader against the S&P
-                        ours, _, mkt = crypto_scores(st, btc, spy)
-                        v = verdict(ours, mkt)
-                        self.title = "Crypto " + lead_title(v, ours - mkt)
+                    try:
+                        carry = carry_step(read_json(CARRY_BOOK, {}), funding_rates())
+                        write_json(CARRY_BOOK, carry)
+                    except Exception:  # Binance down: the trend row still shows, the carry just waits
+                        carry = read_json(CARRY_BOOK, {})
+                    ours, _, mkt = crypto_scores(st, btc, spy)
+                    trend_eq = st["cash"] + st["qty"] * btc
+                    if carry:
+                        text, n = combined_row(trend_eq, carry["eq"], mkt)
+                        fill(*self.rows[5], text, n)
+                    if not gateway_up():  # stocks are asleep, so the title is both crypto sleeves against the S&P
+                        both = (ours + (carry["eq"] / SLEEVE - 1)) / 2 if carry else ours
+                        v = verdict(both, mkt)
+                        self.title = "Crypto " + lead_title(v, both - mkt)
                         self.paint(v)
             except Exception:
                 log(traceback.format_exc())
