@@ -34,7 +34,7 @@ Z, EULER = NormalDist(), 0.5772156649
 
 def note(msg):
     with open(LOG, "a") as f:
-        f.write(f"{datetime.now():%Y-%m-%d %H:%M} {msg}\n")
+        f.write(f"{datetime.now():%b %d, %I:%M %p}  {msg}\n")
 
 
 def sharpe(x):
@@ -128,6 +128,16 @@ def rand_cfg(rng):
     return c
 
 
+def plain(c):
+    t = ", ".join(UNI[i] for i in c["cols"])
+    when = {1: "daily", 5: "weekly", 21: "monthly"}[c["reb"]]
+    if c["fam"] == "trend":
+        return f"hold {t} in equal parts, each only while above its {c['L']}-day average, otherwise cash ({when} check)"
+    if c["fam"] == "mom":
+        return f"each month hold the top {c['K']} of {t} by {c['m']}-day gain, only if it is rising, otherwise cash"
+    return f"{t}, each only while above its {c['L']}-day average, calmer ones weighted more, sized to {c['tv']:.0%} swings (up to {c['lev']}x)"
+
+
 def label(c):
     p = {"trend": f"trend{c.get('L')}", "mom": f"mom{c.get('m')} top{c.get('K')}", "voltrend": f"voltrend{c.get('L')} vol{c.get('tv')} x{c.get('lev')}"}[c["fam"]]
     return f"{p} reb{c['reb']} " + ",".join(UNI[i] for i in c["cols"])
@@ -187,7 +197,7 @@ def save(st, d):
         if name not in st["logged"]:
             st["logged"].append(name)
             l = next(x for x in st["leaders"] if x["name"] == name)
-            note(f"LEAD {name}: train Sharpe {l['train']:.2f}, held-out {l['hold']:.2f} vs SPY {d.spy[3]:.2f}, deflated {l['dsr']:.2f}, after {st['trials']:,} trials. Not proof, forward paper test next.")
+            note(f"*** LEAD *** {plain(l['cfg'])}.\n    Scored {l['train']:.2f} in 2008-2022 and {l['hold']:.2f} on the 2023+ test years (the S&P scored {d.spy[3]:.2f}). Luck-adjusted confidence {l['dsr']:.0%} after {st['trials']:,} tries. Not proof. Next step is paper trading it forward.")
     tmp = STATE + ".tmp"
     json.dump(st, open(tmp, "w"))
     os.replace(tmp, STATE)
@@ -203,7 +213,7 @@ def main():
         try:
             if d is None or time.time() - loaded > 6 * 3600:
                 d, loaded = Data(), time.time()
-                note(f"data {d.dates[WARM]} to {d.dates[-1]}, selecting before {HOLDOUT}, SPY Sharpe {d.spy[2]:.2f} train / {d.spy[3]:.2f} held-out")
+                note(f"Prices loaded, {d.dates[WARM]} to {d.dates[-1]}. Strategies are picked on data before {HOLDOUT} and graded on the years after. The S&P scores {d.spy[2]:.2f} before and {d.spy[3]:.2f} after (higher is better).")
                 rank(st)
             for _ in range(300 if once else 100):
                 trial(d, st, rng)
@@ -211,7 +221,7 @@ def main():
             if time.time() - beat > 1800:
                 beat = time.time()
                 top = st["leaders"][0] if st["leaders"] else None
-                note(f"{st['trials']:,} tried, " + (f"best deflated {top['dsr']:.2f}: {top['name']} (train {top['train']:.2f}, held-out {top['hold']:.2f})" if top else "nothing has beaten SPY in both halves yet"))
+                note(f"{st['trials']:,} strategies tried. " + (f"Closest so far: {plain(top['cfg'])}.\n    Scored {top['train']:.2f} in training, {top['hold']:.2f} on the test years, the S&P {st['spy'][3]:.2f}. Luck-adjusted confidence {top['dsr']:.0%}. " + ("Beating the S&P on the test years, still checking." if top['hold'] > st['spy'][3] else "Not beating the S&P on the test years, so no.") if top else "None has beaten the S&P in both halves of training yet."))
         except Exception:
             note(traceback.format_exc())
             d = None
