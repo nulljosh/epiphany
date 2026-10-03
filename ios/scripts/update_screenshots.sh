@@ -43,6 +43,16 @@ for shot in "${SHOTS[@]}"; do
   cp "fastlane/screenshots/en-US/${DEVICE}-${shot}.png" "../public/screenshots/screenshot-${name}-new.png"
 done
 
+echo "==> Blurring personal data (balances, email) in the committed copies"
+# ponytail: regions are pixel boxes on the 1242x2688 iPhone 11 Pro Max shots. If the Portfolio or Settings layout moves, redo them.
+blur() { magick "$1" -region "$2" -blur 0x20 "$1"; }
+for f in screenshots/appstore/4-portfolio.png ../public/screenshots/screenshot-portfolio-new.png; do
+  blur "$f" 560x230+40+475; blur "$f" 250x680+915+880; blur "$f" 380x110+90+1815
+done
+for f in screenshots/appstore/5-settings.png ../public/screenshots/screenshot-settings-new.png; do
+  blur "$f" 520x70+300+585
+done
+
 echo "==> Uploading to App Store Connect"
 VERSION="$(awk '/MARKETING_VERSION:/ {print $2; exit}' project.yml)"
 for device in IPHONE_65 IPHONE_67; do
