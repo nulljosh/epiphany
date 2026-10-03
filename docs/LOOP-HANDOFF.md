@@ -1,24 +1,21 @@
-# Epiphany loop handoff (2026-10-02, afternoon)
+# Epiphany loop handoff (2026-10-02, evening)
 
 ## What the loop is
 
-The trading edge-hunt loop is complete. Tested 85 rules across 148 parameter settings. Trend 2x survived the luck audit and survivorship test. Now watching performance on paper via menu bar app. Mac crashed at 12:47pm but recovered cleanly with IB Gateway resuming from Keychain login.
+Serial roadmap work: ship remaining features one at a time, no subagent fan-out. Remaining work after map caching fix: Autopilot IBKR bridge, TradingView bot live test, offline mode, brand identity pass, Mac app orphan record cleanup. Paper trading continues weekdays at 12:45pm Pacific via menu bar Epiphany Live.
 
 ## Where things stand
 
-Trend 2x ruling live on Autopilot server (morning-run.js). Paper trading runs weekdays at 12:45pm Pacific; at close Oct 2 holdings were Trailing 0.12 points (+0.95% vs S&P +1.06%), basically a tie. Menu bar Epiphany Live fixed Oct 2 afternoon: stopped writing every runner log line twice (commit 813530a), scoreboard now keeps fully sold positions and waits up to 30s for fills before logging (commit 59c1d18). Menu bar benchmarks against eight indexes (S&P, Nasdaq, Dow, Russell, TSX, gold, Bitcoin, 16-fund basket). Net worth stores Canadian totals for mixed-currency accounts. IB Gateway auto-logs in at boot via IBC and Keychain. Quality factor judged luck and switched off. Momentum failed survivorship test.
-
-iOS 2.5.14 live. iOS 2.5.15 WAITING_FOR_REVIEW (place card, clustered map, Liquid Glass icon). macOS 2.5.3 live. macOS 2.5.15 WAITING_FOR_REVIEW (Liquid Glass icon, Budget widget, clustered map). watchOS honest average-move page. Next run: Monday 12:45pm PT.
+Map slowness solved: multi-tier Cloudflare Workers caching now serves cold loads in 3.6 seconds (was 23s), repeats in 0.1s. Local-events capped at 6s with parallel geocoding, incidents bbox on 0.05 deg grid, crime and earthquakes share edge cache, stale KV served instantly with background refresh. Landing price copy matches "$1 to unlock on the App Store". iOS 2.5.15 live (READY_FOR_DISTRIBUTION verified via asc, 2026-10-02 20:10). macOS 2.5.15 still IN_REVIEW. Menu bar stable post-crash-recovery (Oct 2 12:47pm recovered cleanly). Paper account at close Oct 2: even, Trend 2x +0.95% vs S&P +1.06%. Next paper trade: Monday 12:45pm PT. Roadmap complete on performance, remaining items are feature work or need Joshua (IBKR account approval for live trading bridge, TradingView restart for bot live test, brand design session).
 
 ## Next, in order
 
-2. Check App Store review status for iOS/macOS 2.5.15 before making release decisions.
-3. Ship the X-Epiphany-Client header build once iOS/Mac reviews complete.
-4. Deploy additional Autopilot features when ready (Trend 2x server code if needed).
-5. Watch menu bar performance for stability post-crash-recovery.
+1. Complete remaining roadmap items: Autopilot IBKR bridge (awaiting Joshua's account approval), TradingView bot --remote-debugging-port test, offline mode, brand identity pass.
+2. Check macOS 2.5.15 review status and ship the next iOS/Mac build once approved.
+3. Watch menu bar paper trading performance Mon-Fri at close for benchmark tracking.
 
 ## Restart prompt
 
 ```text
-/loop Watch Trend 2x paper trading Monday-Friday 12:45pm PT. Read docs/LOOP-HANDOFF.md and roadmap.md. Report paper performance vs benchmarks at close, check iOS/macOS review status (2.5.15), verify menu bar stability post-crash.
+/loop until no remaining tasks in roadmap, or something along those lines. Serial inline work only, no subagent fan-out. Read roadmap.md and docs/LOOP-HANDOFF.md. One shippable slice per tick (~10 min). Report status at close on paper trading benchmark vs S&P, note any Mac review verdict on 2.5.15.
 ```
