@@ -206,6 +206,20 @@ class CryptoPaper(unittest.TestCase):
         self.assertEqual(n, 1)
 
 
+class CarryPaper(unittest.TestCase):
+    def test_starts_after_the_latest_payment_then_compounds_new_ones(self):
+        st = mb.carry_step({}, [(1, 0.0001), (2, 0.0001)])
+        self.assertAlmostEqual(st["eq"], 998.0)  # opening cost, no back-pay
+        st = mb.carry_step(st, [(2, 0.0001), (3, 0.001), (4, -0.0005)])  # 2 already counted
+        self.assertAlmostEqual(st["eq"], 998.0 * 1.001 * 0.9995)
+        self.assertEqual(st["last"], 4)
+
+    def test_combined_row_averages_both_sleeves_against_the_sp500(self):
+        text, n = mb.combined_row(1100.0, 1000.0, 0.0)  # trend +10%, carry flat: +5% together
+        self.assertIn("Carry +0.00%, both +5.00% vs S&P +0.00%", text)
+        self.assertEqual(n, 1)
+
+
 class SpyAt(unittest.TestCase):
     def test_picks_the_last_bar_at_or_before_the_fill(self):
         t0 = datetime(2026, 10, 1, 10, 27).astimezone().timestamp()
