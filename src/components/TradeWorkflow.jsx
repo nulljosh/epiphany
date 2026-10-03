@@ -69,6 +69,13 @@ export function AutopilotCard({ dark, t }) {
           above its 200-day average, and BIL (T-bills) when it is below.
         </div>
 
+        {state?.pro && settings?.enabled && (
+          <div style={{ fontSize: 12, color: t.textSecondary, marginBottom: 12 }}>
+            {`Running on ${settings.mode === 'live' ? 'live' : 'paper'} money. Stocks trade at each 9:30 ET open${settings.allowCrypto ? ', Bitcoin is checked every day, weekends too' : ''}.`}
+            {trades[0] ? ` Last trade: ${trades[0].side} ${trades[0].symbol}${trades[0].error ? ' (failed)' : ''}.` : ' First trade comes at the next check.'}
+          </div>
+        )}
+
         {!state && !err && <div style={{ fontSize: 12, color: t.textTertiary }}>Loading…</div>}
 
         {state && !state.pro && (
