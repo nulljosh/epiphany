@@ -10,7 +10,7 @@
 - [ ] Better event filtering on the map
 - [ ] More info on event tap
 - [ ] Map events still slow to load (profile loadData fan-out)
-  - Done 2026-10-02: `local-events.js` now serves stale KV instantly and refreshes via waitUntil (24h KV). Still todo: same for `incidents.js` (6.1s cold), `crime`, `earthquakes`.
+  - Done 2026-10-02: `local-events.js` now serves stale KV instantly and refreshes via waitUntil (24h KV). Still todo: `incidents.js` (6.1s cold) is Overpass keyed by the exact viewport bbox, so every pan is a cache miss and stale-while-revalidate would not help; snap the bbox to a ~0.05 deg grid so nearby viewports share one entry (check the client still filters to the visible box), then do `crime` and `earthquakes`.
   - Finding 2026-10-02: iOS `loadData` is already parallel (9 independent Tasks). The lag is server cold cache: first hit local-events 8.4s, incidents 6.1s, crime 2.3s, earthquakes 1.8s; warm hits are 0.1-0.2s. Fix is server side: stale-while-revalidate (KV + waitUntil, same as the news API) on `local-events.js` and `incidents.js`, or pre-warm popular bboxes.
 - [ ] Search UX pass beyond the contrast fix
 
