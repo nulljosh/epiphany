@@ -3,6 +3,7 @@
 const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
 const CACHE_TTL = 5 * 60 * 1000;
 const DEFAULT_RADIUS_KM = 500;
+import { edgeGet, edgePut } from './_edge-cache.js';
 let cache = null;
 
 function buildMeta(status, extra = {}) {
@@ -36,6 +37,10 @@ export default async function handler(req, res) {
   const radiusKm = parseFloat(req.query.radius) || DEFAULT_RADIUS_KM;
   const hasLocation = !isNaN(userLat) && !isNaN(userLon);
 
+  if (!cache) {
+    const edge = await edgeGet('earthquakes', 'all');
+    if (edge) cache = { ts: edge.ts, data: edge.data };
+  }
   if (cache && Date.now() - cache.ts < CACHE_TTL) {
     res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(200).json({
@@ -60,6 +65,7 @@ export default async function handler(req, res) {
       depth: f.geometry.coordinates[2],
     }));
     cache = { ts: Date.now(), data: { earthquakes: allEarthquakes } };
+    await edgePut('earthquakes', 'all', cache.data, 3600);
     res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(200).json({
       earthquakes: filterByRadius(allEarthquakes, userLat, userLon, radiusKm),
