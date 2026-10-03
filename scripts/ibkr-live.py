@@ -9,7 +9,7 @@ Pacific), 15 minutes before the close, it runs scripts/ibkr-run.py --go once per
 tells you again when it is back. Between 3:45 and 4pm it also runs scripts/ibkr-trend.py --go (Trend 2x) once per day. Demo accounts only (the runner refuses real ones). Logs to
 ~/Library/Logs/EpiphanyIBKR.log. It is a normal foreground process: closing the terminal stops it.
 """
-import argparse, json, os, re, subprocess, sys
+import argparse, json, os, re, subprocess, sys, urllib.request
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from ib_async import IB
@@ -36,6 +36,42 @@ def note(msg):
     subprocess.run(["osascript", "-e", f"display notification {json.dumps(msg)} with title \"Epiphany practice account\""], check=False)
 
 
+API = "https://epiphany.heyitsmejosh.com/api/broker/ibkr-report"
+
+
+def secret():
+    for line in open(os.path.join(ROOT, ".env.tui.local")) if os.path.exists(os.path.join(ROOT, ".env.tui.local")) else []:
+        if line.startswith("WEBHOOK_SECRET="):
+            return line.split("=", 1)[1].strip().strip('"')
+    return os.environ.get("WEBHOOK_SECRET")
+
+
+def app(body=None):
+    """Talk to the app's ibkr-report endpoint. Any failure or missing secret reads as None: the runner never hangs on the app."""
+    key = secret()
+    if not key:
+        return None
+    req = urllib.request.Request(API, data=json.dumps(body).encode() if body else None, headers={"x-webhook-secret": key, "content-type": "application/json", "user-agent": "epiphany-live/1"})  # Cloudflare 403s urllib's default agent
+    try:
+        return json.load(urllib.request.urlopen(req, timeout=10))
+    except Exception:
+        return None
+
+
+def autopilot_on():
+    """The app's Autopilot switch is the kill switch. Only an explicit off from the app stops a run, so an app outage never does."""
+    r = app()
+    return not (r and r.get("enabled") is False)
+
+
+def report():
+    """Send filled orders from both ledgers to the app's trade log. The app skips ones it already has."""
+    fills = [{"ts": o["date"], "symbol": o["symbol"], "side": o["side"], "qty": o["qty"], "price": o.get("fill") or 0}
+             for path in (STATE, TREND) for o in state(path).get("orders", [])[-50:] if o.get("status") == "Filled"]
+    if fills:
+        app({"trades": fills})
+
+
 def state(path=STATE):
     try:
         return json.load(open(path))
@@ -43,7 +79,7 @@ def state(path=STATE):
         return {}
 
 
-ib, level, alevel, down, closed_for = IB(), 0, 0, False, None
+ib, level, alevel, down, closed_for, off_for = IB(), 0, 0, False, None, None
 while True:
     now = datetime.now(ET)
     today, t, weekday = now.date().isoformat(), (now.hour, now.minute), now.weekday() < 5
@@ -72,17 +108,25 @@ while True:
         if weekday and t >= (16, 5) and closed_for != today:
             note(f"Market closed: positions {pct:+.2f}% (${gain:+.2f}), account {nl - start:+,.2f} since the start" if start and nl is not None else f"Market closed: positions {pct:+.2f}%")
             closed_for = today
-        if weekday and t >= (15, 45) and state().get("lastGo") != today:  # after 4pm it still runs, and the orders wait for the next open
+        due = weekday and t >= (15, 45) and (state().get("lastGo") != today or (t < (16, 0) and state(TREND).get("lastRun") != today))
+        go = due and autopilot_on()
+        if due and not go and off_for != today:
+            note("Autopilot is off in the app, no trades today")
+            off_for = today
+        if go and state().get("lastGo") != today:  # after 4pm it still runs, and the orders wait for the next open
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-run.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("plan:", "Filled", "Submitted", "PreSubmitted", "scoreboard"))]
             note("Daily run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Daily run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
+            report()
         # Trend 2x: only inside 3:45 to 4pm so the orders fill and get booked today, once per day.
-        if weekday and (15, 45) <= t < (16, 0) and state(TREND).get("lastRun") != today:
+        if go and (15, 45) <= t < (16, 0) and state(TREND).get("lastRun") != today:
             r = subprocess.run(["uv", "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-trend.py", "--go"], cwd=ROOT, capture_output=True, text=True)
             lines = [l for l in r.stdout.splitlines() if l.startswith(("trend side", "trend plan:", "Filled", "Submitted", "PreSubmitted"))]
             note("Trend run: " + " | ".join(lines)[:220] if r.returncode == 0 else "Trend run failed: " + (r.stderr.strip().splitlines() or ["see log"])[-1][:120])
+            report()
     except Exception as e:
-        if not down:
+        # The menu bar only wakes Gateway around the trade, so a closed port outside that window is normal, not a problem.
+        if not down and weekday and (15, 25) <= t < (16, 20):
             note(f"Gateway problem: {str(e)[:80]}")
             down = True
     if a.once:

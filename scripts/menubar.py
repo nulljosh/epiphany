@@ -12,6 +12,7 @@ Start it from ~/Applications/Epiphany Live.app.
 """
 import json, math, os, subprocess, sys, traceback, urllib.parse, urllib.request
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from ib_async import IB
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -22,6 +23,8 @@ TREND = os.path.join(ROOT, "tradingview", "ibkr-trend.json")
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
 EDGE = os.path.join(ROOT, "tradingview", "edge-state.json")
 EDGE_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdge.log")
+EDGE_CRYPTO = os.path.join(ROOT, "tradingview", "edge-state-crypto.json")
+CRYPTO_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdgeCrypto.log")
 
 
 def read_json(path, default):
@@ -121,8 +124,31 @@ def lead_title(v, d):
     return {"up": "Beating", "down": "Trailing"}[v] + f" {abs(d):.2%}" if v != "even" else f"Even {pct(d)}"
 
 
+GATEWAY = os.path.expanduser("~/ibc/gatewaystartmacos.sh")
+WINDOW = ((15, 30), (16, 15))  # New York time, weekdays: Gateway wakes before the 3:45pm trade and sleeps after
+
+
+def gateway_up():
+    return subprocess.run(["pgrep", "-f", "[b]in/java .*ibc/config.ini"], capture_output=True).returncode == 0
+
+
+def in_window(now=None):
+    now = now or datetime.now(ZoneInfo("America/New_York"))
+    return now.weekday() < 5 and WINDOW[0] <= (now.hour, now.minute) < WINDOW[1]
+
+
+def ensure_gateway(force=False):
+    """Gateway never opens at login. The menu bar starts it inside the trade window (unless paused) or on request.
+    -inline keeps it out of Terminal; a new session lets it outlive this app."""
+    if gateway_up() or not (force or (in_window() and not os.path.exists(PAUSED))):
+        return
+    subprocess.Popen(["/bin/bash", GATEWAY, "-inline"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
 def snapshot():
     """(title, rows, verdict) describing the account right now. A row is (text, number that colors it)."""
+    if not gateway_up():
+        return "Idle", [("IB Gateway is off until 3:30pm New York", None), ("", None), ("", None), ("", None)], None
     ib = IB()
     try:
         ib.connect("127.0.0.1", 4002, clientId=23, timeout=8)
@@ -318,8 +344,10 @@ def main():
             self.toggle = rumps.MenuItem("", callback=self.pause)
             open_edge = lambda _: subprocess.run(["open", "-a", "Console", EDGE_LOG])
             self.edge = symbol(rumps.MenuItem("Edge search: starting", callback=open_edge), "flask")
-            self.menu = [self.watch, self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
-                         self.edge,
+            self.gateway = symbol(rumps.MenuItem("Start IB Gateway", callback=lambda _: ensure_gateway(True)), "bolt.fill")
+            self.crypto = symbol(rumps.MenuItem("Crypto search: starting", callback=lambda _: subprocess.run(["open", "-a", "Console", CRYPTO_LOG])), "bitcoinsign.circle")
+            self.menu = [self.watch, self.toggle, self.gateway, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
+                         self.edge, self.crypto,
                          symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
             fill(*self.rows[0], "Starting...", 0)
             self.label_toggle()
@@ -352,17 +380,21 @@ def main():
                 self.child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=out)  # note() already writes the log; stderr keeps crashes
 
         def ensure_edge(self):
-            if subprocess.run(["pgrep", "-f", "[e]dge-search.py"], capture_output=True).returncode != 0:
-                self.edge_child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "numpy", "python3", "scripts/edge-search.py"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=open(EDGE_LOG, "a"))
+            # Two searches, same engine: ETFs, and a crypto basket on its own state so each bar stays honest.
+            uv = os.path.expanduser("~/.local/bin/uv")
+            for pat, args, log in (("[e]dge-search.py$", [], EDGE_LOG), ("[e]dge-search.py --crypto", ["--crypto"], CRYPTO_LOG)):
+                if subprocess.run(["pgrep", "-f", pat], capture_output=True).returncode != 0:
+                    subprocess.Popen([uv, "run", "--quiet", "--with", "numpy", "python3", "scripts/edge-search.py", *args], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=open(log, "a"))
 
         def paint_edge(self):
-            try:
-                st = json.load(open(EDGE))
-            except Exception:
-                self.edge.title = "Edge search: warming up"
-                return
-            n = len(st["leads"])
-            self.edge.title = f"Edge search: {n} lead{'' if n == 1 else 's'}, see log" if n else f"Edge search: {st['trials']:,} tried, none beat the S&P"
+            for item, path, name in ((self.edge, EDGE, "Edge search"), (self.crypto, EDGE_CRYPTO, "Crypto search")):
+                try:
+                    st = json.load(open(path))
+                except Exception:
+                    item.title = f"{name}: warming up"
+                    continue
+                n = len(st["leads"])
+                item.title = f"{name}: {n} lead{'' if n == 1 else 's'}, see log" if n else f"{name}: {st['trials']:,} tried, none beat the S&P"
 
         @rumps.timer(60)
         def tick(self, _):
@@ -385,6 +417,7 @@ def main():
             except Exception:
                 log(traceback.format_exc())
             try:
+                ensure_gateway()
                 hide_gateway()
             except Exception:
                 log(traceback.format_exc())

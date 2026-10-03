@@ -30,6 +30,14 @@ CASH, HOLDOUT = "BIL", "2023-01-01"
 COST, FIN, WARM = 0.0006, 0.005 / 252, 260
 LS, MS = (100, 150, 200, 250), (63, 126, 189, 252)
 Z, EULER = NormalDist(), 0.5772156649
+if "--crypto" in sys.argv:
+    # Same engine, a crypto universe, its own state and log so the deflation bar stays honest per search.
+    # SPY stays column 0: it is the benchmark. ETH's Yahoo history (late 2017) sets the start.
+    # ponytail: crypto trades 7 days, ETFs 5. Common days are weekdays, so a weekend move lands on Monday's return.
+    UNI = ["SPY", "BTC-USD", "ETH-USD", "LTC-USD", "QQQ", "GLD", "TLT"]
+    COST = 0.002  # crypto spreads and fees, not ETF-cheap
+    STATE = os.path.join(HERE, "..", "tradingview", "edge-state-crypto.json")
+    LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdgeCrypto.log")
 
 
 def note(msg):
@@ -117,7 +125,7 @@ def weights(d, c):
 
 
 def rand_cfg(rng):
-    fam, k = rng.choice(["trend", "mom", "voltrend"]), rng.randint(2, 8)
+    fam, k = rng.choice(["trend", "mom", "voltrend"]), rng.randint(2, min(8, len(UNI)))
     c = {"fam": fam, "cols": sorted(rng.sample(range(len(UNI)), k))}
     if fam == "trend":
         c.update(L=rng.choice(LS), reb=rng.choice([1, 5, 21]))
