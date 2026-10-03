@@ -105,6 +105,18 @@ def sp500(start, entry=None):
     return now / (entry or before[-1]) - 1
 
 
+def spy_at(when):
+    """SPY's price at `when` (local, naive, as the runner logs it), from 5 minute bars. None if Yahoo has nothing,
+    so the caller falls back to the prior close. Yahoo keeps 5 minute bars for about a month."""
+    try:
+        d = yahoo("/v8/finance/chart/SPY?interval=5m&range=1mo")["chart"]["result"][0]
+        t = when.astimezone().timestamp()
+        bars = [c for ts, c in zip(d["timestamp"], d["indicators"]["quote"][0]["close"]) if c and ts <= t]
+        return bars[-1] if bars else None
+    except Exception:
+        return None
+
+
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
 EVEN = (-0.001, 0.0025)
 
@@ -214,6 +226,9 @@ def summarize(port, st, mst):
         began = datetime.fromisoformat(start["date"])
         # Our own SPY lot is the cleanest record of where the market stood when we bought.
         entry = next((num(p.averageCost) for p in port if p.contract.symbol == "SPY" and num(p.averageCost) > 0), None)
+        if not entry:  # no SPY lot: measure the market from when our first buy filled, not from the night before
+            first = min((o["date"] for o in st.get("orders", []) if isinstance(o, dict) and o.get("status") == "Filled" and o.get("symbol") not in ("SSO", "BIL") and o.get("date")), default=None)
+            entry = spy_at(datetime.fromisoformat(first)) if first else None
         spy = sp500(began, entry)
         since = f" since {began:%b} {began.day}"
     except Exception:  # Yahoo down, or no start date yet: no comparison, so no verdict

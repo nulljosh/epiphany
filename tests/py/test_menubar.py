@@ -187,6 +187,18 @@ class Watchlist(unittest.TestCase):
 
 
 
+class SpyAt(unittest.TestCase):
+    def test_picks_the_last_bar_at_or_before_the_fill(self):
+        t0 = datetime(2026, 10, 1, 10, 27).astimezone().timestamp()
+        data = {"chart": {"result": [{"timestamp": [t0 - 600, t0 - 300, t0 + 300], "indicators": {"quote": [{"close": [1.0, 2.0, 3.0]}]}}]}}
+        with mock.patch.object(mb, "yahoo", return_value=data):
+            self.assertEqual(mb.spy_at(datetime(2026, 10, 1, 10, 27)), 2.0)
+
+    def test_yahoo_down_is_none_not_a_crash(self):
+        with mock.patch.object(mb, "yahoo", side_effect=OSError):
+            self.assertIsNone(mb.spy_at(datetime(2026, 10, 1, 10, 27)))
+
+
 class GatewayWindow(unittest.TestCase):
     def test_window_is_weekday_afternoon_new_york(self):
         from zoneinfo import ZoneInfo
