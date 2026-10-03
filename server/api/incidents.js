@@ -97,7 +97,15 @@ function friendlyTitle(category, type, name) {
   return titles[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-async function fetchIncidents(bbox) {
+// Snap the viewport outward to a 0.05 deg grid so nearby pans share one cache entry
+// (a cold Overpass query is ~6s; exact-bbox keys missed on every pan).
+const GRID = 0.05;
+const snapDown = v => Math.floor(v / GRID) * GRID;
+const snapUp = v => Math.ceil(v / GRID) * GRID;
+const r4 = v => Math.round(v * 1e4) / 1e4;
+
+async function fetchIncidents(raw) {
+  const bbox = { lamin: r4(snapDown(raw.lamin)), lomin: r4(snapDown(raw.lomin)), lamax: r4(snapUp(raw.lamax)), lomax: r4(snapUp(raw.lomax)) };
   const key = `${bbox.lamin},${bbox.lomin},${bbox.lamax},${bbox.lomax}`;
   const cached = cache.get(key);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {

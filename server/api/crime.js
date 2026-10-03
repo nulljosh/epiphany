@@ -3,7 +3,9 @@
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const TIMEOUT_MS = 8000;
+import { edgeGet, edgePut } from './_edge-cache.js';
 const cache = new Map();
+const EDGE_FRESH_MS = 15 * 60 * 1000; // shared across isolates, so a cold isolate skips the 2s portal fan-out
 
 function buildMeta(status, extra = {}) {
   return {
@@ -287,8 +289,12 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
-  const cached = cache.get(cacheKey);
-  if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
+  let cached = cache.get(cacheKey);
+  if (!cached) {
+    const edge = await edgeGet('crime', cacheKey);
+    if (edge && Date.now() - edge.ts < EDGE_FRESH_MS) { cached = { data: edge.data, ts: edge.ts }; cache.set(cacheKey, cached); }
+  }
+  if (cached && (Date.now() - cached.ts) < EDGE_FRESH_MS) {
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({
       incidents: cached.data,
@@ -317,6 +323,7 @@ export default async function handler(req, res) {
     const incidents = results.flat();
 
     cache.set(cacheKey, { data: incidents, ts: Date.now() });
+    await edgePut('crime', cacheKey, incidents, 3600);
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     const sources = incidents.length > 0 ? [...new Set(incidents.map(i => i.source))] : [];
     const degraded = incidents.length === 0;
