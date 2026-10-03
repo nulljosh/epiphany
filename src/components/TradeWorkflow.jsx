@@ -88,6 +88,7 @@ export function AutopilotCard({ dark, t }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <span onClick={() => save({ mode: 'paper' })} style={pill(settings.mode !== 'live')}>Paper</span>
               <span onClick={() => save({ mode: 'live' })} style={pill(settings.mode === 'live')}>Live</span>
+              <span onClick={() => save({ allowCrypto: !settings.allowCrypto })} style={pill(Boolean(settings.allowCrypto))}>Crypto weekends</span>
               <div style={{ flex: 1 }} />
               <span style={{ fontSize: 11, color: t.textTertiary }}>Max / trade</span>
               <input
@@ -101,7 +102,7 @@ export function AutopilotCard({ dark, t }) {
             <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 10 }}>
               {settings.mode === 'live'
                 ? `Live -- real orders through your linked brokerage, capped at $${LIVE_MAX_NOTIONAL}/trade and ${LIVE_TRADE_CAP} trades total, then auto-reverts to paper.`
-                : 'Paper trading -- simulated fills, no real orders are placed.'}
+                : `Paper trading -- simulated fills, no real orders are placed.${settings.allowCrypto ? ' Crypto weekends holds BTC while it is above its 100 day average, every day including weekends.' : ''}`}
             </div>
             {trades.length > 0 && (
               <>

@@ -78,6 +78,7 @@ const ROUTES = {
   'broker/webhook':          lazy(() => import('../server/api/broker/webhook.js')),
   'broker/ibkr-report':      lazy(() => import('../server/api/broker/ibkr-report.js')),
   'broker/morning-run':      lazy(() => import('../server/api/broker/morning-run.js')),
+  'broker/crypto-paper':     lazy(() => import('../server/api/broker/crypto-paper.js')),
   'broker/impact-test':      lazy(() => import('../server/api/broker/impact-test.js')),
   'broker/wealthsimple-auth': lazy(() => import('../server/api/broker/wealthsimple-auth.js')),
   'broker/ws-signal':        lazy(() => import('../server/api/broker/ws-signal.js')),
