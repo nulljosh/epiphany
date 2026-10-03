@@ -24,6 +24,7 @@ PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
 EDGE = os.path.join(ROOT, "tradingview", "edge-state.json")
 EDGE_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdge.log")
 CRYPTO_BOOK = os.path.join(ROOT, "tradingview", "crypto-paper.json")
+BLEND_BOOK = os.path.join(ROOT, "tradingview", "blend-paper.json")
 CARRY_BOOK = os.path.join(ROOT, "tradingview", "carry-paper.json")
 EDGE_CRYPTO = os.path.join(ROOT, "tradingview", "edge-state-crypto.json")
 CRYPTO_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdgeCrypto.log")
@@ -180,6 +181,52 @@ def combined_row(trend_eq, carry_eq, mkt):
     """(text, color number): carry on its own, then both sleeves together, against the S&P."""
     comb = (trend_eq + carry_eq) / (2 * SLEEVE) - 1
     return f"Carry {pct(carry_eq / SLEEVE - 1)}, both {pct(comb)} vs S&P {pct(mkt)}", SIGN[verdict(comb, mkt)]
+
+
+BLEND = ["BTC-USD", "SPY", "GLD"]
+
+
+def blend_weights(rets, target=0.15):
+    """Inverse-vol weights for the assets' daily return lists, scaled down if the mix's risk is above `target`
+    (the rest stays in cash). Population stats and 252 days a year, same as tradingview/blend.py."""
+    from statistics import fmean, pstdev
+    raw = [1 / (pstdev(r) * 252 ** 0.5) for r in rets]
+    w = [x / sum(raw) for x in raw]
+    mu = [fmean(r) for r in rets]
+    n = len(rets[0])
+    var = sum(w[i] * w[j] * sum((rets[i][k] - mu[i]) * (rets[j][k] - mu[j]) for k in range(n)) / n * 252 for i in range(len(w)) for j in range(len(w)))
+    return [x * min(1.0, target / var ** 0.5) for x in w]
+
+
+def blend_closes(data, lb=60):
+    """Per-asset daily returns over the last `lb` days that every asset traded (stocks skip weekends, Bitcoin does not)."""
+    by = {s: {datetime.fromtimestamp(t, timezone.utc).date(): c for t, c in zip(data[s]["timestamp"], data[s]["close"]) if c} for s in BLEND}
+    days = sorted(set.intersection(*(set(v) for v in by.values())))[-(lb + 1):]
+    return [[by[s][b] / by[s][a] - 1 for a, b in zip(days, days[1:])] for s in BLEND]
+
+
+def blend_step(st, data, today):
+    """The paper book for the BTC / SPY / gold blend (tradingview/blend.py, stress-tested in blend_stress.py).
+    Rebalances to inverse-vol weights every 28 days, 10 bps on what trades. Between rebalances the weights are held
+    as a fixed share each tick, which is close enough for a paper score.
+    ponytail: Bitcoin did most of the work in the backtest, so this is a test of that, not proof."""
+    px = {s: num(data[s]["fulldayPrice"]) for s in BLEND}
+    if not st:
+        st = {"eq": SLEEVE, "w": [0.0] * 3, "px": px, "spy0": px["SPY"], "reb": "", "start": datetime.now().isoformat(timespec="minutes")}
+    else:
+        st["eq"] *= 1 + sum(w * (px[s] / st["px"][s] - 1) for w, s in zip(st["w"], BLEND))
+        st["px"] = px
+    if not st["reb"] or (datetime.fromisoformat(today) - datetime.fromisoformat(st["reb"])).days >= 28:
+        new = blend_weights(blend_closes(data))
+        st["eq"] *= 1 - 0.001 * sum(abs(a - b) for a, b in zip(new, st["w"]))
+        st["w"], st["reb"] = new, today
+    return st
+
+
+def blend_row(st):
+    ours, mkt = st["eq"] / SLEEVE - 1, st["px"]["SPY"] / st["spy0"] - 1
+    began = datetime.fromisoformat(st["start"])
+    return f"Blend {pct(ours)} vs S&P {pct(mkt)} since {began:%b} {began.day}", SIGN[verdict(ours, mkt)]
 
 
 # How far ahead of SPY, in points of return, counts as really beating it. Inside the band is a tie.
@@ -412,7 +459,7 @@ def main():
             # Built once rumps owns the NSMenu, so the row views can go straight in.
             menu = self._menu._menu
             self.rows = []
-            for big in (True, False, False, False, False, False):
+            for big in (True, False, False, False, False, False, False):
                 view, label = row_view(big)
                 item = NSMenuItem.alloc().init()
                 item.setView_(view)
@@ -528,6 +575,12 @@ def main():
                     if carry:
                         text, n = combined_row(trend_eq, carry["eq"], mkt)
                         fill(*self.rows[5], text, n)
+                    try:
+                        bst = blend_step(read_json(BLEND_BOOK, {}), yahoo("/v8/finance/spark?symbols=BTC-USD,SPY,GLD&range=6mo&interval=1d"), datetime.now(timezone.utc).date().isoformat())
+                        write_json(BLEND_BOOK, bst)
+                        fill(*self.rows[6], *blend_row(bst))
+                    except Exception:
+                        log(traceback.format_exc())
                     if not gateway_up():  # stocks are asleep, so the title is both crypto sleeves against the S&P
                         both = (ours + (carry["eq"] / SLEEVE - 1)) / 2 if carry else ours
                         v = verdict(both, mkt)

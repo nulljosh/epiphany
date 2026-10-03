@@ -220,6 +220,28 @@ class CarryPaper(unittest.TestCase):
         self.assertEqual(n, 1)
 
 
+class BlendPaper(unittest.TestCase):
+    def test_calm_assets_get_more_weight_and_risk_is_capped(self):
+        calm, wild = [0.001, -0.001] * 30, [0.02, -0.02] * 30
+        w = mb.blend_weights([wild, calm, calm])
+        self.assertGreater(w[1], w[0] * 5)  # inverse vol: the 20x calmer asset gets far more
+        self.assertAlmostEqual(sum(w), 1.0)  # calm enough: fully invested
+        self.assertLess(sum(mb.blend_weights([wild, wild, wild])), 0.6)  # a wild mix is scaled into cash to hold the risk target
+
+    def test_first_tick_opens_and_pays_the_cost_then_tracks_prices(self):
+        days = [1_700_000_000 + 86400 * i for i in range(70)]
+        wiggle = lambda base, amp: [base * (1 + amp * (-1) ** i) for i in range(70)]
+        data = {s: {"timestamp": days, "close": wiggle(100.0, a), "fulldayPrice": 100.0} for s, a in zip(mb.BLEND, (0.02, 0.005, 0.005))}
+        st = mb.blend_step({}, data, "2026-10-03")
+        self.assertLess(st["eq"], mb.SLEEVE)  # 10 bps on the weights it just bought
+        self.assertEqual(st["reb"], "2026-10-03")
+        data = {s: {**d, "fulldayPrice": 110.0} for s, d in data.items()}  # everything +10%
+        st = mb.blend_step(st, data, "2026-10-04")  # no rebalance yet
+        self.assertGreater(st["eq"], mb.SLEEVE * 0.999)
+        self.assertAlmostEqual(st["eq"] / mb.SLEEVE - 1, sum(st["w"]) * 0.10 - 0.001 * sum(st["w"]), places=2)
+        self.assertIn("Blend", mb.blend_row(st)[0])
+
+
 class SpyAt(unittest.TestCase):
     def test_picks_the_last_bar_at_or_before_the_fill(self):
         t0 = datetime(2026, 10, 1, 10, 27).astimezone().timestamp()
