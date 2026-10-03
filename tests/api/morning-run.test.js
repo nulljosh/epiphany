@@ -49,6 +49,11 @@ describe('morning-run Trend 2x', () => {
     expect(await kv.get('paperpos:u1')).toEqual({ SSO: 5 }); // floor(500 / 90)
   });
 
+  it('paper: the old $1 default sizes by allocation, 10% of a virtual $10,000', async () => {
+    await run(200, { max: 1 });
+    expect(await kv.get('paperpos:u1')).toEqual({ SSO: 11 }); // floor(1000 / 90)
+  });
+
   it('paper: below the average switches to BIL and sells SSO', async () => {
     await kv.set('paperpos:u1', { SSO: 5 });
     const d = await run(50);
