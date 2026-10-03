@@ -318,9 +318,8 @@ def main():
             self.toggle = rumps.MenuItem("", callback=self.pause)
             open_edge = lambda _: subprocess.run(["open", "-a", "Console", EDGE_LOG])
             self.edge = symbol(rumps.MenuItem("Edge search: starting", callback=open_edge), "flask")
-            self.edge2 = rumps.MenuItem("", callback=open_edge)
             self.menu = [self.watch, self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
-                         self.edge, self.edge2,
+                         self.edge,
                          symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
             fill(*self.rows[0], "Starting...", 0)
             self.label_toggle()
@@ -360,11 +359,10 @@ def main():
             try:
                 st = json.load(open(EDGE))
             except Exception:
-                self.edge.title, self.edge2.title = "Edge search: warming up", ""
+                self.edge.title = "Edge search: warming up"
                 return
-            n, top = len(st["leads"]), (st["leaders"] or [None])[0]
-            self.edge.title = f"Edge search: {st['trials']:,} tried, {n} lead{'' if n == 1 else 's'}"
-            self.edge2.title = f"Best: {top['name'].split(' ')[0]}, held-out {top['hold']:.2f} vs SPY {st['spy'][3]:.2f}" if top else "Nothing beats SPY yet"
+            n = len(st["leads"])
+            self.edge.title = f"Edge search: {n} lead{'' if n == 1 else 's'}, see log" if n else f"Edge search: {st['trials']:,} tried, none beat the S&P"
 
         @rumps.timer(60)
         def tick(self, _):
