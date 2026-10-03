@@ -10,6 +10,7 @@
 - [ ] Better event filtering on the map
 - [ ] More info on event tap
 - [ ] Map events still slow to load (profile loadData fan-out)
+  - Finding 2026-10-02: iOS `loadData` is already parallel (9 independent Tasks). The lag is server cold cache: first hit local-events 8.4s, incidents 6.1s, crime 2.3s, earthquakes 1.8s; warm hits are 0.1-0.2s. Fix is server side: stale-while-revalidate (KV + waitUntil, same as the news API) on `local-events.js` and `incidents.js`, or pre-warm popular bboxes.
 - [ ] Search UX pass beyond the contrast fix
 
 ## Revenue check, 2026-09-11
