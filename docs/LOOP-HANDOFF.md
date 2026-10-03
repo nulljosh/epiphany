@@ -6,7 +6,7 @@ Overnight edge search engine running in the menu bar, looking for trading strate
 
 ## Where things stand
 
-Edge search engine live: 400 trials so far with no leads; best strategy still trails SPY held-out Sharpe by 0.1%. Fixed critical Yahoo backtest bug (range=max returned monthly OHLC bars instead of daily) that had understated volatility across all prior backtests. Confirmed Trend 2x real numbers: 16.3% CAGR (2008-2026), Sharpe 0.76, worst drop -38%, versus SPY 12.2% CAGR, 0.68 Sharpe, -52% worst drop; since 2012 Trend 2x Sharpe ties SPY but only by taking 1.4x the risk. Engine logs to ~/Library/Logs/EpiphanyEdge.log in plain English describing each strategy and its performance. Menu bar shows trial count, any leads found, and best strategy versus SPY. iOS 2.5.15 live, macOS 2.5.15 IN_REVIEW. Paper account trailing SPY slightly since Oct 1; next trade Monday 12:45pm PT.
+Edge search engine live: 400 trials so far with no leads; best strategy still trails SPY held-out Sharpe by 0.1%. Fixed critical Yahoo backtest bug (range=max returned monthly OHLC bars instead of daily) that had understated volatility across all prior backtests. Confirmed Trend 2x real numbers: 16.3% CAGR (2008-2026), Sharpe 0.76, worst drop -38%, versus SPY 12.2% CAGR, 0.68 Sharpe, -52% worst drop; since 2012 Trend 2x Sharpe ties SPY but only by taking 1.4x the risk. Engine logs to ~/Library/Logs/EpiphanyEdge.log in plain English describing each strategy and its performance. Menu bar shows one plain line "Edge search: N tried, none beat the S&P" (click to open log). iOS 2.5.15 live, macOS 2.5.15 IN_REVIEW. Paper account trailing SPY slightly since Oct 1; next trade Monday 12:45pm PT.
 
 ## Next, in order
 
