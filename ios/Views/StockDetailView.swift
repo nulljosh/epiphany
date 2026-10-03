@@ -229,7 +229,7 @@ struct StockDetailView: View {
                         .padding(.bottom, 10)
                     }
                     .padding(.top, 6)
-                    .background(.ultraThinMaterial)
+                    .background(.bar) // opaque bar: a thin material let the stats grid print through "Latest News"
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
