@@ -20,6 +20,8 @@ LOG = os.path.expanduser("~/Library/Logs/EpiphanyIBKR.log")
 TREND = os.path.join(ROOT, "tradingview", "ibkr-trend.json")
 # A file, not a flag in memory, so a pause survives a restart instead of quietly trading again.
 PAUSED = os.path.join(ROOT, "tradingview", "ibkr-paused")
+EDGE = os.path.join(ROOT, "tradingview", "edge-state.json")
+EDGE_LOG = os.path.expanduser("~/Library/Logs/EpiphanyEdge.log")
 
 
 def read_json(path, default):
@@ -314,7 +316,11 @@ def main():
             for sym in WATCH:
                 self.watch.add(rumps.MenuItem(sym))
             self.toggle = rumps.MenuItem("", callback=self.pause)
+            open_edge = lambda _: subprocess.run(["open", "-a", "Console", EDGE_LOG])
+            self.edge = symbol(rumps.MenuItem("Edge search: starting", callback=open_edge), "flask")
+            self.edge2 = rumps.MenuItem("", callback=open_edge)
             self.menu = [self.watch, self.toggle, symbol(rumps.MenuItem("Open Log", callback=lambda _: subprocess.run(["open", "-a", "Console", LOG])), "doc.text.magnifyingglass"),
+                         self.edge, self.edge2,
                          symbol(rumps.MenuItem("Quit Epiphany Live", callback=self.quit, key="q"), "power")]
             fill(*self.rows[0], "Starting...", 0)
             self.label_toggle()
@@ -346,6 +352,20 @@ def main():
                 out = open(LOG, "a")
                 self.child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "ib_async", "python3", "scripts/ibkr-live.py"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=out)  # note() already writes the log; stderr keeps crashes
 
+        def ensure_edge(self):
+            if subprocess.run(["pgrep", "-f", "[e]dge-search.py"], capture_output=True).returncode != 0:
+                self.edge_child = subprocess.Popen([os.path.expanduser("~/.local/bin/uv"), "run", "--quiet", "--with", "numpy", "python3", "scripts/edge-search.py"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=open(EDGE_LOG, "a"))
+
+        def paint_edge(self):
+            try:
+                st = json.load(open(EDGE))
+            except Exception:
+                self.edge.title, self.edge2.title = "Edge search: warming up", ""
+                return
+            n, top = len(st["leads"]), (st["leaders"] or [None])[0]
+            self.edge.title = f"Edge search: {st['trials']:,} tried, {n} lead{'' if n == 1 else 's'}"
+            self.edge2.title = f"Best: {top['name'].split(' ')[0]}, held-out {top['hold']:.2f} vs SPY {st['spy'][3]:.2f}" if top else "Nothing beats SPY yet"
+
         @rumps.timer(60)
         def tick(self, _):
             # An exception escaping a timer can take the whole app down, so nothing gets past here.
@@ -361,6 +381,11 @@ def main():
             if not hasattr(self, "rows"):
                 self.build()
             self.ensure_runner()
+            try:
+                self.ensure_edge()
+                self.paint_edge()
+            except Exception:
+                log(traceback.format_exc())
             try:
                 hide_gateway()
             except Exception:
@@ -387,6 +412,7 @@ def main():
         def quit(self, _):
             if self.child:
                 self.child.terminate()
+            subprocess.run(["pkill", "-f", "[e]dge-search.py"])
             rumps.quit_application()
 
     app = App()

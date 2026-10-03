@@ -191,3 +191,5 @@ tradingview/menubar.lock
 
 # Local wrangler dev secrets and flags
 .dev.vars
+tradingview/edge-state.json
+tradingview/edge-state.json.tmp
