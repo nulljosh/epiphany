@@ -28,6 +28,8 @@ targets:
       - path: Shared
       - path: .
         excludes:
+          - "*.md"
+          - "ExportOptions*.plist"
           - "Epiphany.xcodeproj"
           - "*.xcodeproj"
           - "*.yml"
