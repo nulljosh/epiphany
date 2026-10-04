@@ -57,7 +57,7 @@ struct NearbyPlacesSheet: View {
             .navigationTitle("Near map center")
             .safeAreaInset(edge: .bottom) {
                 Text(section == 0
-                     ? "\(filteredPlaces.count) mapped places · OpenStreetMap · about 6 km"
+                     ? "\(filteredPlaces.count) mapped places · OpenStreetMap · about 3 km"
                      : "\(filteredPlaces.count) geolocated events · connected feeds")
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(8)
