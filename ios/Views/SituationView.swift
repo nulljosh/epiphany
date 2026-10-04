@@ -133,6 +133,7 @@ struct SituationView: View {
     @State private var mapSearch = ""
     @State private var mapSearchError = false
     @State private var searchCompleter = MapSearchCompleter()
+    @FocusState private var searchFocused: Bool
     @State private var locationZoomLevel = 0
 
     private var activeMapStyle: MapStyle {
@@ -1175,7 +1176,14 @@ struct SituationView: View {
                 .foregroundStyle(.primary)
                 .submitLabel(.search)
                 .autocorrectionDisabled()
-                .onSubmit { Task { await geocodeAndFly() } }
+                .focused($searchFocused)
+                .onSubmit { searchFocused = false; Task { await geocodeAndFly() } }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") { searchFocused = false }
+                    }
+                }
                 .onChange(of: mapSearch) { _, query in
                     searchCompleter.update(query: query, region: visibleRegion ?? currentRegion)
                 }
@@ -1184,6 +1192,7 @@ struct SituationView: View {
                 Button {
                     mapSearch = ""
                     searchCompleter.clear()
+                    searchFocused = false
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
@@ -1238,7 +1247,15 @@ struct SituationView: View {
     }
 
     private func flyTo(_ completion: MKLocalSearchCompletion) async {
-        guard let coordinate = await searchCompleter.coordinate(for: completion) else {
+        searchFocused = false
+        // ponytail: MKLocalSearch can come back empty for a valid suggestion; the
+        // geocoder on the suggestion's own text is the fallback before showing an error.
+        var coordinate = await searchCompleter.coordinate(for: completion)
+        if coordinate == nil {
+            coordinate = try? await CLGeocoder()
+                .geocodeAddressString("\(completion.title) \(completion.subtitle)").first?.location?.coordinate
+        }
+        guard let coordinate else {
             mapSearchError = true
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             mapSearchError = false

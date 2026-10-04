@@ -3,7 +3,7 @@
 import { overpassQuery } from './_overpass.js';
 
 const TAGS = ['amenity', 'shop', 'tourism', 'leisure', 'historic', 'healthcare', 'office', 'craft'];
-const RADIUS_KM = 6;
+const RADIUS_KM = 3;
 
 function category(tags) {
   if (['school', 'college', 'university', 'kindergarten'].includes(tags.amenity)) return 'Education';
@@ -29,10 +29,10 @@ export default async function handler(req, res) {
   const bbox = `${lat - deltaLat},${lon - deltaLon},${lat + deltaLat},${lon + deltaLon}`;
   const selectors = TAGS.map(tag => `nwr["${tag}"]["name"](${bbox});`).join('') +
     `nwr["landuse"="cemetery"]["name"](${bbox});`;
-  const query = `[out:json][timeout:20];(${selectors});out center;`;
+  const query = `[out:json][timeout:10];(${selectors});out center 600;`;
 
   try {
-    const data = await overpassQuery(query, 25000);
+    const data = await overpassQuery(query, 10000);
     const seen = new Set();
     const places = (data.elements || []).flatMap(el => {
       const pLat = el.center?.lat ?? el.lat;
