@@ -10,6 +10,9 @@
 - [ ] Search UX pass beyond the contrast fix
 
 ## 2026-10-04 map QA leftovers (open)
+- [ ] Merge the money formatting PR (#189, branch `fix/money-format-autopilot-card`) and ship it in the next build. Prices and balances get thousands separators on iPhone, Mac, Watch and widgets, the ticker strip reads "$" like everything else, and the Autopilot card says so when its status will not load instead of showing a bare title. iPhone and Mac build. Nobody has looked at it in the simulator yet.
+- [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
+- [ ] Work through `docs/reference/code-sweep-2026-10-04.md`: 45 unverified leads from a read-only sweep (double submit on Create Alert, spinner that can stick on the stock chart and Portfolio, tiny tap targets on the watchlist star, amount fields that may save 0).
 - [ ] Ship Mac 2.5.17 once Mac 2.5.16 clears review. It carries the Places list (Apple Maps first), the tighter search zoom and the onboarding stamp fix. iOS 2.5.17 was submitted 2026-10-04 and is waiting for review.
 - [ ] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet.
 - [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
