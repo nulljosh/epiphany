@@ -9,6 +9,13 @@
 - [ ] More info on event tap
 - [ ] Search UX pass beyond the contrast fix
 
+## 2026-10-04 map QA leftovers (open)
+- [ ] Ship Mac 2.5.17 once Mac 2.5.16 clears review. It carries the Places list (Apple Maps first), the tighter search zoom and the onboarding stamp fix. iOS 2.5.17 went out 2026-10-04.
+- [ ] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet.
+- [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
+- [ ] macOS: the sign-in sheet and the onboarding sheet still swap in the same tick at sign-up. iOS hit a dead screen from that kind of overlap. Untested on Mac.
+- [ ] iOS `MapSourcesSettingsView` is never shown, so the map layer toggles and the "Enable data sources in Settings" hint lead nowhere. Signed-out Settings is only Sign In and Register. Wire it up or delete it.
+
 ## Revenue check, 2026-09-11
 
 Handoff: paused at Joshua's request to conserve usage. Changes are local and uncommitted; no deployment or release. Confirmation remains pending. Completed checks and next steps: [revenue handoff](../REVENUE.md).

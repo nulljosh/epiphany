@@ -602,7 +602,8 @@ final class EpiphanyAPI {
 
     private func perform(_ request: URLRequest) async throws -> Data {
         let isNews = request.url?.path == "/api/news"
-        let maxRetries = isNews ? 0 : 2
+        // Places already fails over across three mirrors server-side; retrying here just stretches the wait.
+        let maxRetries = isNews || request.url?.path == "/api/places" ? 0 : 2
         let requestSession = isNews ? newsSession : session
         var lastError: Error?
 

@@ -177,6 +177,8 @@ final class AppState {
         if let apiError = error as? APIError {
             switch apiError {
             case .unauthorized:
+                // Screenshot demo mode has a sample user and no session, so every signed-in call 401s.
+                if CommandLine.arguments.contains("UITEST_DEMO") { return }
                 user = nil
                 showLogin = true
                 self.error = nil
