@@ -41,8 +41,12 @@ final class MapSearchCompleter: NSObject, @preconcurrency MKLocalSearchCompleter
     /// costs one lookup, MKLocalSearchCompletion carries no coordinate.
     func coordinate(for completion: MKLocalSearchCompletion) async -> CLLocationCoordinate2D? {
         let request = MKLocalSearch.Request(completion: completion)
-        guard let response = try? await MKLocalSearch(request: request).start() else { return nil }
-        return response.mapItems.first?.placemark.coordinate
+        if let item = try? await MKLocalSearch(request: request).start().mapItems.first {
+            return item.placemark.coordinate
+        }
+        // MKLocalSearch can come back empty for a valid suggestion, so geocode its own text before giving up.
+        return try? await CLGeocoder()
+            .geocodeAddressString("\(completion.title) \(completion.subtitle)").first?.location?.coordinate
     }
 
     // ponytail: @preconcurrency on the conformance (above) is what lets these stay

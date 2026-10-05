@@ -16,7 +16,12 @@ struct EpiphanyApp: App {
                 } else {
                     ContentView()
                         .environment(appState)
-                        .overlay { WhatsNewSheet() }
+                        .overlay { WhatsNewCard() }
+                        // On the post-splash branch: the session is already restored when this first reads
+                        // signedIn, so a slow restore can't pass for a fresh sign-up and show the slides.
+                        .onboarding(key: "epiphany",
+                                    signedIn: appState.user != nil,
+                                    slides: epiphanyOnboardingSlides)
                 }
             }
             .preferredColorScheme(rawTheme == "dark" ? .dark : rawTheme == "light" ? .light : nil)
@@ -37,9 +42,6 @@ struct EpiphanyApp: App {
                     showSplash = false
                 }
             }
-            .onboarding(key: "epiphany",
-                        signedIn: appState.user != nil,
-                        slides: epiphanyOnboardingSlides)
         }
     }
 }

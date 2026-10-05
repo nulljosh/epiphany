@@ -31,6 +31,13 @@ struct NearbyPlacesSheet: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+                if !isLoading && error == nil {
+                    // Under the picker, not pinned to the bottom: iOS 26 puts the search bar there and the two overlapped.
+                    Text(section == 0
+                         ? "\(filteredPlaces.count) places · \(places.first?.source ?? "OpenStreetMap") · about 3 km"
+                         : "\(filteredPlaces.count) geolocated events · connected feeds")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if isLoading {
                     ProgressView("Loading mapped places")
                 } else if let error {
@@ -55,26 +62,39 @@ struct NearbyPlacesSheet: View {
                 }
             }
             .navigationTitle("Near map center")
-            .safeAreaInset(edge: .bottom) {
-                Text(section == 0
-                     ? "\(filteredPlaces.count) mapped places · OpenStreetMap · about 6 km"
-                     : "\(filteredPlaces.count) geolocated events · connected feeds")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .padding(8)
-            }
         }
         .task {
-            do {
-                places = try await EpiphanyAPI.shared.fetchPlaces(
-                    lat: center.latitude, lon: center.longitude
-                )
-            } catch {
-                self.error = "Places are temporarily unavailable"
-            }
+            // ponytail: Apple's POI search answers in about a second, so it fills the list first.
+            // The fuller OpenStreetMap inventory (behind /api/places) replaces it when Overpass is up;
+            // it can take 30s to fail when it's down, which used to be 30s of spinner.
+            places = await Self.applePlaces(near: center)
+            isLoading = places.isEmpty
+            if let mapped = try? await EpiphanyAPI.shared.fetchPlaces(
+                lat: center.latitude, lon: center.longitude
+            ), !mapped.isEmpty { places = mapped }
+            if places.isEmpty { error = "Places are temporarily unavailable" }
             isLoading = false
             events = (try? await EpiphanyAPI.shared.fetchLocalEvents(
                 lat: center.latitude, lon: center.longitude
             ))?.filter { $0.kind == "event" && $0.source != "news_rss" && $0.coordinate != nil } ?? []
         }
+    }
+
+    private static func applePlaces(near center: CLLocationCoordinate2D) async -> [LocalEvent] {
+        let request = MKLocalPointsOfInterestRequest(center: center, radius: 3000)
+        guard let items = try? await MKLocalSearch(request: request).start().mapItems else { return [] }
+        let rows: [[String: Any]] = items.compactMap { item in
+            guard let name = item.name else { return nil }
+            let coordinate = item.placemark.coordinate
+            // "MKPOICategoryFoodMarket" reads as "Food Market".
+            let category = item.pointOfInterestCategory?.rawValue
+                .replacingOccurrences(of: "MKPOICategory", with: "")
+                .replacingOccurrences(of: "([a-z])([A-Z])", with: "$1 $2", options: .regularExpression)
+            return ["title": name, "category": category ?? "Place", "lat": coordinate.latitude,
+                    "lon": coordinate.longitude, "source": "Apple Maps", "kind": "place"]
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: rows) else { return [] }
+        return ((try? JSONDecoder().decode([LocalEvent].self, from: data)) ?? [])
+            .sorted { $0.title.localizedCompare($1.title) == .orderedAscending }
     }
 }
