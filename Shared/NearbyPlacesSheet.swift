@@ -31,6 +31,13 @@ struct NearbyPlacesSheet: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+                if !isLoading && error == nil {
+                    // Under the picker, not pinned to the bottom: iOS 26 puts the search bar there and the two overlapped.
+                    Text(section == 0
+                         ? "\(filteredPlaces.count) places · \(places.first?.source ?? "OpenStreetMap") · about 3 km"
+                         : "\(filteredPlaces.count) geolocated events · connected feeds")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if isLoading {
                     ProgressView("Loading mapped places")
                 } else if let error {
@@ -55,13 +62,6 @@ struct NearbyPlacesSheet: View {
                 }
             }
             .navigationTitle("Near map center")
-            .safeAreaInset(edge: .bottom) {
-                Text(section == 0
-                     ? "\(filteredPlaces.count) mapped places · about 3 km"
-                     : "\(filteredPlaces.count) geolocated events · connected feeds")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .padding(8)
-            }
         }
         .task {
             // ponytail: Apple's POI search answers in about a second, so it fills the list first.
@@ -86,7 +86,10 @@ struct NearbyPlacesSheet: View {
         let rows: [[String: Any]] = items.compactMap { item in
             guard let name = item.name else { return nil }
             let coordinate = item.placemark.coordinate
-            let category = item.pointOfInterestCategory?.rawValue.replacingOccurrences(of: "MKPOICategory", with: "")
+            // "MKPOICategoryFoodMarket" reads as "Food Market".
+            let category = item.pointOfInterestCategory?.rawValue
+                .replacingOccurrences(of: "MKPOICategory", with: "")
+                .replacingOccurrences(of: "([a-z])([A-Z])", with: "$1 $2", options: .regularExpression)
             return ["title": name, "category": category ?? "Place", "lat": coordinate.latitude,
                     "lon": coordinate.longitude, "source": "Apple Maps", "kind": "place"]
         }

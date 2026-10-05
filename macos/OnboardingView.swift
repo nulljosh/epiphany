@@ -120,7 +120,10 @@ private struct OnboardingModifier: ViewModifier {
                 settled = true
             }
             .onChange(of: signedIn) { _, nowSignedIn in
-                if settled && nowSignedIn && !seen && !slides.isEmpty { showing = true }
+                guard nowSignedIn, !seen else { return }
+                // The task above keeps the signedIn it was built with, so a session restored inside the
+                // settle window has to be stamped here or it never is.
+                if !settled { seen = true } else if !slides.isEmpty { showing = true }
             }
             .fullScreenCoverCompat(isPresented: $showing) {
                 OnboardingView(slides: slides, finishLabel: finishLabel) {

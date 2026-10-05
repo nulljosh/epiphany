@@ -1197,12 +1197,17 @@ struct SituationView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
+                        // 14pt glyph, 44pt target: padded out for the hit shape, pulled back in so the bar keeps its height.
+                        .padding(15).contentShape(Rectangle()).padding(-15)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
-        .liquidGlass(in: Capsule(), interactive: true, fallback: .ultraThinMaterial)
+        // Not interactive glass: on this container it took the taps meant for the clear button inside.
+        .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
     }
 
     private var searchSuggestions: some View {
@@ -1248,14 +1253,7 @@ struct SituationView: View {
 
     private func flyTo(_ completion: MKLocalSearchCompletion) async {
         searchFocused = false
-        // ponytail: MKLocalSearch can come back empty for a valid suggestion; the
-        // geocoder on the suggestion's own text is the fallback before showing an error.
-        var coordinate = await searchCompleter.coordinate(for: completion)
-        if coordinate == nil {
-            coordinate = try? await CLGeocoder()
-                .geocodeAddressString("\(completion.title) \(completion.subtitle)").first?.location?.coordinate
-        }
-        guard let coordinate else {
+        guard let coordinate = await searchCompleter.coordinate(for: completion) else {
             mapSearchError = true
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             mapSearchError = false
