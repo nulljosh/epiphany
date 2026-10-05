@@ -1261,7 +1261,7 @@ struct SituationView: View {
             mapSearchError = false
             return
         }
-        let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
         withAnimation { mapPosition = .region(MKCoordinateRegion(center: coordinate, span: span)) }
         mapSearch = ""
         searchCompleter.clear()

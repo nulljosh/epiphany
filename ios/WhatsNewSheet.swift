@@ -1,8 +1,11 @@
 import SwiftUI
 
-private let whatsNewVersion = "2.5.1"
+// Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
+private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "New floating tab bar with fill icons and bounce animation",
+    "Tapping a map search result now takes you there, and the keyboard closes",
+    "Places always loads, using Apple Maps when the open map data is down",
+    "Paper Autopilot status card in Settings",
 ]
 
 struct WhatsNewSheet: View {
