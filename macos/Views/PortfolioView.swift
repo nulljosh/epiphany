@@ -283,10 +283,10 @@ struct PortfolioView: View {
                 Text("Total Value")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(String(format: "$%.2f", portfolio.totalValue))
+                Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
                     .font(.system(size: 44, weight: .bold))
                 HStack(spacing: 4) {
-                    Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
+                    Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
                     Text(String(format: "(%.2f%%)", portfolio.dayChangePercent))
                 }
                 .font(.caption)
@@ -380,10 +380,10 @@ struct PortfolioView: View {
                                 Text(debt.name)
                                     .font(.headline)
                                 HStack {
-                                    Text(String(format: "Balance: $%.2f", debt.balance))
+                                    Text("Balance: \(CurrencyFormatter.formatPrice(debt.balance))")
                                         .monospacedDigit()
                                     Spacer()
-                                    Text(String(format: "Min: $%.2f", debt.minPayment))
+                                    Text("Min: \(CurrencyFormatter.formatPrice(debt.minPayment))")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .monospacedDigit()
@@ -402,7 +402,7 @@ struct PortfolioView: View {
                             Text("Total")
                                 .font(.headline)
                             Spacer()
-                            Text(String(format: "$%.2f", debtItems.reduce(0) { $0 + $1.balance }))
+                            Text(CurrencyFormatter.formatPrice(debtItems.reduce(0) { $0 + $1.balance }))
                                 .font(.headline)
                                 .monospacedDigit()
                         }
@@ -541,7 +541,7 @@ struct PortfolioView: View {
                                     Text(goal.name)
                                         .font(.headline)
                                     Spacer()
-                                    Text(String(format: "$%.0f / $%.0f", goal.saved, goal.target))
+                                    Text("\(CurrencyFormatter.formatPrice(goal.saved, decimals: 0)) / \(CurrencyFormatter.formatPrice(goal.target, decimals: 0))")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .monospacedDigit()
@@ -599,7 +599,7 @@ struct PortfolioView: View {
                                     Text(month.month)
                                         .font(.headline)
                                     Spacer()
-                                    Text(String(format: "$%.2f", month.total))
+                                    Text(CurrencyFormatter.formatPrice(month.total))
                                         .font(.subheadline)
                                 }
                             }
@@ -613,7 +613,7 @@ struct PortfolioView: View {
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                             Spacer()
-                                            Text(String(format: "$%.2f (%d%%)", category.value, month.total > 0 ? Int(round(category.value / month.total * 100)) : 0))
+                                            Text("\(CurrencyFormatter.formatPrice(category.value)) (\(month.total > 0 ? Int(round(category.value / month.total * 100)) : 0)%)")
                                                 .font(.caption)
                                         }
                                         ProgressView(value: month.total > 0 ? min(category.value / month.total, 1) : 0)
@@ -627,7 +627,7 @@ struct PortfolioView: View {
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                         Spacer()
-                                        Text(String(format: "$%.2f", category.value))
+                                        Text(CurrencyFormatter.formatPrice(category.value))
                                             .font(.caption)
                                     }
                                 }
@@ -651,7 +651,7 @@ struct PortfolioView: View {
         let inactive = subs.filter { !$0.active }
         let monthlyTotal = active.compactMap { $0.amount }.reduce(0, +)
         return VStack(spacing: 16) {
-            sectionCard("Active · \(String(format: "$%.2f/mo", monthlyTotal))") {
+            sectionCard("Active · \(CurrencyFormatter.formatPrice(monthlyTotal))/mo") {
                 if active.isEmpty {
                     emptyState("No active subscriptions")
                 } else {
@@ -915,7 +915,7 @@ struct PortfolioView: View {
                 Text(title)
                     .font(.subheadline)
                 Spacer()
-                Text(String(format: "$%.2f", value))
+                Text(CurrencyFormatter.formatPrice(value))
                     .font(.subheadline)
                     .monospacedDigit()
                     .foregroundStyle(value < 0 ? Palette.dangerRed : .primary)
@@ -1429,7 +1429,7 @@ struct PortfolioView: View {
                         Text(proj.name)
                             .font(.subheadline.weight(.semibold))
                         Spacer()
-                        Text(String(format: "$%.2f", proj.balance))
+                        Text(CurrencyFormatter.formatPrice(proj.balance))
                             .font(.caption)
                             .monospacedDigit()
                     }
@@ -1497,7 +1497,7 @@ struct PortfolioView: View {
         formatter.currencyCode = currencyCode
         formatter.maximumFractionDigits = 2
         formatter.minimumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: value)) ?? String(format: "$%.2f", value)
+        return formatter.string(from: NSNumber(value: value)) ?? CurrencyFormatter.formatPrice(value)
     }
 
     private func shortMonthLabel(_ label: String) -> String {

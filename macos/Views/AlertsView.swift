@@ -112,7 +112,7 @@ struct AlertsView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(String(format: "$%.2f", alert.targetPrice))
+                Text(CurrencyFormatter.formatPrice(alert.targetPrice))
                     .font(.body.monospaced())
                 if alert.triggered {
                     Text("TRIGGERED")

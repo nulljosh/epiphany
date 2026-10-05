@@ -26,15 +26,6 @@ struct TickerBarView: View {
     private let itemSpacing: CGFloat = 18
     private var scrollSpeed: CGFloat { showSparklines ? 14 : 30 }
 
-    private static let priceFormatter: NumberFormatter = {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = "USD"
-        f.minimumFractionDigits = 2
-        f.maximumFractionDigits = 2
-        return f
-    }()
-
     init(appState: AppState, onSelectStock: ((Stock) -> Void)? = nil, showSparklines: Bool = false, height: CGFloat = 32) {
         self.appState = appState
         self.onSelectStock = onSelectStock
@@ -95,7 +86,7 @@ struct TickerBarView: View {
             TickerDisplayItem(
                 id: index,
                 symbol: stock.symbol,
-                priceText: priceFormatter.string(from: NSNumber(value: stock.price)) ?? "$0.00",
+                priceText: CurrencyFormatter.formatPrice(stock.price),
                 changeColor: stock.change >= 0 ? Palette.successGreen : Palette.dangerRed,
                 sparklineData: showSparklines ? appState.sparklineCache[stock.symbol] : nil
             )

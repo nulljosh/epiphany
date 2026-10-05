@@ -603,7 +603,7 @@ struct PortfolioView: View {
                     date: now,
                     icon: "flag",
                     label: goal.name,
-                    detail: String(format: "$%.0f / $%.0f", goal.saved, goal.target),
+                    detail: "\(CurrencyFormatter.formatPrice(goal.saved, decimals: 0)) / \(CurrencyFormatter.formatPrice(goal.target, decimals: 0))",
                     color: Color(hex: goal.priorityColor),
                     amount: remaining
                 ))
@@ -617,7 +617,7 @@ struct PortfolioView: View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
                 if let portfolio = resolvedPortfolio {
-                    Text(String(format: "$%.2f", portfolio.totalValue))
+                    Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
                         .font(.system(size: 32, weight: .heavy))
                         .foregroundStyle(Palette.text)
                     // Holdings are already inside totalValue (investment balances
@@ -634,7 +634,7 @@ struct PortfolioView: View {
                             .foregroundStyle(Palette.textSecondary)
                     }
                     HStack(spacing: 4) {
-                        Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
+                        Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
                         Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
                     }
                     .font(.caption.weight(.semibold))
@@ -974,7 +974,7 @@ struct PortfolioView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Palette.text)
                 Spacer()
-                Text(String(format: "$%.2f", value))
+                Text(CurrencyFormatter.formatPrice(value))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(value < 0 ? Palette.dangerRed : Palette.text)
@@ -1456,7 +1456,7 @@ struct PortfolioView: View {
                         Text(proj.name)
                             .font(.subheadline.weight(.semibold))
                         Spacer()
-                        Text(String(format: "$%.2f", proj.balance))
+                        Text(CurrencyFormatter.formatPrice(proj.balance))
                             .font(.caption)
                             .monospacedDigit()
                     }
@@ -1624,7 +1624,7 @@ extension PortfolioView {
                         .foregroundStyle(Palette.textSecondary)
                         .tracking(1.0)
                     Spacer()
-                    Text(String(format: "$%.2f/mo", monthlyTotal))
+                    Text("\(CurrencyFormatter.formatPrice(monthlyTotal))/mo")
                         .font(.caption2.weight(.semibold).monospacedDigit())
                         .foregroundStyle(Palette.textSecondary)
                 }
@@ -1660,7 +1660,7 @@ extension PortfolioView {
             }
             Spacer()
             if let amount = sub.amount {
-                Text(String(format: "$%.2f", amount))
+                Text(CurrencyFormatter.formatPrice(amount))
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.primary)
             } else if let note = sub.note {
