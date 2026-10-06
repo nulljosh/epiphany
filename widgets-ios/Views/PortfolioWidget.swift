@@ -220,7 +220,7 @@ struct PortfolioWidgetView: View {
     }
 
     private func formatChange(_ value: Double) -> String {
-        String(format: "%@$%.2f", value >= 0 ? "+" : "", value)
+        (value >= 0 ? "+" : "-") + "$" + abs(value).formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US")))
     }
 
     private func formatPercent(_ value: Double) -> String {

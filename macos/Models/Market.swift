@@ -65,6 +65,6 @@ struct PredictionMarket: Codable, Identifiable {
         } else if value >= 1_000 {
             return String(format: "$%.0fK", value / 1_000)
         }
-        return String(format: "$%.0f", value)
+        return CurrencyFormatter.formatPrice(value, decimals: 0)
     }
 }

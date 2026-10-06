@@ -83,8 +83,20 @@ enum CurrencyFormatter {
         return String(format: "$%.4f", value)
     }
 
-    static func formatPrice(_ value: Double) -> String {
-        String(format: "$%.2f", value)
+    /// Dollars with thousands separators, the way the web app shows them: $1,234.56. Fixed to en_US so it
+    /// reads "$", not "US$", on a Canadian phone.
+    static func formatPrice(_ value: Double, decimals: Int = 2) -> String {
+        "$" + value.formatted(.number.precision(.fractionLength(decimals)).locale(Locale(identifier: "en_US")))
+    }
+
+    /// A change in dollars with its sign in front: +$1,234.56 or -$1,234.56.
+    static func formatSignedPrice(_ value: Double) -> String {
+        (value >= 0 ? "+" : "-") + formatPrice(abs(value))
+    }
+
+    /// A share count with separators and no trailing zeros: 52,000 or 0.1234.
+    static func formatShares(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(0...4)).locale(Locale(identifier: "en_US")))
     }
 
     static func formatSignedPercent(_ value: Double, decimals: Int = 2) -> String {

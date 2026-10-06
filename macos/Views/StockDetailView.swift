@@ -46,7 +46,7 @@ struct StockDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     let displayPrice = scrubPrice?.price ?? stock.price
-                    Text(String(format: "$%.2f", displayPrice))
+                    Text(CurrencyFormatter.formatPrice(displayPrice))
                         .font(.system(size: 44, weight: .bold, design: .rounded))
                         .contentTransition(.numericText())
                     if let scrub = scrubPrice {
@@ -88,7 +88,7 @@ struct StockDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         if priceHistory.count == 1 {
-                            Text(String(format: "$%.2f", priceHistory[0].close))
+                            Text(CurrencyFormatter.formatPrice(priceHistory[0].close))
                                 .font(.title2.weight(.semibold))
                         }
                     }
@@ -135,16 +135,16 @@ struct StockDetailView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     if let b = stock.bid {
-                        statCell("Bid", value: String(format: "$%.2f", b))
+                        statCell("Bid", value: CurrencyFormatter.formatPrice(b))
                     }
                     if let a = stock.ask {
-                        statCell("Ask", value: String(format: "$%.2f", a))
+                        statCell("Ask", value: CurrencyFormatter.formatPrice(a))
                     }
                     if stock.open > 0 {
-                        statCell("Open", value: String(format: "$%.2f", stock.open))
+                        statCell("Open", value: CurrencyFormatter.formatPrice(stock.open))
                     }
                     if stock.prevClose > 0 {
-                        statCell("Prev Close", value: String(format: "$%.2f", stock.prevClose))
+                        statCell("Prev Close", value: CurrencyFormatter.formatPrice(stock.prevClose))
                     }
                     if let range = stock.dayRange {
                         statCell("Day Range", value: range)
