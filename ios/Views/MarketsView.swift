@@ -509,7 +509,7 @@ struct MarketsView: View {
             MarketRow(
                 symbol: item.symbol,
                 name: item.name,
-                priceText: String(format: "$%.2f", item.price),
+                priceText: CurrencyFormatter.formatPrice(item.price),
                 changePercent: item.changePercent,
                 isFavorited: appState.isLocalFavorite(item.name),
                 onToggleFavorite: {
@@ -870,10 +870,10 @@ private struct MarketItemDetailView: View {
                 VStack(spacing: 0) {
                     infoRow("Type", value: kindLabel)
                     if case .stock(let stock) = item.kind {
-                        if let b = stock.bid { infoRow("Bid", value: String(format: "$%.2f", b)) }
-                        if let a = stock.ask { infoRow("Ask", value: String(format: "$%.2f", a)) }
-                        if stock.open > 0 { infoRow("Open", value: String(format: "$%.2f", stock.open)) }
-                        if stock.prevClose > 0 { infoRow("Prev Close", value: String(format: "$%.2f", stock.prevClose)) }
+                        if let b = stock.bid { infoRow("Bid", value: CurrencyFormatter.formatPrice(b)) }
+                        if let a = stock.ask { infoRow("Ask", value: CurrencyFormatter.formatPrice(a)) }
+                        if stock.open > 0 { infoRow("Open", value: CurrencyFormatter.formatPrice(stock.open)) }
+                        if stock.prevClose > 0 { infoRow("Prev Close", value: CurrencyFormatter.formatPrice(stock.prevClose)) }
                         if let r = stock.dayRange { infoRow("Day Range", value: r) }
                         if let r = stock.yearRange { infoRow("52W Range", value: r) }
                         infoRow("Volume", value: stock.formattedVolume)

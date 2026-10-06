@@ -94,7 +94,7 @@ struct StockRow: View {
             }
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(String(format: "$%.2f", stock.price))
+                Text(CurrencyFormatter.formatPrice(stock.price))
                     .font(.body.weight(.medium))
                 Text(String(format: "%@%.2f%%", changeSign, stock.changePercent))
                     .font(.caption2.weight(.semibold))

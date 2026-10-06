@@ -163,7 +163,7 @@ struct MarketsWidgetView: View {
     }
 
     private func formatPrice(_ value: Double) -> String {
-        if value >= 10000 { return String(format: "$%.0f", value) }
-        return String(format: "$%.2f", value)
+        // Thousands separators, and no cents once the number is five digits wide.
+        "$" + value.formatted(.number.precision(.fractionLength(value >= 10000 ? 0 : 2)).locale(Locale(identifier: "en_US")))
     }
 }

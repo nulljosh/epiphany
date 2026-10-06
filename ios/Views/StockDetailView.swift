@@ -63,7 +63,7 @@ struct StockDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     let displayPrice = scrubPrice?.price ?? stock.price
-                    Text(String(format: "$%.2f", displayPrice))
+                    Text(CurrencyFormatter.formatPrice(displayPrice))
                         .font(.system(size: 44, weight: .bold, design: .rounded))
                         .contentTransition(.numericText())
                     if let scrub = scrubPrice {
@@ -105,7 +105,7 @@ struct StockDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         if priceHistory.count == 1 {
-                            Text(String(format: "$%.2f", priceHistory[0].close))
+                            Text(CurrencyFormatter.formatPrice(priceHistory[0].close))
                                 .font(.title2.weight(.semibold))
                         }
                     }
@@ -152,10 +152,10 @@ struct StockDetailView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     if stock.open > 0 {
-                        statCell("Open", value: String(format: "$%.2f", stock.open))
+                        statCell("Open", value: CurrencyFormatter.formatPrice(stock.open))
                     }
                     if stock.prevClose > 0 {
-                        statCell("Prev Close", value: String(format: "$%.2f", stock.prevClose))
+                        statCell("Prev Close", value: CurrencyFormatter.formatPrice(stock.prevClose))
                     }
                     if let range = stock.dayRange {
                         statCell("Day Range", value: range)
@@ -570,7 +570,7 @@ struct StockDetailView: View {
                     .foregroundStyle(alert.direction == .above ? Palette.successGreen : Palette.dangerRed)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [6, 4]))
                     .annotation(position: .top, alignment: .trailing) {
-                        Text(String(format: "$%.0f", alert.targetPrice))
+                        Text(CurrencyFormatter.formatPrice(alert.targetPrice, decimals: 0))
                             .font(.caption2)
                             .foregroundStyle(alert.direction == .above ? Palette.successGreen : Palette.dangerRed)
                     }

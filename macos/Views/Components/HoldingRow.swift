@@ -12,15 +12,15 @@ struct HoldingRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(holding.symbol)
                     .font(.headline)
-                Text(String(format: "%.4f shares", holding.shares))
+                Text("\(CurrencyFormatter.formatShares(holding.shares)) shares")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(String(format: "$%.2f", holding.marketValue))
+                Text(CurrencyFormatter.formatPrice(holding.marketValue))
                     .font(.body)
-                Text(String(format: "%@$%.2f", holding.gainLoss >= 0 ? "+" : "", holding.gainLoss))
+                Text(CurrencyFormatter.formatSignedPrice(holding.gainLoss))
                     .font(.caption)
                     .foregroundStyle(gainColor)
             }

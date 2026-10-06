@@ -245,7 +245,7 @@ struct MarketsView: View {
                                     .font(.title3.weight(.heavy))
                                 if !portfolio.holdings.isEmpty {
                                     HStack(spacing: 4) {
-                                        Text(String(format: "%@$%.2f", portfolio.dayChange >= 0 ? "+" : "", portfolio.dayChange))
+                                        Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
                                         Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
                                     }
                                     .font(.caption.weight(.semibold))
@@ -446,7 +446,7 @@ struct MarketsView: View {
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text(String(format: "$%.2f", item.price))
+                Text(CurrencyFormatter.formatPrice(item.price))
                     .font(.body.monospacedDigit())
                     .frame(maxWidth: 110, alignment: .trailing)
 
@@ -652,7 +652,7 @@ private struct MarketItem: Identifiable {
         } else if marketCap >= 1_000_000 {
             return String(format: "$%.0fM", marketCap / 1_000_000)
         }
-        return String(format: "$%.0f", marketCap)
+        return CurrencyFormatter.formatPrice(marketCap, decimals: 0)
     }
 
     var formattedPERatio: String {

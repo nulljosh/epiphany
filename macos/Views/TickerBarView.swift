@@ -113,7 +113,7 @@ private struct TickerItemView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.primary)
 
-            Text(stock.price, format: .currency(code: "USD").precision(.fractionLength(2)))
+            Text(CurrencyFormatter.formatPrice(stock.price))
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(changeColor)
         }

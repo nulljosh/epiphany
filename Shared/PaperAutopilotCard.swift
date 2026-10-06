@@ -5,6 +5,7 @@ import SwiftUI
 /// Enrollment stays on the web, which is also the App Review fallback in ios/APPSTORE.md (Guideline 3.2.1).
 struct PaperAutopilotCard: View {
     @State private var state: AutopilotState?
+    @State private var loaded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -18,10 +19,17 @@ struct PaperAutopilotCard: View {
                 Text("Premium feature. Turn it on from the web app.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            } else if loaded {
+                Text("Status isn't available right now.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .task { state = try? await EpiphanyAPI.shared.fetchAutopilot() }
+        .task {
+            state = try? await EpiphanyAPI.shared.fetchAutopilot()
+            loaded = true
+        }
     }
 
     /// One plain sentence: never blank, never "idle".

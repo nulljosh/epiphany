@@ -76,7 +76,7 @@ struct Stock: Decodable, Identifiable, Hashable {
 
     var formattedEPS: String? {
         guard let e = eps else { return nil }
-        return String(format: "$%.2f", e)
+        return CurrencyFormatter.formatPrice(e)
     }
 
     var formattedBeta: String? {
@@ -98,12 +98,12 @@ struct Stock: Decodable, Identifiable, Hashable {
 
     var dayRange: String? {
         guard dayLow > 0 && dayHigh > 0 else { return nil }
-        return String(format: "$%.2f - $%.2f", dayLow, dayHigh)
+        return "\(CurrencyFormatter.formatPrice(dayLow)) - \(CurrencyFormatter.formatPrice(dayHigh))"
     }
 
     var yearRange: String? {
         guard low52 > 0 && high52 > 0 else { return nil }
-        return String(format: "$%.2f - $%.2f", low52, high52)
+        return "\(CurrencyFormatter.formatPrice(low52)) - \(CurrencyFormatter.formatPrice(high52))"
     }
 
     enum CodingKeys: String, CodingKey {
