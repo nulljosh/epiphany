@@ -1,16 +1,16 @@
-import { supabaseRequest, supabaseConfigured } from './supabase.js';
+import { sparkRequest, sparkConfigured } from './spark.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 
 export default async function handler(req, res) {
   const session = await getSessionUser(req);
   if (!session) return errorResponse(res, 401, 'Authentication required');
-  if (!supabaseConfigured()) return errorResponse(res, 503, 'Database not configured');
+  if (!sparkConfigured()) return errorResponse(res, 503, 'Database not configured');
 
   const email = session.email;
 
   // GET: list alerts
   if (req.method === 'GET') {
-    const rows = await supabaseRequest(
+    const rows = await sparkRequest(
       `alerts?user_email=eq.${encodeURIComponent(email)}&select=*&order=created_at.desc`
     );
     return res.status(200).json(rows || []);
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'direction must be "above" or "below"' });
     }
 
-    const rows = await supabaseRequest('alerts', {
+    const rows = await sparkRequest('alerts', {
       method: 'POST',
       body: {
         user_email: email,
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'Alert id required' });
 
-    await supabaseRequest(
+    await sparkRequest(
       `alerts?id=eq.${encodeURIComponent(id)}&user_email=eq.${encodeURIComponent(email)}`,
       { method: 'DELETE' }
     );

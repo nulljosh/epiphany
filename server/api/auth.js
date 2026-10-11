@@ -2,7 +2,7 @@ import { getKv } from './_kv.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
-import { supabaseRequest, supabaseConfigured } from './supabase.js';
+import { sparkRequest, sparkConfigured } from './spark.js';
 import { verifyAppleIdentityToken } from './_apple-jwt.js';
 import { sendEmail } from './_email.js';
 import { effectiveTier } from './gates.js';
@@ -105,32 +105,32 @@ async function updateCurrentSession(req, kv, updater) {
   await kv.set(sessionKey, next, { ex: SESSION_TTL });
 }
 
-async function migrateSupabaseEmail(oldEmail, newEmail) {
-  if (!supabaseConfigured()) return;
+async function migrateAccountEmail(oldEmail, newEmail) {
+  if (!sparkConfigured()) return;
 
   await Promise.all([
-    supabaseRequest(`watchlists?user_email=eq.${encodeURIComponent(oldEmail)}`, {
+    sparkRequest(`watchlists?user_email=eq.${encodeURIComponent(oldEmail)}`, {
       method: 'PATCH',
       body: { user_email: newEmail },
     }),
-    supabaseRequest(`alerts?user_email=eq.${encodeURIComponent(oldEmail)}`, {
+    sparkRequest(`alerts?user_email=eq.${encodeURIComponent(oldEmail)}`, {
       method: 'PATCH',
       body: { user_email: newEmail },
     }),
-    supabaseRequest(`portfolio_history?user_email=eq.${encodeURIComponent(oldEmail)}`, {
+    sparkRequest(`portfolio_history?user_email=eq.${encodeURIComponent(oldEmail)}`, {
       method: 'PATCH',
       body: { user_email: newEmail },
     }),
   ]);
 }
 
-async function deleteSupabaseUserData(email) {
-  if (!supabaseConfigured()) return;
+async function deleteAccountData(email) {
+  if (!sparkConfigured()) return;
 
   await Promise.all([
-    supabaseRequest(`watchlists?user_email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' }),
-    supabaseRequest(`alerts?user_email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' }),
-    supabaseRequest(`portfolio_history?user_email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' }),
+    sparkRequest(`watchlists?user_email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' }),
+    sparkRequest(`alerts?user_email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' }),
+    sparkRequest(`portfolio_history?user_email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' }),
   ]);
 }
 
@@ -803,7 +803,7 @@ export default async function handler(req, res) {
     await updateCurrentSession(req, kv, (current) => ({ ...current, email: normalizedEmail }));
 
     try {
-      await migrateSupabaseEmail(previousEmail, normalizedEmail);
+      await migrateAccountEmail(previousEmail, normalizedEmail);
     } catch (err) {
       console.error('[AUTH] Email migration error:', err.message);
       user.email = previousEmail;
@@ -834,9 +834,9 @@ export default async function handler(req, res) {
     }
 
     try {
-      await deleteSupabaseUserData(user.email);
+      await deleteAccountData(user.email);
     } catch (err) {
-      console.error('[AUTH] Delete Supabase data error:', err.message);
+      console.error('[AUTH] Delete account data error:', err.message);
       return errorResponse(res, 503, 'Failed to delete account data');
     }
 

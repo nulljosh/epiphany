@@ -43,9 +43,9 @@ vi.mock('../../server/api/auth-helpers.js', () => ({
   errorResponse: (res, status, message) => res.status(status).json({ error: message }),
 }));
 
-vi.mock('../../server/api/supabase.js', () => ({
-  supabaseConfigured: vi.fn(() => false),
-  supabaseRequest: vi.fn(),
+vi.mock('../../server/api/spark.js', () => ({
+  sparkConfigured: vi.fn(() => false),
+  sparkRequest: vi.fn(),
 }));
 
 vi.mock('../../server/api/_email.js', () => ({
