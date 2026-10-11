@@ -1,7 +1,7 @@
-// Storage for watchlists, alerts and portfolio history: the spark-api Worker (D1) at api.heyitsmejosh.com.
+// Storage for watchlists, alerts and portfolio history: the spark-api Worker (D1) at api.jaybulb.com.
 // Server to server only, so every call carries the service key; the handlers check the session before they get here.
 function getSparkConfig() {
-  const url = (process.env.SPARK_API_URL || 'https://api.heyitsmejosh.com').trim();
+  const url = (process.env.SPARK_API_URL || 'https://api.jaybulb.com').trim();
   const key = (process.env.SPARK_SERVICE_KEY || '').trim();
   return { url, key };
 }

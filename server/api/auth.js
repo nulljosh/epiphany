@@ -39,7 +39,7 @@ const APPLE_AUDIENCES = (process.env.APPLE_AUDIENCES || 'com.heyitsmejosh.epipha
   .filter(Boolean);
 const VERIFY_TTL = 24 * 60 * 60; // 24 hours
 const RESET_TTL = 60 * 60; // 1 hour
-const DEFAULT_BASE_URL = 'https://epiphany.heyitsmejosh.com';
+const DEFAULT_BASE_URL = 'https://epiphany.jaybulb.com';
 
 // Email validation: simplified RFC 5322, minus characters that only show up in injection attempts
 const EMAIL_REGEX = /^[^\s@<>"'`,;()\[\]\\]+@[^\s@<>"'`,;()\[\]\\]+\.[^\s@<>"'`,;()\[\]\\]+$/;
