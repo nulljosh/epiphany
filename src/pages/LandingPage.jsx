@@ -565,7 +565,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       </section>
 
       {/* ─── FOOTER ─── */}
-      <InstallAnywhere name="Epiphany" appUrl="https://epiphany.heyitsmejosh.com" appStoreUrl="https://apps.apple.com/app/id6779522175" />
+      <InstallAnywhere name="Epiphany" appUrl="https://epiphany.jaybulb.com" appStoreUrl="https://apps.apple.com/app/id6779522175" />
       <footer className="lp-foot">
   <div className="foot-rule" aria-hidden="true"><span>Epiphany</span><span>Your money, one page</span></div>
   <nav className="foot-dir" aria-label="Footer">
@@ -573,7 +573,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       <h3>Epiphany</h3>
       <ul>
         <li><a href="https://apps.apple.com/app/id6779522175">App Store</a></li>
-        <li><a href="https://epiphany.heyitsmejosh.com">Open the web app</a></li>
+        <li><a href="https://epiphany.jaybulb.com">Open the web app</a></li>
         <li><a href="https://github.com/nulljosh/epiphany/blob/main/roadmap.md">Roadmap</a></li>
         <li><a href="https://github.com/nulljosh/epiphany/blob/main/WHITEPAPER.md">Whitepaper</a></li>
       </ul>
@@ -604,7 +604,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
         <li><a href="/terms.md">Terms</a></li>
         <li><a href="https://github.com/nulljosh/epiphany/blob/main/SECURITY.md">Security</a></li>
         <li><a href="https://github.com/nulljosh/epiphany/blob/main/LICENSE">License (MIT)</a></li>
-        <li><a href="https://heyitsmejosh.com">Portfolio</a></li>
+        <li><a href="https://jaybulb.com">Portfolio</a></li>
         <li><a href="#top">Back to top</a></li>
       </ul>
     </div>

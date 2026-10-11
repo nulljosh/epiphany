@@ -40,7 +40,7 @@ async function fetchNoaa(lat, lon) {
   try {
     const json = await timedFetch(
       `${NOAA_BASE}?point=${lat},${lon}`,
-      { headers: { 'User-Agent': 'monica-intelligence/1.0 (contact@heyitsmejosh.com)' } }
+      { headers: { 'User-Agent': 'monica-intelligence/1.0 (contact@jaybulb.com)' } }
     );
     return (json.features || []).slice(0, 5).map(f => ({
       source: 'noaa',

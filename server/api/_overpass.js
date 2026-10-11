@@ -41,7 +41,7 @@ export async function overpassQuery(query, timeoutMs = 12000) {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           // Mirrors 403/406/521 requests with no UA -- looks like a bare bot/proxy hit.
-          'User-Agent': 'EpiphanyApp/1.0 (+https://epiphany.heyitsmejosh.com; contact: trommatic@icloud.com)',
+          'User-Agent': 'EpiphanyApp/1.0 (+https://epiphany.jaybulb.com; contact: trommatic@icloud.com)',
         },
         body,
         signal: controller.signal,

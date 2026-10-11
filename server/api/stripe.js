@@ -66,7 +66,7 @@ export default async function handler(req, res) {
       }
       const baseUrl = process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
-        : 'https://epiphany.heyitsmejosh.com';
+        : 'https://epiphany.jaybulb.com';
 
       // Link checkout to authenticated user if session cookie exists
       const sessionToken = getSessionToken(req);
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
       if (!cid) return res.status(400).json({ error: 'Customer ID required' });
       const baseUrl = process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
-        : 'https://epiphany.heyitsmejosh.com';
+        : 'https://epiphany.jaybulb.com';
       const session = await getStripe().billingPortal.sessions.create({
         customer: cid,
         return_url: baseUrl,

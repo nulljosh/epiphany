@@ -108,7 +108,7 @@ export function radiusQuery(bbox) {
 async function fetchSource(source, bbox) {
   const res = await fetch(source.url(bbox), {
     signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
-    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (epiphany.heyitsmejosh.com flights layer)' },
+    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (epiphany.jaybulb.com flights layer)' },
   });
   if (!res.ok) throw new Error(`${source.name} ${res.status}`);
   return normalize(await res.json(), bbox, source.toReadsb);
