@@ -19,7 +19,7 @@ export function useWatchlist(authUser) {
   const [loading, setLoading] = useState(false);
   const fetched = useRef(false);
 
-  // Fetch from Supabase when authenticated
+  // Fetch from the server when authenticated
   useEffect(() => {
     if (!authUser?.email || fetched.current) return;
     fetched.current = true;

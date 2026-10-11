@@ -1,4 +1,4 @@
-import { supabaseRequest, supabaseConfigured } from './supabase.js';
+import { sparkRequest, sparkConfigured } from './spark.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 
 // Symbol validation: 1-5 uppercase letters/digits, dots allowed
@@ -12,13 +12,13 @@ function isValidSymbol(symbol) {
 export default async function handler(req, res) {
   const session = await getSessionUser(req);
   if (!session) return errorResponse(res, 401, 'Authentication required');
-  if (!supabaseConfigured()) return errorResponse(res, 503, 'Database not configured');
+  if (!sparkConfigured()) return errorResponse(res, 503, 'Database not configured');
 
   const email = session.email;
 
   // GET: list watchlist
   if (req.method === 'GET') {
-    const rows = await supabaseRequest(`watchlists?user_email=eq.${encodeURIComponent(email)}&select=id,user_email,symbol,added_at&order=added_at.asc`);
+    const rows = await sparkRequest(`watchlists?user_email=eq.${encodeURIComponent(email)}&select=id,user_email,symbol,added_at&order=added_at.asc`);
     return res.status(200).json(rows || []);
   }
 
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      const rows = await supabaseRequest('watchlists', {
+      const rows = await sparkRequest('watchlists', {
         method: 'POST',
         body: { user_email: email, symbol },
       });
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid symbol format' });
     }
 
-    await supabaseRequest(
+    await sparkRequest(
       `watchlists?user_email=eq.${encodeURIComponent(email)}&symbol=eq.${encodeURIComponent(symbol.toUpperCase())}`,
       { method: 'DELETE' }
     );

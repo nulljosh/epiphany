@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createReqRes } from './_mocks.js';
 
-const supabaseRows = [];
+const sparkRows = [];
 let requestId = 0;
 
 vi.mock('../../server/api/auth-helpers.js', () => ({
@@ -15,26 +15,26 @@ vi.mock('../../server/api/auth-helpers.js', () => ({
   errorResponse: (res, status, message) => res.status(status).json({ error: message }),
 }));
 
-vi.mock('../../server/api/supabase.js', () => ({
-  supabaseConfigured: vi.fn(() => true),
-  supabaseRequest: vi.fn(async (query, options = {}) => {
+vi.mock('../../server/api/spark.js', () => ({
+  sparkConfigured: vi.fn(() => true),
+  sparkRequest: vi.fn(async (query, options = {}) => {
     const method = options.method || 'GET';
     const body = options.body || {};
 
-    // Mock Supabase behavior
+    // Mock storage behavior
     if (method === 'GET') {
       // List watchlist items filtered by user_email
       if (query.includes('user_email=eq')) {
         const email = decodeURIComponent(query.split('user_email=eq.')[1].split('&')[0]);
-        return supabaseRows.filter((r) => r.user_email === email);
+        return sparkRows.filter((r) => r.user_email === email);
       }
-      return supabaseRows;
+      return sparkRows;
     }
 
     if (method === 'POST') {
       // Add new watchlist item
       const { user_email, symbol } = body;
-      const existing = supabaseRows.find(
+      const existing = sparkRows.find(
         (r) => r.user_email === user_email && r.symbol === symbol
       );
       if (existing) {
@@ -48,7 +48,7 @@ vi.mock('../../server/api/supabase.js', () => ({
         symbol: symbol.toUpperCase(),
         added_at: new Date().toISOString(),
       };
-      supabaseRows.push(item);
+      sparkRows.push(item);
       return [item];
     }
 
@@ -57,10 +57,10 @@ vi.mock('../../server/api/supabase.js', () => ({
       if (query.includes('user_email=eq')) {
         const email = decodeURIComponent(query.split('user_email=eq.')[1].split('&')[0]);
         const symbol = decodeURIComponent(query.split('symbol=eq.')[1]);
-        const idx = supabaseRows.findIndex(
+        const idx = sparkRows.findIndex(
           (r) => r.user_email === email && r.symbol === symbol.toUpperCase()
         );
-        if (idx >= 0) supabaseRows.splice(idx, 1);
+        if (idx >= 0) sparkRows.splice(idx, 1);
       }
       return [];
     }
@@ -74,7 +74,7 @@ describe('Watchlist API', () => {
   let handler;
 
   beforeEach(async () => {
-    supabaseRows.length = 0;
+    sparkRows.length = 0;
     requestId = 0;
     vi.resetModules();
     ({ default: handler } = await import('../../server/api/watchlist.js'));
@@ -106,13 +106,13 @@ describe('Watchlist API', () => {
     });
 
     it('should return user watchlist items', async () => {
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-1',
         user_email: 'user@example.com',
         symbol: 'AAPL',
         added_at: '2026-01-01T00:00:00.000Z',
       });
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-2',
         user_email: 'user@example.com',
         symbol: 'MSFT',
@@ -133,13 +133,13 @@ describe('Watchlist API', () => {
     });
 
     it('should only return items for authenticated user', async () => {
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-1',
         user_email: 'user@example.com',
         symbol: 'AAPL',
         added_at: '2026-01-01T00:00:00.000Z',
       });
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-2',
         user_email: 'other@example.com',
         symbol: 'GOOGL',
@@ -198,7 +198,7 @@ describe('Watchlist API', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.data.symbol).toBe('AAPL');
       expect(res.data.user_email).toBe('user@example.com');
-      expect(supabaseRows).toHaveLength(1);
+      expect(sparkRows).toHaveLength(1);
     });
 
     it('should normalize symbol to uppercase', async () => {
@@ -226,7 +226,7 @@ describe('Watchlist API', () => {
     });
 
     it('should reject duplicate symbols in watchlist', async () => {
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-1',
         user_email: 'user@example.com',
         symbol: 'AAPL',
@@ -272,7 +272,7 @@ describe('Watchlist API', () => {
     });
 
     it('should allow same symbol for different users', async () => {
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-1',
         user_email: 'other@example.com',
         symbol: 'AAPL',
@@ -288,7 +288,7 @@ describe('Watchlist API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(supabaseRows).toHaveLength(2);
+      expect(sparkRows).toHaveLength(2);
     });
   });
 
@@ -320,7 +320,7 @@ describe('Watchlist API', () => {
     });
 
     it('should remove symbol from watchlist', async () => {
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-1',
         user_email: 'user@example.com',
         symbol: 'AAPL',
@@ -337,11 +337,11 @@ describe('Watchlist API', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.data.ok).toBe(true);
-      expect(supabaseRows).toHaveLength(0);
+      expect(sparkRows).toHaveLength(0);
     });
 
     it('should handle case-insensitive symbol removal', async () => {
-      supabaseRows.push({
+      sparkRows.push({
         id: 'w-1',
         user_email: 'user@example.com',
         symbol: 'MSFT',
@@ -357,7 +357,7 @@ describe('Watchlist API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(supabaseRows).toHaveLength(0);
+      expect(sparkRows).toHaveLength(0);
     });
 
     it('should gracefully handle deleting nonexistent symbol', async () => {
@@ -374,7 +374,7 @@ describe('Watchlist API', () => {
     });
 
     it('should only delete from authenticated user watchlist', async () => {
-      supabaseRows.push(
+      sparkRows.push(
         {
           id: 'w-1',
           user_email: 'user@example.com',
@@ -398,8 +398,8 @@ describe('Watchlist API', () => {
       await handler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(supabaseRows).toHaveLength(1);
-      expect(supabaseRows[0].user_email).toBe('other@example.com');
+      expect(sparkRows).toHaveLength(1);
+      expect(sparkRows[0].user_email).toBe('other@example.com');
     });
   });
 
