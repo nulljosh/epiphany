@@ -1,4 +1,4 @@
-1/ Epiphany is live. Everything in your world, on one screen. https://epiphany.heyitsmejosh.com
+1/ Epiphany is live. Everything in your world, on one screen. https://epiphany.jaybulb.com
 
 2/ A personal situation room. Your markets, your map, your people and the news that touches them, on one screen. Palantir for regular people. Free on web, iPhone and Mac. Premium is a one-time unlock: $0.99 on iOS, $1 on the web.
 

@@ -11,7 +11,7 @@ Topics: Finance, Productivity, News
 Pricing: Free. Premium is a one-time unlock: $0.99 on iOS, $1 on the web.
 
 Links
-Web: https://epiphany.heyitsmejosh.com
+Web: https://epiphany.jaybulb.com
 App Store: https://apps.apple.com/app/id6779522175
 GitHub: https://github.com/nulljosh/epiphany
 
