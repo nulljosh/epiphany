@@ -6,4 +6,4 @@ Body: I wanted the view a trading desk or an ops room has, but for my own life. 
 
 It's a live map (flights, earthquakes, weather, crime, news, all geo tagged), a markets tab with live quotes and a Buy/Hold/Sell signal, a portfolio view, and a people graph. There's also a paper trading engine underneath: Monte Carlo price simulation feeding a Kelly-sized position sizer, gated by RSI/MACD/trend agreement. Free on web, iPhone, and Mac. Premium is a one-time unlock, $0.99 on iOS, $1 on the web.
 
-Live at epiphany.heyitsmejosh.com. Would love feedback on what's missing.
+Live at epiphany.jaybulb.com. Would love feedback on what's missing.
