@@ -304,3 +304,13 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Move the README GIF further down until the app is making money or beating the S&P 500.
 - [ ] Add the jobs report.
 - [ ] Add bonds to the markets list.
+
+## Ingested 2026-10-16
+- [ ] X value still squished on the portfolio spending chart. Entire app needs uniformity. (screenshot: notes/attachments/2026-10-16/epiphany-1.png)
+- [ ] Compare our stocks list against the iOS Stocks app. (screenshot: notes/attachments/2026-10-16/epiphany-2.png)
+- [ ] App broke because we got a new domain (heyitsmejosh.com lapsed, apps now on jaybulb.com). Find what still points at the old host and fix it.
+- [ ] Simplify README markdown. Refresh structure and make the background white.
+- [ ] X value still squished on the portfolio spending chart. Entire app needs uniformity. (screenshot: notes/attachments/2026-10-16/epiphany-1.png)
+- [ ] Compare our stocks list against the iOS Stocks app. (screenshot: notes/attachments/2026-10-16/epiphany-2.png)
+- [ ] App broke because we got a new domain (heyitsmejosh.com lapsed, apps now on jaybulb.com). Find what still points at the old host and fix it.
+- [ ] Simplify README markdown. Refresh structure and make the background white.
