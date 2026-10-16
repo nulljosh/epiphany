@@ -243,6 +243,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   const sawGeoGrantedRef = useRef(false);
   const pendingFlyRef = useRef(null);
   const darkRef = useRef(dark);
+  const P = dark
+    ? { panel: 'rgba(2,6,23,0.88)', solid: 'rgba(2,6,23,0.96)', line: 'rgba(255,255,255,0.24)', ink: '#fff', sub: '#94a3b8', active: '#334155', input: '#101827', link: '#9ecbff', shadow: '0 8px 30px rgba(0,0,0,.35)' }
+    : { panel: 'rgba(255,255,255,0.92)', solid: 'rgba(255,255,255,0.98)', line: 'rgba(15,23,42,0.18)', ink: '#0f172a', sub: '#64748b', active: '#e2e8f0', input: '#f1f5f9', link: '#1d4ed8', shadow: '0 8px 30px rgba(15,23,42,.15)' };
   const activePopupRef = useRef(null);
   const fetchCountRef = useRef(0);
 
@@ -1251,12 +1254,12 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
               aria-label="Search map location"
               list="epiphany-map-search-options"
               autoComplete="off"
-              style={{ flex: 1, height: 40, padding: '0 14px', border: `1px solid ${searchError ? '#ff5a52' : 'rgba(255,255,255,0.24)'}`, borderRadius: 24, background: 'rgba(2,6,23,0.88)', color: '#fff', font: `14px ${SYSTEM_FONT}`, outline: 'none', backdropFilter: 'blur(12px)', transition: 'border-color 0.2s' }}
+              style={{ flex: 1, height: 40, padding: '0 14px', border: `1px solid ${searchError ? '#ff5a52' : P.line}`, borderRadius: 24, background: P.panel, color: P.ink, font: `14px ${SYSTEM_FONT}`, outline: 'none', backdropFilter: 'blur(12px)', transition: 'border-color 0.2s' }}
             />
             <datalist id="epiphany-map-search-options">
               {suggestions.map((s) => <option key={s.place_id} value={s.display_name} />)}
             </datalist>
-            <button type="submit" aria-label="Go" style={{ height: 40, width: 40, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 20, background: 'rgba(2,6,23,0.88)', color: '#94a3b8', font: `700 16px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>→</button>
+            <button type="submit" aria-label="Go" style={{ height: 40, width: 40, border: `1px solid ${P.line}`, borderRadius: 20, background: P.panel, color: P.sub, font: `700 16px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>→</button>
           </form>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollBehavior: 'smooth', pointerEvents: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* ponytail: naive text match against place title/category (see CATEGORY_TERMS),
@@ -1272,10 +1275,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
                 style={{
                   height: 36,
                   padding: '0 14px',
-                  border: '1px solid rgba(255,255,255,0.24)',
+                  border: `1px solid ${P.line}`,
                   borderRadius: 18,
-                  background: showPlaces && placesQuery === term ? '#334155' : 'rgba(2,6,23,0.88)',
-                  color: '#fff',
+                  background: showPlaces && placesQuery === term ? P.active : P.panel,
+                  color: P.ink,
                   font: `13px ${SYSTEM_FONT}`,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
@@ -1307,36 +1310,36 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         disabled={isLocating}
         aria-label="Recenter to my location"
         title="Recenter to my location"
-        style={{ position: 'absolute', right: 14, top: 100, zIndex: 2, width: 34, height: 34, border: '1px solid rgba(255,255,255,0.24)', borderRadius: 9999, background: 'rgba(2,6,23,0.82)', color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
+        style={{ position: 'absolute', right: 14, top: 100, zIndex: 2, width: 34, height: 34, border: `1px solid ${P.line}`, borderRadius: 9999, background: P.panel, color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
       >
         ⌖
       </button>)}
       {chrome && (<button
         onClick={() => { setShowPlaces(value => !value); if (!showPlaces) loadPlaces(); }}
         aria-label="Browse nearby places"
-        style={{ position: 'absolute', right: 14, top: 140, zIndex: 3, minHeight: 34, padding: '0 11px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, background: 'rgba(2,6,23,0.88)', color: '#fff', font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
+        style={{ position: 'absolute', right: 14, top: 140, zIndex: 3, minHeight: 34, padding: '0 11px', border: `1px solid ${P.line}`, borderRadius: 8, background: P.panel, color: P.ink, font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
       >Places</button>)}
       {chrome && showPlaces && (
-        <section aria-label="Nearby places" style={{ position: 'absolute', top: 98, right: 14, bottom: 14, zIndex: 3, width: 'min(350px, calc(100% - 28px))', background: 'rgba(2,6,23,0.96)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 12, color: '#fff', display: 'flex', flexDirection: 'column', fontFamily: SYSTEM_FONT, boxShadow: '0 8px 30px rgba(0,0,0,.35)' }}>
-          <div style={{ padding: 12, borderBottom: '1px solid rgba(255,255,255,.15)' }}>
+        <section aria-label="Nearby places" style={{ position: 'absolute', top: 98, right: 14, bottom: 14, zIndex: 3, width: 'min(350px, calc(100% - 28px))', background: P.solid, border: `1px solid ${P.line}`, borderRadius: 12, color: P.ink, display: 'flex', flexDirection: 'column', fontFamily: SYSTEM_FONT, boxShadow: P.shadow }}>
+          <div style={{ padding: 12, borderBottom: `1px solid ${P.line}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <strong>Places near map center</strong>
-              <button onClick={loadPlaces} disabled={placesLoading} style={{ background: 'none', border: 0, color: '#9ecbff', cursor: 'pointer' }}>Refresh</button>
+              <button onClick={loadPlaces} disabled={placesLoading} style={{ background: 'none', border: 0, color: P.link, cursor: 'pointer' }}>Refresh</button>
             </div>
-            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{placesSection === 'places' ? 'OpenStreetMap · about 6 km · mapped places only' : 'Connected event feeds · verified map locations only'}</div>
+            <div style={{ fontSize: 11, color: P.sub, marginTop: 3 }}>{placesSection === 'places' ? 'OpenStreetMap · about 6 km · mapped places only' : 'Connected event feeds · verified map locations only'}</div>
             <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
-              {['places', 'events'].map(section => <button key={section} onClick={() => setPlacesSection(section)} style={{ flex: 1, padding: 6, border: '1px solid rgba(255,255,255,.2)', borderRadius: 6, background: placesSection === section ? '#334155' : 'transparent', color: '#fff', cursor: 'pointer' }}>{section === 'places' ? 'Places' : 'Events'}</button>)}
+              {['places', 'events'].map(section => <button key={section} onClick={() => setPlacesSection(section)} style={{ flex: 1, padding: 6, border: `1px solid ${P.line}`, borderRadius: 6, background: placesSection === section ? P.active : 'transparent', color: P.ink, cursor: 'pointer' }}>{section === 'places' ? 'Places' : 'Events'}</button>)}
             </div>
-            <input value={placesQuery} onChange={event => setPlacesQuery(event.target.value)} placeholder="Find a place or category" aria-label="Filter places" style={{ width: '100%', boxSizing: 'border-box', marginTop: 10, padding: 8, borderRadius: 7, border: '1px solid rgba(255,255,255,.25)', background: '#101827', color: '#fff' }} />
+            <input value={placesQuery} onChange={event => setPlacesQuery(event.target.value)} placeholder="Find a place or category" aria-label="Filter places" style={{ width: '100%', boxSizing: 'border-box', marginTop: 10, padding: 8, borderRadius: 7, border: `1px solid ${P.line}`, background: P.input, color: P.ink }} />
           </div>
           {placesLoading && <div style={{ padding: 14 }}>Loading places…</div>}
           {placesError && <div role="alert" style={{ padding: 14, color: '#ff8a83' }}>{placesError}</div>}
           {!placesLoading && !placesError && <div style={{ overflowY: 'auto', flex: 1 }}>
-            <div style={{ padding: '9px 12px', fontSize: 11, color: '#9ca3af' }}>
+            <div style={{ padding: '9px 12px', fontSize: 11, color: P.sub }}>
               {listedPlaces.length} {placesSection === 'places' ? 'places' : 'geolocated events'}
               {placesCenter && ` near ${placesCenter.lat.toFixed(2)}, ${placesCenter.lon.toFixed(2)}`}
             </div>
-            {placesSection === 'events' && listedPlaces.length === 0 && <div style={{ padding: 12, color: '#9ca3af' }}>No verified local events from connected feeds.</div>}
+            {placesSection === 'events' && listedPlaces.length === 0 && <div style={{ padding: 12, color: P.sub }}>No verified local events from connected feeds.</div>}
             {listedPlaces.map(place => (
               <button key={place.id} onClick={() => {
                 const map = mapInstanceRef.current;
@@ -1347,9 +1350,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
                   map.flyTo({ center: [place.lon, place.lat], zoom: 16, duration: 600 });
                 }
                 setShowPlaces(false);
-              }} style={{ display: 'block', width: '100%', padding: '9px 12px', textAlign: 'left', border: 0, borderTop: '1px solid rgba(255,255,255,.08)', background: 'none', color: '#fff', cursor: 'pointer' }}>
+              }} style={{ display: 'block', width: '100%', padding: '9px 12px', textAlign: 'left', border: 0, borderTop: `1px solid ${P.line}`, background: 'none', color: P.ink, cursor: 'pointer' }}>
                 <span style={{ display: 'block', fontSize: 13 }}>{place.title}</span>
-                <span style={{ color: '#9ca3af', fontSize: 11 }}>{place.category}</span>
+                <span style={{ color: P.sub, fontSize: 11 }}>{place.category}</span>
               </button>
             ))}
           </div>}
