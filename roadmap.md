@@ -310,5 +310,4 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 ## Ingested 2026-10-16
 - [ ] X value still squished on the portfolio spending chart. Entire app needs uniformity. (screenshot: notes/attachments/2026-10-16/epiphany-1.png)
 - [ ] Compare our stocks list against the iOS Stocks app. (screenshot: notes/attachments/2026-10-16/epiphany-2.png)
-- [ ] App broke because we got a new domain (heyitsmejosh.com lapsed, apps now on jaybulb.com). Find what still points at the old host and fix it.
 - [ ] Simplify README markdown. Refresh structure and make the background white.
