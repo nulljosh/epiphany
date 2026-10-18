@@ -38,7 +38,7 @@ protocol AuthAPI {
 final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     static let shared = EpiphanyAPI()
 
-    private let baseURL = "https://epiphany.heyitsmejosh.com"
+    private let baseURL = "https://epiphany.jaybulb.com"
     private let session: URLSession
     private let newsSession: URLSession
     private let decoder: JSONDecoder

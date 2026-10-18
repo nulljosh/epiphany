@@ -125,7 +125,7 @@ struct SettingsView: View {
         }
         .alert("Upgrade to \(upgradeTarget?.title ?? "")", isPresented: $showUpgradeAlert) {
             Button("Open Web Upgrade") {
-                if let url = URL(string: "https://epiphany.heyitsmejosh.com") {
+                if let url = URL(string: "https://epiphany.jaybulb.com") {
                     openURL(url)
                 }
             }
