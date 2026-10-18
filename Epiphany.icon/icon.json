@@ -1,0 +1,46 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "extended-srgb:0.384,0.835,0.431,1.0",
+          "extended-srgb:0.122,0.616,0.247,1.0"
+        ]
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "linear-gradient": [
+          "extended-srgb:0.034,0.172,0.069,1.0",
+          "extended-srgb:0.015,0.074,0.030,1.0"
+        ]
+      }
+    }
+  ],
+  "groups": [
+    {
+      "layers": [
+        {
+          "glass": false,
+          "image-name": "glyph.png",
+          "name": "Epiphany"
+        }
+      ],
+      "lighting": "individual",
+      "name": "Epiphany",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.3
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}
