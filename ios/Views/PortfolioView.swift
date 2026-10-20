@@ -371,6 +371,8 @@ struct PortfolioView: View {
                         Button { calendarMonth = cal.date(byAdding: .month, value: -1, to: calendarMonth) ?? calendarMonth } label: {
                             Image(systemName: "chevron.left")
                                 .font(.body.weight(.semibold))
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
                         }
                         Spacer()
                         Text(calendarMonthLabel)
@@ -379,6 +381,8 @@ struct PortfolioView: View {
                         Button { calendarMonth = cal.date(byAdding: .month, value: 1, to: calendarMonth) ?? calendarMonth } label: {
                             Image(systemName: "chevron.right")
                                 .font(.body.weight(.semibold))
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
                         }
                     }
                     .padding(.horizontal)

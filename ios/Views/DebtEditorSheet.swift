@@ -16,17 +16,13 @@ struct DebtEditorSheet: View {
                             Text("Balance")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            TextField("0", value: $item.balance, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
+                            AmountField(value: $item.balance)
                         }
                         HStack {
                             Text("Min Payment")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            TextField("0", value: $item.minPayment, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
+                            AmountField(value: $item.minPayment)
                         }
                         TextField("Note", text: Binding(
                             get: { item.note ?? "" },

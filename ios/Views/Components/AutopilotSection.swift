@@ -51,7 +51,7 @@ struct AutopilotSection: View {
                             .textFieldStyle(.roundedBorder)
                             .font(.caption)
                             .autocorrectionDisabled()
-                            .textCase(.uppercase)
+                            .textInputAutocapitalization(.characters)
                         Picker("", selection: $manualSide) {
                             Text("Buy").tag("buy")
                             Text("Sell").tag("sell")

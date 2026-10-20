@@ -1,12 +1,11 @@
 > Priority tier 2 (2026-10-17): ship push, this week. Order: live blockers, ship pushes, active features, portfolio, exploratory. See ~/Documents/Code/LOOP-HANDOFF.md.
 
-- [ ] **Needs Joshua's yes:** archive, upload and submit 2.5.18 to App Store Connect for iOS, Mac and Watch. Built and checked locally (iOS and Mac build clean, 564 web tests pass). It carries the animated map pins, the blue light bulb icon and the version bump. Not archived or submitted yet.
+- [ ] 2.5.18 (pins, blue icon) is waiting for App Review on iPhone and Mac, submitted 2026-10-20. Watch 2.5.18 is bumped but has no ship workflow.
 - [ ] Wire Epiphany Sans into the native apps and the web UI. The font files are in `fonts/` and `brand/tokens.css`; no app or web screen uses it yet.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
-- [ ] Ship the next iOS/Mac/Watch build: the X-Epiphany-Client header is in the code (2026-10-01), it only helps once a build with it is released.
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
@@ -15,10 +14,8 @@
 - [ ] Search UX pass beyond the contrast fix
 
 ## 2026-10-04 map QA leftovers (open)
-- [ ] Merge the money formatting PR (#189, branch `fix/money-format-autopilot-card`) and ship it in the next build. Prices and balances get thousands separators on iPhone, Mac, Watch and widgets, the ticker strip reads "$" like everything else, and the Autopilot card says so when its status will not load instead of showing a bare title. iPhone and Mac build. Nobody has looked at it in the simulator yet.
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
 - [ ] Work through `docs/reference/code-sweep-2026-10-04.md`: 45 unverified leads from a read-only sweep (double submit on Create Alert, spinner that can stick on the stock chart and Portfolio, tiny tap targets on the watchlist star, amount fields that may save 0).
-- [ ] Ship Mac 2.5.17 once Mac 2.5.16 clears review. It carries the Places list (Apple Maps first), the tighter search zoom and the onboarding stamp fix. iOS 2.5.17 was submitted 2026-10-04 and is waiting for review.
 - [ ] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet.
 - [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
 - [ ] macOS: the sign-in sheet and the onboarding sheet still swap in the same tick at sign-up. iOS hit a dead screen from that kind of overlap. Untested on Mac.

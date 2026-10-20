@@ -18,17 +18,13 @@ struct GoalEditorSheet: View {
                             Text("Target")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            TextField("0", value: $item.target, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
+                            AmountField(value: $item.target)
                         }
                         HStack {
                             Text("Saved")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            TextField("0", value: $item.saved, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
+                            AmountField(value: $item.saved)
                         }
                         Picker("Priority", selection: $item.priority) {
                             ForEach(priorities, id: \.self) { Text($0.capitalized) }

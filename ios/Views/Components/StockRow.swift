@@ -54,6 +54,9 @@ struct StockRow: View {
                             .foregroundStyle(isWatchlisted ? Palette.warningAmber : .secondary)
                             .font(.caption2)
                             .frame(width: 14, height: 14)
+                            .padding(15)
+                            .contentShape(Rectangle())
+                            .padding(-15)
                     }
                     .buttonStyle(BounceButtonStyle())
                 } else {

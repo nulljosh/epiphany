@@ -133,6 +133,7 @@ struct CreateAlertSheet: View {
     @State private var targetPrice = ""
     @State private var direction: PriceAlert.Direction = .above
     @State private var error: String?
+    @State private var isCreating = false
 
     var body: some View {
         NavigationStack {
@@ -174,7 +175,7 @@ struct CreateAlertSheet: View {
                             .frame(maxWidth: .infinity)
                             .fontWeight(.semibold)
                     }
-                    .disabled(symbol.isEmpty || targetPrice.isEmpty)
+                    .disabled(symbol.isEmpty || targetPrice.isEmpty || isCreating)
                     .tint(Palette.appleBlue)
                 }
             }
@@ -193,10 +194,13 @@ struct CreateAlertSheet: View {
             error = "Enter a symbol"
             return
         }
-        guard let price = Double(targetPrice), price > 0 else {
+        guard let price = parseAmount(targetPrice), price > 0 else {
             error = "Enter a valid price"
             return
         }
+        guard !isCreating else { return }
+        isCreating = true
+        defer { isCreating = false }
         await appState.createAlert(
             symbol: symbol.uppercased().trimmingCharacters(in: .whitespaces),
             targetPrice: price,

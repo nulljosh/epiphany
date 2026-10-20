@@ -274,9 +274,12 @@ struct StockDetailView: View {
                     Spacer()
                     Button(action: { showTradeSheet = false }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.caption)
+                            .font(.title3)
                             .foregroundStyle(.secondary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Close")
                 }
 
                 HStack {

@@ -310,3 +310,26 @@ enum KeychainHelper {
         SecItemDelete(query as CFDictionary)
     }
 }
+
+/// Decimal field that writes its value on every keystroke. `TextField(value:format:)`
+/// only commits when focus leaves, so tapping Save straight after typing saved 0.
+/// Accepts a comma as the decimal separator too.
+struct AmountField: View {
+    @Binding var value: Double
+    @State private var text = ""
+
+    var body: some View {
+        TextField("0", text: $text)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.trailing)
+            .onAppear { text = value == 0 ? "" : value.formatted(.number.grouping(.never)) }
+            .onChange(of: text) { _, new in value = parseAmount(new) ?? 0 }
+    }
+}
+
+/// Parses "10.50", "10,50" or "1,234.50". A lone comma is a decimal separator.
+func parseAmount(_ raw: String) -> Double? {
+    var s = raw.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: " ", with: "")
+    if s.contains(".") { s = s.replacingOccurrences(of: ",", with: "") } else { s = s.replacingOccurrences(of: ",", with: ".") }
+    return Double(s)
+}

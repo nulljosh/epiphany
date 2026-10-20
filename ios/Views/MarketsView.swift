@@ -213,6 +213,8 @@ struct MarketsView: View {
                         searchFieldFocused = true
                     } label: {
                         Image(systemName: "magnifyingglass")
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .accessibilityLabel("Search markets")
                 } } }
@@ -279,6 +281,7 @@ struct MarketsView: View {
                 TextField("Search markets", text: $searchText)
                     .focused($searchFieldFocused)
                     .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
                     .submitLabel(.search)
                 Image(systemName: "mic.fill")
                     .foregroundStyle(.secondary)
@@ -730,6 +733,9 @@ private struct MarketRow: View {
                         .foregroundStyle(isFavorited ? Palette.warningAmber : .secondary)
                         .font(.caption2)
                         .frame(width: 14, height: 14)
+                        .padding(15)
+                        .contentShape(Rectangle())
+                        .padding(-15)
                 }
                 .buttonStyle(BounceButtonStyle())
             }

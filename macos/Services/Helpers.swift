@@ -227,3 +227,10 @@ enum KeychainHelper {
         SecItemDelete(query as CFDictionary)
     }
 }
+
+/// Parses "10.50", "10,50" or "1,234.50". A lone comma is a decimal separator.
+func parseAmount(_ raw: String) -> Double? {
+    var s = raw.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: " ", with: "")
+    if s.contains(".") { s = s.replacingOccurrences(of: ",", with: "") } else { s = s.replacingOccurrences(of: ",", with: ".") }
+    return Double(s)
+}

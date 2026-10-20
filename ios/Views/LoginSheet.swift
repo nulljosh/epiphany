@@ -118,6 +118,8 @@ struct LoginSheet: View {
                             if showPassword {
                                 TextField("Password", text: $password)
                                     .textContentType(isRegistering ? .newPassword : .password)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
                             } else {
                                 SecureField("Password", text: $password)
                                     .textContentType(isRegistering ? .newPassword : .password)
