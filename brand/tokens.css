@@ -1,7 +1,12 @@
 /* Epiphany brand tokens. The accent is the only colour this app owns; spacing, radii and type come from the shared system. */
+@font-face { font-family: "Epiphany Sans"; font-weight: 400; font-display: swap; src: url("../fonts/EpiphanySans-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Sans"; font-weight: 500; font-display: swap; src: url("../fonts/EpiphanySans-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Sans"; font-weight: 600; font-display: swap; src: url("../fonts/EpiphanySans-Semibold.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Sans"; font-weight: 700; font-display: swap; src: url("../fonts/EpiphanySans-Bold.woff2") format("woff2"); }
 :root {
-  --accent: #1f9d3f;
-  --accent-light: #62d56e;
-  --accent-deep: #1f9d3f;
-  --accent-ring: color-mix(in srgb, #1f9d3f 30%, transparent);
+  --accent: #1462e0;
+  --accent-light: #5aaeff;
+  --accent-deep: #1462e0;
+  --font: "Epiphany Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, sans-serif;
+  --accent-ring: color-mix(in srgb, #1462e0 30%, transparent);
 }

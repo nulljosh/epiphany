@@ -3,9 +3,8 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "Tap a map search result and it takes you there",
-    "Close the keyboard with Done, or clear the search with one tap",
-    "Places opens in about a second, even when the open map data is down",
+    "Map pins pop in as you move around, and the one you tap stands out",
+    "A new blue icon",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

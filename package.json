@@ -2,7 +2,7 @@
   "name": "epiphany",
   "license": "MIT",
   "private": true,
-  "version": "2.6.2",
+  "version": "2.6.3",
   "description": "Everything happening in your world, on one screen. The map, the markets, the people.",
   "keywords": [
     "dashboard",
