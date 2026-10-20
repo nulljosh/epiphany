@@ -290,6 +290,18 @@ final class AppState {
 
     // MARK: - Stocks
 
+    /// Data loads route errors here: a cancelled request stays silent and an expired session reopens sign in.
+    func handleError(_ error: Error) {
+        if error is CancellationError { return }
+        if case APIError.unauthorized = error {
+            user = nil
+            showLogin = true
+            self.error = nil
+            return
+        }
+        self.error = error.localizedDescription
+    }
+
     func loadStocks(force: Bool = false) async {
         if isLoading && !force { return }
         isLoading = true
@@ -301,7 +313,7 @@ final class AppState {
             }
             if !stocks.isEmpty { error = nil; stocksFetchedAt = .now }
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -309,7 +321,7 @@ final class AppState {
         do {
             commodities = try await EpiphanyAPI.shared.fetchCommodities()
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -317,7 +329,7 @@ final class AppState {
         do {
             crypto = try await EpiphanyAPI.shared.fetchCrypto()
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -347,12 +359,12 @@ final class AppState {
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
+            publishBudgetSnapshot()
         } catch {
-            // Don't surface portfolio errors to user
+            // Don't surface portfolio errors to user; the widget keeps its last good numbers.
         }
         financeDataLoaded = true
         portfolioFetchedAt = .now
-        publishBudgetSnapshot()
     }
 
     /// Widgets cannot use the app's session, so hand them the two budget numbers via the App Group.
@@ -383,7 +395,7 @@ final class AppState {
             statements = try await EpiphanyAPI.shared.fetchStatements()
             publishBudgetSnapshot()
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -394,7 +406,7 @@ final class AppState {
         do {
             watchlist = try await EpiphanyAPI.shared.fetchWatchlist()
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -409,7 +421,7 @@ final class AppState {
             }
             self.error = apiError.localizedDescription
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -419,7 +431,7 @@ final class AppState {
             try await EpiphanyAPI.shared.removeFromWatchlist(symbol: symbol)
             watchlist.removeAll { $0.symbol == symbol }
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -434,7 +446,7 @@ final class AppState {
         do {
             alerts = try await EpiphanyAPI.shared.fetchAlerts()
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -448,7 +460,7 @@ final class AppState {
             )
             alerts.append(alert)
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -458,7 +470,7 @@ final class AppState {
             try await EpiphanyAPI.shared.deleteAlert(id: id)
             alerts.removeAll { $0.id == id }
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -468,7 +480,7 @@ final class AppState {
         do {
             markets = try await EpiphanyAPI.shared.fetchMarkets()
         } catch {
-            self.error = error.localizedDescription
+            handleError(error)
         }
     }
 

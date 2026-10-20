@@ -174,6 +174,7 @@ final class AppState {
     // MARK: - Error Handling
 
     func handleError(_ error: Error) {
+        if error is CancellationError { return }
         if let apiError = error as? APIError {
             switch apiError {
             case .unauthorized:
@@ -376,16 +377,18 @@ final class AppState {
         }
     }
 
+    @ObservationIgnored private var sparklinesInFlight: Set<String> = []
+
     func preloadSparklines() async {
         let symbols = stocks.map(\.symbol) + commodities.map(\.name) + crypto.map(\.symbol)
         for symbol in symbols {
-            guard sparklineCache[symbol] == nil else { continue }
+            guard sparklineCache[symbol] == nil, !sparklinesInFlight.contains(symbol) else { continue }
+            sparklinesInFlight.insert(symbol)
             Task {
-                do {
-                    let prices = try await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol)
+                defer { self.sparklinesInFlight.remove(symbol) }
+                // A failed fetch stays uncached so the next preload retries it.
+                if let prices = try? await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol) {
                     self.sparklineCache[symbol] = prices
-                } catch {
-                    self.sparklineCache[symbol] = []
                 }
             }
         }
@@ -471,12 +474,12 @@ final class AppState {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
             financeDataLoaded = true
+            publishBudgetSnapshot()
         } catch {
             financeDataLoaded = true
             handleError(error)
         }
         portfolioFetchedAt = .now
-        publishBudgetSnapshot()
     }
 
     /// Widgets cannot use the app's session, so hand them the two budget numbers via the App Group.

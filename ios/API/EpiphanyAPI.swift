@@ -870,9 +870,14 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
                 (data, response) = try await requestSession.data(for: request)
             } catch let urlError as URLError {
                 switch urlError.code {
-                case .timedOut, .networkConnectionLost, .cancelled:
+                case .cancelled:
+                    throw CancellationError()
+                case .networkConnectionLost:
                     lastError = APIError.networkError(urlError.localizedDescription)
                     continue
+                case .timedOut:
+                    // Retrying a timeout tripled the wait to ~47s; one timeout is answer enough.
+                    throw APIError.networkError("The server took too long to answer")
                 case .notConnectedToInternet:
                     throw APIError.networkError("No internet connection")
                 default:
@@ -895,7 +900,8 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
             guard (200...299).contains(http.statusCode) else {
                 if http.statusCode == 401 { throw APIError.unauthorized }
                 let body = String(data: data, encoding: .utf8) ?? "unknown"
-                let message = Self.parseErrorMessage(body) ?? body
+                // HTML error pages and proxy text are never shown raw.
+                let message = Self.parseErrorMessage(body) ?? HTTPURLResponse.localizedString(forStatusCode: http.statusCode).capitalized
                 throw APIError.httpError(http.statusCode, message)
             }
             return data

@@ -166,8 +166,20 @@ struct PortfolioView: View {
                 if !appState.isLoggedIn {
                     signInPrompt
                 } else if resolvedPortfolio == nil && appState.financeData == nil {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    if appState.financeDataLoaded {
+                        // The load failed; a spinner here would spin forever.
+                        ContentUnavailableView {
+                            Label("Couldn't load your portfolio", systemImage: "wifi.exclamationmark")
+                        } description: {
+                            Text("Check your connection and try again.")
+                        } actions: {
+                            Button("Try Again") { Task { await appState.loadFinanceData() } }
+                                .buttonStyle(.borderedProminent)
+                        }
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 } else {
                     ScrollView {
                         VStack(spacing: 16) {

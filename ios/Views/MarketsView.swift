@@ -6,6 +6,7 @@ struct MarketsView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var searchText = ""
     @State private var isVisible = false
+    @State private var isActive = true
     @State private var hasLoaded = false
     @State private var hasLoadedNews = false
     @State private var selectedStock: Stock?
@@ -122,11 +123,13 @@ struct MarketsView: View {
                 while !Task.isCancelled {
                     let interval = appState.isStockDataStale ? 10 : 30
                     try? await Task.sleep(for: .seconds(interval))
-                    guard isVisible, scenePhase == .active else { continue }
+                    // isActive is @State, so this reads the live phase, not the one captured when the task started.
+                    guard isVisible, isActive else { continue }
                     await refreshAllData()
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
+                isActive = newPhase == .active
                 guard newPhase == .active, isVisible else { return }
                 Task { await refreshAllData() }
             }

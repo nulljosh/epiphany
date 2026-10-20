@@ -618,9 +618,14 @@ final class EpiphanyAPI {
                 (data, response) = try await requestSession.data(for: request)
             } catch let urlError as URLError {
                 switch urlError.code {
-                case .timedOut, .networkConnectionLost, .cancelled:
+                case .cancelled:
+                    throw CancellationError()
+                case .networkConnectionLost:
                     lastError = APIError.networkError(urlError.localizedDescription)
                     continue
+                case .timedOut:
+                    // Retrying a timeout tripled the wait to ~47s; one timeout is answer enough.
+                    throw APIError.networkError("The server took too long to answer")
                 case .notConnectedToInternet:
                     throw APIError.networkError("No internet connection")
                 default:
@@ -642,8 +647,9 @@ final class EpiphanyAPI {
 
             guard (200...299).contains(http.statusCode) else {
                 if http.statusCode == 401 { throw APIError.unauthorized }
-                let body = String(data: data, encoding: .utf8) ?? "unknown"
-                throw APIError.httpError(http.statusCode, body)
+                // HTML error pages and proxy text are never shown raw.
+                let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+                throw APIError.httpError(http.statusCode, message ?? HTTPURLResponse.localizedString(forStatusCode: http.statusCode).capitalized)
             }
             return data
         }
