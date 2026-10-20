@@ -23,7 +23,7 @@ The accent is for actions, links and the icon. Never brown, beige, purple or tea
 
 ## Type
 - **Epiphany Sans** for everything you read: Manrope under the SIL Open Font License, renamed and pinned by `scripts/gen_font.py`, with the curly quotes and apostrophe redrawn as laurel leaves from Apollo's crown. Four weights, 400 to 700, proportional with tabular figures so prices line up.
-- **Epiphany Display** for headlines only: Cinzel (OFL), classical inscription capitals, set in caps with 0.04 em tracking. Never for body text, numbers or buttons.
+- **Epiphany Display** for headlines only: Tenor Sans (OFL), a sans serif with classical inscription proportions, set in caps with 0.08 em tracking. Never for body text, numbers or buttons.
 - Fallback is the system stack. Scale 34/41 bold, 22/28, 17/24, 15/20, 13/18. Licences ship in `fonts/`.
 
 ## Theme

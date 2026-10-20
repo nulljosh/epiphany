@@ -4,7 +4,6 @@
 @font-face { font-family: "Epiphany Sans"; font-weight: 600; font-display: swap; src: url("/fonts/EpiphanySans-Semibold.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 700; font-display: swap; src: url("/fonts/EpiphanySans-Bold.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Display"; font-weight: 400; font-display: swap; src: url("/fonts/EpiphanyDisplay-Regular.woff2") format("woff2"); }
-@font-face { font-family: "Epiphany Display"; font-weight: 700; font-display: swap; src: url("/fonts/EpiphanyDisplay-Bold.woff2") format("woff2"); }
 :root {
   --accent: #1462e0;
   --accent-light: #5aaeff;
@@ -16,5 +15,5 @@
   --ink: #eef2fa;
   --ink-2: #93a0bb;
   --font: "Epiphany Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, sans-serif;
-  --font-display: "Epiphany Display", "Trajan Pro", Georgia, serif;
+  --font-display: "Epiphany Display", -apple-system, Helvetica, sans-serif;
 }
