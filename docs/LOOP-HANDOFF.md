@@ -9,7 +9,6 @@ Work Epiphany toward its next major version, 3.0.0. Each pass fixes a batch from
 - iOS and Mac 2.5.18 (animated map pins, blue bulb icon) are waiting for App Review, submitted 2026-10-20. iOS 2.5.17 and Mac 2.5.16 are live.
 - Sweep batches 1 to 4 are pushed and web is deployed: 43 of 45 leads closed. Two clear-search flicker nits are left.
 - The new name is Plouton, the Greek god of wealth. Joshua asked for a Greek god theme like Hermes, rejected Chrysus, then said "you decide". It is free on Apple. The store name changes with 3.0.0, because 2.5.18 is in review.
-- Atlin's store listing reads "Pistis" from an old name probe; the rename back to Atlin was blocked by the permission check, so Joshua runs it.
 - Epiphany Sans is in `fonts/` and `brand/` but no screen uses it yet.
 - Ship gotchas: `ios/ExportOptions.plist` now exports an IPA so `asc workflow run ship-ios` can publish it. Submit fails until What's New is set on the en-CA locale. Watch has no ship workflow.
 
