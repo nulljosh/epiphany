@@ -260,11 +260,12 @@ struct StockDetailView: View {
                 .navigationTitle("News")
                 .navigationBarTitleDisplayMode(.inline)
             }
+            // Articles open from inside the drawer, so the reader is presented by the drawer, not over it.
+            .sheet(item: $selectedNewsURL) { url in
+                ArticleReaderView(url: url)
+            }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
-        }
-        .sheet(item: $selectedNewsURL) { url in
-            ArticleReaderView(url: url)
         }
         .sheet(isPresented: $showTradeSheet) {
             VStack(alignment: .leading, spacing: 12) {

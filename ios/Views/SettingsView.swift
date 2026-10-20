@@ -406,6 +406,7 @@ private struct ChangeEmailSheet: View {
             Form {
                 Section("New Email") {
                     TextField("name@example.com", text: $newEmail)
+                        .textContentType(.emailAddress)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.emailAddress)
@@ -413,6 +414,7 @@ private struct ChangeEmailSheet: View {
 
                 Section("Confirm Password") {
                     SecureField("Current password", text: $password)
+                        .textContentType(.password)
                 }
 
                 if let localError {
@@ -466,11 +468,14 @@ private struct ChangePasswordSheet: View {
             Form {
                 Section("Current Password") {
                     SecureField("Current password", text: $currentPassword)
+                        .textContentType(.password)
                 }
 
                 Section("New Password") {
                     SecureField("New password", text: $newPassword)
+                        .textContentType(.newPassword)
                     SecureField("Confirm new password", text: $confirmPassword)
+                        .textContentType(.newPassword)
                 }
 
                 if let localError {
@@ -536,6 +541,7 @@ private struct DeleteAccountSheet: View {
 
                 Section("Confirm Password") {
                     SecureField("Current password", text: $password)
+                        .textContentType(.password)
                 }
 
                 if let localError {

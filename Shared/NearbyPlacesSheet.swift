@@ -58,10 +58,15 @@ struct NearbyPlacesSheet: View {
                             }
                         }
                     }
-                    .searchable(text: $query, prompt: "Find a place or category")
                 }
             }
+            // On the stack, not the list, so an empty Events tab never hides the query you typed.
+            .searchable(text: $query, prompt: "Find a place or category")
             .navigationTitle("Near map center")
+            .toolbar {
+                // The Mac sheet has no swipe to dismiss, so an empty or failed list needs a way out.
+                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+            }
         }
         .task {
             // ponytail: Apple's POI search answers in about a second, so it fills the list first.

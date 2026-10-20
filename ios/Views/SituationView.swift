@@ -720,7 +720,7 @@ struct SituationView: View {
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10).padding(.vertical, 7)
                         .foregroundStyle(.primary)
-                        .liquidGlass(in: Capsule(), interactive: true, fallback: .ultraThinMaterial)
+                        .liquidGlass(in: Capsule(), interactive: false, fallback: .ultraThinMaterial)
                 }
                 .buttonStyle(.plain)
                 ForEach(VenueCategory.allCases, id: \.self) { cat in
@@ -754,7 +754,7 @@ struct SituationView: View {
                             if on {
                                 Capsule().fill(cat.tint)
                             } else {
-                                Color.clear.liquidGlass(in: Capsule(), interactive: true, fallback: .ultraThinMaterial)
+                                Color.clear.liquidGlass(in: Capsule(), interactive: false, fallback: .ultraThinMaterial)
                             }
                         }
                     }
