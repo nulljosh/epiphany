@@ -545,17 +545,10 @@ struct SituationView: View {
     }
 
     private func venuePin(_ cat: VenueCategory, _ item: MKMapItem) -> some View {
-        Button {
+        VenuePin(cat: cat, name: item.name ?? cat.label, showLabel: !isWideZoom, selected: selectedVenue === item) {
             Haptics.impact(.light)
             selectedVenue = item
-        } label: {
-            Image(systemName: cat.icon)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(6)
-                .background(cat.tint, in: Circle())
         }
-        .buttonStyle(.plain)
     }
 
     private func venueClusterPin(_ cat: VenueCategory, _ cluster: MapCluster<MKMapItem>) -> some View {
@@ -1793,6 +1786,48 @@ private extension View {
                     .presentationDetents([.fraction(0.4), .medium])
             }
         }
+    }
+}
+
+/// Venue pin: springs in when it appears, shows its name once zoomed in, and bounces up when selected.
+private struct VenuePin: View {
+    let cat: VenueCategory
+    let name: String
+    let showLabel: Bool
+    let selected: Bool
+    let action: () -> Void
+    @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: cat.icon)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(6)
+                    .background(cat.tint, in: Circle())
+                    .overlay(Circle().strokeBorder(.white, lineWidth: selected ? 2 : 0))
+                if showLabel {
+                    Text(name)
+                        .font(.caption2.weight(.semibold))
+                        .lineLimit(1)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.regularMaterial, in: Capsule())
+                        .frame(maxWidth: 110)
+                        .transition(.scale(scale: 0.6, anchor: .top).combined(with: .opacity))
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(shown ? (selected ? 1.25 : 1) : 0.2, anchor: .bottom)
+        .opacity(shown ? 1 : 0)
+        .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.6), value: shown)
+        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.55), value: selected)
+        .animation(reduceMotion ? nil : .snappy, value: showLabel)
+        .onAppear { shown = true }
+        .accessibilityLabel(name)
     }
 }
 

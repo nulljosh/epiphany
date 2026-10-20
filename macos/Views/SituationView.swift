@@ -362,16 +362,7 @@ struct SituationView: View {
     }
 
     private func venuePin(_ cat: VenueCategory, _ item: MKMapItem) -> some View {
-        Button {
-            selectedVenue = item
-        } label: {
-            Image(systemName: cat.icon)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(6)
-                .background(cat.tint, in: Circle())
-        }
-        .buttonStyle(.plain)
+        VenuePin(cat: cat, selected: selectedVenue === item) { selectedVenue = item }
     }
 
     private func venueClusterPin(_ cat: VenueCategory, _ cluster: MapCluster<MKMapItem>) -> some View {
@@ -1287,5 +1278,31 @@ private struct VenueDetailSheet: View {
                 .padding(.vertical, 2)
             }
         }
+    }
+}
+
+/// Venue pin: springs in when it appears and bounces up when selected. Skipped under Reduce Motion.
+private struct VenuePin: View {
+    let cat: VenueCategory
+    let selected: Bool
+    let action: () -> Void
+    @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: cat.icon)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(6)
+                .background(cat.tint, in: Circle())
+                .overlay(Circle().strokeBorder(.white, lineWidth: selected ? 2 : 0))
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(shown ? (selected ? 1.25 : 1) : 0.2, anchor: .bottom)
+        .opacity(shown ? 1 : 0)
+        .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.6), value: shown)
+        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.55), value: selected)
+        .onAppear { shown = true }
     }
 }
