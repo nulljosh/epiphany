@@ -15,7 +15,7 @@
 
 ## 2026-10-04 map QA leftovers (open)
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
-- [ ] Work through `docs/reference/code-sweep-2026-10-04.md`: 45 unverified leads from a read-only sweep (double submit on Create Alert, spinner that can stick on the stock chart and Portfolio, tiny tap targets on the watchlist star, amount fields that may save 0).
+- [ ] Finish the last 2 of 45 leads in `docs/reference/code-sweep-2026-10-04.md`, both low: the search clear re-fills text on the Markets tab and on the situation map search. The other 43 are fixed and checked off in that doc.
 - [ ] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet.
 - [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
 - [ ] macOS: the sign-in sheet and the onboarding sheet still swap in the same tick at sign-up. iOS hit a dead screen from that kind of overlap. Untested on Mac.
