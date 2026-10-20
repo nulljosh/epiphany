@@ -1,5 +1,8 @@
 > Priority tier 2 (2026-10-17): ship push, this week. Order: live blockers, ship pushes, active features, portfolio, exploratory. See ~/Documents/Code/LOOP-HANDOFF.md.
 
+- [ ] **Needs Joshua's yes:** archive, upload and submit 2.5.18 to App Store Connect for iOS, Mac and Watch. Built and checked locally (iOS and Mac build clean, 564 web tests pass). It carries the animated map pins, the blue light bulb icon and the version bump. Not archived or submitted yet.
+- [ ] Wire Epiphany Sans into the native apps and the web UI. The font files are in `fonts/` and `brand/tokens.css`; no app or web screen uses it yet.
+
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
@@ -158,7 +161,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
 - [ ] Add themes (dark mode etc.) to the stocks view
 - [ ] Analyze drawer video at ~/Documents/Misc/epiphany.mp4 for the drawer UX spec
-- [ ] Analyze project from CLAUDE.md + README.md, then refresh the app icon based on that analysis
 
 ## Ingested 2026-08-18
 - [ ] Venue reviews via Google Places, DEFERRED 2026-09-07 (Joshua: later). Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Needs Joshua to add a card + accept ToS at console.cloud.google.com (project winnie-372220, Places API enable started). Then: create key, `wrangler secret put GOOGLE_PLACES_API_KEY`, port `server/api/venue-details.js` from Yelp to Places (New). `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
@@ -201,7 +203,6 @@ Scope: large UI change, do in a dedicated session.
 - [ ] "One big dot for the entire city" on web: not yet root-caused. With almost every layer empty, the surviving markers cluster into a single badge (`clusterPoints` in `src/components/LiveMapBackdrop.jsx`, radius 60 at initial zoom 10.6). Re-check now that flights layer is returning real data.
 - [ ] Loading glitch in the top App Store bar on web.
 - [ ] Bump landing page links and GitHub links to current.
-- [ ] Decide: is the app icon green or blue? Pick one and make it consistent.
 - [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
 
 ### Open, security
