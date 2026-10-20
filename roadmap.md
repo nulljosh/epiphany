@@ -1,6 +1,6 @@
 > Priority tier 2 (2026-10-17): ship push, this week. Order: live blockers, ship pushes, active features, portfolio, exploratory. See ~/Documents/Code/LOOP-HANDOFF.md.
 
-- [ ] 2.5.18 (pins, blue icon) is waiting for App Review on iPhone and Mac, submitted 2026-10-20. Watch 2.5.18 is bumped but has no ship workflow.
+- [ ] 3.0.0 (the 2.5.18 build folded in) is waiting for App Review on iPhone and Mac, submitted 2026-10-20. Watch has no ship workflow.
 - [ ] Wire Epiphany Sans into the native apps and the web UI. The font files are in `fonts/` and `brand/tokens.css`; no app or web screen uses it yet.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
@@ -15,7 +15,6 @@
 
 ## 2026-10-04 map QA leftovers (open)
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
-- [ ] Finish the last 2 of 45 leads in `docs/reference/code-sweep-2026-10-04.md`, both low: the search clear re-fills text on the Markets tab and on the situation map search. The other 43 are fixed and checked off in that doc.
 - [ ] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet.
 - [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
 - [ ] macOS: the sign-in sheet and the onboarding sheet still swap in the same tick at sign-up. iOS hit a dead screen from that kind of overlap. Untested on Mac.
