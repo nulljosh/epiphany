@@ -479,6 +479,9 @@ struct SituationView: View {
         .padding(.top, 12)
     }
 
+    /// Escape and the clear button both empty the field; onChange then drops the suggestions.
+    private func clearMapSearch() { mapSearch = "" }
+
     private var searchField: some View {
         HStack(spacing: 6) {
             TextField("Search location…", text: $mapSearch)
@@ -490,6 +493,16 @@ struct SituationView: View {
                     searchCompleter.update(query: query, region: visibleRegion)
                 }
                 .frame(width: 160)
+                .onExitCommand { clearMapSearch() }
+            if !mapSearch.isEmpty {
+                Button { clearMapSearch() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
+            }
             Button { Task { await geocodeAndFly() } } label: {
                 Image(systemName: "arrow.right")
                     .font(.system(size: 11, weight: .bold))
@@ -660,11 +673,11 @@ struct SituationView: View {
 
         async let earthquakeLoad = loadEarthquakesIfEnabled(lat: center.latitude, lon: center.longitude)
         async let flightLoad = loadFlightsIfEnabled(lamin: lamin, lomin: lomin, lamax: lamax, lomax: lomax)
-        async let incidentLoad = loadIncidentsIfEnabled(lat: center.latitude, lon: center.longitude)
+        async let incidentLoad = loadIncidentsIfEnabled(lat: center.latitude, lon: center.longitude, box: (lamin, lomin, lamax, lomax))
         async let weatherLoad = loadWeatherIfEnabled(lat: center.latitude, lon: center.longitude)
         async let crimeLoad = loadCrimeIfEnabled(lat: center.latitude, lon: center.longitude)
         async let localEventsLoad = loadLocalEventsIfEnabled(lat: center.latitude, lon: center.longitude)
-        async let trafficLoad = loadTrafficIfEnabled(lat: center.latitude, lon: center.longitude)
+        async let trafficLoad = loadTrafficIfEnabled(lat: center.latitude, lon: center.longitude, box: (lamin, lomin, lamax, lomax))
         async let wildfireLoad = loadWildfiresIfEnabled(lat: center.latitude, lon: center.longitude)
         async let aqiLoad = loadSection(label: "AQI") { try await EpiphanyAPI.shared.fetchAQI(lat: center.latitude, lon: center.longitude) }
 
@@ -764,11 +777,12 @@ struct SituationView: View {
 
     private func loadIncidentsIfEnabled(
         lat: Double,
-        lon: Double
+        lon: Double,
+        box: (Double, Double, Double, Double)
     ) async -> (value: [Incident], error: String?) {
         guard appState.situationIncidentsEnabled else { return ([], nil) }
         return await loadSection(label: "Incidents") {
-            try await EpiphanyAPI.shared.fetchIncidents(lat: lat, lon: lon)
+            try await EpiphanyAPI.shared.fetchIncidents(lat: lat, lon: lon, lamin: box.0, lomin: box.1, lamax: box.2, lomax: box.3)
         }
     }
 
@@ -804,11 +818,12 @@ struct SituationView: View {
 
     private func loadTrafficIfEnabled(
         lat: Double,
-        lon: Double
+        lon: Double,
+        box: (Double, Double, Double, Double)
     ) async -> (value: TrafficData?, error: String?) {
         guard appState.situationTrafficEnabled else { return (nil, nil) }
         do {
-            let data = try await EpiphanyAPI.shared.fetchTraffic(lat: lat, lon: lon)
+            let data = try await EpiphanyAPI.shared.fetchTraffic(lat: lat, lon: lon, lamin: box.0, lomin: box.1, lamax: box.2, lomax: box.3)
             return (data, nil)
         } catch {
             return (nil, "Traffic unavailable")

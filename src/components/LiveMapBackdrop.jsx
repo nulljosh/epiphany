@@ -512,7 +512,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           center: [initCenter.lon, initCenter.lat],
           zoom: initZoom,
           interactive: true,
-          attributionControl: false,
+          attributionControl: { compact: true }, // OpenStreetMap and CARTO need on-map credit
           pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         });
         map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
@@ -1249,7 +1249,12 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           <form className="epiphany-map-search" onSubmit={handleSearch} style={{ display: 'flex', gap: 8, pointerEvents: 'auto' }}>
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => {
+                setSearch(e.target.value);
+                // Picking a suggestion flies straight there instead of waiting for Enter.
+                if (suggestions.some(s => s.display_name === e.target.value)) e.target.form.requestSubmit();
+              }}
+              onKeyDown={e => { if (e.key === 'Escape') { setSearch(''); e.currentTarget.blur(); } }}
               placeholder="Search here"
               aria-label="Search map location"
               list="epiphany-map-search-options"
@@ -1324,7 +1329,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           <div style={{ padding: 12, borderBottom: `1px solid ${P.line}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <strong>Places near map center</strong>
-              <button onClick={loadPlaces} disabled={placesLoading} style={{ background: 'none', border: 0, color: P.link, cursor: 'pointer' }}>Refresh</button>
+              <span style={{ display: 'flex', gap: 10 }}>
+                <button onClick={loadPlaces} disabled={placesLoading} style={{ background: 'none', border: 0, color: P.link, cursor: 'pointer' }}>Refresh</button>
+                <button onClick={() => setShowPlaces(false)} style={{ background: 'none', border: 0, color: P.link, cursor: 'pointer' }}>Close</button>
+              </span>
             </div>
             <div style={{ fontSize: 11, color: P.sub, marginTop: 3 }}>{placesSection === 'places' ? 'OpenStreetMap · about 6 km · mapped places only' : 'Connected event feeds · verified map locations only'}</div>
             <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>

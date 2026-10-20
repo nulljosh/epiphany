@@ -438,11 +438,8 @@ final class EpiphanyAPI {
         return try decode(FlightFeed.self, from: data)
     }
 
-    func fetchIncidents(lat: Double, lon: Double) async throws -> [Incident] {
-        let url = try makeURL("/api/incidents", query: [
-            "lat": String(lat),
-            "lon": String(lon),
-        ])
+    func fetchIncidents(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> [Incident] {
+        let url = try makeURL("/api/incidents", query: Self.areaQuery(lat, lon, lamin, lomin, lamax, lomax))
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(IncidentResponse.self, from: data).incidents
@@ -479,8 +476,8 @@ final class EpiphanyAPI {
         return try decode(PlacesResponse.self, from: await perform(URLRequest(url: url))).places
     }
 
-    func fetchTraffic(lat: Double, lon: Double) async throws -> TrafficData {
-        let url = try makeURL("/api/traffic", query: ["lat": String(lat), "lon": String(lon)])
+    func fetchTraffic(lat: Double, lon: Double, lamin: Double? = nil, lomin: Double? = nil, lamax: Double? = nil, lomax: Double? = nil) async throws -> TrafficData {
+        let url = try makeURL("/api/traffic", query: Self.areaQuery(lat, lon, lamin, lomin, lamax, lomax))
         let request = URLRequest(url: url)
         let data = try await perform(request)
         return try decode(TrafficData.self, from: data)
@@ -590,6 +587,16 @@ final class EpiphanyAPI {
     }
 
     // MARK: - Internals
+
+    /// Centre plus the visible box when there is one, so a zoomed out map covers its edges, not just the middle.
+    private static func areaQuery(_ lat: Double, _ lon: Double, _ lamin: Double?, _ lomin: Double?, _ lamax: Double?, _ lomax: Double?) -> [String: String] {
+        var params = ["lat": String(lat), "lon": String(lon)]
+        if let lamin, let lomin, let lamax, let lomax {
+            params["lamin"] = String(lamin); params["lomin"] = String(lomin)
+            params["lamax"] = String(lamax); params["lomax"] = String(lomax)
+        }
+        return params
+    }
 
     private func makeURL(_ path: String, query: [String: String] = [:]) throws -> URL {
         var components = URLComponents(string: baseURL + path)
