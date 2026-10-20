@@ -41,8 +41,8 @@ Not read: ios/API/EpiphanyAPI.swift (notification alerts only); ios/Services/Not
 - [x] (low) `ios/Views/SettingsView.swift:472` SecureField for new password in password change sheet missing textContentType for proper password autofill. Symptom: Autofill doesn't suggest strong password generation; iOS Keychain integration is weaker.
 - [x] (low) `ios/Views/SettingsView.swift:473` SecureField for confirming new password in password change sheet missing textContentType for proper password autofill. Symptom: Autofill doesn't suggest strong password generation; iOS Keychain integration is weaker.
 - [x] (low) `ios/Views/SettingsView.swift:538` SecureField for password in account deletion sheet missing textContentType for proper password autofill. Symptom: Autofill doesn't suggest saved passwords; iOS Keychain integration is weaker.
-- [ ] (low) `ios/Views/MarketsView.swift:291` Search text binding cleared while focus state set to false in same step; field may re-populate old text. Symptom: User taps X to clear search; text clears momentarily then reappears briefly before fully dismissing.
-- [ ] (low) `ios/Views/SituationView.swift:1193` Map search text binding cleared while focus state set to false in same step; field may re-populate old text. Symptom: User taps clear button (xmark); search text clears momentarily then reappears briefly before fully dismissing.
+- [x] (low) `ios/Views/MarketsView.swift:291` Search text binding cleared while focus state set to false in same step; field may re-populate old text. Symptom: User taps X to clear search; text clears momentarily then reappears briefly before fully dismissing.
+- [x] (low) `ios/Views/SituationView.swift:1193` Map search text binding cleared while focus state set to false in same step; field may re-populate old text. Symptom: User taps clear button (xmark); search text clears momentarily then reappears briefly before fully dismissing.
 
 Not read: ios/Views/AlertsView.swift lines 200+; ios/Views/MarketsView.swift lines 350+; ios/Views/StockDetailView.swift lines 350+.
 

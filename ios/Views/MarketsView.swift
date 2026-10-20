@@ -294,9 +294,10 @@ struct MarketsView: View {
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
 
             Button {
+                // Drop focus first so the field can't write the old text back as it resigns.
+                searchFieldFocused = false
                 searchText = ""
                 isSearching = false
-                searchFieldFocused = false
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))

@@ -1239,6 +1239,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         .epiphany-map-popup .maplibregl-popup-content { background:rgba(2,6,23,0.92); color:#fff; border:1px solid rgba(255,255,255,0.24); border-radius:12px; padding:10px 12px; }
         .epiphany-map-popup .maplibregl-popup-tip { border-top-color:rgba(2,6,23,0.92); }
         .epiphany-map-popup .maplibregl-popup-close-button { color:#94a3b8; font-size:16px; padding:2px 6px; }
+        .maplibregl-ctrl-attrib.maplibregl-compact { background:rgba(2,6,23,0.72); color:#94a3b8; }
+        .maplibregl-ctrl-attrib a { color:#cbd5e1; }
+        .maplibregl-ctrl-attrib-button { filter: invert(1); background-color: transparent; }
       `}</style>
       <div
         ref={mapRef}

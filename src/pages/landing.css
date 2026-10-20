@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300&display=swap');
+/* Apollo theme (brand/BRAND.md): Epiphany Sans to read, Epiphany Display caps for headlines, both self-hosted. */
+@font-face { font-family: "Epiphany Sans"; font-weight: 300 400; font-display: swap; src: url("/fonts/EpiphanySans-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Sans"; font-weight: 500; font-display: swap; src: url("/fonts/EpiphanySans-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Sans"; font-weight: 600; font-display: swap; src: url("/fonts/EpiphanySans-Semibold.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Sans"; font-weight: 700 900; font-display: swap; src: url("/fonts/EpiphanySans-Bold.woff2") format("woff2"); }
+@font-face { font-family: "Epiphany Display"; font-weight: 100 900; font-display: swap; src: url("/fonts/EpiphanyDisplay-Regular.woff2") format("woff2"); }
 
 /* Landing Page v2 design handoff (2026-06-13). Everything scoped
    under .lp so nothing leaks into the authed app. */
@@ -10,8 +15,8 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp, .epiphany-preauth {
   --lp-ink: 255,255,255;
   --lp-fg: #fff;
-  --lp-bg: #05070c;
-  --lp-bg-rgb: 5,7,12;
+  --lp-bg: #070b16;
+  --lp-bg-rgb: 7,11,22;
   --lp-nav-bg: rgba(20,20,26,0.72);
 }
 [data-theme="light"] .lp, [data-theme="light"] .epiphany-preauth {
@@ -22,11 +27,12 @@ html:has(.lp) { scroll-behavior: smooth; }
   --lp-nav-bg: rgba(255,255,255,0.72);
 }
 .lp {
-  --accent: #0A84FF;
+  --accent: #1462e0;
+  --link: #5aaeff;
   background: var(--lp-bg);
   color: var(--lp-fg);
   overflow-x: hidden;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: "Epiphany Sans", -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -87,9 +93,13 @@ html:has(.lp) { scroll-behavior: smooth; }
   text-transform: uppercase; color: rgba(var(--lp-ink),0.35);
   margin-bottom: 18px;
 }
+.lp .lp-hero-headline, .lp .lp-showcase-headline, .lp .lp-final-headline {
+  font-family: "Epiphany Display", "Epiphany Sans", sans-serif;
+  font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em;
+}
 .lp .lp-hero-headline {
-  font-size: clamp(52px, 8vw, 108px);
-  font-weight: 800; letter-spacing: -0.045em; line-height: 1.0;
+  font-size: clamp(40px, 6.4vw, 92px);
+  line-height: 1.04;
   text-wrap: balance; margin-bottom: 24px;
 }
 .lp .lp-hero-headline em {
@@ -101,6 +111,17 @@ html:has(.lp) { scroll-behavior: smooth; }
   max-width: 480px; line-height: 1.7; margin-bottom: 40px;
   text-wrap: pretty;
 }
+.lp .lp-hero-art {
+  position: absolute; inset: 0; margin: auto; z-index: 0;
+  height: 100%; width: auto; max-width: none; left: 50%; transform: translateX(-50%);
+  opacity: 0.42; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
+}
+@media (prefers-reduced-transparency: reduce) { .lp .lp-hero-art { opacity: 0.25; } }
+/* The halftone sits on night blue: screen drops that blue into the dark page, and light mode skips the art. */
+.lp .lp-hero-art { mix-blend-mode: screen; }
+[data-theme="light"] .lp .lp-hero-art { display: none; }
 .lp .lp-hero .lp-eyebrow,
 .lp .lp-hero-headline,
 .lp .lp-hero-sub,
@@ -201,8 +222,8 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .lp-showcase.flip > * { direction: ltr; }
 .lp .lp-showcase-copy .lp-eyebrow { color: var(--link, var(--accent)); }
 .lp .lp-showcase-headline {
-  font-size: clamp(36px, 4.5vw, 58px);
-  font-weight: 800; letter-spacing: -0.04em; line-height: 1.03;
+  font-size: clamp(28px, 3.6vw, 46px);
+  line-height: 1.08;
   margin-bottom: 20px; text-wrap: balance;
 }
 .lp .lp-showcase-sub {
@@ -299,8 +320,8 @@ html:has(.lp) { scroll-behavior: smooth; }
   position: relative; overflow: hidden;
 }
 .lp .lp-final-headline {
-  font-size: clamp(44px, 6vw, 84px);
-  font-weight: 800; letter-spacing: -0.045em; line-height: 1.0;
+  font-size: clamp(36px, 5vw, 70px);
+  line-height: 1.04;
   margin-bottom: 36px; position: relative;
 }
 .lp .lp-footer {

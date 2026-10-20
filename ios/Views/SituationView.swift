@@ -1183,9 +1183,10 @@ struct SituationView: View {
                 .frame(maxWidth: .infinity)
             if !mapSearch.isEmpty {
                 Button {
+                    // Drop focus first so the field can't write the old text back as it resigns.
+                    searchFocused = false
                     mapSearch = ""
                     searchCompleter.clear()
-                    searchFocused = false
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))

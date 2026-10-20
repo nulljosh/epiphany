@@ -3,8 +3,11 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "Map pins pop in as you move around, and the one you tap stands out",
-    "A new blue icon",
+    "A new look: Apollo's lyre for the icon, laurel-leaf quote marks",
+    "Map pins pop in as you move, and the one you tap stands out",
+    "No more endless spinners: slow servers give up fast and tell you plainly",
+    "Every button on the map answers the first tap",
+    "Autofill fills your email and passwords in Settings",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app
