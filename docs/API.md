@@ -1,6 +1,6 @@
 # Epiphany API
 
-Base URL: `https://epiphany.heyitsmejosh.com/api`
+Base URL: `https://epiphany.jaybulb.com/api`
 
 Every route is served by one Cloudflare Worker (`worker/index.js`) which hands
 `/api/*` to the gateway in `api/gateway.js`. The path after `/api/` is the route
@@ -15,11 +15,11 @@ Session auth over an HTTP-only cookie. Sign in first, then send the cookie on
 subsequent calls:
 
 ```bash
-curl -c jar.txt -X POST https://epiphany.heyitsmejosh.com/api/auth \
+curl -c jar.txt -X POST https://epiphany.jaybulb.com/api/auth \
   -H 'Content-Type: application/json' \
   -d '{"action":"login","email":"you@example.com","password":"..."}'
 
-curl -b jar.txt https://epiphany.heyitsmejosh.com/api/watchlist
+curl -b jar.txt https://epiphany.jaybulb.com/api/watchlist
 ```
 
 From a browser on the same origin, `fetch(url, { credentials: 'include' })` is

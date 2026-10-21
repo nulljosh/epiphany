@@ -164,7 +164,7 @@ export default {
   // targets Workers rather than Pages.
   async scheduled(event, env, ctx) {
     try { Object.assign(process.env, env); } catch { /* see above */ }
-    bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.heyitsmejosh.com', ctx);
+    bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.jaybulb.com', ctx);
 
     // The daily 12:00 tick also runs crypto paper trading: crypto trades on weekends, the stock crons do not.
     const paths = { '0 8 * * 1-5': ['cron'], '30 14 * * 1-5': ['broker/morning-run'], '0 12 * * *': ['broker/crypto-paper'] }[event.cron] || [];

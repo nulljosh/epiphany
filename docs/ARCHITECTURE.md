@@ -4,7 +4,7 @@ Epiphany is a personal intelligence dashboard for your money, location, and mark
 
 ## How it runs
 
-**Web**: A visitor lands on epiphany.heyitsmejosh.com and loads a Vite React app from Cloudflare Pages. The React code lives in `/src` and talks to the API via `/api`. Unauthenticated visitors see the landing page. Authenticated users get a tabbed dashboard with a live map, markets list, portfolio view, and settings.
+**Web**: A visitor lands on epiphany.jaybulb.com and loads a Vite React app from Cloudflare Pages. The React code lives in `/src` and talks to the API via `/api`. Unauthenticated visitors see the landing page. Authenticated users get a tabbed dashboard with a live map, markets list, portfolio view, and settings.
 
 **iOS/macOS**: A native SwiftUI app in `/ios` and `/Shared` (cross-platform Swift models). At launch, it authenticates with the backend API, then preloads stock prices, portfolio data, and market indicators. The app stores session cookies and credentials in the system keychain. All rendering is SwiftUI; no WebView except for SVG avatar rasterization.
 

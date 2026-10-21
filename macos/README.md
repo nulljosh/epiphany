@@ -5,7 +5,7 @@
 ![version](https://img.shields.io/badge/version-v1.1.1-blue)
 
 Native macOS companion for Epiphany. MapKit map with layer switcher + venue chips, markets table, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
-[Epiphany](https://epiphany.heyitsmejosh.com) | ![Architecture](architecture.svg)
+[Epiphany](https://epiphany.jaybulb.com) | ![Architecture](architecture.svg)
 
 ## Features
 - MapKit map with 7 data layers (earthquakes, flights, incidents, weather, crime, local events, traffic)

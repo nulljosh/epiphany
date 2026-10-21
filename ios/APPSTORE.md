@@ -9,7 +9,7 @@ v1.0 passed App Store review, live within 24h: https://apps.apple.com/app/epipha
 ## Ready
 - Bundle `com.heyitsmejosh.epiphany`, team `QMM486NPYC`, v2.0.5, automatic signing
 - Icons (light/dark/tinted 1024), launch screen, all privacy usage strings, no ATS exceptions
-- Privacy policy live at https://epiphany.heyitsmejosh.com/privacy
+- Privacy policy live at https://epiphany.jaybulb.com/privacy
 - Web-upgrade links removed from iOS Settings (guideline 3.1.1)
 
 ## One-time (App Store Connect → Business)
@@ -22,8 +22,8 @@ v1.0 passed App Store review, live within 24h: https://apps.apple.com/app/epipha
 2. Xcode: Any iOS Device (arm64) → Product → Archive → Distribute → App Store Connect
 3. TestFlight: install via internal testing, smoke-test login/map/markets/portfolio
 4. Listing: screenshots from iPhone 17 Pro simulator (⌘S; 1320×2868), description below,
-   keywords, support URL https://epiphany.heyitsmejosh.com,
-   privacy URL https://epiphany.heyitsmejosh.com/privacy
+   keywords, support URL https://epiphany.jaybulb.com,
+   privacy URL https://epiphany.jaybulb.com/privacy
 5. App Privacy questionnaire — declare, all "linked to you", none used for tracking:
    - Contact Info → Email Address (account)
    - Location → Coarse Location (map features)

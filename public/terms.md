@@ -53,4 +53,4 @@ These Terms of Service are governed by the laws of British Columbia, Canada, wit
 
 ---
 
-**For questions or disputes**, contact: joshua@heyitsmejosh.com
+**For questions or disputes**, contact: trommatic@icloud.com

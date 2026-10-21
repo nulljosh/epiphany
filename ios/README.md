@@ -36,7 +36,7 @@ xcodegen generate && open Epiphany.xcodeproj
 # Simulator: iPhone 17 Pro (default in project.yml)
 ```
 
-Backend: epiphany.heyitsmejosh.com (auth via email/password, credentials stored in keychain)
+Backend: epiphany.jaybulb.com (auth via email/password, credentials stored in keychain)
 
 ## Changelog
 

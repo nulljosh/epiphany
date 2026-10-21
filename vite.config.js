@@ -7,7 +7,7 @@ import { getStatementsPayload } from './server/api/statements-data.js'
 
 const APP_VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 
-const PROD_API = 'https://epiphany.heyitsmejosh.com';
+const PROD_API = 'https://epiphany.jaybulb.com';
 
 function localStatementsPlugin() {
   return {

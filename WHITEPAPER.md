@@ -11,7 +11,7 @@ interface that puts unrelated feeds (earthquakes, flights, crime, prices,
 prediction markets) into a shared frame without forcing them into a single
 schema first. It can also trade a portfolio on a measured signal, so the same
 picture that shows what's happening can act on it. Palantir for regular
-people. Live at [epiphany.heyitsmejosh.com](https://epiphany.heyitsmejosh.com),
+people. Live at [epiphany.jaybulb.com](https://epiphany.jaybulb.com),
 with companion apps for iOS, macOS, and watchOS.
 
 This paper leads with the algorithms, because the trading and prediction
