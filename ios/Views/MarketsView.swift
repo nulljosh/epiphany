@@ -23,6 +23,7 @@ struct MarketsView: View {
     @State private var isLoadingNews = true
     @State private var selectedStockForNews: Stock?
     @State private var isSearching = false
+    @State private var searchResults: [EpiphanyAPI.SymbolSearchResult] = []
     @FocusState private var searchFieldFocused: Bool
 
     enum FeedDest: Identifiable {
@@ -434,6 +435,39 @@ struct MarketsView: View {
                     .listSectionSpacing(0)
             }
 
+            // Any ticker, not just the loaded list: add it straight to the watchlist.
+            let loaded = Set(filteredItems.map(\.symbol))
+            let others = searchResults.filter { !loaded.contains($0.symbol) }
+            if isSearching, !others.isEmpty {
+                Section("Add to watchlist") {
+                    ForEach(others) { result in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(result.symbol).font(.body.weight(.semibold))
+                                Text([result.name, result.exchange].compactMap { $0 }.joined(separator: " · "))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                            let added = appState.isInWatchlist(result.symbol)
+                            Button {
+                                Haptics.impact(.light)
+                                Task {
+                                    if added { await appState.removeWatchlistSymbol(result.symbol) }
+                                    else { await appState.addWatchlistSymbol(result.symbol) }
+                                }
+                            } label: {
+                                Image(systemName: added ? "checkmark.circle.fill" : "plus.circle")
+                                    .font(.title3)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(added ? "Remove \(result.symbol) from watchlist" : "Add \(result.symbol) to watchlist")
+                        }
+                    }
+                }
+            }
+
             if !appState.watchlistStocks.isEmpty {
                 Section("Watchlist") {
                     ForEach(appState.watchlistStocks) { stock in
@@ -471,6 +505,13 @@ struct MarketsView: View {
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
+        .task(id: searchText) {
+            let query = searchText.trimmingCharacters(in: .whitespaces)
+            guard isSearching, !query.isEmpty else { searchResults = []; return }
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            searchResults = (try? await EpiphanyAPI.shared.searchSymbols(query)) ?? []
+        }
         // Clear the floating tab bar AND the news drawer's peek (which floats over
         // the list bottom) so the last stock rows scroll fully into view.
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 72) }
