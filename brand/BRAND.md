@@ -27,7 +27,7 @@ The accent is for actions, links and the icon. Never brown, beige, purple or tea
 - Fallback is the system stack. Scale 34/41 bold, 22/28, 17/24, 15/20, 13/18. Licences ship in `fonts/`.
 
 ## Theme
-Apollo, god of light and foresight: the lyre is the mark, the laurel is the quote mark, the art is public domain engravings and statues of Apollo, dithered to halftone in the accent blue. One colour only; the theme lives in the drawing and the type, not in gold or gradients.
+Apollo, god of light and foresight: the lyre is the mark, the laurel is the quote mark, the art is Prometheus carrying fire (Jan Cossiers, 1637, public domain), the god whose name means forethought, dithered to halftone in the accent blue by `scripts/gen_art.py`. One colour only; the theme lives in the drawing and the type, not in gold or gradients.
 
 ## Space and shape
 - Space on the 8 point grid: 4, 8, 12, 16, 24, 32, 48. Side margin 20. Reading column 680.
