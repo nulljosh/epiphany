@@ -104,6 +104,7 @@ struct SituationView: View {
     @State private var showLiveMap = false
     @State private var selectedEvent: MapEventDetail?
     @State private var loadTask: Task<Void, Never>?
+    @State private var lastLoadedRegion: MKCoordinateRegion?
     @State private var isLoadingData = false
     @State private var isOffline = false
     @State private var networkMonitor: NWPathMonitor?
@@ -170,8 +171,13 @@ struct SituationView: View {
         .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { now in
             let elapsed = min(now.timeIntervalSince(lastFlightTick), 1)
             lastFlightTick = now
-            guard showFlights else { return }
+            guard showFlights, !flights.isEmpty, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
             updateFlightPositions(seconds: elapsed)
+        }
+        // Live layers go stale; reload the visible area every 5 minutes while the map is open.
+        .onReceive(Timer.publish(every: 300, on: .main, in: .common).autoconnect()) { _ in
+            guard !isOffline, !ProcessInfo.processInfo.isLowPowerModeEnabled, let region = visibleRegion ?? lastLoadedRegion else { return }
+            Task { await loadData(region: region) }
         }
         .onChange(of: locationManager.locationUpdateCount) { _, _ in
             guard let region = locationManager.region else { return }
@@ -689,6 +695,11 @@ struct SituationView: View {
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
                 guard !isOffline else { return }
+                // A small pan at the same zoom keeps the loaded layers; only venues follow the view.
+                if let last = lastLoadedRegion, isSmallMove(from: last, to: region) {
+                    await refreshVenues()
+                    return
+                }
                 await loadData(region: region)
                 await refreshVenues()
             }
@@ -879,6 +890,14 @@ struct SituationView: View {
 
     // MARK: - Data loading (incremental, per-source Tasks)
 
+    /// Under a quarter of the view moved and the zoom stayed within 2x.
+    private func isSmallMove(from old: MKCoordinateRegion, to new: MKCoordinateRegion) -> Bool {
+        let zoom = new.span.latitudeDelta / max(old.span.latitudeDelta, 1e-9)
+        guard zoom > 0.5, zoom < 2 else { return false }
+        return abs(new.center.latitude - old.center.latitude) < old.span.latitudeDelta * 0.25
+            && abs(new.center.longitude - old.center.longitude) < old.span.longitudeDelta * 0.25
+    }
+
     private func loadData(region: MKCoordinateRegion) async {
         error = nil
         flightStatusMessage = nil
@@ -886,6 +905,7 @@ struct SituationView: View {
 
         let regionId = UUID()
         loadRegionId = regionId
+        lastLoadedRegion = region
 
         let center = region.center
         let span = region.span
