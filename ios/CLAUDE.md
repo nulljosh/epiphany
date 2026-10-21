@@ -54,7 +54,7 @@ git-tracked file -- only in the gitignored xcconfig.
 1. **Situation** — MapKit map with 8 toggleable live data layers. Default home screen.
 2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index. Feed pills: News | Macro | Alerts. TickerBarView lives here (not ContentView).
 3. **Portfolio** — Spending chart + forecast, holdings, budget, debt/goals calendar, statements.
-4. **Settings** — Profile (avatar + keychain), subscription tier, Tally integration. Security: email/password. Map layers under dev mode only.
+4. **Settings** — Profile (avatar + keychain), subscription tier, Tally integration. Security: email/password. Map layers (Map section, visible to everyone).
 
 ## Run
 
