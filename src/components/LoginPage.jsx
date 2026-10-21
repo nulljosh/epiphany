@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './auth.css';
+import OAuthButtons from './OAuthButtons';
 
 const FONT = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
 
@@ -177,8 +178,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
         {/* Step 1: Email */}
         {step === 'email' && (
           <div style={{ ...card, ...fadeStyle(mounted, 0.12) }}>
-            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with GitHub</a>
-            <a href="/api/auth?action=google" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#fff', color: '#1f1f1f', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with Google</a>
+            <OAuthButtons verb="Sign in" />
             {/* ponytail: Facebook sign-in wired but not linked — FACEBOOK_APP_ID/SECRET not set yet. Uncomment once Josh creates the Facebook app (roadmap.md). */}
             {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with Facebook</a> */}
             {/* ponytail: X sign-in disabled 2026-07-21 — dev X account deleted, TWITTER_CLIENT_ID/SECRET dead. Re-enable once a new account + keys exist. */}

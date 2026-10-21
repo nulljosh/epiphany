@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './auth.css';
+import OAuthButtons from './OAuthButtons';
 
 const FONT = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
 const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
@@ -68,8 +69,7 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
         {/* Form */}
         <div style={{ maxWidth: 420, margin: '0 auto', ...card, ...fadeStyle(mounted, 0.18) }}>
           <div style={{ marginBottom: 20 }}>
-            <a href="/api/auth?action=github" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#24292e', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with GitHub</a>
-            <a href="/api/auth?action=google" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#fff', color: '#1f1f1f', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with Google</a>
+            <OAuthButtons verb="Sign up" />
             {/* ponytail: Facebook sign-up wired but not linked — FACEBOOK_APP_ID/SECRET not set yet. Uncomment once Josh creates the Facebook app (roadmap.md). */}
             {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with Facebook</a> */}
             {/* ponytail: X sign-up disabled 2026-07-21 — dev X account deleted, TWITTER_CLIENT_ID/SECRET dead. Re-enable once a new account + keys exist. */}
