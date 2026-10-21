@@ -1,27 +1,29 @@
-# Epiphany loop handoff (2026-10-21, morning)
+# Epiphany loop handoff (2026-10-21, late morning)
 
 ## What the loop is
 
-Work Epiphany toward its next major version, 3.0.0. Each pass fixes a batch from `docs/reference/code-sweep-2026-10-04.md` or a doable item in `roadmap.md`, builds iOS and Mac, mirrors the fix to every platform that has the same code, commits and pushes. The 3.0.0 bump is submitted; the loop now works the doable roadmap items and ships the next release after 3.0.0 clears.
+Work Epiphany one batch at a time. Each pass fixes a batch from `docs/reference/code-sweep-2026-10-04.md` or a doable item in `roadmap.md`, builds iOS and Mac, mirrors the fix to every platform that has the same code, and commits. Commits stay local until Joshua says push.
 
 ## Where things stand
 
-- Web sign-in (login and register) has shared 48 point capsule Google and GitHub buttons with brand marks. The login diagnosis is in the roadmap; the open login bug is an issue now.
-- 3.0.0 is WAITING_FOR_REVIEW on iOS and Mac, submitted 2026-10-20. It folds in the 2.5.18 build (same store version, renamed). Apple returned a 500 on one submit; the retry went through. Web 3.0.0 is deployed and live. Watch has no ship workflow.
-- Sweep done: all 45 leads closed (the last two: clearing a search drops focus first).
-- The landing page is restyled in the Apollo theme: Epiphany Display caps headlines over a halftone Apollo on a night blue page, Epiphany Sans self-hosted, dark map credit box.
-- The name stays Epiphany (Joshua, 2026-10-20: "just stick with epiphany for now"). The Apollo theme stays: lyre icon, laurel quotes, Tenor Sans headlines, brand kit at /brand.
-- Epiphany Sans is in `fonts/` and `brand/` and the landing uses it, but the iOS, Mac and web apps do not use it yet.
+- The last iPhone store release shipped the old icon: only the root icon bundle had been swapped. The iOS, Mac and Watch `.icon` bundles now carry the lyre.
+- A 3.0.1 iPhone build with the lyre is uploaded, not submitted. The store needs What's New text for en-CA first.
+- Mac 3.0.0 is WAITING_FOR_REVIEW (submitted 2026-10-20). The Watch build has no ship workflow.
+- Commit a6cfec0 is local only. It carries the income and debt fix (real income set, old debt removed, so web and phone agree), People search falling back to Wikipedia when Google's search API comes back empty, the mean-reverting six-month spending forecast, thinner iPhone chart month labels, and one sans type: San Francisco on Apple, Lato under the Epiphany Sans name elsewhere. The all-caps Tenor display face is dropped. The push and web deploy are blocked on Joshua.
+- Sweep done: all 45 leads closed.
+- The name stays Epiphany. The Apollo theme stays: lyre icon, laurel-leaf quotes, brand kit at /brand.
 - Ship gotchas: `ios/ExportOptions.plist` exports an IPA so `asc workflow run ship-ios` can publish it. Submit fails until What's New is set on the en-CA locale.
 
 ## Next, in order
 
-1. Wait for App Review on 3.0.0 (iOS and Mac). If Apple rejects it, reply with the reasons first; do not resubmit unchanged.
-2. Wire Epiphany Sans into iOS, Mac and web.
+1. Wait for App Review on Mac 3.0.0. If Apple rejects it, reply with the reasons first; do not resubmit unchanged.
+2. Brand kit: swap the Apollo statue art for an image that reads as a god of epiphanies (Joshua's ask, 2026-10-21).
 3. Roadmap items that need no one: MapSourcesSettingsView (wire or delete), web Places fallback when Overpass is down, macOS sign-in and onboarding sheet overlap.
+
+Blocked on Joshua, do not do without a yes: submit iPhone 3.0.1; push a6cfec0 and deploy the web.
 
 ## Restart prompt
 
 ```
-/loop to next major semver: read docs/LOOP-HANDOFF.md, do the next item in "Next, in order", build iOS and Mac (look for BUILD SUCCEEDED), mirror to every platform with the same code, commit and push, update this file.
+/loop next release: read docs/LOOP-HANDOFF.md, do the next item in "Next, in order" that needs no one, build iOS and Mac (look for BUILD SUCCEEDED), mirror to every platform with the same code, commit locally. Do not push or submit to the App Store without Joshua's yes. Update this file.
 ```

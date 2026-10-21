@@ -4,6 +4,11 @@
 - [ ] Wire Epiphany Sans into the native apps and the web UI. The font files are in `fonts/` and `brand/tokens.css`; no app or web screen uses it yet.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
+## 2026-10-21 (open)
+- [ ] Submit the iPhone 3.0.1 build with the lyre icon once What's New text is written for en-CA. Needs Joshua's yes.
+- [ ] Push commit a6cfec0 (income and debt, People search fallback, spending forecast, chart labels, one sans) and deploy the web. Local only until Joshua says go.
+- [ ] Brand kit: swap the Apollo statue art for an image that reads as a god of epiphanies (Joshua's next ask).
+
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
