@@ -4,10 +4,34 @@ import { getStatementsPayload, summarizeStatementBuffer } from './statements-dat
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
-import { summarizeTransactions, SUMMARY_VERSION } from './statements-shared.js';
+import {
+  summarizeTransactions,
+  SUMMARY_VERSION,
+  normalizeMerchant,
+  applyCategoryRules,
+  MIN_MERCHANT_KEY_LENGTH,
+} from './statements-shared.js';
 
 function transactionId(txn) {
   return `${txn?.date}|${txn?.description}|${txn?.amount}`;
+}
+
+// One category per merchant key, per user. Set by edit-transaction, applied to
+// every statement on upload and on re-parse, so a merchant is fixed once.
+function categoryRulesKey(userId) {
+  return `category-rules:${userId}`;
+}
+
+async function loadCategoryRules(kv, userId) {
+  const stored = await kv.get(categoryRulesKey(userId));
+  return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+}
+
+function applyRulesToSummary(summary, rules, filename) {
+  const transactions = summary?.transactions || [];
+  const categorized = applyCategoryRules(transactions, rules);
+  if (categorized.every((txn, i) => txn === transactions[i])) return summary;
+  return { ...summary, transactions: categorized, spendingMonth: summarizeTransactions(categorized, filename) };
 }
 
 function safeName(name = 'statement.pdf') {
@@ -59,7 +83,7 @@ async function readStatementBuffer(kv, statement) {
   return Buffer.from(storedFile.contentBase64, 'base64');
 }
 
-async function refreshStoredStatements(kv, statements) {
+async function refreshStoredStatements(kv, statements, rules = {}) {
   if (!Array.isArray(statements) || statements.length === 0) return [];
 
   const refreshed = await Promise.all(
@@ -82,7 +106,8 @@ async function refreshStoredStatements(kv, statements) {
         const buffer = await readStatementBuffer(kv, statement);
         if (!buffer) return statement;
 
-        const { spendingMonth, transactions } = await summarizeStatementBuffer(buffer, statement.filename);
+        const parsed = await summarizeStatementBuffer(buffer, statement.filename);
+        const { spendingMonth, transactions } = applyRulesToSummary(parsed, rules, statement.filename);
         return { ...statement, spendingMonth, transactions: transactions || [] };
       } catch {
         // Don't let one bad statement kill the entire list
@@ -125,7 +150,8 @@ export default async function handler(req, res) {
       const statements = await kv.get(statementsKey);
       console.log(`[STATEMENTS] KV get for ${statementsKey}: type=${typeof statements}, isArray=${Array.isArray(statements)}, length=${Array.isArray(statements) ? statements.length : 'N/A'}`);
       const storedStatements = Array.isArray(statements) ? statements : [];
-      const refreshed = await refreshStoredStatements(kv, storedStatements);
+      const rules = await loadCategoryRules(kv, session.userId);
+      const refreshed = await refreshStoredStatements(kv, storedStatements, rules);
 
       if (JSON.stringify(refreshed) !== JSON.stringify(storedStatements)) {
         await kv.set(statementsKey, refreshed);
@@ -153,7 +179,12 @@ export default async function handler(req, res) {
       if (buffer.length > MAX_STATEMENT_BYTES) {
         return errorResponse(res, 400, 'Statement too large (max 3MB)');
       }
-      const summary = await summarizeStatementBuffer(buffer, filename, providedText);
+      const rules = await loadCategoryRules(kv, session.userId);
+      const summary = applyRulesToSummary(
+        await summarizeStatementBuffer(buffer, filename, providedText),
+        rules,
+        filename
+      );
       const spendingMonth = summary?.spendingMonth || summarizeTransactions([], filename);
       const transactions = summary?.transactions;
       const statements = await kv.get(statementsKey);
@@ -215,20 +246,33 @@ export default async function handler(req, res) {
       const index = list.findIndex((item) => item?.id === id);
       if (index === -1) return errorResponse(res, 404, 'Statement not found');
 
-      const statement = list[index];
-      const nextTransactions = (statement.transactions || []).map((txn) =>
-        transactionId(txn) === txnId ? { ...txn, category } : txn
-      );
-      const nextStatement = {
-        ...statement,
-        transactions: nextTransactions,
-        spendingMonth: summarizeTransactions(nextTransactions, statement.filename),
-      };
-      const nextStatements = [...list];
-      nextStatements[index] = nextStatement;
+      // The edited row sets the rule for its merchant. Every other row with the
+      // same merchant key, in this statement or any other, takes the same category.
+      const edited = (list[index].transactions || []).find((txn) => transactionId(txn) === txnId);
+      const merchant = normalizeMerchant(edited?.description);
+      const learnRule = merchant.length >= MIN_MERCHANT_KEY_LENGTH;
+      const isChosen = (item, txn) =>
+        (item?.id === id && transactionId(txn) === txnId) ||
+        (learnRule && normalizeMerchant(txn?.description) === merchant);
+
+      const nextStatements = list.map((item) => {
+        const transactions = item?.transactions || [];
+        if (!transactions.some((txn) => isChosen(item, txn))) return item;
+        const nextTransactions = transactions.map((txn) => (isChosen(item, txn) ? { ...txn, category } : txn));
+        return {
+          ...item,
+          transactions: nextTransactions,
+          spendingMonth: summarizeTransactions(nextTransactions, item.filename),
+        };
+      });
       await kv.set(statementsKey, nextStatements);
 
-      return res.status(200).json({ ok: true, statement: nextStatement, statements: nextStatements });
+      if (learnRule) {
+        const rules = await loadCategoryRules(kv, session.userId);
+        await kv.set(categoryRulesKey(session.userId), { ...rules, [merchant]: category });
+      }
+
+      return res.status(200).json({ ok: true, statement: nextStatements[index], statements: nextStatements });
     }
 
     return errorResponse(res, 405, 'Method not allowed');

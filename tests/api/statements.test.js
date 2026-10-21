@@ -190,3 +190,88 @@ describe('statements upload handler', () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe('categorization that sticks', () => {
+  const txnId = (t) => `${t.date}|${t.description}|${t.amount}`;
+  const tim = (date, description, amount = -6.5) => ({ date, description, amount, category: 'uncategorized' });
+
+  beforeEach(() => {
+    store.set('statements:user-1', [
+      {
+        id: 'jan', filename: 'jan.pdf',
+        transactions: [tim('2026-01-05', 'TIM HORTONS #4412 VANCOUVER BC'), tim('2026-01-09', 'SHELL 0045', -60)],
+        spendingMonth: { month: 'Jan 2026', sortKey: '2026-01', total: 66.5, categories: {}, version: 4 },
+      },
+      {
+        id: 'feb', filename: 'feb.pdf',
+        transactions: [tim('2026-02-03', 'TIM HORTONS #77 VANCOUVER BC', -4.2)],
+        spendingMonth: { month: 'Feb 2026', sortKey: '2026-02', total: 4.2, categories: {}, version: 4 },
+      },
+    ]);
+  });
+
+  it('applies a merchant edit to every statement and stores the rule', async () => {
+    const jan = store.get('statements:user-1')[0];
+    const res = mockRes();
+    await handler(
+      mockReq({
+        method: 'PATCH',
+        query: { action: 'edit-transaction' },
+        body: { id: 'jan', transactionId: txnId(jan.transactions[0]), category: 'dining' },
+      }),
+      res
+    );
+
+    expect(res.statusCode).toBe(200);
+    const [janNext, febNext] = res.body.statements;
+    expect(janNext.transactions[0].category).toBe('dining');
+    expect(janNext.transactions[1].category).toBe('uncategorized');
+    expect(febNext.transactions[0].category).toBe('dining');
+    expect(febNext.spendingMonth.categories).toEqual({ dining: 4.2 });
+    expect(store.get('category-rules:user-1')).toEqual({ 'tim hortons vancouver': 'dining' });
+  });
+
+  it('applies the stored rule to a statement uploaded later', async () => {
+    store.set('category-rules:user-1', { 'tim hortons vancouver': 'dining' });
+    summarizeStatementBuffer.mockResolvedValueOnce({
+      spendingMonth: { month: 'Mar 2026', sortKey: '2026-03', total: 3, categories: {}, version: 4 },
+      transactions: [tim('2026-03-12', 'TIM HORTONS #9 VANCOUVER BC', -3)],
+    });
+    const res = mockRes();
+    await handler(
+      mockReq({
+        method: 'POST',
+        query: { action: 'upload' },
+        body: { filename: 'mar.pdf', contentBase64: Buffer.from('pdf-bytes').toString('base64') },
+      }),
+      res
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.statement.transactions[0].category).toBe('dining');
+    expect(res.body.statement.spendingMonth.categories).toEqual({ dining: 3 });
+  });
+
+  it('does not learn a rule from a description with no merchant text', async () => {
+    store.set('statements:user-1', [
+      {
+        id: 'jan', filename: 'jan.pdf',
+        transactions: [tim('2026-01-05', '#4412 01/05'), tim('2026-01-06', '#99')],
+        spendingMonth: { month: 'Jan 2026', sortKey: '2026-01', total: 13, categories: {}, version: 4 },
+      },
+    ]);
+    const jan = store.get('statements:user-1')[0];
+    const res = mockRes();
+    await handler(
+      mockReq({
+        method: 'PATCH',
+        query: { action: 'edit-transaction' },
+        body: { id: 'jan', transactionId: txnId(jan.transactions[0]), category: 'dining' },
+      }),
+      res
+    );
+
+    expect(res.body.statements[0].transactions.map((t) => t.category)).toEqual(['dining', 'uncategorized']);
+    expect(store.has('category-rules:user-1')).toBe(false);
+  });
+});

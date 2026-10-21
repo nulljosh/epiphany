@@ -213,6 +213,33 @@ export function parseStatementText(text = '') {
   return [];
 }
 
+// Merchant key for "fix it once": store numbers, dates and a trailing province or
+// city code are dropped, so TIM HORTONS #1234 VANCOUVER BC and TIM HORTONS #77 match.
+export const MIN_MERCHANT_KEY_LENGTH = 3;
+
+export function normalizeMerchant(description = '') {
+  const tokens = String(description)
+    .toUpperCase()
+    .replace(/\d{1,4}[/.-]\d{1,2}(?:[/.-]\d{1,4})?/g, ' ')
+    .replace(/#/g, ' ')
+    .replace(/[^A-Z&' ]+/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  while (tokens.length > 1 && /^[A-Z]{2}$/.test(tokens[tokens.length - 1])) tokens.pop();
+  return tokens.join(' ').toLowerCase();
+}
+
+// rules maps a merchant key to the category the user chose for it. Returns the
+// same transaction objects when nothing changes, so callers can detect a no-op.
+export function applyCategoryRules(transactions = [], rules = {}) {
+  if (!rules || typeof rules !== 'object') return transactions;
+  return transactions.map((txn) => {
+    const key = normalizeMerchant(txn?.description);
+    if (key.length < MIN_MERCHANT_KEY_LENGTH || !Object.hasOwn(rules, key)) return txn;
+    return rules[key] === txn.category ? txn : { ...txn, category: rules[key] };
+  });
+}
+
 export function summarizeTransactions(transactions = [], filename = '') {
   const filtered = transactions.filter((txn) => typeof txn?.amount === 'number' && txn.category && txn.amount < 0);
   const categories = {};
