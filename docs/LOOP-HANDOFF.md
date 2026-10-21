@@ -1,4 +1,4 @@
-# Epiphany loop handoff (2026-10-21, late)
+# Epiphany loop handoff (2026-10-21, paused at weekly usage)
 
 ## What the loop is
 
@@ -6,24 +6,25 @@ Work Epiphany one batch at a time. Each pass fixes a batch from `docs/reference/
 
 ## Where things stand
 
-- iOS 3.0.1 was rebuilt with all of today's native work (ticker search, earnings and calendar export, budget vs actual, recurring charges, map layers, watchlist widgets). The old review was pulled; the new build is uploading and resubmitting.
+- The loop is paused. It stopped at 95% weekly usage. Restart after the Saturday 22:00 reset.
+- iOS 3.0.1 was rebuilt with today's native work and resubmitted. It is WAITING_FOR_REVIEW.
 - Mac 3.0.0 is still in review. Mac 3.0.1 waits for it to clear.
+- Closed today: #116 (the Watch app never uses signal code) and #151 (the web statement upload now reads PDF text in the browser with unpdf; the server parse stays as fallback, commit 96e65d4).
+- 65 issues are open. Do not close any issue without Joshua.
 - The Stripe business website is jaybulb.com (verified live). The product copy no longer says Opticon.
-- Issues went from 133 to 67 open today. #173 (first-run statements card) is live; #123 and #125 are closed.
 - Privacy: personal finance data was removed from the public bundle and the history was rewritten. Old commit b33cd6c is still reachable by SHA through old PR refs; Joshua has to ask GitHub support to purge it.
 - Still holding personal figures in code: `src/utils/roadmapSim.js` (income constant) and the payroll fixture in `tests/api/recurring.test.js`. Replace them with neutral values before the next release.
 
 ## Next, in order
 
-1. Check #116 (Watch target lacks Shared/). The Watch app does not use signal code, so it is likely not needed. Report the finding; do not close it.
-2. #157: the remaining FRED macro series.
-3. Roadmap items that need no one: MapSourcesSettingsView (wire or delete), web Places fallback when Overpass is down, macOS sign-in and onboarding sheet overlap, budget mid-month projection.
-4. Brand kit: the landing footer now uses Prometheus. Check the brand kit art matches.
+1. #157: the remaining FRED macro series.
+2. Roadmap items that need no one: MapSourcesSettingsView (wire or delete), web Places fallback when Overpass is down, macOS sign-in and onboarding sheet overlap, budget mid-month projection.
+3. Brand kit: the landing footer uses Prometheus. Check the brand kit art matches.
 
-Blocked on Joshua, do not do without a yes: submit or push anything to the App Store or GitHub; the GitHub support purge request; the BLS API key; the Google callback URL for the new domain (#210).
+Blocked on Joshua, do not do without a yes: submit or push anything to the App Store or GitHub; the GitHub support purge request; the BLS API key; the Google callback URL for the new domain (#210); closing any issue.
 
 ## Restart prompt
 
 ```
-/loop next release: read docs/LOOP-HANDOFF.md, do the next item in "Next, in order" that needs no one, build iOS and Mac (look for BUILD SUCCEEDED), mirror to every platform with the same code, commit locally. Do not push or submit to the App Store without Joshua's yes. Never write account, phone or finance figures into the repo. Update this file.
+/loop issues until 95%: read docs/LOOP-HANDOFF.md, take the next open issue or the next item in "Next, in order" that needs no one, build iOS and Mac (look for BUILD SUCCEEDED), mirror to every platform with the same code, commit locally. Do not push, close issues or submit to the App Store without Joshua's yes. Never write account, phone or finance figures into the repo. Update this file.
 ```
