@@ -2,7 +2,7 @@ import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
 
-const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving', 'incomePhases'];
+const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving', 'incomePhases', 'subscriptions', 'bills', 'credits'];
 
 // Debts removed from the books (old "Dad" $25 loan repaid; Visa is back on
 // the books as of 2026-09-20). Stale copies persist in KV and localStorage and kept
@@ -177,6 +177,10 @@ export default async function handler(req, res) {
       spending: mergeField('spending'),
       giving: mergeField('giving'),
       incomePhases: mergeField('incomePhases'),
+      subscriptions: mergeField('subscriptions'),
+      bills: mergeField('bills'),
+      credits: mergeField('credits'),
+      telecom: body.telecom ?? existing.telecom ?? null,
       updatedAt: new Date().toISOString(),
     });
 

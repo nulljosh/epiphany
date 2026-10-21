@@ -128,6 +128,8 @@ export function usePortfolio(stocks, isAuthenticated) {
   const giving = customData?.giving ?? DEMO_GIVING;
   const incomePhases = customData?.incomePhases ?? DEMO_INCOME_PHASES;
   const subscriptions = customData?.subscriptions ?? DEMO_SUBSCRIPTIONS;
+  const bills = customData?.bills ?? [];
+  const telecom = customData?.telecom ?? null;
 
   // Holdings whose symbols aren't in the main stocks feed (e.g. broker-synced
   // RL) get a one-shot quote fetch so they don't render as $0.
@@ -321,6 +323,8 @@ export function usePortfolio(stocks, isAuthenticated) {
     giving,
     incomePhases,
     subscriptions,
+    bills,
+    telecom,
     stocksValue,
     cashValue,
     totalDebt,
