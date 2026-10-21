@@ -118,9 +118,8 @@ html:has(.lp) { scroll-behavior: smooth; }
   mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
 }
 @media (prefers-reduced-transparency: reduce) { .lp .lp-hero-art { opacity: 0.25; } }
-/* The halftone sits on night blue: screen drops that blue into the dark page, and light mode skips the art. */
+/* The halftone sits on night blue: screen drops that blue into the hero, which is always dark (the map behind it is), so it shows in light mode too. */
 .lp .lp-hero-art { mix-blend-mode: screen; }
-[data-theme="light"] .lp .lp-hero-art { display: none; }
 .lp .lp-hero .lp-eyebrow,
 .lp .lp-hero-headline,
 .lp .lp-hero-sub,
