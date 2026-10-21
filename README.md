@@ -1,12 +1,10 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
-# Epiphany
-
-[![web](https://img.shields.io/badge/web-v3.0.1-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v3.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.16-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![appstore](https://img.shields.io/badge/App%20Store-%241-success)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE) [![GitHub](https://img.shields.io/badge/GitHub-nulljosh%2Fepiphany-black?logo=github)](https://github.com/nulljosh/epiphany) [![Claude Skill](https://img.shields.io/badge/Claude%20Skill-epiphany-CC785C?logo=claude)](.claude/skills/epiphany/SKILL.md)
+[![web](https://img.shields.io/badge/web-v3.0.1-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v3.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v2.5.16-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Everything happening in your world, on one screen. The map, the markets, the people.
 
-[Live](https://epiphany.jaybulb.com) | [App Store](https://apps.apple.com/app/epiphany/id6779522175) | [Whitepaper](WHITEPAPER.md) | [Roadmap](roadmap.md)
+[Live](https://epiphany.jaybulb.com) | [App Store](https://apps.apple.com/app/epiphany/id6779522175) | [Whitepaper](WHITEPAPER.md)
 
 <p align="center">
   <img src="public/screenshots/screenshot-situation-new.png" width="170">
@@ -15,61 +13,35 @@ Everything happening in your world, on one screen. The map, the markets, the peo
   <img src="public/screenshots/screenshot-portfolio-new.png" width="170">
 </p>
 
-## What it does
+## Features
 
-- **Situation.** A live map with 11 layers (flights, weather, news, incidents and more), a daily brief, and the macro pulse.
-- **Markets.** Stocks, crypto and commodities with a Buy, Hold or Sell read on each. Prediction markets too.
-- **Portfolio.** Holdings, net worth and where the money went. Read-only brokerage sync.
+- **Situation.** A live map of flights, weather, news and incidents, plus a daily brief.
+- **Markets.** Stocks, crypto and commodities, each with a Buy, Hold or Sell read.
+- **Portfolio.** Holdings, net worth and where the money went.
 - **People.** Search anyone and see how they connect.
-- **Autopilot.** Our trading algorithm, on paper money. Stocks on weekdays, Bitcoin every day including weekends, scored against the S&P 500.
+- **Autopilot.** The trading algorithm, on paper money, scored against the S&P 500.
 
-Web, iOS, macOS, watchOS, Windows, Linux and Android. Free to start, $1 once for everything.
+Web, iPhone, iPad, Mac and Apple Watch. Free to start, $1 once for everything.
 
 ## Does the trading work?
 
-We replayed it on real history: hundreds of stocks, index funds, Bitcoin, gold, oil, and the S&P 500 back to 1927. Each strategy was tuned on older years, then graded on years it had never seen. Fees included.
+One rule survived years of data it had never seen: **Double 7s.** In a rising market, buy a 10 day low and sell a 10 day high. About 70% of its trades make money, across 429 stocks, 16 index funds and Bitcoin.
 
-One rule passed: **Double 7s.** In a rising market, buy a 10 day low and sell a 10 day high.
-
-| Tested on | Trades that made money | Average gain per trade | Trades |
-|---|---|---|---|
-| 429 S&P 500 stocks | 67% | 0.39% | 22,614 |
-| 16 index funds | 71% | 0.44% | 807 |
-| Our watchlist, each symbol from its first day | 69% | 0.62% | 3,508 |
-| Bitcoin | 71% | | 104 |
-| S&P 500 index, 49 unseen years (a related dip rule) | 77% | | 377 |
-
-**It does not beat buying and holding.** Run as one account it grew about 3% a year against 15% for SPY. Even parking idle cash in SPY only reached 8.8%. Most of the wins are just the market rising. The full story, failures included, is in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark-does-it-work).
+It still does not beat buying and holding. Run as one account it grew about 3% a year against 15% for SPY. The full test, failures included, is in the [whitepaper](WHITEPAPER.md#5-benchmark-does-it-work).
 
 <p align="center">
-  <img src="docs/double7s-spy.gif" width="720" alt="The Epiphany trading algorithm replaying SPY day by day: green arrows buy, red arrows sell">
-  <br>
-  <sub>The trading algorithm replaying the S&amp;P 500 ETF, one day at a time. Green arrows buy, red arrows sell.</sub>
+  <img src="docs/double7s-spy.gif" width="720" alt="The trading algorithm replaying SPY day by day: green arrows buy, red arrows sell">
 </p>
-
-Run it yourself: `python3 tradingview/backtest.py sp500`. Daily paper trading through Interactive Brokers: `scripts/ibkr-run.py`.
 
 ## Run it
 
 ```bash
 npm install && npm run dev
 npm test -- --run
-npm run build
+npm run build && npx wrangler deploy
 ```
 
-Deploys to Cloudflare Workers (`npm run deploy`). Dev notes are in [CLAUDE.md](CLAUDE.md). `npm run tui -- <email>` is a live portfolio dashboard in the terminal.
-
-For Claude Code: [`.claude/skills/epiphany`](.claude/skills/epiphany/SKILL.md) reads and edits portfolio data directly, and [`docs/API.md`](docs/API.md) lists the HTTP and agent tools.
-
-## How it ships
-
-`asc workflow run ship-ios VERSION=x.y.z` takes it from version bump to App Review. Apple is the one gate a person holds.
-
-<img src="docs/ship-graph.svg" width="600">
-
-## Credits
-
-Chart control is built on [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) by tradesdontlie (MIT). Full notice in [THIRD_PARTY.md](THIRD_PARTY.md).
+Docs live in [docs/](docs/). Chart control builds on [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) (MIT), see [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## License
 

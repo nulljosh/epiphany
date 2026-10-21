@@ -26,8 +26,8 @@
 <text class="t2" x="540" y="259" font-size="8" text-anchor="middle">IB Gateway practice, 3:30pm ET</text>
 <rect class="tint-clay" x="105" y="325" width="200" height="40" rx="12" filter="url(#sh)"/><rect class="edge" x="106" y="326" width="198" height="38" rx="11"/>
 <text class="t" x="205" y="342" font-size="12" font-weight="500" text-anchor="middle">Upstash KV</text>
-<text class="t2" x="205" y="356" font-size="11" text-anchor="middle">trades, paper books</text>
+<text class="t2" x="205" y="356" font-size="11" text-anchor="middle">accounts, portfolios, trades</text>
 <rect class="tint-clay" x="335" y="325" width="200" height="40" rx="12" filter="url(#sh)"/><rect class="edge" x="336" y="326" width="198" height="38" rx="11"/>
-<text class="t" x="435" y="342" font-size="12" font-weight="500" text-anchor="middle">Supabase</text>
-<text class="t2" x="435" y="356" font-size="11" text-anchor="middle">auth</text>
+<text class="t" x="435" y="342" font-size="12" font-weight="500" text-anchor="middle">Stripe, Apple, Resend</text>
+<text class="t2" x="435" y="356" font-size="11" text-anchor="middle">payments, sign-in, email</text>
 </svg>
