@@ -1011,7 +1011,7 @@ private struct SituationEventDetailView: View {
                 ("Depth", quake.depthKm.map { String(format: "%.1f km", $0) } ?? "Unknown"),
                 ("Latitude", String(format: "%.4f", quake.latitude)),
                 ("Longitude", String(format: "%.4f", quake.longitude)),
-                ("Time", quake.occurredAt ?? "Unknown"),
+                ("Time", quake.ageText ?? quake.occurredAt ?? "Unknown"),
             ]
         case .flight(let flight):
             return [

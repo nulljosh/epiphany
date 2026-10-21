@@ -56,6 +56,18 @@ struct Earthquake: Codable, Identifiable {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
+    /// USGS sends epoch milliseconds; older payloads sent ISO 8601.
+    var occurredDate: Date? {
+        guard let occurredAt else { return nil }
+        if let ms = Double(occurredAt) { return Date(timeIntervalSince1970: ms / 1000) }
+        return ISO8601DateFormatter().date(from: occurredAt)
+    }
+
+    /// "42 minutes ago", or nil when the time is unknown.
+    var ageText: String? {
+        occurredDate.map { RelativeDateTimeFormatter().localizedString(for: $0, relativeTo: .now) }
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, title, magnitude, latitude, longitude, place
         case mag, lat, lon, time, depth

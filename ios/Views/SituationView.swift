@@ -1681,7 +1681,7 @@ private struct SituationEventDetailView: View {
             if let depth = quake.depthKm { result.append(("Depth", String(format: "%.1f km", depth))) }
             result.append(("Latitude", String(format: "%.4f", quake.latitude)))
             result.append(("Longitude", String(format: "%.4f", quake.longitude)))
-            if let time = quake.occurredAt { result.append(("Time", time)) }
+            if let age = quake.ageText ?? quake.occurredAt { result.append(("Time", age)) }
             return result
         case .flight(let flight):
             var result: [(label: String, value: String)] = []
