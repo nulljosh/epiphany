@@ -560,8 +560,12 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let request = URLRequest(url: url)
         let data = try await perform(request)
         let wrapper = try decode(StatementsWrapper.self, from: data)
+        lastRecurring = wrapper.recurring ?? []
         return wrapper.statements
     }
+
+    /// Recurring charges from the most recent fetchStatements call.
+    private(set) var lastRecurring: [RecurringCharge] = []
 
     func uploadStatement(filename: String, contentBase64: String, text: String = "") async throws -> [Statement] {
         let url = try makeURL("/api/statements", query: ["action": "upload"])
@@ -1048,6 +1052,36 @@ private struct NewsWrapper: Decodable {
 
 private struct StatementsWrapper: Decodable {
     let statements: [Statement]
+    let recurring: [RecurringCharge]?
+}
+
+extension ISO8601DateFormatter {
+    /// "2026-10-03" style dates from the server.
+    static func dateOnly(_ string: String) -> Date? {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withFullDate]
+        return f.date(from: string)
+    }
+}
+
+/// A charge the server found repeating across statements (detectRecurring).
+struct RecurringCharge: Decodable, Identifiable, Hashable {
+    let merchant: String
+    let name: String
+    let amount: Double
+    let cadence: String
+    let nextDate: String
+    let priceDelta: Double
+    var id: String { "\(merchant)-\(amount)" }
+
+    /// What it costs per month, so biweekly and yearly bills add up with the rest.
+    var monthlyAmount: Double {
+        switch cadence {
+        case "biweekly": amount * 26 / 12
+        case "yearly": amount / 12
+        default: amount
+        }
+    }
 }
 
 private struct EarthquakeResponse: Decodable {

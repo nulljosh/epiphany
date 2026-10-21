@@ -21,6 +21,7 @@ final class AppState {
     var fearGreedRating: String?
     var financeData: FinanceData?
     var statements: [Statement] = []
+    var recurring: [RecurringCharge] = []
     var isLoading = false
     var isAuthenticating = false
     var error: String?
@@ -411,6 +412,7 @@ final class AppState {
         guard isLoggedIn else { return }
         do {
             statements = try await EpiphanyAPI.shared.fetchStatements()
+            recurring = EpiphanyAPI.shared.lastRecurring
             publishBudgetSnapshot()
         } catch {
             handleError(error)

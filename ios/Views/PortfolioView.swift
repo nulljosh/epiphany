@@ -1644,6 +1644,36 @@ extension PortfolioView {
         let subs = appState.financeData?.subscriptions ?? []
         let active = subs.filter { $0.active }
         let inactive = subs.filter { !$0.active }
+        let found = appState.recurring
+        if !found.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("FOUND IN YOUR STATEMENTS")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Palette.textSecondary)
+                        .tracking(1.0)
+                    Spacer()
+                    Text("\(CurrencyFormatter.formatPrice(found.map(\.monthlyAmount).reduce(0, +)))/mo")
+                        .font(.caption2.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(Palette.textSecondary)
+                }
+                ForEach(found) { charge in
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(charge.merchant.capitalized)
+                                .font(.subheadline.weight(.semibold))
+                            Text(recurringDetail(charge))
+                                .font(.caption)
+                                .foregroundStyle(Palette.textSecondary)
+                        }
+                        Spacer()
+                        Text(CurrencyFormatter.formatPrice(charge.amount))
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
         if !subs.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 let monthlyTotal = active.compactMap { $0.amount }.reduce(0, +)
@@ -1674,6 +1704,17 @@ extension PortfolioView {
             }
             .padding(.horizontal)
         }
+    }
+
+    func recurringDetail(_ charge: RecurringCharge) -> String {
+        var parts = [charge.cadence]
+        if let date = ISO8601DateFormatter.dateOnly(charge.nextDate) {
+            parts.append("next " + date.formatted(.dateTime.month(.abbreviated).day()))
+        }
+        if charge.priceDelta != 0 {
+            parts.append((charge.priceDelta > 0 ? "up " : "down ") + CurrencyFormatter.formatPrice(abs(charge.priceDelta)))
+        }
+        return parts.joined(separator: " · ")
     }
 
     @ViewBuilder

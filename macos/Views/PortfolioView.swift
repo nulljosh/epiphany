@@ -657,12 +657,43 @@ struct PortfolioView: View {
         }
     }
 
+    private func recurringDetail(_ charge: RecurringCharge) -> String {
+        var parts = [charge.cadence]
+        if let date = ISO8601DateFormatter.dateOnly(charge.nextDate) {
+            parts.append("next " + date.formatted(.dateTime.month(.abbreviated).day()))
+        }
+        if charge.priceDelta != 0 {
+            parts.append((charge.priceDelta > 0 ? "up " : "down ") + CurrencyFormatter.formatPrice(abs(charge.priceDelta)))
+        }
+        return parts.joined(separator: " · ")
+    }
+
     private var subscriptionsContent: some View {
         let subs = appState.financeData?.subscriptions ?? []
         let active = subs.filter { $0.active }
         let inactive = subs.filter { !$0.active }
         let monthlyTotal = active.compactMap { $0.amount }.reduce(0, +)
+        let found = appState.recurring
         return VStack(spacing: 16) {
+            if !found.isEmpty {
+                let foundTotal = found.map(\.monthlyAmount).reduce(0, +)
+                sectionCard("Found in your statements · \(CurrencyFormatter.formatPrice(foundTotal))/mo") {
+                    ForEach(found) { charge in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(charge.merchant.capitalized).font(.subheadline.weight(.semibold))
+                                Text(recurringDetail(charge)).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(formattedCurrency(charge.amount))
+                                .font(.subheadline.weight(.semibold).monospacedDigit())
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 10)
+                        if charge.id != found.last?.id { Divider().padding(.horizontal) }
+                    }
+                }
+            }
             sectionCard("Active · \(CurrencyFormatter.formatPrice(monthlyTotal))/mo") {
                 if active.isEmpty {
                     emptyState("No active subscriptions")

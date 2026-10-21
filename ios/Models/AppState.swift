@@ -29,6 +29,7 @@ final class AppState {
     var fearGreedRating: String?
     var financeData: FinanceData?
     var statements: [Statement] = []
+    var recurring: [RecurringCharge] = []
     var isLoading = false
     var isAuthenticating = false
     var error: String?
@@ -543,6 +544,7 @@ final class AppState {
         guard isLoggedIn else { return }
         do {
             statements = try await EpiphanyAPI.shared.fetchStatements()
+            recurring = EpiphanyAPI.shared.lastRecurring
             publishBudgetSnapshot()
             let allTransactions = statements.flatMap(\.transactions)
             if !allTransactions.isEmpty {
@@ -689,6 +691,7 @@ final class AppState {
     private func _loadStatementsThrowing() async throws {
         guard isLoggedIn else { return }
         statements = try await EpiphanyAPI.shared.fetchStatements()
+        recurring = EpiphanyAPI.shared.lastRecurring
         let allTransactions = statements.flatMap(\.transactions)
         if !allTransactions.isEmpty {
             let spendingMonths = statements.compactMap(\.spendingMonth)
