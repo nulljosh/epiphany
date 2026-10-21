@@ -422,8 +422,6 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
 
       {/* ─── HERO ─── */}
       <header className="lp-hero" ref={heroRef}>
-        {/* Prometheus carrying fire, after Jan Cossiers (public domain), dithered to halftone (see /brand) */}
-        <img className="lp-hero-art" src="/brand/prometheus.webp" alt="" aria-hidden="true" />
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
         <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities, with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
@@ -569,6 +567,11 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       {/* ─── FOOTER ─── */}
       <InstallAnywhere name="Epiphany" appUrl="https://epiphany.jaybulb.com" appStoreUrl="https://apps.apple.com/app/id6779522175" />
       <footer className="lp-foot">
+  {/* Prometheus carrying fire, after Jan Cossiers (public domain), dithered to halftone (see /brand) */}
+  <figure className="foot-god">
+    <img src="/brand/prometheus.webp" alt="Prometheus running with the torch of fire, in blue halftone" loading="lazy" />
+    <figcaption>Prometheus, whose name means forethought.</figcaption>
+  </figure>
   <div className="foot-rule" aria-hidden="true"><span>Epiphany</span><span>Your money, one page</span></div>
   <nav className="foot-dir" aria-label="Footer">
     <div className="foot-col">

@@ -109,17 +109,6 @@ html:has(.lp) { scroll-behavior: smooth; }
   max-width: 480px; line-height: 1.7; margin-bottom: 40px;
   text-wrap: pretty;
 }
-.lp .lp-hero-art {
-  /* z-index 1 paints it after the blur pane (also 1, but ::before comes first), so the god stays sharp */
-  position: absolute; inset: 0; margin: auto; z-index: 1;
-  height: 100%; width: auto; max-width: none; left: 50%; transform: translateX(-50%);
-  opacity: 0.6; pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
-  mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
-}
-@media (prefers-reduced-transparency: reduce) { .lp .lp-hero-art { opacity: 0.25; } }
-/* The halftone sits on night blue: screen drops that blue into the hero, which is always dark (the map behind it is), so it shows in light mode too. */
-.lp .lp-hero-art { mix-blend-mode: screen; }
 .lp .lp-hero .lp-eyebrow,
 .lp .lp-hero-headline,
 .lp .lp-hero-sub,
@@ -745,6 +734,9 @@ html:has(.lp) { scroll-behavior: smooth; }
 
 /* footer directory, ported from Joshua Tree */
 .lp footer.lp-foot { background: var(--lp-bg); position: relative; max-width: none; display: block; margin: 0; padding: 56px 0 40px; border-top: 1px solid rgba(var(--lp-ink),0.1); text-align: left; font-size: 13px; }
+.lp footer.lp-foot .foot-god { margin: -56px 0 48px; background: #070c16; text-align: center; padding: 48px 20px 28px; }
+.lp footer.lp-foot .foot-god img { display: block; margin: 0 auto; width: min(420px, 80vw); height: auto; }
+.lp footer.lp-foot .foot-god figcaption { margin-top: 16px; font-size: 13px; letter-spacing: .02em; color: rgba(255,255,255,0.5); }
 .lp footer.lp-foot .foot-rule { display: flex; align-items: center; gap: 16px; max-width: 880px; margin: 0 auto; padding: 0 20px 28px; font-size: 13px; letter-spacing: .06em; font-weight: 500; color: rgba(var(--lp-ink),0.6); }
 .lp footer.lp-foot .foot-rule::before { content: ""; order: 1; flex: 1; height: 1px; background: rgba(var(--lp-ink),0.1); }
 .lp footer.lp-foot .foot-rule > :first-child { order: 0; }
