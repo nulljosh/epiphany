@@ -12,6 +12,7 @@ import EpiphanyFinance from './EpiphanyFinance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
+import { budgetActual } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -1256,15 +1257,30 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
                 <div style={labelStyle}>Monthly Expenses</div>
-                {budget.expenses.map((item, index) => (
-                  <div key={`${item.name}-${index}`} style={rowStyle}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
-                      {item.note && <div style={{ fontSize: 11, color: t.textTertiary }}>{item.note}</div>}
+                {budget.expenses.map((item, index) => {
+                  // Last statement's spending in this line's categories, against the budget.
+                  const actual = budgetActual(item, spendingChronological[spendingChronological.length - 1]);
+                  const tone = actual && { ok: t.green, close: '#f59e0b', over: t.red }[actual.status];
+                  return (
+                    <div key={`${item.name}-${index}`} style={{ ...rowStyle, flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
+                        {item.note && <div style={{ fontSize: 11, color: t.textTertiary }}>{item.note}</div>}
+                        {actual && (
+                          <div style={{ fontSize: 11, color: tone, fontVariantNumeric: 'tabular-nums' }}>
+                            {actual.month}: {formatCurrency(actual.spent)} of {formatCurrency(item.amount)}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>-{formatCurrency(item.amount)}</div>
+                      {actual && (
+                        <div style={{ flexBasis: '100%', height: 4, borderRadius: 2, background: t.border, marginTop: 6, overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.min(actual.ratio, 1) * 100}%`, height: '100%', background: tone }} />
+                        </div>
+                      )}
                     </div>
-                    <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>-{formatCurrency(item.amount)}</div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div style={{ ...rowStyle, borderBottom: 'none', fontWeight: 700, fontSize: 16 }}>
                   <span>Surplus</span>
                   <span style={{ color: surplus >= 0 ? t.green : t.red, fontVariantNumeric: 'tabular-nums' }}>
