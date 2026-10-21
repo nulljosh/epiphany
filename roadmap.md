@@ -45,7 +45,7 @@ The web half works today. What is actually missing for iOS/macOS:
 3. A server change so the google-callback can redirect back to `epiphany://` for the native
    client instead of only to the web app.
 
-Do NOT re-add Sign in with Apple here. It was removed 2026-08-28 to clear the Guideline
+Update 2026-10-21: Apple is back next to Google for 3.0.1 (Guideline 4.8). It was removed 2026-08-28 to clear the Guideline
 2.1(a) rejection and 2.5.6 is in review on that basis; revisit only after a verdict.
 
 ## RESOLVED 2026-08-26: /api/stocks 500 on the full default symbol list
@@ -86,7 +86,7 @@ Diagnose Workers 500s with `wrangler tail` before trusting the handler's own mes
 - [ ] Follow-up on the above: the fallback is a **publisher favicon, not a true per-article image**. Genuinely per-article imagery needs og:image, which for Google-sourced items means resolving the opaque `CBMi...` redirect *then* fetching the article page, ~2 network round-trips per row, too expensive to do inline in the handler. Only worth building if GDELT stays dead; check whether GDELT recovers first (it is rate-limiting shared Vercel IPs, "Please limit requests to one every 5 seconds"), since a healthy GDELT already supplies real images for free.
 
 ## OAuth rollout (2026-08-24)
-- [ ] iOS GitHub + Google sign-in: integrate native SDK flows. Web already ships hand-rolled GitHub + Google OAuth (server/api/auth.js:202-329, implemented 2026-07-09), no new web work needed. Existing Sign in with Apple (iOS native) stays as-is.
+- [x] iOS GitHub + Google sign-in (2026-10-21, for 3.0.1): Apple and Google capsules on the iPhone and Mac sign-in sheets (`Shared/SocialSignInButtons.swift`). Google runs the web flow in ASWebAuthenticationSession and gets the session back on epiphany://; signin-apple now requires the nonce. Server deployed, both apps build, 566 web tests pass. Not yet tried on a device or by App Review. GitHub stays web only. Original line: integrate native SDK flows. Web already ships hand-rolled GitHub + Google OAuth (server/api/auth.js:202-329, implemented 2026-07-09), no new web work needed. Existing Sign in with Apple (iOS native) stays as-is.
 
 ## App icon
 - [ ] `AppIcon-dark.png`/`AppIcon-tinted.png` are byte-identical copies of the light icon, not actually designed, cosmetic, tinted variant won't tint meaningfully.

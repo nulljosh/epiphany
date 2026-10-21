@@ -186,6 +186,18 @@ final class AppState {
         }
     }
 
+    func signInWithApple(identityToken: String, nonce: String, fullName: String?) async {
+        await authenticate(email: nil, password: nil) {
+            try await EpiphanyAPI.shared.signInWithApple(identityToken: identityToken, nonce: nonce, fullName: fullName)
+        }
+    }
+
+    func signInWithGoogle(sessionToken: String) async {
+        await authenticate(email: nil, password: nil) {
+            try await EpiphanyAPI.shared.adoptSession(token: sessionToken)
+        }
+    }
+
     func saveBiometricCredentials(email: String, password: String) {
         biometricAuth.saveCredentials(email: email, password: password)
     }
@@ -213,15 +225,17 @@ final class AppState {
     }
 
     private func authenticate(
-        email: String,
-        password: String,
+        email: String?,
+        password: String?,
         _ request: () async throws -> User
     ) async {
         isAuthenticating = true
         error = nil
         do {
             user = try await request()
-            biometricAuth.saveCredentials(email: email, password: password)
+            if let email, let password {
+                biometricAuth.saveCredentials(email: email, password: password)
+            }
             showLogin = false
         } catch {
             self.error = error.localizedDescription

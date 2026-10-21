@@ -55,6 +55,18 @@ struct LoginSheet: View {
                     .padding(.horizontal, 32)
                 }
 
+                SocialSignInButtons(error: $error)
+                    .padding(.horizontal)
+
+                HStack {
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                    Text("or")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                }
+                .padding(.horizontal, 32)
+
                 VStack(spacing: 16) {
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)

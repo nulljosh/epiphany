@@ -277,6 +277,22 @@ describe('Auth API', () => {
     });
   });
 
+  describe('native sign-in', () => {
+    it('rejects an Apple token sent without its nonce', async () => {
+      const { req, res } = createReqRes({ action: 'signin-apple', body: { identityToken: 'x.y.z' } });
+      await handler(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('marks the Google redirect as native for the apps', async () => {
+      process.env.GOOGLE_CLIENT_ID = 'gid';
+      const { req, res } = createReqRes({ method: 'GET', action: 'google', query: { native: '1' } });
+      await handler(req, res);
+      delete process.env.GOOGLE_CLIENT_ID;
+      expect(res.writeHeadHeaders.Location).toContain('state=native');
+    });
+  });
+
   describe('me', () => {
     it('should return the authenticated session', async () => {
       seedUser({ verified: true });

@@ -94,12 +94,20 @@ struct LoginSheet: View {
                     .padding(.horizontal, 32)
                 }
 
-                // ponytail: Sign in with Apple pulled 2026-08-28. Review kept failing
-                // inside Apple's own sheet ("Sign-Up Not Completed"), which we cannot
-                // reach or reproduce. Guideline 4.8 no longer applies now that Google
-                // and Facebook are gone, so the button is optional. The server route
-                // (auth.js signin-apple) and the entitlement stay, so restoring it is
-                // one commit.
+                // Sign in with Apple was pulled 2026-08-28 after review hit "Sign-Up Not
+                // Completed" inside Apple's sheet, and is back in 3.0.1 next to Google
+                // (Guideline 4.8 needs Apple whenever Google is offered).
+                SocialSignInButtons(error: $error)
+                    .padding(.horizontal)
+
+                HStack {
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                    Text("or")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Rectangle().frame(height: 1).foregroundStyle(.quaternary)
+                }
+                .padding(.horizontal, 32)
 
                 VStack(spacing: 16) {
                     TextField("Email", text: $email)

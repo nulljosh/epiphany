@@ -92,6 +92,40 @@ final class EpiphanyAPI {
         return user
     }
 
+    // MARK: - Social sign-in
+
+    func signInWithApple(identityToken: String, nonce: String, fullName: String?) async throws -> User {
+        let url = try makeURL("/api/auth", query: ["action": "signin-apple"])
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var body = ["identityToken": identityToken, "nonce": nonce]
+        if let fullName { body["fullName"] = fullName }
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let data = try await perform(request)
+        guard let user = try decode(AuthResponse.self, from: data).user else {
+            throw APIError.decodingError("No user in auth response")
+        }
+        return user
+    }
+
+    var googleSignInURL: URL {
+        URL(string: baseURL + "/api/auth?action=google&native=1")!
+    }
+
+    /// Google sign-in ends in a web session that hands back a session token.
+    /// Store it as the cookie every other request already sends.
+    func adoptSession(token: String) async throws -> User {
+        guard let host = URL(string: baseURL)?.host,
+              let cookie = HTTPCookie(properties: [
+                  .domain: host, .path: "/", .name: "epiphany_session", .value: token,
+                  .secure: "TRUE", .expires: Date().addingTimeInterval(30 * 24 * 60 * 60),
+              ]) else { throw APIError.unauthorized }
+        HTTPCookieStorage.shared.setCookie(cookie)
+        return try await me()
+    }
+
     func changeEmail(newEmail: String, password: String) async throws -> User {
         let response: AuthActionResponse = try await postAuthAction(
             "change-email",

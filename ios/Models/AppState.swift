@@ -246,6 +246,16 @@ final class AppState {
         await authenticate { try await authAPI.register(email: email, password: password) }
     }
 
+    func signInWithApple(identityToken: String, nonce: String, fullName: String?) async {
+        await authenticate {
+            try await EpiphanyAPI.shared.signInWithApple(identityToken: identityToken, nonce: nonce, fullName: fullName)
+        }
+    }
+
+    func signInWithGoogle(sessionToken: String) async {
+        await authenticate { try await EpiphanyAPI.shared.adoptSession(token: sessionToken) }
+    }
+
     func saveBiometricCredentials(email: String, password: String) {
         biometricAuth.saveCredentials(email: email, password: password)
     }

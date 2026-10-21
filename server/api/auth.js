@@ -247,6 +247,9 @@ export default async function handler(req, res) {
       client_id: clientId, response_type: 'code', scope: 'openid email profile',
       redirect_uri: `${base}/api/auth?action=google-callback`,
     });
+    // The iPhone and Mac apps open this in ASWebAuthenticationSession; state tells the
+    // callback to hand the session back to epiphany:// instead of the web app.
+    if (req.query.native === '1') params.set('state', 'native');
     res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
     return res.end();
   }
@@ -298,6 +301,13 @@ export default async function handler(req, res) {
 
       const sessionToken = generateToken();
       await kv.set(`session:${sessionToken}`, { userId: user.id, email: user.email, tier: user.tier || 'free', expiresAt: Date.now() + SESSION_TTL * 1000 }, { ex: SESSION_TTL });
+      if (req.query.state === 'native') {
+        // ponytail: token rides the custom-scheme redirect. ASWebAuthenticationSession
+        // returns it only to the app that opened the session; swap for a one-time code
+        // if a non-ASWeb client ever uses this path.
+        res.writeHead(302, { Location: `epiphany://auth?token=${encodeURIComponent(sessionToken)}` });
+        return res.end();
+      }
       setSessionCookie(res, sessionToken);
       res.writeHead(302, { Location: base });
       return res.end();
@@ -594,9 +604,9 @@ export default async function handler(req, res) {
 
   // POST: Sign in with Apple
   if (action === 'signin-apple') {
-    const { identityToken, fullName } = req.body || {};
-    if (!identityToken) {
-      return errorResponse(res, 400, 'Identity token required');
+    const { identityToken, fullName, nonce } = req.body || {};
+    if (!identityToken || !nonce) {
+      return errorResponse(res, 400, 'Identity token and nonce required');
     }
 
     let payload;
@@ -605,6 +615,10 @@ export default async function handler(req, res) {
     } catch (err) {
       // An unverified token is an impersonation attempt, not a server fault.
       console.warn('[AUTH] Apple token rejected:', err.message);
+      return errorResponse(res, 401, 'Invalid Apple token');
+    }
+    // The app sends the raw nonce; Apple signed its SHA-256. A mismatch is a replayed token.
+    if (payload.nonce !== crypto.createHash('sha256').update(String(nonce)).digest('hex')) {
       return errorResponse(res, 401, 'Invalid Apple token');
     }
 
