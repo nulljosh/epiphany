@@ -333,7 +333,22 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   const [showSortPanel, setShowSortPanel] = useState(false);
   const [showNewsDrawer, setShowNewsDrawer] = useState(false);
   const searchInputRef = useRef(null);
+  const [searchResults, setSearchResults] = useState([]);
   const { score: fgScore, rating: fgRating } = useFearGreed();
+
+  // Any ticker or company, not just the loaded list (/api/search, Yahoo).
+  useEffect(() => {
+    const q = search.trim();
+    if (!showSearch || q.length < 1) { setSearchResults([]); return undefined; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal })
+        .then(r => (r.ok ? r.json() : { results: [] }))
+        .then(d => setSearchResults(d.results || []))
+        .catch(() => {});
+    }, 250);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [search, showSearch]);
 
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
@@ -511,6 +526,27 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
                 if (e.key === 'Escape') { setShowSearch(false); setSearch(''); }
               }}
             />
+            {searchResults.length > 0 && (
+              <div style={{ marginTop: 8, borderRadius: 12, border: `1px solid ${t.border}`, background: t.glass, backdropFilter: 'blur(20px) saturate(150%)', overflow: 'hidden' }}>
+                {searchResults.map(r => {
+                  const added = watchlistSet.has(r.symbol);
+                  return (
+                    <div key={r.symbol} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: `1px solid ${t.border}` }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: t.text, fontWeight: 600, fontSize: 14 }}>{r.symbol}</div>
+                        <div style={{ color: t.textSecondary, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[r.name, r.exchange].filter(Boolean).join(' · ')}</div>
+                      </div>
+                      <button
+                        onClick={() => toggleSymbol(r.symbol)}
+                        style={{ minHeight: 32, padding: '0 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: font, fontWeight: 600, fontSize: 13, background: added ? t.border : '#1462e0', color: added ? t.text : '#fff' }}
+                      >
+                        {added ? 'Added' : 'Add'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -67,6 +67,19 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/api\//],
         cacheId: 'epiphany',
+        // Offline: the map keeps its last tiles and pins when the network drops.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/[a-z0-9.-]*cartocdn\.com\//,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'tiles', expiration: { maxEntries: 500, maxAgeSeconds: 7 * 24 * 3600 } },
+          },
+          {
+            urlPattern: /\/api\/(flights|traffic|incidents|earthquakes|weather-alerts|wildfires|aqi|crime|local-events|stocks-free|commodities|crypto)\b/,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'api', networkTimeoutSeconds: 6, expiration: { maxEntries: 100, maxAgeSeconds: 24 * 3600 } },
+          },
+        ],
       },
       manifest: {
         name: 'Epiphany',

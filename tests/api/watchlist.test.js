@@ -261,7 +261,7 @@ describe('Watchlist API', () => {
     it('should reject overly long symbols', async () => {
       const { req, res } = createReqRes({
         method: 'POST',
-        body: { symbol: 'AAPL123456' },
+        body: { symbol: 'AAPL123456789' },
         cookie: 'epiphany_session=valid',
       });
 

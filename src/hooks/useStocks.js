@@ -12,7 +12,7 @@ function isMarketHours() {
 // All tradeable stock/ETF symbols across 100-asset universe
 // Excludes: indices (handled by commodities.js), meme coins (CoinGecko / not on Yahoo)
 // Note: Block Inc rebranded SQ → XYZ (Jan 2025). Berkshire uses BRK-B on Yahoo.
-const DEFAULT_SYMBOLS = [
+export const DEFAULT_SYMBOLS = [
   // MAG7
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA',
   // Large cap US stocks

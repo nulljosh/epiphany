@@ -1,8 +1,8 @@
 import { sparkRequest, sparkConfigured } from './spark.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 
-// Symbol validation: 1-5 uppercase letters/digits, dots allowed
-const SYMBOL_REGEX = /^[A-Z0-9.]{1,5}$/;
+// Any Yahoo symbol: SHOP.TO, BRK-B, ^GSPC, GC=F, BTC-USD.
+const SYMBOL_REGEX = /^[A-Z0-9.\-=^]{1,12}$/;
 
 function isValidSymbol(symbol) {
   if (!symbol || typeof symbol !== 'string') return false;

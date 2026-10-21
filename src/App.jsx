@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { PremiumContext } from './context/PremiumContext.js';
 import { usePolymarket } from './hooks/usePolymarket';
 import { useLivePrices } from './hooks/useLivePrices';
-import { useStocks } from './hooks/useStocks';
+import { useStocks, DEFAULT_SYMBOLS } from './hooks/useStocks';
 import { applyResolvedTheme, getTheme, resolveAutoTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
 import { tldr } from './utils/helpers';
@@ -369,7 +369,9 @@ export default function App() {
 
   const { prices: liveAssets, lastUpdated } = useLivePrices(defaultAssets);
   const { markets, whales, loading: pmLoading, error: pmError } = usePolymarket();
-  const { stocks, reliability: stocksReliability } = useStocks(undefined, { realtime: isPro });
+  // Watchlist symbols found through search are fetched alongside the default universe.
+  const stockSymbols = useMemo(() => [...new Set([...DEFAULT_SYMBOLS, ...(watchlist || [])])], [watchlist]);
+  const { stocks, reliability: stocksReliability } = useStocks(stockSymbols, { realtime: isPro });
 
   const { elapsedTime, resetElapsedTime } = useElapsedTime(running);
   const { runStats } = useRunHistory({ running, balance, tick, trades, elapsedTime, targetTrillion });
