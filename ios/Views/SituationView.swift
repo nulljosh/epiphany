@@ -768,12 +768,24 @@ struct SituationView: View {
     @ViewBuilder
     private var layerPickerButton: some View {
         Menu {
-            ForEach(MapLayerStyle.allCases, id: \.rawValue) { style in
-                Button {
-                    mapLayerRaw = style.rawValue
-                } label: {
-                    Label(style.label, systemImage: style.icon)
+            Section("Map") {
+                ForEach(MapLayerStyle.allCases, id: \.rawValue) { style in
+                    Button {
+                        mapLayerRaw = style.rawValue
+                    } label: {
+                        Label(style.label, systemImage: style.icon)
+                    }
                 }
+            }
+            // Same switches as Settings, without leaving the map.
+            Section("Layers") {
+                Toggle("Flights", isOn: $showFlights)
+                Toggle("Traffic", isOn: $showTraffic)
+                Toggle("Incidents", isOn: $showIncidents)
+                Toggle("Weather", isOn: $showWeatherAlerts)
+                Toggle("Earthquakes", isOn: $showEarthquakes)
+                Toggle("Wildfires", isOn: $showWildfires)
+                Toggle("Air quality", isOn: $showAQI)
             }
         } label: {
             Image(systemName: MapLayerStyle(rawValue: mapLayerRaw)?.icon ?? "map.fill")
