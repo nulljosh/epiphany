@@ -308,3 +308,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] X value still squished on the portfolio spending chart. Entire app needs uniformity. (screenshot: notes/attachments/2026-10-16/epiphany-1.png)
 - [ ] Compare our stocks list against the iOS Stocks app. (screenshot: notes/attachments/2026-10-16/epiphany-2.png)
 - [ ] Simplify README markdown. Refresh structure and make the background white.
+
+## Ingested 2026-10-21
+- [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png)
