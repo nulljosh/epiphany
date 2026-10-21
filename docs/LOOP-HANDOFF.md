@@ -1,4 +1,4 @@
-# Epiphany loop handoff (2026-10-20, afternoon)
+# Epiphany loop handoff (2026-10-21, morning)
 
 ## What the loop is
 
@@ -6,6 +6,7 @@ Work Epiphany toward its next major version, 3.0.0. Each pass fixes a batch from
 
 ## Where things stand
 
+- Web sign-in (login and register) has shared 48 point capsule Google and GitHub buttons with brand marks. The login diagnosis is in the roadmap; the open login bug is an issue now.
 - 3.0.0 is WAITING_FOR_REVIEW on iOS and Mac, submitted 2026-10-20. It folds in the 2.5.18 build (same store version, renamed). Apple returned a 500 on one submit; the retry went through. Web 3.0.0 is deployed and live. Watch has no ship workflow.
 - Sweep done: all 45 leads closed (the last two: clearing a search drops focus first).
 - The landing page is restyled in the Apollo theme: Epiphany Display caps headlines over a halftone Apollo on a night blue page, Epiphany Sans self-hosted, dark map credit box.
