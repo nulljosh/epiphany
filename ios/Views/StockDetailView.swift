@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import EventKit
 
 struct StockDetailView: View {
     @Environment(AppState.self) private var appState
@@ -21,6 +22,7 @@ struct StockDetailView: View {
     }
 
     @State private var selectedRange = "1y"
+    @State private var earningsAdded = false
     @State private var chartType: ChartType = .heikinAshi
     @State private var isLoading = true
     @State private var error: String?
@@ -195,6 +197,17 @@ struct StockDetailView: View {
                 .padding()
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
+
+                if let ts = (liveStock ?? stock).nextEarnings {
+                    Button {
+                        addEarningsToCalendar(ts)
+                    } label: {
+                        Label(earningsAdded ? "Added to Calendar" : "Add earnings to Calendar",
+                              systemImage: earningsAdded ? "checkmark" : "calendar.badge.plus")
+                    }
+                    .disabled(earningsAdded)
+                    .padding(.horizontal)
+                }
 
                 // Trade temporarily disabled, crashed on tap; web side already disabled pending SnapTrade sync fix
                 Text("Trading is temporarily disabled, back soon")
@@ -750,6 +763,21 @@ struct StockDetailView: View {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Write-only calendar access: one all-day event on the earnings date.
+    private func addEarningsToCalendar(_ ts: Double) {
+        let store = EKEventStore()
+        Task {
+            guard (try? await store.requestWriteOnlyAccessToEvents()) == true else { return }
+            let event = EKEvent(eventStore: store)
+            event.title = "\(stock.symbol) earnings"
+            event.startDate = Date(timeIntervalSince1970: ts)
+            event.endDate = event.startDate
+            event.isAllDay = true
+            event.calendar = store.defaultCalendarForNewEvents
+            if (try? store.save(event, span: .thisEvent)) != nil { earningsAdded = true }
+        }
     }
 
     private func statCell(_ label: String, value: String) -> some View {
