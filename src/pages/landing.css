@@ -110,9 +110,10 @@ html:has(.lp) { scroll-behavior: smooth; }
   text-wrap: pretty;
 }
 .lp .lp-hero-art {
-  position: absolute; inset: 0; margin: auto; z-index: 0;
+  /* z-index 1 paints it after the blur pane (also 1, but ::before comes first), so the god stays sharp */
+  position: absolute; inset: 0; margin: auto; z-index: 1;
   height: 100%; width: auto; max-width: none; left: 50%; transform: translateX(-50%);
-  opacity: 0.42; pointer-events: none;
+  opacity: 0.6; pointer-events: none;
   -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
   mask-image: radial-gradient(ellipse 60% 70% at 50% 45%, #000 40%, transparent 100%);
 }

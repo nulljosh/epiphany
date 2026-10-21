@@ -422,7 +422,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
 
       {/* ─── HERO ─── */}
       <header className="lp-hero" ref={heroRef}>
-        {/* Apollo Belvedere, CC0 Rijksmuseum print, dithered to halftone (see /brand) */}
+        {/* Prometheus carrying fire, after Jan Cossiers (public domain), dithered to halftone (see /brand) */}
         <img className="lp-hero-art" src="/brand/prometheus.webp" alt="" aria-hidden="true" />
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
