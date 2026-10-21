@@ -9,12 +9,6 @@ Everything happening in your world, on one screen. The map, the markets, the peo
 [Live](https://epiphany.jaybulb.com) | [App Store](https://apps.apple.com/app/epiphany/id6779522175) | [Whitepaper](WHITEPAPER.md) | [Roadmap](roadmap.md)
 
 <p align="center">
-  <img src="docs/double7s-spy.gif" width="720" alt="The Epiphany trading algorithm replaying SPY day by day: green arrows buy, red arrows sell">
-  <br>
-  <sub>The trading algorithm replaying the S&amp;P 500 ETF, one day at a time. Green arrows buy, red arrows sell.</sub>
-</p>
-
-<p align="center">
   <img src="public/screenshots/screenshot-situation-new.png" width="170">
   <img src="public/screenshots/screenshot-markets-new.png" width="170">
   <img src="public/screenshots/screenshot-stocks-new.png" width="170">
@@ -46,6 +40,12 @@ One rule passed: **Double 7s.** In a rising market, buy a 10 day low and sell a 
 | S&P 500 index, 49 unseen years (a related dip rule) | 77% | | 377 |
 
 **It does not beat buying and holding.** Run as one account it grew about 3% a year against 15% for SPY. Even parking idle cash in SPY only reached 8.8%. Most of the wins are just the market rising. The full story, failures included, is in [WHITEPAPER.md](WHITEPAPER.md#5-benchmark-does-it-work).
+
+<p align="center">
+  <img src="docs/double7s-spy.gif" width="720" alt="The Epiphany trading algorithm replaying SPY day by day: green arrows buy, red arrows sell">
+  <br>
+  <sub>The trading algorithm replaying the S&amp;P 500 ETF, one day at a time. Green arrows buy, red arrows sell.</sub>
+</p>
 
 Run it yourself: `python3 tradingview/backtest.py sp500`. Daily paper trading through Interactive Brokers: `scripts/ibkr-run.py`.
 
