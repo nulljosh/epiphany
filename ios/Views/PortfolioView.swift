@@ -626,6 +626,18 @@ struct PortfolioView: View {
             }
         }
 
+        // Earnings and dividends for what you hold or watch, the next 60 days.
+        let mine = Set(appState.watchlistSymbols).union(appState.portfolio?.holdings.map(\.symbol) ?? [])
+        let horizon = cal.date(byAdding: .day, value: 60, to: now) ?? now
+        for stock in appState.stocks where mine.contains(stock.symbol) {
+            for (ts, label, icon) in [(stock.nextEarnings, "earnings", "chart.bar.doc.horizontal"), (stock.dividendDate, "dividend", "dollarsign.arrow.circlepath")] {
+                guard let ts else { continue }
+                let date = Date(timeIntervalSince1970: ts)
+                guard date >= cal.startOfDay(for: now), date <= horizon else { continue }
+                events.append(CalendarEvent(date: date, icon: icon, label: "\(stock.symbol) \(label)", detail: stock.name, color: Palette.paleBlue, amount: nil))
+            }
+        }
+
         return events
     }
 

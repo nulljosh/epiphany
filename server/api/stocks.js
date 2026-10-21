@@ -154,7 +154,14 @@ function mapYahooQuote(q) {
     prevClose: q.regularMarketPreviousClose ?? null,
     high: q.regularMarketDayHigh ?? null,
     low: q.regularMarketDayLow ?? null,
+    // Unix seconds; a past date means Yahoo has not set the next one yet.
+    nextEarnings: futureTs(q.earningsTimestamp) ?? futureTs(q.earningsTimestampStart),
+    dividendDate: futureTs(q.dividendDate),
   };
+}
+
+function futureTs(ts) {
+  return typeof ts === 'number' && ts * 1000 > Date.now() - 24 * 3600 * 1000 ? ts : null;
 }
 
 async function fetchYahooBatchQuotes(symbolList) {
