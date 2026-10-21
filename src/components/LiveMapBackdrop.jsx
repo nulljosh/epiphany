@@ -935,9 +935,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       const lat = inc.lat ?? inc.position?.lat;
       const lon = inc.lon ?? inc.position?.lon;
       if (lat == null || lon == null) return;
-      const icon = inc.type === 'hospital' ? '🏥' : inc.type === 'fire_station' || inc.type === 'ambulance_station' ? '🚒' : '🚨';
+      // ponytail: letter badges, no emoji in the UI.
+      const icon = inc.type === 'hospital' ? 'H' : inc.type === 'fire_station' || inc.type === 'ambulance_station' ? 'F' : '!';
       const el = document.createElement('div');
-      el.style.cssText = 'width:18px;height:18px;font-size:14px;line-height:18px;text-align:center;cursor:pointer;';
+      el.style.cssText = 'width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;font:700 10px/18px -apple-system,sans-serif;text-align:center;cursor:pointer;';
       el.textContent = icon;
       el.title = inc.name || inc.type || 'Emergency service';
       el._layerType = 'incidents';
@@ -1043,10 +1044,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     clusterLayer(payload.emergencyIncidents, 120, (ev) => extractCoords(ev), '#94a3b8').forEach((ev) => {
       if (ev.lat == null || ev.lng == null) return;
       const cat = ev.category || 'alert';
-      const icon = cat === 'police' ? '🚔' : cat === 'fire' ? '🚒' : cat === 'ems' ? '🚑' : cat === 'accident' ? '💥' : cat === 'hazard' ? '⚠️' : cat === 'road_closed' ? '🚫' : '🚨';
+      const icon = cat === 'police' ? 'P' : cat === 'fire' ? 'F' : cat === 'ems' ? 'E' : cat === 'accident' ? 'A' : cat === 'road_closed' ? 'X' : '!';
       const color = cat === 'police' ? '#3b82f6' : cat === 'fire' ? '#ef4444' : cat === 'ems' ? '#f97316' : cat === 'accident' ? '#f59e0b' : '#94a3b8';
       addMarker(
-        `width:20px;height:20px;background:transparent;font-size:14px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;color:${color};`,
+        `width:18px;height:18px;border-radius:50%;background:${color};color:#fff;font:700 10px/18px -apple-system,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;`,
         ev.title,
         { type: 'emergency', title: ev.title, detail: `Source: ${ev.source || 'Live feed'} | ${ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : ''}`, level: ev.severity || 'medium', source: ev.source || 'Emergency feed', link: null },
         ev.lng, ev.lat, 'incidents', icon

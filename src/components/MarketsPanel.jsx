@@ -478,7 +478,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
             onMouseEnter={e => e.currentTarget.style.color = t.text}
             onMouseLeave={e => e.currentTarget.style.color = t.textSecondary}
           >
-            🔍
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
           </button>
         </div>
       </div>

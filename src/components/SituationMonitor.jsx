@@ -280,12 +280,11 @@ export default function SituationMonitor({
                 const isPolice = call.type === 'police';
                 const isFire = call.type === 'fire';
                 const color = isPolice ? '#3b82f6' : isFire ? '#f97316' : '#7FB2FF';
-                const icon = isPolice ? '🚔' : isFire ? '🚒' : '🚑';
                 const detail = [call.address, call.source].filter(Boolean).join(' · ');
                 return (
                   <DetectionCard
                     key={`dispatch-${i}`}
-                    type={`${icon} ${(call.type || 'emergency').toUpperCase()}`}
+                    type={(call.type || 'emergency').toUpperCase()}
                     title={call.title}
                     detail={detail || null}
                     severity={call.severity || 'elevated'}
