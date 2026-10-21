@@ -13,8 +13,10 @@ const MIRRORS = (process.env.OVERPASS_MIRRORS ||
     // Global-coverage instances only. overpass.osm.ch is deliberately absent:
     // it is a Switzerland-only extract that answers 200 with zero elements for
     // anywhere else, so failover can never tell it apart from "nothing here".
-    'https://overpass-api.de/api/interpreter',
+    // .fr first: overpass-api.de hangs or 521s from Workers egress, and every
+    // stalled mirror costs a full timeout before the next is tried.
     'https://overpass.openstreetmap.fr/api/interpreter',
+    'https://overpass-api.de/api/interpreter',
     'https://lz4.overpass-api.de/api/interpreter',
   ].join(','))
   .split(',')

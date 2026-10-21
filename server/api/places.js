@@ -32,7 +32,7 @@ export default async function handler(req, res) {
   const query = `[out:json][timeout:10];(${selectors});out center 600;`;
 
   try {
-    const data = await overpassQuery(query, 10000);
+    const data = await overpassQuery(query, 9000); // ponytail: .fr answers Workers in ~6-8s; .de 521s fast, so worst case is ~18s, not 30
     const seen = new Set();
     const places = (data.elements || []).flatMap(el => {
       const pLat = el.center?.lat ?? el.lat;

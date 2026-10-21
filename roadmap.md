@@ -15,7 +15,7 @@
 
 ## 2026-10-04 map QA leftovers (open)
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
-- [ ] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet.
+- [x] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet. Fixed 2026-10-21: overpass.openstreetmap.fr now tried first (overpass-api.de 521s or hangs from Workers), places per-mirror timeout 9s; live answers in 3 to 4s with ~600 places, worst case ~18s.
 - [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
 - [ ] macOS: the sign-in sheet and the onboarding sheet still swap in the same tick at sign-up. iOS hit a dead screen from that kind of overlap. Untested on Mac.
 - [ ] iOS `MapSourcesSettingsView` is never shown, so the map layer toggles and the "Enable data sources in Settings" hint lead nowhere. Signed-out Settings is only Sign In and Register. Wire it up or delete it.
