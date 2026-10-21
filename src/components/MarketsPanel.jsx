@@ -20,7 +20,7 @@ const SORT_OPTIONS = [
 ];
 
 const COMMODITY_KEYS = ['gold', 'silver', 'platinum', 'palladium', 'copper', 'oil', 'natgas'];
-const INDEX_KEYS = ['nas100', 'us500', 'us30', 'dxy'];
+const INDEX_KEYS = ['nas100', 'us500', 'us30', 'dxy', 'us10y'];
 const CRYPTO_KEYS = ['btc', 'eth'];
 
 function compareItems(a, b, sortKey, sortAsc) {

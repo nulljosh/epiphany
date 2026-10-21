@@ -36,6 +36,7 @@ export const defaultAssets = {
   gs: { name: 'GS', full: 'Goldman Sachs', notes: 'IB/M&A cycle recovery. Trading revenue strength.', spot: 580, vol: 0.26, targets: [620, 680, 750], hi52: 610, lo52: 380 },
   ms: { name: 'MS', full: 'Morgan Stanley', notes: 'Wealth management flywheel. Fee-based stability.', spot: 130, vol: 0.24, targets: [140, 155, 170], hi52: 135, lo52: 85 },
   dxy: { name: 'DXY', full: 'US Dollar Index', notes: 'De-dollarization watch. Twin deficits.', spot: 108, vol: 0.08, targets: [110, 112, 115], hi52: 110, lo52: 100 },
+  us10y: { name: 'US10Y', full: 'US 10 Year Treasury Yield', notes: 'The price of money. Rising yields squeeze stocks and housing.', spot: 4.2, vol: 0.20, targets: [4.5, 5.0, 5.5], hi52: 5.0, lo52: 3.5 },
 };
 
 // Scenario configurations for Monte Carlo

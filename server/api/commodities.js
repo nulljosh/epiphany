@@ -14,6 +14,7 @@ const SYMBOLS = {
   us500: { fmp: '%5EGSPC', yahoo: '^GSPC' },
   us30: { fmp: '%5EDJI', yahoo: '^DJI' },
   dxy: { fmp: 'DX-Y.NYB', yahoo: 'DX-Y.NYB' },
+  us10y: { fmp: '%5ETNX', yahoo: '^TNX' },
 };
 
 // FMP batch fetch for commodities

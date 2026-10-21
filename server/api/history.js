@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     // Matches commodity.name values emitted by server/api/commodities.js
     Gold: 'GC=F', Silver: 'SI=F', Platinum: 'PL=F', Palladium: 'PA=F',
     Copper: 'HG=F', Oil: 'CL=F', Natgas: 'NG=F',
-    Nas100: '^NDX', Us500: '^GSPC', Us30: '^DJI', Dxy: 'DX-Y.NYB',
+    Nas100: '^NDX', Us500: '^GSPC', Us30: '^DJI', Dxy: 'DX-Y.NYB', Us10y: '^TNX', US10Y: '^TNX',
     // Raw crypto symbols emitted by server/api/crypto.js (uppercased)
     BTC: 'BTC-USD', ETH: 'ETH-USD', SOL: 'SOL-USD', DOGE: 'DOGE-USD',
     ADA: 'ADA-USD', XRP: 'XRP-USD', DOT: 'DOT-USD', AVAX: 'AVAX-USD',

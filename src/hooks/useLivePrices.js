@@ -23,6 +23,7 @@ const YAHOO_SYMBOLS = {
   us500: '^GSPC',
   us30: '^DJI',
   dxy: 'DX-Y.NYB',
+  us10y: '^TNX',
 };
 
 // Reverse lookup: symbol -> asset key

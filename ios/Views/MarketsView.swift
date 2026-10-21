@@ -693,7 +693,7 @@ private struct MarketItem: Identifiable {
                 "gold": "GC=F", "silver": "SI=F", "platinum": "PL=F",
                 "palladium": "PA=F", "copper": "HG=F", "oil": "CL=F",
                 "natgas": "NG=F", "nas100": "^NDX", "us500": "^GSPC",
-                "us30": "^DJI", "dxy": "DX-Y.NYB"
+                "us30": "^DJI", "dxy": "DX-Y.NYB", "us10y": "^TNX"
             ]
             return map[lower]
         case .crypto:
@@ -790,6 +790,7 @@ private struct MarketRow: View {
         if lower.contains("nas") || lower.contains("ndx") || lower.contains("nasdaq") { return ("chart.line.uptrend.xyaxis", .green) }
         if lower.contains("us30") || lower.contains("dow") || lower.contains("dji") { return ("chart.line.uptrend.xyaxis", Palette.paleBlue) }
         if lower.contains("dxy") || lower.contains("dollar") { return ("dollarsign.circle.fill", .green) }
+        if lower.contains("10y") || lower.contains("treasury") { return ("building.columns.fill", .blue) }
         if lower.contains("vix") { return ("waveform.path.ecg", .red) }
         if lower.contains("btc") || lower.contains("bitcoin") { return ("bitcoinsign.circle.fill", .orange) }
         if lower.contains("eth") || lower.contains("ether") { return ("diamond.fill", Palette.appleBlue) }
