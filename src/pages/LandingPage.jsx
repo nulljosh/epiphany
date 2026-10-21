@@ -423,7 +423,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
       {/* ─── HERO ─── */}
       <header className="lp-hero" ref={heroRef}>
         {/* Apollo Belvedere, CC0 Rijksmuseum print, dithered to halftone (see /brand) */}
-        <img className="lp-hero-art" src="/brand/apollo.webp" alt="" aria-hidden="true" />
+        <img className="lp-hero-art" src="/brand/prometheus.webp" alt="" aria-hidden="true" />
         <div className="lp-eyebrow">Portfolio Intelligence</div>
         <h1 className="lp-hero-headline">Know before<br /><em>the market moves.</em></h1>
         <p className="lp-hero-sub">Signals across your stocks, crypto, and commodities, with a Buy / Hold / Sell read on every position. Palantir for your portfolio.</p>
