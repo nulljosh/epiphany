@@ -44,8 +44,9 @@ export async function put(pathname, body, _opts = {}) {
       ? body
       : JSON.stringify(body);
 
+  const size = typeof value === 'string' ? new TextEncoder().encode(value).byteLength : value.byteLength;
   await kv().put(PREFIX + key, value, {
-    metadata: { uploadedAt: new Date().toISOString() },
+    metadata: { uploadedAt: new Date().toISOString(), size },
   });
 
   return { url: keyToUrl(key), downloadUrl: keyToUrl(key), pathname: key };
@@ -57,8 +58,15 @@ export async function del(urlOrKey, _opts = {}) {
 }
 
 export async function list({ prefix = '' } = {}) {
-  const res = await kv().list({ prefix: PREFIX + prefix });
-  const blobs = res.keys.map((k) => {
+  // KV pages at 1000 keys; walk every page so the newest blob is never on a later one.
+  const keys = [];
+  let cursor;
+  do {
+    const res = await kv().list({ prefix: PREFIX + prefix, cursor });
+    keys.push(...res.keys);
+    cursor = res.list_complete ? undefined : res.cursor;
+  } while (cursor);
+  const blobs = keys.map((k) => {
     const key = k.name.slice(PREFIX.length);
     return {
       url: keyToUrl(key),
@@ -70,7 +78,7 @@ export async function list({ prefix = '' } = {}) {
   });
   // Newest first; latest.js relies on blobs[0].
   blobs.sort((a, b) => String(b.uploadedAt || '').localeCompare(String(a.uploadedAt || '')));
-  return { blobs, cursor: res.cursor, hasMore: !res.list_complete };
+  return { blobs, cursor: undefined, hasMore: false };
 }
 
 export async function get(urlOrKey, _opts = {}) {
