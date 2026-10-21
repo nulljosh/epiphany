@@ -232,11 +232,15 @@ final class AppState {
         isAuthenticating = true
         error = nil
         do {
-            user = try await request()
+            let signedIn = try await request()
             if let email, let password {
                 biometricAuth.saveCredentials(email: email, password: password)
             }
+            // ponytail: macOS drops a sheet presented while another is still closing, and the
+            // onboarding sheet keys off `user`. Close sign in first, then publish the user.
             showLogin = false
+            try? await Task.sleep(for: .milliseconds(400))
+            user = signedIn
         } catch {
             self.error = error.localizedDescription
         }
