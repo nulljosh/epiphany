@@ -1419,7 +1419,9 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 {importError}
               </div>
             )}
-            <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+            <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); handleStatementUpload({ target: { files: e.dataTransfer.files } }); }}>
                 <div style={labelStyle}>Saved Statements</div>
                 <div style={{ fontSize: 12, color: t.textSecondary, marginBottom: 12 }}>
                   Upload PDF statements once. Epiphany keeps the spending months in sync on this account.
@@ -1434,7 +1436,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 {statementLoading ? (
                   <div style={{ fontSize: 12, color: t.textTertiary }}>Loading saved statements…</div>
                 ) : statementFiles.length === 0 ? (
-                  <div style={{ fontSize: 12, color: t.textTertiary }}>No statements saved to this account yet.</div>
+                  <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: t.textSecondary, lineHeight: 1.8 }}>
+                    <li>Download last month's PDF statement from your bank.</li>
+                    <li>Drop it on this card, or tap Upload PDFs.</li>
+                    <li>See your spending, recurring charges and budget vs actual.</li>
+                  </ol>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ fontSize: 12, color: t.green }}>

@@ -176,8 +176,8 @@ export const MobileMenuDivider = ({ t }) => (
   <div style={{ height: 1, background: t.border, margin: '4px 0' }} />
 );
 
-export const Card = ({ children, style, onClick, dark, t }) => (
-  <div onClick={onClick} style={{
+export const Card = ({ children, style, onClick, onDragOver, onDrop, dark, t }) => (
+  <div onClick={onClick} onDragOver={onDragOver} onDrop={onDrop} style={{
     background: t.glass,
     backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
