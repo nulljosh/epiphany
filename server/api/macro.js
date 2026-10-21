@@ -1,4 +1,5 @@
 import { applyCors } from './_cors.js';
+import { getKv } from './_kv.js';
 
 // Keyless FRED CSV download endpoint. The JSON observations API requires a
 // registered api_key; this public graph CSV does not. Same underlying data,
@@ -11,9 +12,10 @@ const OBS_LIMIT = 12;
 
 const SERIES = [
   { id: 'fedFunds',    seriesId: 'FEDFUNDS',        name: 'Fed Funds Rate',    unit: '%' },
-  { id: 'cpi',         seriesId: 'CPIAUCSL',        name: 'CPI',              unit: 'index' },
+  { id: 'cpi',         seriesId: 'CPIAUCSL',        name: 'CPI',              unit: 'index', bls: 'CUSR0000SA0' },
   { id: 'gdp',         seriesId: 'A191RL1Q225SBEA', name: 'GDP Growth',        unit: '%' },
-  { id: 'unemployment', seriesId: 'UNRATE',          name: 'Unemployment',      unit: '%' },
+  { id: 'unemployment', seriesId: 'UNRATE',          name: 'Unemployment',      unit: '%', bls: 'LNS14000000' },
+  { id: 'payrolls',    seriesId: 'PAYEMS',          name: 'Nonfarm Payrolls',  unit: 'K', bls: 'CES0000000001' },
   { id: 'joblessClaims', seriesId: 'ICSA',           name: 'Jobless Claims',    unit: 'K' },
   { id: 'consumerConf', seriesId: 'UMCSENT',         name: 'Consumer Confidence', unit: 'index' },
   { id: 'pce',         seriesId: 'PCEPI',            name: 'PCE Inflation',     unit: 'index' },
@@ -69,6 +71,39 @@ async function fetchSeries(seriesId) {
   }
 }
 
+// BLS is the fallback for the jobs report and CPI when FRED fails. Keyless calls
+// from Workers egress get REQUEST_NOT_PROCESSED (shared IPs spend the daily quota),
+// so it needs BLS_API_KEY (free, 500 a day). One call is cached in KV for six hours.
+const BLS_URL = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
+const BLS_TTL_S = 6 * 60 * 60;
+
+async function fetchBls(ids) {
+  const kv = await getKv().catch(() => null);
+  const cached = kv ? await kv.get('macro:bls').catch(() => null) : null;
+  if (cached) return typeof cached === 'string' ? JSON.parse(cached) : cached;
+
+  const response = await fetch(BLS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ seriesid: ids, ...(process.env.BLS_API_KEY ? { registrationkey: process.env.BLS_API_KEY.trim() } : {}) }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`BLS returned HTTP ${response.status}`);
+  const json = await response.json();
+  if (json.status !== 'REQUEST_SUCCEEDED') throw new Error(`BLS ${json.status}`);
+
+  const out = {};
+  for (const series of json.Results?.series || []) {
+    out[series.seriesID] = series.data
+      .filter(d => /^M(0[1-9]|1[0-2])$/.test(d.period))
+      .map(d => ({ date: `${d.year}-${d.period.slice(1)}-01`, value: Number(d.value) }))
+      .filter(o => Number.isFinite(o.value))
+      .slice(0, OBS_LIMIT); // BLS is already newest first
+  }
+  if (kv && Object.keys(out).length) await kv.set('macro:bls', JSON.stringify(out), { ex: BLS_TTL_S }).catch(() => {});
+  return out;
+}
+
 function buildIndicator(spec, observations) {
   // observations are desc order (newest first)
   const current = observations[0] || null;
@@ -104,9 +139,21 @@ async function fetchMacroData() {
     console.error(`[macro] ${failures.length}/${SERIES.length} FRED series failed:`, failures[0].reason?.message);
   }
 
-  return settled
+  const ok = new Map(settled
     .filter(r => r.status === 'fulfilled' && r.value.obs.length > 0)
-    .map(r => buildIndicator(r.value.spec, r.value.obs));
+    .map(r => [r.value.spec.id, r.value.obs]));
+
+  const needBls = SERIES.filter(spec => spec.bls && !ok.has(spec.id));
+  if (needBls.length) {
+    try {
+      const bls = await fetchBls(needBls.map(spec => spec.bls));
+      for (const spec of needBls) if (bls[spec.bls]?.length) ok.set(spec.id, bls[spec.bls]);
+    } catch (err) {
+      console.error('[macro] BLS fallback failed:', err.message);
+    }
+  }
+
+  return SERIES.filter(spec => ok.has(spec.id)).map(spec => buildIndicator(spec, ok.get(spec.id)));
 }
 
 export default async function handler(req, res) {
