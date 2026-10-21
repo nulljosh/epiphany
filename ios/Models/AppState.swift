@@ -366,7 +366,16 @@ final class AppState {
 
     // MARK: - Stocks
 
+    /// Last known prices from disk, only while the lists are still empty.
+    func hydrateCachedMarkets() {
+        let api = EpiphanyAPI.shared
+        if stocks.isEmpty { stocks = api.cachedStocks() }
+        if commodities.isEmpty { commodities = api.cachedCommodities() }
+        if crypto.isEmpty { crypto = api.cachedCrypto() }
+    }
+
     func loadStocks(force: Bool = false) async {
+        hydrateCachedMarkets()
         if isLoading && !force { return }
         isLoading = true
         defer { isLoading = false }
@@ -405,6 +414,7 @@ final class AppState {
     }
 
     func loadCommodities(force: Bool = false) async {
+        hydrateCachedMarkets()
         do {
             commodities = try await EpiphanyAPI.shared.fetchCommodities()
             if !commodities.isEmpty { Task { await preloadSparklines() } }
@@ -414,6 +424,7 @@ final class AppState {
     }
 
     func loadCrypto(force: Bool = false) async {
+        hydrateCachedMarkets()
         do {
             crypto = try await EpiphanyAPI.shared.fetchCrypto()
             if !crypto.isEmpty { Task { await preloadSparklines() } }
@@ -641,6 +652,7 @@ final class AppState {
     }
 
     func refreshMarkets() async throws {
+        hydrateCachedMarkets()
         async let stocks: Void = _loadStocksThrowing(force: true)
         async let commodities: Void = _loadCommoditiesThrowing(force: true)
         async let crypto: Void = _loadCryptoThrowing(force: true)
