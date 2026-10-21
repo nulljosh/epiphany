@@ -1,17 +1,12 @@
 > Priority tier 2 (2026-10-17): ship push, this week. Order: live blockers, ship pushes, active features, portfolio, exploratory. See ~/Documents/Code/LOOP-HANDOFF.md.
 
-- [ ] 3.0.0 (the 2.5.18 build folded in) is waiting for App Review on iPhone and Mac, submitted 2026-10-20. Watch has no ship workflow.
 - [ ] Wire Epiphany Sans into the native apps and the web UI. The font files are in `fonts/` and `brand/tokens.css`; no app or web screen uses it yet.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
 ## 2026-10-21 (open)
-- [ ] Submit the iPhone 3.0.1 build with the lyre icon once What's New text is written for en-CA. Needs Joshua's yes.
-- [ ] Push commit a6cfec0 (income and debt, People search fallback, spending forecast, chart labels, one sans) and deploy the web. Local only until Joshua says go.
-- [ ] Brand kit: swap the Apollo statue art for an image that reads as a god of epiphanies (Joshua's next ask).
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
-- [ ] Stripe LIVE $0 coupon checkout (needs a one-off 100% promo code made in the dashboard): needs a signed-in live account. Test mode already passes end to end on a local copy (card and $0 promo, webhook 200, status active).
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
 - [ ] Better event filtering on the map
@@ -85,8 +80,6 @@ Diagnose Workers 500s with `wrangler tail` before trusting the handler's own mes
 ## OAuth rollout (2026-08-24)
 
 ## App icon
-- [ ] `AppIcon-dark.png`/`AppIcon-tinted.png` are byte-identical copies of the light icon, not actually designed, cosmetic, tinted variant won't tint meaningfully.
-- [ ] Icon still reads generic/weak overall, a real personality refresh has been repeatedly deferred (imported from App Store.pdf 07-29, reconfirmed 08-04).
 
 ## Ship 2.5.4, DONE
 Confirmed 2026-08-06: iOS 2.5.4 is READY_FOR_SALE/live. macOS remains at 2.5.2 (statement-upload fix was iOS-only at the time; macOS parity landed separately 08-04, see above), bump macOS if the Mac statement UI work should ship as a version.
@@ -95,16 +88,12 @@ Confirmed 2026-08-06: iOS 2.5.4 is READY_FOR_SALE/live. macOS remains at 2.5.2 (
 User confirmed live on-device it's not as fluid as native iOS Stocks, across three separate fix attempts (07-07, 07-07 later, 07-22, reverted, commit `69f82c6`). Root cause not found. Do NOT attempt a 4th blind fix.
 - Attempt 1: moved `.frame(height:)` off per-drag resizing to a fixed max-height + outer clip animation. Real perf issue, not the (or not the only) felt cause.
 - Attempt 3: replaced per-drag resize with `.offset(y:)` compositor transform (textbook fix for this SwiftUI pattern), broke drag hit-testing (touch passed through to the row underneath instead of moving the drawer). Reverted. Suspected cause: the drag handle's `.overlay(alignment: .top)` is attached to the offset-shifted view, whose own layout frame stays fixed size, something in the offset→padding→overlay→clipped chain desyncs the touch target from the rendered position.
-- [ ] Before attempting again: (1) get Josh to describe specifically what feels wrong (lag following finger / jank on release / stutter during momentum / frame drops with images loading), (2) profile with Instruments Time Profiler on a real device, none of the 3 attempts have done either. Consider testing the offset approach on an isolated dummy view first, or attaching `DragGesture` to a stable sibling view instead of the offset-shifted card.
 
 ## Epiphany Mac merge (ASC)
 - [ ] Old orphaned "Epiphany Mac" app record (6782703473, bundle `com.heyitsmejosh.epiphany-macos`) needs Joshua's manual ASC dashboard deletion, no public API to delete an app record (confirmed on Talli's/Voxprint's equivalent orphans too). Do not upload anything further to it. Full merge history/blockers (upload error 90348, three widget compile fixes) preserved in CLAUDE.md.
 
 ## Brand & landing page
-- [ ] **Brand identity pass (raised by Josh, not started)**, iOS/macOS/web lean entirely on default Apple styling (`Palette.appleBlue`, SF Symbols only), no signature color/typography beyond the landing page's Fraunces headline. Ideas: one signature accent color app-wide (no gradients/purple), reuse Fraunces for in-app section headers, a custom map style/pin set (biggest available differentiation surface now that native POI pins are off). Needs its own dedicated design session.
-- [ ] "Coolest app ever", explore an unnamed app/website's idea and integrate it (from Coolest app ever.pdf). Underspecified, ask Joshua which app/site before scoping.
 - [ ] Landing page screenshots must use a real populated account, not a demo account (currently renders an empty portfolio, looks broken on the marketing site).
-- [ ] Fresh App Store screenshots (fastlane snapshot erroring, exit 75), optional, 2.5.1 shots still carry over fine.
 
 ## Commodity/crypto detail parity
 - [ ] iOS/macOS mirror of web's commodity/crypto stats grid (dayHigh/dayLow/prevClose, high24h/low24h, backend shipped 07-19). Bigger than a mirror pass: no iOS/macOS view renders `CommodityData`/`CryptoData` at all yet (`StockDetailView.swift` is equity-only), needs a dedicated session to build the detail view first, then add stats fields.
@@ -117,8 +106,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Live trading blocked on a trade-permissioned brokerage, **needs Joshua**: ~~sign up for Alpaca (paper account, free, fastest path) at alpaca.markets~~. ALPACA BLOCKED: rejects Canadian residents, hides paper accounts behind US application. IBKR only if TSX/Canadian equities needed later. RBC confirmed no public trading API. Researched 2026-07-22: IBKR does not bridge to Wealthsimple; the only way to execute trades *in* a Wealthsimple account is unofficial reverse-engineered wrappers that violate WS's ToS, not viable. Real path is a separate IBKR/Alpaca account, SnapTrade/WS stay read-only for display only.
   **2026-09-03**: unlocked live-mode plumbing ahead of the broker swap -- `autopilot.js` accepts `mode:'live'` from the client (was hardcoded to paper), `morning-run.js` runs the full watchlist in live mode (was BTC-only probe) with a hard $50/trade cap + 20-trade total cap then auto-revert to paper, `TradeWorkflow.jsx` has a Paper/Live toggle. Still wired to SnapTrade under the hood, which is a no-op for real fills against Wealthsimple (see above) -- swap the execution call in `runLive()` to IBKR once the adapter exists and the account is approved, nothing else in this plumbing needs to change.
 - [ ] **BLOCKED (Joshua):** "Login with TradingView" to sync watchlist, no public TradingView API for reading a user's watchlist/account. Receiving endpoint already exists (`server/api/broker/webhook.js` accepts `{ticker, action, qty}`, places Alpaca paper orders), only remaining step needs Joshua's TradingView Pro+ account to configure an outbound webhook alert. Can't self-provision.
-- [ ] **Needs Joshua:** re-enable the disabled Trade tab in `FinancePanel.jsx` once he eyeballs a real force-sync confirming holdings/math are clean (phantom-holdings dedupe shipped 07-02).
-- [ ] Autopilot trading UI visibility, ambiguous which control this refers to (reconfirmed 07-25: autopilot is fully implemented, paper mode works, only *live* execution is blocked on brokerage permission, nothing is visibly non-functional). Needs Joshua to name the specific control before hiding anything.
 - [ ] Autopilot copy ("Pilots"): curated famous-investor model portfolios (congress trades + 13F trackers, read-only vs SnapTrade) with performance-vs-you + new-trade alerts; web first, mirror iOS. Feature notes in wiki `pages/epiphany.md`.
 - [ ] `src/App.jsx` `ASSETS` const (~180 tickers, fallback-only) and the Watchlist, both tightly coupled to the 978-line trading simulator, used in 6+ places. Not safe to blind-edit; needs its own dedicated session for both together.
 
@@ -128,7 +115,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] iOS landscape support, one-line flag, but map/markets/portfolio are portrait-first; enabling without adapting layouts looks broken. Needs a per-screen pass (split layouts, wider charts, map controls). Same applies to other iOS apps. Also: Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss).
 
 ## From Apple Notes (imported 2026-08-10)
-- [ ] App Store splash/screenshot refresh: current screenshots show demo data, portfolio reads $0. Regenerate with realistic seeded portfolio data (fastlane snapshot / appstore-screenshots skill) before next submission.
 
 ## [x] Stale marketing screenshots, FIXED 2026-08-10
 
@@ -152,7 +138,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
 - [ ] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
 - [ ] Add themes (dark mode etc.) to the stocks view
-- [ ] Analyze drawer video at ~/Documents/Misc/epiphany.mp4 for the drawer UX spec
 
 ## Ingested 2026-08-18
 - [ ] Venue reviews via Google Places, DEFERRED 2026-09-07 (Joshua: later). Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Needs Joshua to add a card + accept ToS at console.cloud.google.com (project winnie-372220, Places API enable started). Then: create key, `wrangler secret put GOOGLE_PLACES_API_KEY`, port `server/api/venue-details.js` from Yelp to Places (New). `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
@@ -171,7 +156,6 @@ Scope: large UI change, do in a dedicated session.
 ## Ingested 2026-08-22
 - [ ] Add a police scanner feature.
 - [ ] Build upon the ontology / people index feature.
-- [ ] Add Moderna and Pfizer to the stock list, plus any other suggestions. "Theoretically an infinite list that the user can organize and categorize themselves", i.e. make the stock list user-extensible and user-categorizable rather than a fixed set.
 - [ ] Portfolio syncing is laggy and unreliable, "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end.
 
 ## From Apple Notes (imported 2026-08-25)
@@ -188,10 +172,8 @@ Scope: large UI change, do in a dedicated session.
   the same run and probably older: `Cron crypto fetch failed: HTTP 403`.
 
 ## From Apple Notes (imported 2026-08-27)
-- [ ] Remaining empty map layers (as of 2026-08-27, now dated): `/api/events` 502 (GDELT unavailable, no cache), `/api/flights` FIXED (see above), `traffic`/`emergency`/`weather-alerts`/`aqi`/`earthquakes` all 0 (unchanged). `crime` returning 0 is expected, it only covers 9 US cities. Working: `news` (69 articles), `wildfires` (3).
 - [ ] "One big dot for the entire city" on web: not yet root-caused. With almost every layer empty, the surviving markers cluster into a single badge (`clusterPoints` in `src/components/LiveMapBackdrop.jsx`, radius 60 at initial zoom 10.6). Re-check now that flights layer is returning real data.
 - [ ] Loading glitch in the top App Store bar on web.
-- [ ] Bump landing page links and GitHub links to current.
 - [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
 
 ### Open, security
@@ -212,24 +194,18 @@ Scope: large UI change, do in a dedicated session.
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
 
 ## From Notes (2026-09-12)
-- [ ] Current location button works but no pin shown on map
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
 - [ ] ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
 - [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
-- [ ] Fee test: 0%, 0.1%, 0.25% per side
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
 - [ ] Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
 - [ ] Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
-- [ ] Drop the in-app Stripe unlock path now that the app is a paid download, and decide what to do about the web paywall gate
 
 ## Ingested 2026-10-01
-- [ ] Refresh App Store and README screenshots, automatically every time the app changes.
-- [ ] Sample-data mode for screenshots (launch argument, a wealthy demo portfolio) so fastlane can refresh iPhone, Mac and Watch shots without a login; then refresh README and landing screenshots
 - [ ] Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
-- [ ] Screenshot run: UITEST_DEMO mode is in (ios/Models/DemoData.swift), the app compiles, but `fastlane screenshots` failed at SwiftCompile of ContentView.swift under its own derived data and produced no images. Reproduce with the lane's xcodebuild line, fix, rerun, then refresh README and landing shots
 - [ ] Budget should read income statements dynamically instead of a typed Monthly Income ($1000 shown, real figure is higher); phone device debt should calculate dynamically too. Joshua's real numbers are in the wiki epiphany.md (personal data, repo is public). Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed (income 1650, Visa 5000). Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
 - [ ] /api/venue-details returns HTTP 400 from Yelp (key set but rejected, Yelp Fusion went paid). Only the iOS 17 / macOS 14 fallback sheet uses it now; drop it or swap the source
 
@@ -274,15 +250,10 @@ Bigger, parked:
 Dropped on purpose: Copilot-style ML category prediction from amount, weekday and card: a per-user merchant ru; Rocket Money SMS assistant texting you about price increases and new subscriptions: needs ; Watch Duty evacuation orders subscribed by county: requires a regional evacuation-order fe; Citizen-style following an incident from first report to resolved: /api/incidents is an Op; Flightradar24 7700 emergency squawk alerts: needs continuous aircraft polling in the backg; Apple Maps-style full offline area download: MapKit exposes no tile download API and the C
 
 ## Ingested 2026-10-02
-- [ ] GitHub release versions are stale.
-- [ ] Move the README GIF further down until the app is making money or beating the S&P 500.
 - [ ] Add the jobs report.
-- [ ] Add bonds to the markets list.
 
 ## Ingested 2026-10-16
-- [ ] X value still squished on the portfolio spending chart. Entire app needs uniformity. (screenshot: notes/attachments/2026-10-16/epiphany-1.png)
 - [ ] Compare our stocks list against the iOS Stocks app. (screenshot: notes/attachments/2026-10-16/epiphany-2.png)
-- [ ] Simplify README markdown. Refresh structure and make the background white.
 
 ## Ingested 2026-10-21
 - [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
