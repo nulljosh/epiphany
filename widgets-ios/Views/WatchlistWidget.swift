@@ -11,7 +11,7 @@ struct WatchlistWidget: Widget {
         }
         .configurationDisplayName("Watchlist")
         .description("Your watched stocks at a glance.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline])
     }
 }
 
@@ -25,8 +25,38 @@ struct WatchlistWidgetView: View {
             mediumView
         case .systemLarge:
             largeView
+        case .accessoryRectangular:
+            lockRectangular
+        case .accessoryInline:
+            lockInline
         default:
             mediumView
+        }
+    }
+
+    // MARK: - Lock Screen
+
+    private func percent(_ v: Double) -> String {
+        String(format: "%@%.1f%%", v >= 0 ? "+" : "", v)
+    }
+
+    private var lockRectangular: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(entry.stocks.prefix(3)) { stock in
+                HStack {
+                    Text(stock.symbol).font(.caption.weight(.semibold))
+                    Spacer()
+                    Text(percent(stock.changePercent)).font(.caption.monospacedDigit())
+                }
+            }
+        }
+    }
+
+    private var lockInline: some View {
+        if let first = entry.stocks.first {
+            Text("\(first.symbol) \(percent(first.changePercent))")
+        } else {
+            Text("Watchlist")
         }
     }
 
