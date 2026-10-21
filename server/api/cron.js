@@ -1,3 +1,4 @@
+import { fetchYahooBatch } from './stocks-free.js';
 import { put } from './_blob.js';
 import { getKv } from './_kv.js';
 import { YAHOO_HEADERS, FMP_BASE, getFmpApiKey, BLOB_PREFIX } from './stocks-shared.js';
@@ -129,12 +130,18 @@ async function fetchStocks() {
     }
   }
 
-  // Yahoo chunked fallback for any symbols FMP missed
-  const have = new Set(results.map(r => r.symbol));
-  const missing = ALL_SYMBOLS.filter(s => !have.has(s));
+  // Yahoo fallback for any symbols FMP missed. One batch quote first: a fetch per
+  // symbol blew through the Workers subrequest cap and dropped the KV writes.
+  let have = new Set(results.map(r => r.symbol));
+  let missing = ALL_SYMBOLS.filter(s => !have.has(s));
   if (missing.length > 0) {
     console.log(`[CRON] FMP returned ${results.length}/${ALL_SYMBOLS.length}, fetching ${missing.length} from Yahoo`);
-    const yahooResults = await chunkedFetch(missing, fetchYahooSymbol, 10, 100);
+    const batch = await fetchYahooBatch(missing).catch(() => null);
+    (batch || []).forEach(q => results.push({ symbol: q.symbol, price: q.price, change: q.change, changePercent: q.changePercent, volume: q.volume }));
+    have = new Set(results.map(r => r.symbol));
+    missing = ALL_SYMBOLS.filter(s => !have.has(s));
+    // ponytail: per-symbol only for a short tail, so a failed batch can't fan out 100+ fetches.
+    const yahooResults = await chunkedFetch(missing.slice(0, 20), fetchYahooSymbol, 10, 100);
     yahooResults.filter(Boolean).forEach(r => results.push(r));
   }
 

@@ -181,7 +181,7 @@ async function fetchFmpBatch(symbolList) {
 
 // Yahoo fallback: v7 batch quote (fundamentals) + v8 chart (price history).
 // Yahoo gates v7 behind a cookie+crumb; without it the call returns 401.
-async function fetchYahooBatch(symbolList) {
+export async function fetchYahooBatch(symbolList) {
   const fields = 'regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketVolume,regularMarketDayHigh,regularMarketDayLow,regularMarketOpen,regularMarketPreviousClose,fiftyTwoWeekHigh,fiftyTwoWeekLow,marketCap,trailingPE,epsTrailingTwelveMonths,averageDailyVolume3Month,beta,trailingAnnualDividendYield,bid,ask,fullExchangeName';
   for (const base of YAHOO_URLS) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
