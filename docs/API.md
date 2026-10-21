@@ -56,8 +56,8 @@ which run inside the page and are not filtered.
 | `/broker/morning-run` | POST | Runs the morning strategy pass (also on cron). Paper positions size as allocation % of a virtual $10,000 |
 | `/broker/crypto-paper` | GET | Crypto paper trading, daily on cron including weekends (Bearer CRON_SECRET). Holds BTC while above its 100 day average. Opt in with `allowCrypto`. Never places real orders |
 | `/broker/impact-test` | POST | Dry-run a strategy change |
-| `/broker/autopilot` | POST | `{enabled}` — **places real trades when enabled** |
-| `/broker/disconnect` | POST | `{broker}` — unlinks the account |
+| `/broker/autopilot` | POST | `{enabled}`, **places real trades when enabled** |
+| `/broker/disconnect` | POST | `{broker}`, unlinks the account |
 | `/broker/wealthsimple-auth`, `/broker/alpaca` | POST | Account linking |
 
 ## Market data (open)
@@ -65,30 +65,30 @@ which run inside the page and are not filtered.
 | Route | Query | Cache |
 |---|---|---|
 | `/stocks-free` | `?symbols=AAPL,MSFT` | 60s |
-| `/stocks` | `?symbols=` (richer, keyed provider) | — |
+| `/stocks` | `?symbols=` (richer, keyed provider) |, |
 | `/prices` | `?symbols=` | 60s |
-| `/markets` | — indices, breadth | 60s |
-| `/macro` | — rates, CPI, unemployment | 1h |
-| `/commodities` | — | 5m |
+| `/markets` |, indices, breadth | 60s |
+| `/macro` |, rates, CPI, unemployment | 1h |
+| `/commodities` |, | 5m |
 | `/crypto` | `?symbols=BTC,ETH` | 60s |
-| `/fear-greed` | — | 5m |
-| `/sp500` | — constituents | — |
-| `/polymarket-whales` | — prediction-market flow | — |
+| `/fear-greed` |, | 5m |
+| `/sp500` |, constituents |, |
+| `/polymarket-whales` |, prediction-market flow |, |
 
 ## News and world data (open)
 
 | Route | Query | Cache |
 |---|---|---|
 | `/news` | `?category=` | 5m |
-| `/daily-brief` | — | — |
+| `/daily-brief` |, |, |
 | `/reddit` | `?sub=` | 5m |
 | `/weather` | `?lat=&lon=` | 5m |
 | `/weather-alerts` | `?lat=&lon=` | 5m |
-| `/aqi` | `?lat=&lon=` | — |
+| `/aqi` | `?lat=&lon=` |, |
 | `/earthquakes`, `/wildfires`, `/flights`, `/traffic`, `/crime`, `/incidents`, `/emergency`, `/dispatch` | `?lat=&lon=&radius=` | 2–60m |
 | `/events`, `/local-events` | `?lat=&lon=` | 10m |
-| `/venue-details` | `?id=` — Yelp detail | 24h |
-| `/defuddle`, `/validate-link` | `?url=` — readable article text | — |
+| `/venue-details` | `?id=`, Yelp detail | 24h |
+| `/defuddle`, `/validate-link` | `?url=`, readable article text |, |
 
 ## Webhooks
 
