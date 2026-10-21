@@ -21,8 +21,8 @@ const SERIES = [
   { id: 'pce',         seriesId: 'PCEPI',            name: 'PCE Inflation',     unit: 'index' },
   { id: 'retailSales', seriesId: 'RSAFS',            name: 'Retail Sales',      unit: 'B USD' },
   { id: 'treasury2y',  seriesId: 'DGS2',            name: '2Y Treasury',       unit: '%' },
-  { id: 'treasury10y', seriesId: 'DGS10',           name: '10Y Treasury',      unit: '%' },
-  { id: 'treasury30y', seriesId: 'DGS30',           name: '30Y Treasury',      unit: '%' },
+  { id: 'treasury10y', seriesId: 'DGS10',           name: '10Y Treasury',      unit: '%', yahoo: '^TNX' },
+  { id: 'treasury30y', seriesId: 'DGS30',           name: '30Y Treasury',      unit: '%', yahoo: '^TYX' },
   { id: 'deficit',     seriesId: 'FYFSD',           name: 'Federal Deficit',   unit: 'B USD' },
 ];
 
@@ -104,6 +104,22 @@ async function fetchBls(ids) {
   return out;
 }
 
+// Treasury yields as monthly closes from Yahoo, newest first, when FRED fails.
+async function fetchYahooMonthly(symbol) {
+  const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1mo&range=1y`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`Yahoo ${symbol} returned HTTP ${response.status}`);
+  const r = (await response.json()).chart?.result?.[0];
+  const closes = r?.indicators?.quote?.[0]?.close || [];
+  return (r?.timestamp || [])
+    .map((t, i) => ({ date: new Date(t * 1000).toISOString().slice(0, 10), value: closes[i] }))
+    .filter(o => Number.isFinite(o.value))
+    .slice(-OBS_LIMIT)
+    .reverse();
+}
+
 function buildIndicator(spec, observations) {
   // observations are desc order (newest first)
   const current = observations[0] || null;
@@ -152,6 +168,11 @@ async function fetchMacroData() {
       console.error('[macro] BLS fallback failed:', err.message);
     }
   }
+
+  await Promise.all(SERIES.filter(spec => spec.yahoo && !ok.has(spec.id)).map(spec =>
+    fetchYahooMonthly(spec.yahoo)
+      .then(obs => { if (obs.length) ok.set(spec.id, obs); })
+      .catch(err => console.error('[macro] Yahoo fallback failed:', err.message))));
 
   return SERIES.filter(spec => ok.has(spec.id)).map(spec => buildIndicator(spec, ok.get(spec.id)));
 }
