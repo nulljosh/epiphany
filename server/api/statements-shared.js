@@ -240,6 +240,53 @@ export function applyCategoryRules(transactions = [], rules = {}) {
   });
 }
 
+// Charges that repeat: same merchant key in 2+ months, amounts within 15%, a gap of
+// about a month or a year. Returns newest first by next expected date.
+const DAY_MS = 24 * 3600 * 1000;
+export function detectRecurring(transactions = [], today = new Date()) {
+  const groups = new Map();
+  for (const txn of transactions) {
+    if (!(txn?.amount < 0) || !DATE_RE.test(txn?.date || '')) continue;
+    const key = normalizeMerchant(txn.description);
+    if (key.length < MIN_MERCHANT_KEY_LENGTH) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(txn);
+  }
+
+  const out = [];
+  for (const [key, txns] of groups) {
+    txns.sort((a, b) => a.date.localeCompare(b.date));
+    const months = new Set(txns.map((t) => t.date.slice(0, 7)));
+    if (months.size < 2) continue;
+    const amounts = txns.map((t) => Math.abs(t.amount));
+    const sorted = [...amounts].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    if (amounts.some((a) => Math.abs(a - median) > median * 0.15)) continue;
+    const times = txns.map((t) => Date.parse(`${t.date}T00:00:00Z`));
+    const gaps = times.slice(1).map((t, i) => (t - times[i]) / DAY_MS).sort((a, b) => a - b);
+    const gap = gaps[Math.floor(gaps.length / 2)];
+    const cadence = gap >= 26 && gap <= 35 ? 'monthly' : gap >= 350 && gap <= 380 ? 'yearly' : null;
+    if (!cadence) continue;
+    const last = txns[txns.length - 1];
+    const lastTime = times[times.length - 1];
+    const next = new Date(lastTime + (cadence === 'monthly' ? 30 : 365) * DAY_MS);
+    // A charge that has missed two cycles has probably been cancelled.
+    if (today - next > (cadence === 'monthly' ? 35 : 60) * DAY_MS) continue;
+    const prev = amounts[amounts.length - 2];
+    out.push({
+      merchant: key,
+      name: last.description,
+      amount: amounts[amounts.length - 1],
+      cadence,
+      lastDate: last.date,
+      nextDate: next.toISOString().slice(0, 10),
+      priceDelta: Math.round((amounts[amounts.length - 1] - prev) * 100) / 100,
+      count: txns.length,
+    });
+  }
+  return out.sort((a, b) => a.nextDate.localeCompare(b.nextDate));
+}
+
 export function summarizeTransactions(transactions = [], filename = '') {
   const filtered = transactions.filter((txn) => typeof txn?.amount === 'number' && txn.category && txn.amount < 0);
   const categories = {};

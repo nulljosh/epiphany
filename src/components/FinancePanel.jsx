@@ -654,6 +654,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [tab, setTab] = useState('portfolio');
   const [importError, setImportError] = useState(null);
   const [statementFiles, setStatementFiles] = useState([]);
+  const [recurring, setRecurring] = useState([]);
   const [statementLoading, setStatementLoading] = useState(false);
   const [statementUploading, setStatementUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
@@ -773,6 +774,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         console.warn(`[STATEMENTS] Dropped ${allStatements.length - files.length}/${allStatements.length} statements missing spendingMonth.month`);
       }
       setStatementFiles(files);
+      setRecurring(Array.isArray(data?.recurring) ? data.recurring : []);
       const result = syncSpendingMonthsRef.current(files.map((item) => item.spendingMonth));
       setImportError(result.success ? null : result.error);
     } catch (err) {
@@ -1523,8 +1525,31 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           const activeSubs = subscriptions.filter(s => s.active);
           const inactiveSubs = subscriptions.filter(s => !s.active);
           const monthlyTotal = activeSubs.reduce((sum, s) => sum + (s.amount || 0), 0);
+          const recurringMonthly = recurring.reduce((sum, r) => sum + (r.cadence === 'monthly' ? r.amount : r.amount / 12), 0);
           return (
             <>
+              {recurring.length > 0 && (
+                <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+                  <div style={sectionStyle}>
+                    <div style={labelStyle}>Found in your statements</div>
+                    <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 12 }}>
+                      {formatCurrency(recurringMonthly)} / mo
+                    </div>
+                    {recurring.map((r) => (
+                      <div key={r.merchant} style={rowStyle}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
+                          <div style={{ fontSize: 11, color: t.textTertiary }}>
+                            {r.cadence} · next {new Date(`${r.nextDate}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            {r.priceDelta > 0 ? ` · up ${formatCurrency(r.priceDelta)}` : r.priceDelta < 0 ? ` · down ${formatCurrency(-r.priceDelta)}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
               <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
                 <div style={sectionStyle}>
                   <div style={labelStyle}>Active</div>

@@ -9,6 +9,7 @@ import {
   SUMMARY_VERSION,
   normalizeMerchant,
   applyCategoryRules,
+  detectRecurring,
   MIN_MERCHANT_KEY_LENGTH,
 } from './statements-shared.js';
 
@@ -154,7 +155,8 @@ export default async function handler(req, res) {
         await kv.set(statementsKey, refreshed);
       }
 
-      return res.status(200).json({ statements: refreshed });
+      const recurring = detectRecurring(refreshed.flatMap((item) => item?.transactions || []));
+      return res.status(200).json({ statements: refreshed, recurring });
     }
 
     if (req.method === 'POST' && action === 'upload') {
