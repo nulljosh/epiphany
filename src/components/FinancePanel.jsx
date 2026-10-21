@@ -817,11 +817,18 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         const file = files[i];
         setUploadProgress({ current: i + 1, total: files.length, filename: file.name });
         const contentBase64 = await fileToBase64(file);
+        // Extract text here like the native apps do, so the Worker skips its own PDF parse.
+        let text = '';
+        try {
+          const { extractText, getDocumentProxy } = await import('unpdf');
+          const pdf = await getDocumentProxy(new Uint8Array(await file.arrayBuffer()));
+          text = (await extractText(pdf, { mergePages: true })).text || '';
+        } catch { /* server parses the PDF itself */ }
         const response = await fetch('/api/statements?action=upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ filename: file.name, contentBase64 }),
+          body: JSON.stringify({ filename: file.name, contentBase64, text }),
         });
         if (!response.ok) {
           const data = await response.json().catch(() => ({}));
