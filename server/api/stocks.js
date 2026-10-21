@@ -164,6 +164,14 @@ function futureTs(ts) {
   return typeof ts === 'number' && ts * 1000 > Date.now() - 24 * 3600 * 1000 ? ts : null;
 }
 
+// Named outright: the default field set leaves out the earnings and dividend dates.
+const QUOTE_FIELDS = [
+  'symbol', 'shortName', 'longName', 'regularMarketPrice', 'regularMarketChange', 'regularMarketChangePercent',
+  'regularMarketVolume', 'regularMarketOpen', 'regularMarketPreviousClose', 'regularMarketDayHigh', 'regularMarketDayLow',
+  'marketCap', 'trailingPE', 'epsTrailingTwelveMonths', 'fiftyTwoWeekHigh', 'fiftyTwoWeekLow',
+  'earningsTimestamp', 'earningsTimestampStart', 'dividendDate',
+].join(',');
+
 async function fetchYahooBatchQuotes(symbolList) {
   const session = await getYahooCrumb().catch(() => null);
   if (!session || !session.crumb || !session.cookie) return null;
@@ -171,7 +179,7 @@ async function fetchYahooBatchQuotes(symbolList) {
   const out = [];
   for (let i = 0; i < symbolList.length; i += YAHOO_QUOTE_CHUNK) {
     const chunk = symbolList.slice(i, i + YAHOO_QUOTE_CHUNK);
-    const url = `${YAHOO_PROVIDERS[0]}/v7/finance/quote?symbols=${encodeURIComponent(chunk.join(','))}&crumb=${encodeURIComponent(session.crumb)}`;
+    const url = `${YAHOO_PROVIDERS[0]}/v7/finance/quote?symbols=${encodeURIComponent(chunk.join(','))}&fields=${QUOTE_FIELDS}&crumb=${encodeURIComponent(session.crumb)}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {

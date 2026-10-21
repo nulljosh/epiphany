@@ -151,6 +151,25 @@ struct FinanceData: Codable {
 
             var id: String { name }
 
+            /// Statement categories this hand-typed line covers; mirrors src/utils/budgetActual.js.
+            var statementCategories: [String] {
+                let keywords: [(String, [String])] = [
+                    ("food|eat|dining|restaurant", ["food", "groceries", "coffee", "starbucks"]),
+                    ("grocer", ["groceries"]), ("coffee|starbucks", ["coffee", "starbucks"]),
+                    ("vape", ["vape"]), ("weed|cannabis", ["cannabis"]),
+                    ("liquor|alcohol|booze|beer", ["liquor"]), ("pharma|drug|meds", ["pharmacy"]),
+                    ("shop", ["shopping"]), ("tech", ["tech"]), ("subscri", ["subscriptions"]),
+                ]
+                return keywords.first { name.range(of: $0.0, options: [.regularExpression, .caseInsensitive]) != nil }?.1 ?? []
+            }
+
+            /// What the given month's statement spent in this line's categories, or nil when unlinked.
+            func spent(in month: SpendingMonth?) -> Double? {
+                let cats = statementCategories
+                guard !cats.isEmpty, let month, amount > 0 else { return nil }
+                return cats.reduce(0) { $0 + (month.categories[$1] ?? 0) }
+            }
+
             var monthlyAmount: Double {
                 switch frequency {
                 case "biweekly": return amount * 26 / 12

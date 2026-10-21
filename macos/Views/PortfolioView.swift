@@ -352,6 +352,20 @@ struct PortfolioView: View {
                             : 0,
                         color: budget.monthlySurplus >= 0 ? Palette.successGreen : Palette.dangerRed
                     )
+
+                    // Each linked line against last statement's spending: green under 90%, amber to 110%, red past it.
+                    let lastMonth = appState.statements.compactMap(\.spendingMonth).max { $0.sortKey < $1.sortKey }
+                    ForEach(budget.expenses) { line in
+                        if let spent = line.spent(in: lastMonth) {
+                            let ratio = spent / line.amount
+                            budgetMetricRow(
+                                title: "\(line.name) · \(lastMonth?.month ?? "") of \(CurrencyFormatter.formatPrice(line.amount))",
+                                value: spent,
+                                progress: min(ratio, 1),
+                                color: ratio <= 0.9 ? Palette.successGreen : ratio <= 1.1 ? Palette.warningAmber : Palette.dangerRed
+                            )
+                        }
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 12)
