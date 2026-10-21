@@ -4,7 +4,6 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import dotenv from 'dotenv';
 import React, { useState, useEffect } from 'react';
 import { render, Box, Text, useApp, useInput, useStdin } from 'ink';
@@ -19,13 +18,7 @@ function loadKvEnv() {
   const cached = join(repoRoot, '.env.tui.local');
   if (existsSync(cached)) dotenv.config({ path: cached });
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) return;
-
-  // ponytail: reuse scripts/kv-portfolio-edit.sh's pull-and-cache pattern instead of a new one
-  execFileSync('npx', ['--yes', 'vercel', 'env', 'pull', cached, '--environment=production', '--yes'], {
-    cwd: repoRoot,
-    stdio: ['ignore', 'ignore', 'inherit'],
-  });
-  dotenv.config({ path: cached });
+  throw new Error('Put KV_REST_API_URL and KV_REST_API_TOKEN (Upstash) in .env.tui.local');
 }
 
 async function kvGet(key) {

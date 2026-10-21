@@ -844,8 +844,8 @@ struct PortfolioView: View {
         })
     }
 
-    // ponytail: mirrors the server's cap. The real ceiling is Vercel's 4.5MB
-    // serverless request-body limit, and we send the PDF base64-encoded (4/3
+    // ponytail: mirrors the server's cap. The real ceiling is the Worker's
+    // request-body cap, and we send the PDF base64-encoded (4/3
     // inflation), so 3MB of PDF. Above that the platform 413s before the handler
     // runs, which is why oversized statements used to vanish with no error.
     private static let maxStatementBytes = 3 * 1024 * 1024

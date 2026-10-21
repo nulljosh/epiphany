@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Read straight from KV. A Worker cannot fetch() its own custom domain
-    // (Cloudflare answers 522), which is what killed this endpoint after Vercel.
+    // (Cloudflare answers 522).
     const blobUrl = blobs[0].url;
     const raw = await get(blobs[0].pathname);
     if (raw == null) throw new Error('Blob missing from KV');

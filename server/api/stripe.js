@@ -64,9 +64,7 @@ export default async function handler(req, res) {
       if (allowedPriceIds.size > 0 && !allowedPriceIds.has(priceId)) {
         return res.status(400).json({ error: 'Invalid price ID' });
       }
-      const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'https://epiphany.jaybulb.com';
+      const baseUrl = 'https://epiphany.jaybulb.com';
 
       // Link checkout to authenticated user if session cookie exists
       const sessionToken = getSessionToken(req);
@@ -140,9 +138,7 @@ export default async function handler(req, res) {
     try {
       const { customerId: cid } = req.body;
       if (!cid) return res.status(400).json({ error: 'Customer ID required' });
-      const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'https://epiphany.jaybulb.com';
+      const baseUrl = 'https://epiphany.jaybulb.com';
       const session = await getStripe().billingPortal.sessions.create({
         customer: cid,
         return_url: baseUrl,

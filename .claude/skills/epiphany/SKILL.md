@@ -14,7 +14,7 @@ Wraps `~/Documents/Code/epiphany/scripts/kv-portfolio-edit.sh`, which talks to U
 ~/Documents/Code/epiphany/scripts/kv-portfolio-edit.sh set <email> <file.json> # overwrite with file contents
 ```
 
-The script pulls `KV_REST_API_URL`/`KV_REST_API_TOKEN` fresh from Vercel prod env on every run, so no local secrets are needed.
+The script reads `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash) from `.env.tui.local`.
 
 ## Critical rule: never blind-overwrite
 

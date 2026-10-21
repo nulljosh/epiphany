@@ -33,7 +33,7 @@ async function getYahooCrumb() {
   return crumb;
 }
 
-// Vercel serverless proxy for Yahoo Finance historical data
+// Proxy for Yahoo Finance historical data
 export default async function handler(req, res) {
   applyCors(req, res);
   const symbol = req.query.symbol || 'AAPL';

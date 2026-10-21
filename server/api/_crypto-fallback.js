@@ -1,6 +1,6 @@
 // CoinGecko rate-limits by IP, and Cloudflare Workers egress shares addresses
 // with everyone else on the platform, so it returns 429/451 far more often here
-// than it did on Vercel. Kraken and Coinbase are keyless and don't IP-gate, so
+//. Kraken and Coinbase are keyless and don't IP-gate, so
 // they stand in when CoinGecko refuses.
 //
 // ponytail: same primary-then-fallback shape as stocks-free.js (FMP -> Yahoo);

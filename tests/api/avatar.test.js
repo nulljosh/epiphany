@@ -9,7 +9,7 @@ const callOrder = [];
 vi.mock('../../server/api/_blob.js', () => ({
   put: vi.fn(async (pathname) => {
     callOrder.push('put');
-    return { url: `https://blob.vercel-storage.com/${pathname}` };
+    return { url: `https://blob.example.com/${pathname}` };
   }),
   del: vi.fn(async () => {
     callOrder.push('del');
@@ -26,7 +26,7 @@ vi.mock('../../server/api/auth-helpers.js', () => ({
   errorResponse: (res, status, message) => res.status(status).json({ error: message }),
 }));
 
-const OLD_URL = 'https://blob.vercel-storage.com/avatars/user-1-old.jpg';
+const OLD_URL = 'https://blob.example.com/avatars/user-1-old.jpg';
 
 function postAvatar() {
   const { req, res } = createReqRes({

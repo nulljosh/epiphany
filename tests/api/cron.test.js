@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../server/api/cron.js';
 import { put } from '../../server/api/_blob.js';
 
-// Mock Vercel Blob
+// Mock the blob store
 vi.mock('../../server/api/_blob.js', () => ({
   put: vi.fn(async (filename, content, opts) => ({
-    url: `https://blob.vercel-storage.com/${filename}`,
+    url: `https://blob.example.com/${filename}`,
     pathname: `/${filename}`,
   })),
   list: vi.fn(async (opts) => ({
     blobs: [
       {
-        url: 'https://blob.vercel-storage.com/monica-cache/results.json',
+        url: 'https://blob.example.com/monica-cache/results.json',
         pathname: '/monica-cache/results.json',
       },
     ],
@@ -131,7 +131,7 @@ describe('Cron API', () => {
     
     const response = res.json.mock.calls[0][0];
     expect(response.blobUrl).toBeDefined();
-    expect(response.blobUrl.includes('vercel')).toBe(true);
+    expect(response.blobUrl.includes('blob')).toBe(true);
   });
 });
 
@@ -168,7 +168,7 @@ describe('Cron Error Handling', () => {
 
     await handler(req, res);
 
-    // Should return 200 with error info for proper Vercel logging
+    // Should return 200 with error info so the failure is logged
     expect(res.status).toHaveBeenCalledWith(200);
 
     const response = res.json.mock.calls[0][0];

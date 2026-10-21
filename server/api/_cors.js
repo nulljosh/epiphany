@@ -11,10 +11,8 @@ function getAllowedOrigins() {
     .map(v => v.trim())
     .filter(Boolean);
 
-  const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
-  // The Worker's own origin replaced VERCEL_URL after the move.
   const siteOrigin = globalThis.__publicBaseUrl || 'https://epiphany.jaybulb.com';
-  return new Set([...configured, ...(vercelOrigin ? [vercelOrigin] : []), ...LOCAL_DEV_ORIGINS, siteOrigin]);
+  return new Set([...configured, ...LOCAL_DEV_ORIGINS, siteOrigin]);
 }
 
 export function applyCors(req, res, { methods = 'GET, OPTIONS', headers = 'Content-Type' } = {}) {

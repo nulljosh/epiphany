@@ -39,14 +39,12 @@ function safeName(name = 'statement.pdf') {
 }
 
 // ponytail: 3MB, and the ceiling is the transport, not Blob. The PDF reaches this
-// handler as base64 inside a JSON body to a Vercel Serverless Function, whose
-// request-body limit is 4.5MB — enforced by the platform, so an oversized upload
-// 413s before this code ever runs and the client sees no useful error. Base64
+// handler as base64 inside a JSON body, and worker/index.js caps bodies at 8MB,
+// so an oversized upload 413s before this code ever runs. Base64
 // inflates by 4/3, so 3MB of PDF is the honest cap. The previous 25MB bound was
 // Blob's limit, which nothing here ever gets to use.
-// Upgrade path if real statements exceed this: client-direct upload to Blob
-// (`@vercel/blob/client` handleUpload + a token route), which bypasses the
-// function body entirely. That's a cross-platform client change, not a constant.
+// Upgrade path if real statements exceed this: a raw-body upload route, which
+// skips the base64 inflation. That's a cross-platform client change, not a constant.
 const MAX_STATEMENT_BYTES = 3 * 1024 * 1024;
 
 // ponytail: statements live in Blob, not KV. KV rejected values over ~4MB, which
@@ -74,7 +72,7 @@ async function putStatementBlob(userId, recordId, buffer) {
 // KV base64 copy so statements uploaded before this migration still open.
 async function readStatementBuffer(kv, statement) {
   if (statement?.blobUrl) {
-    // The KV shim returns bytes, not a stream like @vercel/blob did.
+    // The KV blob store returns bytes, not a stream.
     const bytes = await getArrayBuffer(statement.blobUrl);
     return bytes ? Buffer.from(bytes) : null;
   }
@@ -134,9 +132,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET' && action === 'scan-local') {
       // scan-local reads statements off the local filesystem, so it must never
-      // be reachable in production. This used to test process.env.VERCEL, which
-      // is undefined on Workers — the check silently inverted at cutover and
-      // exposed the route. Default-deny on NODE_ENV instead, which wrangler.jsonc
+      // be reachable in production. It once tested a host-specific env var that
+      // is undefined on Workers, which silently exposed the route. Default-deny on NODE_ENV instead, which wrangler.jsonc
       // pins to "production" for the deployed Worker.
       if (process.env.NODE_ENV === 'production') {
         return errorResponse(res, 404, 'Not found');

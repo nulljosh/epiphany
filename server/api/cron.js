@@ -220,7 +220,7 @@ export default async function handler(req, res) {
 
     console.log(`[CRON] Fetched data in ${fetchTime}ms - Markets: ${markets.length}, Stocks: ${stocks.length}, Commodities: ${Object.keys(commodities).length}`);
 
-    // Upload to Vercel Blob
+    // Upload to the blob store
     const uploadStart = Date.now();
     const blob = await put(BLOB_FILENAME, payload, {
       access: 'public',
@@ -236,7 +236,7 @@ export default async function handler(req, res) {
     if (stocks.length > 0) {
       try {
         const kvClient = await getKv();
-        if (!kvClient) throw new Error('@vercel/kv not available');
+        if (!kvClient) throw new Error('KV not available');
         const hash = ALL_SYMBOLS.join(',').replace(/[^A-Za-z0-9]/g, '').toLowerCase().slice(0, 16) || 'default';
         const kvFreshKey = `stocks:free:v1:${hash}`;
         const kvStaleKey = `stocks:free:v1:stale:${hash}`;
@@ -278,7 +278,7 @@ export default async function handler(req, res) {
     const totalTime = Date.now() - startTime;
     console.error(`[CRON] Failed after ${totalTime}ms:`, err.message);
     
-    // Even on error, return 200 so Vercel logs the failure properly
+    // Even on error, return 200 so the failure is logged, not retried
     res.status(200).json({ 
       ok: false,
       error: err.message,

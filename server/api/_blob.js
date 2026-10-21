@@ -1,4 +1,4 @@
-// Drop-in replacement for @vercel/blob, backed by Workers KV.
+// Blob store (put/get/list/del), backed by Workers KV.
 //
 // R2 would be the natural fit, but it can only be enabled from the Cloudflare
 // dashboard, so KV keeps the migration self-service. Values here are avatars,
@@ -68,7 +68,7 @@ export async function list({ prefix = '' } = {}) {
       size: k.metadata?.size ?? 0,
     };
   });
-  // @vercel/blob returns newest-first; latest.js relies on blobs[0].
+  // Newest first; latest.js relies on blobs[0].
   blobs.sort((a, b) => String(b.uploadedAt || '').localeCompare(String(a.uploadedAt || '')));
   return { blobs, cursor: res.cursor, hasMore: !res.list_complete };
 }

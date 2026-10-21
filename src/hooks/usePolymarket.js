@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useVisibilityPolling } from './useVisibilityPolling';
 
-// Use relative paths - works on any domain (Vercel auto-serves from same origin)
+// Relative paths: the API is served from the same origin
 const POLYMARKET_API = '/api';
 
 // Cache for validated links (slug -> isValid)

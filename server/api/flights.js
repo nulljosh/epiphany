@@ -1,7 +1,7 @@
 // Flights proxy — live ADS-B positions within a bounding box.
 //
 // Sources are readsb-style point+radius APIs tried in order; the first that
-// answers wins. OpenSky is deliberately absent: it blocks Vercel and Cloudflare
+// answers wins. OpenSky is deliberately absent: it blocks Cloudflare
 // egress (confirmed 2026-06-12, relay tried and still 522s). airplanes.live
 // 403s until you email them for access. adsb.lol and adsb.fi are free,
 // no-auth, and not datacenter-blocked.

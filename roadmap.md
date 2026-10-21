@@ -78,14 +78,9 @@ Diagnose Workers 500s with `wrangler tail` before trusting the handler's own mes
   or confirmed fixed. Do this first next session.
 
 ## Urgent
-- [ ] **Statement upload, two real bugs found and fixed 2026-08-10, awaiting Josh's retry to confirm they were *the* cause.** The 08-06 Blob fix was genuinely incomplete; two independent second bugs existed, both of which produce exactly "the statement never landed":
-  1. **Unparseable PDF → 500, upload discarded** (fixed, regression test added). `summarizeStatementBuffer` returned `{ spendingMonth: null }` whenever `pdf-parse` threw, and the upload handler's dedupe then did `spendingMonth.month` on that null → `TypeError` → the outer catch returned a 500 with `statements: []`. The PDF was already written to Blob at that point, so it was orphaned and never recorded in KV. Any statement whose PDF pdf-parse can't read (encrypted, or a newer Wealthsimple template) failed permanently and silently this way. Fixed at the source in `server/api/statements-data.js`, falls back to `summarizeTransactions([], filename)`, so an unreadable statement is still stored and just gets named after its filename. Belt-and-braces `?.` in `server/api/statements.js`. Test: `tests/api/statements.test.js` "still stores a statement whose PDF could not be parsed".
-  2. **Advertised 25MB cap the transport cannot carry** (fixed). The PDF travels base64-encoded inside a JSON body to a Vercel *Serverless Function*, whose request-body limit is **4.5MB, enforced by the platform**, the handler never runs, so the client got a bare 413 with no useful message. Base64 inflates 4/3, so the honest PDF ceiling is 3MB, not the 25MB that `server/api/statements.js`, `ios/Views/PortfolioView.swift` and `macos/Views/PortfolioView.swift` all claimed (25MB was Blob's limit, which this path never gets to use). All three now say 3MB and reject oversized files client-side with a real message.
-  - **Still needs Josh**: retry the June + July 2026 uploads. If they now land, done. If they're over 3MB, the clear error will say so and the real fix is the upgrade path noted in `statements.js`, client-direct upload to Blob (`@vercel/blob/client` `handleUpload` + a token route), which bypasses the function body entirely. That's a cross-platform client change deserving its own session, not a constant.
 - [ ] SnapTrade billing: Josh believes it was paid, not independently re-verified this session (ran out of time/budget). Confirm via SnapTrade dashboard before trusting the "disabled key" urgent item above is stale.
 
 ## From Apple Notes (imported 2026-08-08)
-- [ ] Follow-up on the above: the fallback is a **publisher favicon, not a true per-article image**. Genuinely per-article imagery needs og:image, which for Google-sourced items means resolving the opaque `CBMi...` redirect *then* fetching the article page, ~2 network round-trips per row, too expensive to do inline in the handler. Only worth building if GDELT stays dead; check whether GDELT recovers first (it is rate-limiting shared Vercel IPs, "Please limit requests to one every 5 seconds"), since a healthy GDELT already supplies real images for free.
 
 ## OAuth rollout (2026-08-24)
 
@@ -147,7 +142,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
   recover a record that was overwritten. If the June PDF still exists in Blob it may survive as
   an orphan; otherwise just re-upload June, then July, and confirm both now appear as separate
   months.
-- [ ] iOS: fix "Login with …" (social sign-in buttons), **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set the Vercel env vars. No code change unblocks this.
+- [ ] iOS: fix "Login with …" (social sign-in buttons), **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set them as Worker secrets (`npx wrangler secret put`). No code change unblocks this.
 - [ ] Web landing page needs a light mode (looks great otherwise), note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
 
@@ -183,15 +178,12 @@ Scope: large UI change, do in a dedicated session.
 
 - [ ] Mobile web UI/UX is spotty overall, general pass needed.
 
-- [ ] `/api/macro` returns an empty set on Cloudflare Workers. FRED sits behind Akamai, which refuses Workers egress IPs, every series comes back 520 at the edge, while the identical fetch succeeds from Vercel and from a laptop. Browser User-Agent, Referer and Accept-Language were all tried and none help, so it is the egress IP and not the request shape. Fix is either a reachable macro source or populating KV from something that can reach FRED. Already fixed alongside it: the handler used to cache the empty result for a full hour, serving the outage from memory in 1ms.
-- [ ] Ship the macOS avatar fix. `macos/Models/AppState.swift` decodes inline data: URL avatars now, but macOS is still live on 2.5.2 and the change is unshipped.
 - [ ] `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
   (2026-08-26 08:00 UTC) completed 200, but logged `[KV] set error: Too many
   subrequests by single Worker invocation` twice, so part of the cache write was
   dropped. The handler fans out to 111 stock symbols plus markets and commodities,
   each its own fetch, then writes several KV keys, that is well past the
-  per-invocation subrequest limit. It never showed on Vercel, which has no such
-  cap. Fix is to batch the Yahoo fetches or split the run across the three cron
+  per-invocation subrequest limit. Fix is to batch the Yahoo fetches or split the run across the three cron
   slots; raising the limit is a plan change, not a config flag. Also visible in
   the same run and probably older: `Cron crypto fetch failed: HTTP 403`.
 
@@ -206,32 +198,15 @@ Scope: large UI change, do in a dedicated session.
 
 - **Rotate the two dashboard-gated secrets** (2026-08-27 security sweep). Fresh
   `WEBHOOK_SECRET` + `CRON_SECRET` were already regenerated locally in
-  `.env.tui.local` and need pushing to Vercel prod (my broker/webhook + autopilot
+  `.env.tui.local` and need pushing to the Worker with `npx wrangler secret put` (my broker/webhook + autopilot
   cron endpoints now 503 until the secret is set in prod). Still to do by hand,
   because no API mints these headlessly:
   - `STRIPE_SECRET_KEY` (roll `sk_live_` at dashboard.stripe.com/apikeys)
-  - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API; rotating invalidates all tokens)
-  Run `scripts/rotate-keys.sh` to open all tabs, then `scripts/sync-vercel-env.sh`.
+  Run `scripts/rotate-keys.sh` to open the dashboards.
 
 ## From Notes (imported 2026-08-27)
 - [ ] Widgets receive no data: `widgets-ios/Models/WidgetAPI.swift` reads `UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany")`, but the **main app declares no app-groups entitlement** (only the widget target does) and no main-app code writes that suite. Found while inspecting the signed archive; unrelated to the rejection.
 
-## Migrate off Vercel to Cloudflare, DONE (verified 2026-09-02)
-
-This whole section was stale: the migration described below as blocked/not-started actually
-shipped 2026-08-25/26 (`2e6b6c3` port to Workers, `a2a1547` custom domain cutover, `cb72eef`
-crons moved, `e7ca627` Vercel remnants cleaned up, `dcbfd3a` 2026-08-31 Stripe webhook fix
-post-migration). `wrangler.jsonc` serves `epiphany.heyitsmejosh.com` directly via Workers
-custom domain, KV backs the old Blob usage (`server/api/_blob.js`), crons run on Cloudflare
-triggers. `vercel.json` is a dead leftover, safe to delete once double-checked nothing still
-reads it. Deploy is **manual**: `npm run build && npx wrangler deploy` -- there is no
-GitHub Actions auto-deploy on push (`.github/workflows/test.yml` only runs tests), so a
-merged PR does not go live by itself.
-
-Confirmed still true from the original scoping: whoever revisits this should re-verify
-`pdf-parse` (bank-statement parsing) actually works under the deployed Worker with a real
-upload, since that was the one open risk flagged before the migration and no test result for
-it is recorded here.
 
 ## Portfolio + Markets feedback (2026-09-03)
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
@@ -274,7 +249,7 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
 
-## Cloudflare audit 2026-10-01 (what else the Vercel move broke)
+## Cloudflare audit 2026-10-01
 Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
 - [ ] macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
 - [ ] _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0

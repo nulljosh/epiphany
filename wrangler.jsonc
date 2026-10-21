@@ -11,18 +11,16 @@
     "not_found_handling": "single-page-application"
   },
   "kv_namespaces": [
-    // Backs server/api/_blob.js, the @vercel/blob replacement.
+    // Backs server/api/_blob.js, the blob store.
     { "binding": "BLOB", "id": "a67a16077d864bdfbb57f25254116550" }
   ],
-  // Serves the production hostname directly; Workers custom domains own the
-  // DNS record, so this replaces the old CNAME at Vercel.
+  // Serves the production hostnames directly; Workers custom domains own the DNS record.
   "routes": [{ "pattern": "epiphany.heyitsmejosh.com", "custom_domain": true }, { "pattern": "epiphany.jaybulb.com", "custom_domain": true }],
   "observability": { "enabled": true },
   // Default-deny switch for local-only debug routes (server/api/statements.js
   // scan-local). Must stay "production" on the deployed Worker.
   "vars": { "NODE_ENV": "production" },
-  // Mirrors the three entries removed from vercel.json in this same commit, so
-  // exactly one platform is ever armed. worker/index.js scheduled() maps each
+  // worker/index.js scheduled() maps each
   // expression to its gateway path. broker/morning-run places real trades.
   "triggers": { "crons": ["0 8 * * 1-5", "30 14 * * 1-5", "0 12 * * *"] }
 }

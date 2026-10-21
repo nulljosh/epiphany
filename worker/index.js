@@ -1,11 +1,11 @@
 // Workers entry for epiphany. Serves the Vite build from the assets binding and
-// routes /api/* into the existing Vercel-style gateway handler.
+// routes /api/* into the (req, res) gateway handler.
 //
 // ponytail: api/gateway.js is already a single (req, res) dispatcher over
 // server/api/**, so the whole migration is one adapter rather than 72 rewrites.
 import gateway from '../api/gateway.js';
 
-// Vercel handlers expect Node's (req, res). Build a request shim, collect what
+// Handlers expect Node's (req, res). Build a request shim, collect what
 // the handler writes, and hand back a Response.
 function makeReq(request, url, body, rawBody) {
   const headers = Object.fromEntries(request.headers);
@@ -108,7 +108,7 @@ export default {
     // URLs, so this route is what makes a stored blob.url resolvable.
     if (url.pathname.startsWith('/api/blob/')) {
       const key = decodeURIComponent(url.pathname.slice('/api/blob/'.length));
-      // Bank statements were access:private on Vercel Blob; nothing client-side
+      // Bank statements are private; nothing client-side
       // reads them by URL, so they are never served here.
       if (key.startsWith('statements/')) return new Response('Not found', { status: 404 });
       const body = await env.BLOB.get('blob:' + key, 'arrayBuffer');
@@ -122,13 +122,12 @@ export default {
       });
     }
     if (url.pathname.startsWith('/api/')) {
-      // Vercel 413ed at 4.5MB; Workers accept 100MB, so cap bodies here.
+      // Workers accept 100MB; cap bodies here.
       if (Number(request.headers.get('content-length') || 0) > 8 * 1024 * 1024) {
         return new Response(JSON.stringify({ error: 'Payload too large' }), { status: 413, headers: { 'Content-Type': 'application/json' } });
       }
       try {
-        // The gateway's s-maxage header meant something on Vercel's CDN; here the
-        // Cache API is the edge cache, so public GETs are stored for that TTL.
+        // The gateway sets s-maxage; the Cache API is the edge cache, so public GETs are stored for that TTL.
         const origin = request.headers.get('Origin');
         const cacheable = request.method === 'GET' && (!origin || origin === url.origin);
         const cacheKey = cacheable ? new Request(url.toString(), { method: 'GET' }) : null;
@@ -159,9 +158,8 @@ export default {
     return env.ASSETS.fetch(request);
   },
 
-  // Replaces the three Vercel cron entries in vercel.json. Cron Triggers are a
-  // Workers feature; Pages Functions cannot run them, which is why this project
-  // targets Workers rather than Pages.
+  // Cron Triggers are a Workers feature; Pages Functions cannot run them, which is
+  // why this project targets Workers rather than Pages.
   async scheduled(event, env, ctx) {
     try { Object.assign(process.env, env); } catch { /* see above */ }
     bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.jaybulb.com', ctx);

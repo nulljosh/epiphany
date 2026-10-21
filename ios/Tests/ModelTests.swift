@@ -589,7 +589,7 @@ final class UserAvatarModelTests: XCTestCase {
             "tier": "pro",
             "verified": true,
             "stripeCustomerId": null,
-            "avatarUrl": "https://blob.vercel-storage.com/avatars/abc-123.jpg"
+            "avatarUrl": "https://blob.example.com/avatars/abc-123.jpg"
         }
         """.data(using: .utf8)!
 
@@ -597,7 +597,7 @@ final class UserAvatarModelTests: XCTestCase {
         XCTAssertEqual(user.id, "abc-123")
         XCTAssertEqual(user.email, "test@example.com")
         XCTAssertEqual(user.tier, "pro")
-        XCTAssertEqual(user.avatarUrl, "https://blob.vercel-storage.com/avatars/abc-123.jpg")
+        XCTAssertEqual(user.avatarUrl, "https://blob.example.com/avatars/abc-123.jpg")
     }
 
     func testUserDecodesWithoutAvatarUrl() throws {

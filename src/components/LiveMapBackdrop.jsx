@@ -608,7 +608,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       try {
         const bbox = { lamin: center.lat - 1, lomin: center.lon - 1, lamax: center.lat + 1, lomax: center.lon + 1 };
         const bboxQ = `lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`;
-        // Vercel functions cold-start; first hit can hang past short timeouts.
+        // First hit after a quiet spell can be slow; keep the timeout generous.
         // Retry once with a longer timeout, then return FAILED (null) so the
         // merge below keeps last-known-good data instead of blanking the layer.
         // A successful-but-empty response is distinct from FAILED and DOES clear.

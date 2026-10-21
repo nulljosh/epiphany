@@ -2,13 +2,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../server/api/latest.js';
 import { get, list } from '../../server/api/_blob.js';
 
-// Mock Vercel Blob
+// Mock the blob store
 vi.mock('../../server/api/_blob.js', () => ({
   get: vi.fn(),
   list: vi.fn(async (opts) => ({
     blobs: [
       {
-        url: 'https://blob.vercel-storage.com/monica-cache/results.json',
+        url: 'https://blob.example.com/monica-cache/results.json',
         pathname: '/monica-cache/results.json',
       },
     ],
@@ -91,7 +91,7 @@ describe('Latest API', () => {
     
     const response = res.json.mock.calls[0][0];
     expect(response.blobUrl).toBeDefined();
-    expect(response.blobUrl.includes('vercel')).toBe(true);
+    expect(response.blobUrl.includes('blob')).toBe(true);
   });
 
   it('should parse and validate cache data structure', async () => {

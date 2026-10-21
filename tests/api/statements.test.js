@@ -15,7 +15,7 @@ const kvMock = {
 };
 vi.mock('../../server/api/_kv.js', () => ({ getKv: vi.fn().mockResolvedValue(kvMock) }));
 
-// Statement PDFs live in Vercel Blob (private), not KV — KV only holds the
+// Statement PDFs live in the blob store, apart from the user record, which only holds the
 // metadata list now. Blob is stubbed in-memory so the handler's put/get/del
 // round-trip is exercised without network.
 const blobStore = new Map();

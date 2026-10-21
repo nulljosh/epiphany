@@ -8,8 +8,8 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_STATEMENTS_DIR = path.join(process.env.HOME || '', 'Documents/Misc/statement/');
 
 // unpdf is pdf.js packaged for serverless runtimes. pdf-parse's build hung on a
-// cold Cloudflare isolate (the request never returned), which is why uploads
-// broke after the move off Vercel. The race keeps a bad PDF from hanging a request.
+// cold Cloudflare isolate (the request never returned), which broke uploads.
+// The race keeps a bad PDF from hanging a request.
 const PARSE_TIMEOUT_MS = 12000;
 
 async function parsePdfBuffer(buffer) {

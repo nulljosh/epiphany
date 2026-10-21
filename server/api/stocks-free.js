@@ -21,7 +21,7 @@ function toYahooSymbol(fmpSymbol) {
   return fmpSymbol.replace(/\.([A-Z])$/, '-$1');
 }
 
-// Inlined to avoid Vercel bundler cache issues with new exports in stocks-shared.js
+// Inlined on purpose; keep it in sync with stocks-shared.js
 function isMarketHours(now = new Date()) {
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',

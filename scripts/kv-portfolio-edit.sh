@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 ACTION="${1:?usage: kv-portfolio-edit.sh <get|set> <email> [file.json]}"
 EMAIL="${2:?email required}"
 
-# ponytail: Vercel is gone (migrated to Cloudflare 2026-08-31); read the Upstash creds from .env.tui.local, stripping the literal \n Vercel appended.
+# Upstash creds come from .env.tui.local; old values may end in a literal \n, stripped here.
 KV_URL=$(grep '^KV_REST_API_URL' .env.tui.local | sed 's/^[^"]*"//;s/\\n"$//;s/"$//')
 KV_TOKEN=$(grep '^KV_REST_API_TOKEN' .env.tui.local | sed 's/^[^"]*"//;s/\\n"$//;s/"$//')
 

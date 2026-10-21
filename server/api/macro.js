@@ -36,7 +36,7 @@ async function fetchSeries(seriesId) {
       signal: controller.signal,
       // ponytail: FRED sits behind Akamai, which refuses this request from
       // Cloudflare Workers egress — every series comes back 520 at the edge
-      // while the same fetch works from Vercel and from a laptop. Browser
+      // while the same fetch works from a laptop. Browser
       // User-Agent, Referer and Accept-Language were all tried; none help, so
       // it is the egress IP, not the request shape. Until macro moves to a
       // reachable source (or gets populated into KV by something that can

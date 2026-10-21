@@ -184,7 +184,7 @@ function marketOpenNow() {
 }
 
 export default async function handler(req, res) {
-  // Auth: Vercel cron and GitHub Actions send Authorization: Bearer <CRON_SECRET>
+  // Auth: the Worker cron and GitHub Actions send Authorization: Bearer <CRON_SECRET>
   const cronAuth = verifyCronSecret(req);
   if (!cronAuth.ok) return res.status(cronAuth.status).json({ error: cronAuth.error });
 
