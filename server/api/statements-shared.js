@@ -240,49 +240,70 @@ export function applyCategoryRules(transactions = [], rules = {}) {
   });
 }
 
-// Charges that repeat: same merchant key in 2+ months, amounts within 15%, a gap of
-// about a month or a year. Returns newest first by next expected date.
+// Charges that repeat. Within a merchant key, charges are split into amount bands
+// (within 15%), so two plans at one gym are two rows and a price change starts a
+// new band. A band counts when it spans 2+ months, about once per month, with a gap
+// near a month or a year. Coffee shops fail the once-a-month test.
 const DAY_MS = 24 * 3600 * 1000;
+const CADENCES = [
+  { name: 'biweekly', min: 12, max: 16, days: 14, perMonth: 2.6 },
+  { name: 'monthly', min: 26, max: 35, days: 30, perMonth: 1.5 },
+  { name: 'yearly', min: 350, max: 380, days: 365, perMonth: 1.1 },
+];
 export function detectRecurring(transactions = [], today = new Date()) {
   const groups = new Map();
   for (const txn of transactions) {
     if (!(txn?.amount < 0) || !DATE_RE.test(txn?.date || '')) continue;
-    const key = normalizeMerchant(txn.description);
-    if (key.length < MIN_MERCHANT_KEY_LENGTH) continue;
+    // Banks rename the same biller ("PRE AUTHORIZED DEBIT TO ABC CLUB", "ABC CLUB
+    // FITNESS"), so recurring matching drops the bank prefix and keeps two words.
+    const key = normalizeMerchant(txn.description)
+      .replace(/^(pre ?authorized debit( to)?|pad( to)?|pos purchase|purchase)\s+/, '')
+      .split(' ').slice(0, 2).join(' ');
+    // Money moved between your own accounts or to people is not a bill.
+    if (key.length < MIN_MERCHANT_KEY_LENGTH || /^(transfer|e transfer|interac|withdrawal|atm)\b/.test(key)) continue;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(txn);
   }
 
+  // Judge "stopped" against the newest statement, not the clock: months without an
+  // upload should not make every subscription look cancelled.
+  const newest = Math.max(...[...groups.values()].flat().map((t) => Date.parse(`${t.date}T00:00:00Z`)));
+  const ref = Math.min(today.getTime(), newest);
   const out = [];
-  for (const [key, txns] of groups) {
-    txns.sort((a, b) => a.date.localeCompare(b.date));
-    const months = new Set(txns.map((t) => t.date.slice(0, 7)));
-    if (months.size < 2) continue;
-    const amounts = txns.map((t) => Math.abs(t.amount));
-    const sorted = [...amounts].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
-    if (amounts.some((a) => Math.abs(a - median) > median * 0.15)) continue;
-    const times = txns.map((t) => Date.parse(`${t.date}T00:00:00Z`));
-    const gaps = times.slice(1).map((t, i) => (t - times[i]) / DAY_MS).sort((a, b) => a - b);
-    const gap = gaps[Math.floor(gaps.length / 2)];
-    const cadence = gap >= 26 && gap <= 35 ? 'monthly' : gap >= 350 && gap <= 380 ? 'yearly' : null;
-    if (!cadence) continue;
-    const last = txns[txns.length - 1];
-    const lastTime = times[times.length - 1];
-    const next = new Date(lastTime + (cadence === 'monthly' ? 30 : 365) * DAY_MS);
-    // A charge that has missed two cycles has probably been cancelled.
-    if (today - next > (cadence === 'monthly' ? 35 : 60) * DAY_MS) continue;
-    const prev = amounts[amounts.length - 2];
-    out.push({
-      merchant: key,
-      name: last.description,
-      amount: amounts[amounts.length - 1],
-      cadence,
-      lastDate: last.date,
-      nextDate: next.toISOString().slice(0, 10),
-      priceDelta: Math.round((amounts[amounts.length - 1] - prev) * 100) / 100,
-      count: txns.length,
-    });
+  for (const [key, all] of groups) {
+    const bands = [];
+    for (const txn of [...all].sort((a, b) => Math.abs(a.amount) - Math.abs(b.amount))) {
+      const band = bands[bands.length - 1];
+      if (band && Math.abs(txn.amount) <= Math.abs(band[0].amount) * 1.15) band.push(txn);
+      else bands.push([txn]);
+    }
+    for (const band of bands) {
+      const txns = band.sort((a, b) => a.date.localeCompare(b.date));
+      const months = new Set(txns.map((t) => t.date.slice(0, 7))).size;
+      if (months < 2) continue;
+      const times = txns.map((t) => Date.parse(`${t.date}T00:00:00Z`));
+      const gaps = times.slice(1).map((t, i) => (t - times[i]) / DAY_MS).sort((a, b) => a - b);
+      const gap = gaps[Math.floor(gaps.length / 2)];
+      const cadence = CADENCES.find((c) => gap >= c.min && gap <= c.max);
+      // The rate check is what keeps a daily coffee out.
+      if (!cadence || txns.length / months > cadence.perMonth) continue;
+      const last = txns[txns.length - 1];
+      const next = new Date(times[times.length - 1] + cadence.days * DAY_MS);
+      // Two missed cycles: probably cancelled.
+      if (ref - next > cadence.days * 1.2 * DAY_MS) continue;
+      const amount = Math.abs(last.amount);
+      const prev = Math.abs(txns[txns.length - 2].amount);
+      out.push({
+        merchant: key,
+        name: last.description,
+        amount,
+        cadence: cadence.name,
+        lastDate: last.date,
+        nextDate: next.toISOString().slice(0, 10),
+        priceDelta: Math.round((amount - prev) * 100) / 100,
+        count: txns.length,
+      });
+    }
   }
   return out.sort((a, b) => a.nextDate.localeCompare(b.nextDate));
 }

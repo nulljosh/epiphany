@@ -1525,7 +1525,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           const activeSubs = subscriptions.filter(s => s.active);
           const inactiveSubs = subscriptions.filter(s => !s.active);
           const monthlyTotal = activeSubs.reduce((sum, s) => sum + (s.amount || 0), 0);
-          const recurringMonthly = recurring.reduce((sum, r) => sum + (r.cadence === 'monthly' ? r.amount : r.amount / 12), 0);
+          const recurringMonthly = recurring.reduce((sum, r) => sum + r.amount * ({ biweekly: 26 / 12, monthly: 1, yearly: 1 / 12 }[r.cadence] ?? 1), 0);
           return (
             <>
               {recurring.length > 0 && (
