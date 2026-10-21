@@ -63,4 +63,4 @@ xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=m
 - Initial release with map, markets, predictions, portfolio, alerts
 
 ## License
-MIT 2026 Joshua Trommel
+Apache 2.0, 2026, Joshua Trommel

@@ -1,6 +1,6 @@
 {
   "name": "epiphany",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "private": true,
   "version": "3.0.1",
   "description": "Everything happening in your world, on one screen. The map, the markets, the people.",

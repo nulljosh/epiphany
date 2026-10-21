@@ -605,17 +605,17 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
     <div className="foot-col">
       <h3>Project</h3>
       <ul>
-        <li><a href="/privacy.md">Privacy</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
         <li><a href="/terms.md">Terms</a></li>
         <li><a href="https://github.com/nulljosh/epiphany/blob/main/SECURITY.md">Security</a></li>
-        <li><a href="https://github.com/nulljosh/epiphany/blob/main/LICENSE">License (MIT)</a></li>
+        <li><a href="https://github.com/nulljosh/epiphany/blob/main/LICENSE">License (Apache 2.0)</a></li>
         <li><a href="https://jaybulb.com">Portfolio</a></li>
         <li><a href="#top">Back to top</a></li>
       </ul>
     </div>
   </nav>
   <div className="foot-bar">
-    <p className="foot-meta">Epiphany{typeof __APP_VERSION__ !== 'undefined' ? ` v${__APP_VERSION__}` : ''} · MIT License · © 2026 Joshua Trommel · Made with <span aria-hidden="true">♥</span> in Vancouver, BC</p>
+    <p className="foot-meta">Epiphany{typeof __APP_VERSION__ !== 'undefined' ? ` v${__APP_VERSION__}` : ''} · Apache 2.0 · © 2026 Joshua Trommel</p>
     <p className="foot-meta foot-note">Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.</p>
   </div>
 </footer>

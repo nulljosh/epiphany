@@ -92,5 +92,5 @@ Backend: epiphany.heyitsmejosh.com (auth via email/password, credentials stored 
 
 ## License
 
-MIT 2026 Joshua Trommel
+Apache 2.0, 2026, Joshua Trommel
 
