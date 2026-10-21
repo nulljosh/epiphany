@@ -3,6 +3,7 @@ import SwiftUI
 struct MarketsView: View {
     @Environment(AppState.self) private var appState
     @State private var searchText = ""
+    @State private var searchResults: [EpiphanyAPI.SymbolSearchResult] = []
     @State private var isVisible = false
     @State private var hasLoaded = false
     @State private var selectedStock: Stock?
@@ -415,6 +416,7 @@ struct MarketsView: View {
 
             ScrollView {
                 LazyVStack(spacing: 8) {
+                    searchResultRows
                     ForEach(filteredItems) { item in
                         marketRow(item)
                     }
@@ -424,6 +426,36 @@ struct MarketsView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .task(id: searchText) {
+            let query = searchText.trimmingCharacters(in: .whitespaces)
+            guard !query.isEmpty else { searchResults = []; return }
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            searchResults = (try? await EpiphanyAPI.shared.searchSymbols(query)) ?? []
+        }
+    }
+
+    // Any ticker, not just the loaded list: add it straight to the watchlist.
+    @ViewBuilder
+    private var searchResultRows: some View {
+        let loaded = Set(filteredItems.map(\.symbol))
+        ForEach(searchResults.filter { !loaded.contains($0.symbol) }) { result in
+            let added = appState.isInWatchlist(result.symbol)
+            HStack(spacing: 10) {
+                Text(result.symbol).font(.body.weight(.semibold))
+                Text([result.name, result.exchange].compactMap { $0 }.joined(separator: " · "))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer()
+                Button(added ? "Added" : "Add to watchlist") {
+                    Task {
+                        if added { await appState.removeWatchlistSymbol(result.symbol) }
+                        else { await appState.addWatchlistSymbol(result.symbol) }
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+        }
     }
 
     private func marketRow(_ item: MarketItem) -> some View {

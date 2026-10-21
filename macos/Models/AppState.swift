@@ -329,7 +329,7 @@ final class AppState {
             if let financeData {
                 portfolio = Portfolio(financeData: financeData, stocks: stocks)
             }
-            if !stocks.isEmpty { error = nil; stocksFetchedAt = .now }
+            if !stocks.isEmpty { error = nil; stocksFetchedAt = .now; await loadMissingWatchlistQuotes() }
         } catch {
             handleError(error)
         }
@@ -423,6 +423,7 @@ final class AppState {
         guard isLoggedIn else { return }
         do {
             watchlist = try await EpiphanyAPI.shared.fetchWatchlist()
+            await loadMissingWatchlistQuotes()
         } catch {
             handleError(error)
         }
@@ -433,6 +434,7 @@ final class AppState {
         do {
             let item = try await EpiphanyAPI.shared.addToWatchlist(symbol: symbol)
             watchlist.append(item)
+            await loadMissingWatchlistQuotes()
         } catch let apiError as APIError {
             if case .httpError(409, _) = apiError {
                 return // already in watchlist
@@ -441,6 +443,14 @@ final class AppState {
         } catch {
             handleError(error)
         }
+    }
+
+    /// Watchlist symbols found through search are not in /api/stocks; fetch them on their own.
+    func loadMissingWatchlistQuotes() async {
+        let have = Set(stocks.map(\.symbol))
+        let missing = watchlist.map(\.symbol).filter { !have.contains($0) }
+        guard !missing.isEmpty, let extra = try? await EpiphanyAPI.shared.fetchQuotes(symbols: missing) else { return }
+        stocks.append(contentsOf: extra.filter { !have.contains($0.symbol) })
     }
 
     func removeWatchlistSymbol(_ symbol: String) async {

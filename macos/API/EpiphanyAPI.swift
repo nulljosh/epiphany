@@ -632,6 +632,30 @@ final class EpiphanyAPI {
         return params
     }
 
+    struct SymbolSearchResult: Decodable, Identifiable, Hashable {
+        let symbol: String
+        let name: String
+        let exchange: String?
+        var id: String { symbol }
+    }
+
+    /// Any ticker or company name, via /api/search (Yahoo).
+    func searchSymbols(_ query: String) async throws -> [SymbolSearchResult] {
+        struct Response: Decodable { let results: [SymbolSearchResult] }
+        let url = try makeURL("/api/search", query: ["q": query])
+        let data = try await perform(URLRequest(url: url))
+        return try decode(Response.self, from: data).results
+    }
+
+    /// Quotes for symbols outside the default list, like a searched-and-added watchlist ticker.
+    func fetchQuotes(symbols: [String]) async throws -> [Stock] {
+        guard !symbols.isEmpty else { return [] }
+        let url = try makeURL("/api/stocks-free", query: ["symbols": symbols.joined(separator: ",")])
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        return try decode([Stock].self, from: try await perform(request))
+    }
+
     private func makeURL(_ path: String, query: [String: String] = [:]) throws -> URL {
         var components = URLComponents(string: baseURL + path)
         if !query.isEmpty {
