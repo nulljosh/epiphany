@@ -111,6 +111,17 @@ function mapsLink(lat, lon, zoom = 15) {
   return `https://www.google.com/maps/@${lat},${lon},${zoom}z`;
 }
 
+// '42 min ago' for event pins; null when the time is unknown.
+function ago(ts) {
+  const t = typeof ts === 'number' ? ts : Date.parse(ts);
+  if (!Number.isFinite(t)) return null;
+  const min = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (min < 60) return `${min} min ago`;
+  if (min < 48 * 60) return `${Math.round(min / 60)} h ago`;
+  return `${Math.round(min / 1440)} d ago`;
+}
+const OLD_MS = 24 * 60 * 60 * 1000;
+
 function markerCss({ size = 10, color, pulse, shape = 'circle', extra = '' }) {
   const radius = shape === 'circle' ? '50%' : shape === 'bar' ? '999px' : '2px';
   const shadow = pulse ? `animation:${pulse};` : '';
@@ -848,9 +859,11 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
       addMarker(
-        `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);animation:pulse-red 1.9s infinite;`,
+        Date.now() - eq.time > OLD_MS
+          ? `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.35);`
+          : `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);animation:pulse-red 1.9s infinite;`,
         `M${eq.mag} ${eq.place || ''}`,
-        { type: 'seismic', title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`, detail: eq.place || 'Earthquake', level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor', source: 'USGS Earthquake Catalog', link: eq.url || 'https://earthquake.usgs.gov/earthquakes/map/' },
+        { type: 'seismic', title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`, detail: [eq.place || 'Earthquake', ago(eq.time)].filter(Boolean).join(' · '), level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor', source: 'USGS Earthquake Catalog', link: eq.url || 'https://earthquake.usgs.gov/earthquakes/map/' },
         eq.lon, eq.lat, 'earthquakes'
       );
     });
@@ -957,7 +970,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
       addMarker(
         'width:12px;height:12px;border-radius:50%;background:#f59e0b;animation:pulse-amber 1.8s infinite;',
         wa.event || 'Weather Alert',
-        { type: 'weather', title: wa.event || 'Weather Alert', detail: wa.headline || wa.event, level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
+        { type: 'weather', title: wa.event || 'Weather Alert', detail: [wa.headline || wa.event, ago(wa.sent)].filter(Boolean).join(' · '), level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
         lon, lat, 'weather'
       );
     });

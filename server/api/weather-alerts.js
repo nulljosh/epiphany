@@ -48,6 +48,7 @@ async function fetchNoaa(lat, lon) {
       severity: f.properties.severity,
       headline: f.properties.headline,
       expires: f.properties.expires,
+      sent: f.properties.sent || f.properties.effective || null,
       description: f.properties.description?.slice(0, 300) || null,
       lat,
       lon,
