@@ -23,6 +23,11 @@ struct WatchlistEntry: TimelineEntry {
 
 struct WatchlistProvider: TimelineProvider {
     private let defaultSymbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META", "JPM", "V", "UNH"]
+    /// The user's watchlist from the app, or the defaults before they sign in.
+    private var symbols: [String] {
+        let mine = WidgetAPI.watchlistSymbols
+        return mine.isEmpty ? defaultSymbols : mine
+    }
 
     func placeholder(in context: Context) -> WatchlistEntry {
         .placeholder
@@ -33,20 +38,24 @@ struct WatchlistProvider: TimelineProvider {
             completion(.placeholder)
             return
         }
-        let cached = WidgetAPI.cachedStocks().filter { defaultSymbols.contains($0.symbol) }
+        let wanted = symbols
+        let cached = (WidgetAPI.cachedWatchlistStocks() + WidgetAPI.cachedStocks()).filter { wanted.contains($0.symbol) }
         completion(WatchlistEntry(date: .now, stocks: cached, isPlaceholder: false))
     }
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<WatchlistEntry>) -> Void) {
         Task {
+            let wanted = symbols
             let all: [WidgetStock]
             do {
-                all = try await WidgetAPI.fetchStocks()
+                all = try await WidgetAPI.fetchStocks(symbols: wanted)
             } catch {
-                all = WidgetAPI.cachedStocks()
+                all = WidgetAPI.cachedWatchlistStocks() + WidgetAPI.cachedStocks()
             }
 
-            let filtered = all.filter { defaultSymbols.contains($0.symbol) }
+            // Keep the user's order and drop duplicates from the two caches.
+            var seen = Set<String>()
+            let filtered = wanted.compactMap { sym in all.first { $0.symbol == sym } }.filter { seen.insert($0.symbol).inserted }
             let entry = WatchlistEntry(date: .now, stocks: filtered, isPlaceholder: false)
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: .now)!
             completion(Timeline(entries: [entry], policy: .after(nextUpdate)))

@@ -14,7 +14,13 @@ final class AppState {
     var hideFloatingTabBar = false
     var stocks: [Stock] = []
     var portfolio: Portfolio?
-    var watchlist: [WatchlistItem] = []
+    var watchlist: [WatchlistItem] = [] {
+        // The Watchlist widget shows the user's real list, handed over through the App Group.
+        didSet {
+            UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany")?.set(watchlist.map(\.symbol), forKey: "widget_watchlist")
+            WidgetCenter.shared.reloadTimelines(ofKind: "WatchlistWidget")
+        }
+    }
     var alerts: [PriceAlert] = []
 
     var commodities: [CommodityData] = []

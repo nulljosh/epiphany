@@ -20,6 +20,24 @@ struct WidgetAPI {
         return stocks
     }
 
+    /// Quotes for the user's own symbols, set by the app in `widget_watchlist`.
+    static func fetchStocks(symbols: [String]) async throws -> [WidgetStock] {
+        let list = symbols.joined(separator: ",").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let data = try await fetch("/api/stocks-free?symbols=\(list)")
+        let stocks = try JSONDecoder().decode([WidgetStock].self, from: data)
+        cache(data, forKey: "watchlist_stocks")
+        return stocks
+    }
+
+    static func cachedWatchlistStocks() -> [WidgetStock] {
+        guard let data = defaults?.data(forKey: "widget_watchlist_stocks") else { return [] }
+        return (try? JSONDecoder().decode([WidgetStock].self, from: data)) ?? []
+    }
+
+    static var watchlistSymbols: [String] {
+        defaults?.stringArray(forKey: "widget_watchlist") ?? []
+    }
+
     static func cachedStocks() -> [WidgetStock] {
         guard let data = defaults?.data(forKey: "widget_stocks") else { return [] }
         return (try? JSONDecoder().decode([WidgetStock].self, from: data)) ?? []
