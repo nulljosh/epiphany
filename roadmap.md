@@ -18,7 +18,7 @@
 - [x] Web Places panel still waits up to 30 seconds and then errors when Overpass is down. Native falls back to Apple Maps, web has no second source yet. Fixed 2026-10-21: overpass.openstreetmap.fr now tried first (overpass-api.de 521s or hangs from Workers), places per-mirror timeout 9s; live answers in 3 to 4s with ~600 places, worst case ~18s.
 - [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
 - [x] macOS: the sign-in sheet and the onboarding sheet still swap in the same tick at sign-up. iOS hit a dead screen from that kind of overlap. Untested on Mac. Fixed 2026-10-21: macOS `authenticate()` closes sign in, waits 400ms, then sets `user`, so onboarding presents after the login sheet is gone. Covers email, register, Apple and Google. Builds; not walked live (sign-up would make a real account).
-- [ ] iOS `MapSourcesSettingsView` is never shown, so the map layer toggles and the "Enable data sources in Settings" hint lead nowhere. Signed-out Settings is only Sign In and Register. Wire it up or delete it.
+- [x] iOS `MapSourcesSettingsView` is never shown, so the map layer toggles and the "Enable data sources in Settings" hint lead nowhere. Signed-out Settings is only Sign In and Register. Wire it up or delete it. Fixed 2026-10-21: Settings has a Map section that opens Map Sources for signed-in and signed-out users; iOS simulator build passes. Note: `ios/CLAUDE.md` said map layers were dev-mode only, this makes them visible to everyone.
 
 ## Revenue check, 2026-09-11
 

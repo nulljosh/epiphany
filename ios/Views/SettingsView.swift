@@ -168,6 +168,12 @@ struct SettingsView: View {
                     PaperAutopilotCard()
                 }
 
+                Section("Map") {
+                    NavigationLink("Map Sources") {
+                        MapSourcesSettingsView()
+                    }
+                }
+
                 Section("Appearance") {
                     AppearancePicker(rawTheme: $rawTheme)
                         .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
