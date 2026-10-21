@@ -8,7 +8,10 @@
   "assets": {
     "directory": "dist",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // SPA mode answers browser navigations with index.html before the Worker runs,
+    // which swallowed the OAuth callbacks (/api/auth?action=*-callback). API first.
+    "run_worker_first": ["/api/*"]
   },
   "kv_namespaces": [
     // Backs server/api/_blob.js, the blob store.
