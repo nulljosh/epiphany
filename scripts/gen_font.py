@@ -1,14 +1,14 @@
-"""Epiphany Sans: Manrope (Mikhail Sharanda, SIL Open Font License 1.1, no reserved name), renamed, with its curly
-quote marks redrawn as laurel leaves, Apollo's crown.
-Manrope is an open, proportionally spaced grotesque with tabular figures, so prices still line up in columns.
+"""Epiphany Sans: Lato (Lukasz Dziedzic, SIL Open Font License 1.1, reserved name Lato), renamed, with its curly
+quote marks redrawn as laurel leaves, Apollo's crown. On Apple devices the UI stack puts San Francisco first and
+uses this only where SF is missing (web on Windows, Linux, Android), so it reads as one family.
+Lato is a proportionally spaced humanist sans, warm like SF but with rounder, more open forms.
 
 Same method as hermes's Hermes Sans and coda's Quip Sans: pinned release, renamed, OFL shipped beside the fonts,
 original copyright kept in the name table, fixed timestamps so every build is the same bytes.
 
-    python3 scripts/gen_font.py            # writes fonts/<App>Sans-*, <App>Display-* (ttf, woff2) and both OFLs
-    python3 scripts/gen_font.py --check    # names, licences, copyright and the leaf quotes
-Epiphany Display is Tenor Sans (Denis Masharov, SIL OFL 1.1), a sans with classical inscription proportions, for headlines, renamed the same way.
-Needs fonttools and brotli (uv run --with fonttools --with brotli).
+    uv run --with fonttools --with brotli python scripts/gen_font.py          # writes fonts/<App>Sans-* (ttf, woff2) and OFL.txt
+    uv run --with fonttools --with brotli python scripts/gen_font.py --check  # names, licence, copyright and the leaf quotes
+Lato ships no Semibold, so 600 reuses Bold's outlines under its own name.
 """
 import io
 import os
@@ -22,11 +22,9 @@ from fontTools.ttLib import TTFont
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(HERE, "fonts")
-SOURCE = "https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.2.5/"
-DISPLAY_SOURCE = "https://cdn.jsdelivr.net/npm/@fontsource/tenor-sans@5.2.5/"
+SOURCE = "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/"
 APP = "Epiphany"                     # the one line to change on a rename
-WEIGHTS = {"Regular": 400, "Medium": 500, "Semibold": 600, "Bold": 700}
-DISPLAY_WEIGHTS = {"Regular": 400}
+WEIGHTS = {"Regular": "Regular", "Medium": "Medium", "Semibold": "Bold", "Bold": "Bold"}  # style -> Lato file
 QUOTES = ((0x2018, 1), (0x2019, 1), (0x201C, 2), (0x201D, 2))
 
 
@@ -87,13 +85,12 @@ def rename(font, style, family=f"{APP} Sans"):
     font["OS/2"].achVendID = "EPHY"
 
 
-SANS, DISPLAY = f"{APP}Sans", f"{APP}Display"
+SANS = f"{APP}Sans"
 
 
 def check():
     """Self-check of the shipped files."""
-    for lic in ("OFL.txt", "OFL-Tenor.txt"):
-        assert os.path.exists(os.path.join(OUT, lic)), f"{lic} must ship with the fonts"
+    assert os.path.exists(os.path.join(OUT, "OFL.txt")), "OFL.txt must ship with the fonts"
     for style in WEIGHTS:
         for ext in ("ttf", "woff2"):
             f = TTFont(os.path.join(OUT, f"{SANS}-{style}.{ext}"))
@@ -106,34 +103,23 @@ def check():
                 g = glyf[cmap[cp]]
                 assert g.numberOfContours == n, f"U+{cp:04X} is not the leaf"
                 assert 0 <= g.xMin and g.xMax <= hmtx[cmap[cp]][0], f"U+{cp:04X} spills out of its advance"
-    for style in DISPLAY_WEIGHTS:
-        f = TTFont(os.path.join(OUT, f"{DISPLAY}-{style}.woff2"))
-        assert f["name"].getDebugName(1) == f"{APP} Display" and f["name"].getDebugName(0), "display name and copyright"
-    print(f"font ok: {APP} Sans (Manrope) and {APP} Display (Tenor Sans), OFL, quotes are laurel leaves")
-
-
-def build(source, files, weights, family, out_name, quotes):
-    """Fetch each weight, optionally redraw the quotes, rename, and save ttf and woff2."""
-    for style, weight in weights.items():
-        font = TTFont(io.BytesIO(fetch(files.format(weight=weight), source)))
-        if quotes:
-            redraw_quotes(font)
-        rename(font, style, family)
-        for ext, flavor in (("ttf", None), ("woff2", "woff2")):
-            font.flavor = flavor
-            font.save(os.path.join(OUT, f"{out_name}-{style}.{ext}"), reorderTables=False)
-        print(f"{out_name}-{style}: {weight}")
+    print(f"font ok: {APP} Sans (Lato), OFL, quotes are laurel leaves")
 
 
 def main():
     if "--check" in sys.argv:
         return check()
     os.makedirs(OUT, exist_ok=True)
-    for name, source in (("OFL.txt", SOURCE), ("OFL-Tenor.txt", DISPLAY_SOURCE)):
-        with open(os.path.join(OUT, name), "wb") as f:
-            f.write(fetch("LICENSE", source))
-    build(SOURCE, "files/manrope-latin-{weight}-normal.woff2", WEIGHTS, f"{APP} Sans", SANS, quotes=True)
-    build(DISPLAY_SOURCE, "files/tenor-sans-latin-{weight}-normal.woff2", DISPLAY_WEIGHTS, f"{APP} Display", DISPLAY, quotes=False)
+    with open(os.path.join(OUT, "OFL.txt"), "wb") as f:
+        f.write(fetch("OFL.txt"))
+    for style, lato in WEIGHTS.items():
+        font = TTFont(io.BytesIO(fetch(f"Lato-{lato}.ttf")))
+        redraw_quotes(font)
+        rename(font, style)
+        for ext, flavor in (("ttf", None), ("woff2", "woff2")):
+            font.flavor = flavor
+            font.save(os.path.join(OUT, f"{SANS}-{style}.{ext}"), reorderTables=False)
+        print(f"{SANS}-{style}: Lato {lato}")
 
 
 if __name__ == "__main__":

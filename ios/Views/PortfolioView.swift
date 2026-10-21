@@ -885,9 +885,9 @@ struct PortfolioView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: thinnedMonthLabels(allData.map(\.month))) { value in
+                    AxisMarks { value in
                         AxisValueLabel {
-                            if let month = value.as(String.self), month.count >= 7 {
+                            if let month = value.as(String.self), month.count >= 7, thinnedMonthLabels(allData.map(\.month)).contains(month) {
                                 let monthNum = Int(month.suffix(2)) ?? 0
                                 Text(monthNum > 0 && monthNum <= 12 ? monthNames[monthNum] : month)
                                     .font(.caption2)
@@ -1115,11 +1115,12 @@ struct PortfolioView: View {
             .chartLegend(Visibility.hidden)
             .chartYScale(domain: yDomain)
             .chartXAxis {
-                AxisMarks(position: .bottom, values: axisMonths) { value in
+                AxisMarks(position: .bottom) { value in
                     AxisGridLine()
                     AxisTick()
                     AxisValueLabel(centered: true) {
-                        if let month = value.as(String.self) {
+                        // Swift Charts ignores `values:` on a month-string axis, so every month got a label; only print the thinned ones.
+                        if let month = value.as(String.self), axisMonths.contains(month) {
                             Text(shortMonthLabel(month))
                                 .font(.caption2)
                         } else {
@@ -1415,11 +1416,11 @@ struct PortfolioView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .chartXAxis {
-                    AxisMarks(position: .bottom, values: thinnedMonthLabels(months.map(\.month))) { value in
+                    AxisMarks(position: .bottom) { value in
                         AxisGridLine()
                         AxisTick()
                         AxisValueLabel(centered: true) {
-                            if let month = value.as(String.self) {
+                            if let month = value.as(String.self), thinnedMonthLabels(months.map(\.month)).contains(month) {
                                 Text(shortMonthLabel(month))
                                     .font(.caption2)
                                     .fixedSize()

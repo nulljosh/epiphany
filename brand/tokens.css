@@ -1,9 +1,8 @@
-/* Epiphany brand tokens. Apollo theme: one blue accent, night surfaces, Epiphany Sans for reading, Epiphany Display caps for headlines. */
+/* Epiphany brand tokens. Apollo theme: one blue accent, night surfaces, Epiphany Sans for reading, the same sans for headlines. */
 @font-face { font-family: "Epiphany Sans"; font-weight: 400; font-display: swap; src: url("../fonts/EpiphanySans-Regular.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 500; font-display: swap; src: url("../fonts/EpiphanySans-Medium.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 600; font-display: swap; src: url("../fonts/EpiphanySans-Semibold.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 700; font-display: swap; src: url("../fonts/EpiphanySans-Bold.woff2") format("woff2"); }
-@font-face { font-family: "Epiphany Display"; font-weight: 400; font-display: swap; src: url("../fonts/EpiphanyDisplay-Regular.woff2") format("woff2"); }
 :root {
   --accent: #1462e0;
   --accent-light: #5aaeff;
@@ -14,6 +13,6 @@
   --night-line: #1e2740;
   --ink: #eef2fa;
   --ink-2: #93a0bb;
-  --font: "Epiphany Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, sans-serif;
-  --font-display: "Epiphany Display", -apple-system, Helvetica, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Epiphany Sans", Helvetica, Arial, sans-serif;
+  --font-display: var(--font);
 }

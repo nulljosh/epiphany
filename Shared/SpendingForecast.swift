@@ -30,66 +30,52 @@ enum SpendingForecastBuilder {
 
         guard series.count >= 3 else { return nil }
 
-        let rawReturns = zip(series.dropFirst(), series).compactMap { current, previous -> Double? in
-            guard previous.total > 0, current.total > 0 else { return nil }
-            return log(current.total / previous.total)
-        }
+        // Spending is mean-reverting, not trending: model log-spend as an AR(1) around
+        // a recent level and bootstrap the residuals. The old version compounded
+        // month-over-month drift and started from the last (often spiky) month,
+        // so forecasts ran away and the band ballooned over a year-long horizon.
+        let logs = series.map { log($0.total) }
+        let recent = Array(logs.suffix(min(6, logs.count)))
+        let mu = recent.reduce(0, +) / Double(recent.count)
+        let dev = logs.map { $0 - mu }
 
-        guard !rawReturns.isEmpty else { return nil }
+        // phi: lag-1 persistence of deviations, kept in [0, 0.8] so shocks fade
+        let num = zip(dev.dropFirst(), dev).reduce(0) { $0 + $1.0 * $1.1 }
+        let den = dev.dropLast().reduce(0) { $0 + $1 * $1 }
+        let phi = den > 0 ? min(max(num / den, 0), 0.8) : 0.0
 
-        let returns = winsorize(rawReturns, lower: 0.15, upper: 0.85)
-        let trailingWindow = Array(series.suffix(min(3, series.count)))
-        let baseline = trailingWindow.map(\.total).reduce(0, +) / Double(trailingWindow.count)
+        let rawResiduals = zip(dev.dropFirst(), dev).map { $0 - phi * $1 }
+        let residuals = winsorize(rawResiduals, lower: 0.1, upper: 0.9)
+        guard !residuals.isEmpty else { return nil }
 
-        let drift = returns.reduce(0, +) / Double(returns.count)
-        let varianceDivisor = max(1, returns.count - 1)
-        let variance = returns.reduce(0) { partial, value in
-            partial + pow(value - drift, 2)
-        } / Double(varianceDivisor)
-        let volatility = min(max(sqrt(max(variance, 0)), 0.03), 0.35)
-        let horizon = series.count
-        let startValue = series.last?.total ?? 0
-        guard startValue > 0 else { return nil }
+        // ponytail: 6 months out is where a monthly series still carries signal;
+        // past that the band is just noise. Extend if real longer-range data appears.
+        let horizon = min(series.count, 6)
+        let startDev = (dev.last ?? 0) // start from where spending actually is
 
         var random = SeededGenerator(seed: hashSeries(series))
         var paths = Array(repeating: [Double](), count: horizon)
 
         for _ in 0..<simulations {
-            var value = startValue
+            var d = startDev
             for step in 0..<horizon {
-                let sampledReturn = bootstrapReturn(from: returns, using: &random)
-                let shock = gaussian(using: &random) * volatility * 0.35
-                let projected = value * exp((sampledReturn * 0.75) + (drift * 0.25) + shock)
-                let meanReverted = (projected * 0.72) + (baseline * 0.28)
-                value = max(0, meanReverted.roundedToCents())
-                paths[step].append(value)
+                d = phi * d + bootstrapReturn(from: residuals, using: &random)
+                paths[step].append(max(0, exp(mu + d).roundedToCents()))
             }
         }
-
-        // Holt-Winters exponential smoothing for trend-aware point estimates
-        let hwForecasts = holtWinters(values: series.map(\.total), horizon: horizon)
 
         guard let lastSortKey = series.last?.sortKey else { return nil }
         let points = paths.enumerated().map { index, values in
             let sorted = values.sorted()
-            let mcMedian = percentile(sorted, p: 0.5)
-            let hwValue = index < hwForecasts.count ? hwForecasts[index] : mcMedian
-
-            // Ensemble: blend Monte Carlo median (60%) with Holt-Winters (40%).
-            // hwValue is an unbounded trend extrapolation, so the blend can land
-            // outside the MC 20th/80th percentile band -- clamp it back in so
-            // low <= median <= high always holds (was violated: a $25 trend push
-            // put median above high with only 3 months of history).
-            let low = percentile(sorted, p: 0.2).roundedToCents()
-            let high = percentile(sorted, p: 0.8).roundedToCents()
-            let blended = (mcMedian * 0.6 + hwValue * 0.4).roundedToCents()
-                .clamped(to: low...high)
+            let low = percentile(sorted, p: 0.1).roundedToCents()
+            let high = percentile(sorted, p: 0.9).roundedToCents()
+            let median = percentile(sorted, p: 0.5).roundedToCents().clamped(to: low...high)
 
             let monthLabel = nextMonth(after: lastSortKey, offset: index + 1)
             return SpendingForecast.Point(
                 month: monthLabel.month,
                 sortKey: monthLabel.sortKey,
-                median: blended,
+                median: median,
                 low: low,
                 high: high
             )
@@ -104,24 +90,6 @@ enum SpendingForecastBuilder {
                 rangeHigh: points.first?.high ?? 0
             )
         )
-    }
-
-    /// Double exponential smoothing (Holt's method) for trend-aware forecasts
-    private static func holtWinters(values: [Double], horizon: Int, alpha: Double = 0.4, beta: Double = 0.2) -> [Double] {
-        guard values.count >= 2 else { return Array(repeating: values.last ?? 0, count: horizon) }
-
-        var level = values[0]
-        var trend = values[1] - values[0]
-
-        for i in 1..<values.count {
-            let prevLevel = level
-            level = alpha * values[i] + (1 - alpha) * (prevLevel + trend)
-            trend = beta * (level - prevLevel) + (1 - beta) * trend
-        }
-
-        return (1...horizon).map { step in
-            max(0, level + trend * Double(step))
-        }
     }
 
     private static func hashSeries(_ months: [FinanceData.SpendingMonth]) -> UInt64 {

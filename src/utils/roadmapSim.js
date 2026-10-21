@@ -24,8 +24,8 @@ export function simulate({
 
     let income;
     if (year >= sweStartYear) income = sweStartSalary / 12;
-    else if (year < 2026 || (year === 2026 && month < 5)) income = 1000;
-    else income = 1735;
+    else if (year < 2026 || (year === 2026 && month < 5)) income = 1750;
+    else income = 1750;
 
     if ((year === 2026 && month >= 8) || year > 2026) {
       if (year < sweStartYear) income += 5160 / 12;

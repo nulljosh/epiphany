@@ -103,7 +103,8 @@ async function googleSearch(query) {
       return duckDuckGoSearch(query);
     }
     const data = await res.json();
-    return data.items || [];
+    // CSE can answer 200 with no items (whole-web search is retired); fall through so People still returns something
+    return data.items?.length ? data.items : duckDuckGoSearch(query);
   } catch (err) {
     console.warn(`[people] Google CSE failed: ${err.message}`);
     return duckDuckGoSearch(query);

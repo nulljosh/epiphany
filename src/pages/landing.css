@@ -1,9 +1,8 @@
-/* Apollo theme (brand/BRAND.md): Epiphany Sans to read, Epiphany Display caps for headlines, both self-hosted. */
+/* Brand type (brand/BRAND.md): San Francisco on Apple devices, Epiphany Sans (Lato, OFL, renamed) everywhere else. One sans for everything. */
 @font-face { font-family: "Epiphany Sans"; font-weight: 300 400; font-display: swap; src: url("/fonts/EpiphanySans-Regular.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 500; font-display: swap; src: url("/fonts/EpiphanySans-Medium.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 600; font-display: swap; src: url("/fonts/EpiphanySans-Semibold.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 700 900; font-display: swap; src: url("/fonts/EpiphanySans-Bold.woff2") format("woff2"); }
-@font-face { font-family: "Epiphany Display"; font-weight: 100 900; font-display: swap; src: url("/fonts/EpiphanyDisplay-Regular.woff2") format("woff2"); }
 
 /* Landing Page v2 design handoff (2026-06-13). Everything scoped
    under .lp so nothing leaks into the authed app. */
@@ -32,7 +31,7 @@ html:has(.lp) { scroll-behavior: smooth; }
   background: var(--lp-bg);
   color: var(--lp-fg);
   overflow-x: hidden;
-  font-family: "Epiphany Sans", -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Epiphany Sans", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -94,8 +93,7 @@ html:has(.lp) { scroll-behavior: smooth; }
   margin-bottom: 18px;
 }
 .lp .lp-hero-headline, .lp .lp-showcase-headline, .lp .lp-final-headline {
-  font-family: "Epiphany Display", "Epiphany Sans", sans-serif;
-  font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 700; letter-spacing: -0.035em;
 }
 .lp .lp-hero-headline {
   font-size: clamp(40px, 6.4vw, 92px);
