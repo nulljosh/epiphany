@@ -43,8 +43,18 @@ struct Stock: Decodable, Identifiable, Hashable {
     let bid: Double?
     let ask: Double?
     let exchange: String?
+    /// Unix seconds, from Yahoo; nil when unknown or already past.
+    var nextEarnings: Double? = nil
+    var dividendDate: Double? = nil
 
     var id: String { symbol }
+
+    var formattedNextEarnings: String? { nextEarnings.map(Self.shortDate) }
+    var formattedDividendDate: String? { dividendDate.map(Self.shortDate) }
+
+    private static func shortDate(_ ts: Double) -> String {
+        Date(timeIntervalSince1970: ts).formatted(.dateTime.month(.abbreviated).day())
+    }
 
     var formattedVolume: String {
         if volume >= 1_000_000_000 {
@@ -108,6 +118,7 @@ struct Stock: Decodable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case symbol, name, price, change, volume, marketCap, peRatio, eps, beta, yield, avgVolume, bid, ask, exchange
+        case nextEarnings, dividendDate
         case changePercent = "changesPercentage"
         case changePercentAlt = "changePercent"
         case changePercentSnake = "change_percent"
@@ -168,6 +179,8 @@ struct Stock: Decodable, Identifiable, Hashable {
         bid = container.flexibleDouble(forKey: .bid)
         ask = container.flexibleDouble(forKey: .ask)
         exchange = try? container.decodeIfPresent(String.self, forKey: .exchange)
+        nextEarnings = container.flexibleDouble(forKey: .nextEarnings)
+        dividendDate = container.flexibleDouble(forKey: .dividendDate)
     }
 
     init(symbol: String, name: String, price: Double, change: Double = 0,

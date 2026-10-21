@@ -179,6 +179,12 @@ struct StockDetailView: View {
                     if let b = enriched.formattedBeta {
                         statCell("Beta", value: b)
                     }
+                    if let date = enriched.formattedNextEarnings {
+                        statCell("Earnings", value: date)
+                    }
+                    if let date = enriched.formattedDividendDate {
+                        statCell("Dividend", value: date)
+                    }
                     if let y = enriched.formattedYield {
                         statCell("Yield", value: y)
                     }

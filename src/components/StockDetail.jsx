@@ -4,6 +4,11 @@ import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../
 import { signal as computeSignal } from '../utils/indicators';
 import { usePremium, showPricing, PREMIUM_INDICATORS } from '../context/PremiumContext.js';
 
+// Unix seconds from Yahoo, as 'Oct 28'.
+function formatEventDate(ts) {
+  return ts ? new Date(ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '--';
+}
+
 const EMPTY = {};
 const CHART_TYPES = [
   { key: 'heikinAshi', label: 'Heikin Ashi' },
@@ -708,6 +713,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     { label: 'EPS', value: d.eps != null ? `$${d.eps.toFixed(2)}` : '--' },
     { label: 'Yield', value: d.yield != null ? `${d.yield.toFixed(2)}%` : '--' },
     { label: 'Beta', value: d.beta != null ? d.beta.toFixed(2) : '--' },
+    { label: 'Earnings', value: formatEventDate(d.nextEarnings) },
+    { label: 'Dividend', value: formatEventDate(d.dividendDate) },
   ], [d, stock]);
 
   // Crosshair scrub: filter Related News to articles near the hovered date.

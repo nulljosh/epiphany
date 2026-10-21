@@ -181,8 +181,12 @@ async function fetchFmpBatch(symbolList) {
 
 // Yahoo fallback: v7 batch quote (fundamentals) + v8 chart (price history).
 // Yahoo gates v7 behind a cookie+crumb; without it the call returns 401.
+function futureTs(ts) {
+  return typeof ts === 'number' && ts * 1000 > Date.now() - 24 * 3600 * 1000 ? ts : null;
+}
+
 export async function fetchYahooBatch(symbolList) {
-  const fields = 'regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketVolume,regularMarketDayHigh,regularMarketDayLow,regularMarketOpen,regularMarketPreviousClose,fiftyTwoWeekHigh,fiftyTwoWeekLow,marketCap,trailingPE,epsTrailingTwelveMonths,averageDailyVolume3Month,beta,trailingAnnualDividendYield,bid,ask,fullExchangeName';
+  const fields = 'regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketVolume,regularMarketDayHigh,regularMarketDayLow,regularMarketOpen,regularMarketPreviousClose,fiftyTwoWeekHigh,fiftyTwoWeekLow,marketCap,trailingPE,epsTrailingTwelveMonths,averageDailyVolume3Month,beta,trailingAnnualDividendYield,bid,ask,fullExchangeName,earningsTimestamp,earningsTimestampStart,dividendDate';
   for (const base of YAHOO_URLS) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const session = await getYahooCrumb({ force: attempt > 0 });
@@ -223,6 +227,9 @@ export async function fetchYahooBatch(symbolList) {
             bid: q.bid ?? null,
             ask: q.ask ?? null,
             exchange: q.fullExchangeName ?? q.exchange ?? null,
+            // Unix seconds. Yahoo keeps the last date until the next one is set, so past dates mean unknown.
+            nextEarnings: futureTs(q.earningsTimestamp) ?? futureTs(q.earningsTimestampStart),
+            dividendDate: futureTs(q.dividendDate),
             source: 'yahoo',
           }));
       } catch (err) {
@@ -375,7 +382,8 @@ export default async function handler(req, res) {
       // Treat pe=0 as missing: FMP returns 0 on free tier for no-earnings stocks
       // which can mask a real value from Yahoo. marketCap=0 is always wrong.
       const needsFundamentals = stocks
-        .filter(s => !s.peRatio || !s.marketCap || s.bid == null)
+        // nextEarnings is never in FMP's quote, so short lists always take one Yahoo batch.
+        .filter(s => !s.peRatio || !s.marketCap || s.bid == null || s.nextEarnings === undefined)
         .map(s => s.symbol);
       if (needsFundamentals.length > 0) {
         const supplement = await fetchYahooBatch(needsFundamentals);
@@ -402,6 +410,8 @@ export default async function handler(req, res) {
               bid: s.bid ?? y.bid,
               ask: s.ask ?? y.ask,
               exchange: s.exchange ?? y.exchange,
+              nextEarnings: y.nextEarnings ?? null,
+              dividendDate: y.dividendDate ?? null,
             };
           });
           source = 'mixed';
