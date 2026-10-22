@@ -682,7 +682,9 @@ struct PortfolioView: View {
         let subs = appState.financeData?.subscriptions ?? []
         let active = subs.filter { $0.active }
         let inactive = subs.filter { !$0.active }
-        let monthlyTotal = active.compactMap { $0.amount }.reduce(0, +)
+        // Totals stay per currency, same as iOS.
+        let monthlyTotal = active.filter { $0.currency != "USD" }.compactMap { $0.amount }.reduce(0, +)
+        let usdTotal = active.filter { $0.currency == "USD" }.compactMap { $0.amount }.reduce(0, +)
         let found = appState.recurring
         return VStack(spacing: 16) {
             if !found.isEmpty {
@@ -704,7 +706,7 @@ struct PortfolioView: View {
                     }
                 }
             }
-            sectionCard("Active · \(CurrencyFormatter.formatPrice(monthlyTotal))/mo") {
+            sectionCard("Active · " + (usdTotal > 0 ? "US\(CurrencyFormatter.formatPrice(usdTotal)) + " : "") + "\(CurrencyFormatter.formatPrice(monthlyTotal))/mo") {
                 if active.isEmpty {
                     emptyState("No active subscriptions")
                 } else {
@@ -717,7 +719,7 @@ struct PortfolioView: View {
                             }
                             Spacer()
                             if let amount = sub.amount {
-                                Text(formattedCurrency(amount))
+                                Text((sub.currency == "USD" ? "US" : "") + formattedCurrency(amount))
                                     .font(.subheadline.weight(.semibold).monospacedDigit())
                             }
                         }

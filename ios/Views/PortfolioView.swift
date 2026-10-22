@@ -1693,14 +1693,16 @@ extension PortfolioView {
         }
         if !subs.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                let monthlyTotal = active.compactMap { $0.amount }.reduce(0, +)
+                // Totals stay per currency: adding US$ to CAD gave a number that was neither.
+                let monthlyTotal = active.filter { $0.currency != "USD" }.compactMap { $0.amount }.reduce(0, +)
+                let usdTotal = active.filter { $0.currency == "USD" }.compactMap { $0.amount }.reduce(0, +)
                 HStack {
                     Text("SUBSCRIPTIONS")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Palette.textSecondary)
                         .tracking(1.0)
                     Spacer()
-                    Text("\(CurrencyFormatter.formatPrice(monthlyTotal))/mo")
+                    Text((usdTotal > 0 ? "US\(CurrencyFormatter.formatPrice(usdTotal)) + " : "") + "\(CurrencyFormatter.formatPrice(monthlyTotal))/mo")
                         .font(.caption2.weight(.semibold).monospacedDigit())
                         .foregroundStyle(Palette.textSecondary)
                 }
