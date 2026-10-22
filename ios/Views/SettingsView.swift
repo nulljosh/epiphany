@@ -289,7 +289,7 @@ struct SettingsView: View {
     @MainActor
     private func generateAndUploadAvatar() async {
         isUploadingAvatar = true
-        let image = Self.generateNodeGraphImage()
+        let image = Self.generateGodImage()
         guard let jpegData = image.jpegData(compressionQuality: 0.9) else {
             isUploadingAvatar = false
             return
@@ -309,81 +309,31 @@ struct SettingsView: View {
         isUploadingAvatar = false
     }
 
-    private static func generateNodeGraphImage() -> UIImage {
-        let palettes: [UIColor] = [
-            UIColor(red: 0.48, green: 0.67, blue: 0.48, alpha: 1),
-            UIColor(red: 0.78, green: 0.57, blue: 0.23, alpha: 1),
-            UIColor(red: 0.36, green: 0.56, blue: 0.79, alpha: 1),
-            UIColor(red: 0.79, green: 0.42, blue: 0.42, alpha: 1),
-            UIColor(red: 0.61, green: 0.48, blue: 0.79, alpha: 1),
-            UIColor(red: 0.25, green: 0.72, blue: 0.73, alpha: 1),
-            UIColor(red: 0.90, green: 0.36, blue: 0.56, alpha: 1),
+    // One Greek god's emblem, bold white on the lyre-icon blue, in place of the old dot graph.
+    private static func generateGodImage() -> UIImage {
+        let emblems = [
+            "bolt.fill",     // Zeus
+            "sun.max.fill",  // Apollo
+            "moon.fill",     // Artemis
+            "water.waves",   // Poseidon
+            "shield.fill",   // Athena
+            "flame.fill",    // Hestia
+            "leaf.fill",     // Demeter
+            "heart.fill",    // Aphrodite
         ]
-        let nodeColor = palettes.randomElement()!
         let size: CGFloat = 200
-        let cx: CGFloat = 100, cy: CGFloat = 100
-
-        // 3 topology presets; pick one at random
-        typealias Offsets = [(CGFloat, CGFloat)]
-        typealias Edges = [(Int, Int)]
-        let topologies: [(Offsets, Edges)] = [
-            // Star/hub
-            (
-                [(0,-58),(46,-30),(55,18),(20,56),(-20,56),(-55,18),(-46,-30),(0,0)],
-                [(7,0),(7,1),(7,2),(7,3),(7,4),(7,5),(7,6),(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,0)]
-            ),
-            // Hexagon ring + inner triangle
-            (
-                [(0,-55),(48,-27),(48,27),(0,55),(-48,27),(-48,-27),(0,-22),(22,11),(-22,11)],
-                [(0,1),(1,2),(2,3),(3,4),(4,5),(5,0),(6,7),(7,8),(8,6),(0,6),(2,7),(4,8),(1,6),(3,7),(5,8)]
-            ),
-            // Scattered mesh
-            (
-                [(-38,-50),(18,-52),(52,-10),(44,42),(0,55),(-44,34),(-54,-10),(0,-10),(30,12),(-25,18)],
-                [(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,0),(0,7),(1,7),(2,8),(3,8),(4,9),(5,9),(6,9),(7,8),(8,9),(7,9)]
-            ),
-        ]
-
-        let (baseOffsets, allEdges) = topologies.randomElement()!
-        let jitter: CGFloat = CGFloat.random(in: 10...20)
-        // Scale offsets so the graph fills the circle (~2.5-7.5% edge padding)
-        let fill: CGFloat = 1.1
-        let nodes = baseOffsets.map { dx, dy in
-            CGPoint(
-                x: cx + dx * fill + CGFloat.random(in: -jitter...jitter),
-                y: cy + dy * fill + CGFloat.random(in: -jitter...jitter)
-            )
-        }
-
-        let edgeDensity = Double.random(in: 0.45...0.85)
-        let activeEdges = allEdges.filter { _ in Double.random(in: 0...1) < edgeDensity }
-
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
         return renderer.image { ctx in
-            let cgCtx = ctx.cgContext
-            UIColor(white: 0.06, alpha: 1).setFill()
-            UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: size, height: size)).fill()
-
-            cgCtx.setStrokeColor(UIColor(white: 1, alpha: 0.25).cgColor)
-            cgCtx.setLineWidth(1.5)
-            cgCtx.setLineCap(.round)
-            for (a, b) in activeEdges where a < nodes.count && b < nodes.count {
-                cgCtx.move(to: nodes[a])
-                cgCtx.addLine(to: nodes[b])
+            let colors = [UIColor(red: 0.35, green: 0.67, blue: 1.0, alpha: 1).cgColor,
+                          UIColor(red: 0.10, green: 0.37, blue: 0.88, alpha: 1).cgColor]
+            if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1]) {
+                ctx.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: size), options: [])
             }
-            cgCtx.strokePath()
-
-            nodeColor.setFill()
-            for (i, node) in nodes.enumerated() {
-                let r = CGFloat.random(in: 5...11)
-                let isAccent = i == 0 || i == nodes.count / 2
-                UIBezierPath(ovalIn: CGRect(x: node.x - r, y: node.y - r, width: r * 2, height: r * 2)).fill()
-                if isAccent {
-                    UIColor(white: 1, alpha: 0.35).setFill()
-                    let dot: CGFloat = 3
-                    UIBezierPath(ovalIn: CGRect(x: node.x - dot, y: node.y - dot, width: dot * 2, height: dot * 2)).fill()
-                    nodeColor.setFill()
-                }
+            let config = UIImage.SymbolConfiguration(pointSize: 92, weight: .bold)
+            if let glyph = UIImage(systemName: emblems.randomElement()!, withConfiguration: config)?
+                .withTintColor(.white, renderingMode: .alwaysOriginal) {
+                let g = glyph.size
+                glyph.draw(in: CGRect(x: (size - g.width) / 2, y: (size - g.height) / 2, width: g.width, height: g.height))
             }
         }
     }

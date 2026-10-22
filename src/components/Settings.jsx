@@ -109,77 +109,22 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
     : `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}`;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
-  const generateNodeGraphSVG = () => {
-    const r = () => Math.random();
-    const palettes = [
-      ['#5b8fc9','#7aabde','#3a6fa8'], ['#7aab7a','#5a9e5a','#a8d4a8'],
-      ['#c96b6b','#e08080','#a84444'], ['#8ca0b3','#a8bccd','#6e829a'],
-      ['#c8913a','#e0b060','#a87020'], ['#c2a878','#a88c58','#dcc79c'],
-      ['#c96ba8','#e080c0','#a84480'], ['#c9c96b','#e0d840','#a8a830'],
+  // One Greek god's emblem, bold white on the lyre-icon blue, same set as iOS.
+  const generateGodSVG = () => {
+    const W = 'fill="#fff"';
+    const S = 'fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"';
+    const emblems = [
+      `<path ${W} d="M56 14 L28 56 H47 L40 86 L72 42 H53 Z"/>`, // Zeus
+      `<circle ${W} cx="50" cy="50" r="15"/><path ${S} d="M50 16v8M50 76v8M16 50h8M76 50h8M26 26l6 6M68 68l6 6M26 74l6-6M68 32l6-6"/>`, // Apollo
+      `<path ${W} d="M62 18 A32 32 0 1 0 62 82 A25 25 0 1 1 62 18 Z"/>`, // Artemis
+      `<path ${S} d="M50 30V86M32 22v18q0 12 18 12t18-12V22M50 16v36"/>`, // Poseidon
+      `<path ${W} d="M50 16 L76 27 V50 C76 67 64 79 50 86 C36 79 24 67 24 50 V27 Z"/>`, // Athena
+      `<path ${W} d="M50 14 C64 32 72 44 72 59 A22 22 0 0 1 28 59 C28 47 38 40 41 29 C46 39 50 41 50 14 Z"/>`, // Hestia
+      `<path ${W} d="M26 76 C26 42 48 22 78 22 C78 54 60 76 26 76 Z"/>`, // Demeter
+      `<path ${W} d="M50 82 L22 54 A15 15 0 0 1 50 34 A15 15 0 0 1 78 54 Z"/>`, // Aphrodite
     ];
-    const palette = palettes[Math.floor(r() * palettes.length)];
-    const styles = ['scatter','radial','chain','layered','cluster'];
-    const style = styles[Math.floor(r() * styles.length)];
-    const nodeCount = 5 + Math.floor(r() * 7);
-    const cx = 100, cy = 100;
-    let nodes = [];
-    if (style === 'radial') {
-      nodes.push([cx, cy]);
-      for (let i = 1; i < nodeCount; i++) {
-        const a = (i / (nodeCount - 1)) * Math.PI * 2 + r() * 0.5;
-        const d = 28 + r() * 38;
-        nodes.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]);
-      }
-    } else if (style === 'chain') {
-      let x = 40 + r() * 20, y = 55 + r() * 20;
-      for (let i = 0; i < nodeCount; i++) {
-        nodes.push([Math.max(32, Math.min(168, x)), Math.max(32, Math.min(168, y))]);
-        x += 14 + r() * 18; y += (r() - 0.5) * 44;
-      }
-    } else if (style === 'layered') {
-      const rows = [Math.ceil(nodeCount / 3), Math.ceil(nodeCount / 3), nodeCount - 2 * Math.ceil(nodeCount / 3)];
-      [55, 100, 145].forEach((yPos, l) => {
-        const n = Math.max(1, rows[l]);
-        for (let i = 0; i < n; i++) nodes.push([(200 / (n + 1)) * (i + 1) + (r() - 0.5) * 14, yPos + (r() - 0.5) * 14]);
-      });
-    } else if (style === 'cluster') {
-      const cc = Array.from({ length: 2 + Math.floor(r() * 2) }, () => [45 + r() * 110, 45 + r() * 110]);
-      for (let i = 0; i < nodeCount; i++) { const c = cc[i % cc.length]; nodes.push([c[0] + (r() - 0.5) * 36, c[1] + (r() - 0.5) * 36]); }
-    } else {
-      for (let i = 0; i < nodeCount; i++) { const a = r() * Math.PI * 2, d = r() * 68; nodes.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]); }
-    }
-    // Clamp radially (not box) -- the avatar is cropped to a circle, so box-clamped
-    // corner nodes (e.g. 28,28) land outside the circle and get clipped.
-    nodes = nodes.map(([x, y]) => {
-      const dx = x - cx, dy = y - cy;
-      const d = Math.hypot(dx, dy);
-      const maxR = 62; // keeps node radius (≤10.5) well inside the r=100 circle
-      if (d <= maxR) return [x, y];
-      return [cx + (dx / d) * maxR, cy + (dy / d) * maxR];
-    });
-    const edges = [];
-    for (let i = 1; i < nodes.length; i++) {
-      let near = 0, minD = Infinity;
-      for (let j = 0; j < i; j++) { const d = Math.hypot(nodes[i][0] - nodes[j][0], nodes[i][1] - nodes[j][1]); if (d < minD) { minD = d; near = j; } }
-      edges.push([i, near]);
-    }
-    const extras = Math.floor(r() * nodeCount * 0.8);
-    for (let k = 0; k < extras; k++) {
-      const a = Math.floor(r() * nodes.length), b = Math.floor(r() * nodes.length);
-      if (a !== b && !edges.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) edges.push([a, b]);
-    }
-    const sw = (1 + r() * 1.5).toFixed(1);
-    const so = (0.15 + r() * 0.28).toFixed(2);
-    const bgs = ['#0f0f0f','#0d1520','#120d0d','#0d1210','#12100d'];
-    const bg = bgs[Math.floor(r() * bgs.length)];
-    const multiColor = r() > 0.35;
-    const edgeSvg = edges.map(([a, b]) =>
-      `<line x1="${nodes[a][0].toFixed(1)}" y1="${nodes[a][1].toFixed(1)}" x2="${nodes[b][0].toFixed(1)}" y2="${nodes[b][1].toFixed(1)}" stroke="rgba(255,255,255,${so})" stroke-width="${sw}"/>`
-    ).join('');
-    const nodeSvg = nodes.map(([x, y], i) =>
-      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(3.5 + r() * 7).toFixed(1)}" fill="${multiColor ? palette[i % palette.length] : palette[0]}"/>`
-    ).join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><circle cx="100" cy="100" r="100" fill="${bg}"/>${edgeSvg}${nodeSvg}</svg>`;
+    const emblem = emblems[Math.floor(Math.random() * emblems.length)];
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aabff"/><stop offset="1" stop-color="#1a5fe0"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/>${emblem}</svg>`;
   };
 
   const showAvatarMsg = useCallback((msg) => {
@@ -189,7 +134,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   }, []);
 
   const handleGenerateAvatar = async () => {
-    const svg = generateNodeGraphSVG();
+    const svg = generateGodSVG();
     const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
     setLocalAvatarUrl(dataUrl);
     setAvatarUploading(true);
