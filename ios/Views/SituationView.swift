@@ -1232,8 +1232,11 @@ struct SituationView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
+        // Clear glass alone vanished over busy map tiles, so it sits on a mostly opaque fill.
+        .background(Capsule().fill(Color(.systemBackground).opacity(0.82)))
         // Not interactive glass: on this container it took the taps meant for the clear button inside.
         .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
+        .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
     }
 
     private var searchSuggestions: some View {

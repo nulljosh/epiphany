@@ -699,6 +699,10 @@ html:has(.lp) { scroll-behavior: smooth; }
 }
 
 @media (max-width: 640px) {
+  .lp .lp-nav { width: calc(100% - 32px); padding: 0 10px 0 16px; }
+  .lp .lp-nav-cta { gap: 2px; flex-shrink: 0; }
+  .lp .lp-nav-login { padding: 7px 8px; }
+  .lp .lp-nav-get { padding: 8px 14px; }
   .lp .lp-footer { gap: 16px; }
   .lp .lp-footer-logo { justify-content: center; }
 }
