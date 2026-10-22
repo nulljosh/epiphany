@@ -425,7 +425,8 @@ struct MarketsView: View {
         List {
             // Hidden when the drawer is fully open so the top strip is purely the
             // ticker bar -- no half-obscured Fear & Greed row behind the drawer.
-            if drawerState != .large {
+            // No score yet: skip the section, an empty row still left a blank band.
+            if drawerState != .large, appState.fearGreedScore != nil {
                 Section { fearGreedView }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -505,6 +506,8 @@ struct MarketsView: View {
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
+        // The default grouped-list top margin left a blank band under the ticker strip.
+        .contentMargins(.top, 4, for: .scrollContent)
         .task(id: searchText) {
             let query = searchText.trimmingCharacters(in: .whitespaces)
             guard isSearching, !query.isEmpty else { searchResults = []; return }
