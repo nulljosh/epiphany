@@ -538,6 +538,12 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         setMapLoaded(true);
         if (onMapReady) onMapReady(map);
         map.on('load', () => {
+          // Landing backdrop: place labels collided with the hero copy on top of it.
+          if (!chrome) {
+            for (const layer of map.getStyle().layers) {
+              if (layer.type === 'symbol') map.setLayoutProperty(layer.id, 'visibility', 'none');
+            }
+          }
           if (pendingFlyRef.current) {
             map.flyTo(pendingFlyRef.current);
             pendingFlyRef.current = null;

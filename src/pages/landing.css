@@ -92,6 +92,12 @@ html:has(.lp) { scroll-behavior: smooth; }
   text-transform: uppercase; color: rgba(var(--lp-ink),0.35);
   margin-bottom: 18px;
 }
+/* The hero sits on the live map, whose place labels collided with this line. */
+.lp .lp-hero .lp-eyebrow {
+  display: inline-block; padding: 6px 14px; border-radius: 100px;
+  background: rgba(5,7,12,0.72); color: rgba(var(--lp-ink),0.6);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
 .lp .lp-hero-headline, .lp .lp-showcase-headline, .lp .lp-final-headline {
   font-weight: 700; letter-spacing: -0.035em;
 }
