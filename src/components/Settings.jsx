@@ -109,23 +109,9 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
     : `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}`;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
-  // One Greek god's emblem, bold white on the lyre-icon blue, same set as iOS.
-  const generateGodSVG = () => {
-    const W = 'fill="#fff"';
-    const S = 'fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"';
-    const emblems = [
-      `<path ${W} d="M56 14 L28 56 H47 L40 86 L72 42 H53 Z"/>`, // Zeus
-      `<circle ${W} cx="50" cy="50" r="15"/><path ${S} d="M50 16v8M50 76v8M16 50h8M76 50h8M26 26l6 6M68 68l6 6M26 74l6-6M68 32l6-6"/>`, // Apollo
-      `<path ${W} d="M62 18 A32 32 0 1 0 62 82 A25 25 0 1 1 62 18 Z"/>`, // Artemis
-      `<path ${S} d="M50 30V86M32 22v18q0 12 18 12t18-12V22M50 16v36"/>`, // Poseidon
-      `<path ${W} d="M50 16 L76 27 V50 C76 67 64 79 50 86 C36 79 24 67 24 50 V27 Z"/>`, // Athena
-      `<path ${W} d="M50 14 C64 32 72 44 72 59 A22 22 0 0 1 28 59 C28 47 38 40 41 29 C46 39 50 41 50 14 Z"/>`, // Hestia
-      `<path ${W} d="M26 76 C26 42 48 22 78 22 C78 54 60 76 26 76 Z"/>`, // Demeter
-      `<path ${W} d="M50 82 L22 54 A15 15 0 0 1 50 34 A15 15 0 0 1 78 54 Z"/>`, // Aphrodite
-    ];
-    const emblem = emblems[Math.floor(Math.random() * emblems.length)];
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aabff"/><stop offset="1" stop-color="#1a5fe0"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/>${emblem}</svg>`;
-  };
+  // 9 Greek gods from public-domain museum busts x 12 duotones = 108 avatars, served from /avatars/gods. Same set as iOS.
+  const GODS = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
+  const randomGodAvatar = () => `/avatars/gods/${GODS[Math.floor(Math.random() * GODS.length)]}-${Math.floor(Math.random() * 12)}.jpg`;
 
   const showAvatarMsg = useCallback((msg) => {
     if (avatarMsgTimerRef.current) clearTimeout(avatarMsgTimerRef.current);
@@ -134,13 +120,14 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   }, []);
 
   const handleGenerateAvatar = async () => {
-    const svg = generateGodSVG();
-    const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
-    setLocalAvatarUrl(dataUrl);
+    const path = randomGodAvatar();
+    setLocalAvatarUrl(path);
     setAvatarUploading(true);
     try {
-      const base64 = btoa(unescape(encodeURIComponent(svg)));
-      const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64, format: 'svg' }) });
+      const bytes = new Uint8Array(await (await fetch(path)).arrayBuffer());
+      let binary = '';
+      for (const b of bytes) binary += String.fromCharCode(b);
+      const res = await fetch('/api/avatar', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: btoa(binary), format: 'jpeg' }) });
       const data = await res.json();
       if (data.ok && data.avatarUrl) { setLocalAvatarUrl(data.avatarUrl); setAvatarVersion(Date.now()); showAvatarMsg({ text: 'Saved', error: false }); }
       else showAvatarMsg({ text: data.error || 'Failed', error: true });

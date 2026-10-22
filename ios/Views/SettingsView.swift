@@ -289,8 +289,9 @@ struct SettingsView: View {
     @MainActor
     private func generateAndUploadAvatar() async {
         isUploadingAvatar = true
-        let image = Self.generateGodImage()
-        guard let jpegData = image.jpegData(compressionQuality: 0.9) else {
+        guard let (jpegData, _) = try? await URLSession.shared.data(from: Self.randomGodAvatarURL()),
+              UIImage(data: jpegData) != nil else {
+            avatarError = "Couldn't load an avatar. Try again."
             isUploadingAvatar = false
             return
         }
@@ -309,33 +310,10 @@ struct SettingsView: View {
         isUploadingAvatar = false
     }
 
-    // One Greek god's emblem, bold white on the lyre-icon blue, in place of the old dot graph.
-    private static func generateGodImage() -> UIImage {
-        let emblems = [
-            "bolt.fill",     // Zeus
-            "sun.max.fill",  // Apollo
-            "moon.fill",     // Artemis
-            "water.waves",   // Poseidon
-            "shield.fill",   // Athena
-            "flame.fill",    // Hestia
-            "leaf.fill",     // Demeter
-            "heart.fill",    // Aphrodite
-        ]
-        let size: CGFloat = 200
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
-        return renderer.image { ctx in
-            let colors = [UIColor(red: 0.35, green: 0.67, blue: 1.0, alpha: 1).cgColor,
-                          UIColor(red: 0.10, green: 0.37, blue: 0.88, alpha: 1).cgColor]
-            if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1]) {
-                ctx.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: size), options: [])
-            }
-            let config = UIImage.SymbolConfiguration(pointSize: 92, weight: .bold)
-            if let glyph = UIImage(systemName: emblems.randomElement()!, withConfiguration: config)?
-                .withTintColor(.white, renderingMode: .alwaysOriginal) {
-                let g = glyph.size
-                glyph.draw(in: CGRect(x: (size - g.width) / 2, y: (size - g.height) / 2, width: g.width, height: g.height))
-            }
-        }
+    // 9 Greek gods from public-domain museum busts x 12 duotones, the same files the web app serves.
+    private static func randomGodAvatarURL() -> URL {
+        let gods = ["aphrodite", "ares", "artemis", "athena", "demeter", "dionysus", "hera", "hermes", "zeus"]
+        return URL(string: "https://epiphany.jaybulb.com/avatars/gods/\(gods.randomElement()!)-\(Int.random(in: 0..<12)).jpg")!
     }
 
 }
