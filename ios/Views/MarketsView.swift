@@ -517,7 +517,7 @@ struct MarketsView: View {
         }
         // Clear the floating tab bar AND the news drawer's peek (which floats over
         // the list bottom) so the last stock rows scroll fully into view.
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 72) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 176) }
         .refreshable {
             do {
                 try await appState.refreshMarkets()
