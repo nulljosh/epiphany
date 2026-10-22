@@ -526,7 +526,8 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           attributionControl: { compact: true }, // OpenStreetMap and CARTO need on-map credit
           pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         });
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
+        // The landing map is inert, so zoom buttons there did nothing.
+        if (chrome) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
         map.on('moveend', () => {
           const c = map.getCenter();
           setCenter((prev) => {
