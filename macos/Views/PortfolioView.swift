@@ -186,10 +186,6 @@ struct PortfolioView: View {
                             tabSelector
                                 .padding(.top, 12)
 
-                            // Display-only paper status, same card as iOS. The full AutopilotSection stays hidden.
-                            PaperAutopilotCard()
-                                .padding(.horizontal, 16)
-
                             tabContent
 
                             Spacer(minLength: 24)

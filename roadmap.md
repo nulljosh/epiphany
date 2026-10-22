@@ -260,7 +260,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] [P1] Splash screen is stale: uses the old logo, needs an animation on load.
 - [ ] [P1] Stale App Store links.
 - [ ] [P1] Avatar generation is stale. Should be Greek gods, Hermes style, not dots like Anthropic. (notes/attachments/2026-10-21/epiphany-7.png)
-- [ ] [P1] Remove the Autopilot text/copy from Settings. Same with legal. Keep that for the website or something. (notes/attachments/2026-10-21/epiphany-7.png)
+- [x] [P1] Remove the Autopilot text/copy from Settings. Same with legal. Keep that for the website or something. (2026-10-21: iOS Settings card + Legal section, macOS Portfolio card, web Settings sentence removed; landing footer keeps the legal line. Not built or run, needs a build check.) (notes/attachments/2026-10-21/epiphany-7.png)
 - [ ] [P1] Portfolio subscriptions are stale. I quit the gym. Remove YouTube and ChatGPT etc (the Inactive list). Only sub I have is Claude $200/m, the app shows Claude Pro $30. (notes/attachments/2026-10-21/epiphany-2.png, notes/attachments/2026-10-21/epiphany-3.png)
 - [ ] [P2] Map: Look Around / Apple Maps street view in the place sheet disappeared, it should be showing. (notes/attachments/2026-10-21/epiphany-4.png)
 - [ ] [P2] Map: places render on the map. What other details could we be displaying? (sheet today shows hours, phone, website, address, Get Directions) (notes/attachments/2026-10-21/epiphany-4.png)

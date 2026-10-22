@@ -158,16 +158,6 @@ struct SettingsView: View {
                     }
                 }
 
-                // ponytail: Autopilot is paper-trading only and does nothing a
-                // user can act on (SnapTrade/Wealthsimple is read-only by
-                // design). Hidden until a brokerage with real trade permission
-                // is wired up -- matches web, where the Trade tab is already
-                // disabled in FinancePanel.jsx. Re-enable by uncommenting.
-                // Display-only status card: no manual orders, no live switch. The full AutopilotSection above stays hidden.
-                Section {
-                    PaperAutopilotCard()
-                }
-
                 Section("Map") {
                     NavigationLink("Map Sources") {
                         MapSourcesSettingsView()
@@ -177,16 +167,6 @@ struct SettingsView: View {
                 Section("Appearance") {
                     AppearancePicker(rawTheme: $rawTheme)
                         .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-                }
-
-                Section("Legal") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(nil)
-                    }
-                    .padding(.vertical, 6)
                 }
 
                 Section("Account") {
