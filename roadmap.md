@@ -257,8 +257,8 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-21
 - [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
-- [ ] [P1] Splash screen is stale: uses the old logo, needs an animation on load.
-- [ ] [P1] Stale App Store links.
+- [x] [P1] Splash screen is stale: uses the old logo, needs an animation on load. (2026-10-21: SplashIcon 1x/2x/3x now the lyre from brand/icon-1024.png, entrance is a spring. Not built or run.)
+- [ ] [P1] Stale App Store links. (2026-10-21: every epiphany link in code already points at id6779522175, so the stale ones are elsewhere. Which page or app? Need the URL.)
 - [ ] [P1] Avatar generation is stale. Should be Greek gods, Hermes style, not dots like Anthropic. (notes/attachments/2026-10-21/epiphany-7.png)
 - [x] [P1] Remove the Autopilot text/copy from Settings. Same with legal. Keep that for the website or something. (2026-10-21: iOS Settings card + Legal section, macOS Portfolio card, web Settings sentence removed; landing footer keeps the legal line. Not built or run, needs a build check.) (notes/attachments/2026-10-21/epiphany-7.png)
 - [ ] [P1] Portfolio subscriptions are stale. I quit the gym. Remove YouTube and ChatGPT etc (the Inactive list). Only sub I have is Claude $200/m, the app shows Claude Pro $30. (notes/attachments/2026-10-21/epiphany-2.png, notes/attachments/2026-10-21/epiphany-3.png)

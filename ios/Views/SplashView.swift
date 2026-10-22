@@ -28,7 +28,7 @@ struct SplashView: View {
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5)) {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.65)) {
                 iconScale = 1.0
                 iconOpacity = 1.0
             }
