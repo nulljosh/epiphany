@@ -1198,9 +1198,10 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           source: 'heatmap-source',
           paint: {
             'heatmap-weight': ['get', 'weight'],
-            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 10, 2, 14, 4],
-            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 16, 8, 40, 12, 80, 15, 120],
-            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 15, 0.5],
+            // Softer than before: at city zoom it was one opaque red blob hiding the streets.
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 10, 1, 14, 2],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 10, 8, 24, 12, 40, 15, 60],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.45, 15, 0.3],
             'heatmap-color': [
               'interpolate', ['linear'], ['heatmap-density'],
               0,    'rgba(0,0,0,0)',
