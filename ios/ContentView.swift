@@ -45,6 +45,12 @@ struct ContentView: View {
             }
         }
         .task {
+            #if DEBUG
+            // QA: `-qaTab 2` opens straight on that tab.
+            if UserDefaults.standard.object(forKey: "qaTab") != nil {
+                selectedTab = UserDefaults.standard.integer(forKey: "qaTab")
+            }
+            #endif
             if CommandLine.arguments.contains("UITEST_DEMO") {
                 // Screenshots only: sample user and portfolio, public market data, no network login.
                 appState.user = DemoData.user

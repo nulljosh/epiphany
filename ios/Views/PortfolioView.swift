@@ -675,12 +675,15 @@ struct PortfolioView: View {
                             .font(.caption2)
                             .foregroundStyle(Palette.textSecondary)
                     }
-                    HStack(spacing: 4) {
-                        Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
-                        Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                    // A flat "+$0.00 (0.0%)" in green said nothing, so a no-change day hides it.
+                    if abs(portfolio.dayChange) >= 0.005 {
+                        HStack(spacing: 4) {
+                            Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
+                            Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(changeColor)
                     }
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(changeColor)
                 } else {
                     Text("Portfolio")
                         .font(.system(size: 32, weight: .heavy))
@@ -1744,7 +1747,7 @@ extension PortfolioView {
             }
             Spacer()
             if let amount = sub.amount {
-                Text(CurrencyFormatter.formatPrice(amount))
+                Text((sub.currency == "USD" ? "US" : "") + CurrencyFormatter.formatPrice(amount))
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.primary)
             } else if let note = sub.note {
