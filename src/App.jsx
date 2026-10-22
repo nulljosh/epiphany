@@ -887,6 +887,8 @@ const reset = useCallback(() => {
         .epiphany-ticker { display: block; }
         .epiphany-header, .epiphany-footer, .epiphany-panel { display: none; }
         .epiphany-mobile-nav { display: flex; }
+        .epiphany-mobile-tabbar { display: flex; }
+        .maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right { bottom: calc(env(safe-area-inset-bottom, 0px) + 80px); }
         /* Mobile nav floats over the map top-left, so the map's search bar
            starts past the 44px burger and stops short of the recenter button. */
         .epiphany-map-search {
@@ -923,6 +925,8 @@ const reset = useCallback(() => {
         @media (min-width: 768px) {
           .epiphany-ticker, .epiphany-header, .epiphany-footer { display: flex; }
           .epiphany-mobile-nav { display: none; }
+          .epiphany-mobile-tabbar { display: none !important; }
+          .maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right { bottom: 0; }
           .epiphany-map-search { left: 14px !important; right: auto; margin-left: 0; }
           .epiphany-map-search input { width: 180px !important; flex: none; }
           .epiphany-mobile-panel { display: none !important; }

@@ -139,8 +139,53 @@ export default function MobileLayout({
             >{'\u00d7'}</button>
           </div>
           {panelContent}
+          {/* Room to scroll the last rows clear of the floating tab bar. */}
+          <div aria-hidden="true" style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 88px)', flexShrink: 0 }} />
         </div>
+      )}
+
+      {/* Bottom tab bar, same four tabs as the iOS app. Map closes the panel to show the map itself. */}
+      {isMobileNav && (
+        <nav className="epiphany-mobile-tabbar" aria-label="Tabs" style={{
+          position: 'fixed', zIndex: 1000, left: '50%', transform: 'translateX(-50%)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', width: 'min(calc(100% - 32px), 420px)',
+          display: 'flex', padding: 4, borderRadius: 100, gap: 2,
+          background: dark ? 'rgba(28,28,30,0.78)' : 'rgba(255,255,255,0.82)',
+          backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)'}`,
+        }}>
+          {TAB_PILLS.map(pill => {
+            const isMap = pill.key === 'situation';
+            const active = isMap ? !mobilePanelOpen : (mobilePanelOpen && activeTab === pill.key);
+            return (
+              <button
+                key={pill.key}
+                onClick={() => (isMap ? setMobilePanelOpen(false) : handleMobileTabSelect(pill.key))}
+                aria-current={active ? 'page' : undefined}
+                style={{
+                  flex: 1, minHeight: 48, borderRadius: 100, border: 'none', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                  fontFamily: FONT, fontSize: 11, fontWeight: 600,
+                  background: active ? (dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                  color: active ? '#0a84ff' : t.textSecondary,
+                }}
+              >
+                <TabIcon name={pill.key} />
+                {isMap ? 'Map' : pill.label}
+              </button>
+            );
+          })}
+        </nav>
       )}
     </>
   );
+}
+
+function TabIcon({ name }) {
+  const common = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+  if (name === 'situation') return <svg {...common}><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>;
+  if (name === 'markets') return <svg {...common}><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>;
+  if (name === 'portfolio') return <svg {...common}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>;
+  if (name === 'people') return <svg {...common}><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20c0-2.6-1.6-4.8-4-5.6"/></svg>;
+  return <svg {...common}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>;
 }

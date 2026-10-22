@@ -942,7 +942,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 6, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <span>Stocks: {formatCurrency(stocksValue, 'CAD')}</span>
           <span>Cash: {formatCurrency(cashValue, 'CAD')}</span>
-          <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>
+          {totalDebt > 0 && <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>}
         </div>
         {(() => {
           const ageMs = portfolioFetchedAt ? Date.now() - portfolioFetchedAt.getTime() : null;
