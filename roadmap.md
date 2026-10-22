@@ -266,6 +266,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 ## QA pass 2026-10-21 (web, iOS)
 - [ ] Web map heatmap renders as one opaque red blob over Maple Ridge/Langley. Lower opacity or radius so streets show through.
 - [ ] Web mobile has no visible tab bar; Markets, Portfolio and Settings hide behind the burger. Consider a bottom tab bar like iOS.
-- [ ] iOS Markets: the Business News drawer covers the list above the tab bar. Fear & Greed row never showed in QA (score nil), check /api feed.
+- [ ] iOS Markets: the Business News drawer covers the list above the tab bar. Fear & Greed is empty: CNN blocks Workers egress by IP (418) and the KV stale cache has lapsed. Needs another source or a non-Cloudflare fetcher; iOS now hides the empty row.
 - [ ] iOS Settings signed out is just Sign In and Register on an empty screen. Add the map and appearance sections for signed-out users too.
 - [ ] iOS Portfolio monthly subscriptions total adds US$200 to CAD amounts. Convert or show per currency.
