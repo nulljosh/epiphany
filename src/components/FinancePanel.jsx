@@ -1559,7 +1559,9 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         {tab === 'subscriptions' && (() => {
           const activeSubs = subscriptions.filter(s => s.active);
           const inactiveSubs = subscriptions.filter(s => !s.active);
-          const monthlyTotal = activeSubs.reduce((sum, s) => sum + (s.amount || 0), 0);
+          // Totals stay per currency: adding US$ to CAD gave a number that was neither.
+          const monthlyTotal = activeSubs.filter(s => s.currency !== 'USD').reduce((sum, s) => sum + (s.amount || 0), 0);
+          const usdTotal = activeSubs.filter(s => s.currency === 'USD').reduce((sum, s) => sum + (s.amount || 0), 0);
           const recurringMonthly = recurring.reduce((sum, r) => sum + r.amount * ({ biweekly: 26 / 12, monthly: 1, yearly: 1 / 12 }[r.cadence] ?? 1), 0);
           return (
             <>
@@ -1589,7 +1591,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 <div style={sectionStyle}>
                   <div style={labelStyle}>Active</div>
                   <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 12 }}>
-                    {formatCurrency(monthlyTotal)} / mo
+                    {usdTotal > 0 ? `US${formatCurrency(usdTotal)} + ` : ''}{formatCurrency(monthlyTotal)} / mo
                   </div>
                   {activeSubs.map((sub) => (
                     <div key={sub.name} style={rowStyle}>
@@ -1600,7 +1602,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                         </div>
                       </div>
                       <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
-                        {sub.amount != null ? formatCurrency(sub.amount) : ''}
+                        {sub.amount != null ? (sub.currency === 'USD' ? 'US' : '') + formatCurrency(sub.amount) : ''}
                       </div>
                     </div>
                   ))}
