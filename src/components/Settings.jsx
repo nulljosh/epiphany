@@ -177,10 +177,17 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   });
 
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
+    <div className="settings-shell" style={{ display: 'flex', height: '100%', minHeight: 0 }}>
+      {/* Phones: the side list becomes a row of tabs on top so the form gets the full width. */}
+      <style>{`@media (max-width: 640px) {
+        .settings-shell { flex-direction: column !important; }
+        .settings-side { width: auto !important; display: flex; gap: 4px; overflow-x: auto; padding: 8px 12px !important; border-right: none !important; border-bottom: 1px solid ${t.border}; }
+        .settings-side .settings-side-title { display: none; }
+        .settings-side button { width: auto !important; white-space: nowrap; flex-shrink: 0; }
+      }`}</style>
       {/* Sidebar */}
-      <div style={{ width: 140, flexShrink: 0, padding: '16px 8px', borderRight: `1px solid ${t.border}` }}>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, padding: '0 12px', marginBottom: 8 }}>Settings</div>
+      <div className="settings-side" style={{ width: 140, flexShrink: 0, padding: '16px 8px', borderRight: `1px solid ${t.border}` }}>
+        <div className="settings-side-title" style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, padding: '0 12px', marginBottom: 8 }}>Settings</div>
         {NAV_ITEMS.map(item => (
           <button key={item.id} style={navStyle(section === item.id)} onClick={() => setSection(item.id)}>
             {item.label}
