@@ -211,6 +211,18 @@ struct SettingsView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
+
+                // Map and appearance work without an account, so signed-out users get them too.
+                Section("Map") {
+                    NavigationLink("Map Sources") {
+                        MapSourcesSettingsView()
+                    }
+                }
+
+                Section("Appearance") {
+                    AppearancePicker(rawTheme: $rawTheme)
+                        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                }
             }
         }
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
