@@ -258,9 +258,15 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
 - [ ] [P1] Stale App Store links. (2026-10-21: every epiphany link in code already points at id6779522175, so the stale ones are elsewhere. Which page or app? Need the URL.)
 - [ ] [P1] Avatar generation is stale. Should be Greek gods, Hermes style, not dots like Anthropic. (notes/attachments/2026-10-21/epiphany-7.png)
-- [x] [P1] Portfolio subscriptions are stale. I quit the gym. Remove YouTube and ChatGPT etc (the Inactive list). Only sub I have is Claude $200/m, the app shows Claude Pro $30. (notes/attachments/2026-10-21/epiphany-2.png, notes/attachments/2026-10-21/epiphany-3.png) (2026-10-21: KV now has Claude US$200/mo and iCloud+ only, inactive list removed. No gym entry existed in the data.)
 - [ ] [P2] Map: Look Around / Apple Maps street view in the place sheet disappeared, it should be showing. (notes/attachments/2026-10-21/epiphany-4.png)
 - [ ] [P2] Map: places render on the map. What other details could we be displaying? (sheet today shows hours, phone, website, address, Get Directions) (notes/attachments/2026-10-21/epiphany-4.png)
 - [ ] [P3] Map: for airplanes, use emojis instead of round blue dots. (notes/attachments/2026-10-21/epiphany-5.png) Question: house rule is no emojis in any UI, did you mean a plane glyph without the blue circle, or a real emoji?
 - [ ] [P3] Remove Debt & Calendar's calendar unless we can find a use for it. (notes/attachments/2026-10-21/epiphany-6.png)
 
+## QA pass 2026-10-21 (web, iOS)
+- [ ] Web map heatmap renders as one opaque red blob over Maple Ridge/Langley. Lower opacity or radius so streets show through.
+- [ ] Web mobile has no visible tab bar; Markets, Portfolio and Settings hide behind the burger. Consider a bottom tab bar like iOS.
+- [ ] Landing platform line wraps with "Android" orphaned on its own line at 375px.
+- [ ] iOS Markets: blank band between the ticker strip and the first row, and the Business News drawer covers the list above the tab bar.
+- [ ] iOS Settings signed out is just Sign In and Register on an empty screen. Add the map and appearance sections for signed-out users too.
+- [ ] iOS Portfolio monthly subscriptions total adds US$200 to CAD amounts. Convert or show per currency.
