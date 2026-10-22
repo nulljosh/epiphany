@@ -119,7 +119,7 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .lp-hero-headline,
 .lp .lp-hero-sub,
 .lp .lp-hero-actions,
-.lp .lp-hero-platforms { position: relative; z-index: 2; }
+.lp .lp-hero-platforms { position: relative; z-index: 2; text-wrap: balance; }
 .lp .lp-hero-platforms {
   font-size: 13px; font-weight: 400; color: rgba(var(--lp-ink),0.35);
   margin-top: 18px; letter-spacing: 0.02em;
