@@ -890,8 +890,7 @@ const reset = useCallback(() => {
         /* Mobile nav floats over the map top-left, so the map's search bar
            starts past the 44px burger and stops short of the recenter button. */
         .epiphany-map-search {
-          left: calc(env(safe-area-inset-left, 0px) + 68px) !important;
-          right: 58px;
+          margin-left: 54px;
         }
         .epiphany-map-search input { width: auto !important; flex: 1; }
         .epiphany-root {
@@ -924,7 +923,7 @@ const reset = useCallback(() => {
         @media (min-width: 768px) {
           .epiphany-ticker, .epiphany-header, .epiphany-footer { display: flex; }
           .epiphany-mobile-nav { display: none; }
-          .epiphany-map-search { left: 14px !important; right: auto; }
+          .epiphany-map-search { left: 14px !important; right: auto; margin-left: 0; }
           .epiphany-map-search input { width: 180px !important; flex: none; }
           .epiphany-mobile-panel { display: none !important; }
           .epiphany-root {

@@ -67,7 +67,7 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .lp-nav-cta { display: flex; align-items: center; gap: 10px; }
 .lp .lp-nav-login {
   color: rgba(var(--lp-ink),0.55); text-decoration: none; background: none; border: none;
-  font-size: 13px; font-weight: 500; padding: 7px 12px; transition: color 0.2s;
+  font-size: 13px; font-weight: 500; padding: 7px 12px; transition: color 0.2s; white-space: nowrap;
 }
 .lp .lp-nav-login:hover { color: var(--lp-fg); }
 .lp .lp-nav-get {
