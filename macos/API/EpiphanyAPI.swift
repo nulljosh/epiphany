@@ -218,7 +218,24 @@ final class EpiphanyAPI {
         let url = try makeURL("/api/fear-greed")
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        return try decode(FearGreedResponse.self, from: data)
+        if let server = try? decode(FearGreedResponse.self, from: data) { return server }
+        // CNN blocks the Worker's IPs, so the server often has nothing. The device can ask CNN itself.
+        return try await fetchFearGreedFromCNN()
+    }
+
+    private func fetchFearGreedFromCNN() async throws -> FearGreedResponse {
+        struct CNN: Decodable {
+            struct Index: Decodable { let score: Double; let rating: String }
+            let fear_and_greed: Index
+        }
+        var request = URLRequest(url: URL(string: "https://production.dataviz.cnn.io/index/fearandgreed/graphdata")!)
+        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+        request.setValue("https://www.cnn.com/", forHTTPHeaderField: "Referer")
+        request.setValue("https://www.cnn.com", forHTTPHeaderField: "Origin")
+        request.setValue("application/json, text/plain, */*", forHTTPHeaderField: "Accept")
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let index = try JSONDecoder().decode(CNN.self, from: data).fear_and_greed
+        return FearGreedResponse(score: Int(index.score.rounded()), rating: index.rating)
     }
 
     func fetchNews() async throws -> [NewsArticle] {
