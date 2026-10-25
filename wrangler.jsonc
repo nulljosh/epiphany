@@ -18,7 +18,7 @@
     { "binding": "BLOB", "id": "a67a16077d864bdfbb57f25254116550" }
   ],
   // Serves the production hostnames directly; Workers custom domains own the DNS record.
-  "routes": [{ "pattern": "epiphany.heyitsmejosh.com", "custom_domain": true }, { "pattern": "epiphany.jaybulb.com", "custom_domain": true }],
+  "routes": [{ "pattern": "epiphany.jaybulb.com", "custom_domain": true }],
   "observability": { "enabled": true },
   // Default-deny switch for local-only debug routes (server/api/statements.js
   // scan-local). Must stay "production" on the deployed Worker.
