@@ -38,7 +38,8 @@ async function kvReadNews(key) {
   if (!kv) return null;
   const raw = await kv.get(key);
   if (!raw) return null;
-  try { return typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return null; }
+  // An empty entry is a miss, never something to serve.
+  try { const e = typeof raw === 'string' ? JSON.parse(raw) : raw; return e?.data?.articles?.length ? e : null; } catch { return null; }
 }
 
 async function kvWriteNews(key, entry) {
@@ -362,23 +363,25 @@ function decodeXml(text) {
     .trim();
 }
 
-async function fetchBingNews(queryTerms, lat, lon) {
+// Plain RSS 2.0 reader for Bing, Yahoo Finance and CNBC feeds.
+async function fetchRss(url, newsSource, lat, lon) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    const url = `https://www.bing.com/news/search?q=${encodeURIComponent(queryTerms.join(' '))}&format=rss&setlang=en-us`;
     const r = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!r.ok) throw new Error(`Bing News ${r.status}`);
+    if (!r.ok) throw new Error(`${newsSource} ${r.status}`);
     const xml = await r.text();
     const items = xml.match(/<item\b[\s\S]*?<\/item>/gi) || [];
     return items.map(item => {
-      const title = decodeXml(item.match(/<title>([\s\S]*?)<\/title>/i)?.[1]);
-      // Links are bing.com/news/apiclick.aspx redirects; the real article is the url= param.
-      let articleUrl = decodeXml(item.match(/<link>([\s\S]*?)<\/link>/i)?.[1]);
+      const tag = (name) => decodeXml(item.match(new RegExp(`<${name}\\b[^>]*>([\\s\\S]*?)<\/${name}>`, 'i'))?.[1]);
+      const title = tag('title');
+      // Bing links are bing.com/news/apiclick.aspx redirects; the real article is the url= param.
+      let articleUrl = tag('link');
       try { articleUrl = new URL(articleUrl).searchParams.get('url') || articleUrl; } catch { /* keep raw */ }
-      const source = decodeXml(item.match(/<News:Source>([\s\S]*?)<\/News:Source>/i)?.[1]).replace(/ on MSN$/, '');
-      const image = decodeXml(item.match(/<News:Image>([\s\S]*?)<\/News:Image>/i)?.[1]) || null;
-      const pubDate = decodeXml(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1]);
+      let source = tag('News:Source').replace(/ on MSN$/, '');
+      if (!source) { try { source = new URL(articleUrl).hostname.replace(/^www\./, ''); } catch { source = ''; } }
+      const image = tag('News:Image') || decodeXml(item.match(/<media:(?:content|thumbnail)\b[^>]*\burl="([^"]+)"/i)?.[1]) || null;
+      const pubDate = tag('pubDate');
       const { lat: gLat, lon: gLon } = extractGeo({ title });
       return {
         title,
@@ -389,7 +392,7 @@ async function fetchBingNews(queryTerms, lat, lon) {
         lat: gLat ?? lat ?? null,
         lon: gLon ?? lon ?? null,
         publishedAt: pubDate && !Number.isNaN(Date.parse(pubDate)) ? new Date(pubDate).toISOString() : null,
-        newsSource: 'bing',
+        newsSource,
       };
     }).filter(a => a.title && a.url);
   } catch {
@@ -399,13 +402,19 @@ async function fetchBingNews(queryTerms, lat, lon) {
   }
 }
 
-// Google and Bing together, so one blocked feed never empties the drawer.
+// From Cloudflare's edge Google answers 503 and Bing sometimes serves a bot
+// page, so Yahoo Finance (per ticker) and CNBC (no location) are the steady floor.
+const CNBC_BUSINESS = 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147';
 async function fetchRssNews(queryTerms, lat, lon) {
-  const [google, bing] = await Promise.all([
+  const q = queryTerms.join(' ');
+  const ticker = queryTerms[1] === 'stock' && /^[A-Za-z.^=-]{1,10}$/.test(queryTerms[0]) ? queryTerms[0].toUpperCase() : null;
+  const feeds = [
     fetchGoogleNews(queryTerms, lat, lon),
-    fetchBingNews(queryTerms, lat, lon),
-  ]);
-  return [...google, ...bing];
+    fetchRss(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`, 'bing', lat, lon),
+  ];
+  if (ticker) feeds.push(fetchRss(`https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(ticker)}&region=US&lang=en-US`, 'yahoo', lat, lon));
+  else if (lat == null) feeds.push(fetchRss(CNBC_BUSINESS, 'cnbc', null, null));
+  return (await Promise.all(feeds)).flat();
 }
 
 async function handleStockNews(req, res, query) {
