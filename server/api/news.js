@@ -42,6 +42,7 @@ async function kvReadNews(key) {
 }
 
 async function kvWriteNews(key, entry) {
+  if (!entry?.data?.articles?.length) return;
   const kv = await getKv();
   if (!kv) return;
   await kv.set(key, JSON.stringify(entry), { ex: KV_STALE_SEC });
@@ -52,6 +53,7 @@ const MAX_CACHE = 100;
 const cache = new Map();
 
 function cacheSet(key, value) {
+  if (!value?.data?.articles?.length) return;
   if (cache.size >= MAX_CACHE) {
     const oldest = cache.keys().next().value;
     cache.delete(oldest);
@@ -350,6 +352,62 @@ async function fetchGoogleNews(queryTerms, lat, lon) {
   }
 }
 
+// Bing News RSS. From Cloudflare's edge Google News answers 503 "Sorry" and
+// GDELT 429s, which left the app on "No News". Bing serves the same IPs fine.
+function decodeXml(text) {
+  return (text || '')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+    .trim();
+}
+
+async function fetchBingNews(queryTerms, lat, lon) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const url = `https://www.bing.com/news/search?q=${encodeURIComponent(queryTerms.join(' '))}&format=rss&setlang=en-us`;
+    const r = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!r.ok) throw new Error(`Bing News ${r.status}`);
+    const xml = await r.text();
+    const items = xml.match(/<item\b[\s\S]*?<\/item>/gi) || [];
+    return items.map(item => {
+      const title = decodeXml(item.match(/<title>([\s\S]*?)<\/title>/i)?.[1]);
+      // Links are bing.com/news/apiclick.aspx redirects; the real article is the url= param.
+      let articleUrl = decodeXml(item.match(/<link>([\s\S]*?)<\/link>/i)?.[1]);
+      try { articleUrl = new URL(articleUrl).searchParams.get('url') || articleUrl; } catch { /* keep raw */ }
+      const source = decodeXml(item.match(/<News:Source>([\s\S]*?)<\/News:Source>/i)?.[1]).replace(/ on MSN$/, '');
+      const image = decodeXml(item.match(/<News:Image>([\s\S]*?)<\/News:Image>/i)?.[1]) || null;
+      const pubDate = decodeXml(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1]);
+      const { lat: gLat, lon: gLon } = extractGeo({ title });
+      return {
+        title,
+        url: articleUrl,
+        source,
+        sourceUrl: null,
+        image,
+        lat: gLat ?? lat ?? null,
+        lon: gLon ?? lon ?? null,
+        publishedAt: pubDate && !Number.isNaN(Date.parse(pubDate)) ? new Date(pubDate).toISOString() : null,
+        newsSource: 'bing',
+      };
+    }).filter(a => a.title && a.url);
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Google and Bing together, so one blocked feed never empties the drawer.
+async function fetchRssNews(queryTerms, lat, lon) {
+  const [google, bing] = await Promise.all([
+    fetchGoogleNews(queryTerms, lat, lon),
+    fetchBingNews(queryTerms, lat, lon),
+  ]);
+  return [...google, ...bing];
+}
+
 async function handleStockNews(req, res, query) {
   const norm = query.toLowerCase();
   const cacheKey = `stock:${norm}`;
@@ -397,7 +455,7 @@ async function handleStockNews(req, res, query) {
   try {
     const [gdeltResult, googleResult] = await Promise.allSettled([
       fetchGdelt(gdeltUrl),
-      fetchGoogleNews([query, 'stock'], null, null),
+      fetchRssNews([query, 'stock'], null, null),
     ]);
 
     const gdeltArticles = gdeltResult.status === 'fulfilled' ? gdeltResult.value : [];
@@ -412,7 +470,7 @@ async function handleStockNews(req, res, query) {
     return res.status(200).json(data);
   } catch {
     try {
-      const googleArticles = await fetchGoogleNews([query, 'stock'], null, null);
+      const googleArticles = await fetchRssNews([query, 'stock'], null, null);
       const articles = dedup(googleArticles).filter(a => isEnglishTitle(a.title));
       if (articles.length > 0) {
         const data = { articles, meta: buildMeta('live', { degraded: true }) };
@@ -513,7 +571,7 @@ export default async function handler(req, res) {
   // "loads forever then errors" report. Never re-fetch what already ran.
   const [gdeltResult, googleResult] = await Promise.allSettled([
     fetchGdelt(url),
-    fetchGoogleNews(queryTerms, parsedLat, parsedLon),
+    fetchRssNews(queryTerms, parsedLat, parsedLon),
   ]);
   let googleArticles = googleResult.status === 'fulfilled' ? googleResult.value : [];
 

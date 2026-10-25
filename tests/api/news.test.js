@@ -267,3 +267,25 @@ describe('stock news via ?q= param', () => {
     expect(call2.data().meta.status).toBe('cache');
   });
 });
+
+describe('Bing News fallback', () => {
+  it('serves Bing articles with the real URL when GDELT and Google fail', async () => {
+    const rss = '<rss><channel><item><title>Nasdaq falls &amp; tech slides on the AI outlook</title>'
+      + '<link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;url=https%3a%2f%2fwww.msn.com%2fstory&amp;mkt=en-ca</link>'
+      + '<pubDate>Fri, 23 Oct 2026 07:00:00 GMT</pubDate><News:Source>TheStreet on MSN</News:Source>'
+      + '<News:Image>http://www.bing.com/th?id=X&amp;pid=News</News:Image></item></channel></rss>';
+    global.fetch = vi.fn((url) => {
+      if (String(url).includes('bing.com')) return Promise.resolve(mockOk(rss));
+      if (String(url).includes('news.google.com')) return Promise.resolve({ ok: false, status: 503, text: async () => 'Sorry' });
+      return Promise.reject(new Error('429'));
+    });
+    const { req, res, status, data } = makeReqRes();
+    await handler(req, res);
+    expect(status()).toBe(200);
+    const a = data().articles[0];
+    expect(a.title).toBe('Nasdaq falls & tech slides on the AI outlook');
+    expect(a.url).toBe('https://www.msn.com/story');
+    expect(a.source).toBe('TheStreet');
+    expect(a.newsSource).toBe('bing');
+  });
+});
