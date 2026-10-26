@@ -1,6 +1,6 @@
 > Priority tier 2 (2026-10-17): ship push, this week. Order: live blockers, ship pushes, active features, portfolio, exploratory. See ~/Documents/Code/LOOP-HANDOFF.md.
 
-- [ ] Wire Epiphany Sans into the native apps and the web UI. The font files are in `fonts/` and `brand/tokens.css`; no app or web screen uses it yet.
+- [x] Dropped 2026-10-26: Epiphany Sans will not be wired in. Standing rule is system font only (SF Pro / Helvetica), no custom typefaces. Font files stay in `fonts/` unused.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
 ## 2026-10-21 (open)
