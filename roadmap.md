@@ -272,3 +272,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 - [ ] Avatar is stale (Settings shows the node-graph avatar). Should be Greek gods. Screenshot: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-5.png
 - [ ] Crypto view needs more detail and real-time current price plus 1m etc. Bitcoin sheet today is a flat 1D line with only a Type row, 1D/5D/1MO/3MO/1Y: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-4.png
+
+## Ingested 2026-10-27
+- [ ] Markets tab, Business News ("From 1 source", only CNBC showing) still takes a second or two to load. It should lazy load the stories. Screenshot: ~/Documents/Code/notes/attachments/2026-10-27/epiphany-11.png
