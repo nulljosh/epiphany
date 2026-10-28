@@ -1,4 +1,4 @@
-# Epiphany loop handoff (2026-10-28)
+# Epiphany loop handoff (2026-10-28, afternoon)
 
 ## What the loop is
 
