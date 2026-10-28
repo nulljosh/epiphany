@@ -274,5 +274,5 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Crypto view needs more detail and real-time current price plus 1m etc. Bitcoin sheet today is a flat 1D line with only a Type row, 1D/5D/1MO/3MO/1Y: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-4.png
 
 ## Ingested 2026-10-27
-- [x] Markets tab, Business News slow to load: every row fetched the same publisher favicon on its own. iOS now shares one download and one decoded image per URL (`ios/Helpers/CachedAsyncImage.swift`). macOS stays on AsyncImage, its project is pure SwiftUI.
+- [ ] Markets tab, Business News slow to load: every row fetched the same publisher favicon on its own. iOS now shares one download and one decoded image per URL (`ios/Helpers/CachedAsyncImage.swift`). macOS stays on AsyncImage, its project is pure SwiftUI.
 - [ ] Business News shows one source ("From 1 source", CNBC only). From the edge Google answers 503 and Bing serves a bot page, so CNBC is the only feed that lands. Needs a second steady feed in `server/api/news.js`.
