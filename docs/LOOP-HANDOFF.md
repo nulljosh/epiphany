@@ -1,4 +1,4 @@
-# Epiphany loop handoff (2026-10-22, early morning)
+# Epiphany loop handoff (2026-10-28)
 
 ## What the loop is
 
@@ -9,6 +9,7 @@ Work Epiphany one batch at a time. Each pass fixes a batch from `docs/reference/
 - The loop is paused. It stopped at 95% weekly usage on 2026-10-21. Restart after the Saturday 22:00 reset, but commits kept landing on main until about 00:07 on 2026-10-22, so check that nothing is still running first.
 - iOS 3.0.1 was rebuilt with today's native work and resubmitted. It is WAITING_FOR_REVIEW.
 - Mac 3.0.0 is still in review. Mac 3.0.1 waits for it to clear.
+- Since 2026-10-22: Business News pulls Google, CNBC and MarketWatch live (MarketWatch decodes numeric XML entities), and news thumbnails are pushed after 580 tests. The macOS side still uses AsyncImage, so that roadmap item stays open.
 - Overnight commits on main, not confirmed in the build waiting for review: subscription totals split per currency on iOS, macOS and web, so a US$ plan stops landing in Canadian totals; native apps fetch Fear and Greed from CNN when the server is blocked (web still has no source); 108 Greek god avatars on lyre blue; the web bottom tab bar on phones; a lyre splash; QA fixes on iOS and web. Check which of these are in the next submitted build.
 - 73 issues are open. Do not close any issue without Joshua.
 - The Stripe business website is jaybulb.com (verified live). The product copy no longer says Opticon.
