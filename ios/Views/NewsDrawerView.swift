@@ -73,8 +73,8 @@ struct NewsDrawerView: View {
 
                                 Group {
                                     if let imageUrl = article.thumbnailURL {
-                                        AsyncImage(url: imageUrl) { phase in
-                                            if let image = phase.image {
+                                        CachedAsyncImage(url: imageUrl) { image in
+                                            if let image {
                                                 image.resizable().aspectRatio(contentMode: .fill)
                                             } else {
                                                 newsPlaceholder

@@ -56,8 +56,8 @@ struct CompactNewsRow: View {
             Spacer(minLength: 0)
 
             if let url = article.thumbnailURL {
-                AsyncImage(url: url) { phase in
-                    if let image = phase.image {
+                CachedAsyncImage(url: url) { image in
+                    if let image {
                         image.resizable().scaledToFill()
                     } else {
                         Color.clear
