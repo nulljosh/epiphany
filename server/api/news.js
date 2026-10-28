@@ -359,6 +359,8 @@ function decodeXml(text) {
   return (text || '')
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
     .trim();
 }
@@ -403,8 +405,9 @@ async function fetchRss(url, newsSource, lat, lon) {
 }
 
 // From Cloudflare's edge Google answers 503 and Bing sometimes serves a bot
-// page, so Yahoo Finance (per ticker) and CNBC (no location) are the steady floor.
+// page, so Yahoo Finance (per ticker) and CNBC plus MarketWatch (no location) are the steady floor.
 const CNBC_BUSINESS = 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147';
+const MARKETWATCH_TOP = 'https://feeds.content.dowjones.io/public/rss/mw_topstories';
 async function fetchRssNews(queryTerms, lat, lon) {
   const q = queryTerms.join(' ');
   const ticker = queryTerms[1] === 'stock' && /^[A-Za-z.^=-]{1,10}$/.test(queryTerms[0]) ? queryTerms[0].toUpperCase() : null;
@@ -413,7 +416,7 @@ async function fetchRssNews(queryTerms, lat, lon) {
     fetchRss(`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`, 'bing', lat, lon),
   ];
   if (ticker) feeds.push(fetchRss(`https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(ticker)}&region=US&lang=en-US`, 'yahoo', lat, lon));
-  else if (lat == null) feeds.push(fetchRss(CNBC_BUSINESS, 'cnbc', null, null));
+  else if (lat == null) feeds.push(fetchRss(CNBC_BUSINESS, 'cnbc', null, null), fetchRss(MARKETWATCH_TOP, 'marketwatch', null, null));
   return (await Promise.all(feeds)).flat();
 }
 

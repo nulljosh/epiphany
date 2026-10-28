@@ -275,4 +275,4 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-27
 - [ ] Markets tab, Business News slow to load: every row fetched the same publisher favicon on its own. iOS now shares one download and one decoded image per URL (`ios/Helpers/CachedAsyncImage.swift`). macOS stays on AsyncImage, its project is pure SwiftUI.
-- [ ] Business News shows one source ("From 1 source", CNBC only). From the edge Google answers 503 and Bing serves a bot page, so CNBC is the only feed that lands. Needs a second steady feed in `server/api/news.js`.
+- [ ] Business News shows one source ("From 1 source", CNBC only). From the edge Google answers 503 and Bing serves a bot page, so CNBC is the only feed that lands. MarketWatch top stories (with images) added as a second feed in `server/api/news.js` on 2026-10-28; waits on a `wrangler deploy` and a live check of `/api/news`.
