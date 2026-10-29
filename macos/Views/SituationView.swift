@@ -1202,6 +1202,7 @@ private struct VenueDetailSheet: View {
                     }
                     .buttonStyle(.plain)
                 }
+                DriveTimeLabel(item: item)
                 if let address = item.placemark.title {
                     Label(address, systemImage: "mappin.and.ellipse")
                         .font(.subheadline)

@@ -1876,6 +1876,9 @@ private struct PlaceCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .padding([.horizontal, .top], Spacing.lg)
             }
+            DriveTimeLabel(item: item)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding([.horizontal, .top], Spacing.lg)
             AppleDetail(item: item) { dismiss() }
         }
         .task { scene = await lookAroundScene(for: item) }
@@ -1931,6 +1934,7 @@ private struct VenueDetailSheet: View {
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
+                    DriveTimeLabel(item: item)
                     if let address = item.placemark.title {
                         Label(address, systemImage: "mappin.and.ellipse")
                             .font(.subheadline)
