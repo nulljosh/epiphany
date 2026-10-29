@@ -451,6 +451,10 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     return list;
   }, [allItems, search, sortKey, sortAsc, watchlistSet, assetDimension]);
 
+  // Paging walks the list in screen order: watchlist first, then the rest.
+  // Paging only `filtered` left watchlist stocks at "0 / N".
+  const pagerItems = useMemo(() => [...watchlistItems, ...filtered], [watchlistItems, filtered]);
+
   const topMovers = useMemo(() => {
     if (filtered.length === 0) return [];
     const sorted = [...filtered].sort((a, b) => b.changePercent - a.changePercent);
@@ -652,9 +656,9 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           onClose={() => { setSelectedStock(null); setShowNewsDrawer(false); }}
           dark={dark}
           t={t}
-          currentIndex={filtered.findIndex(s => s.symbol === selectedStock.symbol)}
-          totalCount={filtered.length}
-          onNavigate={(idx) => setSelectedStock(filtered[idx])}
+          currentIndex={pagerItems.findIndex(s => s.symbol === selectedStock.symbol)}
+          totalCount={pagerItems.length}
+          onNavigate={(idx) => setSelectedStock(pagerItems[idx])}
         />
       )}
 
