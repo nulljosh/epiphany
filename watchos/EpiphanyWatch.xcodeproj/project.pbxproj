@@ -10,6 +10,7 @@
 		1C7ED4525247250570791322 /* 1-main.png in Resources */ = {isa = PBXBuildFile; fileRef = B03B3668652B7ABCD5DEED6D /* 1-main.png */; };
 		207E9C30E7398B59A8E9D1CC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3677C73F7619C5604216695 /* ContentView.swift */; };
 		35D3A57E08C04C4E5AFCB2B4 /* WatchlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF25DB0B1B81A44CA20A707 /* WatchlistView.swift */; };
+		3AAA93E40E2D1A8DFBCD2BF7 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC220DBC4759D9A806F864D7 /* WatchModels.swift */; };
 		3BC1C9EC9193F955AA45058C /* PortfolioGlance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161A09815360F68802F7CE3C /* PortfolioGlance.swift */; };
 		460239DB1E7B030DAFC425E4 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC220DBC4759D9A806F864D7 /* WatchModels.swift */; };
 		673D9E7A853D411BD1E4F060 /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA88ABC31FB3B303257392BF /* WatchAPI.swift */; };
@@ -19,11 +20,40 @@
 		C07E4FC3D9D894C1DD49EB72 /* EpiphanyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */; };
 		D1B6DBF6AB0B083794E836CE /* Ontology.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63B7CAD4FB4DFE9F0235F90 /* Ontology.swift */; };
 		DB6A0D3249AD10A70388C7A0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01973E26C4F6546D2B34FA7F /* Assets.xcassets */; };
+		E0A4A1A3A5D9D8CBDCE84587 /* EpiphanyComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98EFF094501EDDC050DBF271 /* EpiphanyComplication.swift */; };
+		F153037B3DEF960B3152F54C /* EpiphanyComplication.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 906F5A78B1A7264F0F61B536 /* EpiphanyComplication.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FB9F888187D8A72CBFB9F20E /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA88ABC31FB3B303257392BF /* WatchAPI.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5FEB33CD289BED77CE62C458 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A4C4F18CC0ED0FEFA6D6DF07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7C195C0F02607F13C49809F;
+			remoteInfo = EpiphanyComplication;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0B179969FC9EE9DCC762E16B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F153037B3DEF960B3152F54C /* EpiphanyComplication.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		01973E26C4F6546D2B34FA7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		161A09815360F68802F7CE3C /* PortfolioGlance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioGlance.swift; sourceTree = "<group>"; };
+		906F5A78B1A7264F0F61B536 /* EpiphanyComplication.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EpiphanyComplication.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		98EFF094501EDDC050DBF271 /* EpiphanyComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpiphanyComplication.swift; sourceTree = "<group>"; };
 		9D1FAC340E9ED93F595CAD18 /* Epiphany.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Epiphany.icon; sourceTree = "<group>"; };
 		9ECC556D87E0451C762ED2BB /* MarketView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketView.swift; sourceTree = "<group>"; };
 		A3677C73F7619C5604216695 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -76,6 +106,15 @@
 			path = screenshots;
 			sourceTree = "<group>";
 		};
+		95A76748A63FF0D9D652358C /* watchos-widgets */ = {
+			isa = PBXGroup;
+			children = (
+				98EFF094501EDDC050DBF271 /* EpiphanyComplication.swift */,
+			);
+			name = "watchos-widgets";
+			path = "../watchos-widgets";
+			sourceTree = "<group>";
+		};
 		B3DE59B9DDDC7B3B0C5E7EB4 = {
 			isa = PBXGroup;
 			children = (
@@ -83,6 +122,7 @@
 				106E53F353E2B4D2B7323800 /* Models */,
 				4B21E5263A1FA7294B5A0220 /* Views */,
 				D2A821F629F41751B8504089 /* watchos */,
+				95A76748A63FF0D9D652358C /* watchos-widgets */,
 				EBEE247B42F1763899BB6AD0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -114,6 +154,7 @@
 		EBEE247B42F1763899BB6AD0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				906F5A78B1A7264F0F61B536 /* EpiphanyComplication.appex */,
 				D147F8F2B6DA68CEC014AF25 /* EpiphanyWatch.app */,
 			);
 			name = Products;
@@ -128,10 +169,12 @@
 			buildPhases = (
 				B4D8BC006229536B7B510648 /* Sources */,
 				E11504B1E3554BDCA995724F /* Resources */,
+				0B179969FC9EE9DCC762E16B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A9239084835DB49A1C75EFD7 /* PBXTargetDependency */,
 			);
 			name = EpiphanyWatch;
 			packageProductDependencies = (
@@ -139,6 +182,23 @@
 			productName = EpiphanyWatch;
 			productReference = D147F8F2B6DA68CEC014AF25 /* EpiphanyWatch.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B7C195C0F02607F13C49809F /* EpiphanyComplication */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 208AA41E0A706854BEC90396 /* Build configuration list for PBXNativeTarget "EpiphanyComplication" */;
+			buildPhases = (
+				0E56A1AF55E2AD6518CA8ACA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EpiphanyComplication;
+			packageProductDependencies = (
+			);
+			productName = EpiphanyComplication;
+			productReference = 906F5A78B1A7264F0F61B536 /* EpiphanyComplication.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -150,6 +210,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					8A25A73363972894D9B04550 = {
+						DevelopmentTeam = QMM486NPYC;
+						ProvisioningStyle = Automatic;
+					};
+					B7C195C0F02607F13C49809F = {
 						DevelopmentTeam = QMM486NPYC;
 						ProvisioningStyle = Automatic;
 					};
@@ -170,6 +234,7 @@
 			projectRoot = "";
 			targets = (
 				8A25A73363972894D9B04550 /* EpiphanyWatch */,
+				B7C195C0F02607F13C49809F /* EpiphanyComplication */,
 			);
 		};
 /* End PBXProject section */
@@ -188,6 +253,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0E56A1AF55E2AD6518CA8ACA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E0A4A1A3A5D9D8CBDCE84587 /* EpiphanyComplication.swift in Sources */,
+				FB9F888187D8A72CBFB9F20E /* WatchAPI.swift in Sources */,
+				3AAA93E40E2D1A8DFBCD2BF7 /* WatchModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B4D8BC006229536B7B510648 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -205,6 +280,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A9239084835DB49A1C75EFD7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7C195C0F02607F13C49809F /* EpiphanyComplication */;
+			targetProxy = 5FEB33CD289BED77CE62C458 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4C821C6AE8405BCDEE5B014C /* Release */ = {
@@ -255,7 +338,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 6.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -336,7 +419,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 6.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -364,6 +447,42 @@
 			};
 			name = Debug;
 		};
+		D8956DC33EBFE4B00EFCB195 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "../watchos-widgets/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Epiphany;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.heyitsmejosh.epiphany.watchos.complication;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		FDBB6A76A2BD315D1DD02BB8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "../watchos-widgets/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Epiphany;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.heyitsmejosh.epiphany.watchos.complication;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -372,6 +491,15 @@
 			buildConfigurations = (
 				CA570C686F5FF6C7550F122C /* Debug */,
 				57921847F0507AED91490713 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		208AA41E0A706854BEC90396 /* Build configuration list for PBXNativeTarget "EpiphanyComplication" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDBB6A76A2BD315D1DD02BB8 /* Debug */,
+				D8956DC33EBFE4B00EFCB195 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

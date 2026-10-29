@@ -26,6 +26,13 @@ final class WatchAPI: @unchecked Sendable {
         return stocks
     }
 
+    /// One quote for any symbol, for the complication.
+    func fetchQuote(symbol: String) async throws -> WatchStock? {
+        let encoded = symbol.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? symbol
+        let data = try await fetch("/api/stocks-free?symbols=\(encoded)")
+        return try decoder.decode([WatchStock].self, from: data).first
+    }
+
     func cachedStocks() -> [WatchStock]? {
         guard let data = defaults?.data(forKey: "cache_stocks") else { return nil }
         return try? decoder.decode([WatchStock].self, from: data)

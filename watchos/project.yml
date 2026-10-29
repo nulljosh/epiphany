@@ -28,3 +28,24 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.watchos
       ASSETCATALOG_COMPILER_APPICON_NAME: Epiphany
       PRODUCT_NAME: Epiphany
+    dependencies:
+      - target: EpiphanyComplication
+  EpiphanyComplication:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: ../watchos-widgets
+        excludes:
+          - Info.plist
+      - path: Models/WatchAPI.swift
+      - path: Models/WatchModels.swift
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      INFOPLIST_KEY_CFBundleDisplayName: Epiphany
+      PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.watchos.complication
+      SKIP_INSTALL: YES
+    info:
+      path: ../watchos-widgets/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
