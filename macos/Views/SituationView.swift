@@ -478,8 +478,8 @@ struct SituationView: View {
                             if isSearchingVenues && selectedVenueCategory == cat {
                                 ProgressView().controlSize(.mini).tint(.white)
                             } else {
-                                Image(systemName: cat.icon)
-                                    .font(.caption.weight(.semibold))
+                                Text(MapEmoji.bySymbol[cat.icon] ?? "")
+                                    .font(.caption)
                             }
                             Text(cat.label)
                                 .font(.caption.weight(.semibold))
@@ -687,11 +687,7 @@ struct SituationView: View {
         size: CGFloat = 12,
         padding: CGFloat = 8
     ) -> some View {
-        Image(systemName: symbol)
-            .font(.system(size: size * 0.8, weight: .semibold))
-            .foregroundStyle(.white)
-            .padding(max(padding, 5))
-            .background(color, in: Circle())
+        MapGlyph(symbol: symbol, tint: color, size: max(size * 1.2, 16))
     }
 
     private func loadData(for region: MKCoordinateRegion) async {
@@ -1400,12 +1396,7 @@ private struct VenuePin: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: cat.icon)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(6)
-                .background(cat.tint, in: Circle())
-                .overlay(Circle().strokeBorder(.white, lineWidth: selected ? 2 : 0))
+            MapGlyph(symbol: cat.icon, tint: cat.tint, selected: selected)
         }
         .buttonStyle(.plain)
         .scaleEffect(shown ? (selected ? 1.25 : 1) : 0.2, anchor: .bottom)

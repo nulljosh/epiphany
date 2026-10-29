@@ -20,8 +20,11 @@ const IP_FALLBACK_ZOOM = 11.5;
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 // Search terms for the map's category chips, matched against `${place.title} ${place.category}`
 // (see /api/places' category buckets: Food & drink, Shopping, Recreation, ...).
+// Emoji pins at Joshua's ask (2026-10-29): the glyph says what it is, no legend needed.
+const EMOJI_CSS = 'width:24px;height:24px;font-size:18px;line-height:24px;text-align:center;cursor:pointer;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));';
 const WINDOW_CHOICES = [[1, 'Last hour'], [6, 'Last 6 hours'], [24, 'Last 24 hours'], [0, 'Any time']];
 const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality']];
+const CATEGORY_EMOJI = { Restaurants: '🍽️', Coffee: '☕', Gas: '⛽', Parks: '🌳', Shopping: '🛍️', Groceries: '🛒' };
 const CATEGORY_TERMS = { Restaurants: 'food & drink', Coffee: 'coffee', Gas: 'gas', Parks: 'park', Shopping: 'shopping', Groceries: 'grocery' };
 
 const apiPath = (path) => `${API_BASE}${path}`;
@@ -828,6 +831,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       const isTransit = t === 'train_station' || t === 'bus_station' || cat === 'transit';
       const isMuseum = t === 'museum' || cat === 'cultural';
       const isInfra = !isConstruction;
+      const emoji = isConstruction ? '🚧' : isPolice ? '🚓' : isHospital ? '🏥' : isFire ? '🚒' : isBarrier ? '🛂' : isAirport ? '🛫' : isTransit ? '🚉' : isMuseum ? '🏛️' : '⚠️';
       const css = isConstruction
         ? 'width:44px;height:6px;border-radius:999px;background:#f59e0b;border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);animation:pulse-amber 1.8s infinite;'
         : isPolice
@@ -847,11 +851,11 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
         : 'width:10px;height:10px;border-radius:50%;background:#f59e0b;border:2px solid rgba(255,255,255,0.5);animation:pulse-amber 1.8s infinite;';
       const label = inc.title || (isPolice ? 'POLICE' : isHospital ? 'HOSPITAL' : isFire ? 'FIRE/EMS' : isBarrier ? 'CHECKPOINT' : isAirport ? 'AIRPORT' : isTransit ? 'TRANSIT' : t.toUpperCase());
       addMarker(
-        css,
+        EMOJI_CSS,
         inc.description || inc.title || t,
         { type: t, title: label, detail: inc.description || label, level: cat === 'construction' ? 'active' : 'infrastructure', source: 'OpenStreetMap / Overpass', link: mapsLink(inc.lat, inc.lon), linkLabel: 'Get Directions' },
         inc.lon, inc.lat, 'incidents',
-        isAirport ? '✈' : ''
+        isAirport ? '✈' : '', emoji
       );
     });
 
@@ -860,10 +864,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       const p = inc.position;
       if (!p || p.lon == null || p.lat == null) return;
       addMarker(
-        `width:48px;height:6px;border-radius:999px;background:${trafficColor(inc)};border:1px solid rgba(0,0,0,0.2);transform:rotate(18deg);animation:pulse-amber 1.6s infinite;`,
+        EMOJI_CSS,
         inc.description || inc.type || 'traffic incident',
         { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local', source: inc.source || 'Traffic feed', link: inc.url || mapsLink(p.lat, p.lon), linkLabel: inc.url ? 'Open source' : 'Get Directions' },
-        p.lon, p.lat, 'traffic'
+        p.lon, p.lat, 'traffic', '🚗'
       );
     });
 
@@ -872,12 +876,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
       addMarker(
-        Date.now() - eq.time > OLD_MS
-          ? `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.35);`
-          : `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);animation:pulse-red 1.9s infinite;`,
+        EMOJI_CSS,
         `M${eq.mag} ${eq.place || ''}`,
         { type: 'seismic', title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`, detail: [eq.place || 'Earthquake', ago(eq.time)].filter(Boolean).join(' · '), level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor', source: 'USGS Earthquake Catalog', link: eq.url || 'https://earthquake.usgs.gov/earthquakes/map/' },
-        eq.lon, eq.lat, 'earthquakes'
+        eq.lon, eq.lat, 'earthquakes', '🫨'
       );
     });
 
@@ -889,10 +891,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
         : geoKeywordMatch(ev.title);
       if (!coords) return;
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#7FB2FF;animation:pulse-dot 2.2s infinite;',
+        EMOJI_CSS,
         `${coords.label}: ${ev.title}`,
         { type: 'event', title: ev.country ? `[${ev.country}] ${coords.label}` : coords.label, detail: ev.title, level: 'global', source: 'GDELT / News feed', link: ev.url || 'https://www.gdeltproject.org/' },
-        coords.lon, coords.lat, 'news'
+        coords.lon, coords.lat, 'news', '🌐'
       );
     });
 
@@ -907,10 +909,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       const pubTime = article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
       const detail = [article.source, pubTime].filter(Boolean).join(' · ');
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#60A5FA;animation:pulse-blue 2.1s infinite;',
+        EMOJI_CSS,
         article.title,
         { type: 'news', title: article.title || 'News', detail: detail || 'News article', level: 'global', source: 'GDELT News', link: article.url || 'https://www.gdeltproject.org/' },
-        target.lon, target.lat, 'news'
+        target.lon, target.lat, 'news', '📰'
       );
     });
 
@@ -921,10 +923,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       if (!c) return;
       const { lat, lon } = c;
       addMarker(
-        'width:10px;height:10px;border-radius:50%;background:#ef4444;animation:pulse-red 2s infinite;',
+        EMOJI_CSS,
         crime.title || 'Crime',
         { type: 'crime', title: crime.title || 'Crime incident', detail: `${crime.category || 'Unknown'} -- ${crime.source || 'News'}${crime.timestamp ? ` -- ${new Date(crime.timestamp).toLocaleDateString()}` : ''}`, level: crime.severity || 'low', source: crime.source || 'Crime data', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
-        lon, lat, 'crime'
+        lon, lat, 'crime', '🚨'
       );
     });
 
@@ -948,10 +950,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       if (!c) return;
       const { lat, lon } = c;
       addMarker(
-        'width:14px;height:14px;border-radius:50%;background:#8CA0B3;animation:pulse-dot 2.2s infinite;',
+        EMOJI_CSS,
         ev.title || (ev.kind === 'place' ? 'Place' : 'Event'),
         { type: 'local-event', title: ev.title || (ev.kind === 'place' ? 'Place' : 'Event'), detail: ev.description || ev.venue || ev.source || (ev.kind === 'place' ? 'Nearby place' : 'Nearby event'), level: ev.kind === 'place' ? 'place' : 'event', source: ev.source || 'Map data', link: ev.url || mapsLink(lat, lon), linkLabel: ev.url ? 'Open source' : 'Get Directions', image: ev.image || null },
-        lon, lat, 'localEvents'
+        lon, lat, 'localEvents', ({ attraction: '⭐', recreation: '🌳', community: '📣', education: '🎓', cemetery: '🪦' })[ev.category] || (ev.kind === 'place' ? '📍' : '🎟️')
       );
     });
 
@@ -961,10 +963,9 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       const lat = inc.lat ?? inc.position?.lat;
       const lon = inc.lon ?? inc.position?.lon;
       if (lat == null || lon == null) return;
-      // ponytail: letter badges, no emoji in the UI.
-      const icon = inc.type === 'hospital' ? 'H' : inc.type === 'fire_station' || inc.type === 'ambulance_station' ? 'F' : '!';
+      const icon = ({ hospital: '🏥', fire_station: '🚒', ambulance_station: '🚑' })[inc.type] || '🚨';
       const el = document.createElement('div');
-      el.style.cssText = 'width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;font:700 10px/18px -apple-system,sans-serif;text-align:center;cursor:pointer;';
+      el.style.cssText = EMOJI_CSS;
       el.textContent = icon;
       el.title = inc.name || inc.type || 'Emergency service';
       el._layerType = 'incidents';
@@ -981,10 +982,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       const lon = wa.lon;
       if (lat == null || lon == null) return;
       addMarker(
-        'width:12px;height:12px;border-radius:50%;background:#f59e0b;animation:pulse-amber 1.8s infinite;',
+        EMOJI_CSS,
         wa.event || 'Weather Alert',
         { type: 'weather', title: wa.event || 'Weather Alert', detail: [wa.headline || wa.event, ago(wa.sent)].filter(Boolean).join(' · '), level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
-        lon, lat, 'weather'
+        lon, lat, 'weather', '⛈️'
       );
     });
 
@@ -993,10 +994,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
     clusterLayer(payload.wildfires, 80, (fire) => extractCoords(fire), '#f97316').forEach((fire, i) => {
       if (fire.lat == null || fire.lon == null) return;
       addMarker(
-        'width:10px;height:10px;border-radius:50%;background:#f97316;animation:pulse-amber 1.6s infinite;',
+        EMOJI_CSS,
         'Wildfire',
         { type: 'wildfire', title: 'Active Fire', detail: `Confidence: ${fire.confidence || 'Unknown'} -- ${fire.date || 'Recent'}`, level: 'elevated', source: 'NASA FIRMS', link: mapsLink(fire.lat, fire.lon), linkLabel: 'Get Directions' },
-        fire.lon, fire.lat, 'wildfires'
+        fire.lon, fire.lat, 'wildfires', '🔥'
       );
     });
 
@@ -1074,10 +1075,10 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       const icon = cat === 'police' ? 'P' : cat === 'fire' ? 'F' : cat === 'ems' ? 'E' : cat === 'accident' ? 'A' : cat === 'road_closed' ? 'X' : '!';
       const color = cat === 'police' ? '#3b82f6' : cat === 'fire' ? '#ef4444' : cat === 'ems' ? '#f97316' : cat === 'accident' ? '#f59e0b' : '#94a3b8';
       addMarker(
-        `width:18px;height:18px;border-radius:50%;background:${color};color:#fff;font:700 10px/18px -apple-system,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;`,
+        EMOJI_CSS,
         ev.title,
         { type: 'emergency', title: ev.title, detail: `Source: ${ev.source || 'Live feed'} | ${ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : ''}`, level: ev.severity || 'medium', source: ev.source || 'Emergency feed', link: null },
-        ev.lng, ev.lat, 'incidents', icon
+        ev.lng, ev.lat, 'incidents', icon, ({ police: '🚓', fire: '🔥', ems: '🚑', accident: '💥', road_closed: '⛔' })[cat] || '⚠️'
       );
     });
 
@@ -1332,7 +1333,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
                   flexShrink: 0,
                 }}
               >
-                {cat}
+                {CATEGORY_EMOJI[cat]} {cat}
               </button>
             ))}
           </div>

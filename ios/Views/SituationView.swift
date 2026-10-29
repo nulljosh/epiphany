@@ -385,11 +385,7 @@ struct SituationView: View {
                             Haptics.impact(.light)
                             selectedEvent = .localEvent(event)
                         } label: {
-                            Image(systemName: localEventIcon(event))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(6)
-                                .background(localEventTint(event), in: Circle())
+                            MapGlyph(symbol: localEventIcon(event), tint: localEventTint(event))
                         }
                         .buttonStyle(.plain)
                     }
@@ -412,7 +408,7 @@ struct SituationView: View {
         case "recreation": return "leaf.fill"
         case "community": return "megaphone.fill"
         case "education": return "graduationcap.fill"
-        case "cemetery": return "cross.fill"
+        case "cemetery": return "building.columns.fill"
         default: return "mappin"
         }
     }
@@ -545,11 +541,7 @@ struct SituationView: View {
 
     /// Round badge for event pins, same shape as venue pins. No emoji.
     private func eventPin(_ symbol: String, _ tint: Color, label: String = "Event") -> some View {
-        Image(systemName: symbol)
-            .font(.caption2.weight(.semibold))
-            .foregroundStyle(.white)
-            .padding(5)
-            .background(tint, in: Circle())
+        MapGlyph(symbol: symbol, tint: tint, size: 16)
             .accessibilityLabel(label)
     }
 
@@ -755,9 +747,8 @@ struct SituationView: View {
                             if isSearchingVenues && on {
                                 ProgressView().controlSize(.mini).tint(.white)
                             } else {
-                                Image(systemName: cat.icon)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(on ? .white : cat.tint)
+                                Text(MapEmoji.bySymbol[cat.icon] ?? "")
+                                    .font(.caption)
                             }
                             Text(cat.label)
                                 .font(.caption.weight(.semibold))
@@ -1871,15 +1862,10 @@ private struct VenuePin: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: cat.icon)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(6)
-                .background(cat.tint, in: Circle())
-                .overlay(Circle().strokeBorder(.white, lineWidth: selected ? 2 : 0))
+            MapGlyph(symbol: cat.icon, tint: cat.tint, selected: selected)
         }
         .buttonStyle(.plain)
-        .scaleEffect(shown ? (selected ? 1.25 : 1) : 0.2, anchor: .bottom)
+        .scaleEffect(shown ? 1 : 0.2, anchor: .bottom)
         .opacity(shown ? 1 : 0)
         .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.6), value: shown)
         .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.55), value: selected)
