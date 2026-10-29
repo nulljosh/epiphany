@@ -1,6 +1,7 @@
 import { MobileMenu, MobileMenuItem, MobileMenuDivider } from '../components/ui';
 import { formatLastUpdated } from '../hooks/useLivePrices';
 import Ticker from '../components/Ticker';
+import { TabIcon } from './MobileLayout';
 
 const FONT = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
@@ -52,31 +53,11 @@ export default function DesktopLayout({
         <div ref={desktopNavRef} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* Segmented control */}
           <div style={{ display: 'flex', gap: 0, background: glassButton.background, borderRadius: 8, border: glassButton.border, overflow: 'hidden', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-            {TAB_PILLS.map((pill, i) => {
-              const isActive = activeTab === pill.key && desktopPanelOpen;
-              return (
-                <button
-                  key={pill.key}
-                  onClick={() => handleDesktopTabSelect(pill.key)}
-                  style={{
-                    padding: '4px 10px', borderRadius: 0, fontSize: 10, fontWeight: 600,
-                    fontFamily: FONT, cursor: 'pointer',
-                    background: isActive ? (dark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)') : 'transparent',
-                    color: isActive ? (dark ? '#020617' : '#ffffff') : t.textSecondary,
-                    border: 'none',
-                    borderRight: i < TAB_PILLS.length - 1 ? `1px solid ${t.border}` : 'none',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {pill.label}
-                </button>
-              );
-            })}
             {/* Alerts bell inline */}
             <button
               onClick={() => setShowAlerts(true)}
               style={{
-                position: 'relative', background: 'none', border: 'none', borderLeft: `1px solid ${t.border}`, cursor: 'pointer',
+                position: 'relative', background: 'none', border: 'none', cursor: 'pointer',
                 color: t.textSecondary, fontSize: 16, padding: '4px 8px', lineHeight: 1,
                 transition: 'color 0.15s',
               }}
@@ -148,11 +129,43 @@ export default function DesktopLayout({
       {/* Panel cell */}
       <div ref={desktopPanelRef} className="epiphany-panel" style={{ gridColumn: isMobileNav ? '1 / -1' : '2', overflow: 'auto', minHeight: 0 }}>
         {desktopPanelOpen && panelContent}
+        {/* Room for the last rows to scroll clear of the tab bar. */}
+        {desktopPanelOpen && !isMobileNav && <div aria-hidden="true" style={{ height: 88 }} />}
       </div>
+
+      {/* Bottom tab bar, the same one the Mac app has: icons and labels on glass. */}
+      {!isMobileNav && (
+        <nav aria-label="Sections" style={{
+          position: 'fixed', zIndex: 1000, left: '50%', transform: 'translateX(-50%)', bottom: 44,
+          width: 'min(calc(100% - 48px), 560px)', display: 'flex', gap: 2, padding: 6, borderRadius: 22,
+          background: dark ? 'rgba(28,28,30,0.72)' : 'rgba(255,255,255,0.78)',
+          backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)'}`,
+          boxShadow: '0 8px 30px rgba(0,0,0,0.18)',
+        }}>
+          {TAB_PILLS.map((pill) => {
+            const active = activeTab === pill.key && desktopPanelOpen;
+            return (
+              <button key={pill.key} type="button" onClick={() => handleDesktopTabSelect(pill.key)} aria-current={active ? 'page' : undefined}
+                title={pill.label}
+                style={{
+                  flex: 1, minHeight: 48, borderRadius: 16, border: 'none', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                  fontFamily: FONT, fontSize: 11, fontWeight: 600,
+                  background: active ? (dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                  color: active ? '#0a84ff' : t.textSecondary,
+                }}>
+                <TabIcon name={pill.key} />
+                {pill.label}
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {/* Footer */}
       <footer className="epiphany-footer" style={{ gridColumn: '1 / -1', gridRow: 4, padding: '12px 16px', justifyContent: 'center', alignItems: 'center', gap: 16, borderTop: `1px solid ${t.border}`, fontSize: 11, color: t.textSecondary }}>
-        <span>&copy; 2026 Epiphany</span>
+        <span>&copy; 2026 Joshua Trommel</span>
         <a href="https://github.com/nulljosh/epiphany/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>Apache 2.0</a>
         <a href="https://github.com/nulljosh/epiphany" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>GitHub</a>
         <a href="https://github.com/nulljosh/epiphany/tree/main/ios" target="_blank" rel="noopener noreferrer" style={{ color: t.textTertiary, textDecoration: 'underline', textDecorationColor: t.border, textUnderlineOffset: '3px', transition: 'opacity 0.4s ease-out' }} onMouseEnter={e => e.target.style.opacity = '0.5'} onMouseLeave={e => e.target.style.opacity = '1'}>iOS</a>
