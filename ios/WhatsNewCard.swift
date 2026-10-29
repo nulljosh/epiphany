@@ -3,12 +3,11 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "Markets looks like iOS Stocks: bigger rows, filled sparklines, a dotted line at yesterday's close",
-    "Prices flash green or red the moment they tick",
-    "Crypto and commodities get their own page with day, 52-week and 24h ranges",
-    "Filter the list by Long, Hold or Short, and swipe or long press a row to watch it",
-    "Earnings show on a stock's page when the report is two weeks out, one tap adds it to Calendar",
-    "Meet Spark, plus a short tour for new accounts",
+    "Look Around photos are back on place pages, even for pins we drop ourselves",
+    "Place and event pages show how long the drive is and how far",
+    "Map events get a street-level photo when Apple has one",
+    "News loads faster: each publisher logo downloads once",
+    "The Debt section drops the calendar that only repeated its dates",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app
