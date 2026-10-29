@@ -33,8 +33,8 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 15.0 | Mac extras: menu bar ticker, Notification Center alerts (done 15.0.0) |
 | 16.0 | Price alerts with the apps closed: the server checks every 15 minutes and emails (done 16.0.0). APNs push still needs a key (#180) |
 | 17.0 | Commodity and crypto detail parity with stocks (done 17.0.0) |
-| 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua) |
-| 19.0 | Design debt: colour rule violations, news drawer drag |
+| 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua, skipped for now) |
+| 19.0 | Design debt: colour rule violations (done 19.0.0; the news drawer drag still needs an on-device look, see below) |
 | 20.0 | A fresh Mobbin pass, written into a new table |
 | 21 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 

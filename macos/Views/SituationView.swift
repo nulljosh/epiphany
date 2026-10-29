@@ -635,7 +635,7 @@ struct SituationView: View {
         } label: {
             Image(systemName: MapLayerStyle(rawValue: mapLayerRaw)?.icon ?? "map.fill")
                 .font(.body.weight(.medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .frame(width: 36, height: 36)
                 .background(.ultraThinMaterial, in: Circle())
         }

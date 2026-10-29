@@ -517,8 +517,9 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   return (
     <div style={{ padding: 16, fontFamily: font, minWidth: 0, overflow: 'hidden', boxSizing: 'border-box' }}>
       {/* Sticky header: market status + search icon + sort button */}
+      {/* top: -16 cancels this panel's padding: sticky measures from the padding edge, so top: 0 pushed the header 16px down over the index cards. */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 3,
+        position: 'sticky', top: -16, zIndex: 3,
         margin: '-16px -16px 12px -16px', padding: '12px 16px 10px',
         background: dark ? 'rgba(2,6,23,0.72)' : 'rgba(255,255,255,0.72)',
         backdropFilter: 'blur(20px) saturate(150%)',

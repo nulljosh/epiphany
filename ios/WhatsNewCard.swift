@@ -5,8 +5,8 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
+    "Map buttons stay readable in light mode",
     "Gold, oil and crypto charts get SMA and EMA lines",
-    "Every asset shows a Long, Hold or Short signal",
     "Price alerts email you, even with the app closed",
 ]
 

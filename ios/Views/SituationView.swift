@@ -352,7 +352,7 @@ struct SituationView: View {
                             Haptics.impact(.medium)
                             selectedEvent = .weatherAlert(alert)
                         } label: {
-                            eventPin("cloud.bolt.rain.fill", .indigo, label: alert.title)
+                            eventPin("cloud.bolt.rain.fill", Palette.warningAmber, label: alert.title)
                         }
                         .buttonStyle(.plain)
                     }
@@ -820,7 +820,7 @@ struct SituationView: View {
         } label: {
             Image(systemName: MapLayerStyle(rawValue: mapLayerRaw)?.icon ?? "map.fill")
                 .font(.body.weight(.medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
                 .background(.ultraThinMaterial, in: Circle())
         }
@@ -848,7 +848,7 @@ struct SituationView: View {
         } label: {
             Image(systemName: "location.fill")
                 .font(.body.weight(.medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
                 .background(.ultraThinMaterial, in: Circle())
         }
