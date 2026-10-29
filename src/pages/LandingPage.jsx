@@ -615,7 +615,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
     </div>
   </nav>
   <div className="foot-bar">
-    <p className="foot-meta">Epiphany{typeof __APP_VERSION__ !== 'undefined' ? ` v${__APP_VERSION__}` : ''} · Apache 2.0 · © 2026 Joshua Trommel</p>
+    <p className="foot-meta">© 2026 Joshua Trommel</p>
     <p className="foot-meta foot-note">Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.</p>
   </div>
 </footer>

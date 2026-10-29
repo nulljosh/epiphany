@@ -3,9 +3,9 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "Planes on the map point the way they fly",
-    "Map clusters show their count once, so the map reads cleaner",
-    "New Apple Watch complication: one symbol's price and day change on your watch face",
+    "Planes point where they fly",
+    "A cleaner map",
+    "A Watch complication for any symbol",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

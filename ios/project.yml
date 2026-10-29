@@ -99,7 +99,7 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       INFOPLIST_KEY_CFBundleDisplayName: Epiphany Widgets
-      INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright 2026 Joshua Trommel"
+      INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 Joshua Trommel"
       PRODUCT_BUNDLE_IDENTIFIER: com.heyitsmejosh.epiphany.widgets
       ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
       PRODUCT_NAME: EpiphanyWidgets
