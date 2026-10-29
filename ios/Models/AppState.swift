@@ -645,6 +645,8 @@ final class AppState {
                 direction: direction
             )
             alerts.append(alert)
+            // First alert is the moment to ask; the background check posts local notifications.
+            await NotificationManager.shared.requestAuthorization()
         } catch {
             handleError(error)
         }

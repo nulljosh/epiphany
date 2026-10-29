@@ -28,6 +28,7 @@ struct EpiphanyApp: App {
             .task {
                 guard !hasStartedLaunchFlow else { return }
                 hasStartedLaunchFlow = true
+                AlertWatcher.schedule()
                 // Warm the news cache during splash so the Markets drawer opens already filled.
                 Task { _ = try? await EpiphanyAPI.shared.fetchNews() }
 
@@ -45,6 +46,10 @@ struct EpiphanyApp: App {
                     showSplash = false
                 }
             }
+        }
+        .backgroundTask(.appRefresh(AlertWatcher.taskID)) {
+            AlertWatcher.schedule()
+            await AlertWatcher.check()
         }
     }
 }
