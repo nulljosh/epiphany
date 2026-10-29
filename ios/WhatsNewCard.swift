@@ -3,9 +3,9 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "Index cards and top movers",
-    "Full-screen charts you can scrub",
-    "Price alerts with the app closed",
+    "Bills due in the next 30 days",
+    "Money in vs spending by month",
+    "Cards that say what changed",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

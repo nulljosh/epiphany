@@ -11,9 +11,9 @@ One row per minor version, daily-use first. Borrow the idea, never the look.
 | Index cards (S&P 500, Nasdaq, Dow) with mini charts above the list | Robinhood, Yahoo | S | 8.0 | done 8.0.0 (web, iOS, Mac) |
 | Top movers row (biggest gainers and losers today) | Robinhood | S | 8.0 | done 8.0.0 (iOS, Mac) |
 | Full-screen chart button on stock and asset pages | Yahoo, TradingView | S | 8.0 | done 8.0.0 (web, iOS, Mac) |
-| Upcoming bills list from detected recurring charges | Monarch, Copilot, Rocket Money | M | 9.0 | open (server detectRecurring exists) |
-| Cash flow: income vs spending bars by month | Copilot, Monarch | M | 9.0 | open |
-| Money insight cards from statements (top merchant, a spending jump) | Copilot | M | 9.0 | open |
+| Upcoming bills list from detected recurring charges | Monarch, Copilot, Rocket Money | M | 9.0 | done 9.0.0 (web, iOS, Mac) |
+| Cash flow: income vs spending bars by month | Copilot, Monarch | M | 9.0 | done 9.0.0 (web, iOS, Mac) |
+| Money insight cards from statements (top merchant, a spending jump) | Copilot | M | 9.0 | done 9.0.0 (web, iOS, Mac) |
 | "N to review" transaction queue | Copilot, Monarch | M | 9.0 | #179 |
 | Map filter bar: incident type and time window | Citizen | M | 10.0 | open |
 | Saved places with nearby-incident counts | Citizen | M | 10.0 | open |
