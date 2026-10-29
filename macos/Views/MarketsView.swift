@@ -125,226 +125,50 @@ struct MarketsView: View {
                     description: Text("Click refresh to try again.")
                 )
             } else {
-                VStack(spacing: 0) {
-                    HStack {
-                        Circle()
-                            .fill(usMarketStatus.color)
-                            .frame(width: 6, height: 6)
-                        Text(usMarketStatus.label)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-
-                        Button {
-                            Task {
-                                async let s: Void = appState.loadStocks(force: true)
-                                async let c: Void = appState.loadCommodities(force: true)
-                                async let k: Void = appState.loadCrypto(force: true)
-                                _ = await (s, c, k)
-                            }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-
-                    if appState.isStockDataStale, let fetchedAt = appState.stocksFetchedAt {
-                        (Text("Data may be stale \u{00B7} updated ") + Text(fetchedAt, style: .relative) + Text(" ago"))
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.vertical, 4)
-                            .background(.black.opacity(0.4))
-                    }
-
-                    if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
-                        // Same shape as iOS/web: label, score and rating on one
-                        // baseline with the bar flush beneath, full width.
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text("Fear & Greed")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                                Text("\(fgScore)")
-                                    .font(.subheadline.weight(.bold).monospacedDigit())
-                                    .foregroundStyle(fearGreedColor(fgScore))
-                                Text(fgRating)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(fearGreedColor(fgScore))
-                                Spacer(minLength: 0)
-                            }
-                            ProgressView(value: Double(fgScore), total: 100)
-                                .tint(fearGreedColor(fgScore))
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 10)
-                    }
-
-                    HStack(spacing: 12) {
-                        topLink("News", systemImage: "newspaper") {
-                            NewsView()
-                                .environment(appState)
-                        }
-                        topLink("Macro", systemImage: "chart.bar.doc.horizontal") {
-                            MacroView()
-                                .environment(appState)
-                        }
-                        topLink("Alerts", systemImage: "bell.badge") {
-                            AlertsView()
-                                .environment(appState)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
-
-                    if let brief = appState.dailyBrief, !brief.points.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Daily Brief")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                            ForEach(brief.points, id: \.self) { point in
-                                HStack(alignment: .top, spacing: 6) {
-                                    Circle()
-                                        .fill(Palette.appleBlue)
-                                        .frame(width: 4, height: 4)
-                                        .padding(.top, 5)
-                                    Text(point)
-                                        .font(.caption)
-                                        .lineLimit(2)
+                // Mac layout, like Stocks: the list in a fixed column, the pick on the right.
+                HStack(spacing: 0) {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Picker("Filter", selection: $marketFilter) {
+                                ForEach(MarketFilter.allCases) { filter in
+                                    Text(filter.rawValue).tag(filter)
                                 }
                             }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                        .padding(.bottom, 8)
+
+                        HStack {
+                            TextField("Search markets", text: $searchText)
+                                .textFieldStyle(.roundedBorder)
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
+
+                        marketList
                     }
+                    .frame(width: 380)
 
-                    if appState.isLoggedIn, let financeData = appState.financeData {
-                        let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
-                        let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
-                        let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
-                        // totalValue is already the sum of account balances (holdings folded in server-side),
-                        // or the holdings value when there are no accounts. Adding totalBalance on top counted it twice.
-                        let netWorth = portfolio.totalValue - totalDebt
+                    Divider()
 
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(CurrencyFormatter.formatPrice(netWorth))
-                                    .font(.title3.weight(.heavy))
-                                if !portfolio.holdings.isEmpty {
-                                    HStack(spacing: 4) {
-                                        Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
-                                        Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
-                                    }
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
-                                } else {
-                                    Text("Net Worth")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            Spacer()
-                            if !financeData.accounts.isEmpty {
-                                VStack(alignment: .trailing, spacing: 3) {
-                                    Text(CurrencyFormatter.formatPrice(totalBalance))
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(Palette.successGreen)
-                                    Text("\(financeData.accounts.count) accounts")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 4)
-
-                        if !financeData.accounts.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: true) {
-                                HStack(spacing: 10) {
-                                    ForEach(financeData.accounts) { account in
-                                        TimelineChip(
-                                            icon: account.type == "investment" ? "chart.line.uptrend.xyaxis" : account.type == "gift" ? "giftcard" : "banknote",
-                                            label: account.name,
-                                            detail: CurrencyFormatter.formatAbbreviated(account.balance),
-                                            color: Palette.appleBlue
-                                        )
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                            .padding(.bottom, 4)
-                        }
-
-                        if !financeData.debt.isEmpty || !UpcomingPayments.all.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: true) {
-                                HStack(spacing: 10) {
-                                    ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
-                                        if let days = UpcomingPayments.daysUntil(payment), days >= 0 {
-                                            TimelineChip(
-                                                icon: payment.icon,
-                                                label: payment.name,
-                                                detail: days == 0 ? "Today" : "\(days)d",
-                                                color: Palette.successGreen
-                                            )
-                                        }
-                                    }
-
-                                    let debtWithPayoff = financeData.debt.map { item in
-                                        (item: item, months: DebtCalc.monthsToPayoff(item: item))
-                                    }.sorted { $0.months < $1.months }
-
-                                    ForEach(debtWithPayoff, id: \.item.name) { entry in
-                                        TimelineChip(
-                                            icon: DebtCalc.icon(for: entry.item.name),
-                                            label: entry.item.name,
-                                            detail: DebtCalc.payoffLabel(entry.months),
-                                            color: entry.months < 0.1 ? Palette.successGreen : entry.months <= 3 ? Palette.warningAmber : Palette.dangerRed
-                                        )
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                            .padding(.bottom, 8)
+                    Group {
+                        if let stock = selectedStock {
+                            detailPane { StockDetailView(stock: stock).id(stock.symbol) }
+                        } else if let item = selectedAsset {
+                            detailPane { AssetDetailView(item: item).id(item.symbol) }
+                        } else {
+                            overview
                         }
                     }
-
-                    HStack {
-                        Picker("Filter", selection: $marketFilter) {
-                            ForEach(MarketFilter.allCases) { filter in
-                                Text(filter.rawValue).tag(filter)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-                        .frame(maxWidth: 300)
-
-                        Spacer()
-
-                        TextField("Search markets", text: $searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 200)
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
-
-                    marketList
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .sheet(item: $selectedStock) { stock in
-            StockDetailView(stock: stock)
-                .environment(appState)
-                .frame(minWidth: 720, minHeight: 520)
-        }
-        .sheet(item: $selectedAsset) { item in
-            AssetDetailView(item: item)
-                .frame(minWidth: 560, minHeight: 480)
-        }
         .onAppear {
             isVisible = true
             guard !hasLoaded else { return }
@@ -378,6 +202,232 @@ struct MarketsView: View {
                 async let k: Void = appState.loadCrypto(force: true)
                 _ = await (s, c, k)
             }
+        }
+    }
+
+    private func isPicked(_ item: MarketItem) -> Bool {
+        (selectedStock?.symbol ?? selectedAsset?.symbol) == item.symbol
+    }
+
+    /// Nothing picked: the day at a glance, held to a readable width.
+    private var overview: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Circle()
+                        .fill(usMarketStatus.color)
+                        .frame(width: 6, height: 6)
+                    Text(usMarketStatus.label)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+
+                    Button {
+                        Task {
+                            async let s: Void = appState.loadStocks(force: true)
+                            async let c: Void = appState.loadCommodities(force: true)
+                            async let k: Void = appState.loadCrypto(force: true)
+                            _ = await (s, c, k)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+
+                if appState.isStockDataStale, let fetchedAt = appState.stocksFetchedAt {
+                    (Text("Data may be stale \u{00B7} updated ") + Text(fetchedAt, style: .relative) + Text(" ago"))
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.4))
+                }
+
+                if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
+                    // Same shape as iOS/web: label, score and rating on one
+                    // baseline with the bar flush beneath, full width.
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text("Fear & Greed")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Text("\(fgScore)")
+                                .font(.subheadline.weight(.bold).monospacedDigit())
+                                .foregroundStyle(fearGreedColor(fgScore))
+                            Text(fgRating)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(fearGreedColor(fgScore))
+                            Spacer(minLength: 0)
+                        }
+                        ProgressView(value: Double(fgScore), total: 100)
+                            .tint(fearGreedColor(fgScore))
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
+                }
+
+                HStack(spacing: 12) {
+                    topLink("News", systemImage: "newspaper") {
+                        NewsView()
+                            .environment(appState)
+                    }
+                    topLink("Macro", systemImage: "chart.bar.doc.horizontal") {
+                        MacroView()
+                            .environment(appState)
+                    }
+                    topLink("Alerts", systemImage: "bell.badge") {
+                        AlertsView()
+                            .environment(appState)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+
+                if let brief = appState.dailyBrief, !brief.points.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Daily Brief")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        ForEach(brief.points, id: \.self) { point in
+                            HStack(alignment: .top, spacing: 6) {
+                                Circle()
+                                    .fill(Palette.appleBlue)
+                                    .frame(width: 4, height: 4)
+                                    .padding(.top, 5)
+                                Text(point)
+                                    .font(.caption)
+                                    .lineLimit(2)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                }
+
+                if appState.isLoggedIn, let financeData = appState.financeData {
+                    let portfolio = appState.portfolio ?? Portfolio(financeData: financeData, stocks: appState.stocks)
+                    let totalBalance = financeData.accounts.reduce(0) { $0 + $1.balance }
+                    let totalDebt = financeData.debt.reduce(0) { $0 + $1.balance }
+                    // totalValue is already the sum of account balances (holdings folded in server-side),
+                    // or the holdings value when there are no accounts. Adding totalBalance on top counted it twice.
+                    let netWorth = portfolio.totalValue - totalDebt
+
+                HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(CurrencyFormatter.formatPrice(netWorth))
+                                .font(.title3.weight(.heavy))
+                            if !portfolio.holdings.isEmpty {
+                                HStack(spacing: 4) {
+                                    Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
+                                    Text(String(format: "(%.1f%%)", portfolio.dayChangePercent))
+                                }
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(portfolio.dayChange >= 0 ? Palette.successGreen : Palette.dangerRed)
+                            } else {
+                                Text("Net Worth")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        if !financeData.accounts.isEmpty {
+                            VStack(alignment: .trailing, spacing: 3) {
+                                Text(CurrencyFormatter.formatPrice(totalBalance))
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Palette.successGreen)
+                                Text("\(financeData.accounts.count) accounts")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
+
+                    if !financeData.accounts.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            HStack(spacing: 10) {
+                                ForEach(financeData.accounts) { account in
+                                    TimelineChip(
+                                        icon: account.type == "investment" ? "chart.line.uptrend.xyaxis" : account.type == "gift" ? "giftcard" : "banknote",
+                                        label: account.name,
+                                        detail: CurrencyFormatter.formatAbbreviated(account.balance),
+                                        color: Palette.appleBlue
+                                    )
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.bottom, 4)
+                    }
+
+                    if !financeData.debt.isEmpty || !UpcomingPayments.all.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            HStack(spacing: 10) {
+                                ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
+                                    if let days = UpcomingPayments.daysUntil(payment), days >= 0 {
+                                        TimelineChip(
+                                            icon: payment.icon,
+                                            label: payment.name,
+                                            detail: days == 0 ? "Today" : "\(days)d",
+                                            color: Palette.successGreen
+                                        )
+                                    }
+                                }
+
+                                let debtWithPayoff = financeData.debt.map { item in
+                                    (item: item, months: DebtCalc.monthsToPayoff(item: item))
+                                }.sorted { $0.months < $1.months }
+
+                                ForEach(debtWithPayoff, id: \.item.name) { entry in
+                                    TimelineChip(
+                                        icon: DebtCalc.icon(for: entry.item.name),
+                                        label: entry.item.name,
+                                        detail: DebtCalc.payoffLabel(entry.months),
+                                        color: entry.months < 0.1 ? Palette.successGreen : entry.months <= 3 ? Palette.warningAmber : Palette.dangerRed
+                                    )
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.bottom, 8)
+                    }
+                }
+
+                if !appState.stocks.isEmpty {
+                    MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0; selectedAsset = nil }
+                        .task { for s in ["SPY", "QQQ", "DIA"] { await appState.loadSparkline(s) } }
+                }
+            }
+            .frame(maxWidth: 760, alignment: .leading)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// The picked stock or asset in place of a sheet. Esc goes back to the overview.
+    private func detailPane(@ViewBuilder _ content: () -> some View) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button {
+                    selectedStock = nil
+                    selectedAsset = nil
+                } label: {
+                    Label("Overview", systemImage: "chevron.left")
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.cancelAction)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            content()
+                .environment(appState)
         }
     }
 
@@ -425,11 +475,6 @@ struct MarketsView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     searchResultRows
-                    if searchText.isEmpty, !appState.stocks.isEmpty {
-                        MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0 }
-                            .padding(.horizontal, -16)
-                            .task { for s in ["SPY", "QQQ", "DIA"] { await appState.loadSparkline(s) } }
-                    }
                     ForEach(filteredItems) { item in
                         marketRow(item)
                     }
@@ -473,7 +518,7 @@ struct MarketsView: View {
 
     private func marketRow(_ item: MarketItem) -> some View {
         Button {
-            if case .stock(let stock) = item.kind { selectedStock = stock } else { selectedAsset = item }
+            if case .stock(let stock) = item.kind { selectedStock = stock; selectedAsset = nil } else { selectedAsset = item; selectedStock = nil }
         } label: {
             // Same row as iOS Stocks; the star stays since a Mac has no swipe.
             HStack(spacing: 10) {
@@ -481,8 +526,12 @@ struct MarketsView: View {
                 QuoteRow(symbol: item.symbol, name: item.name, price: item.price,
                          changePercent: item.changePercent, sparklineData: appState.sparklineCache[item.symbol])
             }
-            .padding(.horizontal, 4)
-            .overlay(alignment: .bottom) { Rectangle().fill(.separator).frame(height: 0.5) }
+            .padding(.horizontal, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.accentColor.opacity(isPicked(item) ? 0.14 : 0))
+            )
+            .overlay(alignment: .bottom) { Rectangle().fill(.separator).frame(height: 0.5).padding(.horizontal, 8) }
             .task { await appState.loadSparkline(item.symbol) }
         }
         .buttonStyle(.plain)
