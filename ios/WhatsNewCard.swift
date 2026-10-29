@@ -3,11 +3,12 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "A new look: Apollo's lyre for the icon, laurel-leaf quote marks",
-    "Map pins pop in as you move, and the one you tap stands out",
-    "No more endless spinners: slow servers give up fast and tell you plainly",
-    "Every button on the map answers the first tap",
-    "Autofill fills your email and passwords in Settings",
+    "Markets looks like iOS Stocks: bigger rows, filled sparklines, a dotted line at yesterday's close",
+    "Swipe or long press a row to watch it",
+    "Fear & Greed sits up top, and the ticker is easier to read",
+    "Business News slides up smoothly",
+    "A stock's page shows its earnings date when the report is two weeks out, one tap adds it to Calendar",
+    "Meet Spark, plus a short tour for new accounts",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

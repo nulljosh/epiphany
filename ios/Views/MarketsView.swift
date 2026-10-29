@@ -392,10 +392,11 @@ struct MarketsView: View {
                             StockRow(stock: stock, sparklineData: appState.sparklineCache[stock.symbol])
                         }
                         .buttonStyle(BounceButtonStyle())
-                        .swipeActions(edge: .trailing) { watchlistSwipe(stock.symbol) }
                         .padding(.horizontal, 16)
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 16 }
                         .alignmentGuide(.listRowSeparatorTrailing) { $0.width - 16 }
+                        .swipeActions(edge: .trailing) { watchlistSwipe(stock.symbol) }
+                        .contextMenu { watchlistSwipe(stock.symbol) }
                     }
                 }
                 .listRowInsets(EdgeInsets())
@@ -415,6 +416,10 @@ struct MarketsView: View {
                 // Separators inset 16 on both sides, like iOS Stocks.
                 .alignmentGuide(.listRowSeparatorLeading) { _ in 16 }
                 .alignmentGuide(.listRowSeparatorTrailing) { $0.width - 16 }
+                // On the outermost row view: nested inside the Button they never reached
+                // the List, and a swipe fell through as a tap. Long press does the same.
+                .swipeActions(edge: .trailing) { rowActions(item) }
+                .contextMenu { rowActions(item) }
             }
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
@@ -453,8 +458,28 @@ struct MarketsView: View {
             StockRow(stock: stock, sparklineData: appState.sparklineCache[stock.symbol])
         }
         .buttonStyle(BounceButtonStyle())
-        .swipeActions(edge: .trailing) { if appState.isLoggedIn { watchlistSwipe(stock.symbol) } }
         .accessibilityIdentifier("market-stock-row")
+    }
+
+    @ViewBuilder
+    private func rowActions(_ item: MarketItem) -> some View {
+        switch item.kind {
+        case .stock(let stock):
+            if appState.isLoggedIn { watchlistSwipe(stock.symbol) }
+        case .commodity, .crypto:
+            favoriteButton(item)
+        }
+    }
+
+    private func favoriteButton(_ item: MarketItem) -> some View {
+        let fav = appState.isLocalFavorite(item.name)
+        return Button {
+            Haptics.impact(.light)
+            appState.toggleLocalFavorite(item.name)
+        } label: {
+            Label(fav ? "Unwatch" : "Watch", systemImage: fav ? "star.slash" : "star")
+        }
+        .tint(fav ? .gray : Palette.warningAmber)
     }
 
     /// The star moved off the row into a swipe, like iOS Stocks.
@@ -478,15 +503,6 @@ struct MarketsView: View {
         } label: {
             QuoteRow(symbol: item.symbol, name: item.name, price: item.price,
                      changePercent: item.changePercent, sparklineData: appState.sparklineCache[item.symbol])
-        }
-        .swipeActions(edge: .trailing) {
-            let fav = appState.isLocalFavorite(item.name)
-            Button {
-                appState.toggleLocalFavorite(item.name)
-            } label: {
-                Label(fav ? "Unwatch" : "Watch", systemImage: fav ? "star.slash" : "star")
-            }
-            .tint(fav ? .gray : Palette.warningAmber)
         }
         .buttonStyle(BounceButtonStyle())
     }
