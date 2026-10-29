@@ -913,6 +913,7 @@ private enum MapEventDetail: Identifiable {
 
 private struct SituationEventDetailView: View {
     let event: MapEventDetail
+    @State private var scene: MKLookAroundScene?
 
     var body: some View {
         ScrollView {
@@ -948,6 +949,16 @@ private struct SituationEventDetailView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if let coord = eventCoordinate {
+                    DriveTimeLabel(item: MKMapItem(placemark: MKPlacemark(coordinate: coord)))
+                }
+
+                if let scene, eventImageURL == nil {
+                    LookAroundPreview(initialScene: scene)
+                        .frame(height: 160)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+
                 ForEach(rows, id: \.label) { row in
                     HStack(alignment: .top) {
                         Text(row.label)
@@ -959,9 +970,50 @@ private struct SituationEventDetailView: View {
                         Spacer(minLength: 0)
                     }
                 }
+
+                if let coord = eventCoordinate {
+                    Map(initialPosition: .region(MKCoordinateRegion(
+                        center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))) {
+                        Marker(title, coordinate: coord)
+                    }
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .disabled(true)
+
+                    Button {
+                        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coord))
+                        mapItem.name = title
+                        mapItem.openInMaps(launchOptions: [
+                            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDefault,
+                        ])
+                    } label: {
+                        Label("Directions", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .controlSize(.large)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
+        }
+        .task {
+            guard let coord = eventCoordinate else { return }
+            scene = try? await MKLookAroundSceneRequest(coordinate: coord).scene
+        }
+    }
+
+    private var eventCoordinate: CLLocationCoordinate2D? {
+        switch event {
+        case .earthquake(let q): return q.coordinate
+        case .flight: return nil
+        case .incident(let i): return i.coordinate
+        case .crime(let c): return c.coordinate
+        case .localEvent(let e): return e.coordinate
+        case .trafficIncident(let t): return t.coordinate
+        case .aqi(let r): return r.coordinate
         }
     }
 

@@ -14,7 +14,7 @@ struct DriveTimeLabel: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .task(id: item) { eta = await fetch() }
+        .task(id: "\(item.placemark.coordinate.latitude),\(item.placemark.coordinate.longitude)") { eta = await fetch() }
     }
 
     @MainActor

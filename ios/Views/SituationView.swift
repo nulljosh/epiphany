@@ -1478,6 +1478,7 @@ private enum MapEventDetail: Identifiable {
 
 private struct SituationEventDetailView: View {
     let event: MapEventDetail
+    @State private var scene: MKLookAroundScene?
 
     var body: some View {
         ScrollView {
@@ -1515,6 +1516,16 @@ private struct SituationEventDetailView: View {
                     Text(subtitle)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                }
+
+                if let coord = eventCoordinate {
+                    DriveTimeLabel(item: MKMapItem(placemark: MKPlacemark(coordinate: coord)))
+                }
+
+                if let scene, eventImageURL == nil {
+                    LookAroundPreview(initialScene: scene)
+                        .frame(height: 160)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
 
                 VStack(spacing: 0) {
@@ -1584,6 +1595,10 @@ private struct SituationEventDetailView: View {
         }
         .navigationTitle("Details")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            guard let coord = eventCoordinate else { return }
+            scene = try? await MKLookAroundSceneRequest(coordinate: coord).scene
+        }
     }
 
     private var eventCoordinate: CLLocationCoordinate2D? {
