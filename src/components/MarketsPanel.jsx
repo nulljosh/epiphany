@@ -607,7 +607,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         const cards = [['SPY', 'S&P 500'], ['QQQ', 'Nasdaq 100'], ['DIA', 'Dow']].filter(([sym]) => bySym.has(sym));
         if (!cards.length) return null;
         return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 8, marginBottom: 12 }}>
             {cards.map(([sym, label]) => {
               const item = bySym.get(sym);
               const up = (item.changePercent ?? 0) >= 0;

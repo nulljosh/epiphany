@@ -1286,6 +1286,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
         .epiphany-map-popup .maplibregl-popup-close-button { color:#94a3b8; font-size:16px; padding:2px 6px; }
         .maplibregl-ctrl-attrib.maplibregl-compact { background:rgba(2,6,23,0.72); color:#94a3b8; }
         .maplibregl-ctrl-attrib a { color:#cbd5e1; }
+        ${dark ? '' : '.maplibregl-canvas { filter: brightness(0.88) saturate(1.4) contrast(1.06); }'}
         .maplibregl-ctrl-attrib-button { filter: invert(1); background-color: transparent; }
       `}</style>
       <div

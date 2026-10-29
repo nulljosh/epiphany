@@ -20,11 +20,12 @@ export const darkTheme = {
   pink: '#FF375F',
 };
 
+// Softer than paper white: Joshua found #fafafa and pure white panels glaring (2026-10-29).
 export const lightTheme = {
-  bg: '#fafafa',
-  surface: '#FFFFFF',
-  glass: 'rgba(255,255,255,0.92)',
-  glassHover: '#FFFFFF',
+  bg: '#e8eaee',
+  surface: '#f5f6f8',
+  glass: 'rgba(245,246,248,0.9)',
+  glassHover: '#fafbfc',
   border: 'rgba(0,0,0,0.1)',
   text: '#000000',
   textSecondary: 'rgba(0,0,0,0.5)',
