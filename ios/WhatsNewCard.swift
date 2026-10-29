@@ -1,7 +1,9 @@
 import SwiftUI
 
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
-private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+// Major.minor only: a patch (10.0.1) is a fix, so it never brings the card back.
+private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+    .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
     "Filter the map by type and time",
     "Save places and see what's near them",
@@ -14,7 +16,8 @@ struct WhatsNewCard: View {
     @AppStorage("whats_new_seen_version") private var seenVersion = ""
 
     var body: some View {
-        if seenVersion != whatsNewVersion {
+        // Older builds stored the full x.y.z; compare that the same way.
+        if seenVersion.split(separator: ".").prefix(2).joined(separator: ".") != whatsNewVersion {
             VStack(alignment: .leading, spacing: 20) {
                 Text("What's New in v\(whatsNewVersion)")
                     .font(.title2.bold())
