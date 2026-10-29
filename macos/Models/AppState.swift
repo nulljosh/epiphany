@@ -336,6 +336,18 @@ final class AppState {
         }
     }
 
+    @ObservationIgnored private var sparklinesInFlight: Set<String> = []
+
+    /// Fetched per row as it scrolls into view; a failed fetch stays uncached so it retries.
+    func loadSparkline(_ symbol: String) async {
+        guard sparklineCache[symbol] == nil, !sparklinesInFlight.contains(symbol) else { return }
+        sparklinesInFlight.insert(symbol)
+        defer { sparklinesInFlight.remove(symbol) }
+        if let prices = try? await EpiphanyAPI.shared.fetchSparklineData(symbol: symbol), !prices.isEmpty {
+            sparklineCache[symbol] = prices
+        }
+    }
+
     func loadCommodities(force: Bool = false) async {
         do {
             commodities = try await EpiphanyAPI.shared.fetchCommodities()

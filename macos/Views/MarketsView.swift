@@ -62,35 +62,6 @@ struct MarketsView: View {
         "\(sortField.title) \(sortAscending ? "ascending" : "descending")"
     }
 
-    private func sortButton(_ field: MarketSortField) -> some View {
-        Button {
-            if sortField == field {
-                sortAscending.toggle()
-            } else {
-                sortField = field
-                sortAscending = field.defaultAscending
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Text(field.title)
-                if sortField == field {
-                    Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
-                        .font(.caption2.weight(.bold))
-                }
-            }
-            .font(.caption.weight(sortField == field ? .semibold : .medium))
-            .foregroundStyle(sortField == field ? Color.white : .secondary)
-            .frame(maxWidth: .infinity, alignment: field.alignment)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(sortField == field ? Color.white.opacity(0.08) : Color.clear)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
     private func comparisonResult(_ lhs: MarketItem, _ rhs: MarketItem) -> ComparisonResult {
         switch sortField {
         case .symbol:
@@ -329,6 +300,7 @@ struct MarketsView: View {
                             }
                         }
                         .pickerStyle(.segmented)
+                        .labelsHidden()
                         .frame(maxWidth: 300)
 
                         Spacer()
@@ -389,26 +361,25 @@ struct MarketsView: View {
 
     private var marketList: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                sortButton(.symbol)
-                    .frame(maxWidth: 150, alignment: .leading)
-                sortButton(.name)
-                sortButton(.price)
-                    .frame(maxWidth: 110, alignment: .trailing)
-                sortButton(.pe)
-                    .frame(maxWidth: 84, alignment: .trailing)
-                sortButton(.marketCap)
-                    .frame(maxWidth: 110, alignment: .trailing)
-                sortButton(.change)
-                    .frame(maxWidth: 110, alignment: .trailing)
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 6)
-
+            // The old column headers matched a table layout the rows no longer have.
             HStack {
-                Text("Sorted by \(activeSortLabel)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Menu {
+                    ForEach([MarketSortField.symbol, .name, .price, .pe, .marketCap, .change], id: \.self) { field in
+                        Button {
+                            if sortField == field { sortAscending.toggle() } else {
+                                sortField = field
+                                sortAscending = field.defaultAscending
+                            }
+                        } label: {
+                            Text(sortField == field ? "\(field.title) \(sortAscending ? "↑" : "↓")" : field.title)
+                        }
+                    }
+                } label: {
+                    Label("Sorted by \(activeSortLabel)", systemImage: "arrow.up.arrow.down")
+                        .font(.caption)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
                 Spacer()
             }
             .padding(.horizontal)
@@ -470,7 +441,8 @@ struct MarketsView: View {
                          changePercent: item.changePercent, sparklineData: appState.sparklineCache[item.symbol])
             }
             .padding(.horizontal, 4)
-            .overlay(alignment: .bottom) { Divider() }
+            .overlay(alignment: .bottom) { Rectangle().fill(.separator).frame(height: 0.5) }
+            .task { await appState.loadSparkline(item.symbol) }
         }
         .buttonStyle(.plain)
         .disabled(!item.isStock)
@@ -600,13 +572,6 @@ private enum MarketSortField {
         switch self {
         case .symbol, .name: return true
         case .price, .pe, .marketCap, .change: return false
-        }
-    }
-
-    var alignment: Alignment {
-        switch self {
-        case .symbol, .name: return .leading
-        case .price, .pe, .marketCap, .change: return .trailing
         }
     }
 }

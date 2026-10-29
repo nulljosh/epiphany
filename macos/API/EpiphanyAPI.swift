@@ -180,6 +180,13 @@ final class EpiphanyAPI {
         return try decode(PriceHistory.self, from: data)
     }
 
+    /// Today's one-minute closes, for the row sparklines.
+    func fetchSparklineData(symbol: String) async throws -> [Double] {
+        let url = try makeURL("/api/history", query: ["symbol": symbol, "range": "1d", "interval": "1m"])
+        let data = try await perform(URLRequest(url: url))
+        return try decode(PriceHistory.self, from: data).history.compactMap { $0.close }
+    }
+
     func fetchCommodities() async throws -> [CommodityData] {
         let url = try makeURL("/api/commodities")
         let request = URLRequest(url: url)

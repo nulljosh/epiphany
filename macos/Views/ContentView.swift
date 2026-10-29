@@ -81,6 +81,12 @@ struct ContentView: View {
                 .frame(minWidth: 400, minHeight: 400)
         }
         .task {
+            #if DEBUG
+            // QA: `-qaSection Markets` opens straight on that section, like iOS's qaTab.
+            if let raw = UserDefaults.standard.string(forKey: "qaSection"), let section = AppSection(rawValue: raw) {
+                selectedSection = section
+            }
+            #endif
             if CommandLine.arguments.contains("UITEST_SNAPSHOT"),
                let email = ProcessInfo.processInfo.environment["SNAPSHOT_EMAIL"],
                let password = ProcessInfo.processInfo.environment["SNAPSHOT_PASSWORD"] {
