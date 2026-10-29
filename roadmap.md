@@ -2,6 +2,23 @@
 
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
+## Mobbin gaps (2026-10-29: Robinhood, Yahoo Finance, TradingView, Copilot, Monarch, Citizen)
+One row per minor version, daily-use first. Borrow the idea, never the look.
+
+| Gap | Who has it | Size | Target | Status |
+|---|---|---|---|---|
+| Price alerts with the app closed | Yahoo, TradingView | M | 8.0 | iOS done (background refresh); APNs push open in #180 |
+| Index cards (S&P 500, Nasdaq, Dow) with mini charts above the list | Robinhood, Yahoo | S | 8.0 | open |
+| Top movers row (biggest gainers and losers today) | Robinhood | S | 8.0 | open |
+| Full-screen chart button on stock and asset pages | Yahoo, TradingView | S | 8.0 | open |
+| Upcoming bills list from detected recurring charges | Monarch, Copilot, Rocket Money | M | 9.0 | open (server detectRecurring exists) |
+| Cash flow: income vs spending bars by month | Copilot, Monarch | M | 9.0 | open |
+| Money insight cards from statements (top merchant, a spending jump) | Copilot | M | 9.0 | open |
+| "N to review" transaction queue | Copilot, Monarch | M | 9.0 | #179 |
+| Map filter bar: incident type and time window | Citizen | M | 10.0 | open |
+| Saved places with nearby-incident counts | Citizen | M | 10.0 | open |
+| Multiple named watchlists | Yahoo, TradingView | L | later | open |
+
 ## 2026-10-21 (open)
 
 ## 2026-10-01 brain dump (open)
