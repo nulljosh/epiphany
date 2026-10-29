@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 
 struct MarketsView: View {
     @Environment(AppState.self) private var appState
@@ -7,6 +8,18 @@ struct MarketsView: View {
     @State private var isVisible = false
     @State private var hasLoaded = false
     @State private var selectedStock: Stock?
+    @State private var selectedAsset: MarketItem?
+
+    // Same names as iOS, so a row says Natural Gas, not Natgas.
+    private static let assetDisplayNames: [String: String] = [
+        "Gold": "Gold (XAU/USD)", "Silver": "Silver (XAG/USD)",
+        "Oil": "WTI Crude Oil", "Natgas": "Natural Gas",
+        "Copper": "Copper (HG)", "Platinum": "Platinum (PL)",
+        "Palladium": "Palladium (PA)",
+        "Nas100": "Nasdaq 100", "Us500": "S&P 500", "Us30": "Dow Jones",
+        "Dxy": "US Dollar Index",
+        "Btc": "Bitcoin", "Eth": "Ethereum",
+    ]
     @State private var sortField: MarketSortField = .change
     @State private var sortAscending = false
     @State private var marketFilter: MarketFilter = .all
@@ -22,7 +35,7 @@ struct MarketsView: View {
         }
         for commodity in appState.commodities {
             items.append(MarketItem(
-                name: commodity.name, symbol: commodity.name, price: commodity.price,
+                name: Self.assetDisplayNames[commodity.name] ?? commodity.name, symbol: commodity.name, price: commodity.price,
                 changePercent: commodity.changePercent, marketCap: nil,
                 peRatio: nil, kind: .commodity
             ))
@@ -323,6 +336,10 @@ struct MarketsView: View {
                 .environment(appState)
                 .frame(minWidth: 720, minHeight: 520)
         }
+        .sheet(item: $selectedAsset) { item in
+            AssetDetailView(item: item)
+                .frame(minWidth: 560, minHeight: 480)
+        }
         .onAppear {
             isVisible = true
             guard !hasLoaded else { return }
@@ -431,8 +448,7 @@ struct MarketsView: View {
 
     private func marketRow(_ item: MarketItem) -> some View {
         Button {
-            guard case .stock(let stock) = item.kind else { return }
-            selectedStock = stock
+            if case .stock(let stock) = item.kind { selectedStock = stock } else { selectedAsset = item }
         } label: {
             // Same row as iOS Stocks; the star stays since a Mac has no swipe.
             HStack(spacing: 10) {
@@ -445,7 +461,6 @@ struct MarketsView: View {
             .task { await appState.loadSparkline(item.symbol) }
         }
         .buttonStyle(.plain)
-        .disabled(!item.isStock)
     }
 
     @ViewBuilder
@@ -590,6 +605,29 @@ private struct MarketItem: Identifiable {
         return false
     }
 
+    var yahooSymbol: String? {
+        let lower = symbol.lowercased()
+        switch kind {
+        case .stock: return symbol
+        case .commodity:
+            let map: [String: String] = [
+                "gold": "GC=F", "silver": "SI=F", "platinum": "PL=F",
+                "palladium": "PA=F", "copper": "HG=F", "oil": "CL=F",
+                "natgas": "NG=F", "nas100": "^NDX", "us500": "^GSPC",
+                "us30": "^DJI", "dxy": "DX-Y.NYB", "us10y": "^TNX"
+            ]
+            return map[lower]
+        case .crypto:
+            let map: [String: String] = [
+                "btc": "BTC-USD", "eth": "ETH-USD", "sol": "SOL-USD",
+                "xrp": "XRP-USD", "doge": "DOGE-USD", "ada": "ADA-USD",
+                "bnb": "BNB-USD", "avax": "AVAX-USD", "link": "LINK-USD",
+                "matic": "MATIC-USD", "dot": "DOT-USD"
+            ]
+            return map[lower]
+        }
+    }
+
     var id: String {
         switch kind {
         case .stock: return "stock-\(symbol)"
@@ -629,4 +667,73 @@ private enum MarketFilter: String, CaseIterable, Identifiable {
     case crypto = "Crypto"
 
     var id: String { rawValue }
+}
+
+/// Commodity and crypto page on the Mac: chart, the day or 24h ranges, period high and low.
+private struct AssetDetailView: View {
+    let item: MarketItem
+    @Environment(\.dismiss) private var dismiss
+    @State private var range = "1y"
+    @State private var history: [PriceHistory.DataPoint] = []
+    @State private var stats: [(String, String)] = []
+
+    private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
+
+    var body: some View {
+        let color = item.changePercent >= 0 ? Palette.successGreen : Palette.dangerRed
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.name).font(.title2.weight(.bold))
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(CurrencyFormatter.formatPrice(item.price)).font(.title.weight(.semibold).monospacedDigit())
+                        Text(String(format: "%@%.2f%%", item.changePercent >= 0 ? "+" : "", item.changePercent))
+                            .font(.headline.monospacedDigit()).foregroundStyle(color)
+                    }
+                }
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
+            }
+            Picker("Range", selection: $range) {
+                ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            Chart(history) { point in
+                LineMark(x: .value("Date", point.date), y: .value("Price", point.close))
+                    .foregroundStyle(color)
+            }
+            .chartXAxis(.hidden)
+            .chartYScale(domain: .automatic(includesZero: false))
+            .frame(height: 220)
+            VStack(spacing: 0) {
+                ForEach(rows, id: \.0) { row in
+                    HStack {
+                        Text(row.0).foregroundStyle(.secondary)
+                        Spacer()
+                        Text(row.1).monospacedDigit()
+                    }
+                    .padding(.vertical, 6)
+                    Divider()
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(24)
+        .task { stats = await EpiphanyAPI.shared.fetchMarketStats(symbol: item.symbol, isCrypto: { if case .crypto = item.kind { return true }; return false }()) }
+        .task(id: range) {
+            guard let sym = item.yahooSymbol else { return }
+            history = (try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: range))?.history ?? []
+        }
+    }
+
+    private var rows: [(String, String)] {
+        var out = stats
+        // Period high and low from the chart already loaded, no extra fetch.
+        if let hi = history.map({ $0.high ?? $0.close }).max(), let lo = history.map({ $0.low ?? $0.close }).min(), lo > 0 {
+            out.append(("\(range.uppercased()) High", CurrencyFormatter.formatPrice(hi)))
+            out.append(("\(range.uppercased()) Low", CurrencyFormatter.formatPrice(lo)))
+        }
+        return out
+    }
 }
