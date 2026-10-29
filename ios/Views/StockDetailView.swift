@@ -269,6 +269,8 @@ struct StockDetailView: View {
                                 } label: {
                                     CompactNewsRow(article: article)
                                 }
+                                // Default style tinted headlines blue and centred them.
+                                .buttonStyle(.plain)
                             } else {
                                 CompactNewsRow(article: article)
                             }

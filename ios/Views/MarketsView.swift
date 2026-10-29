@@ -688,6 +688,7 @@ private struct MarketItemDetailView: View {
     @State private var error: String?
     @State private var relatedNews: [NewsArticle] = []
     @State private var selectedNewsURL: URL?
+    @State private var stats: [(String, String)] = []
 
     private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
 
@@ -758,6 +759,13 @@ private struct MarketItemDetailView: View {
                         if let bt = stock.formattedBeta { infoRow("Beta", value: bt) }
                         if let y = stock.formattedYield { infoRow("Yield", value: y) }
                     }
+                    ForEach(stats, id: \.0) { infoRow($0.0, value: $0.1) }
+                    // Period high and low from the chart already on screen, no extra fetch.
+                    if case .stock = item.kind {} else if let hi = priceHistory.map({ $0.high ?? $0.close }).max(),
+                              let lo = priceHistory.map({ $0.low ?? $0.close }).min(), lo > 0 {
+                        infoRow("\(selectedRange.uppercased()) High", value: CurrencyFormatter.formatPrice(hi))
+                        infoRow("\(selectedRange.uppercased()) Low", value: CurrencyFormatter.formatPrice(lo))
+                    }
                     if let cap = item.marketCap, cap > 0 {
                         infoRow("Market Cap", value: CurrencyFormatter.formatAbbreviated(cap))
                     }
@@ -782,6 +790,8 @@ private struct MarketItemDetailView: View {
                                 } label: {
                                     CompactNewsRow(article: article)
                                 }
+                                // Default style tinted headlines blue and centred them.
+                                .buttonStyle(.plain)
                             } else {
                                 CompactNewsRow(article: article)
                             }
@@ -800,6 +810,11 @@ private struct MarketItemDetailView: View {
         .navigationTitle(item.name)
         .navigationBarTitleDisplayMode(.inline)
         .task {
+            if case .stock = item.kind {} else {
+                var isCrypto = false
+                if case .crypto = item.kind { isCrypto = true }
+                stats = await EpiphanyAPI.shared.fetchMarketStats(symbol: item.symbol, isCrypto: isCrypto)
+            }
             await loadRelatedNews()
         }
         .task(id: selectedRange) {

@@ -340,6 +340,37 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
             .sorted { $0.name < $1.name }
     }
 
+    /// Ranges the list endpoints leave out: day and 52-week for commodities, 24h range
+    /// and volume for crypto. Empty when the server has nothing, never placeholder numbers.
+    func fetchMarketStats(symbol: String, isCrypto: Bool) async -> [(String, String)] {
+        let range = { (lo: Double?, hi: Double?) -> String? in
+            guard let lo, let hi, lo > 0, hi > 0 else { return nil }
+            return "\(CurrencyFormatter.formatPrice(lo)) - \(CurrencyFormatter.formatPrice(hi))"
+        }
+        guard let url = try? makeURL(isCrypto ? "/api/crypto" : "/api/commodities"),
+              let data = try? await perform(URLRequest(url: url)),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+        let entry: [String: Any]?
+        if isCrypto {
+            entry = (json["coins"] as? [[String: Any]])?.first { ($0["symbol"] as? String)?.uppercased() == symbol.uppercased() }
+        } else {
+            entry = json[symbol.lowercased()] as? [String: Any]
+        }
+        guard let e = entry else { return [] }
+        let n = { (k: String) in (e[k] as? NSNumber)?.doubleValue }
+        var out: [(String, String)] = []
+        if isCrypto {
+            if let r = range(n("low24h"), n("high24h")) { out.append(("24h Range", r)) }
+            if let v = n("volume"), v > 0 { out.append(("24h Volume", CurrencyFormatter.formatAbbreviated(v))) }
+            if let c = n("marketCap"), c > 0 { out.append(("Market Cap", CurrencyFormatter.formatAbbreviated(c))) }
+        } else {
+            if let p = n("prevClose"), p > 0 { out.append(("Prev Close", CurrencyFormatter.formatPrice(p))) }
+            if let r = range(n("dayLow"), n("dayHigh")) { out.append(("Day Range", r)) }
+            if let r = range(n("low52"), n("high52")) { out.append(("52W Range", r)) }
+        }
+        return out
+    }
+
     func fetchCrypto() async throws -> [CryptoData] {
         let url = try makeURL("/api/prices")
         let request = URLRequest(url: url)
