@@ -1,60 +1,6 @@
 # Epiphany iOS
 
-v8.0.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.jaybulb.com
-
-## Dev auto-login (2026-07-05)
-Run scheme signs in automatically as the admin/pro account via `DEV_EMAIL`/`DEV_PASSWORD`
-build settings, sourced from `Configs/Secrets.xcconfig` (gitignored, real values also in
-repo-root `.env.accounts.local`) and wired into the Debug config via `project.yml`'s
-`configFiles`. Triggers `AppState.autoLoginIfNeeded()` (DEBUG-only). If someone clones
-fresh, `xcodegen generate` will fail without `Configs/Secrets.xcconfig` existing --
-create it with `DEV_EMAIL = ...` / `DEV_PASSWORD = ...` (escape `$` as `$$`).
-Do NOT put real credentials in `project.yml`, the shared `.xcscheme`, or any
-git-tracked file -- only in the gitignored xcconfig.
-
-## Known bugs (2026-07-05)
-- Markets drawer drag: FIXED 2026-07-05. Choppiness was the declarative
-  `.animation(_:value: drawerState)` fighting the live `@GestureState` drag each
-  frame. Removed it; the drag now tracks the finger 1:1 and only the settle-to-
-  detent animates via explicit `withAnimation` in `.onEnded` (with momentum
-  projection via `predictedEndTranslation` so flicks carry). Also switched the
-  drawer to a semi-transparent liquid-glass look (`.ultraThinMaterial` + hairline
-  rim) so content shows through.
-- Autopilot paper-mode trading was silently a no-op below ~$150 notional cap
-  (whole-share floor() on stock-only watchlist). Fixed: paper mode now also
-  trades fractional BTC (`server/api/broker/morning-run.js`), and the iOS
-  max-per-trade slider goes down to $0.01. Still fundamentally paper/simulated --
-  actual live trading needs a real brokerage with trade permission (Alpaca/IBKR),
-  SnapTrade/Wealthsimple stays read-only by design.
-
-## Session fixes (2026-07-05, late)
-- Portfolio net worth was dropping uninvested cash inside investment accounts
-  (showed $229 vs real $415.78); now sums all account balances. Subtitle "Cash"
-  now = total - holdings. Account rows show nickname only (`Account.displayName`
-  strips "Wealthsimple Trade " etc).
-- Markets news drawer: pop-free settle (@State drag reset inside the release
-  spring), list clears the peek drawer, and at `.large` the Fear & Greed row
-  hides so the top ~10% is purely the ticker strip (Yahoo-style).
-- Commodity/crypto detail sparseness is a data gap, not UI -- see roadmap.md
-  "commodity/crypto detail parity". News/chart/ranges already work.
-- Autopilot simulator: works but market-hours gated; stale "live failed" rows
-  are old read-only-Wealthsimple probes. See roadmap.md.
-
-## Rules
-
-- iPhone only, portrait-only, UIRequiresFullScreen
-- Map is home screen (tab 0), no jumps on load
-- All data preloaded on launch in parallel (stocks, crypto, commodities, finance, Tally, fear/greed)
-- Stay logged in between launches (session cookie + keychain)
-- No emojis
-- Follows system appearance (auto light/dark). No `preferredColorScheme` lock. `Palette` is fully adaptive (see `Helpers/Helpers.swift`)
-
-## Tabs
-
-1. **Situation** — MapKit map with 8 toggleable live data layers. Default home screen.
-2. **Markets** — Stocks/commodities/crypto with filter segments. Inline portfolio (collapsible): net worth, debt, payday. Daily Brief + Fear & Greed Index. Feed pills: News | Macro | Alerts. TickerBarView lives here (not ContentView).
-3. **Portfolio** — Spending chart + forecast, holdings, budget, debt/goals calendar, statements.
-4. **Settings** — Profile (avatar + keychain), subscription tier, Tally integration. Security: email/password. Map layers (Map section, visible to everyone).
+v8.0.0. iPhone app with four tabs (Situation, Markets, Portfolio, Settings), portrait only, follows system light and dark. API: epiphany.jaybulb.com. Shared Swift lives in `../Shared`.
 
 ## Run
 
@@ -64,33 +10,29 @@ xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=i
 xcodebuild test -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -skipPackagePluginValidation
 ```
 
-`-skipPackagePluginValidation` is required on every CLI/CI build now — SwiftLint runs as an SPM build-tool plugin (2026-07-18), and `xcodebuild` can't grant its interactive trust prompt headlessly without that flag.
+`-skipPackagePluginValidation` is required on every CLI build: SwiftLint runs as an SPM plugin and its trust prompt can't be answered headless.
 
-Version lives in `project.yml` (`MARKETING_VERSION`). On every release, sync the README badge and the CLAUDE.md header line to it -- all three must match the build.
+Debug builds sign in on their own from `Configs/Secrets.xcconfig` (gitignored, `DEV_EMAIL` and `DEV_PASSWORD`, escape `$` as `$$`). A fresh clone needs that file before `xcodegen generate`. Never put credentials in `project.yml` or the scheme.
 
-## Key Files
+QA launch arguments: `-qaTab N` opens on a tab, `UITEST_DEMO` uses demo data.
 
-- `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires). Map layer switcher (Hybrid/Satellite/Standard/Terrain) persisted via AppStorage. Venue category chips (Restaurant/Gas/Groceries/Coffee/Parks/Shopping) trigger MKLocalSearch.
-- `Views/MarketsView.swift` — Markets list + inline portfolio, stock detail sheets, TickerBarView (scoped here to avoid back-button overlap on other tabs)
-- `Views/PortfolioView.swift` — Spending chart, holdings, budget, debt/goals calendar, statements
-- `ContentView.swift` — Tab navigation (Situation/Markets/Portfolio/Settings), parallel data preloading on launch
-- `Models/AppState.swift` — @Observable shared state, avatar persistence
-- `API/EpiphanyAPI.swift` — All backend requests. `fetchPriceHistory` maps display ranges (1m, 15m, max) to Yahoo Finance range+interval pairs
-- `Services/TallyService.swift` — Tally API client + keychain credentials
-- `Models/SituationData.swift` — Map data models (Flight now includes velocityKnots, headingDeg)
-- `Helpers/SVGRasterizer.swift` — WKWebView-based SVG-to-UIImage converter (fixes web-uploaded SVG avatars)
-- `Views/SettingsView.swift` — Avatar generator picks 1 of 3 topologies (star, hexagon, mesh) with high jitter and variable node sizes
+## Rules
 
-## Recent Fixes
+- iPhone only, portrait, `UIRequiresFullScreen`.
+- The map is home and never jumps on load.
+- Launch loads stocks, crypto, commodities, finance and Fear & Greed in parallel, behind the splash.
+- Sessions survive relaunch (cookie plus keychain).
+- Colours come from `Palette`, which adapts to light and dark. No `preferredColorScheme` lock except the user's own theme setting.
+- No emojis. Plain SF type, no rounded design.
 
-- **Markets UI polish** (06-18): Drawer top-area shows a horizontally scrolling sparkline ticker when fully expanded (`.large`). Search + filter moved to a top-right `ellipsis.circle` menu (Asset Type/Sort/Direction), replacing the old inline "Sort & Filter" list section. Markets list rows no longer have padded card backgrounds. `StockRow` shows company name below the ticker symbol.
+## Key files
 
-- **Markets search bar** (06-17): Search now matches native iOS Stocks app — bottom-pinned bar (mic icon, blue circular X to dismiss) via `safeAreaInset(edge: .bottom)`, auto-focuses keyboard on activation, replaces old inline top-of-list search row. Floating search icon hides while active.
-- **PersonModels test drift** (06-17): `SocialLink`/`PersonSearchResult` now conform to `Identifiable` (`id` = url) and `SocialLink` gained computed `displayName`/`systemImage` (fallback to platform name / "globe"); `PersonSearchResult` decodes missing fields as `""` instead of failing. Fixes `PersonDataTests`. `AppStateTests.swift` drift against `User`/`APIError`/`PriceAlert` fixed (06-17): removed stale `avatar`/`createdAt` params from `User` inits, `price:`→`targetPrice:`+`direction:` on `PriceAlert`, `.serverError`→`.httpError(500, ...)` on `APIError` mocks. Not yet confirmed green on a real machine (xcodebuild unavailable in this environment — full Xcode not selected).
-- **Markets sparklines** (06-16): StockRow now renders sparklines with minimal data (1+ points), not just 2+. Fixes 10-15% missing graphs. Fetch changed to `.task` for proper async lifecycle.
+- `Views/SituationView.swift`: the map, its layers, venue search, Look Around and drive time.
+- `Views/MarketsView.swift`: Markets list, index cards and movers (`Shared/MarketPulse.swift`), crypto and commodity detail with full-screen chart.
+- `Views/StockDetailView.swift`: stock detail, indicators, scrub, full-screen chart.
+- `Views/PortfolioView.swift`: spending, holdings, budget, statements.
+- `Services/AlertWatcher.swift`: background refresh that fires price alerts with the app closed.
+- `API/EpiphanyAPI.swift`: every request. `fetchPriceHistory` maps display ranges to Yahoo range and interval.
+- `WhatsNewCard.swift`: three short bullets per release; the version comes from the bundle.
 
-## Known Issues / Next
-
-- Wealthsimple unofficial API exists in `src/utils/brokers/wealthsimple.js` — not yet wired to portfolio sync
-- 500 error intermittent on app startup (~30-45 min window 06-16) — likely Yahoo Finance IP block or crumb fetch failure; monitor after deploy
-- Changelog v2.5.1 (2026-06-28): FloatingTabBar now uses fill variants for selected state (map.fill, briefcase.fill, gearshape.fill). Added symbolEffect(.bounce) on tab selection.
+Version lives in `project.yml` (`MARKETING_VERSION`). On a release, match the README badges and the first line of this file.

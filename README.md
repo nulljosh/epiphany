@@ -16,7 +16,7 @@ Everything happening in your world, on one screen. The map, the markets, the peo
 ## Features
 
 - **Situation.** A live map of flights, weather, news and incidents, plus a daily brief.
-- **Markets.** Stocks, crypto and commodities, each with a Buy, Hold or Sell read.
+- **Markets.** Stocks, crypto and commodities, each with a Buy, Hold or Sell read. Index cards, top movers, full-screen charts and price alerts.
 - **Portfolio.** Holdings, net worth and where the money went.
 - **People.** Search anyone and see how they connect.
 - **Autopilot.** The trading algorithm, on paper money, scored against the S&P 500.

@@ -1,23 +1,6 @@
 # Epiphany macOS
 
-v2.5.2 — Native macOS intelligence dashboard. 5-tab SwiftUI app (Situation, Markets, People, Portfolio, Settings).
-
-## Rules
-
-- Pure SwiftUI, no AppKit/UIKit
-- Bottom nav only, no sidebar
-- No haptics, no iOS-specific modifiers
-- Keyboard shortcuts Cmd+1-5 for tabs
-- Map stays steady -- no jumps on load or state changes
-- No emojis
-
-## Tabs
-
-1. **Situation** (Cmd+1) — MapKit map with 8 toggleable live data layers
-2. **Markets** (Cmd+2) — Sortable stocks/commodities/crypto table with search, stock detail sheets
-3. **People** (Cmd+3) — DONE 2026-06-21: `PeopleView.swift` was already fully built, wired into `ContentView.AppSection` (was previously left out of the enum entirely, not just hidden)
-4. **Portfolio** (Cmd+4) — 6-subtab financial dashboard: Spending, Holdings, Budget, Debt, Goals, Statements
-5. **Settings** (Cmd+5) — Profile, subscription tier, map layer toggles, Tally integration
+v8.0.0. Mac app with five sections (Situation, Markets, People, Portfolio, Settings) on a Liquid Glass bottom bar. Boots with the same lyre splash as iPhone. Shared Swift lives in `../Shared`.
 
 ## Run
 
@@ -27,12 +10,23 @@ xcodebuild -project Epiphany.xcodeproj -scheme Epiphany -destination 'platform=m
 xcodebuild test -project Epiphany.xcodeproj -scheme EpiphanyTests -destination 'platform=macOS'
 ```
 
-## Key Files
+QA: `open -n Epiphany.app --args -qaSection Markets` opens on a section (Debug builds only).
 
-- `Views/SituationView.swift` — MapKit map (earthquakes, flights, incidents, weather, crime, events, traffic, wildfires)
-- `Views/MarketsView.swift` — Sortable table with search, stock detail with chart scrub
-- `Views/PortfolioView.swift` — Spending forecast, income scenarios, debt payoff projections
-- `Models/AppState.swift` — @Observable shared state, parallel data loading
-- `API/EpiphanyAPI.swift` — All backend requests (auth, stocks, map data, finance, people)
-- `Services/TallyService.swift` — Tally API client + keychain
-- `Models/SituationData.swift` — Map data models (earthquakes, flights, crime, traffic, events, wildfires)
+## Rules
+
+- SwiftUI first. AppKit only where SwiftUI has no answer (window colours, for example).
+- Bottom bar, no sidebar. Cmd-1 to Cmd-5 switch sections.
+- It's a Mac app, not a stretched iPad: lists sit in a fixed column, detail opens beside them, settings and portfolio hold a readable width.
+- Every colour works in light and dark. Never hard-code white text or white fills; use `.primary` and `.secondary`.
+- Glass only on the functional layer (the bottom bar, floating controls). Content uses plain fills or materials.
+- The map stays steady: no jumps on load.
+- No haptics, no emojis.
+
+## Key files
+
+- `Views/ContentView.swift`: sections, bottom bar.
+- `Views/MarketsView.swift`: list column on the left, overview or the picked asset on the right.
+- `Views/StockDetailView.swift`: stock chart, indicators, scrub, bigger-chart toggle (Cmd-Shift-F).
+- `Views/SituationView.swift`: the map and its layers.
+- `Views/PortfolioView.swift`: spending, holdings, budget, statements.
+- `API/EpiphanyAPI.swift`: every request.
