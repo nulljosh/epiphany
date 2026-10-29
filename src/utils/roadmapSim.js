@@ -7,12 +7,12 @@ export function simulate({
   sweStartYear,
   startDebt,
   horizonYears,
+  monthlyIncome = 2000,
 }) {
   const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1;
   let debt = startDebt;
   let rdsp = 0;
   let tfsa = 0;
-  let cash = 0;
   const rows = [];
   const startYear = 2026;
   const startMonth = 0;
@@ -22,18 +22,9 @@ export function simulate({
     const month = (startMonth + i) % 12;
     const dateLabel = `${MONTHS[month]} ${String(year).slice(2)}`;
 
-    let income;
-    if (year >= sweStartYear) income = sweStartSalary / 12;
-    else if (year < 2026 || (year === 2026 && month < 5)) income = 1750;
-    else income = 1750;
+    const income = year >= sweStartYear ? sweStartSalary / 12 : monthlyIncome;
 
-    if ((year === 2026 && month >= 8) || year > 2026) {
-      if (year < sweStartYear) income += 5160 / 12;
-    }
-    if (year === 2026 && month === 5) cash += 3900;
-
-    let surplus = income - monthlyExpenses + cash;
-    cash = 0;
+    let surplus = income - monthlyExpenses;
 
     if (debt > 0 && surplus > 0) {
       const payment = Math.min(debt, surplus);
@@ -42,12 +33,9 @@ export function simulate({
     }
 
     if (debt <= 0 && surplus > 0) {
-      let targetPersonal = 1500;
-      let targetGrant = 3500;
-      if (year === 2027 || year === 2028) {
-        targetPersonal = 4500;
-        targetGrant = 10500;
-      }
+      // CDSG: $1,500 a year of contributions earns the full $3,500 grant.
+      const targetPersonal = 1500;
+      const targetGrant = 3500;
       const monthlyPersonal = targetPersonal / 12;
       const monthlyGrant = targetGrant / 12;
       const rdspContrib = Math.min(surplus, monthlyPersonal);

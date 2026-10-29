@@ -12,7 +12,7 @@ describe('detectRecurring', () => {
       txn('2026-08-03', 'SPOTIFY #456 STOCKHOLM SE', -11.99),
       txn('2026-09-03', 'SPOTIFY #789 STOCKHOLM SE', -12.99),
       txn('2026-09-10', 'TIM HORTONS', -4.5),
-      txn('2026-09-14', 'PAYROLL', 1750),
+      txn('2026-09-14', 'PAYROLL', 2000),
     ], today);
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({ merchant: 'spotify stockholm', cadence: 'monthly', amount: 12.99, priceDelta: 1, nextDate: '2026-10-03' });
