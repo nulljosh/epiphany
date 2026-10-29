@@ -192,8 +192,7 @@ struct MarketsView: View {
                     }
                 }
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar { if !isSearching { // Fear & Greed sits where the redundant Markets title was.
-                    ToolbarItem(placement: .topBarLeading) { fearGreedView }
+                .toolbar { if !isSearching {
                     ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Picker("Asset Type", selection: $marketFilter) {
@@ -400,6 +399,13 @@ struct MarketsView: View {
                 }
             }
 
+            if !isSearching {
+                fearGreedView
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+
             if !isSearching, !appState.stocks.isEmpty {
                 MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0 }
                     .listRowInsets(EdgeInsets())
@@ -557,7 +563,7 @@ struct MarketsView: View {
     private var fearGreedView: some View {
         Group {
             if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
-                // One compact chip in the nav bar: label, score, rating on one baseline.
+                // Label, score, rating on one baseline, then the gauge.
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text("Fear & Greed")
                         .font(.caption.weight(.semibold))
@@ -568,9 +574,20 @@ struct MarketsView: View {
                     Text(fgRating.capitalized)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(fearGreedColor(fgScore))
+                            // The gauge takes whatever width is left, so the chip runs up to the buttons.
+                    GeometryReader { geo in
+                        Capsule().fill(.fill.tertiary)
+                            .overlay(alignment: .leading) {
+                                Capsule().fill(fearGreedColor(fgScore))
+                                    .frame(width: geo.size.width * CGFloat(min(max(fgScore, 0), 100)) / 100)
+                            }
+                    }
+                    .frame(height: 6)
+                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 2 }
                 }
-                .padding(.horizontal, 10)
-                .fixedSize()
+                // Full width above the index cards; the nav bar capped it at a third of the screen.
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Fear and Greed index \(fgScore), \(fgRating)")
             }
