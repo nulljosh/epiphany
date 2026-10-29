@@ -186,6 +186,11 @@ struct PortfolioView: View {
                             tabSelector
                                 .padding(.top, 12)
 
+                            if (appState.financeData?.accounts ?? []).isEmpty, (resolvedPortfolio?.holdings ?? []).isEmpty, appState.statements.isEmpty {
+                                FirstRunCard { selectedTab = .statements }
+                                    .padding(.horizontal)
+                            }
+
                             tabContent
 
                             Spacer(minLength: 24)

@@ -142,130 +142,6 @@ const fetchWithRetry = async (url, maxRetries = 3, baseDelay = 1000) => {
 };
 
 // Fallback static data -- used only when all live APIs fail (Feb 21, 2026)
-const FALLBACK_DATA = {
-  // MAG7
-  AAPL:   { symbol: 'AAPL',   price: 264.58, changePercent: -0.32 },
-  MSFT:   { symbol: 'MSFT',   price: 397.23, changePercent:  0.18 },
-  GOOGL:  { symbol: 'GOOGL',  price: 314.98, changePercent: -0.41 },
-  AMZN:   { symbol: 'AMZN',   price: 210.11, changePercent:  0.24 },
-  NVDA:   { symbol: 'NVDA',   price: 189.82, changePercent: -0.67 },
-  META:   { symbol: 'META',   price: 655.66, changePercent:  0.35 },
-  TSLA:   { symbol: 'TSLA',   price: 411.82, changePercent: -1.22 },
-  // Large cap
-  'BRK-B':{ symbol: 'BRK-B', price: 498.20, changePercent:  0.08 },
-  LLY:    { symbol: 'LLY',    price: 1009.52,changePercent: -0.55 },
-  V:      { symbol: 'V',      price: 320.95, changePercent:  0.12 },
-  UNH:    { symbol: 'UNH',    price: 290.00, changePercent: -0.38 },
-  XOM:    { symbol: 'XOM',    price: 147.28, changePercent:  0.44 },
-  JPM:    { symbol: 'JPM',    price: 310.79, changePercent:  0.19 },
-  // Canadian banks (previous close 2026-08-24)
-  RY:     { symbol: 'RY',     price: 205.23, changePercent:  0.59 },
-  TD:     { symbol: 'TD',     price: 117.15, changePercent: -0.51 },
-  BNS:    { symbol: 'BNS',    price: 87.57,  changePercent: -0.81 },
-  BMO:    { symbol: 'BMO',    price: 174.43, changePercent: -1.19 },
-  CM:     { symbol: 'CM',     price: 116.49, changePercent: -1.34 },
-  WMT:    { symbol: 'WMT',    price: 122.99, changePercent: -0.61 },
-  JNJ:    { symbol: 'JNJ',    price: 242.49, changePercent:  0.11 },
-  MA:     { symbol: 'MA',     price: 526.41, changePercent:  0.05 },
-  PG:     { symbol: 'PG',     price: 160.78, changePercent:  0.28 },
-  AVGO:   { symbol: 'AVGO',   price: 332.65, changePercent: -0.72 },
-  HD:     { symbol: 'HD',     price: 382.25, changePercent:  0.14 },
-  CVX:    { symbol: 'CVX',    price: 183.93, changePercent:  0.52 },
-  MRK:    { symbol: 'MRK',    price: 122.26, changePercent: -0.33 },
-  COST:   { symbol: 'COST',   price: 985.27, changePercent: -0.25 },
-  ABBV:   { symbol: 'ABBV',   price: 224.81, changePercent:  0.47 },
-  KO:     { symbol: 'KO',     price: 79.84,  changePercent:  0.13 },
-  PEP:    { symbol: 'PEP',    price: 164.94, changePercent: -0.18 },
-  AMD:    { symbol: 'AMD',    price: 200.15, changePercent: -1.44 },
-  ADBE:   { symbol: 'ADBE',   price: 258.61, changePercent: -0.36 },
-  CRM:    { symbol: 'CRM',    price: 185.16, changePercent:  0.31 },
-  NFLX:   { symbol: 'NFLX',   price: 78.67,  changePercent:  0.48 },
-  CSCO:   { symbol: 'CSCO',   price: 79.20,  changePercent:  0.07 },
-  TMO:    { symbol: 'TMO',    price: 520.40, changePercent: -0.28 },
-  ORCL:   { symbol: 'ORCL',   price: 148.08, changePercent:  0.37 },
-  ACN:    { symbol: 'ACN',    price: 215.35, changePercent: -0.15 },
-  INTC:   { symbol: 'INTC',   price: 44.11,  changePercent: -0.74 },
-  NKE:    { symbol: 'NKE',    price: 74.30,  changePercent: -0.22 },
-  TXN:    { symbol: 'TXN',    price: 220.80, changePercent:  0.19 },
-  QCOM:   { symbol: 'QCOM',   price: 155.40, changePercent: -0.43 },
-  PM:     { symbol: 'PM',     price: 142.50, changePercent:  0.30 },
-  DHR:    { symbol: 'DHR',    price: 200.10, changePercent: -0.17 },
-  INTU:   { symbol: 'INTU',   price: 640.20, changePercent:  0.10 },
-  UNP:    { symbol: 'UNP',    price: 245.60, changePercent:  0.06 },
-  RTX:    { symbol: 'RTX',    price: 150.30, changePercent:  0.25 },
-  HON:    { symbol: 'HON',    price: 220.40, changePercent: -0.11 },
-  SPGI:   { symbol: 'SPGI',   price: 480.50, changePercent:  0.22 },
-  // Financials
-  BAC:    { symbol: 'BAC',    price: 53.06,  changePercent:  0.38 },
-  GS:     { symbol: 'GS',     price: 922.24, changePercent:  0.27 },
-  MS:     { symbol: 'MS',     price: 175.41, changePercent:  0.16 },
-  C:      { symbol: 'C',      price: 116.00, changePercent:  0.34 },
-  WFC:    { symbol: 'WFC',    price: 88.70,  changePercent:  0.22 },
-  BLK:    { symbol: 'BLK',    price: 1093.64,changePercent:  0.12 },
-  SCHW:   { symbol: 'SCHW',   price: 85.40,  changePercent:  0.42 },
-  AXP:    { symbol: 'AXP',    price: 320.80, changePercent:  0.06 },
-  // Healthcare
-  PFE:    { symbol: 'PFE',    price: 28.40,  changePercent: -0.31 },
-  MRNA:   { symbol: 'MRNA',   price: 32.50,  changePercent: 0.00 },
-  AMGN:   { symbol: 'AMGN',   price: 305.60, changePercent: -0.50 },
-  BMY:    { symbol: 'BMY',    price: 60.20,  changePercent:  0.13 },
-  MDT:    { symbol: 'MDT',    price: 90.80,  changePercent:  0.19 },
-  BSX:    { symbol: 'BSX',    price: 100.30, changePercent:  0.44 },
-  ELV:    { symbol: 'ELV',    price: 360.40, changePercent: -0.75 },
-  CVS:    { symbol: 'CVS',    price: 58.90,  changePercent: -0.44 },
-  // Industrials
-  UPS:    { symbol: 'UPS',    price: 118.60, changePercent: -0.36 },
-  FDX:    { symbol: 'FDX',    price: 275.40, changePercent:  0.15 },
-  BA:     { symbol: 'BA',     price: 232.03, changePercent:  0.68 },
-  CAT:    { symbol: 'CAT',    price: 759.74, changePercent:  0.35 },
-  DE:     { symbol: 'DE',     price: 662.49, changePercent: -0.25 },
-  LMT:    { symbol: 'LMT',    price: 658.26, changePercent:  0.09 },
-  GE:     { symbol: 'GE',     price: 343.22, changePercent:  0.30 },
-  // Media & Telecom
-  DIS:    { symbol: 'DIS',    price: 105.58, changePercent: -0.46 },
-  CMCSA:  { symbol: 'CMCSA',  price: 38.80,  changePercent: -0.22 },
-  VZ:     { symbol: 'VZ',     price: 40.60,  changePercent:  0.21 },
-  T:      { symbol: 'T',      price: 24.80,  changePercent:  0.14 },
-  TMUS:   { symbol: 'TMUS',   price: 270.40, changePercent:  0.36 },
-  // Utilities
-  NEE:    { symbol: 'NEE',    price: 70.20,  changePercent:  0.50 },
-  DUK:    { symbol: 'DUK',    price: 118.40, changePercent:  0.18 },
-  SO:     { symbol: 'SO',     price: 82.60,  changePercent:  0.11 },
-  // Consumer
-  TGT:    { symbol: 'TGT',    price: 132.80, changePercent: -0.25 },
-  LOW:    { symbol: 'LOW',    price: 250.60, changePercent:  0.06 },
-  SBUX:   { symbol: 'SBUX',   price: 102.40, changePercent:  0.42 },
-  MCD:    { symbol: 'MCD',    price: 310.20, changePercent:  0.14 },
-  YUM:    { symbol: 'YUM',    price: 148.30, changePercent: -0.22 },
-  F:      { symbol: 'F',      price: 10.20,  changePercent: -0.35 },
-  GM:     { symbol: 'GM',     price: 56.40,  changePercent:  0.31 },
-  // REITs & Other
-  AMT:    { symbol: 'AMT',    price: 210.60, changePercent: -0.27 },
-  PLD:    { symbol: 'PLD',    price: 115.40, changePercent:  0.11 },
-  CME:    { symbol: 'CME',    price: 242.80, changePercent:  0.07 },
-  WM:     { symbol: 'WM',     price: 235.60, changePercent:  0.17 },
-  XYZ:    { symbol: 'XYZ',    price: 72.40,  changePercent:  0.36 },
-  // Popular
-  COIN:   { symbol: 'COIN',   price: 171.35, changePercent:  0.98 },
-  PLTR:   { symbol: 'PLTR',   price: 135.24, changePercent: -1.82 },
-  HOOD:   { symbol: 'HOOD',   price: 76.11,  changePercent:  0.63 },
-  HIMS:   { symbol: 'HIMS',   price: 15.63,  changePercent:  1.18 },
-  SHOP:   { symbol: 'SHOP',   price: 126.20, changePercent:  0.76 },
-  RKLB:   { symbol: 'RKLB',   price: 70.86,  changePercent:  2.54 },
-  SOFI:   { symbol: 'SOFI',   price: 19.02,  changePercent: -0.55 },
-  IBM:    { symbol: 'IBM',    price: 257.16, changePercent:  0.07 },
-  IWM:    { symbol: 'IWM',    price: 232.40, changePercent: -0.33 },
-  // Commodity futures
-  'GC=F': { symbol: 'GC=F',  price: 2960.40, changePercent: 0.32 },
-  'SI=F': { symbol: 'SI=F',  price: 33.60,   changePercent: 0.52 },
-  'CL=F': { symbol: 'CL=F',  price: 74.20,   changePercent: 0.22 },
-  // Cramer tracker ETFs + benchmark
-  SPY:    { symbol: 'SPY',   price: 689.43,  changePercent: 0.11 },
-  SJIM:   { symbol: 'SJIM',  price: 22.80,   changePercent: 0.25 },
-  LJIM:   { symbol: 'LJIM',  price: 21.40,   changePercent: -0.38 },
-  // Volatility
-  '^VIX': { symbol: '^VIX',  price: 16.40,   changePercent: -1.20 },
-};
 
 // Parse stock data from either serverless array or Yahoo quoteResponse format
 const parseStockData = (raw) => {
@@ -303,8 +179,8 @@ function loadStockCache() {
 }
 
 export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true, realtime = false } = {}) {
-  // ponytail: FALLBACK_DATA still covers a first-ever visit; dropping it needs empty states (roadmap).
-  const [stocks, setStocks] = useState(() => loadStockCache() || FALLBACK_DATA);
+  // No typed-in prices: the last real ones this browser saw, or nothing until the network answers.
+  const [stocks, setStocks] = useState(() => loadStockCache() || {});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reliability, setReliability] = useState({
@@ -383,7 +259,7 @@ export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true, realtime 
           lastAttemptAt: now,
         };
       });
-      setStocks(prev => (Object.keys(prev || {}).length > 0 ? prev : FALLBACK_DATA));
+      setStocks(prev => prev || {});
     } finally {
       setLoading(false);
     }

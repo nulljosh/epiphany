@@ -66,14 +66,13 @@ describe('useStocks', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should show loading with fallback data before the first fetch resolves', () => {
+  it('shows no made-up prices before the first fetch resolves', () => {
     global.fetch.mockImplementation(() => new Promise(() => {}));
 
     const { result } = renderHook(() => useStocks(['AAPL']));
 
     expect(result.current.loading).toBe(true);
-    expect(result.current.stocks).toBeDefined();
-    expect(result.current.stocks.AAPL).toBeDefined();
+    expect(result.current.stocks).toEqual({});
     expect(result.current.reliability.status).toBe('loading');
   });
 
@@ -87,8 +86,8 @@ describe('useStocks', () => {
     });
 
     expect(result.current.error).toBeTruthy();
-    // Hook initializes with FALLBACK_DATA so stocks is never empty on error
-    expect(result.current.stocks).toBeDefined();
+    // Nothing made up on error either: the map stays as it was (empty here).
+    expect(result.current.stocks).toEqual({});
   });
 
   it('should handle invalid response format', async () => {
@@ -122,7 +121,8 @@ describe('useStocks', () => {
     expect(result.current.stocks).not.toHaveProperty('INVALID');
   });
 
-  it('should merge live data on top of fallback (never lose symbols)', async () => {
+  it('keeps symbols it already had when a refresh brings fewer', async () => {
+    localStorage.setItem('epiphany_stocks_last', JSON.stringify({ MSFT: { symbol: 'MSFT', price: 400, changePercent: 0 } }));
     mockFetchWith(() => Promise.resolve({
       ok: true,
       json: async () => [{ symbol: 'AAPL', price: 150.25, change: 2.5, changePercent: 1.69 }]
@@ -134,7 +134,7 @@ describe('useStocks', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Live data merges on top of fallback -- AAPL updated, others preserved
+    // Live data merges on top of the last real prices: AAPL arrives, MSFT stays
     expect(result.current.stocks['AAPL'].price).toBe(150.25);
     expect(Object.keys(result.current.stocks).length).toBeGreaterThan(1);
   });

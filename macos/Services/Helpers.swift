@@ -147,43 +147,6 @@ enum DebtCalc {
 
 // MARK: - Upcoming Payments
 
-enum UpcomingPayments {
-    struct Payment: Sendable {
-        let name: String
-        let amount: Double
-        let recurring: String
-        let icon: String
-        let dateResolver: @Sendable () -> Date?
-    }
-
-    private static func nextCRAQuarterlyDate() -> Date? {
-        let cal = Calendar.current
-        let now = Date()
-        let quarterMonths = [1, 4, 7, 10]
-        let year = cal.component(.year, from: now)
-        for offset in 0...1 {
-            for m in quarterMonths {
-                var comps = DateComponents()
-                comps.year = year + offset
-                comps.month = m
-                comps.day = 5
-                if let d = cal.date(from: comps), d >= cal.startOfDay(for: now) {
-                    return d
-                }
-            }
-        }
-        return nil
-    }
-
-    static let all: [Payment] = [
-        Payment(name: "GST/HST Credit", amount: 87.25, recurring: "quarterly", icon: "dollarsign.circle", dateResolver: nextCRAQuarterlyDate),
-    ]
-
-    static func daysUntil(_ payment: Payment) -> Int? {
-        guard let payDate = payment.dateResolver() else { return nil }
-        return Calendar.current.dateComponents([.day], from: Date(), to: payDate).day
-    }
-}
 
 // MARK: - Keychain
 

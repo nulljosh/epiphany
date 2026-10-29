@@ -961,6 +961,28 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         })()}
       </div>
 
+      {/* First run: an empty account gets three steps instead of zeros (Copilot's quick start, our words). */}
+      {holdings.length === 0 && accounts.length === 0 && statementFiles.length === 0 && (
+        <Card dark={dark} t={t} style={{ margin: '0 16px 16px', padding: 20 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Start with last month</div>
+          <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 14 }}>Three steps and the numbers here are yours.</div>
+          {[
+            ['1', 'Drop in a PDF statement', 'Spending, bills and insights fill in from it.', () => statementInputRef.current?.click(), 'Upload'],
+            ['2', 'Add what you hold', 'Type a holding or connect a broker, read only.', () => setTab('portfolio'), 'Add'],
+            ['3', 'Set a budget', 'Pick a monthly number per category.', () => setTab('budget'), 'Set'],
+          ].map(([n, title, body, onClick, cta]) => (
+            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: `1px solid ${t.border}` }}>
+              <div style={{ width: 28, height: 28, borderRadius: 14, background: t.backgroundSecondary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{n}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{title}</div>
+                <div style={{ fontSize: 12, color: t.textTertiary }}>{body}</div>
+              </div>
+              <button type="button" onClick={onClick} style={{ height: 32, padding: '0 14px', borderRadius: 16, border: 'none', background: t.accent, color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{cta}</button>
+            </div>
+          ))}
+        </Card>
+      )}
+
       <div style={{ display: 'flex', gap: 4, padding: '0 16px', marginBottom: 8, flexWrap: 'wrap' }}>
         {TAB_GROUPS.map((group) => {
           const active = group.tabs.includes(tab);

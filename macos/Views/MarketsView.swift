@@ -365,19 +365,9 @@ struct MarketsView: View {
                         .padding(.bottom, 4)
                     }
 
-                    if !financeData.debt.isEmpty || !UpcomingPayments.all.isEmpty {
+                    if !financeData.debt.isEmpty {
                         ScrollView(.horizontal, showsIndicators: true) {
                             HStack(spacing: 10) {
-                                ForEach(Array(UpcomingPayments.all.enumerated()), id: \.offset) { _, payment in
-                                    if let days = UpcomingPayments.daysUntil(payment), days >= 0 {
-                                        TimelineChip(
-                                            icon: payment.icon,
-                                            label: payment.name,
-                                            detail: days == 0 ? "Today" : "\(days)d",
-                                            color: Palette.successGreen
-                                        )
-                                    }
-                                }
 
                                 let debtWithPayoff = financeData.debt.map { item in
                                     (item: item, months: DebtCalc.monthsToPayoff(item: item))

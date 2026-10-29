@@ -123,3 +123,35 @@ struct MoneyGlance: View {
         }
     }
 }
+
+/// First run: an empty account gets three steps instead of zeros. Hidden once anything is there.
+struct FirstRunCard: View {
+    let onUpload: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Start with last month")
+                .font(.headline)
+            Text("Three steps and the numbers here are yours.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            ForEach(Array(["Drop in a PDF statement: spending, bills and insights fill in from it.",
+                           "Add what you hold, or connect a broker read only.",
+                           "Set a monthly budget per category."].enumerated()), id: \.offset) { i, step in
+                HStack(alignment: .top, spacing: 10) {
+                    Text("\(i + 1)")
+                        .font(.caption.weight(.bold))
+                        .frame(width: 24, height: 24)
+                        .background(Color.primary.opacity(0.08), in: Circle())
+                    Text(step)
+                        .font(.subheadline)
+                }
+            }
+            Button("Add a statement", action: onUpload)
+                .buttonStyle(.borderedProminent)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}

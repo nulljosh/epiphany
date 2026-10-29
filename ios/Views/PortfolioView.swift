@@ -170,6 +170,11 @@ struct PortfolioView: View {
                             compactHeader
                                 .padding(.top, 8)
 
+                            if (appState.financeData?.accounts ?? []).isEmpty, (resolvedPortfolio?.holdings ?? []).isEmpty, appState.statements.isEmpty {
+                                FirstRunCard { showStatementManager = true }
+                                    .padding(.horizontal)
+                            }
+
                             if let accounts = appState.financeData?.accounts {
                                 accountsBreakdown(accounts)
                             }
