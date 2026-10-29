@@ -106,7 +106,7 @@ private struct TickerItemView: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(item.symbol)
-                .font(.caption.weight(.bold))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(Palette.text)
 
             if let data = item.sparklineData, !data.isEmpty {
@@ -115,7 +115,7 @@ private struct TickerItemView: View {
             }
 
             Text(item.priceText)
-                .font(.caption.weight(.semibold).monospacedDigit())
+                .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundStyle(item.changeColor)
         }
         .lineLimit(1)

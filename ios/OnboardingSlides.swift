@@ -10,7 +10,7 @@ let epiphanyOnboardingSlides = [
                     body: "Tap any row for its chart. Tap the star to keep it on your watchlist. Pull up Business News from the bottom."),
     OnboardingSlide(symbol: "calendar.badge.plus",
                     title: "Earnings",
-                    body: "The calendar button in Markets lists upcoming reports. Add one, or all of them, to your Calendar."),
+                    body: "When a stock reports in the next two weeks, its page shows the date. One tap adds it to your Calendar."),
     OnboardingSlide(symbol: "briefcase",
                     title: "Portfolio",
                     body: "Drop in a bank statement PDF to see your spending, budget and net worth on one page."),

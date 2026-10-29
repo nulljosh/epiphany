@@ -181,7 +181,7 @@ struct StockDetailView: View {
                     if let b = enriched.formattedBeta {
                         statCell("Beta", value: b)
                     }
-                    if let date = enriched.formattedNextEarnings {
+                    if enriched.earningsSoon, let date = enriched.formattedNextEarnings {
                         statCell("Earnings", value: date)
                     }
                     if let date = enriched.formattedDividendDate {
@@ -198,7 +198,7 @@ struct StockDetailView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
 
-                if let ts = (liveStock ?? stock).nextEarnings {
+                if (liveStock ?? stock).earningsSoon, let ts = (liveStock ?? stock).nextEarnings {
                     Button {
                         addEarningsToCalendar(ts)
                     } label: {

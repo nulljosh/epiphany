@@ -27,7 +27,7 @@ struct MarketsView: View {
     @FocusState private var searchFieldFocused: Bool
 
     enum FeedDest: Identifiable {
-        case news, macro, alerts, earnings
+        case news, macro, alerts
         var id: Self { self }
     }
 
@@ -184,12 +184,12 @@ struct MarketsView: View {
                     case .news: NewsView().environment(appState)
                     case .macro: MacroView().environment(appState)
                     case .alerts: AlertsView().environment(appState)
-                    case .earnings: EarningsView().environment(appState)
                     }
                 }
-                .navigationTitle("Markets")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar { if !isSearching { ToolbarItemGroup(placement: .topBarTrailing) {
+                .toolbar { if !isSearching { // Fear & Greed sits where the redundant Markets title was.
+                    ToolbarItem(placement: .topBarLeading) { fearGreedView }
+                    ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Picker("Asset Type", selection: $marketFilter) {
                             ForEach(MarketFilter.allCases) { filter in
@@ -215,13 +215,6 @@ struct MarketsView: View {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                     }
                     .accessibilityLabel("Filter and sort")
-
-                    Button {
-                        feedDest = .earnings
-                    } label: {
-                        Image(systemName: "calendar")
-                    }
-                    .accessibilityLabel("Earnings calendar")
 
                     Button {
                         isSearching = true
@@ -357,20 +350,6 @@ struct MarketsView: View {
 
     private var marketsList: some View {
         List {
-            // Hidden when the drawer is fully open so the top strip is purely the
-            // ticker bar -- no half-obscured Fear & Greed row behind the drawer.
-            // Faded, not removed: removing the row mid-spring re-laid out the list.
-            // No score yet: skip the section, an empty row still left a blank band.
-            if appState.fearGreedScore != nil {
-                Section { fearGreedView.opacity(drawerState == .large ? 0 : 1) }
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    // Sits flush against the ticker strip above it rather than
-                    // floating with a default section gap on either side.
-                    .listSectionSpacing(0)
-            }
-
             // Any ticker, not just the loaded list: add it straight to the watchlist.
             let loaded = Set(filteredItems.map(\.symbol))
             let others = searchResults.filter { !loaded.contains($0.symbol) }
@@ -420,30 +399,24 @@ struct MarketsView: View {
                             )
                         }
                         .buttonStyle(BounceButtonStyle())
-                        .padding(.horizontal, 16)
-                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                        .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
                     }
                 }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.ultraThinMaterial)
+                        .padding(2)
+                )
             }
 
             ForEach(filteredItems) { item in
-                Group {
-                    switch item.kind {
-                    case .stock(let stock):
-                        stockRow(stock)
-                    case .commodity, .crypto:
-                        commodityCryptoRow(item)
-                    }
+                switch item.kind {
+                case .stock(let stock):
+                    stockRow(stock)
+                case .commodity, .crypto:
+                    commodityCryptoRow(item)
                 }
-                .padding(.horizontal, 16)
-                // Separators run edge to edge instead of starting under the symbol.
-                .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
             }
-            .listRowInsets(EdgeInsets())
+            .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
@@ -524,9 +497,9 @@ struct MarketsView: View {
                     .background(.black.opacity(0.6))
             }
             if !appState.stocks.isEmpty {
-                TickerBarView(appState: appState) { stock in
+                TickerBarView(appState: appState, onSelectStock: { stock in
                     tickerSelectedStock = stock
-                }
+                }, height: 60)
                 .opacity(appState.isStockDataStale ? 0.65 : 1.0)
             }
         }
@@ -539,29 +512,20 @@ struct MarketsView: View {
     private var fearGreedView: some View {
         Group {
             if let fgScore = appState.fearGreedScore, let fgRating = appState.fearGreedRating {
-                // ponytail: was a grey material "island", a stacked label block, a
-                // right-aligned duplicate percentage, and a bar underneath. Now one
-                // horizontal row: label, score, rating on a single baseline with the
-                // bar flush beneath it, no backing fill and no duplicate number.
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("Fear & Greed")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Text("\(fgScore)")
-                            .font(.subheadline.weight(.bold).monospacedDigit())
-                            .foregroundStyle(fearGreedColor(fgScore))
-                        Text(fgRating)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(fearGreedColor(fgScore))
-                        Spacer(minLength: 0)
-                    }
-                    ProgressView(value: Double(fgScore), total: 100)
-                        .tint(fearGreedColor(fgScore))
+                // One compact chip in the nav bar: label, score, rating on one baseline.
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Fear & Greed")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text("\(fgScore)")
+                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .foregroundStyle(fearGreedColor(fgScore))
+                    Text(fgRating.capitalized)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(fearGreedColor(fgScore))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .fixedSize()
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Fear and Greed index \(fgScore), \(fgRating)")
             }
