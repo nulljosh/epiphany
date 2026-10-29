@@ -3,6 +3,7 @@ import { formatCurrency } from '../utils/formatting';
 import StockDetail from './StockDetail';
 import SparklineChart from './SparklineChart';
 import useFearGreed from '../hooks/useFearGreed';
+import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 import { SECTOR_MAP, SECTOR_ORDER } from '../hooks/useStocks';
 
 const ASSET_DIMENSIONS = [
@@ -441,6 +442,15 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     return items;
   }, [stocks, liveAssets]);
 
+  // The index cards' own quotes: the default list may not carry QQQ or DIA.
+  const [indexQuotes, setIndexQuotes] = useState([]);
+  useVisibilityPolling(async () => {
+    try {
+      const res = await fetch('/api/stocks-free?symbols=SPY,QQQ,DIA');
+      if (res.ok) setIndexQuotes((await res.json()).map(q => ({ ...q, name: q.shortName || q.symbol, kind: 'stock' })));
+    } catch { /* keep the last quotes */ }
+  }, 60000);
+
   const watchlistSet = useMemo(() => new Set(watchlist || []), [watchlist]);
 
   const watchlistItems = useMemo(() => {
@@ -590,6 +600,29 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       )}
 
       <FearGreedBanner score={fgScore} rating={fgRating} t={t} />
+
+      {/* The three big indexes, as their ETFs from the list already loaded. */}
+      {!search && (() => {
+        const bySym = new Map(indexQuotes.map(i => [i.symbol, i]));
+        const cards = [['SPY', 'S&P 500'], ['QQQ', 'Nasdaq 100'], ['DIA', 'Dow']].filter(([sym]) => bySym.has(sym));
+        if (!cards.length) return null;
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 12 }}>
+            {cards.map(([sym, label]) => {
+              const item = bySym.get(sym);
+              const up = (item.changePercent ?? 0) >= 0;
+              return (
+                <button key={sym} onClick={() => setSelectedStock(item)} style={{ ...glass, padding: 12, marginBottom: 0, textAlign: 'left', cursor: 'pointer', color: t.text, font: 'inherit', minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                  <div style={{ margin: '6px 0' }}><SparklineChart symbol={sym} changePercent={item.changePercent} t={t} /></div>
+                  <div style={{ fontSize: 13, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(item.price)}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: up ? '#30d158' : '#ff453a' }}>{up ? '+' : ''}{(item.changePercent ?? 0).toFixed(2)}%</div>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Watchlist */}
       {watchlistItems.length > 0 && (
