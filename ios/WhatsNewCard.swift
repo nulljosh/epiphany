@@ -3,11 +3,10 @@ import SwiftUI
 // Read from the bundle so the title can't go stale again; only the bullets need a hand edit per release.
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
-    "Look Around photos are back on place pages, even for pins we drop ourselves",
-    "Place and event pages show how long the drive is and how far",
-    "Map events get a street-level photo when Apple has one",
-    "News loads faster: each publisher logo downloads once",
-    "The Debt section drops the calendar that only repeated its dates",
+    "Crypto and commodity pages show a live price that updates every 15 seconds",
+    "New 1M and 15M charts, and charts zoom to the move instead of drawing a flat line",
+    "Only the digits that changed light up green or red when a price ticks",
+    "Mac 1D charts draw the whole day instead of a single point",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app
