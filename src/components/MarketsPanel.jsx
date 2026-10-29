@@ -601,7 +601,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
       <FearGreedBanner score={fgScore} rating={fgRating} t={t} />
 
-      {/* The three big indexes, as their ETFs from the list already loaded. */}
+      {/* The three big indexes, as their ETFs, from their own quotes above. */}
       {!search && (() => {
         const bySym = new Map(indexQuotes.map(i => [i.symbol, i]));
         const cards = [['SPY', 'S&P 500'], ['QQQ', 'Nasdaq 100'], ['DIA', 'Dow']].filter(([sym]) => bySym.has(sym));

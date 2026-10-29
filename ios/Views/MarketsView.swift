@@ -574,7 +574,7 @@ struct MarketsView: View {
                     Text(fgRating.capitalized)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(fearGreedColor(fgScore))
-                            // The gauge takes whatever width is left, so the chip runs up to the buttons.
+                    // The gauge takes whatever width is left on the row.
                     GeometryReader { geo in
                         Capsule().fill(.fill.tertiary)
                             .overlay(alignment: .leading) {
@@ -960,7 +960,8 @@ private struct MarketItemDetailView: View {
                 AxisMarks(values: .automatic(desiredCount: 5)) { value in
                     AxisValueLabel {
                         if let date = value.as(Date.self) {
-                            Text(date, format: ["1m", "15m", "1d"].contains(selectedRange) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day())
+                            // 15M spans five days, so it labels days like 5D; only single-day ranges show the time.
+                            Text(date, format: ["1m", "1d"].contains(selectedRange) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day())
                                 .font(.caption2)
                         }
                     }

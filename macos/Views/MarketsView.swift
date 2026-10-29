@@ -400,7 +400,12 @@ struct MarketsView: View {
 
                 if !appState.stocks.isEmpty {
                     MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0; selectedAsset = nil }
-                        .task { for s in ["SPY", "QQQ", "DIA"] { await appState.loadSparkline(s) } }
+                        .task {
+                            async let spy: Void = appState.loadSparkline("SPY")
+                            async let qqq: Void = appState.loadSparkline("QQQ")
+                            async let dia: Void = appState.loadSparkline("DIA")
+                            _ = await (spy, qqq, dia)
+                        }
                 }
             }
             .frame(maxWidth: 760, alignment: .leading)
@@ -746,7 +751,6 @@ private enum MarketFilter: String, CaseIterable, Identifiable {
 /// Commodity and crypto page on the Mac: chart, the day or 24h ranges, period high and low.
 private struct AssetDetailView: View {
     let item: MarketItem
-    @Environment(\.dismiss) private var dismiss
     @State private var range = "1y"
     @State private var history: [PriceHistory.DataPoint] = []
     @State private var stats: [(String, String)] = []
@@ -774,58 +778,60 @@ private struct AssetDetailView: View {
 
     var body: some View {
         let color = changePercent >= 0 ? Palette.successGreen : Palette.dangerRed
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(item.name).font(.title2.weight(.bold))
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(CurrencyFormatter.formatPrice(price)).font(.title.weight(.semibold).monospacedDigit())
-                            .contentTransition(.numericText(value: price))
-                        Text(String(format: "%@%.2f%%", changePercent >= 0 ? "+" : "", changePercent))
-                            .font(.headline.monospacedDigit()).foregroundStyle(color)
-                            .contentTransition(.numericText(value: changePercent))
+        // Inline in the pane now, so the tall chart and stats scroll instead of clipping on a short window.
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(item.name).font(.title2.weight(.bold))
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(CurrencyFormatter.formatPrice(price)).font(.title.weight(.semibold).monospacedDigit())
+                                .contentTransition(.numericText(value: price))
+                            Text(String(format: "%@%.2f%%", changePercent >= 0 ? "+" : "", changePercent))
+                                .font(.headline.monospacedDigit()).foregroundStyle(color)
+                                .contentTransition(.numericText(value: changePercent))
+                        }
+                        .animation(.snappy, value: price)
                     }
-                    .animation(.snappy, value: price)
+                    Spacer()
                 }
-                Spacer()
-                Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
-            }
-            HStack(spacing: 12) {
-                Picker("Range", selection: $range) {
-                    ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                ChartSizeButton(tall: $tallChart)
-            }
-            Chart(history) { point in
-                LineMark(x: .value("Date", point.date), y: .value("Price", point.close))
-                    .foregroundStyle(color)
-            }
-            .chartXAxis(.hidden)
-            .chartYScale(domain: .automatic(includesZero: false))
-            .frame(height: tallChart ? 520 : 220)
-            VStack(spacing: 0) {
-                ForEach(rows, id: \.0) { row in
-                    HStack {
-                        Text(row.0).foregroundStyle(.secondary)
-                        Spacer()
-                        Text(row.1).monospacedDigit()
+                HStack(spacing: 12) {
+                    Picker("Range", selection: $range) {
+                        ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
                     }
-                    .padding(.vertical, 6)
-                    Divider()
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    ChartSizeButton(tall: $tallChart)
                 }
+                Chart(history) { point in
+                    LineMark(x: .value("Date", point.date), y: .value("Price", point.close))
+                        .foregroundStyle(color)
+                }
+                .chartXAxis(.hidden)
+                .chartYScale(domain: .automatic(includesZero: false))
+                .frame(height: tallChart ? 520 : 220)
+                VStack(spacing: 0) {
+                    ForEach(rows, id: \.0) { row in
+                        HStack {
+                            Text(row.0).foregroundStyle(.secondary)
+                            Spacer()
+                            Text(row.1).monospacedDigit()
+                        }
+                        .padding(.vertical, 6)
+                        Divider()
+                    }
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            .padding(24)
         }
-        .padding(24)
         .task { stats = await EpiphanyAPI.shared.fetchMarketStats(symbol: item.symbol, isCrypto: { if case .crypto = item.kind { return true }; return false }()) }
         .task(id: range) {
             guard let sym = item.yahooSymbol else { return }
             history = (try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: range))?.history ?? []
         }
         .task {
-            // Last close of the one-minute chart, every 15 seconds while the sheet is open.
+            // Last close of the one-minute chart, every 15 seconds while the page is open.
             guard let sym = item.yahooSymbol else { return }
             while !Task.isCancelled {
                 if let last = try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: "1m").history.last?.close,

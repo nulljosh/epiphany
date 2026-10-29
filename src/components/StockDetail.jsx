@@ -425,12 +425,17 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   // Keyboard navigation: Escape to close, ArrowLeft/Right to cycle stocks
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Escape') { if (fullChart) setFullChart(false); else onClose(); return; }
+      if (e.key === 'Escape') {
+        // In full screen, Esc only leaves full screen: stop App's handler from closing the panel too.
+        if (fullChart) { e.stopPropagation(); setFullChart(false); } else onClose();
+        return;
+      }
       if (e.key === 'ArrowLeft' && onNavigate && currentIndex > 0) onNavigate(currentIndex - 1);
       if (e.key === 'ArrowRight' && onNavigate && currentIndex < totalCount - 1) onNavigate(currentIndex + 1);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    // Capture phase on window runs before App's document listener, so stopPropagation reaches it.
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [onClose, onNavigate, currentIndex, totalCount, fullChart]);
 
   // Render lightweight-charts

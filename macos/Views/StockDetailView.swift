@@ -576,7 +576,7 @@ private struct IntradayXScaleModifier: ViewModifier {
     }
 }
 
-/// Grows the chart to fill the sheet and back. The Mac version of a full-screen chart.
+/// Grows the chart to fill the detail pane and back. The Mac version of a full-screen chart.
 struct ChartSizeButton: View {
     @Binding var tall: Bool
 
