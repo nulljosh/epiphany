@@ -14,6 +14,8 @@ struct OnboardingSlide: Identifiable {
     let symbol: String
     let title: String
     let body: String
+    /// An asset image shown instead of the SF Symbol (the Spark mascot).
+    var image: String? = nil
 }
 
 struct OnboardingView: View {
@@ -32,10 +34,17 @@ struct OnboardingView: View {
             TabView(selection: $index) {
                 ForEach(Array(slides.enumerated()), id: \.element.id) { i, slide in
                     VStack(spacing: 16) {
-                        Image(systemName: slide.symbol)
-                            .font(.system(size: 72, weight: .light))
-                            .foregroundStyle(.tint)
-                            .frame(height: 140)
+                        if let image = slide.image {
+                            Image(image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 140)
+                        } else {
+                            Image(systemName: slide.symbol)
+                                .font(.system(size: 72, weight: .light))
+                                .foregroundStyle(.tint)
+                                .frame(height: 140)
+                        }
                         Text(slide.title)
                             .font(.title.bold())
                             .multilineTextAlignment(.center)

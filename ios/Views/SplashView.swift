@@ -7,6 +7,7 @@ struct SplashView: View {
     @State private var tileOpacity: Double = 0
     @State private var textOpacity: Double = 0
     @State private var pluck = false
+    @State private var sparkShown = false
 
     private let tile: CGFloat = 220
 
@@ -31,6 +32,17 @@ struct SplashView: View {
                     }
                 }
                 .frame(width: tile, height: tile)
+                // Spark, the mascot, pops up on the tile's corner like a sticker.
+                .overlay(alignment: .bottomTrailing) {
+                    Image("Mascot")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: tile * 0.42)
+                        .offset(x: tile * 0.14, y: tile * 0.12)
+                        .scaleEffect(sparkShown ? 1 : 0.1, anchor: .bottomTrailing)
+                        .opacity(sparkShown ? 1 : 0)
+                        .accessibilityHidden(true)
+                }
                 .scaleEffect(tileScale)
                 .opacity(tileOpacity)
 
@@ -47,7 +59,7 @@ struct SplashView: View {
     private func play() {
         if reduceMotion {
             for part in LyreShape.Part.allCases { drawn[part] = 1 }
-            tileScale = 1; tileOpacity = 1; textOpacity = 1
+            tileScale = 1; tileOpacity = 1; textOpacity = 1; sparkShown = true
             return
         }
         withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { tileScale = 1; tileOpacity = 1 }
@@ -57,6 +69,7 @@ struct SplashView: View {
         }
         withAnimation(.easeInOut(duration: 0.12).delay(1.3)) { pluck = true }
         withAnimation(.spring(response: 0.3, dampingFraction: 0.35).delay(1.42)) { pluck = false }
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.55).delay(1.0)) { sparkShown = true }
         withAnimation(.easeOut(duration: 0.4).delay(1.1)) { textOpacity = 1 }
     }
 }

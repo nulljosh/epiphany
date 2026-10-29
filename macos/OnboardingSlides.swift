@@ -1,14 +1,21 @@
 import SwiftUI
 
-/// The three screens a first-time, signed-out visitor sees. Shared by iOS and macOS.
+/// A short tour shown once, right after a new account signs up. Shared by iOS and macOS.
 let epiphanyOnboardingSlides = [
-    OnboardingSlide(symbol: "wallet.bifold",
-                    title: "Your money, one page",
-                    body: "Epiphany pulls your accounts, holdings and spending into a single dashboard you can read in a glance."),
+    OnboardingSlide(symbol: "lightbulb",
+                    title: "Hi, I'm Spark",
+                    body: "Epiphany puts your map, markets and money on one screen. Here's the quick tour.",
+                    image: "Mascot"),
+    OnboardingSlide(symbol: "map",
+                    title: "Map",
+                    body: "See what's around you: places, flights, incidents and weather alerts. Click a pin for details."),
     OnboardingSlide(symbol: "chart.line.uptrend.xyaxis",
-                    title: "Watch it move",
-                    body: "Charts for net worth, allocation and performance update as your positions do. No spreadsheet upkeep."),
-    OnboardingSlide(symbol: "bell.badge",
-                    title: "Know before it stings",
-                    body: "Set alerts on prices, balances and budgets so the number finds you instead of the other way round."),
+                    title: "Markets",
+                    body: "Click any row for its chart and news. Star it to keep it on your watchlist."),
+    OnboardingSlide(symbol: "calendar.badge.plus",
+                    title: "Earnings",
+                    body: "When a stock reports in the next two weeks, its page shows the date. One click adds it to your Calendar."),
+    OnboardingSlide(symbol: "briefcase",
+                    title: "Portfolio",
+                    body: "Drop in a bank statement PDF to see your spending, budget and net worth on one page."),
 ]

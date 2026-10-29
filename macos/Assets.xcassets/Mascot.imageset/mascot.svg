@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6ecff"/>
+      <stop offset="1" stop-color="#5aaeff"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0.55" stop-color="#5aaeff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#5aaeff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="120" cy="100" r="100" fill="url(#glow)"/>
+  <g stroke="#5aaeff" stroke-width="8" stroke-linecap="round">
+    <path d="M120 6V20"/><path d="M52 30L62 40"/><path d="M188 30L178 40"/>
+    <path d="M24 98H38"/><path d="M216 98H202"/>
+  </g>
+  <path fill="url(#glass)" d="M120 32A68 68 0 0 1 172 144C162 156 156 166 154 178H86C84 166 78 156 68 144A68 68 0 0 1 120 32Z"/>
+  <path d="M84 60Q96 46 112 44" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+  <rect x="86" y="182" width="68" height="13" rx="6.5" fill="#1462e0"/>
+  <rect x="90" y="198" width="60" height="13" rx="6.5" fill="#1462e0"/>
+  <path d="M104 214H136Q132 226 120 226Q108 226 104 214Z" fill="#0b3c91"/>
+  <ellipse cx="104" cy="108" rx="6" ry="7.5" fill="#0b2f73"/>
+  <ellipse cx="136" cy="108" rx="6" ry="7.5" fill="#0b2f73"/>
+  <circle cx="106" cy="105" r="2" fill="#fff"/>
+  <circle cx="138" cy="105" r="2" fill="#fff"/>
+  <circle cx="93" cy="122" r="5.5" fill="#ff9bb3" opacity="0.6"/>
+  <circle cx="147" cy="122" r="5.5" fill="#ff9bb3" opacity="0.6"/>
+  <path d="M111 125Q120 133 129 125" fill="none" stroke="#0b2f73" stroke-width="3.5" stroke-linecap="round"/>
+</svg>
