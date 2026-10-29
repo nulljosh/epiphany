@@ -190,6 +190,8 @@ struct PortfolioView: View {
 
                             Spacer(minLength: 24)
                         }
+                        .frame(maxWidth: 960)
+                        .frame(maxWidth: .infinity)
                     }
                 }
             }

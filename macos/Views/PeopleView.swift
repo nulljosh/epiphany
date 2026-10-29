@@ -62,7 +62,6 @@ struct PeopleView: View {
             .padding(.bottom, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Palette.bgDark)
         .onAppear {
             loadRecents()
             loadIndex()

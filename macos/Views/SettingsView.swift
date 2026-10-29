@@ -119,9 +119,12 @@ struct SettingsView: View {
                     signedOutCard
                 }
             }
+            // A settings column, not a billboard: System Settings width, centred.
+            .frame(maxWidth: 680)
             .padding(.horizontal, 20)
             .padding(.top, 16)
             .padding(.bottom, 96)
+            .frame(maxWidth: .infinity)
         }
         .alert("Upgrade to \(upgradeTarget?.title ?? "")", isPresented: $showUpgradeAlert) {
             Button("Open Web Upgrade") {

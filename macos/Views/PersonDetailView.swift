@@ -45,7 +45,6 @@ struct PersonDetailView: View {
             .padding(Spacing.xl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Palette.bgDark)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Done") { dismiss() }
