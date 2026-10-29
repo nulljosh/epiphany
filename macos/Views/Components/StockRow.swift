@@ -73,6 +73,7 @@ struct QuoteRow: View {
     var sparklineData: [Double]? = nil
     /// Green or red behind the price for a moment when it ticks, like TradingView.
     @State private var flash: Color?
+    @State private var previousPrice: String?
 
     var body: some View {
         let color = changePercent >= 0 ? Palette.successGreen : Palette.dangerRed
@@ -93,13 +94,12 @@ struct QuoteRow: View {
                     .frame(width: 64, height: 36)
             }
             VStack(alignment: .trailing, spacing: 4) {
-                Text(price.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))
+                tickText(priceText, previous: previousPrice, tick: flash, base: .primary)
                     .font(.body.weight(.medium).monospacedDigit())
-                    .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .padding(.horizontal, 4)
-                    .background((flash ?? .clear).opacity(0.3), in: RoundedRectangle(cornerRadius: 4))
+                    .background((flash ?? .clear).opacity(0.15), in: RoundedRectangle(cornerRadius: 4))
                     .padding(.horizontal, -4)
                 Text(String(format: "%@%.2f%%", changePercent >= 0 ? "+" : "", changePercent))
                     .font(.footnote.weight(.semibold).monospacedDigit())
@@ -115,9 +115,16 @@ struct QuoteRow: View {
         .contentShape(Rectangle())
         .onChange(of: price) { old, new in
             guard old != new else { return }
+            previousPrice = format(old)
             flash = new > old ? Palette.successGreen : Palette.dangerRed
-            withAnimation(.easeOut(duration: 0.8).delay(0.2)) { flash = nil }
+            withAnimation(.easeOut(duration: 0.8).delay(0.6)) { flash = nil }
         }
+    }
+
+    private var priceText: String { format(price) }
+
+    private func format(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US")))
     }
 }
 

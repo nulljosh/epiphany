@@ -127,15 +127,22 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
   // itself causes one) and re-fire the effect forever.
   const handleSignal = useCallback((_, s) => setSignal(s), []);
   // Green or red behind the price for a moment when it ticks, like TradingView.
+  // Only the digits that changed take the tick colour.
   const prevPrice = useRef(price);
   const [flash, setFlash] = useState(null);
+  const [tick, setTick] = useState(null);
   useEffect(() => {
     if (prevPrice.current === price) return;
-    setFlash(price > prevPrice.current ? 'rgba(48,209,88,0.3)' : 'rgba(255,69,58,0.3)');
+    const up = price > prevPrice.current;
+    setFlash(up ? 'rgba(48,209,88,0.15)' : 'rgba(255,69,58,0.15)');
+    setTick({ prev: formatCurrency(prevPrice.current).replace('$', ''), color: up ? '#30d158' : '#ff453a' });
     prevPrice.current = price;
-    const id = setTimeout(() => setFlash(null), 250);
+    const id = setTimeout(() => { setFlash(null); setTick(null); }, 1200);
     return () => clearTimeout(id);
   }, [price]);
+  const priceText = formatCurrency(price).replace('$', '');
+  let same = 0;
+  if (tick) while (same < priceText.length && priceText[same] === tick.prev[same]) same++;
   return (
     <div
       onClick={onClick}
@@ -173,7 +180,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
       <SignalBadge signal={signal} />
       <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '45%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
         {/* No dollar sign, like iOS Stocks. */}
-        <div style={{ fontWeight: 500, fontSize: 17, color: t.text, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', padding: '0 4px', margin: '0 -4px', borderRadius: 4, background: flash || 'transparent', transition: flash ? 'none' : 'background 0.8s ease-out' }}>{formatCurrency(price).replace('$', '')}</div>
+        <div style={{ fontWeight: 500, fontSize: 17, color: t.text, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', padding: '0 4px', margin: '0 -4px', borderRadius: 4, background: flash || 'transparent', transition: flash ? 'none' : 'background 0.8s ease-out' }}>{tick ? <>{priceText.slice(0, same)}<span style={{ color: tick.color }}>{priceText.slice(same)}</span></> : priceText}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <ChangePill value={changePercent} />
           {Math.abs(changePercent) >= 5 && (
