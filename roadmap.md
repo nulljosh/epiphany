@@ -32,7 +32,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 14.0 | Multiple named watchlists (done 14.0.0) |
 | 15.0 | Mac extras: menu bar ticker, Notification Center alerts (done 15.0.0) |
 | 16.0 | Price alerts with the apps closed: the server checks every 15 minutes and emails (done 16.0.0). APNs push still needs a key (#180) |
-| 17.0 | Commodity and crypto detail parity with stocks |
+| 17.0 | Commodity and crypto detail parity with stocks (done 17.0.0) |
 | 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua) |
 | 19.0 | Design debt: colour rule violations, news drawer drag |
 | 20.0 | A fresh Mobbin pass, written into a new table |
@@ -96,9 +96,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## Brand & landing page
 - [ ] Landing page screenshots must use a real populated account, not a demo account (currently renders an empty portfolio, looks broken on the marketing site).
-
-## Commodity/crypto detail parity
-- [ ] Derivable without new backend work: Period High/Low from already-loaded price history; SMA20/EMA50 overlays on the commodity chart (client-side, `StockDetailView` already computes these for equities, reuse). Needs a chart refactor pass.
 
 ## Trading / brokerage
 - [ ] **IBKR broker adapter, blocked on IBKR account approval**: Joshua started an Interactive Brokers Canada individual application on 2026-09-06 and is filling KYC forms. Once approved, write `server/api/broker/ibkr.js` mirroring the existing `alpaca.js` stub interface (paper account endpoint, execute trade with symbol/qty/side). Wire it into `broker/morning-run.js:runLive()` in place of the Alpaca call. Alpaca is blocked because it rejects Canadian residents. IBKR is the funded path forward for live autopilot trading in Canada.

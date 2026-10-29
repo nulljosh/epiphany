@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum ChartType: String, CaseIterable {
     case line = "Line"
@@ -148,5 +149,40 @@ enum Indicators {
             if f > s { score += 1 } else if f < s { score -= 1 }
         }
         return score >= 2 ? .buy : (score <= -2 ? .sell : .hold)
+    }
+}
+
+/// Long / Hold / Short from `Indicators.signal`, as a small capsule under the price.
+struct SignalPill: View {
+    let signal: Indicators.TradeSignal
+
+    var body: some View {
+        let tint: Color = signal == .buy ? .green : signal == .sell ? .red : .gray
+        Text(signal.rawValue.uppercased())
+            .font(.caption2.weight(.bold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 3)
+            .background(tint.opacity(0.18), in: Capsule())
+            .foregroundStyle(tint)
+    }
+}
+
+/// An overlay on/off chip (SMA, EMA) in the overlay's own colour.
+struct IndicatorChip: View {
+    let label: String
+    @Binding var isOn: Bool
+    let color: Color
+
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(isOn ? color.opacity(0.2) : .clear, in: Capsule())
+                .overlay(Capsule().stroke(isOn ? color : .secondary.opacity(0.3), lineWidth: 1))
+                .foregroundStyle(isOn ? color : .secondary)
+        }
+        .buttonStyle(.plain)
     }
 }

@@ -752,6 +752,8 @@ private struct MarketItemDetailView: View {
     @State private var livePrice: Double?
     @State private var fullChart = false
     @State private var scrub: (date: Date, price: Double)?
+    @State private var showSMA = true
+    @State private var showEMA = true
 
     private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
 
@@ -794,11 +796,21 @@ private struct MarketItemDetailView: View {
                 .animation(.snappy, value: price)
                 .padding(.top, 8)
 
+                if let sig = Indicators.signal(closes: priceHistory.map(\.close)) {
+                    SignalPill(signal: sig)
+                }
+
                 if isLoading {
                     ProgressView()
                         .frame(height: 220)
                 } else if priceHistory.count >= 2 {
                     chartView()
+                    HStack(spacing: 8) {
+                        IndicatorChip(label: "SMA 20", isOn: $showSMA, color: Palette.warningAmber)
+                        IndicatorChip(label: "EMA 50", isOn: $showEMA, color: Palette.slate)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
                 } else if let error {
                     Text(error)
                         .font(.caption)
@@ -933,7 +945,8 @@ private struct MarketItemDetailView: View {
                 ForEach(points, id: \.0) { point in
                     LineMark(
                         x: .value("Date", point.0),
-                        y: .value("Price", point.1)
+                        y: .value("Price", point.1),
+                        series: .value("Series", "Price")
                     )
                     .foregroundStyle(itemChangeColor)
 
@@ -949,6 +962,21 @@ private struct MarketItemDetailView: View {
                             endPoint: .bottom
                         )
                     )
+                }
+                // Same overlays as a stock: SMA 20 amber, EMA 50 slate.
+                if showSMA {
+                    ForEach(Indicators.sma(prices: points, period: 20), id: \.date) { p in
+                        LineMark(x: .value("Date", p.date), y: .value("SMA", p.value), series: .value("Series", "SMA"))
+                            .foregroundStyle(Palette.warningAmber)
+                            .lineStyle(StrokeStyle(lineWidth: 1.5))
+                    }
+                }
+                if showEMA {
+                    ForEach(Indicators.ema(prices: points, period: 50), id: \.date) { p in
+                        LineMark(x: .value("Date", p.date), y: .value("EMA", p.value), series: .value("Series", "EMA"))
+                            .foregroundStyle(Palette.slate)
+                            .lineStyle(StrokeStyle(lineWidth: 1.5))
+                    }
                 }
                 if let scrub {
                     RuleMark(x: .value("Date", scrub.date))

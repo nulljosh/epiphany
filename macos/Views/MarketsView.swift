@@ -756,10 +756,13 @@ private struct AssetDetailView: View {
     @State private var stats: [(String, String)] = []
     @State private var livePrice: Double?
     @State private var tallChart = false
+    @State private var showSMA = true
+    @State private var showEMA = true
 
     private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
 
     private var price: Double { livePrice ?? item.price }
+    private var points: [(Date, Double)] { history.compactMap { p in p.parsedDate.map { ($0, p.close) } } }
 
     /// Day change against the previous close the list row was built from, so the live tick moves it too.
     private var changePercent: Double {
@@ -786,8 +789,11 @@ private struct AssetDetailView: View {
                         .animation(.snappy, value: price)
                     }
                     Spacer()
+                    if let sig = Indicators.signal(closes: history.map(\.close)) { SignalPill(signal: sig) }
                 }
                 HStack(spacing: 12) {
+                    IndicatorChip(label: "SMA 20", isOn: $showSMA, color: Palette.warningAmber)
+                    IndicatorChip(label: "EMA 50", isOn: $showEMA, color: Palette.slate)
                     Picker("Range", selection: $range) {
                         ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
                     }
@@ -795,9 +801,25 @@ private struct AssetDetailView: View {
                     .labelsHidden()
                     ChartSizeButton(tall: $tallChart)
                 }
-                Chart(history) { point in
-                    LineMark(x: .value("Date", point.date), y: .value("Price", point.close))
-                        .foregroundStyle(color)
+                let points = points
+                Chart {
+                    ForEach(points, id: \.0) { p in
+                        LineMark(x: .value("Date", p.0), y: .value("Price", p.1), series: .value("Series", "Price"))
+                            .foregroundStyle(color)
+                    }
+                    // Same overlays as a stock: SMA 20 amber, EMA 50 slate.
+                    if showSMA {
+                        ForEach(Indicators.sma(prices: points, period: 20), id: \.date) { p in
+                            LineMark(x: .value("Date", p.date), y: .value("SMA", p.value), series: .value("Series", "SMA"))
+                                .foregroundStyle(Palette.warningAmber)
+                        }
+                    }
+                    if showEMA {
+                        ForEach(Indicators.ema(prices: points, period: 50), id: \.date) { p in
+                            LineMark(x: .value("Date", p.date), y: .value("EMA", p.value), series: .value("Series", "EMA"))
+                                .foregroundStyle(Palette.slate)
+                        }
+                    }
                 }
                 .chartXAxis(.hidden)
                 .chartYScale(domain: .automatic(includesZero: false))
