@@ -268,7 +268,7 @@ describe('findInsights', () => {
       { date: '2026-09-08', description: 'STARBUCKS 44', amount: -10, category: 'starbucks' },
     ]);
     expect(out.map((i) => i.kind)).toEqual(['top_merchant', 'category_move', 'total_change']);
-    expect(out[0].title).toBe('Most went to costco');
+    expect(out[0].title).toBe('Most went to Costco');
     expect(out[1]).toMatchObject({ title: 'groceries up', amount: 150 });
     expect(out[2].title).toBe('Spending up 160%');
   });

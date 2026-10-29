@@ -23,7 +23,7 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 16 }}>
           {insights.map((i) => (
             <Card key={i.kind} dark={dark} t={t} style={{ padding: 14, minWidth: 170, flex: '0 0 auto' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{i.title}</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{i.title.charAt(0).toUpperCase() + i.title.slice(1)}</div>
               <div style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: 'tabular-nums', margin: '4px 0' }}>{formatCurrency(i.amount)}</div>
               <div style={{ fontSize: 11, color: t.textTertiary }}>{i.detail}</div>
             </Card>

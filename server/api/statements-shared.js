@@ -383,12 +383,14 @@ export function findInsights(transactions = []) {
   const insights = [];
 
   const merchants = Object.entries(sumBy(latest, (t) => normalizeMerchant(t.description))).sort((a, b) => b[1] - a[1]);
-  if (merchants[0]?.[0]) insights.push({ kind: 'top_merchant', title: `Most went to ${merchants[0][0]}`, amount: merchants[0][1], month: latest, detail: `in ${label(latest)}` });
+  const titleCase = (text) => text.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+  if (merchants[0]?.[0]) insights.push({ kind: 'top_merchant', title: `Most went to ${titleCase(merchants[0][0])}`, amount: merchants[0][1], month: latest, detail: `in ${label(latest)}` });
 
   if (prev) {
     const now = sumBy(latest, (t) => t.category);
     const before = sumBy(prev, (t) => t.category);
-    const moves = [...new Set([...Object.keys(now), ...Object.keys(before)])]
+    // Uncategorized moving says nothing about your habits, so it never makes a card.
+    const moves = [...new Set([...Object.keys(now), ...Object.keys(before)])].filter((c) => c !== 'uncategorized')
       .map((c) => [c, roundMoney((now[c] || 0) - (before[c] || 0))])
       .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
     const [cat, delta] = moves[0] || [];
