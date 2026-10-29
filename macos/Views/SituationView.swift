@@ -280,8 +280,9 @@ struct SituationView: View {
                         .buttonStyle(.plain)
                     }
                 } else {
-                    Annotation(cluster.count >= 3 ? "\(cluster.count) events" : "", coordinate: cluster.coordinate) {
+                    Annotation("", coordinate: cluster.coordinate) {
                         countBadge(cluster.count, tint: Palette.slate, coordinate: cluster.coordinate)
+                            .accessibilityLabel("\(cluster.count) events")
                     }
                 }
             }
