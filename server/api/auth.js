@@ -69,6 +69,16 @@ function getBaseUrl() {
   return process.env.SITE_URL || DEFAULT_BASE_URL;
 }
 
+// Accounts with no avatar get a Greek-god bust, the same one per email every time
+// (Talli does the same). Absolute so the native apps can load it; avatarUpdatedAt 1
+// gives their disk cache a stable key.
+const GODS = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
+export function defaultAvatarUrl(email) {
+  let h = 2166136261;
+  for (const ch of String(email || '')) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+  return `https://epiphany.jaybulb.com/avatars/gods/${GODS[h % GODS.length]}-${Math.floor(h / GODS.length) % 12}.jpg`;
+}
+
 function publicUser(user) {
   return {
     id: user?.id,
@@ -79,8 +89,8 @@ function publicUser(user) {
     // The purchase handler stores it snake_case; read both so a paid account shows as paid on any device.
     stripeCustomerId: user?.stripeCustomerId || user?.stripe_customer_id || null,
     watchlist: user?.watchlist || null,
-    avatarUrl: user?.avatarUrl || null,
-    avatarUpdatedAt: user?.avatarUpdatedAt || null,
+    avatarUrl: user?.avatarUrl || defaultAvatarUrl(user?.email),
+    avatarUpdatedAt: user?.avatarUrl ? (user?.avatarUpdatedAt || null) : 1,
     readOnlyApiEnabled: user?.readOnlyApiEnabled ?? false,
     readOnlyApiKey: user?.readOnlyApiEnabled ? (user?.readOnlyApiKey || null) : null,
   };
@@ -485,7 +495,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         found: true,
         name: user.name || user.fullName || null,
-        avatarUrl: user.avatarUrl || null,
+        avatarUrl: user.avatarUrl || defaultAvatarUrl(user.email),
       });
     } catch {
       return res.status(200).json({ found: false });

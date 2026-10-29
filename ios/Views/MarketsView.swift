@@ -27,7 +27,7 @@ struct MarketsView: View {
     @FocusState private var searchFieldFocused: Bool
 
     enum FeedDest: Identifiable {
-        case news, macro, alerts
+        case news, macro, alerts, earnings
         var id: Self { self }
     }
 
@@ -104,7 +104,13 @@ struct MarketsView: View {
     }
 
     var body: some View {
-        mainNavigation
+        // Ticker above everything: it owns the strip under the status bar and the
+        // nav stack starts below it.
+        VStack(spacing: 0) {
+            topAreaContent
+            mainNavigation
+        }
+        .background(Palette.bg.ignoresSafeArea())
             .onAppear { setupOnAppear() }
             .onDisappear { isVisible = false }
             .onChange(of: appState.stocks.count) { _, _ in rebuildItems() }
@@ -173,14 +179,12 @@ struct MarketsView: View {
     private var mainNavigation: some View {
         NavigationStack {
             mainContent
-                // Inside the stack so the ticker sits under the nav bar; outside it
-                // the strip covered the filter and search buttons.
-                .safeAreaInset(edge: .top, spacing: 8) { topAreaContent }
                 .navigationDestination(item: $feedDest) { dest in
                     switch dest {
                     case .news: NewsView().environment(appState)
                     case .macro: MacroView().environment(appState)
                     case .alerts: AlertsView().environment(appState)
+                    case .earnings: EarningsView().environment(appState)
                     }
                 }
                 .navigationTitle("Markets")
@@ -211,6 +215,13 @@ struct MarketsView: View {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                     }
                     .accessibilityLabel("Filter and sort")
+
+                    Button {
+                        feedDest = .earnings
+                    } label: {
+                        Image(systemName: "calendar")
+                    }
+                    .accessibilityLabel("Earnings calendar")
 
                     Button {
                         isSearching = true
@@ -269,7 +280,7 @@ struct MarketsView: View {
                 isLoadingNews = false
             }
         }
-        .overlay(alignment: .bottom) { if !isSearching { newsDrawerOverlay } }
+        .overlay(alignment: .bottom) { if !isSearching, feedDest == nil { newsDrawerOverlay } }
         .onChange(of: drawerState) { _, state in
             if state != .peek { loadNewsIfNeeded() }
         }
@@ -313,22 +324,6 @@ struct MarketsView: View {
     }
 
     @State private var drawerState: DrawerState = .peek
-    // Plain @State (not @GestureState) so we can reset it to 0 *inside* the
-    // release animation -- @GestureState resets instantly and pops the height.
-    @State private var dragTranslation: CGFloat = 0
-
-    private enum DrawerState: CaseIterable {
-        case peek, medium, large
-        func height(in totalHeight: CGFloat) -> CGFloat {
-            switch self {
-            case .peek: return 64
-            case .medium: return totalHeight * 0.45
-            // Fills up to just under the ticker, which now sits beneath the inline
-            // nav bar: status bar + nav bar + strip is about 140pt.
-            case .large: return totalHeight - 140
-            }
-        }
-    }
 
     /// Past either end the drawer gives a little and resists, like a system sheet.
     static func rubberBand(_ value: CGFloat, min lo: CGFloat, max hi: CGFloat) -> CGFloat {
@@ -338,69 +333,8 @@ struct MarketsView: View {
     }
 
     private var newsDrawerOverlay: some View {
-        GeometryReader { geo in
-            let maxHeight = geo.size.height - 80
-            let target = drawerState.height(in: geo.size.height) - dragTranslation
-            let height = Self.rubberBand(target, min: 64, max: maxHeight)
-            VStack(spacing: 0) {
-                NewsDrawerView(articles: $newsArticles, isLoading: $isLoadingNews, isExpanded: drawerState != .peek, brief: appState.dailyBrief)
-            }
-            .frame(maxWidth: .infinity)
-            // Fixed at max height -- the inner List never gets a new size
-            // proposal during drag, so it never re-measures/re-lays-out its
-            // lazy content.
-            .frame(height: maxHeight, alignment: .top)
-            .frame(height: height, alignment: .top)
-            .clipped()
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
-            )
-            // Geometry already stops at the tab bar, so no extra bottom gap:
-            // the peek sits flush on the tab bar instead of floating over rows.
-            .overlay(alignment: .top) {
-                Color.clear
-                    .frame(height: 96)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        // Global space: this handle rides on the drawer's top edge, so a
-                        // local translation shifts under the finger every frame and the
-                        // drag jitters. Measured globally it tracks the finger 1:1.
-                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
-                            .onChanged { value in
-                                var t = SwiftUI.Transaction()
-                                t.disablesAnimations = true
-                                withTransaction(t) { dragTranslation = value.translation.height }
-                            }
-                            .onEnded { value in
-                                let totalHeight = geo.size.height
-                                let current = min(max(64, drawerState.height(in: totalHeight) - value.translation.height), maxHeight)
-                                // Project momentum so a flick settles past the nearest detent.
-                                let predicted = drawerState.height(in: totalHeight)
-                                    - value.predictedEndTranslation.height
-                                let settled = DrawerState.allCases.min(
-                                    by: { abs($0.height(in: totalHeight) - predicted) < abs($1.height(in: totalHeight) - predicted) }
-                                ) ?? .peek
-                                // Hand the finger's speed to the spring so release doesn't
-                                // stall or lurch. initialVelocity is in units of the distance left.
-                                let distance = settled.height(in: totalHeight) - current
-                                let velocity = abs(distance) > 1 ? -value.velocity.height / distance : 0
-                                if settled != drawerState { Haptics.impact(.light) }
-                                // Reset drag AND snap the detent in one animation so the
-                                // height interpolates continuously -- no instant pop.
-                                withAnimation(.interpolatingSpring(duration: 0.4, bounce: 0.12, initialVelocity: velocity)) {
-                                    drawerState = settled
-                                    dragTranslation = 0
-                                }
-                            }
-                    )
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 4)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-        }
+        NewsDrawerContainer(articles: $newsArticles, isLoading: $isLoadingNews,
+                            brief: appState.dailyBrief, drawerState: $drawerState)
     }
 
     @ViewBuilder
@@ -425,9 +359,10 @@ struct MarketsView: View {
         List {
             // Hidden when the drawer is fully open so the top strip is purely the
             // ticker bar -- no half-obscured Fear & Greed row behind the drawer.
+            // Faded, not removed: removing the row mid-spring re-laid out the list.
             // No score yet: skip the section, an empty row still left a blank band.
-            if drawerState != .large, appState.fearGreedScore != nil {
-                Section { fearGreedView }
+            if appState.fearGreedScore != nil {
+                Section { fearGreedView.opacity(drawerState == .large ? 0 : 1) }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -485,24 +420,30 @@ struct MarketsView: View {
                             )
                         }
                         .buttonStyle(BounceButtonStyle())
+                        .padding(.horizontal, 16)
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                        .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
                     }
                 }
-                .listRowBackground(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.ultraThinMaterial)
-                        .padding(2)
-                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
 
             ForEach(filteredItems) { item in
-                switch item.kind {
-                case .stock(let stock):
-                    stockRow(stock)
-                case .commodity, .crypto:
-                    commodityCryptoRow(item)
+                Group {
+                    switch item.kind {
+                    case .stock(let stock):
+                        stockRow(stock)
+                    case .commodity, .crypto:
+                        commodityCryptoRow(item)
+                    }
                 }
+                .padding(.horizontal, 16)
+                // Separators run edge to edge instead of starting under the symbol.
+                .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
             }
-            .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
+            .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
@@ -517,7 +458,7 @@ struct MarketsView: View {
         }
         // Clear the floating tab bar AND the news drawer's peek (which floats over
         // the list bottom) so the last stock rows scroll fully into view.
-        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 176) }
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 196) }
         .refreshable {
             do {
                 try await appState.refreshMarkets()

@@ -31,6 +31,7 @@ struct EpiphanyApp: App {
                 // Warm the news cache during splash so the Markets drawer opens already filled.
                 Task { _ = try? await EpiphanyAPI.shared.fetchNews() }
 
+                let started = ContinuousClock.now
                 // Restore auth DURING splash so login sheet never flashes.
                 await appState.restoreAuthentication()
                 #if DEBUG
@@ -38,6 +39,8 @@ struct EpiphanyApp: App {
                 #endif
                 appState.error = nil
 
+                // Let the logo animation finish even when auth restores instantly.
+                try? await Task.sleep(until: started + .seconds(2.2))
                 withAnimation(.easeOut(duration: 0.6)) {
                     showSplash = false
                 }
