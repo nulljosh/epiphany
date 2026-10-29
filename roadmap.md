@@ -19,6 +19,23 @@ One row per minor version, daily-use first. Borrow the idea, never the look.
 | Saved places with nearby-incident counts | Citizen | M | 10.0 | done 10.0.0 (web, iOS, Mac) |
 | Multiple named watchlists | Yahoo, TradingView | L | later | done 14.0.0 (web, iOS, Mac) |
 
+## Mobbin pass 2 (20.0, 2026-10-29: Robinhood, Yahoo Finance, Webull, TradingView, Copilot, Monarch, Rocket Money, Delta, Citizen, Stocktwits)
+Read from each app's App Store screens. Daily use first, polish before novelty. Skipped: social feeds and sentiment votes, options and futures trading, AI chat, bill negotiation, NFTs, paid tiers.
+
+| Gap | Who has it | Size | Target | Status |
+|---|---|---|---|---|
+| More alert kinds: 52 week high or low, and earnings day for a followed stock, as toggles | Yahoo | S | 21.0 | open |
+| Budget left per day ("$48 a day for 13 days") on the budget card | Rocket Money | S | 22.0 | open |
+| Live price chip under a headline for each symbol it names | Yahoo | S | 23.0 | open |
+| Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | open (#179) |
+| Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | open |
+| Allocation donut on the portfolio (stocks, crypto, cash, funds) | Delta, Robinhood | M | 26.0 | open |
+| RSI and MACD in a pane under the price chart, not only in the signal | TradingView, Webull | M | 27.0 | open |
+| Gain chart toggles: value, amount invested, cost basis | Delta | M | 28.0 | open |
+| Spending flow (Sankey) from income to categories | Monarch | L | 29.0 | open |
+| Incident status on map pins: active or resolved | Citizen | S | 29.0 | open, needs a status field in the feeds |
+| Weekly earnings digest by email, Sunday, for watched stocks | Yahoo | S | 29.0 | open, rides the 16.0 alert cron |
+
 ## Version plan to v100
 One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.
 
@@ -35,8 +52,9 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 17.0 | Commodity and crypto detail parity with stocks (done 17.0.0) |
 | 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua, skipped for now) |
 | 19.0 | Design debt: colour rule violations (done 19.0.0; the news drawer drag still needs an on-device look, see below) |
-| 20.0 | A fresh Mobbin pass, written into a new table |
-| 21 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 20.0 | A fresh Mobbin pass, written into a new table (done 20.0.0, "Mobbin pass 2" above) |
+| 21 to 29 | One row each from "Mobbin pass 2" |
+| 30 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
