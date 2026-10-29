@@ -456,6 +456,9 @@ struct SituationView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 filterMenu
+                SavedPlacesMenu(events: incidents.map(\.coordinate) + crimeIncidents.map(\.coordinate)) { place in
+                    withAnimation { mapPosition = .region(MKCoordinateRegion(center: place.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))) }
+                }
                 Button { showPlaces = true } label: {
                     Label("Places", systemImage: "list.bullet")
                         .font(.caption.weight(.semibold))
@@ -1282,6 +1285,7 @@ private struct VenueDetailSheet: View {
                     Text(item.name ?? "Place")
                         .font(.title3.weight(.semibold))
                     Spacer()
+                    SavePlaceButton(name: item.name ?? "Place", coordinate: item.placemark.coordinate)
                     Button { dismiss() } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title3)

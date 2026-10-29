@@ -134,6 +134,18 @@ function markerCss({ size = 10, color, pulse, shape = 'circle', extra = '' }) {
   return `width:${size}px;height:${size}px;border-radius:${radius};background:${color};${shadow}${extra}`;
 }
 
+// Events within a kilometre of a saved place (equirectangular distance is plenty at this scale).
+function nearbyCount(place, items, radiusKm = 1) {
+  const k = Math.cos((place.lat * Math.PI) / 180);
+  return items.filter((it) => {
+    const c = extractCoords(it);
+    if (!c) return false;
+    const dx = (c.lon - place.lon) * 111.32 * k;
+    const dy = (c.lat - place.lat) * 110.57;
+    return Math.hypot(dx, dy) <= radiusKm;
+  }).length;
+}
+
 function extractCoords(item) {
   const lat = item.lat ?? item.latitude ?? null;
   const lon = item.lng ?? item.lon ?? item.longitude ?? null;
@@ -284,6 +296,9 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
   // How far back timed layers (incidents, crime, quakes) reach. 0 = any time. Same choices as the apps.
   const [windowHours, setWindowHours] = useState(() => { try { return Number(localStorage.getItem('mapWindowHours')) || 0; } catch { return 0; } });
   const [showFilter, setShowFilter] = useState(false);
+  // Places you keep an eye on, kept in this browser. Same idea as SavedPlaces.swift.
+  const [savedPlaces, setSavedPlaces] = useState(() => { try { return JSON.parse(localStorage.getItem('savedPlaces') || '[]'); } catch { return []; } });
+  const storeSaved = (next) => { setSavedPlaces(next); try { localStorage.setItem('savedPlaces', JSON.stringify(next)); } catch { /* private mode */ } };
   const [places, setPlaces] = useState([]);
   const [placesLoading, setPlacesLoading] = useState(false);
   const [placesError, setPlacesError] = useState('');
@@ -528,7 +543,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
           container: mapRef.current,
           style: darkRef.current
             ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-            : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+            : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
           center: [initCenter.lon, initCenter.lat],
           zoom: initZoom,
           interactive: true,
@@ -610,7 +625,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
     if (!map) return;
     const style = dark
       ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-      : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+      : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
     map.setStyle(style);
     // Re-add heatmap source/layer after style swap
     map.once('style.load', () => {
@@ -1358,6 +1373,22 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
                   ))}
                 </>
               )}
+              <div style={{ fontSize: 11, color: P.sub, margin: '6px 0 2px' }}>Saved places</div>
+              {savedPlaces.map((sp) => {
+                const n = nearbyCount(sp, [...payload.incidents, ...payload.crimeIncidents, ...payload.trafficIncidents.map((t) => t.position || {})]);
+                return (
+                  <div key={sp.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 28 }}>
+                    <button type="button" onClick={() => doFlyTo({ center: [sp.lon, sp.lat], zoom: 14 })} style={{ flex: 1, textAlign: 'left', background: 'none', border: 0, color: P.ink, font: 'inherit', cursor: 'pointer', padding: 0 }}>
+                      {sp.name} <span style={{ color: P.sub }}>· {n ? `${n} nearby` : 'quiet'}</span>
+                    </button>
+                    <button type="button" aria-label={`Remove ${sp.name}`} onClick={() => storeSaved(savedPlaces.filter((x) => x.id !== sp.id))} style={{ background: 'none', border: 0, color: P.sub, cursor: 'pointer', font: 'inherit' }}>×</button>
+                  </div>
+                );
+              })}
+              <button type="button" onClick={() => storeSaved([...savedPlaces, { id: Date.now(), name: search.trim() || `Spot ${savedPlaces.length + 1}`, lat: center.lat, lon: center.lon }])}
+                style={{ marginTop: 4, height: 32, borderRadius: 16, border: `1px solid ${P.line}`, background: 'transparent', color: P.ink, font: 'inherit', cursor: 'pointer' }}>
+                Save the map centre
+              </button>
             </div>
           )}
           <style>{`::-webkit-scrollbar { display: none; }`}</style>

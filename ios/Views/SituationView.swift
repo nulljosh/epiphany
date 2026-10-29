@@ -306,6 +306,11 @@ struct SituationView: View {
         }
     }
 
+    /// Everything loaded that a saved place should count: incidents, crime and traffic.
+    private var nearbyEventCoordinates: [CLLocationCoordinate2D] {
+        incidents.map(\.coordinate) + crimeIncidents.map(\.coordinate) + (trafficData?.incidents ?? []).compactMap(\.coordinate)
+    }
+
     private var activeIncidents: [Incident] {
         incidents.filter { !$0.isInfrastructure && MapWindow.allows($0.reportedAt, hours: mapWindowHours) }
     }
@@ -722,6 +727,9 @@ struct SituationView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 filterMenu
+                SavedPlacesMenu(events: nearbyEventCoordinates) { place in
+                    withAnimation { mapPosition = .region(MKCoordinateRegion(center: place.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))) }
+                }
                 Button { showPlaces = true } label: {
                     Label("Places", systemImage: "list.bullet")
                         .font(.caption.weight(.semibold))
@@ -1943,6 +1951,7 @@ private struct VenueDetailSheet: View {
                         Text(item.name ?? "Place")
                             .font(.title3.weight(.semibold))
                         Spacer()
+                        SavePlaceButton(name: item.name ?? "Place", coordinate: item.placemark.coordinate)
                         Button { dismiss() } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.title3)

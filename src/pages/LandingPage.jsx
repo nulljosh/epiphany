@@ -61,9 +61,8 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
 
       <main>
         <section className="hero">
-          <p className="label">Map, markets and money</p>
-          <h1>Epiphany</h1>
-          <p className="lead">Everything happening in your world, on one screen.</p>
+          <h1>Your world,<br />on one screen.</h1>
+          <p className="lead">What is happening near you, what the markets are doing, and where your money went.</p>
           <div className="cta">
             <button className="btn btn-solid" type="button" onClick={act('register')}>Open the web app</button>
             <a className="btn btn-ghost" href={APP_STORE}>Get it on the App Store</a>
