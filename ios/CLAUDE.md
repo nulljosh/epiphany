@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v6.0.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.jaybulb.com
+v7.0.0 — Native iPhone intelligence app. 4-tab SwiftUI app (Situation, Markets, Portfolio, Settings), portrait-only, auto light/dark. API: epiphany.jaybulb.com
 
 ## Dev auto-login (2026-07-05)
 Run scheme signs in automatically as the admin/pro account via `DEV_EMAIL`/`DEV_PASSWORD`
