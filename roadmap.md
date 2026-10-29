@@ -251,7 +251,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Add the jobs report.
 
 ## Ingested 2026-10-16
-- [ ] Compare our stocks list against the iOS Stocks app. (screenshot: notes/attachments/2026-10-16/epiphany-2.png)
 
 ## Ingested 2026-10-21
 - [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
@@ -270,7 +269,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
 - [ ] Configure with Alpaca, finally. The project is a year old; it should be able to buy and sell and even auto trade. SPCX detail screen currently says "Trading is temporarily disabled, back soon" (screenshot ~/Documents/Code/notes/attachments/2026-10-25/epiphany-1.png); Settings shows Autopilot on paper money, last trade sell XLV. Note: Alpaca rejects Canadian residents, see the IBKR/brokerage item above, so this needs a decision on which broker.
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
-- [ ] Avatar is stale (Settings shows the node-graph avatar). Should be Greek gods. Screenshot: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-5.png
 - [ ] Crypto view needs more detail and real-time current price plus 1m etc. Bitcoin sheet today is a flat 1D line with only a Type row, 1D/5D/1MO/3MO/1Y: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-4.png
 
 ## Ingested 2026-10-27
