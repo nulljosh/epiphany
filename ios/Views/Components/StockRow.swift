@@ -71,6 +71,8 @@ struct QuoteRow: View {
     let price: Double
     let changePercent: Double
     var sparklineData: [Double]? = nil
+    /// Green or red behind the price for a moment when it ticks, like TradingView.
+    @State private var flash: Color?
 
     var body: some View {
         let color = Palette.forChange(changePercent)
@@ -96,6 +98,9 @@ struct QuoteRow: View {
                     .foregroundStyle(Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+                    .padding(.horizontal, 4)
+                    .background((flash ?? .clear).opacity(0.3), in: RoundedRectangle(cornerRadius: 4))
+                    .padding(.horizontal, -4)
                 Text(CurrencyFormatter.formatSignedPercent(changePercent))
                     .font(.footnote.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.white)
@@ -108,6 +113,11 @@ struct QuoteRow: View {
         }
         .padding(.vertical, 12)
         .contentShape(Rectangle())
+        .onChange(of: price) { old, new in
+            guard old != new else { return }
+            flash = new > old ? Palette.successGreen : Palette.dangerRed
+            withAnimation(.easeOut(duration: 0.8).delay(0.2)) { flash = nil }
+        }
     }
 }
 
