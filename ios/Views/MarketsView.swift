@@ -739,19 +739,11 @@ private struct MarketItemDetailView: View {
     private var price: Double { livePrice ?? item.price }
 
     /// "1M High" reads as one month, so the stats name intraday ranges plainly.
-    private var rangeName: String {
-        switch selectedRange {
-        case "1m", "1d": return "Day"
-        case "15m": return "5D"  // 15-minute bars over five days
-        default: return selectedRange.uppercased()
-        }
-    }
+    private var rangeName: String { LivePrice.rangeName(selectedRange) }
 
     /// Day change against the previous close the list row was built from, so the live tick moves it too.
     private var changePercent: Double {
-        let prevClose = item.price / (1 + item.changePercent / 100)
-        guard livePrice != nil, prevClose > 0 else { return item.changePercent }
-        return (price / prevClose - 1) * 100
+        LivePrice.changePercent(listPrice: item.price, listPercent: item.changePercent, live: livePrice)
     }
 
     private var itemChangeColor: Color {
@@ -897,20 +889,12 @@ private struct MarketItemDetailView: View {
         .task(id: selectedRange) {
             await loadHistory()
         }
-        .task { await pollLivePrice() }
-    }
-
-    /// Last close of the one-minute chart, every 15 seconds while the page is open.
-    private func pollLivePrice() async {
-        guard let yahooSym = item.yahooSymbol else { return }
-        while !Task.isCancelled {
-            if let last = try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: yahooSym, range: "1m").history.last?.close,
-               last > 0 {
-                livePrice = last
-            }
-            try? await Task.sleep(for: .seconds(15))
+        .task {
+            guard let sym = item.yahooSymbol else { return }
+            await LivePrice.poll(sym) { livePrice = $0 }
         }
     }
+
 
     /// `height: nil` fills the full-screen cover. Only there does a drag scrub, so the page swipe keeps working inline.
     @ViewBuilder

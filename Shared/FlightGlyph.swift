@@ -8,8 +8,9 @@ struct FlightGlyph: View {
     var body: some View {
         Image(systemName: "airplane")
             .font(.system(size: size, weight: .bold))
-            .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.7), radius: 1.5)
+            // Amber with a dark edge reads on light, dark and satellite maps alike; white vanished on the light map.
+            .foregroundStyle(Palette.warningAmber)
+            .shadow(color: .black.opacity(0.8), radius: 1)
             .rotationEffect(.degrees(Double(headingDeg ?? 90) - 90))
             .frame(width: size + 10, height: size + 10)
             .contentShape(Rectangle())

@@ -763,18 +763,10 @@ private struct AssetDetailView: View {
 
     /// Day change against the previous close the list row was built from, so the live tick moves it too.
     private var changePercent: Double {
-        let prevClose = item.price / (1 + item.changePercent / 100)
-        guard livePrice != nil, prevClose > 0 else { return item.changePercent }
-        return (price / prevClose - 1) * 100
+        LivePrice.changePercent(listPrice: item.price, listPercent: item.changePercent, live: livePrice)
     }
 
-    private var rangeName: String {
-        switch range {
-        case "1m", "1d": return "Day"
-        case "15m": return "5D"  // 15-minute bars over five days
-        default: return range.uppercased()
-        }
-    }
+    private var rangeName: String { LivePrice.rangeName(range) }
 
     var body: some View {
         let color = changePercent >= 0 ? Palette.successGreen : Palette.dangerRed
@@ -831,15 +823,8 @@ private struct AssetDetailView: View {
             history = (try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: range))?.history ?? []
         }
         .task {
-            // Last close of the one-minute chart, every 15 seconds while the page is open.
             guard let sym = item.yahooSymbol else { return }
-            while !Task.isCancelled {
-                if let last = try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: "1m").history.last?.close,
-                   last > 0 {
-                    livePrice = last
-                }
-                try? await Task.sleep(for: .seconds(15))
-            }
+            await LivePrice.poll(sym) { livePrice = $0 }
         }
     }
 
