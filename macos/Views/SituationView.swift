@@ -226,7 +226,7 @@ struct SituationView: View {
                     Button {
                         selectedEvent = .flight(flight)
                     } label: {
-                        mapPin(color: Palette.paleBlue, symbol: "airplane", size: 15)
+                        FlightGlyph(headingDeg: flight.headingDeg, size: 15)
                     }
                     .buttonStyle(.plain)
                 }

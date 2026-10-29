@@ -236,7 +236,8 @@ struct SituationView: View {
                         Haptics.impact(.light)
                         selectedEvent = .flight(flight)
                     } label: {
-                        eventPin("airplane", .blue, label: "Flight \(flight.callsign)")
+                        FlightGlyph(headingDeg: flight.headingDeg)
+                            .accessibilityLabel("Flight \(flight.callsign)")
                     }
                     .buttonStyle(.plain)
                 }
