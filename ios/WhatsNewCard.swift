@@ -5,9 +5,9 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
-    "Filter the map by type and time",
-    "Save places and see what's near them",
-    "Map pins you can read at a glance",
+    "Mac and the web open on your last prices",
+    "A softer, more colourful light mode on the web",
+    "The web gets the same tab bar as the apps",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

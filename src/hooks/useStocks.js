@@ -296,8 +296,15 @@ const parseStockData = (raw) => {
   return Object.keys(stockMap).length > 0 ? stockMap : null;
 };
 
+// Instant open: the last real prices this browser saw, shown at launch while the network catches up.
+const STOCK_CACHE_KEY = 'epiphany_stocks_last';
+function loadStockCache() {
+  try { const c = JSON.parse(localStorage.getItem(STOCK_CACHE_KEY) || 'null'); return c && Object.keys(c).length ? c : null; } catch { return null; }
+}
+
 export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true, realtime = false } = {}) {
-  const [stocks, setStocks] = useState(FALLBACK_DATA);
+  // ponytail: FALLBACK_DATA still covers a first-ever visit; dropping it needs empty states (roadmap).
+  const [stocks, setStocks] = useState(() => loadStockCache() || FALLBACK_DATA);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reliability, setReliability] = useState({
@@ -332,7 +339,11 @@ export function useStocks(symbols = DEFAULT_SYMBOLS, { enabled = true, realtime 
         throw new Error('No valid stock data received from any API');
       }
 
-      setStocks(prev => ({ ...prev, ...stockMap }));
+      setStocks(prev => {
+        const next = { ...prev, ...stockMap };
+        try { localStorage.setItem(STOCK_CACHE_KEY, JSON.stringify(stockMap)); } catch { /* private mode or full */ }
+        return next;
+      });
       setError(null);
       const now = Date.now();
       lastLiveSuccessRef.current = now;

@@ -26,7 +26,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 |---|---|
 | 9.0 | Money at a glance: upcoming bills, cash flow bars, insight cards, review queue (#179) |
 | 10.0 | Map: filter bar by incident type and time, saved places with incident counts |
-| 11.0 | Instant open: cached prices on launch, real watchlist in the widget and Lock Screen |
+| 11.0 | Instant open: cached prices on launch, real watchlist in the widget and Lock Screen (done 11.0.0) |
 | 12.0 | First run for everyone: empty fallbacks, no personal demo data, the drop-a-statement card |
 | 13.0 | Google sign-in on iPhone and Mac (server is done) |
 | 14.0 | Multiple named watchlists |
@@ -37,6 +37,9 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 19.0 | Design debt: colour rule violations, news drawer drag |
 | 20.0 | A fresh Mobbin pass, written into a new table |
 | 21 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+
+## Web fake prices (found 2026-10-29)
+- [ ] `src/hooks/useStocks.js` FALLBACK_DATA shows typed-in prices on a first visit and after errors, against the "no fake prices before real data" rule. Instant open now shows the last real prices first; replace the fallback with an empty state and update the two tests in useStocks.test.js that expect it.
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
@@ -215,9 +218,7 @@ Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every t
 - [ ] _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0
 
 ## Competitor gaps (sweep 2026-10-01: Copilot, Monarch, Apple Stocks, Yahoo, Robinhood, Citizen, Google Maps)
-- [ ] Watchlist widget shows the user's real watchlist and works on the Lock Screen (vs Apple Stocks widget follows your actual ). ios/Models/AppState.swift:545 loadWatchlist: after `watchlist = try await ...fetchWatchlist()`, write `Array(watchlistSymbols)` to UserDefaults(suiteName: group.com.heyitsmejosh.epiphany) key `widget_watchlist` and call WidgetCenter.shared.reloadTimelines(ofKind: "WatchlistWidget") (kind constant at widgets-ios/Views/WatchlistWidget.swift:5). widgets-ios/Providers/WatchlistProvider.swift:25: replace the hardcoded `de
 - [ ] Next earnings date and dividend date on the stock page (vs Wealthsimple Trade shows next earnings d). server/api/stocks-free.js:185 append `,earningsTimestamp,earningsTimestampStart,dividendDate` to the Yahoo v7 fields string; :224 (the q => ({...}) map) add `nextEarnings: q.earningsTimestamp ?? q.earningsTimestampStart ?? null, dividendDate: q.dividendDate ?? null`. ios/Models/Stock.swift: add `let nextEarnings: Double?` and `let dividendDate: Double?` with CodingKeys (:88) and decodeIfPresent in init(from:) (:98). 
-- [ ] Instant open: Markets tab renders last known prices on launch, then refreshes (vs Apple Stocks and Yahoo Finance show cach). ios/API/EpiphanyAPI.swift:178 fetchStocks: after `let data = try await perform(request)`, write `data` to FileManager caches dir `stocks.json` (same for fetchCommodities and fetchCrypto). ios/Models/AppState.swift: add `func hydrateCachedMarkets()` that decodes `[Stock]` from that file (reuse the same `decode`), sets `stocks` and `stocksFetchedAt` from the file's modification date only when `stocks.isEmpty`. Call it 
 - [ ] Layers button on the map itself: toggle Flights, Traffic, Incidents, Weather, Quakes, Wildfires, AQI without leaving the map (vs Google Maps Layers sheet with Traffic, T). ios/Views/SituationView.swift:772 layerPickerButton is already a Menu of basemap styles; add a second `Section("Layers")` with `Toggle("Flights", isOn: $showFlights)` etc. bound to the nine @AppStorage flags that already exist at :115-124 (SettingsView.swift:649 keeps its copies, same keys). macos/Views/SituationView.swift:564 same Menu, bound to appState.situation*Enabled (the bindings SettingsView.swift:390 sourceB
 - [ ] Map that is fast and stays alive: skip the refetch on tiny pans, stop the flight timer when there is nothing to move, honour Low Power Mode, and reload every 5 minutes while the tab is open (vs Google Maps and Apple Maps only re-searc). ios/Views/SituationView.swift: add `@State private var lastLoadedRegion: MKCoordinateRegion?`; in .onMapCameraChange (:687) compute centre delta vs lastLoadedRegion and if it moved under 25% of the previous span and latitudeDelta ratio is within 0.5 to 2, run only refreshVenues and return; set lastLoadedRegion at the end of loadData (:873). :169 flight timer: `guard showFlights, !flights.isEmpty, !ProcessInfo.process
 - [ ] First run that is not Joshua's bank account: empty fallbacks plus a three-step 'drop last month's PDF' card (vs Copilot Quick Start Guide and YNAB's Rea). src/config/userProfile.js: empty USER_BUDGET, USER_DEBT, USER_BILLS, USER_TELECOM, USER_SUBSCRIPTIONS, USER_INCOME_PHASES (one person's real budget, debt and bill lines ship to every signed-out and empty-KV user today via src/utils/financeData.js:2-14 aliasing them as DEMO_* and src/hooks/usePortfolio.js:122-130 falling back to them). src/components/FinancePanel.jsx: delete the Monthly Bills card and T

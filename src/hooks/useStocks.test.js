@@ -22,6 +22,7 @@ describe('useStocks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear(); // the last-prices cache would carry one test's data into the next
     // Default: cache miss + empty stocks
     mockFetchWith(() => Promise.resolve({ ok: true, json: async () => [] }));
   });
@@ -272,5 +273,15 @@ describe('useStockHistory', () => {
     });
 
     expect(result.current.error).toBeTruthy();
+  });
+});
+
+describe('useStocks instant open', () => {
+  it('starts from the last real prices this browser saw', () => {
+    localStorage.setItem('epiphany_stocks_last', JSON.stringify({ AAPL: { symbol: 'AAPL', price: 123.45, changePercent: 1 } }));
+    global.fetch = vi.fn(() => new Promise(() => {}));
+    const { result } = renderHook(() => useStocks(['AAPL']));
+    expect(result.current.stocks.AAPL.price).toBe(123.45);
+    localStorage.clear();
   });
 });

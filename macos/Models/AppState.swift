@@ -323,7 +323,16 @@ final class AppState {
         self.error = error.localizedDescription
     }
 
+    /// Last known prices from disk, only while the lists are still empty.
+    func hydrateCachedMarkets() {
+        let api = EpiphanyAPI.shared
+        if stocks.isEmpty { stocks = api.cachedStocks() }
+        if commodities.isEmpty { commodities = api.cachedCommodities() }
+        if crypto.isEmpty { crypto = api.cachedCrypto() }
+    }
+
     func loadStocks(force: Bool = false) async {
+        hydrateCachedMarkets()
         if isLoading && !force { return }
         isLoading = true
         defer { isLoading = false }

@@ -167,8 +167,30 @@ final class EpiphanyAPI {
         let url = try makeURL("/api/stocks")
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        return try decode([Stock].self, from: data)
+        let stocks = try decode([Stock].self, from: data)
+        if !stocks.isEmpty { saveMarketCache("stocks", data) }
+        return stocks
     }
+
+    // Instant open, same as iPhone: the last good payloads live in Caches and show at
+    // launch while the network catches up.
+    private func marketCacheURL(_ name: String) -> URL? {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("market-\(name).json")
+    }
+
+    private func saveMarketCache(_ name: String, _ data: Data) {
+        guard let url = marketCacheURL(name) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    private func loadMarketCache(_ name: String) -> Data? {
+        marketCacheURL(name).flatMap { try? Data(contentsOf: $0) }
+    }
+
+    func cachedStocks() -> [Stock] { loadMarketCache("stocks").flatMap { try? decode([Stock].self, from: $0) } ?? [] }
+    func cachedCommodities() -> [CommodityData] { loadMarketCache("commodities").flatMap { try? parseCommodities($0) } ?? [] }
+    func cachedCrypto() -> [CryptoData] { loadMarketCache("crypto").flatMap { try? parseCrypto($0) } ?? [] }
 
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
         // Same display-range to Yahoo range and interval pairs as iOS.
@@ -233,8 +255,13 @@ final class EpiphanyAPI {
         let url = try makeURL("/api/commodities")
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        let decoded = try decode([String: CommodityResponse].self, from: data)
-        return decoded
+        let commodities = try parseCommodities(data)
+        if !commodities.isEmpty { saveMarketCache("commodities", data) }
+        return commodities
+    }
+
+    private func parseCommodities(_ data: Data) throws -> [CommodityData] {
+        try decode([String: CommodityResponse].self, from: data)
             .map { key, value in
                 CommodityData(
                     name: key.capitalized,
@@ -250,8 +277,13 @@ final class EpiphanyAPI {
         let url = try makeURL("/api/prices")
         let request = URLRequest(url: url)
         let data = try await perform(request)
-        let decoded = try decode([String: CryptoResponse].self, from: data)
-        return decoded
+        let crypto = try parseCrypto(data)
+        if !crypto.isEmpty { saveMarketCache("crypto", data) }
+        return crypto
+    }
+
+    private func parseCrypto(_ data: Data) throws -> [CryptoData] {
+        try decode([String: CryptoResponse].self, from: data)
             .map { key, value in
                 CryptoData(symbol: key.uppercased(), spot: value.spot, chgPct: value.chgPct)
             }
