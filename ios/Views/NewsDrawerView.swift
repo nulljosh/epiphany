@@ -23,7 +23,7 @@ struct NewsDrawerView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Business News")
-                    .font(.title3.weight(.bold))
+                    .font(.title2.weight(.bold))
                 if sourceCount > 0 {
                     Text("From \(sourceCount) source\(sourceCount == 1 ? "" : "s")")
                         .font(.subheadline)

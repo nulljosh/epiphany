@@ -389,19 +389,13 @@ struct MarketsView: View {
                         Button {
                             selectedStock = stock
                         } label: {
-                            StockRow(
-                                stock: stock,
-                                isWatchlisted: true,
-                                onToggleWatchlist: {
-                                    Haptics.impact(.light)
-                                    Task { await appState.removeWatchlistSymbol(stock.symbol) }
-                                }
-                            )
+                            StockRow(stock: stock, sparklineData: appState.sparklineCache[stock.symbol])
                         }
                         .buttonStyle(BounceButtonStyle())
+                        .swipeActions(edge: .trailing) { watchlistSwipe(stock.symbol) }
                         .padding(.horizontal, 16)
-                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                        .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 16 }
+                        .alignmentGuide(.listRowSeparatorTrailing) { $0.width - 16 }
                     }
                 }
                 .listRowInsets(EdgeInsets())
@@ -418,9 +412,9 @@ struct MarketsView: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                // Separators run edge to edge instead of starting under the symbol.
-                .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
+                // Separators inset 16 on both sides, like iOS Stocks.
+                .alignmentGuide(.listRowSeparatorLeading) { _ in 16 }
+                .alignmentGuide(.listRowSeparatorTrailing) { $0.width - 16 }
             }
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
@@ -456,40 +450,43 @@ struct MarketsView: View {
             selectedStockForNews = stock
             withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { drawerState = .medium }
         } label: {
-            StockRow(
-                stock: stock,
-                isWatchlisted: appState.isInWatchlist(stock.symbol),
-                onToggleWatchlist: appState.isLoggedIn ? {
-                    Task {
-                        if appState.isInWatchlist(stock.symbol) {
-                            await appState.removeWatchlistSymbol(stock.symbol)
-                        } else {
-                            await appState.addWatchlistSymbol(stock.symbol)
-                        }
-                    }
-                } : nil,
-                sparklineData: appState.sparklineCache[stock.symbol]
-            )
+            StockRow(stock: stock, sparklineData: appState.sparklineCache[stock.symbol])
         }
         .buttonStyle(BounceButtonStyle())
+        .swipeActions(edge: .trailing) { if appState.isLoggedIn { watchlistSwipe(stock.symbol) } }
         .accessibilityIdentifier("market-stock-row")
+    }
+
+    /// The star moved off the row into a swipe, like iOS Stocks.
+    private func watchlistSwipe(_ symbol: String) -> some View {
+        let watched = appState.isInWatchlist(symbol)
+        return Button {
+            Haptics.impact(.light)
+            Task {
+                if watched { await appState.removeWatchlistSymbol(symbol) }
+                else { await appState.addWatchlistSymbol(symbol) }
+            }
+        } label: {
+            Label(watched ? "Unwatch" : "Watch", systemImage: watched ? "star.slash" : "star")
+        }
+        .tint(watched ? .gray : Palette.warningAmber)
     }
 
     private func commodityCryptoRow(_ item: MarketItem) -> some View {
         Button {
             selectedMarketItem = item
         } label: {
-            MarketRow(
-                symbol: item.symbol,
-                name: item.name,
-                priceText: CurrencyFormatter.formatPrice(item.price),
-                changePercent: item.changePercent,
-                isFavorited: appState.isLocalFavorite(item.name),
-                onToggleFavorite: {
-                    appState.toggleLocalFavorite(item.name)
-                },
-                sparklineData: appState.sparklineCache[item.symbol]
-            )
+            QuoteRow(symbol: item.symbol, name: item.name, price: item.price,
+                     changePercent: item.changePercent, sparklineData: appState.sparklineCache[item.symbol])
+        }
+        .swipeActions(edge: .trailing) {
+            let fav = appState.isLocalFavorite(item.name)
+            Button {
+                appState.toggleLocalFavorite(item.name)
+            } label: {
+                Label(fav ? "Unwatch" : "Watch", systemImage: fav ? "star.slash" : "star")
+            }
+            .tint(fav ? .gray : Palette.warningAmber)
         }
         .buttonStyle(BounceButtonStyle())
     }
@@ -662,112 +659,6 @@ private struct MarketItem: Identifiable {
             ]
             return map[lower]
         }
-    }
-}
-
-// MARK: - MarketRow
-
-private struct MarketRow: View {
-    let symbol: String
-    let name: String
-    let priceText: String
-    let changePercent: Double
-    var isFavorited: Bool = false
-    var onToggleFavorite: (() -> Void)? = nil
-    var sparklineData: [Double]? = nil
-
-    private var changeColorValue: Color {
-        Palette.forChange(changePercent)
-    }
-
-    private var signedPercent: String {
-        CurrencyFormatter.formatSignedPercent(changePercent)
-    }
-
-    var body: some View {
-        HStack(spacing: 8) {
-            if let onToggle = onToggleFavorite {
-                Button {
-                    onToggle()
-                } label: {
-                    Image(systemName: isFavorited ? "star.fill" : "star")
-                        .foregroundStyle(isFavorited ? Palette.warningAmber : .secondary)
-                        .font(.caption2)
-                        .frame(width: 14, height: 14)
-                        .padding(15)
-                        .contentShape(Rectangle())
-                        .padding(-15)
-                }
-                .buttonStyle(BounceButtonStyle())
-            }
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(symbol.uppercased())
-                    .font(.subheadline.weight(.semibold))
-                Text(name)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer()
-
-            if let data = sparklineData, !data.isEmpty {
-                SparklinePath(data: data, color: changeColorValue)
-                    .frame(width: 40, height: 20)
-            }
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(priceText)
-                    .font(.subheadline.weight(.medium))
-                ChangePill(text: signedPercent, color: changeColorValue)
-            }
-        }
-        .padding(.vertical, 3)
-        .contentShape(Rectangle())
-    }
-
-    private var marketIcon: some View {
-        let (icon, color) = getIconAndColor()
-        return Image(systemName: icon)
-            .font(.subheadline)
-            .foregroundStyle(color)
-            .frame(width: 24, height: 24)
-    }
-
-    private func getIconAndColor() -> (String, Color) {
-        let lower = name.lowercased()
-        if lower.contains("gold") || lower.contains("xau") { return ("circle.fill", .yellow) }
-        if lower.contains("silver") || lower.contains("xag") { return ("circle.fill", Color(.systemGray3)) }
-        if lower.contains("oil") || lower.contains("crude") || lower.contains("wti") || lower.contains("brent") { return ("drop.fill", .brown) }
-        if lower.contains("gas") || lower.contains("natgas") || lower.contains("natural") { return ("flame.fill", .orange) }
-        if lower.contains("copper") { return ("circle.fill", Color(.systemOrange)) }
-        if lower.contains("platinum") { return ("circle.fill", Color(.systemGray)) }
-        if lower.contains("corn") || lower.contains("wheat") || lower.contains("soy") || lower.contains("coffee") || lower.contains("sugar") { return ("leaf.fill", .green) }
-        if lower.contains("us500") || lower.contains("s&p") || lower.contains("spx") { return ("chart.line.uptrend.xyaxis", Palette.appleBlue) }
-        if lower.contains("nas") || lower.contains("ndx") || lower.contains("nasdaq") { return ("chart.line.uptrend.xyaxis", .green) }
-        if lower.contains("us30") || lower.contains("dow") || lower.contains("dji") { return ("chart.line.uptrend.xyaxis", Palette.paleBlue) }
-        if lower.contains("dxy") || lower.contains("dollar") { return ("dollarsign.circle.fill", .green) }
-        if lower.contains("10y") || lower.contains("treasury") { return ("building.columns.fill", .blue) }
-        if lower.contains("vix") { return ("waveform.path.ecg", .red) }
-        if lower.contains("btc") || lower.contains("bitcoin") { return ("bitcoinsign.circle.fill", .orange) }
-        if lower.contains("eth") || lower.contains("ether") { return ("diamond.fill", Palette.appleBlue) }
-        if lower.contains("sol") || lower.contains("solana") { return ("sun.max.fill", Palette.sand) }
-        if lower.contains("xrp") || lower.contains("ripple") { return ("circle.hexagongrid.fill", Color(.systemBlue)) }
-        if lower.contains("doge") { return ("hare.fill", .yellow) }
-        if lower.contains("ada") || lower.contains("cardano") { return ("hexagon.fill", Palette.appleBlue) }
-        if lower.contains("bnb") { return ("square.fill", .yellow) }
-        if lower.contains("avax") { return ("triangle.fill", .red) }
-        if lower.contains("link") { return ("link.circle.fill", Palette.appleBlue) }
-        if lower.contains("matic") || lower.contains("pol") { return ("pentagon.fill", Palette.slate) }
-        return ("chart.bar.fill", .secondary)
-    }
-
-    private var symbolOrName: String {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.count <= 6 {
-            return trimmed.uppercased()
-        }
-        return trimmed
     }
 }
 

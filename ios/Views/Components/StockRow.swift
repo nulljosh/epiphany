@@ -22,75 +22,101 @@ struct SparklinePath: View {
     }
 }
 
-struct StockRow: View {
-    let stock: Stock
-    let isWatchlisted: Bool
-    let onToggleWatchlist: (() -> Void)?
-    var sparklineData: [Double]? = nil
-
-    init(stock: Stock, isWatchlisted: Bool = false, onToggleWatchlist: (() -> Void)? = nil, sparklineData: [Double]? = nil) {
-        self.stock = stock
-        self.isWatchlisted = isWatchlisted
-        self.onToggleWatchlist = onToggleWatchlist
-        self.sparklineData = sparklineData
-    }
-
-    private var changeColor: Color {
-        stock.change >= 0 ? Palette.successGreen : Palette.dangerRed
-    }
-
-    private var changeSign: String {
-        stock.change >= 0 ? "+" : ""
-    }
+/// Sparkline in the iOS Stocks style: line, a fade underneath, and a dotted
+/// line at the previous close.
+struct SparklineChart: View {
+    let data: [Double]
+    var baseline: Double? = nil
+    var color: Color = .green
 
     var body: some View {
-        HStack(spacing: 10) {
-            Group {
-                if let onToggle = onToggleWatchlist {
-                    Button {
-                        onToggle()
-                    } label: {
-                        Image(systemName: isWatchlisted ? "star.fill" : "star")
-                            .foregroundStyle(isWatchlisted ? Palette.warningAmber : .secondary)
-                            .font(.caption2)
-                            .frame(width: 14, height: 14)
-                            .padding(15)
-                            .contentShape(Rectangle())
-                            .padding(-15)
-                    }
-                    .buttonStyle(BounceButtonStyle())
-                } else {
-                    Color.clear
-                        .frame(width: 14, height: 14)
+        GeometryReader { geo in
+            let values = data + (baseline.map { [$0] } ?? [])
+            let lo = values.min() ?? 0
+            let range = max((values.max() ?? 1) - lo, 0.0001)
+            let w = geo.size.width, h = geo.size.height
+            let point = { (i: Int, v: Double) in
+                CGPoint(x: w * CGFloat(i) / CGFloat(max(data.count - 1, 1)),
+                        y: h * (1 - CGFloat((v - lo) / range)))
+            }
+            let line = Path { p in
+                for (i, v) in data.enumerated() {
+                    i == 0 ? p.move(to: point(i, v)) : p.addLine(to: point(i, v))
                 }
             }
+            ZStack {
+                Path { p in
+                    p.addPath(line)
+                    p.addLine(to: CGPoint(x: w, y: h))
+                    p.addLine(to: CGPoint(x: 0, y: h))
+                    p.closeSubpath()
+                }
+                .fill(LinearGradient(colors: [color.opacity(0.35), color.opacity(0)],
+                                     startPoint: .top, endPoint: .bottom))
+                line.stroke(color, style: StrokeStyle(lineWidth: 1.5, lineJoin: .round))
+                if let baseline {
+                    let y = h * (1 - CGFloat((baseline - lo) / range))
+                    Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: w, y: y)) }
+                        .stroke(Color.secondary.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                }
+            }
+        }
+    }
+}
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(stock.symbol.uppercased())
-                    .font(.body.weight(.semibold))
+/// One quote row, laid out like the iOS Stocks list.
+struct QuoteRow: View {
+    let symbol: String
+    let name: String
+    let price: Double
+    let changePercent: Double
+    var sparklineData: [Double]? = nil
+
+    var body: some View {
+        let color = Palette.forChange(changePercent)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(symbol.uppercased())
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(Palette.text)
-                Text(stock.name)
-                    .font(.caption2)
+                Text(name)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            .frame(minWidth: 50, alignment: .leading)
-
-            Spacer()
-
-            if let data = sparklineData, !data.isEmpty {
-                SparklinePath(data: data, color: changeColor)
-                    .frame(width: 40, height: 20)
+            Spacer(minLength: 8)
+            if let data = sparklineData, data.count > 1 {
+                // Previous close, from today's change.
+                SparklineChart(data: data, baseline: price / (1 + changePercent / 100), color: color)
+                    .frame(width: 64, height: 36)
             }
-
             VStack(alignment: .trailing, spacing: 4) {
-                Text(CurrencyFormatter.formatPrice(stock.price))
-                    .font(.body.weight(.semibold))
+                Text(price.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))
+                    .font(.title3.weight(.medium).monospacedDigit())
                     .foregroundStyle(Palette.text)
-                ChangePill(text: String(format: "%@%.2f%%", changeSign, stock.changePercent), color: changeColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(CurrencyFormatter.formatSignedPercent(changePercent))
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(width: 76, height: 28)
+                    .background(color, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
+            .frame(minWidth: 96, alignment: .trailing)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 10)
         .contentShape(Rectangle())
+    }
+}
+
+struct StockRow: View {
+    let stock: Stock
+    var sparklineData: [Double]? = nil
+
+    var body: some View {
+        QuoteRow(symbol: stock.symbol, name: stock.name, price: stock.price,
+                 changePercent: stock.changePercent, sparklineData: sparklineData)
     }
 }
