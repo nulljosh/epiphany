@@ -1,5 +1,13 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+typealias PlatformImage = UIImage
+private func makeImage(_ i: PlatformImage) -> Image { Image(uiImage: i) }
+#else
+import AppKit
+typealias PlatformImage = NSImage
+private func makeImage(_ i: PlatformImage) -> Image { Image(nsImage: i) }
+#endif
 
 /// News rows share a handful of publisher favicons. AsyncImage fetches once per row and drops the result on
 /// scroll, so a list of 25 CNBC rows pays for 25 downloads. This keeps one decoded image per URL and one
@@ -7,17 +15,17 @@ import UIKit
 @MainActor
 final class ThumbStore {
     static let shared = ThumbStore()
-    private let cache = NSCache<NSURL, UIImage>()
-    private var inflight: [URL: Task<UIImage?, Never>] = [:]
+    private let cache = NSCache<NSURL, PlatformImage>()
+    private var inflight: [URL: Task<PlatformImage?, Never>] = [:]
 
-    func cached(_ url: URL) -> UIImage? { cache.object(forKey: url as NSURL) }
+    func cached(_ url: URL) -> PlatformImage? { cache.object(forKey: url as NSURL) }
 
-    func image(for url: URL) async -> UIImage? {
+    func image(for url: URL) async -> PlatformImage? {
         if let hit = cached(url) { return hit }
         if let running = inflight[url] { return await running.value }
-        let task = Task { () -> UIImage? in
+        let task = Task { () -> PlatformImage? in
             guard let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
-            return UIImage(data: data)
+            return PlatformImage(data: data)
         }
         inflight[url] = task
         let image = await task.value
@@ -31,11 +39,11 @@ final class ThumbStore {
 struct CachedAsyncImage<Content: View>: View {
     let url: URL?
     @ViewBuilder var content: (Image?) -> Content
-    @State private var loaded: UIImage?
+    @State private var loaded: PlatformImage?
 
     var body: some View {
         let shown = loaded ?? url.flatMap { ThumbStore.shared.cached($0) }
-        content(shown.map { Image(uiImage: $0) })
+        content(shown.map { makeImage($0) })
             .task(id: url) {
                 guard let url else { return }
                 loaded = await ThumbStore.shared.image(for: url)

@@ -121,13 +121,12 @@ private struct NewsRow: View {
             Spacer(minLength: 0)
 
             if let imageURL = articleImageURL {
-                AsyncImage(url: imageURL) { phase in
-                    switch phase {
-                    case .success(let image):
+                CachedAsyncImage(url: imageURL) { image in
+                    if let image {
                         image
                             .resizable()
                             .scaledToFill()
-                    default:
+                    } else {
                         Color.white.opacity(0.06)
                     }
                 }
