@@ -1,16 +1,16 @@
-> Priority tier 2 (2026-10-17): ship push, this week. Order: live blockers, ship pushes, active features, portfolio, exploratory. See ~/Documents/Code/LOOP-HANDOFF.md.
-
+> Open work for Epiphany. The Mobbin table sets the order through 10.0; see docs/LOOP-HANDOFF.md.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
+
 ## Mobbin gaps (2026-10-29: Robinhood, Yahoo Finance, TradingView, Copilot, Monarch, Citizen)
 One row per minor version, daily-use first. Borrow the idea, never the look.
 
 | Gap | Who has it | Size | Target | Status |
 |---|---|---|---|---|
-| Price alerts with the app closed | Yahoo, TradingView | M | 8.0 | iOS done (background refresh); APNs push open in #180 |
-| Index cards (S&P 500, Nasdaq, Dow) with mini charts above the list | Robinhood, Yahoo | S | 8.0 | open |
-| Top movers row (biggest gainers and losers today) | Robinhood | S | 8.0 | open |
-| Full-screen chart button on stock and asset pages | Yahoo, TradingView | S | 8.0 | open |
+| Price alerts with the app closed | Yahoo, TradingView | M | 8.0 | iOS done 8.0.0; APNs push open in #180 |
+| Index cards (S&P 500, Nasdaq, Dow) with mini charts above the list | Robinhood, Yahoo | S | 8.0 | done 8.0.0 (web, iOS, Mac) |
+| Top movers row (biggest gainers and losers today) | Robinhood | S | 8.0 | done 8.0.0 (iOS, Mac) |
+| Full-screen chart button on stock and asset pages | Yahoo, TradingView | S | 8.0 | done 8.0.0 (web, iOS, Mac) |
 | Upcoming bills list from detected recurring charges | Monarch, Copilot, Rocket Money | M | 9.0 | open (server detectRecurring exists) |
 | Cash flow: income vs spending bars by month | Copilot, Monarch | M | 9.0 | open |
 | Money insight cards from statements (top merchant, a spending jump) | Copilot | M | 9.0 | open |
@@ -19,7 +19,24 @@ One row per minor version, daily-use first. Borrow the idea, never the look.
 | Saved places with nearby-incident counts | Citizen | M | 10.0 | open |
 | Multiple named watchlists | Yahoo, TradingView | L | later | open |
 
-## 2026-10-21 (open)
+## Version plan to v100
+One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.
+
+| Version | Theme |
+|---|---|
+| 9.0 | Money at a glance: upcoming bills, cash flow bars, insight cards, review queue (#179) |
+| 10.0 | Map: filter bar by incident type and time, saved places with incident counts |
+| 11.0 | Instant open: cached prices on launch, real watchlist in the widget and Lock Screen |
+| 12.0 | First run for everyone: empty fallbacks, no personal demo data, the drop-a-statement card |
+| 13.0 | Google sign-in on iPhone and Mac (server is done) |
+| 14.0 | Multiple named watchlists |
+| 15.0 | Mac extras: menu bar ticker, Notification Center alerts |
+| 16.0 | APNs price alerts (#180), alerts on web |
+| 17.0 | Commodity and crypto detail parity with stocks |
+| 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua) |
+| 19.0 | Design debt: colour rule violations, news drawer drag |
+| 20.0 | A fresh Mobbin pass, written into a new table |
+| 21 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
@@ -61,28 +78,6 @@ The web half works today. What is actually missing for iOS/macOS:
 Update 2026-10-21: Apple is back next to Google for 3.0.1 (Guideline 4.8). It was removed 2026-08-28 to clear the Guideline
 2.1(a) rejection and 2.5.6 is in review on that basis; revisit only after a verdict.
 
-## RESOLVED 2026-08-26: /api/stocks 500 on the full default symbol list
-
-Cloudflare Workers cap a single invocation at **50 subrequests**. This handler had
-THREE per-symbol fan-out paths: FMP quote+ratios (2 subrequests each), the v8 chart
-fallback (1 each), and v10 fundamentals enrichment (1 each). The 63-symbol default
-list issued well over 100, so everything past the cap failed -- including the Upstash
-KV read inside `getYahooCrumb`, which is what finally showed up in `wrangler tail` as
-`[KV] get error: Too many subrequests by single Worker invocation`.
-
-A second, independent bug masked it: early returns dropped response bodies without
-reading or cancelling them. Workers cap concurrent in-flight responses and an unread
-body never completes, so the runtime cancelled the oldest and unrelated fetches failed.
-Fixed with `discardBody()`; that removed the stall warnings and exposed the real error.
-
-Fix: Yahoo **v7 batch quote** first (one subrequest for all 63 symbols), with the two
-per-symbol paths gated behind `PER_SYMBOL_FANOUT_MAX = 15`. Verified in production:
-`/api/stocks` returns 200 with 62 symbols.
-
-Worth remembering: the thrown error said "Yahoo Finance v8 chart API returned no data",
-which was misleading -- Yahoo was fine, the Worker had simply run out of subrequests.
-Diagnose Workers 500s with `wrangler tail` before trusting the handler's own message.
-
 ## 2026-08-10 (late), UI + data pass, shipped
 - [ ] **Not verified this session**: iOS statement upload with a real PDF. The web path and
   all builds pass, but Josh's "haven't seen it work in months" on mobile was not reproduced
@@ -90,15 +85,6 @@ Diagnose Workers 500s with `wrangler tail` before trusting the handler's own mes
 
 ## Urgent
 - [ ] SnapTrade billing: Josh believes it was paid, not independently re-verified this session (ran out of time/budget). Confirm via SnapTrade dashboard before trusting the "disabled key" urgent item above is stale.
-
-## From Apple Notes (imported 2026-08-08)
-
-## OAuth rollout (2026-08-24)
-
-## App icon
-
-## Ship 2.5.4, DONE
-Confirmed 2026-08-06: iOS 2.5.4 is READY_FOR_SALE/live. macOS remains at 2.5.2 (statement-upload fix was iOS-only at the time; macOS parity landed separately 08-04, see above), bump macOS if the Mac statement UI work should ship as a version.
 
 ## Markets news drawer drag, still choppy (3 attempts, all failed)
 User confirmed live on-device it's not as fluid as native iOS Stocks, across three separate fix attempts (07-07, 07-07 later, 07-22, reverted, commit `69f82c6`). Root cause not found. Do NOT attempt a 4th blind fix.
@@ -117,8 +103,8 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 ## Trading / brokerage
 - [ ] **IBKR broker adapter, blocked on IBKR account approval**: Joshua started an Interactive Brokers Canada individual application on 2026-09-06 and is filling KYC forms. Once approved, write `server/api/broker/ibkr.js` mirroring the existing `alpaca.js` stub interface (paper account endpoint, execute trade with symbol/qty/side). Wire it into `broker/morning-run.js:runLive()` in place of the Alpaca call. Alpaca is blocked because it rejects Canadian residents. IBKR is the funded path forward for live autopilot trading in Canada.
 - [ ] **Evaluate replacing SnapTrade with Interactive Brokers**, SnapTrade is read-only by design (blocks live trading, forced `AutopilotSection()` to be commented out); IBKR Web API would unblock it. Needs scoping: auth model, holdings/positions endpoints, cost, SnapTrade sync-layer reuse. (The SnapTrade billing outage above is a good moment to revisit this.)
-- [ ] Live trading blocked on a trade-permissioned brokerage, **needs Joshua**: ~~sign up for Alpaca (paper account, free, fastest path) at alpaca.markets~~. ALPACA BLOCKED: rejects Canadian residents, hides paper accounts behind US application. IBKR only if TSX/Canadian equities needed later. RBC confirmed no public trading API. Researched 2026-07-22: IBKR does not bridge to Wealthsimple; the only way to execute trades *in* a Wealthsimple account is unofficial reverse-engineered wrappers that violate WS's ToS, not viable. Real path is a separate IBKR/Alpaca account, SnapTrade/WS stay read-only for display only.
-  **2026-09-03**: unlocked live-mode plumbing ahead of the broker swap -- `autopilot.js` accepts `mode:'live'` from the client (was hardcoded to paper), `morning-run.js` runs the full watchlist in live mode (was BTC-only probe) with a hard $50/trade cap + 20-trade total cap then auto-revert to paper, `TradeWorkflow.jsx` has a Paper/Live toggle. Still wired to SnapTrade under the hood, which is a no-op for real fills against Wealthsimple (see above) -- swap the execution call in `runLive()` to IBKR once the adapter exists and the account is approved, nothing else in this plumbing needs to change.
+- [ ] Live trading blocked on a trade-permissioned brokerage, **needs Joshua**. Alpaca blocked: rejects Canadian residents, hides paper accounts behind US application. IBKR only if TSX/Canadian equities needed later. RBC confirmed no public trading API. Researched 2026-07-22: IBKR does not bridge to Wealthsimple; the only way to execute trades *in* a Wealthsimple account is unofficial reverse-engineered wrappers that violate WS's ToS, not viable. Real path is a separate IBKR/Alpaca account, SnapTrade/WS stay read-only for display only.
+  **2026-09-03**: unlocked live-mode plumbing ahead of the broker swap: `autopilot.js` accepts `mode:'live'` from the client (was hardcoded to paper), `morning-run.js` runs the full watchlist in live mode (was BTC-only probe) with a hard $50/trade cap + 20-trade total cap then auto-revert to paper, `TradeWorkflow.jsx` has a Paper/Live toggle. Still wired to SnapTrade under the hood, which is a no-op for real fills against Wealthsimple (see above). Swap the execution call in `runLive()` to IBKR once the adapter exists and the account is approved, nothing else in this plumbing needs to change.
 - [ ] **BLOCKED (Joshua):** "Login with TradingView" to sync watchlist, no public TradingView API for reading a user's watchlist/account. Receiving endpoint already exists (`server/api/broker/webhook.js` accepts `{ticker, action, qty}`, places Alpaca paper orders), only remaining step needs Joshua's TradingView Pro+ account to configure an outbound webhook alert. Can't self-provision.
 - [ ] Autopilot copy ("Pilots"): curated famous-investor model portfolios (congress trades + 13F trackers, read-only vs SnapTrade) with performance-vs-you + new-trade alerts; web first, mirror iOS. Feature notes in wiki `pages/epiphany.md`.
 - [ ] `src/App.jsx` `ASSETS` const (~180 tickers, fallback-only) and the Watchlist, both tightly coupled to the 978-line trading simulator, used in 6+ places. Not safe to blind-edit; needs its own dedicated session for both together.
@@ -127,12 +113,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Markets-row buy/sell/hold badge on the list view, the "why" panel itself already ships (tap BUY/SELL/HOLD pill on `StockDetail.jsx` for reasons + math rationale). Putting it on each Markets-list row is blocked: `MarketRow` only gets symbol/name/price/changePercent, but `signal()` needs 35+ price points, needs either N per-row history calls or the bulk price-history endpoint already deferred for sparklines. Same blocker, fix together.
 - [ ] Portfolio/Settings tab audit, getting cluttered, decide what stays. Calendar view specifically flagged as possibly unnecessary.
 - [ ] iOS landscape support, one-line flag, but map/markets/portfolio are portrait-first; enabling without adapting layouts looks broken. Needs a per-screen pass (split layouts, wider charts, map controls). Same applies to other iOS apps. Also: Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss).
-
-## From Apple Notes (imported 2026-08-10)
-
-## [x] Stale marketing screenshots, FIXED 2026-08-10
-
-**Resolution:** The initial investigation tracked the empty-state issue (Portfolio $0.00, "No transaction data", "No budget data") to the demo account lacking KV seed data, and proposed a dead-end fix approach (manually author demo portfolio JSON). The real solution turned out simpler: the snapshot pipeline was logging into the empty demo account, but the repo's gitignored `.env.accounts.local` file already contained real account credentials. Fixed by running fastlane snapshot with `DEV_EMAIL`/`DEV_PASSWORD` pointing to Joshua's real account. Uncovered two pipeline bugs in the process: (1) `ios/fastlane/Snapfile` was missing `-skipPackagePluginValidation`, causing the SwiftLint SPM build-tool plugin to fail headlessly and timeout (~15s failures, ~8 silent retries per full run); (2) PreviewScreenshot.swift launched the app three times (Portfolio, Settings, Settings again), and the third launch reliably died with "Simulator device failed to launch" timeout, consolidated Settings into Portfolio launch to reduce to two launches, eliminating the timeout. Result: four refreshed screenshots deployed live showing real portfolio data ($162.37, actual holdings, spending chart). Settings screenshot deliberately omitted to keep personal email off the public landing page. Unreferenced PNG duplicates deleted from public/screenshots/. Commit f6b08f8.
 
 ## From Apple Notes (imported 2026-08-11)
 - [ ] **Needs Joshua: re-upload the June 2026 statement.** Consequence of the month-labelling
@@ -145,8 +125,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] iOS: fix "Login with …" (social sign-in buttons), **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set them as Worker secrets (`npx wrangler secret put`). No code change unblocks this.
 - [ ] Web landing page needs a light mode (looks great otherwise), note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
-
-> Resume note (2026-08-11), **updated 2026-08-13**: the `wip: partial work from /work notes ingest` commit (`2a46fe9`) has now been reviewed and verified, 413 tests pass, iOS and macOS both BUILD SUCCEEDED. Five of the items above are genuinely done and checked off. The "unpushed" claim in the original note was already stale: `2a46fe9` and `d98e8ce` are both on `origin/main`. Safe to build on.
 
 ## Design debt, standing colour rule violations
 - [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
@@ -175,7 +153,6 @@ Scope: large UI change, do in a dedicated session.
 ## From Apple Notes (imported 2026-08-25)
 
 - [ ] Mobile web UI/UX is spotty overall, general pass needed.
-
 - [ ] `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
   (2026-08-26 08:00 UTC) completed 200, but logged `[KV] set error: Too many
   subrequests by single Worker invocation` twice, so part of the cache write was
@@ -200,13 +177,8 @@ Scope: large UI change, do in a dedicated session.
   - `STRIPE_SECRET_KEY` (roll `sk_live_` at dashboard.stripe.com/apikeys)
   Run `scripts/rotate-keys.sh` to open the dashboards.
 
-## From Notes (imported 2026-08-27)
-
-
 ## Portfolio + Markets feedback (2026-09-03)
 - [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
-
-## From Notes (2026-09-12)
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
@@ -219,12 +191,11 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 
 ## Ingested 2026-10-01
 - [ ] Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
-- [ ] Budget should read income statements dynamically instead of a typed Monthly Income ($1000 shown, real figure is higher); phone device debt should calculate dynamically too. Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed. Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
-- [ ] /api/venue-details returns HTTP 400 from Yelp (key set but rejected, Yelp Fusion went paid). Only the iOS 17 / macOS 14 fallback sheet uses it now; drop it or swap the source
+- [ ] Budget should read income statements dynamically instead of a typed Monthly Income; phone device debt should calculate dynamically too. Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed. Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
+- [ ] Yelp key on Cloudflare returns 400 (key set but rejected, Yelp Fusion went paid). Needs a fresh key from the Yelp developer portal (Chrome job). It only adds review photos and ratings. Only the iOS 17 / macOS 14 fallback sheet uses `/api/venue-details` now, so drop it or swap the source.
 
 ## QA loop 2026-10-01
 Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), place card A (Look Around nil on simulator only, works on device), Markets B (rows blank in demo, ticker fixed), Portfolio A-, Settings A.
-- [ ] Yelp key on Cloudflare returns 400, needs a fresh key from the Yelp developer portal (Chrome job), only adds review photos and ratings
 - [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
 - [ ] Markets list rows render blank in UITEST_DEMO mode
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
@@ -249,7 +220,7 @@ Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every t
 - [ ] Instant open: Markets tab renders last known prices on launch, then refreshes (vs Apple Stocks and Yahoo Finance show cach). ios/API/EpiphanyAPI.swift:178 fetchStocks: after `let data = try await perform(request)`, write `data` to FileManager caches dir `stocks.json` (same for fetchCommodities and fetchCrypto). ios/Models/AppState.swift: add `func hydrateCachedMarkets()` that decodes `[Stock]` from that file (reuse the same `decode`), sets `stocks` and `stocksFetchedAt` from the file's modification date only when `stocks.isEmpty`. Call it 
 - [ ] Layers button on the map itself: toggle Flights, Traffic, Incidents, Weather, Quakes, Wildfires, AQI without leaving the map (vs Google Maps Layers sheet with Traffic, T). ios/Views/SituationView.swift:772 layerPickerButton is already a Menu of basemap styles; add a second `Section("Layers")` with `Toggle("Flights", isOn: $showFlights)` etc. bound to the nine @AppStorage flags that already exist at :115-124 (SettingsView.swift:649 keeps its copies, same keys). macos/Views/SituationView.swift:564 same Menu, bound to appState.situation*Enabled (the bindings SettingsView.swift:390 sourceB
 - [ ] Map that is fast and stays alive: skip the refetch on tiny pans, stop the flight timer when there is nothing to move, honour Low Power Mode, and reload every 5 minutes while the tab is open (vs Google Maps and Apple Maps only re-searc). ios/Views/SituationView.swift: add `@State private var lastLoadedRegion: MKCoordinateRegion?`; in .onMapCameraChange (:687) compute centre delta vs lastLoadedRegion and if it moved under 25% of the previous span and latitudeDelta ratio is within 0.5 to 2, run only refreshVenues and return; set lastLoadedRegion at the end of loadData (:873). :169 flight timer: `guard showFlights, !flights.isEmpty, !ProcessInfo.process
-- [ ] First run that is not Joshua's bank account: empty fallbacks plus a three-step 'drop last month's PDF' card (vs Copilot Quick Start Guide and YNAB's Rea). src/config/userProfile.js: empty USER_BUDGET, USER_DEBT, USER_BILLS, USER_TELECOM, USER_SUBSCRIPTIONS, USER_INCOME_PHASES (Welfare, Vape, Weed, Visa $7500, Telus lines, Claude Pro all ship to every signed-out and empty-KV user today via src/utils/financeData.js:2-14 aliasing them as DEMO_* and src/hooks/usePortfolio.js:122-130 falling back to them). src/components/FinancePanel.jsx: delete the Monthly Bills card and T
+- [ ] First run that is not Joshua's bank account: empty fallbacks plus a three-step 'drop last month's PDF' card (vs Copilot Quick Start Guide and YNAB's Rea). src/config/userProfile.js: empty USER_BUDGET, USER_DEBT, USER_BILLS, USER_TELECOM, USER_SUBSCRIPTIONS, USER_INCOME_PHASES (one person's real budget, debt and bill lines ship to every signed-out and empty-KV user today via src/utils/financeData.js:2-14 aliasing them as DEMO_* and src/hooks/usePortfolio.js:122-130 falling back to them). src/components/FinancePanel.jsx: delete the Monthly Bills card and T
 - [ ] Search any ticker or company name and add it to the watchlist (vs Apple Stocks search returns any symbol b). New server/api/search.js: GET ?q=, calls Yahoo `v1/finance/search?q=&quotesCount=8&newsCount=0` with YAHOO_HEADERS from stocks-shared.js (same unofficial endpoint family stocks-free.js:190 already uses), returns [{symbol, name, exchange, type}], KV cache 10 min keyed by lowercased q. Register in api/gateway.js (import plus the route map at :29 and the cache seconds table at :105). ios/Views/MarketsView.swift:274 bott
 - [ ] Web map keeps its last pins and tiles when the network drops (vs Apple Maps offline areas). vite.config.js:64 workbox block: add `runtimeCaching: [ { urlPattern: /basemaps\.cartocdn\.com/, handler: 'StaleWhileRevalidate', options: { cacheName: 'tiles', expiration: { maxEntries: 500, maxAgeSeconds: 7*24*3600 } } }, { urlPattern: /\/api\/(flights|traffic|incidents|earthquakes|weather-alerts|wildfires|aqi|crime|local-events|stocks-free|commodities|crypto)/, handler: 'NetworkFirst', options: { cacheName: 'api',
 - [ ] Pin age for earthquakes and weather alerts: '42 min ago' in the sheet and faded pins past 24 h (vs Citizen colour-codes pins by age). Scoped down from the candidate: /api/incidents is an Overpass query for construction sites, police and fire stations, museums and bus stations (server/api/incidents.js:130-172), static map features with no event time, so incident age is not a thing. Real timestamps exist for quakes (server sends `time` epoch ms at earthquakes.js:57; Shared/SituationData.swift:62 already lists `time` as a coding key but only fills the
@@ -262,8 +233,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-02
 - [ ] Add the jobs report.
-
-## Ingested 2026-10-16
 
 ## Ingested 2026-10-21
 - [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
@@ -280,5 +249,3 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
 - [ ] Configure with Alpaca, finally. The project is a year old; it should be able to buy and sell and even auto trade. SPCX detail screen currently says "Trading is temporarily disabled, back soon" (screenshot ~/Documents/Code/notes/attachments/2026-10-25/epiphany-1.png); Settings shows Autopilot on paper money, last trade sell XLV. Note: Alpaca rejects Canadian residents, see the IBKR/brokerage item above, so this needs a decision on which broker.
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
-
-## Ingested 2026-10-27

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { createChart, ColorType, LineType, CrosshairMode, CandlestickSeries, BarSeries, LineSeries, AreaSeries, BaselineSeries, HistogramSeries } from 'lightweight-charts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 import { signal as computeSignal } from '../utils/indicators';
@@ -606,7 +607,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       console.warn('Chart render error:', err.message);
       return undefined;
     }
-  }, [history, chartType, dark, range, activeIndicators]);
+  }, [history, chartType, dark, range, activeIndicators, fullChart]);
 
   // --- Oscillator sub-chart ---
   const oscillators = activeIndicators.filter(ind => {
@@ -1092,7 +1093,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
         })()}
 
         {/* Chart */}
-        <div
+        {/* Full screen renders into body: the modal's backdrop blur would trap a fixed box inside it. */}
+        {(box => fullChart ? createPortal(box, document.body) : box)(<div
           onClick={e => e.stopPropagation()}
           style={fullChart
             ? { position: 'fixed', inset: 0, zIndex: 10000, background: t.bg, padding: '56px 12px 24px' }
@@ -1127,9 +1129,10 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
               No chart data available
             </div>
           ) : (
-            <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
+            // Own stacking layer, so the chart's canvases can't sit over the expand button.
+            <div ref={chartContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
           )}
-        </div>
+        </div>)}
 
         {/* Oscillator Sub-Chart */}
         {oscillators.length > 0 && (
