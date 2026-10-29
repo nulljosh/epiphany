@@ -9,6 +9,7 @@ struct MarketsView: View {
     @State private var hasLoaded = false
     @State private var selectedStock: Stock?
     @State private var selectedAsset: MarketItem?
+    @State private var activeList: String?  // a named watchlist, nil = everything
     @State private var signalFilter: Indicators.TradeSignal?
 
     // Same names as iOS, so a row says Natural Gas, not Natgas.
@@ -53,6 +54,9 @@ struct MarketsView: View {
 
     private var filteredItems: [MarketItem] {
         var items = allItems
+        if let name = activeList, let list = appState.watchlistLists.first(where: { $0.name == name }) {
+            items = items.filter { list.symbols.contains($0.symbol) }
+        }
         switch marketFilter {
         case .all: break
         case .stocks: items = items.filter { if case .stock = $0.kind { return true }; return false }
@@ -144,6 +148,11 @@ struct MarketsView: View {
                         HStack {
                             TextField("Search markets", text: $searchText)
                                 .textFieldStyle(.roundedBorder)
+                            if appState.isLoggedIn {
+                                WatchlistListPicker(lists: appState.watchlistLists, active: $activeList,
+                                                    onCreate: { appState.updateWatchlistLists(appState.watchlistLists + [WatchlistList(name: $0, symbols: [])]) },
+                                                    onDelete: { name in appState.updateWatchlistLists(appState.watchlistLists.filter { $0.name != name }); activeList = nil })
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
@@ -530,6 +539,7 @@ struct MarketsView: View {
             .task { await appState.loadSparkline(item.symbol) }
         }
         .buttonStyle(.plain)
+        .contextMenu { AddToListMenu(symbol: item.symbol, lists: appState.watchlistLists) { appState.toggle($1, inList: $0) } }
     }
 
     @ViewBuilder

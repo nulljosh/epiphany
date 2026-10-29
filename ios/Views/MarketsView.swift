@@ -10,6 +10,7 @@ struct MarketsView: View {
     @State private var hasLoaded = false
     @State private var hasLoadedNews = false
     @State private var selectedStock: Stock?
+    @State private var activeList: String?  // nil = the main watchlist
     @State private var sortField: MarketSortField = .changePercent
     @State private var sortAscending = false
     @State private var marketFilter: MarketFilter = .all
@@ -413,9 +414,9 @@ struct MarketsView: View {
                     .listRowSeparator(.hidden)
             }
 
-            if !appState.watchlistStocks.isEmpty {
-                Section("Watchlist") {
-                    ForEach(appState.watchlistStocks) { stock in
+            if !appState.watchlistStocks.isEmpty || !appState.watchlistLists.isEmpty {
+                Section {
+                    ForEach(shownListStocks) { stock in
                         Button {
                             selectedStock = stock
                         } label: {
@@ -426,8 +427,14 @@ struct MarketsView: View {
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 16 }
                         .alignmentGuide(.listRowSeparatorTrailing) { $0.width - 16 }
                         .swipeActions(edge: .trailing) { watchlistSwipe(stock.symbol) }
-                        .contextMenu { watchlistSwipe(stock.symbol) }
+                        .contextMenu { watchlistSwipe(stock.symbol); listMenu(stock.symbol) }
                     }
+                } header: {
+                    WatchlistListPicker(lists: appState.watchlistLists, active: $activeList,
+                                        onCreate: { appState.updateWatchlistLists(appState.watchlistLists + [WatchlistList(name: $0, symbols: [])]) },
+                                        onDelete: { name in appState.updateWatchlistLists(appState.watchlistLists.filter { $0.name != name }); activeList = nil })
+                        .padding(.horizontal, 16)
+                        .textCase(nil)
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -495,7 +502,7 @@ struct MarketsView: View {
     private func rowActions(_ item: MarketItem) -> some View {
         switch item.kind {
         case .stock(let stock):
-            if appState.isLoggedIn { watchlistSwipe(stock.symbol) }
+            if appState.isLoggedIn { watchlistSwipe(stock.symbol); listMenu(stock.symbol) }
         case .commodity, .crypto:
             favoriteButton(item)
         }
@@ -513,6 +520,18 @@ struct MarketsView: View {
     }
 
     /// The star moved off the row into a swipe, like iOS Stocks.
+    /// The picked list's stocks: the main watchlist, or a named list's symbols from the loaded quotes.
+    private var shownListStocks: [Stock] {
+        guard let name = activeList, let list = appState.watchlistLists.first(where: { $0.name == name }) else {
+            return appState.watchlistStocks
+        }
+        return list.symbols.compactMap { sym in appState.stocks.first { $0.symbol == sym } }
+    }
+
+    private func listMenu(_ symbol: String) -> some View {
+        AddToListMenu(symbol: symbol, lists: appState.watchlistLists) { appState.toggle($1, inList: $0) }
+    }
+
     private func watchlistSwipe(_ symbol: String) -> some View {
         let watched = appState.isInWatchlist(symbol)
         return Button {

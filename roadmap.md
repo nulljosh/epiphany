@@ -17,7 +17,7 @@ One row per minor version, daily-use first. Borrow the idea, never the look.
 | "N to review" transaction queue | Copilot, Monarch | M | 9.0 | #179 |
 | Map filter bar: incident type and time window | Citizen | M | 10.0 | done 10.0.0 (web, iOS, Mac) |
 | Saved places with nearby-incident counts | Citizen | M | 10.0 | done 10.0.0 (web, iOS, Mac) |
-| Multiple named watchlists | Yahoo, TradingView | L | later | open |
+| Multiple named watchlists | Yahoo, TradingView | L | later | done 14.0.0 (web, iOS, Mac) |
 
 ## Version plan to v100
 One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.
@@ -28,8 +28,8 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 10.0 | Map: filter bar by incident type and time, saved places with incident counts |
 | 11.0 | Instant open: cached prices on launch, real watchlist in the widget and Lock Screen (done 11.0.0) |
 | 12.0 | First run for everyone: empty fallbacks, no personal demo data, the drop-a-statement card (done 12.0.0) |
-| 13.0 | Google sign-in on iPhone and Mac (server is done) |
-| 14.0 | Multiple named watchlists |
+| 13.0 | Google sign-in on iPhone and Mac (server is done; blocked on the new callback URL in Google console, #210) |
+| 14.0 | Multiple named watchlists (done 14.0.0) |
 | 15.0 | Mac extras: menu bar ticker, Notification Center alerts |
 | 16.0 | APNs price alerts (#180), alerts on web |
 | 17.0 | Commodity and crypto detail parity with stocks |

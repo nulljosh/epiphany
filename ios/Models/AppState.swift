@@ -111,6 +111,8 @@ final class AppState {
         Set(watchlist.map(\.symbol))
     }
 
+    var watchlistLists: [WatchlistList] = []
+
     var watchlistStocks: [Stock] {
         stocks.filter { watchlistSymbols.contains($0.symbol) }
     }
@@ -585,6 +587,7 @@ final class AppState {
         guard isLoggedIn else { return }
         do {
             watchlist = try await EpiphanyAPI.shared.fetchWatchlist()
+            await loadWatchlistLists()
             await loadMissingWatchlistQuotes()
         } catch {
             handleError(error)

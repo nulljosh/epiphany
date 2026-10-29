@@ -496,6 +496,18 @@ final class EpiphanyAPI {
 
     // MARK: - Watchlist
 
+    /// Named lists live beside the main watchlist; Shared/WatchlistLists.swift wraps this.
+    func watchlistListsRequest(method: String, body: Data?) async throws -> [WatchlistList] {
+        var request = URLRequest(url: try makeURL("/api/watchlist-lists"))
+        request.httpMethod = method
+        if let body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        struct Wrapper: Decodable { let lists: [WatchlistList] }
+        return try decode(Wrapper.self, from: try await perform(request)).lists
+    }
+
     func fetchWatchlist() async throws -> [WatchlistItem] {
         let url = try makeURL("/api/watchlist")
         let request = URLRequest(url: url)
