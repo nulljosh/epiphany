@@ -95,9 +95,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Landing page screenshots must use a real populated account, not a demo account (currently renders an empty portfolio, looks broken on the marketing site).
 
 ## Commodity/crypto detail parity
-- [ ] iOS/macOS mirror of web's commodity/crypto stats grid (dayHigh/dayLow/prevClose, high24h/low24h, backend shipped 07-19). Bigger than a mirror pass: no iOS/macOS view renders `CommodityData`/`CryptoData` at all yet (`StockDetailView.swift` is equity-only), needs a dedicated session to build the detail view first, then add stats fields.
 - [ ] Derivable without new backend work: Period High/Low from already-loaded price history; SMA20/EMA50 overlays on the commodity chart (client-side, `StockDetailView` already computes these for equities, reuse). Needs a chart refactor pass.
-- [ ] Mirror Yahoo Finance layout: at drawer `.large`, the ticker bar should own ~top 10% of the view, visual-proportion tuning, do live on the sim.
 
 ## Trading / brokerage
 - [ ] **IBKR broker adapter, blocked on IBKR account approval**: Joshua started an Interactive Brokers Canada individual application on 2026-09-06 and is filling KYC forms. Once approved, write `server/api/broker/ibkr.js` mirroring the existing `alpaca.js` stub interface (paper account endpoint, execute trade with symbol/qty/side). Wire it into `broker/morning-run.js:runLive()` in place of the Alpaca call. Alpaca is blocked because it rejects Canadian residents. IBKR is the funded path forward for live autopilot trading in Canada.
@@ -186,7 +184,6 @@ Scope: large UI change, do in a dedicated session.
   Run `scripts/rotate-keys.sh` to open the dashboards.
 
 ## From Notes (imported 2026-08-27)
-- [ ] Widgets receive no data: `widgets-ios/Models/WidgetAPI.swift` reads `UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany")`, but the **main app declares no app-groups entitlement** (only the widget target does) and no main-app code writes that suite. Found while inspecting the signed archive; unrelated to the rejection.
 
 
 ## Portfolio + Markets feedback (2026-09-03)
