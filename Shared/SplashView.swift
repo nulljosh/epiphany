@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Boot animation on iPhone and Mac: the lyre draws itself, the strings pluck, Spark pops on.
 struct SplashView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drawn: [LyreShape.Part: CGFloat] = [:]
@@ -13,7 +14,8 @@ struct SplashView: View {
 
     var body: some View {
         ZStack {
-            Palette.bg
+            Rectangle()
+                .fill(.background)
                 .ignoresSafeArea()
 
             VStack(spacing: 28) {
@@ -49,7 +51,7 @@ struct SplashView: View {
                 Text("EPIPHANY")
                     .font(.system(size: 16, weight: .light))
                     .tracking(8)
-                    .foregroundStyle(Palette.overlay.opacity(0.5))
+                    .foregroundStyle(.primary.opacity(0.5))
                     .opacity(textOpacity)
             }
         }

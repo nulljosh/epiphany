@@ -4,19 +4,31 @@ import SwiftUI
 struct EpiphanyApp: App {
     @State private var appState = AppState()
     @AppStorage("app_theme") private var rawTheme = "system"
+    @State private var showSplash = true
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(appState)
-                .preferredColorScheme(rawTheme == "dark" ? .dark : rawTheme == "light" ? .light : nil)
-                .task {
-                    await appState.restoreAuthentication()
-                    appState.error = nil
+            Group {
+                if showSplash {
+                    SplashView()
+                        .transition(.opacity)
+                } else {
+                    ContentView()
+                        .environment(appState)
+                        .onboarding(key: "epiphany",
+                                    signedIn: appState.user != nil,
+                                    slides: epiphanyOnboardingSlides)
                 }
-                .onboarding(key: "epiphany",
-                            signedIn: appState.user != nil,
-                            slides: epiphanyOnboardingSlides)
+            }
+            .preferredColorScheme(rawTheme == "dark" ? .dark : rawTheme == "light" ? .light : nil)
+            .task {
+                let started = ContinuousClock.now
+                // Restore the session behind the splash so the sign-in sheet never flashes.
+                await appState.restoreAuthentication()
+                appState.error = nil
+                try? await Task.sleep(until: started + .seconds(2.2))
+                withAnimation(.easeOut(duration: 0.6)) { showSplash = false }
+            }
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
