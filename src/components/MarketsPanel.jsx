@@ -453,12 +453,28 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
   const watchlistSet = useMemo(() => new Set(watchlist || []), [watchlist]);
 
+  // Named lists beyond the main watchlist, saved per account (server/api/watchlist-lists.js).
+  const [lists, setLists] = useState([]);
+  const [activeList, setActiveList] = useState(null); // null = the main watchlist
+  const [listDraft, setListDraft] = useState(null);   // text while naming a new list
+  const [symbolDraft, setSymbolDraft] = useState('');
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch('/api/watchlist-lists', { credentials: 'include' }).then(r => (r.ok ? r.json() : null)).then(d => d && setLists(d.lists || [])).catch(() => {});
+  }, [isAuthenticated]);
+  const saveLists = (next) => {
+    setLists(next);
+    fetch('/api/watchlist-lists', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lists: next }) }).catch(() => {});
+  };
+  const shownList = lists.find(l => l.name === activeList);
+
   const watchlistItems = useMemo(() => {
-    if (!watchlist || watchlist.length === 0) return [];
+    const wanted = shownList ? new Set(shownList.symbols) : watchlistSet;
+    if (wanted.size === 0) return [];
     return allItems
-      .filter(item => watchlistSet.has(item.symbol))
+      .filter(item => wanted.has(item.symbol))
       .sort((a, b) => compareItems(a, b, sortKey, sortAsc));
-  }, [allItems, watchlistSet, sortKey, sortAsc]);
+  }, [allItems, watchlistSet, shownList, sortKey, sortAsc]);
 
   const filtered = useMemo(() => {
     let list = allItems.filter(item => {
@@ -625,11 +641,47 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       })()}
 
       {/* Watchlist */}
-      {watchlistItems.length > 0 && (
+      {(watchlistItems.length > 0 || lists.length > 0 || (watchlist || []).length > 0) && (
         <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-            Watchlist
-          </div>
+          {isAuthenticated ? (
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 8, alignItems: 'center' }}>
+              {[null, ...lists.map(l => l.name)].map(name => (
+                <button key={name ?? '__main'} type="button" onClick={() => setActiveList(name)}
+                  style={{ height: 28, padding: '0 12px', borderRadius: 14, border: `1px solid ${t.border}`, whiteSpace: 'nowrap', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: activeList === name ? t.text : 'transparent', color: activeList === name ? t.bg : t.textSecondary }}>
+                  {name ?? 'Watchlist'}
+                </button>
+              ))}
+              {listDraft === null ? (
+                <button type="button" onClick={() => setListDraft('')} aria-label="New list"
+                  style={{ height: 28, padding: '0 10px', borderRadius: 14, border: `1px dashed ${t.border}`, background: 'transparent', color: t.textSecondary, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>+ New list</button>
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); const name = listDraft.trim(); if (name && !lists.some(l => l.name.toLowerCase() === name.toLowerCase())) { saveLists([...lists, { name, symbols: [] }]); setActiveList(name); } setListDraft(null); }}>
+                  <input autoFocus value={listDraft} onChange={e => setListDraft(e.target.value)} onBlur={() => setListDraft(null)} placeholder="List name" maxLength={24} aria-label="New list name"
+                    style={{ height: 28, width: 120, padding: '0 10px', borderRadius: 14, border: `1px solid ${t.border}`, background: 'transparent', color: t.text, fontSize: 12 }} />
+                </form>
+              )}
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+              Watchlist
+            </div>
+          )}
+          {shownList && (
+            <form style={{ display: 'flex', gap: 6, marginBottom: 6 }} onSubmit={(e) => {
+              e.preventDefault();
+              const sym = symbolDraft.trim().toUpperCase();
+              if (sym && !shownList.symbols.includes(sym)) saveLists(lists.map(l => (l.name === shownList.name ? { ...l, symbols: [...l.symbols, sym] } : l)));
+              setSymbolDraft('');
+            }}>
+              <input value={symbolDraft} onChange={e => setSymbolDraft(e.target.value)} placeholder={`Add a symbol to ${shownList.name}`} maxLength={12} aria-label="Add symbol"
+                style={{ flex: 1, height: 32, padding: '0 12px', borderRadius: 16, border: `1px solid ${t.border}`, background: 'transparent', color: t.text, fontSize: 13 }} />
+              <button type="button" onClick={() => { saveLists(lists.filter(l => l.name !== shownList.name)); setActiveList(null); }}
+                style={{ height: 32, padding: '0 12px', borderRadius: 16, border: 'none', background: 'transparent', color: t.red, cursor: 'pointer', fontSize: 12 }}>Delete list</button>
+            </form>
+          )}
+          {shownList && watchlistItems.length === 0 && (
+            <div style={{ fontSize: 12, color: t.textTertiary, padding: '6px 0' }}>Nothing here yet. Add a symbol above.</div>
+          )}
           {watchlistItems.map(item => (
             <MarketRow
               key={`wl-${item.symbol}`}
