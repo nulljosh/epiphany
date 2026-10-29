@@ -609,11 +609,15 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let data = try await perform(request)
         let wrapper = try decode(StatementsWrapper.self, from: data)
         lastRecurring = wrapper.recurring ?? []
+        lastCashflow = wrapper.cashflow ?? []
+        lastInsights = wrapper.insights ?? []
         return wrapper.statements
     }
 
     /// Recurring charges from the most recent fetchStatements call.
     private(set) var lastRecurring: [RecurringCharge] = []
+    private(set) var lastCashflow: [CashflowMonth] = []
+    private(set) var lastInsights: [MoneyInsight] = []
 
     func uploadStatement(filename: String, contentBase64: String, text: String = "") async throws -> [Statement] {
         let url = try makeURL("/api/statements", query: ["action": "upload"])
@@ -1101,6 +1105,8 @@ private struct NewsWrapper: Decodable {
 private struct StatementsWrapper: Decodable {
     let statements: [Statement]
     let recurring: [RecurringCharge]?
+    let cashflow: [CashflowMonth]?
+    let insights: [MoneyInsight]?
 }
 
 extension ISO8601DateFormatter {

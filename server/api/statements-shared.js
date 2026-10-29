@@ -345,3 +345,62 @@ export function summarizeTransactions(transactions = [], filename = '') {
     importedAt: new Date().toISOString(),
   };
 }
+
+// Money that came in: anything positive except card payments and moves between
+// your own accounts. ponytail: description heuristic; a refund counts as money in
+// until statements carry an account tag.
+const NOT_INCOME = /payment|paiement|transfer (in|from)|internal/i;
+function isMoneyIn(txn) {
+  return txn.amount > 0 && (/e-?transfer/i.test(txn.description) || !NOT_INCOME.test(txn.description || ''));
+}
+
+// Money in vs spending per calendar month, oldest first, last `months` months with data.
+export function summarizeCashflow(transactions = [], months = 6) {
+  const byMonth = {};
+  for (const txn of transactions) {
+    if (typeof txn?.amount !== 'number' || !DATE_RE.test(txn?.date || '')) continue;
+    const key = txn.date.slice(0, 7);
+    const row = (byMonth[key] ||= { month: key, in: 0, out: 0 });
+    if (txn.amount < 0 && txn.category) row.out = roundMoney(row.out - txn.amount);
+    else if (isMoneyIn(txn)) row.in = roundMoney(row.in + txn.amount);
+  }
+  return Object.values(byMonth).sort((a, b) => a.month.localeCompare(b.month)).slice(-months);
+}
+
+// Up to three plain lines about the latest month: where the money went, what moved most, the overall change.
+export function findInsights(transactions = []) {
+  const spend = transactions.filter((t) => typeof t?.amount === 'number' && t.amount < 0 && t.category && DATE_RE.test(t.date || ''));
+  const monthsSeen = [...new Set(spend.map((t) => t.date.slice(0, 7)))].sort();
+  const latest = monthsSeen.at(-1);
+  if (!latest) return [];
+  const prev = monthsSeen.at(-2);
+  const label = (m) => monthLabelFromDate(`${m}-01`).split(' ')[0];
+  const sumBy = (month, keyFn) => {
+    const out = {};
+    for (const t of spend) if (t.date.startsWith(month)) out[keyFn(t)] = roundMoney((out[keyFn(t)] || 0) - t.amount);
+    return out;
+  };
+  const insights = [];
+
+  const merchants = Object.entries(sumBy(latest, (t) => normalizeMerchant(t.description))).sort((a, b) => b[1] - a[1]);
+  if (merchants[0]?.[0]) insights.push({ kind: 'top_merchant', title: `Most went to ${merchants[0][0]}`, amount: merchants[0][1], month: latest, detail: `in ${label(latest)}` });
+
+  if (prev) {
+    const now = sumBy(latest, (t) => t.category);
+    const before = sumBy(prev, (t) => t.category);
+    const moves = [...new Set([...Object.keys(now), ...Object.keys(before)])]
+      .map((c) => [c, roundMoney((now[c] || 0) - (before[c] || 0))])
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    const [cat, delta] = moves[0] || [];
+    if (cat && Math.abs(delta) >= 20) {
+      insights.push({ kind: 'category_move', title: `${cat.replace(/_/g, ' ')} ${delta > 0 ? 'up' : 'down'}`, amount: Math.abs(delta), month: latest, detail: `vs ${label(prev)}` });
+    }
+    const total = (o) => Object.values(o).reduce((s, v) => s + v, 0);
+    const t0 = total(before), t1 = total(now);
+    if (t0 > 0) {
+      const pct = Math.round(((t1 - t0) / t0) * 100);
+      if (pct !== 0) insights.push({ kind: 'total_change', title: `Spending ${pct > 0 ? 'up' : 'down'} ${Math.abs(pct)}%`, amount: roundMoney(t1), month: latest, detail: `${label(latest)} vs ${label(prev)}` });
+    }
+  }
+  return insights;
+}

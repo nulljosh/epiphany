@@ -12,6 +12,7 @@ import EpiphanyFinance from './EpiphanyFinance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
+import MoneyGlance from './MoneyGlance';
 import { budgetActual } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
@@ -656,6 +657,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [importError, setImportError] = useState(null);
   const [statementFiles, setStatementFiles] = useState([]);
   const [recurring, setRecurring] = useState([]);
+  const [cashflow, setCashflow] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [statementLoading, setStatementLoading] = useState(false);
   const [statementUploading, setStatementUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
@@ -776,6 +779,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       }
       setStatementFiles(files);
       setRecurring(Array.isArray(data?.recurring) ? data.recurring : []);
+      setCashflow(Array.isArray(data?.cashflow) ? data.cashflow : []);
+      setInsights(Array.isArray(data?.insights) ? data.insights : []);
       const result = syncSpendingMonthsRef.current(files.map((item) => item.spendingMonth));
       setImportError(result.success ? null : result.error);
     } catch (err) {
@@ -1421,6 +1426,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
         {tab === 'spending' && (
           <>
+            <MoneyGlance recurring={recurring} cashflow={cashflow} insights={insights} dark={dark} t={t} />
             {importError && (
               <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,69,58,0.15)', borderRadius: 8, fontSize: 11, color: t.red }}>
                 {importError}

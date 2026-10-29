@@ -176,6 +176,9 @@ struct PortfolioView: View {
 
                             combinedSpendingCard
 
+                            MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights)
+                                .padding(.horizontal)
+
                             if let portfolio = resolvedPortfolio, !portfolio.holdings.isEmpty {
                                 holdingsContent(portfolio)
                             }

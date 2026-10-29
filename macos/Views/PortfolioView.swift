@@ -599,6 +599,9 @@ struct PortfolioView: View {
                 emptyState("No spending data available")
             } else {
                 VStack(spacing: 16) {
+                    MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights)
+                        .padding(.horizontal)
+
                     scenarioToggles
                         .padding(.horizontal)
 

@@ -235,3 +235,45 @@ describe('parseStatementText column layouts', () => {
     expect(b[1]).toMatchObject({ date: '2026-07-31', postedDate: '2026-08-01', description: 'Compass Web', amount: -6.1, balance: 1228.57, category: 'transit' });
   });
 });
+
+import { summarizeCashflow, findInsights } from '../../server/api/statements-shared.js';
+
+describe('summarizeCashflow', () => {
+  const txns = [
+    { date: '2026-08-02', description: 'DIRECT DEPOSIT PAYROLL', amount: 2000, category: null },
+    { date: '2026-08-05', description: 'COSTCO #123', amount: -150, category: 'groceries' },
+    { date: '2026-08-20', description: 'PAYMENT - THANK YOU', amount: 500, category: null },
+    { date: '2026-09-02', description: 'INTERAC E-TRANSFER FROM SAM', amount: 40, category: null },
+    { date: '2026-09-06', description: 'COSTCO #123', amount: -300, category: 'groceries' },
+    { date: '2026-09-07', description: 'Transfer In from Savings', amount: 900, category: null },
+  ];
+
+  it('counts deposits and e-transfers in, skips card payments and own transfers', () => {
+    expect(summarizeCashflow(txns)).toEqual([
+      { month: '2026-08', in: 2000, out: 150 },
+      { month: '2026-09', in: 40, out: 300 },
+    ]);
+  });
+
+  it('keeps only the last N months', () => {
+    expect(summarizeCashflow(txns, 1).map((r) => r.month)).toEqual(['2026-09']);
+  });
+});
+
+describe('findInsights', () => {
+  it('names the top merchant, the biggest category move and the total change', () => {
+    const out = findInsights([
+      { date: '2026-08-05', description: 'COSTCO #123', amount: -100, category: 'groceries' },
+      { date: '2026-09-06', description: 'COSTCO #123', amount: -250, category: 'groceries' },
+      { date: '2026-09-08', description: 'STARBUCKS 44', amount: -10, category: 'starbucks' },
+    ]);
+    expect(out.map((i) => i.kind)).toEqual(['top_merchant', 'category_move', 'total_change']);
+    expect(out[0].title).toBe('Most went to costco');
+    expect(out[1]).toMatchObject({ title: 'groceries up', amount: 150 });
+    expect(out[2].title).toBe('Spending up 160%');
+  });
+
+  it('returns nothing without spending', () => {
+    expect(findInsights([])).toEqual([]);
+  });
+});

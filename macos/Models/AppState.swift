@@ -22,6 +22,8 @@ final class AppState {
     var financeData: FinanceData?
     var statements: [Statement] = []
     var recurring: [RecurringCharge] = []
+    var cashflow: [CashflowMonth] = []
+    var insights: [MoneyInsight] = []
     var isLoading = false
     var isAuthenticating = false
     var error: String?
@@ -425,6 +427,8 @@ final class AppState {
         do {
             statements = try await EpiphanyAPI.shared.fetchStatements()
             recurring = EpiphanyAPI.shared.lastRecurring
+            cashflow = EpiphanyAPI.shared.lastCashflow
+            insights = EpiphanyAPI.shared.lastInsights
             publishBudgetSnapshot()
         } catch {
             handleError(error)
