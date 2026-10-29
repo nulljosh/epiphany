@@ -1853,6 +1853,14 @@ private struct VenuePin: View {
     }
 }
 
+/// Map items we build from our own pins carry no Apple place id, so the item request comes back empty.
+/// Fall back to the nearest Look Around imagery at the coordinate.
+@MainActor
+private func lookAroundScene(for item: MKMapItem) async -> MKLookAroundScene? {
+    if let scene = try? await MKLookAroundSceneRequest(mapItem: item).scene { return scene }
+    return try? await MKLookAroundSceneRequest(coordinate: item.placemark.coordinate).scene
+}
+
 /// Look Around photo on top, Apple's own place card (hours, details, directions) below.
 @available(iOS 18, *)
 private struct PlaceCard: View {
@@ -1870,7 +1878,7 @@ private struct PlaceCard: View {
             }
             AppleDetail(item: item) { dismiss() }
         }
-        .task { scene = try? await MKLookAroundSceneRequest(mapItem: item).scene }
+        .task { scene = await lookAroundScene(for: item) }
     }
 }
 
@@ -1956,7 +1964,7 @@ private struct VenueDetailSheet: View {
         }
         .task {
             // Native Apple imagery, no API key. Nil in areas without coverage.
-            scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
+            scene = await lookAroundScene(for: item)
             loadingScene = false
         }
         .task {

@@ -1222,7 +1222,9 @@ private struct VenueDetailSheet: View {
         }
         .frame(minWidth: 360, minHeight: 420)
         .task {
+            // Our own pins carry no Apple place id, so fall back to the imagery at the coordinate.
             scene = try? await MKLookAroundSceneRequest(mapItem: item).scene
+            if scene == nil { scene = try? await MKLookAroundSceneRequest(coordinate: item.placemark.coordinate).scene }
             loadingScene = false
         }
         .task {
