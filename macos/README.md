@@ -2,7 +2,7 @@
 
 # Epiphany macOS
 
-![version](https://img.shields.io/badge/version-v7.0.0-blue)
+![version](https://img.shields.io/badge/version-v8.0.0-blue)
 
 Native macOS companion for Epiphany. MapKit map with layer switcher + venue chips, markets table, portfolio, trading simulator, alerts. Pure SwiftUI, macOS 14+.
 [Epiphany](https://epiphany.jaybulb.com) | ![Architecture](architecture.svg)
