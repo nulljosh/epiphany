@@ -399,29 +399,37 @@ struct MarketsView: View {
                             )
                         }
                         .buttonStyle(BounceButtonStyle())
+                        .padding(.horizontal, 16)
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                        .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
                     }
                 }
-                .listRowBackground(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.ultraThinMaterial)
-                        .padding(2)
-                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
 
             ForEach(filteredItems) { item in
-                switch item.kind {
-                case .stock(let stock):
-                    stockRow(stock)
-                case .commodity, .crypto:
-                    commodityCryptoRow(item)
+                Group {
+                    switch item.kind {
+                    case .stock(let stock):
+                        stockRow(stock)
+                    case .commodity, .crypto:
+                        commodityCryptoRow(item)
+                    }
                 }
+                .padding(.horizontal, 16)
+                // Separators run edge to edge instead of starting under the symbol.
+                .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                .alignmentGuide(.listRowSeparatorTrailing) { $0.width }
             }
-            .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
+            .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
         }
         .animation(.smooth, value: searchText)
         // The default grouped-list top margin left a blank band under the ticker strip.
         .contentMargins(.top, 4, for: .scrollContent)
+        // Rows run to the screen edges; the grouped list's side margins are gone.
+        .contentMargins(.horizontal, 0, for: .scrollContent)
         .task(id: searchText) {
             let query = searchText.trimmingCharacters(in: .whitespaces)
             guard isSearching, !query.isEmpty else { searchResults = []; return }
