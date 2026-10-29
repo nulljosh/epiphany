@@ -122,25 +122,11 @@ private struct BottomTabBar: View {
                 tabCell(for: section)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 8)
+        .padding(8)
         .frame(maxWidth: 760)
         .frame(height: 64)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .allowsHitTesting(false)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.04))
-                .allowsHitTesting(false)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                        .allowsHitTesting(false)
-                )
-        )
+        // Functional layer, so it gets the glass; the content under it stays plain.
+        .liquidGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous), fallback: .regularMaterial)
     }
 
     private func isSelected(_ section: ContentView.AppSection) -> Bool {
@@ -160,9 +146,11 @@ private struct BottomTabBar: View {
         .frame(maxWidth: .infinity, minHeight: 44)
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .foregroundStyle(selected ? .white : Color.white.opacity(0.64))
-        .background(tabBackground(selected: selected))
-        .overlay(tabBorder(selected: selected))
+        .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.primary.opacity(selected ? 0.08 : 0))
+        )
         .background(shortcutBridge(for: section))
         .contentShape(Rectangle())
         .onTapGesture {
@@ -182,23 +170,6 @@ private struct BottomTabBar: View {
         .accessibilityHidden(true)
     }
 
-    private func tabBackground(selected: Bool) -> some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(selected ? AnyShapeStyle(selectedGradient) : AnyShapeStyle(Color.clear))
-    }
-
-    private func tabBorder(selected: Bool) -> some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .stroke(Color.white.opacity(selected ? 0.14 : 0), lineWidth: 1)
-    }
-
-    private var selectedGradient: LinearGradient {
-        LinearGradient(
-            colors: [Color.white.opacity(0.14), Color.white.opacity(0.08)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
 }
 
 private extension ContentView.AppSection {

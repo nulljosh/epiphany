@@ -297,6 +297,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const [hoveredDate, setHoveredDate] = useState(null);
   const newsRef = useRef(null);
   const [showSignalWhy, setShowSignalWhy] = useState(false);
+  const [fullChart, setFullChart] = useState(false);
   const [activeIndicators, setActiveIndicators] = useState(() => loadIndicators());
   const [showIndicatorPanel, setShowIndicatorPanel] = useState(false);
   const [editingIndicator, setEditingIndicator] = useState(null);
@@ -423,13 +424,13 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   // Keyboard navigation: Escape to close, ArrowLeft/Right to cycle stocks
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { if (fullChart) setFullChart(false); else onClose(); return; }
       if (e.key === 'ArrowLeft' && onNavigate && currentIndex > 0) onNavigate(currentIndex - 1);
       if (e.key === 'ArrowRight' && onNavigate && currentIndex < totalCount - 1) onNavigate(currentIndex + 1);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onClose, onNavigate, currentIndex, totalCount]);
+  }, [onClose, onNavigate, currentIndex, totalCount, fullChart]);
 
   // Render lightweight-charts
   useEffect(() => {
@@ -442,7 +443,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     try {
     chart = createChart(container, {
       width: container.clientWidth,
-      height: 180,
+      height: container.clientHeight || 180,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: isDark ? '#8e8e93' : '#6e6e73',
@@ -590,7 +591,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
 
     const ro = new ResizeObserver(() => {
       if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight || 180 });
       }
     });
     ro.observe(container);
@@ -1091,7 +1092,32 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
         })()}
 
         {/* Chart */}
-        <div style={{ ...glass, padding: '12px 8px 8px', marginBottom: oscillators.length > 0 ? 4 : 12, height: 200 }}>
+        <div
+          onClick={e => e.stopPropagation()}
+          style={fullChart
+            ? { position: 'fixed', inset: 0, zIndex: 10000, background: t.bg, padding: '56px 12px 24px' }
+            : { ...glass, position: 'relative', padding: '12px 8px 8px', marginBottom: oscillators.length > 0 ? 4 : 12, height: 200 }}
+        >
+          {history.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setFullChart(f => !f)}
+              aria-label={fullChart ? 'Close full screen chart' : 'Full screen chart'}
+              title={fullChart ? 'Close (Esc)' : 'Full screen'}
+              style={{
+                position: 'absolute', top: fullChart ? 12 : 8, left: fullChart ? 12 : 8, zIndex: 2,
+                width: 32, height: 32, borderRadius: 16, border: 'none', cursor: 'pointer',
+                background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', color: t.textSecondary,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                {fullChart
+                  ? <path d="M5 1v4H1M9 1v4h4M5 13V9H1M9 13V9h4" />
+                  : <path d="M1 5V1h4M13 5V1H9M1 9v4h4M13 9v4H9" />}
+              </svg>
+            </button>
+          )}
           {historyLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: t.textTertiary, fontSize: 12 }}>
               Loading chart...

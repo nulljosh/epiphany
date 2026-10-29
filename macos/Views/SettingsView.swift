@@ -156,7 +156,7 @@ struct SettingsView: View {
     private var profileCard: some View {
         ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.05))
+                .fill(Color.primary.opacity(0.05))
 
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 14) {
@@ -170,11 +170,11 @@ struct SettingsView: View {
                                 .clipShape(Circle())
                         } else {
                             Circle()
-                                .fill(Color.white.opacity(0.12))
+                                .fill(Color.primary.opacity(0.12))
                                 .frame(width: 62, height: 62)
                             Text(avatarInitial)
                                 .font(.title2.weight(.bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.primary)
                         }
                     }
 
@@ -197,7 +197,7 @@ struct SettingsView: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
         )
     }
 
@@ -237,11 +237,11 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(normalizedTier == tier ? Color.white.opacity(0.08) : Color.white.opacity(0.04))
+                                .fill(normalizedTier == tier ? Color.primary.opacity(0.08) : Color.primary.opacity(0.04))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(normalizedTier == tier ? Palette.linkBlue.opacity(0.35) : Color.white.opacity(0.05), lineWidth: 1)
+                                .stroke(normalizedTier == tier ? Palette.linkBlue.opacity(0.35) : Color.primary.opacity(0.05), lineWidth: 1)
                         )
                     }
                     .buttonStyle(.plain)
@@ -461,7 +461,7 @@ struct SettingsView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
     }
 
@@ -469,16 +469,16 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title.uppercased())
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(.primary.opacity(0.55))
             Text(value)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
         .background(
             Capsule()
-                .fill(Color.white.opacity(0.08))
+                .fill(Color.primary.opacity(0.08))
         )
     }
 
@@ -505,11 +505,11 @@ struct SettingsView: View {
             .padding(Spacing.smPlus)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
+                    .fill(Color.primary.opacity(0.04))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                    .stroke(Color.primary.opacity(0.05), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -544,11 +544,11 @@ struct SettingsView: View {
         .padding(Spacing.smPlus)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.04))
+                .fill(Color.primary.opacity(0.04))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
         )
     }
 }
@@ -750,7 +750,7 @@ private struct AppearancePicker: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .stroke(rawTheme == id ? Palette.linkBlue : Color.white.opacity(0.08), lineWidth: 2)
+                                    .stroke(rawTheme == id ? Palette.linkBlue : Color.primary.opacity(0.08), lineWidth: 2)
                             )
                         Text(label)
                             .font(.caption.weight(.medium))

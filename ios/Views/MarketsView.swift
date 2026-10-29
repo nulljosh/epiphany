@@ -731,6 +731,8 @@ private struct MarketItemDetailView: View {
     @State private var selectedNewsURL: URL?
     @State private var stats: [(String, String)] = []
     @State private var livePrice: Double?
+    @State private var fullChart = false
+    @State private var scrub: (date: Date, price: Double)?
 
     private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
 
@@ -769,7 +771,7 @@ private struct MarketItemDetailView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 4) {
                     Text(CurrencyFormatter.formatPrice(price))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 44, weight: .semibold).monospacedDigit())
                         .contentTransition(.numericText(value: price))
                     HStack(spacing: 6) {
                         Text(CurrencyFormatter.formatSignedPercent(changePercent))
@@ -785,7 +787,7 @@ private struct MarketItemDetailView: View {
                     ProgressView()
                         .frame(height: 220)
                 } else if priceHistory.count >= 2 {
-                    chartView
+                    chartView()
                 } else if let error {
                     Text(error)
                         .font(.caption)
@@ -798,12 +800,23 @@ private struct MarketItemDetailView: View {
                         .frame(height: 220)
                 }
 
-                Picker("Range", selection: $selectedRange) {
-                    ForEach(ranges, id: \.self) { range in
-                        Text(range.uppercased()).tag(range)
+                HStack(spacing: 12) {
+                    Picker("Range", selection: $selectedRange) {
+                        ForEach(ranges, id: \.self) { range in
+                            Text(range.uppercased()).tag(range)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    Button {
+                        fullChart = true
+                    } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .accessibilityLabel("Full screen chart")
+                    .disabled(priceHistory.count < 2)
                 }
-                .pickerStyle(.segmented)
                 .padding(.horizontal)
 
                 VStack(spacing: 0) {
@@ -870,6 +883,7 @@ private struct MarketItemDetailView: View {
             SafariView(url: url)
                 .ignoresSafeArea()
         }
+        .fullScreenCover(isPresented: $fullChart) { fullChartView }
         .navigationTitle(item.name)
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -898,8 +912,9 @@ private struct MarketItemDetailView: View {
         }
     }
 
+    /// `height: nil` fills the full-screen cover. Only there does a drag scrub, so the page swipe keeps working inline.
     @ViewBuilder
-    private var chartView: some View {
+    private func chartView(height: CGFloat? = 220) -> some View {
         let points = priceHistory.compactMap { point -> (Date, Double)? in
             guard let date = DateParsing.parse(point.date) else { return nil }
             return (date, point.close)
@@ -911,25 +926,35 @@ private struct MarketItemDetailView: View {
         let pad = max((hi - lo) * 0.08, hi * 0.001)
 
         if points.count >= 2 {
-            Chart(points, id: \.0) { point in
-                LineMark(
-                    x: .value("Date", point.0),
-                    y: .value("Price", point.1)
-                )
-                .foregroundStyle(itemChangeColor)
-
-                AreaMark(
-                    x: .value("Date", point.0),
-                    yStart: .value("Floor", lo - pad),
-                    yEnd: .value("Price", point.1)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [itemChangeColor.opacity(0.2), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
+            Chart {
+                ForEach(points, id: \.0) { point in
+                    LineMark(
+                        x: .value("Date", point.0),
+                        y: .value("Price", point.1)
                     )
-                )
+                    .foregroundStyle(itemChangeColor)
+
+                    AreaMark(
+                        x: .value("Date", point.0),
+                        yStart: .value("Floor", lo - pad),
+                        yEnd: .value("Price", point.1)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [itemChangeColor.opacity(0.2), .clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                }
+                if let scrub {
+                    RuleMark(x: .value("Date", scrub.date))
+                        .foregroundStyle(.secondary.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    PointMark(x: .value("Date", scrub.date), y: .value("Price", scrub.price))
+                        .foregroundStyle(itemChangeColor)
+                        .symbolSize(50)
+                }
             }
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) { value in
@@ -945,9 +970,70 @@ private struct MarketItemDetailView: View {
                 AxisMarks(position: .trailing, values: .automatic(desiredCount: 4))
             }
             .chartYScale(domain: (lo - pad)...(hi + pad))
-            .frame(height: 220)
+            .chartOverlay { proxy in scrubLayer(proxy: proxy, points: points).allowsHitTesting(height == nil) }
+            .frame(height: height)
             .padding(.horizontal)
         }
+    }
+
+    private func scrubLayer(proxy: ChartProxy, points: [(Date, Double)]) -> some View {
+        GeometryReader { geo in
+            Rectangle().fill(.clear).contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard let plot = proxy.plotFrame,
+                                  let date: Date = proxy.value(atX: value.location.x - geo[plot].origin.x),
+                                  let closest = points.min(by: { abs($0.0.timeIntervalSince(date)) < abs($1.0.timeIntervalSince(date)) })
+                            else { return }
+                            if scrub?.date != closest.0 { UISelectionFeedbackGenerator().selectionChanged() }
+                            scrub = (closest.0, closest.1)
+                        }
+                        .onEnded { _ in scrub = nil }
+                )
+        }
+    }
+
+    /// The chart on its own, edge to edge. Drag to read any point.
+    private var fullChartView: some View {
+        let intraday = ["1m", "15m", "1d", "5d"].contains(selectedRange)
+        return VStack(spacing: 16) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name)
+                        .font(.headline)
+                    Text(CurrencyFormatter.formatPrice(scrub?.price ?? price))
+                        .font(.title.weight(.bold).monospacedDigit())
+                        .contentTransition(.numericText())
+                    Text(scrub.map { $0.date.formatted(intraday ? .dateTime.month(.abbreviated).day().hour().minute() : .dateTime.month(.abbreviated).day().year()) }
+                         ?? CurrencyFormatter.formatSignedPercent(changePercent))
+                        .font(.callout.weight(.medium))
+                        .foregroundStyle(scrub == nil ? itemChangeColor : Color.secondary)
+                }
+                Spacer()
+                Button { fullChart = false } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close chart")
+            }
+            .padding(.horizontal)
+
+            if priceHistory.count >= 2 {
+                chartView(height: nil)
+            } else {
+                ProgressView().frame(maxHeight: .infinity)
+            }
+
+            Picker("Range", selection: $selectedRange) {
+                ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+        }
+        .padding(.vertical)
     }
 
     private func loadHistory() async {

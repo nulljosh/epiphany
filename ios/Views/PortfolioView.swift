@@ -574,7 +574,7 @@ struct PortfolioView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     if let total = displayTotal {
                         Text(total, format: .currency(code: currencyCode).precision(.fractionLength(0)))
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .font(.system(size: 34, weight: .semibold).monospacedDigit())
                     }
                     Text(displayLabel)
                         .font(.caption)

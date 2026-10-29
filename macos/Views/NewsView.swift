@@ -127,7 +127,7 @@ private struct NewsRow: View {
                             .resizable()
                             .scaledToFill()
                     } else {
-                        Color.white.opacity(0.06)
+                        Color.primary.opacity(0.06)
                     }
                 }
                 .frame(width: 56, height: 56)

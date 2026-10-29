@@ -270,12 +270,12 @@ struct PortfolioView: View {
                     } label: {
                         Text(tab.rawValue)
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(selectedTab == tab ? Color.black : .white.opacity(0.86))
+                            .foregroundStyle(selectedTab == tab ? Color(nsColor: .windowBackgroundColor) : .primary.opacity(0.86))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(
                                 Capsule()
-                                    .fill(selectedTab == tab ? Color.white : Color.white.opacity(0.08))
+                                    .fill(selectedTab == tab ? Color.primary : Color.primary.opacity(0.08))
                             )
                     }
                     .buttonStyle(.plain)
@@ -475,7 +475,7 @@ struct PortfolioView: View {
                                         .frame(width: geo.size.width * pct)
                                 }
                                 .frame(height: 8)
-                                .background(Color.white.opacity(0.05))
+                                .background(Color.primary.opacity(0.05))
                                 .clipShape(RoundedRectangle(cornerRadius: 4))
 
                                 Text("$\(Int(item.balance))")
@@ -522,7 +522,7 @@ struct PortfolioView: View {
                                 Spacer()
                             }
                             .padding(Spacing.xs)
-                            .background(Color.white.opacity(0.03))
+                            .background(Color.primary.opacity(0.03))
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                     }
@@ -1124,14 +1124,14 @@ struct PortfolioView: View {
 
                 if let forecastStartMonth {
                     RuleMark(x: .value("Forecast Starts", forecastStartMonth))
-                        .foregroundStyle(Color.white.opacity(0.22))
+                        .foregroundStyle(Color.primary.opacity(0.22))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 5]))
                         .annotation(position: .top, alignment: .trailing) {
                             Text("Forecast")
                                 .font(.caption2.weight(.semibold))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.white.opacity(0.08), in: Capsule())
+                                .background(Color.primary.opacity(0.08), in: Capsule())
                         }
                 }
 
@@ -1151,7 +1151,7 @@ struct PortfolioView: View {
 
                 if let selectedSpendingMonth {
                     RuleMark(x: .value("Selected Month", selectedSpendingMonth))
-                        .foregroundStyle(Color.white.opacity(0.35))
+                        .foregroundStyle(Color.primary.opacity(0.35))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                 }
             }
@@ -1189,7 +1189,7 @@ struct PortfolioView: View {
             }
             .chartPlotStyle { plot in
                 plot
-                    .background(Color.white.opacity(0.03))
+                    .background(Color.primary.opacity(0.03))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .chartOverlay { proxy in
@@ -1197,7 +1197,7 @@ struct PortfolioView: View {
             }
         }
         .padding(Spacing.smPlus)
-        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func spendingChartOverlay(proxy: ChartProxy) -> some View {
@@ -1294,25 +1294,25 @@ struct PortfolioView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(month)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(.primary.opacity(0.72))
 
             if let actual = selectedActualSpendingMonth, actual.month == month {
                 Text("Actual: \(actual.total, format: .currency(code: currencyCode))")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
             }
 
             if let forecastPoint = selectedForecastPoint, forecastPoint.month == month {
                 Text("Forecast: \(forecastPoint.median, format: .currency(code: currencyCode))")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                 Text("Range: \(forecastPoint.low, format: .currency(code: currencyCode)) - \(forecastPoint.high, format: .currency(code: currencyCode))")
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.78))
+                    .foregroundStyle(.primary.opacity(0.78))
             } else if selectedActualSpendingMonth == nil {
                 Text(value, format: .currency(code: currencyCode))
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
             }
         }
         .padding(.horizontal, 10)
@@ -1320,7 +1320,7 @@ struct PortfolioView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         .overlay {
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
         }
     }
 
@@ -1355,12 +1355,12 @@ struct PortfolioView: View {
                     } label: {
                         Text(scenario.label)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(isActive ? Color.black : .white.opacity(0.86))
+                            .foregroundStyle(isActive ? Color(nsColor: .windowBackgroundColor) : .primary.opacity(0.86))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                             .background(
                                 Capsule()
-                                    .fill(isActive ? scenario.color : Color.white.opacity(0.08))
+                                    .fill(isActive ? scenario.color : Color.primary.opacity(0.08))
                             )
                     }
                     .buttonStyle(.plain)
@@ -1397,7 +1397,7 @@ struct PortfolioView: View {
                 .frame(height: 200)
                 .chartPlotStyle { plot in
                     plot
-                        .background(Color.white.opacity(0.03))
+                        .background(Color.primary.opacity(0.03))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .chartXAxis {
@@ -1432,7 +1432,7 @@ struct PortfolioView: View {
             }
         }
         .padding(Spacing.smPlus)
-        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func debtMonthsToPayoff(_ item: FinanceData.DebtItem) -> Double {
@@ -1568,7 +1568,7 @@ struct PortfolioView: View {
                 .foregroundStyle(.secondary)
             Text(value)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .lineLimit(2)
         }
         .padding(.horizontal, 10)

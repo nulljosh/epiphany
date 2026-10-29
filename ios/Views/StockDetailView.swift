@@ -38,6 +38,7 @@ struct StockDetailView: View {
     @State private var smaPeriod = 20
     @State private var emaPeriod = 50
     @State private var showIndicatorConfig = false
+    @State private var fullChart = false
     @State private var liveStock: Stock?
     @State private var showTradeSheet = false
     @State private var tradeSide = "buy"
@@ -66,7 +67,7 @@ struct StockDetailView: View {
                     }
                     let displayPrice = scrubPrice?.price ?? stock.price
                     Text(CurrencyFormatter.formatPrice(displayPrice))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 44, weight: .semibold).monospacedDigit())
                         .contentTransition(.numericText())
                     if let scrub = scrubPrice {
                         Text(scrub.date.formatted(.dateTime.month(.abbreviated).day().year()))
@@ -100,7 +101,7 @@ struct StockDetailView: View {
                         .foregroundStyle(.secondary)
                         .frame(height: 220)
                 } else if priceHistory.count >= 2 {
-                    chartView
+                    chartView()
                 } else {
                     VStack(spacing: 8) {
                         Text(priceHistory.isEmpty ? "No chart data available" : "Not enough data for intraday chart")
@@ -258,6 +259,7 @@ struct StockDetailView: View {
                 })
             }
         }
+        .fullScreenCover(isPresented: $fullChart) { fullChartView }
         .sheet(isPresented: $showNewsDrawer) {
             NavigationStack {
                 ScrollView {
@@ -612,8 +614,9 @@ struct StockDetailView: View {
     }
 
 
+    /// `height: nil` lets the chart fill the full-screen cover; the indicator bar stays on the page.
     @ViewBuilder
-    private var chartView: some View {
+    private func chartView(height: CGFloat? = 220) -> some View {
         let points = chartPoints
         let candleData: [OHLCPoint] = {
             switch chartType {
@@ -670,12 +673,50 @@ struct StockDetailView: View {
                         )
                 }
             }
-            .frame(height: 220)
+            .frame(height: height)
             .clipped()
             .padding(.horizontal)
 
-            indicatorBar
+            if height != nil { indicatorBar }
         }
+    }
+
+    /// The chart on its own, edge to edge. Drag to read any point.
+    private var fullChartView: some View {
+        let intraday = ["1m", "15m", "1d", "5d"].contains(selectedRange)
+        return VStack(spacing: 16) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(stock.symbol)
+                        .font(.headline)
+                    Text(CurrencyFormatter.formatPrice(scrubPrice?.price ?? stock.price))
+                        .font(.title.weight(.bold).monospacedDigit())
+                        .contentTransition(.numericText())
+                    Text(scrubPrice.map { $0.date.formatted(intraday ? .dateTime.month(.abbreviated).day().hour().minute() : .dateTime.month(.abbreviated).day().year()) }
+                         ?? CurrencyFormatter.formatSignedPercent(stock.changePercent))
+                        .font(.callout.weight(.medium))
+                        .foregroundStyle(scrubPrice == nil ? changeColor : Color.secondary)
+                }
+                Spacer()
+                Button { fullChart = false } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close chart")
+            }
+            .padding(.horizontal)
+
+            chartView(height: nil)
+
+            Picker("Range", selection: $selectedRange) {
+                ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+        }
+        .padding(.vertical)
     }
 
     private var indicatorBar: some View {
@@ -690,6 +731,14 @@ struct StockDetailView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Button {
+                fullChart = true
+            } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityLabel("Full screen chart")
         }
         .padding(.horizontal)
         .sheet(isPresented: $showIndicatorConfig) {

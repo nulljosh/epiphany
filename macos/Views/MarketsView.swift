@@ -520,11 +520,11 @@ struct MarketsView: View {
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.white.opacity(0.07))
+                        .fill(Color.primary.opacity(0.07))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -702,6 +702,7 @@ private struct AssetDetailView: View {
     @State private var history: [PriceHistory.DataPoint] = []
     @State private var stats: [(String, String)] = []
     @State private var livePrice: Double?
+    @State private var tallChart = false
 
     private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
 
@@ -740,18 +741,21 @@ private struct AssetDetailView: View {
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
             }
-            Picker("Range", selection: $range) {
-                ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+            HStack(spacing: 12) {
+                Picker("Range", selection: $range) {
+                    ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                ChartSizeButton(tall: $tallChart)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             Chart(history) { point in
                 LineMark(x: .value("Date", point.date), y: .value("Price", point.close))
                     .foregroundStyle(color)
             }
             .chartXAxis(.hidden)
             .chartYScale(domain: .automatic(includesZero: false))
-            .frame(height: 220)
+            .frame(height: tallChart ? 520 : 220)
             VStack(spacing: 0) {
                 ForEach(rows, id: \.0) { row in
                     HStack {

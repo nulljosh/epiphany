@@ -25,6 +25,7 @@ struct StockDetailView: View {
     @State private var relatedNews: [NewsArticle] = []
     @State private var newsError = false
     @State private var scrubPrice: (date: Date, price: Double)?
+    @State private var tallChart = false
 
     private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
 
@@ -47,18 +48,18 @@ struct StockDetailView: View {
                     }
                     let displayPrice = scrubPrice?.price ?? stock.price
                     Text(CurrencyFormatter.formatPrice(displayPrice))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 44, weight: .semibold).monospacedDigit())
                         .contentTransition(.numericText())
                     if let scrub = scrubPrice {
                         Text(scrub.date.formatted(.dateTime.month(.abbreviated).day().year()))
-                            .font(.callout.weight(.medium))
+                            .font(.title3.weight(.medium).monospacedDigit())
                             .foregroundStyle(.secondary)
                     } else {
                         HStack(spacing: 6) {
                             Text(String(format: "%@%.2f", stock.change >= 0 ? "+" : "", stock.change))
                             Text(String(format: "(%.2f%%)", stock.changePercent))
                         }
-                        .font(.callout.weight(.medium))
+                        .font(.title3.weight(.medium).monospacedDigit())
                         .foregroundStyle(changeColor)
                     }
                     if let sig = Indicators.signal(closes: priceHistory.map(\.close)) {
@@ -95,12 +96,15 @@ struct StockDetailView: View {
                     .frame(height: 220)
                 }
 
-                Picker("Range", selection: $selectedRange) {
-                    ForEach(ranges, id: \.self) { range in
-                        Text(range.uppercased()).tag(range)
+                HStack(spacing: 12) {
+                    Picker("Range", selection: $selectedRange) {
+                        ForEach(ranges, id: \.self) { range in
+                            Text(range.uppercased()).tag(range)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    ChartSizeButton(tall: $tallChart)
                 }
-                .pickerStyle(.segmented)
                 .padding(.horizontal)
 
                 ScrollView(.horizontal, showsIndicators: true) {
@@ -462,7 +466,7 @@ struct StockDetailView: View {
                     )
             }
         }
-        .frame(height: 220)
+        .frame(height: tallChart ? 520 : 220)
         .clipped()
         .padding(.horizontal)
     }
@@ -569,5 +573,22 @@ private struct IntradayXScaleModifier: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+/// Grows the chart to fill the sheet and back. The Mac version of a full-screen chart.
+struct ChartSizeButton: View {
+    @Binding var tall: Bool
+
+    var body: some View {
+        Button {
+            withAnimation(.snappy) { tall.toggle() }
+        } label: {
+            Image(systemName: tall ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+        }
+        .buttonStyle(.borderless)
+        .keyboardShortcut("f", modifiers: [.command, .shift])
+        .help(tall ? "Smaller chart" : "Bigger chart")
+        .accessibilityLabel(tall ? "Smaller chart" : "Bigger chart")
     }
 }
