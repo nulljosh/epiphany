@@ -15,8 +15,8 @@ One row per minor version, daily-use first. Borrow the idea, never the look.
 | Cash flow: income vs spending bars by month | Copilot, Monarch | M | 9.0 | done 9.0.0 (web, iOS, Mac) |
 | Money insight cards from statements (top merchant, a spending jump) | Copilot | M | 9.0 | done 9.0.0 (web, iOS, Mac) |
 | "N to review" transaction queue | Copilot, Monarch | M | 9.0 | #179 |
-| Map filter bar: incident type and time window | Citizen | M | 10.0 | open |
-| Saved places with nearby-incident counts | Citizen | M | 10.0 | open |
+| Map filter bar: incident type and time window | Citizen | M | 10.0 | done 10.0.0 (web, iOS, Mac) |
+| Saved places with nearby-incident counts | Citizen | M | 10.0 | done 10.0.0 (web, iOS, Mac) |
 | Multiple named watchlists | Yahoo, TradingView | L | later | open |
 
 ## Version plan to v100
