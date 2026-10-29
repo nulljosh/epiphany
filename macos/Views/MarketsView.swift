@@ -9,6 +9,7 @@ struct MarketsView: View {
     @State private var hasLoaded = false
     @State private var selectedStock: Stock?
     @State private var selectedAsset: MarketItem?
+    @State private var signalFilter: Indicators.TradeSignal?
 
     // Same names as iOS, so a row says Natural Gas, not Natgas.
     private static let assetDisplayNames: [String: String] = [
@@ -57,6 +58,10 @@ struct MarketsView: View {
         case .stocks: items = items.filter { if case .stock = $0.kind { return true }; return false }
         case .commodities: items = items.filter { if case .commodity = $0.kind { return true }; return false }
         case .crypto: items = items.filter { if case .crypto = $0.kind { return true }; return false }
+        }
+        // Same Long/Hold/Short read as the stock page, from today's sparkline closes.
+        if let sig = signalFilter {
+            items = items.filter { Indicators.signal(closes: appState.sparklineCache[$0.symbol] ?? []) == sig }
         }
         if !searchText.isEmpty {
             items = items.filter {
@@ -397,6 +402,21 @@ struct MarketsView: View {
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
+                Picker("Signal", selection: $signalFilter) {
+                    Text("Any Signal").tag(Indicators.TradeSignal?.none)
+                    ForEach([Indicators.TradeSignal.buy, .hold, .sell], id: \.self) { sig in
+                        Text(sig.rawValue).tag(Optional(sig))
+                    }
+                }
+                .labelsHidden()
+                .fixedSize()
+                // Rows load sparklines as they scroll in; a signal filter needs them all.
+                .task(id: signalFilter) {
+                    guard signalFilter != nil else { return }
+                    await withTaskGroup(of: Void.self) { group in
+                        for item in allItems { group.addTask { await appState.loadSparkline(item.symbol) } }
+                    }
+                }
                 Spacer()
             }
             .padding(.horizontal)

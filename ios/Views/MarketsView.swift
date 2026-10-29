@@ -14,6 +14,7 @@ struct MarketsView: View {
     @State private var sortAscending = false
     @State private var marketFilter: MarketFilter = .all
     @State private var gainersOnly = false
+    @State private var signalFilter: Indicators.TradeSignal?
     @State private var selectedMarketItem: MarketItem?
     @State private var selectedNewsURL: URL?
     @State private var cachedItems: [MarketItem] = []
@@ -95,6 +96,10 @@ struct MarketsView: View {
         case .crypto: items = items.filter { if case .crypto = $0.kind { return true }; return false }
         }
         if gainersOnly { items = items.filter { $0.changePercent > 0 } }
+        // Same Long/Hold/Short read as the stock page, from today's sparkline closes.
+        if let sig = signalFilter {
+            items = items.filter { Indicators.signal(closes: appState.sparklineCache[$0.symbol] ?? []) == sig }
+        }
         if searchText.isEmpty { return items }
         let query = searchText.lowercased()
         return items.filter {
@@ -196,11 +201,15 @@ struct MarketsView: View {
                                 Text(filter.label).tag(filter)
                             }
                         }
+                        .pickerStyle(.menu)
+
                         Picker("Sort By", selection: $sortField) {
                             ForEach(MarketSortField.allCases) { field in
                                 Text(field.label).tag(field)
                             }
                         }
+                        .pickerStyle(.menu)
+
                         Button {
                             sortAscending.toggle()
                         } label: {
@@ -211,6 +220,14 @@ struct MarketsView: View {
                         } label: {
                             Label("Gainers Only", systemImage: gainersOnly ? "checkmark" : "arrow.up.right")
                         }
+                        Picker("Signal", selection: $signalFilter) {
+                            Text("Any Signal").tag(Indicators.TradeSignal?.none)
+                            ForEach([Indicators.TradeSignal.buy, .hold, .sell], id: \.self) { sig in
+                                Text(sig.rawValue).tag(Optional(sig))
+                            }
+                        }
+                        .pickerStyle(.menu)
+
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                     }
