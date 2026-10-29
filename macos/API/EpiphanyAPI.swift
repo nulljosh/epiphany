@@ -171,9 +171,20 @@ final class EpiphanyAPI {
     }
 
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
+        // Same display-range to Yahoo range and interval pairs as iOS.
+        let (finalRange, interval): (String, String)
+        switch range {
+        case "1m":  (finalRange, interval) = ("1d", "1m")
+        case "15m": (finalRange, interval) = ("5d", "15m")
+        case "max": (finalRange, interval) = ("max", "1d")
+        case "1d":  (finalRange, interval) = ("1d", "5m")
+        case "5d":  (finalRange, interval) = ("5d", "15m")
+        default:    (finalRange, interval) = (range, "1d")
+        }
         let url = try makeURL("/api/history", query: [
             "symbol": symbol,
-            "range": range
+            "range": finalRange,
+            "interval": interval
         ])
         let request = URLRequest(url: url)
         let data = try await perform(request)

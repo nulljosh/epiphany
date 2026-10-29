@@ -706,11 +706,30 @@ private struct MarketItemDetailView: View {
     @State private var relatedNews: [NewsArticle] = []
     @State private var selectedNewsURL: URL?
     @State private var stats: [(String, String)] = []
+    @State private var livePrice: Double?
 
-    private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
+    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
+
+    private var price: Double { livePrice ?? item.price }
+
+    /// "1M High" reads as one month, so the stats name intraday ranges plainly.
+    private var rangeName: String {
+        switch selectedRange {
+        case "1m", "1d": return "Day"
+        case "15m": return "5D"  // 15-minute bars over five days
+        default: return selectedRange.uppercased()
+        }
+    }
+
+    /// Day change against the previous close the list row was built from, so the live tick moves it too.
+    private var changePercent: Double {
+        let prevClose = item.price / (1 + item.changePercent / 100)
+        guard livePrice != nil, prevClose > 0 else { return item.changePercent }
+        return (price / prevClose - 1) * 100
+    }
 
     private var itemChangeColor: Color {
-        Palette.forChange(item.changePercent)
+        Palette.forChange(changePercent)
     }
 
     private var kindLabel: String {
@@ -725,14 +744,17 @@ private struct MarketItemDetailView: View {
         ScrollView {
             VStack(spacing: 24) {
                 VStack(spacing: 4) {
-                    Text(CurrencyFormatter.formatPrice(item.price))
+                    Text(CurrencyFormatter.formatPrice(price))
                         .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .contentTransition(.numericText(value: price))
                     HStack(spacing: 6) {
-                        Text(CurrencyFormatter.formatSignedPercent(item.changePercent))
+                        Text(CurrencyFormatter.formatSignedPercent(changePercent))
+                            .contentTransition(.numericText(value: changePercent))
                     }
                     .font(.callout.weight(.medium))
                     .foregroundStyle(itemChangeColor)
                 }
+                .animation(.snappy, value: price)
                 .padding(.top, 8)
 
                 if isLoading {
@@ -780,8 +802,8 @@ private struct MarketItemDetailView: View {
                     // Period high and low from the chart already on screen, no extra fetch.
                     if case .stock = item.kind {} else if let hi = priceHistory.map({ $0.high ?? $0.close }).max(),
                               let lo = priceHistory.map({ $0.low ?? $0.close }).min(), lo > 0 {
-                        infoRow("\(selectedRange.uppercased()) High", value: CurrencyFormatter.formatPrice(hi))
-                        infoRow("\(selectedRange.uppercased()) Low", value: CurrencyFormatter.formatPrice(lo))
+                        infoRow("\(rangeName) High", value: CurrencyFormatter.formatPrice(hi))
+                        infoRow("\(rangeName) Low", value: CurrencyFormatter.formatPrice(lo))
                     }
                     if let cap = item.marketCap, cap > 0 {
                         infoRow("Market Cap", value: CurrencyFormatter.formatAbbreviated(cap))
@@ -837,6 +859,19 @@ private struct MarketItemDetailView: View {
         .task(id: selectedRange) {
             await loadHistory()
         }
+        .task { await pollLivePrice() }
+    }
+
+    /// Last close of the one-minute chart, every 15 seconds while the page is open.
+    private func pollLivePrice() async {
+        guard let yahooSym = item.yahooSymbol else { return }
+        while !Task.isCancelled {
+            if let last = try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: yahooSym, range: "1m").history.last?.close,
+               last > 0 {
+                livePrice = last
+            }
+            try? await Task.sleep(for: .seconds(15))
+        }
     }
 
     @ViewBuilder
@@ -845,6 +880,11 @@ private struct MarketItemDetailView: View {
             guard let date = DateParsing.parse(point.date) else { return nil }
             return (date, point.close)
         }
+
+        // Fit the axis to the data. From zero, a day's move on a $1,000 asset draws as a flat line.
+        let closes = points.map(\.1)
+        let lo = closes.min() ?? 0, hi = closes.max() ?? 0
+        let pad = max((hi - lo) * 0.08, hi * 0.001)
 
         if points.count >= 2 {
             Chart(points, id: \.0) { point in
@@ -856,7 +896,8 @@ private struct MarketItemDetailView: View {
 
                 AreaMark(
                     x: .value("Date", point.0),
-                    y: .value("Price", point.1)
+                    yStart: .value("Floor", lo - pad),
+                    yEnd: .value("Price", point.1)
                 )
                 .foregroundStyle(
                     LinearGradient(
@@ -870,7 +911,7 @@ private struct MarketItemDetailView: View {
                 AxisMarks(values: .automatic(desiredCount: 5)) { value in
                     AxisValueLabel {
                         if let date = value.as(Date.self) {
-                            Text(date, format: .dateTime.month(.abbreviated).day())
+                            Text(date, format: ["1m", "15m", "1d"].contains(selectedRange) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day())
                                 .font(.caption2)
                         }
                     }
@@ -879,6 +920,7 @@ private struct MarketItemDetailView: View {
             .chartYAxis {
                 AxisMarks(position: .trailing, values: .automatic(desiredCount: 4))
             }
+            .chartYScale(domain: (lo - pad)...(hi + pad))
             .frame(height: 220)
             .padding(.horizontal)
         }

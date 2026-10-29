@@ -696,20 +696,41 @@ private struct AssetDetailView: View {
     @State private var range = "1y"
     @State private var history: [PriceHistory.DataPoint] = []
     @State private var stats: [(String, String)] = []
+    @State private var livePrice: Double?
 
-    private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
+    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
+
+    private var price: Double { livePrice ?? item.price }
+
+    /// Day change against the previous close the list row was built from, so the live tick moves it too.
+    private var changePercent: Double {
+        let prevClose = item.price / (1 + item.changePercent / 100)
+        guard livePrice != nil, prevClose > 0 else { return item.changePercent }
+        return (price / prevClose - 1) * 100
+    }
+
+    private var rangeName: String {
+        switch range {
+        case "1m", "1d": return "Day"
+        case "15m": return "5D"  // 15-minute bars over five days
+        default: return range.uppercased()
+        }
+    }
 
     var body: some View {
-        let color = item.changePercent >= 0 ? Palette.successGreen : Palette.dangerRed
+        let color = changePercent >= 0 ? Palette.successGreen : Palette.dangerRed
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.name).font(.title2.weight(.bold))
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(CurrencyFormatter.formatPrice(item.price)).font(.title.weight(.semibold).monospacedDigit())
-                        Text(String(format: "%@%.2f%%", item.changePercent >= 0 ? "+" : "", item.changePercent))
+                        Text(CurrencyFormatter.formatPrice(price)).font(.title.weight(.semibold).monospacedDigit())
+                            .contentTransition(.numericText(value: price))
+                        Text(String(format: "%@%.2f%%", changePercent >= 0 ? "+" : "", changePercent))
                             .font(.headline.monospacedDigit()).foregroundStyle(color)
+                            .contentTransition(.numericText(value: changePercent))
                     }
+                    .animation(.snappy, value: price)
                 }
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.cancelAction)
@@ -745,14 +766,25 @@ private struct AssetDetailView: View {
             guard let sym = item.yahooSymbol else { return }
             history = (try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: range))?.history ?? []
         }
+        .task {
+            // Last close of the one-minute chart, every 15 seconds while the sheet is open.
+            guard let sym = item.yahooSymbol else { return }
+            while !Task.isCancelled {
+                if let last = try? await EpiphanyAPI.shared.fetchPriceHistory(symbol: sym, range: "1m").history.last?.close,
+                   last > 0 {
+                    livePrice = last
+                }
+                try? await Task.sleep(for: .seconds(15))
+            }
+        }
     }
 
     private var rows: [(String, String)] {
         var out = stats
         // Period high and low from the chart already loaded, no extra fetch.
         if let hi = history.map({ $0.high ?? $0.close }).max(), let lo = history.map({ $0.low ?? $0.close }).min(), lo > 0 {
-            out.append(("\(range.uppercased()) High", CurrencyFormatter.formatPrice(hi)))
-            out.append(("\(range.uppercased()) Low", CurrencyFormatter.formatPrice(lo)))
+            out.append(("\(rangeName) High", CurrencyFormatter.formatPrice(hi)))
+            out.append(("\(rangeName) Low", CurrencyFormatter.formatPrice(lo)))
         }
         return out
     }
