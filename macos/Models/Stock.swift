@@ -50,6 +50,12 @@ struct Stock: Decodable, Identifiable, Hashable {
     var id: String { symbol }
 
     var formattedNextEarnings: String? { nextEarnings.map(Self.shortDate) }
+    /// Earnings only show when the report is within two weeks; further out it is noise.
+    var earningsSoon: Bool {
+        guard let ts = nextEarnings else { return false }
+        let days = (ts - Date().timeIntervalSince1970) / 86_400
+        return days > -1 && days <= 14
+    }
     var formattedDividendDate: String? { dividendDate.map(Self.shortDate) }
 
     private static func shortDate(_ ts: Double) -> String {

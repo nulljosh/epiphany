@@ -92,9 +92,11 @@ function ChangePill({ value }) {
   const text = `${positive ? '+' : ''}${value.toFixed(2)}%`;
   return (
     <span style={{
-      display: 'inline-block', padding: '2px 8px', borderRadius: 100,
-      fontSize: 11, fontWeight: 600, background: bg, color: '#fff',
-      whiteSpace: 'nowrap',
+      // iOS Stocks pill: fixed width, small radius.
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: 72, height: 26, borderRadius: 6,
+      fontSize: 13, fontWeight: 600, background: bg, color: '#fff',
+      whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums',
     }}>
       {text}
     </span>
@@ -128,7 +130,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
     <div
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
+        display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0',
         borderBottom: `1px solid ${t.border}`,
         cursor: 'pointer',
         transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -154,13 +156,14 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
         <span style={{ width: 14 }} />
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: t.text }}>{symbol}</div>
-        <div style={{ fontSize: 11, color: t.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+        <div style={{ fontWeight: 700, fontSize: 17, color: t.text }}>{symbol}</div>
+        <div style={{ fontSize: 15, color: t.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{name}</div>
       </div>
       <SparklineChart symbol={symbol} changePercent={changePercent} t={t} onSignal={handleSignal} />
       <SignalBadge signal={signal} />
-      <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '45%' }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: t.text, whiteSpace: 'nowrap' }}>{formatCurrency(price)}</div>
+      <div style={{ textAlign: 'right', flexShrink: 0, maxWidth: '45%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+        {/* No dollar sign, like iOS Stocks. */}
+        <div style={{ fontWeight: 500, fontSize: 17, color: t.text, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(price).replace('$', '')}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <ChangePill value={changePercent} />
           {Math.abs(changePercent) >= 5 && (

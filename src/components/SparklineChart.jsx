@@ -41,7 +41,7 @@ export default function SparklineChart({ symbol, changePercent, t, onSignal }) {
     return (
       <div
         style={{
-          width: 60, height: 30, borderRadius: 4,
+          width: 64, height: 36, borderRadius: 4,
           background: `rgba(128, 128, 128, 0.1)`,
           flexShrink: 0,
         }}
@@ -53,7 +53,7 @@ export default function SparklineChart({ symbol, changePercent, t, onSignal }) {
     return (
       <div
         style={{
-          width: 60, height: 30, borderRadius: 4,
+          width: 64, height: 36, borderRadius: 4,
           background: `rgba(128, 128, 128, 0.1)`,
           flexShrink: 0,
         }}
@@ -68,7 +68,7 @@ export default function SparklineChart({ symbol, changePercent, t, onSignal }) {
     return (
       <div
         style={{
-          width: 60, height: 30, borderRadius: 4,
+          width: 64, height: 36, borderRadius: 4,
           background: `rgba(128, 128, 128, 0.1)`,
           flexShrink: 0,
         }}
@@ -81,41 +81,39 @@ export default function SparklineChart({ symbol, changePercent, t, onSignal }) {
   const max = Math.max(...prices);
   const range = max - min || 1; // Avoid division by zero
 
-  // SVG dimensions
-  const width = 60;
-  const height = 30;
+  // iOS Stocks style: line, a fade underneath, dotted previous close.
+  const last = prices[prices.length - 1];
+  const prevClose = Number.isFinite(changePercent) ? last / (1 + changePercent / 100) : null;
+  const lo = prevClose != null ? Math.min(min, prevClose) : min;
+  const span = (prevClose != null ? Math.max(max, prevClose) : max) - lo || 1;
+  const width = 64;
+  const height = 36;
   const padding = 2;
   const chartWidth = width - 2 * padding;
   const chartHeight = height - 2 * padding;
+  const yOf = (v) => padding + chartHeight - ((v - lo) / span) * chartHeight;
 
-  // Scale prices to SVG coordinates
-  const points = prices.map((price, i) => {
-    const x = padding + (i / (prices.length - 1)) * chartWidth;
-    const y = padding + chartHeight - ((price - min) / range) * chartHeight;
-    return `${x},${y}`;
-  }).join(' ');
+  const coords = prices.map((price, i) => [padding + (i / Math.max(prices.length - 1, 1)) * chartWidth, yOf(price)]);
+  const points = coords.map(([x, y]) => `${x},${y}`).join(' ');
+  const area = `${padding},${height} ${points} ${padding + chartWidth},${height}`;
 
-  // Color based on price change
   const color = changePercent >= 0 ? '#30D158' : '#FF453A';
+  const gradId = `spark-${symbol.replace(/[^a-z0-9]/gi, '')}`;
 
   return (
-    <svg
-      width={width}
-      height={height}
-      style={{
-        flexShrink: 0,
-        overflow: 'visible',
-      }}
-      viewBox={`0 0 ${width} ${height}`}
-    >
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width={width} height={height} style={{ flexShrink: 0, overflow: 'visible' }} viewBox={`0 0 ${width} ${height}`}>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={color} stopOpacity="0.35" />
+          <stop offset="1" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill={`url(#${gradId})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {prevClose != null && (
+        <line x1={padding} x2={padding + chartWidth} y1={yOf(prevClose)} y2={yOf(prevClose)}
+          stroke="rgba(142,142,147,0.6)" strokeWidth="1" strokeDasharray="2 3" />
+      )}
     </svg>
   );
 }

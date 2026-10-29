@@ -277,6 +277,13 @@ const RANGES = [
   { key: 'max', label: 'ALL', range: 'max', interval: '1mo' },
 ];
 
+const earningsSoon = (ts) => {
+  if (!ts) return false;
+  const ms = ts > 1e12 ? ts : ts * 1000;
+  const days = (ms - Date.now()) / 86400000;
+  return days > -1 && days <= 14;
+};
+
 export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount }) {
   const [range, setRange] = useState('1mo');
   const [chartType, setChartType] = useState('heikinAshi');
@@ -713,7 +720,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     { label: 'EPS', value: d.eps != null ? `$${d.eps.toFixed(2)}` : '--' },
     { label: 'Yield', value: d.yield != null ? `${d.yield.toFixed(2)}%` : '--' },
     { label: 'Beta', value: d.beta != null ? d.beta.toFixed(2) : '--' },
-    { label: 'Earnings', value: formatEventDate(d.nextEarnings) },
+    // Earnings only when the report is within two weeks; further out it is noise.
+    ...(earningsSoon(d.nextEarnings) ? [{ label: 'Earnings', value: formatEventDate(d.nextEarnings) }] : []),
     { label: 'Dividend', value: formatEventDate(d.dividendDate) },
   ], [d, stock]);
 

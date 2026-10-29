@@ -167,7 +167,7 @@ struct StockDetailView: View {
                     if let b = stock.formattedBeta {
                         statCell("Beta", value: b)
                     }
-                    if let date = stock.formattedNextEarnings {
+                    if stock.earningsSoon, let date = stock.formattedNextEarnings {
                         statCell("Earnings", value: date)
                     }
                     if let date = stock.formattedDividendDate {

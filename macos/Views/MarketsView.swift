@@ -415,7 +415,7 @@ struct MarketsView: View {
             .padding(.bottom, 8)
 
             ScrollView {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: 0) {
                     searchResultRows
                     ForEach(filteredItems) { item in
                         marketRow(item)
@@ -463,50 +463,14 @@ struct MarketsView: View {
             guard case .stock(let stock) = item.kind else { return }
             selectedStock = stock
         } label: {
+            // Same row as iOS Stocks; the star stays since a Mac has no swipe.
             HStack(spacing: 10) {
-                HStack(spacing: 6) {
-                    watchlistButton(for: item)
-                    Text(item.symbol)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.primary)
-                }
-                .frame(maxWidth: 150, alignment: .leading)
-
-                Text(item.name)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text(CurrencyFormatter.formatPrice(item.price))
-                    .font(.body.monospacedDigit())
-                    .frame(maxWidth: 110, alignment: .trailing)
-
-                Text(item.formattedPERatio)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(item.peRatio == nil ? .secondary : .primary)
-                    .frame(maxWidth: 84, alignment: .trailing)
-
-                Text(item.formattedMarketCap)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(item.marketCap == nil ? .secondary : .primary)
-                    .frame(maxWidth: 110, alignment: .trailing)
-
-                Text(String(format: "%@%.2f%%", item.changePercent >= 0 ? "+" : "", item.changePercent))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(item.changePercent >= 0 ? Palette.successGreen : Palette.dangerRed)
-                    .frame(maxWidth: 110, alignment: .trailing)
+                watchlistButton(for: item)
+                QuoteRow(symbol: item.symbol, name: item.name, price: item.price,
+                         changePercent: item.changePercent, sparklineData: appState.sparklineCache[item.symbol])
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
-            )
+            .padding(.horizontal, 4)
+            .overlay(alignment: .bottom) { Divider() }
         }
         .buttonStyle(.plain)
         .disabled(!item.isStock)
