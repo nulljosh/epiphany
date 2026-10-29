@@ -47,6 +47,7 @@ Epiphany is a personal intelligence dashboard for your money, location, and mark
 | `server/api/broker/` | SnapTrade multi-broker sync (read-only). POST /api/broker/sync pulls holdings + balances from connected Wealthsimple/Alpaca/IBKR, stores snapshot in KV (holdings and cash carry currency; snapshot adds CAD totals, netWorthCad and an fxMissing flag). GET returns the latest snapshot. Wealthsimple OAuth, Alpaca API key, IBKR coming. Paper trading via Alpaca (`/api/broker/signal`). Morning run (`/api/broker/morning-run.js`) is a cron job running weekday opens: one Trend 2x signal from SPY against its 200 day average moves each user to SSO or BIL (`trend2x()` in `src/utils/indicators.js`), with the live caps unchanged. `autopilot.js` stores per-user Autopilot settings (Premium) |
 | `server/api/broker/morning-run.js` | Weekday cron (Bearer CRON_SECRET) that runs Trend 2x for every enrolled Autopilot user: SPY's price against its 200 day average picks SSO (above) or BIL (below), sells the other side and buys the target. Paper mode books the switch in KV; live mode keeps the $50 per trade and 20 fill caps and reverts to paper at the cap. Tests in `tests/api/morning-run.test.js` |
 | `server/api/broker/ibkr-report.js` | Bridge from the Mac IBKR runner: POST appends its fills to the owner's `trades:` log (deduped on ts, symbol, side) so the Autopilot screen shows them, GET returns the Autopilot `enabled` flag as the runner's kill switch. Secret gated, one owner from `IBKR_REPORT_USER_ID`, closed when unset. Tests in `tests/api/ibkr-report.test.js` |
+| `server/api/alerts-check.js` | Cron every 15 minutes (Bearer CRON_SECRET). Checks every untriggered price alert against live quotes, flips the crossed ones first, then emails each owner once through Resend. Tests in `tests/api/alerts-check.test.js` |
 | `server/api/broker/crypto-paper.js` | Daily cron (12:00 UTC, every day, so weekends too). BTC against its 100 day average: above holds BTC, below sits in cash. Paper only, sized at allocation % of a virtual $10,000, for users with Autopilot on and `allowCrypto`. Fills go to the same `trades:` log |
 
 ## People, ontology, events
@@ -146,7 +147,7 @@ Epiphany is a personal intelligence dashboard for your money, location, and mark
 | File | What it owns |
 |---|---|
 | `vite.config.js` | Vite bundler config. PWA plugin, compression, environment variable loader for statements preview payload |
-| `wrangler.jsonc` | Cloudflare Worker config. Entry `worker/index.js`, custom domains, the `ASSETS` and `BLOB` bindings, three cron triggers. `30 14 * * 1-5` (9:30am ET weekdays) runs `/api/broker/morning-run` |
+| `wrangler.jsonc` | Cloudflare Worker config. Entry `worker/index.js`, custom domains, the `ASSETS` and `BLOB` bindings, one cron trigger, `*/15 * * * *` (the account is at the Workers Free cap of 5). `worker/schedule.js` picks jobs by the scheduled time: 08:00 UTC weekdays `/api/cron`, 14:30 UTC weekdays (9:30am ET) `/api/broker/morning-run`, 12:00 UTC daily `/api/broker/crypto-paper`, and every tick `/api/alerts-check` |
 | `vitest.config.js` | Vitest test runner config |
 | `eslint.config.js` | Eslint rules for the web codebase |
 | `stripe.config.js` | Stripe price ID mapping (starter/pro tiers) |

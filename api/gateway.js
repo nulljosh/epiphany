@@ -71,6 +71,7 @@ const ROUTES = {
   watchlist:            lazy(() => import('../server/api/watchlist.js')),
   'watchlist-lists':    lazy(() => import('../server/api/watchlist-lists.js')),
   alerts:               lazy(() => import('../server/api/alerts.js')),
+  'alerts-check':       lazy(() => import('../server/api/alerts-check.js')),
   avatar:               lazy(() => import('../server/api/avatar.js')),
   ontology:             lazy(() => import('../server/api/ontology.js')),
   'portfolio/history':  lazy(() => import('../server/api/portfolio-history.js')),

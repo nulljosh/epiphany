@@ -31,7 +31,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 13.0 | Google sign-in on iPhone and Mac (server is done; blocked on the new callback URL in Google console, #210) |
 | 14.0 | Multiple named watchlists (done 14.0.0) |
 | 15.0 | Mac extras: menu bar ticker, Notification Center alerts (done 15.0.0) |
-| 16.0 | APNs price alerts (#180), alerts on web |
+| 16.0 | Price alerts with the apps closed: the server checks every 15 minutes and emails (done 16.0.0). APNs push still needs a key (#180) |
 | 17.0 | Commodity and crypto detail parity with stocks |
 | 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua) |
 | 19.0 | Design debt: colour rule violations, news drawer drag |

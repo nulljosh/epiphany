@@ -5,9 +5,9 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
-    "On a Mac, your watchlist now sits in the menu bar",
+    "Price alerts now email you, even with the app closed",
+    "On a Mac, your watchlist sits in the menu bar",
     "Mac price alerts land in Notification Center",
-    "Turn the menu bar prices off in Mac Settings",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

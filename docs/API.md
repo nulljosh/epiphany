@@ -36,7 +36,7 @@ which run inside the page and are not filtered.
 |---|---|---|
 | `/auth` | POST | `action`: `login`, `register`, `logout`, `me`, `change-password`, `change-email`, `change-name` |
 | `/watchlist` | GET, POST, DELETE | POST `{symbol}`; DELETE `?symbol=AAPL` |
-| `/alerts` | GET, POST, DELETE | POST `{symbol, targetPrice, direction}` where direction is `above`/`below`; DELETE `?id=` |
+| `/alerts` | GET, POST, DELETE | POST `{symbol, targetPrice, direction}` where direction is `above`/`below`; DELETE `?id=`. The `/alerts-check` cron emails the owner when one crosses and sets `triggered` |
 | `/portfolio` | GET, POST | GET returns accounts, holdings and net worth; POST replaces manual accounts |
 | `/portfolio/history` | GET | Net-worth time series |
 | `/ontology` | GET, POST, DELETE | Personal entity graph |

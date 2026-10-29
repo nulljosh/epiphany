@@ -3,6 +3,7 @@
 //
 // ponytail: api/gateway.js is already a single (req, res) dispatcher over
 // server/api/**, so the whole migration is one adapter rather than 72 rewrites.
+import { cronPaths } from './schedule.js';
 import gateway from '../api/gateway.js';
 
 // Handlers expect Node's (req, res). Build a request shim, collect what
@@ -164,8 +165,7 @@ export default {
     try { Object.assign(process.env, env); } catch { /* see above */ }
     bindGlobals(env, env.PUBLIC_BASE_URL || 'https://epiphany.jaybulb.com', ctx);
 
-    // The daily 12:00 tick also runs crypto paper trading: crypto trades on weekends, the stock crons do not.
-    const paths = { '0 8 * * 1-5': ['cron'], '30 14 * * 1-5': ['broker/morning-run'], '0 12 * * *': ['broker/crypto-paper'] }[event.cron] || [];
+    const paths = cronPaths(event.scheduledTime);
     for (const path of paths) {
       const url = new URL(`https://cron.local/api/${path}`);
       const req = makeReq(new Request(url, { headers: { Authorization: `Bearer ${env.CRON_SECRET || ''}` } }), url, undefined, undefined);

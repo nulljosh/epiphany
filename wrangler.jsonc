@@ -25,5 +25,5 @@
   "vars": { "NODE_ENV": "production" },
   // worker/index.js scheduled() maps each
   // expression to its gateway path. broker/morning-run places real trades.
-  "triggers": { "crons": ["0 8 * * 1-5", "30 14 * * 1-5", "0 12 * * *"] }
+  "triggers": { "crons": ["*/15 * * * *"] }
 }

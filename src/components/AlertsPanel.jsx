@@ -152,6 +152,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           <button style={styles.dirBtn(direction === 'below')} onClick={() => setDirection('below')}>Below</button>
           <button style={styles.addBtn} onClick={handleAdd}>{isPro ? 'Add' : 'Unlock'}</button>
         </div>
+        <div style={{ ...styles.detail, marginBottom: 16 }}>We email you when it hits, even with Epiphany closed.</div>
 
         <div style={styles.section}>
           <div style={styles.sectionLabel}>Active ({activeAlerts.length})</div>

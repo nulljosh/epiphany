@@ -151,12 +151,16 @@ struct CreateAlertSheet: View {
                         .font(.body.weight(.medium))
                 }
 
-                Section("Direction") {
+                Section {
                     Picker("Trigger when price goes", selection: $direction) {
                         Text("Above").tag(PriceAlert.Direction.above)
                         Text("Below").tag(PriceAlert.Direction.below)
                     }
                     .pickerStyle(.segmented)
+                } header: {
+                    Text("Direction")
+                } footer: {
+                    Text("We email you when it hits, even with Epiphany closed.")
                 }
 
                 if let error {
