@@ -97,6 +97,8 @@ struct NewsDrawerView: View {
                         )
                     }
                 }
+                // The grouped list's default top margin left a blank band under the header.
+                .contentMargins(.top, 8, for: .scrollContent)
             }
         }
         .sheet(item: $selectedNewsURL) { url in

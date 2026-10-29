@@ -77,7 +77,7 @@ struct QuoteRow: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(symbol.uppercased())
-                    .font(.title3.weight(.bold))
+                    .font(.body.weight(.bold))
                     .foregroundStyle(Palette.text)
                 Text(name)
                     .font(.subheadline)
@@ -92,21 +92,21 @@ struct QuoteRow: View {
             }
             VStack(alignment: .trailing, spacing: 4) {
                 Text(price.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "en_US"))))
-                    .font(.title3.weight(.medium).monospacedDigit())
+                    .font(.body.weight(.medium).monospacedDigit())
                     .foregroundStyle(Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Text(CurrencyFormatter.formatSignedPercent(changePercent))
-                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .font(.footnote.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .frame(width: 76, height: 28)
+                    .frame(width: 72, height: 26)
                     .background(color, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
             .frame(minWidth: 96, alignment: .trailing)
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
         .contentShape(Rectangle())
     }
 }
