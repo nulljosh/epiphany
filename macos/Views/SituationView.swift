@@ -106,6 +106,15 @@ struct SituationView: View {
     @State private var loadTask: Task<Void, Never>?
 
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
+    @AppStorage("mapWindowHours") private var mapWindowHours = 0
+    // Same keys AppState reads, so the filter menu redraws the map when a switch flips.
+    @AppStorage("settings.situation.incidents") private var showIncidents = true
+    @AppStorage("settings.situation.crime") private var showCrime = true
+    @AppStorage("settings.situation.traffic") private var showTraffic = true
+    @AppStorage("settings.situation.flights") private var showFlights = true
+    @AppStorage("settings.situation.weather") private var showWeather = true
+    @AppStorage("settings.situation.earthquakes") private var showEarthquakes = true
+    @AppStorage("settings.situation.wildfires") private var showWildfires = true
     @State private var selectedVenueCategory: VenueCategory?
     @State private var venueResults: [MKMapItem] = []
     @State private var selectedVenue: MKMapItem?
@@ -210,7 +219,7 @@ struct SituationView: View {
                 }
             }
 
-            ForEach(appState.situationEarthquakesEnabled ? earthquakes : []) { quake in
+            ForEach(appState.situationEarthquakesEnabled ? earthquakes.filter { MapWindow.allows($0.occurredAt, hours: mapWindowHours) } : []) { quake in
                 Annotation(quake.title, coordinate: quake.coordinate) {
                     Button {
                         selectedEvent = .earthquake(quake)
@@ -260,7 +269,7 @@ struct SituationView: View {
 
             // Weather alerts have no coordinates -- displayed as overlay text, not map pins
 
-            ForEach(appState.situationCrimeEnabled ? crimeIncidents : []) { crime in
+            ForEach(appState.situationCrimeEnabled ? crimeIncidents.filter { MapWindow.allows($0.timestamp, hours: mapWindowHours) } : []) { crime in
                 Annotation(crime.title, coordinate: crime.coordinate) {
                     Button {
                         selectedEvent = .crime(crime)
@@ -397,7 +406,7 @@ struct SituationView: View {
     private var roadEvents: [RoadEvent] {
         var out: [RoadEvent] = []
         if appState.situationIncidentsEnabled {
-            out += incidents.filter { !$0.isInfrastructure }.prefix(25).map { .incident($0) }
+            out += incidents.filter { !$0.isInfrastructure && MapWindow.allows($0.reportedAt, hours: mapWindowHours) }.prefix(25).map { .incident($0) }
             out += incidents.filter { $0.isInfrastructure }.prefix(15).map { .incident($0) }
         }
         out += trafficIncidentAnnotations.map { .traffic($0) }
@@ -414,10 +423,39 @@ struct SituationView: View {
         withAnimation { mapPosition = .region(MKCoordinateRegion(center: coordinate, span: next)) }
     }
 
+    /// What shows on the map and how far back, first in the chip row so it's found.
+    private var filterMenu: some View {
+        Menu {
+            Picker("Time", selection: $mapWindowHours) {
+                ForEach(MapWindow.choices, id: \.hours) { Text($0.label).tag($0.hours) }
+            }
+            Section("Show") {
+                Toggle("Incidents", isOn: $showIncidents)
+                Toggle("Crime", isOn: $showCrime)
+                Toggle("Traffic", isOn: $showTraffic)
+                Toggle("Flights", isOn: $showFlights)
+                Toggle("Weather", isOn: $showWeather)
+                Toggle("Earthquakes", isOn: $showEarthquakes)
+                Toggle("Wildfires", isOn: $showWildfires)
+            }
+        } label: {
+            Label(MapWindow.shortLabel(mapWindowHours), systemImage: "line.3.horizontal.decrease")
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 11).padding(.vertical, 7)
+                .background(Color.black.opacity(0.7), in: Capsule())
+                .foregroundStyle(mapWindowHours == 0 ? Color.white : Color.accentColor)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .fixedSize()
+        .accessibilityLabel("Map filter")
+    }
+
     @ViewBuilder
     private var venueCategoryBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                filterMenu
                 Button { showPlaces = true } label: {
                     Label("Places", systemImage: "list.bullet")
                         .font(.caption.weight(.semibold))

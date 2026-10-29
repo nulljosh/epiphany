@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import Supercluster from 'supercluster';
 import { SYSTEM_FONT } from '../utils/formatting';
+import { inWindow } from '../utils/mapWindow';
 
 // Brookswood/Langley, BC -- home base. Used while geolocation resolves and
 // as the fallback if IP geolocation fails or returns junk.
@@ -19,6 +20,8 @@ const IP_FALLBACK_ZOOM = 11.5;
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 // Search terms for the map's category chips, matched against `${place.title} ${place.category}`
 // (see /api/places' category buckets: Food & drink, Shopping, Recreation, ...).
+const WINDOW_CHOICES = [[1, 'Last hour'], [6, 'Last 6 hours'], [24, 'Last 24 hours'], [0, 'Any time']];
+const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality']];
 const CATEGORY_TERMS = { Restaurants: 'food & drink', Coffee: 'coffee', Gas: 'gas', Parks: 'park', Shopping: 'shopping', Groceries: 'grocery' };
 
 const apiPath = (path) => `${API_BASE}${path}`;
@@ -239,7 +242,7 @@ function createMarker(maplibregl, map, markersArray, css, title, data, lon, lat,
   );
 }
 
-function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome = true }) {
+function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo = true, chrome = true }) {
   const storedGeoRef = useRef(loadStoredGeo());
   const storedGeo = storedGeoRef.current;
   const initPos = useRef(storedGeo || DEFAULT_CENTER).current;
@@ -275,6 +278,9 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
   const [searchError, setSearchError] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showPlaces, setShowPlaces] = useState(false);
+  // How far back timed layers (incidents, crime, quakes) reach. 0 = any time. Same choices as the apps.
+  const [windowHours, setWindowHours] = useState(() => { try { return Number(localStorage.getItem('mapWindowHours')) || 0; } catch { return 0; } });
+  const [showFilter, setShowFilter] = useState(false);
   const [places, setPlaces] = useState([]);
   const [placesLoading, setPlacesLoading] = useState(false);
   const [placesError, setPlacesError] = useState('');
@@ -809,7 +815,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
         .filter(Boolean);
 
     if (mapLayers.incidents !== false)
-    clusterLayer(payload.incidents, 80, (inc) => extractCoords(inc), '#f59e0b').forEach((inc) => {
+    clusterLayer(payload.incidents.filter((inc) => inWindow(inc.reported_at ?? inc.reportedAt, windowHours)), 80, (inc) => extractCoords(inc), '#f59e0b').forEach((inc) => {
       if (inc.lon == null || inc.lat == null) return;
       const t = inc.type || 'incident';
       const cat = inc.category || 'infrastructure';
@@ -862,7 +868,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     });
 
     if (mapLayers.earthquakes !== false)
-    clusterLayer(payload.earthquakes, 120, (eq) => extractCoords(eq), '#ef4444').forEach((eq) => {
+    clusterLayer(payload.earthquakes.filter((eq) => inWindow(eq.time, windowHours)), 120, (eq) => extractCoords(eq), '#ef4444').forEach((eq) => {
       if (eq.lon == null || eq.lat == null) return;
       const size = Math.max(10, Math.min(18, (eq.mag || 0) * 2.4));
       addMarker(
@@ -910,7 +916,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
 
     // Crime incidents
     if (mapLayers.crime !== false)
-    clusterLayer(payload.crimeIncidents, 80, (crime) => extractCoords(crime), '#ef4444').forEach((crime, i) => {
+    clusterLayer(payload.crimeIncidents.filter((crime) => inWindow(crime.timestamp, windowHours)), 80, (crime) => extractCoords(crime), '#ef4444').forEach((crime, i) => {
       const c = extractCoords(crime);
       if (!c) return;
       const { lat, lon } = c;
@@ -1012,16 +1018,17 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
           retained.velocity = fl.velocity || 0;
           retained.heading = fl.heading || 0;
           retained.flight = fl;
-          retained.el.style.transform = `rotate(${retained.heading}deg)`;
+          retained.el.style.transform = `rotate(${retained.heading - 45}deg)`;
           flightMarkersRef.current.push(retained);
           return;
         }
         const cs = (fl.callsign || '').trim();
         const el = document.createElement('div');
         el.style.cssText = `width:20px;height:20px;background:transparent;font-size:16px;line-height:20px;text-align:center;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.05s linear;`;
-        el.textContent = '✈';
+        // The emoji plane points northeast, so it turns by heading minus 45.
+        el.textContent = '✈️';
         el._layerType = 'flights';
-        if (fl.heading != null) el.style.transform = `rotate(${fl.heading}deg)`;
+        if (fl.heading != null) el.style.transform = `rotate(${fl.heading - 45}deg)`;
         const hoverTitle = `${cs || fl.icao24 || 'Aircraft'} | ${fl.altitude ? fl.altitude + 'ft' : '?ft'} | ${fl.velocity || '?'}kts | Hdg: ${fl.heading || '?'}°`;
         el.title = hoverTitle;
         let entry;
@@ -1113,7 +1120,7 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
     // New set is fully rendered — now retire the previous markers (no flash).
     staleMarkers.forEach(m => m.remove());
     staleFlights.forEach(entry => entry.marker.remove());
-  }, [center.lat, center.lon, payload, mapLoaded, mapLayers, zoomTick]);
+  }, [center.lat, center.lon, payload, mapLoaded, mapLayers, zoomTick, windowHours]);
 
   // Dead-reckoning animation — moves flight markers between 60s polls
   // 1 knot ≈ 0.000008467 degrees lat/sec (= 1.852 km/hr / 111.32 km/deg / 3600 sec)
@@ -1292,6 +1299,14 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
             <button type="submit" aria-label="Go" style={{ height: 40, width: 40, border: `1px solid ${P.line}`, borderRadius: 20, background: P.panel, color: P.sub, font: `700 16px ${SYSTEM_FONT}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>→</button>
           </form>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollBehavior: 'smooth', pointerEvents: 'auto', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <button
+              onClick={() => setShowFilter((v) => !v)}
+              aria-expanded={showFilter}
+              aria-label="Map filter"
+              style={{ height: 36, padding: '0 14px', border: `1px solid ${P.line}`, borderRadius: 18, background: showFilter ? P.active : P.panel, color: windowHours ? '#0a84ff' : P.ink, font: `600 13px ${SYSTEM_FONT}`, cursor: 'pointer', whiteSpace: 'nowrap', backdropFilter: 'blur(12px)', flexShrink: 0 }}
+            >
+              {windowHours ? `${windowHours}h` : 'Filter'}
+            </button>
             {/* ponytail: naive text match against place title/category (see CATEGORY_TERMS),
                 not a true tag filter — upgrade if /api/places exposes raw OSM tags */}
             {Object.entries(CATEGORY_TERMS).map(([cat, term]) => (
@@ -1321,6 +1336,29 @@ function LiveMapBackdrop({ dark, mapLayers, onMapReady, autoGeo = true, chrome =
               </button>
             ))}
           </div>
+          {showFilter && (
+            <div role="dialog" aria-label="Map filter" style={{ pointerEvents: 'auto', alignSelf: 'flex-start', marginTop: 4, padding: 12, borderRadius: 16, border: `1px solid ${P.line}`, background: P.panel, color: P.ink, font: `13px ${SYSTEM_FONT}`, backdropFilter: 'blur(20px)', minWidth: 200, display: 'grid', gap: 4 }}>
+              {WINDOW_CHOICES.map(([hours, text]) => (
+                <label key={hours} style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 28, cursor: 'pointer' }}>
+                  <input type="radio" name="map-window" checked={windowHours === hours}
+                    onChange={() => { setWindowHours(hours); try { localStorage.setItem('mapWindowHours', String(hours)); } catch { /* private mode */ } }} />
+                  {text}
+                </label>
+              ))}
+              {onLayersChange && (
+                <>
+                  <div style={{ fontSize: 11, color: P.sub, margin: '6px 0 2px' }}>Show</div>
+                  {FILTER_LAYERS.map(([key, text]) => (
+                    <label key={key} style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 28, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={mapLayers[key] !== false}
+                        onChange={(e) => onLayersChange((prev) => ({ ...prev, [key]: e.target.checked }))} />
+                      {text}
+                    </label>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
           <style>{`::-webkit-scrollbar { display: none; }`}</style>
         </div>
       )}

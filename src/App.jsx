@@ -961,6 +961,7 @@ const reset = useCallback(() => {
         <Suspense fallback={null}><LiveMapBackdrop
           dark={dark}
           mapLayers={mapLayers}
+          onLayersChange={setMapLayers}
           onMapReady={handleMapReady}
         /></Suspense>
         <MobileLayout

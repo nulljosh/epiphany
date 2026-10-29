@@ -122,6 +122,7 @@ struct SituationView: View {
     @AppStorage("showTraffic") private var showTraffic = true
     @AppStorage("showWildfires") private var showWildfires = true
     @AppStorage("showAQI") private var showAQI = true
+    @AppStorage("mapWindowHours") private var mapWindowHours = 0
     @AppStorage("showHighAltFlights") private var showHighAltFlights = false
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
     @State private var selectedVenueCategories: Set<VenueCategory> = Set(VenueCategory.allCases)
@@ -209,7 +210,7 @@ struct SituationView: View {
     @MapContentBuilder
     private var earthquakeAnnotations: some MapContent {
         if showEarthquakes {
-            ForEach(Array(earthquakes.prefix(maxAnnotationsPerCategory))) { quake in
+            ForEach(Array(earthquakes.filter { MapWindow.allows($0.occurredAt, hours: mapWindowHours) }.prefix(maxAnnotationsPerCategory))) { quake in
                 Annotation(quake.place ?? quake.title, coordinate: quake.coordinate) {
                     Button {
                         Haptics.impact(.light)
@@ -306,7 +307,7 @@ struct SituationView: View {
     }
 
     private var activeIncidents: [Incident] {
-        incidents.filter { !$0.isInfrastructure }
+        incidents.filter { !$0.isInfrastructure && MapWindow.allows($0.reportedAt, hours: mapWindowHours) }
     }
 
 
@@ -358,7 +359,7 @@ struct SituationView: View {
     @MapContentBuilder
     private var crimeAnnotations: some MapContent {
         if showCrime {
-            ForEach(Array(crimeIncidents.prefix(maxAnnotationsPerCategory))) { crime in
+            ForEach(Array(crimeIncidents.filter { MapWindow.allows($0.timestamp, hours: mapWindowHours) }.prefix(maxAnnotationsPerCategory))) { crime in
                 Annotation(crime.title, coordinate: crime.coordinate) {
                     Button {
                         Haptics.impact(.medium)
@@ -728,6 +729,7 @@ struct SituationView: View {
     private var venueCategoryBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                filterMenu
                 Button { showPlaces = true } label: {
                     Label("Places", systemImage: "list.bullet")
                         .font(.caption.weight(.semibold))
@@ -779,6 +781,32 @@ struct SituationView: View {
     }
 
     @ViewBuilder
+    /// What shows on the map and how far back, first in the chip row so it's found (Citizen-style).
+    private var filterMenu: some View {
+        Menu {
+            Picker("Time", selection: $mapWindowHours) {
+                ForEach(MapWindow.choices, id: \.hours) { Text($0.label).tag($0.hours) }
+            }
+            Section("Show") {
+                Toggle("Incidents", isOn: $showIncidents)
+                Toggle("Crime", isOn: $showCrime)
+                Toggle("Traffic", isOn: $showTraffic)
+                Toggle("Flights", isOn: $showFlights)
+                Toggle("Weather", isOn: $showWeatherAlerts)
+                Toggle("Earthquakes", isOn: $showEarthquakes)
+                Toggle("Wildfires", isOn: $showWildfires)
+                Toggle("Air quality", isOn: $showAQI)
+            }
+        } label: {
+            Label(MapWindow.shortLabel(mapWindowHours), systemImage: "line.3.horizontal.decrease")
+                .font(.caption.weight(.semibold))
+                .padding(.horizontal, 10).padding(.vertical, 7)
+                .foregroundStyle(mapWindowHours == 0 ? Color.primary : Color.accentColor)
+                .liquidGlass(in: Capsule(), interactive: false, fallback: .ultraThinMaterial)
+        }
+        .accessibilityLabel("Map filter")
+    }
+
     private var layerPickerButton: some View {
         Menu {
             Section("Map") {
@@ -789,16 +817,6 @@ struct SituationView: View {
                         Label(style.label, systemImage: style.icon)
                     }
                 }
-            }
-            // Same switches as Settings, without leaving the map.
-            Section("Layers") {
-                Toggle("Flights", isOn: $showFlights)
-                Toggle("Traffic", isOn: $showTraffic)
-                Toggle("Incidents", isOn: $showIncidents)
-                Toggle("Weather", isOn: $showWeatherAlerts)
-                Toggle("Earthquakes", isOn: $showEarthquakes)
-                Toggle("Wildfires", isOn: $showWildfires)
-                Toggle("Air quality", isOn: $showAQI)
             }
         } label: {
             Image(systemName: MapLayerStyle(rawValue: mapLayerRaw)?.icon ?? "map.fill")

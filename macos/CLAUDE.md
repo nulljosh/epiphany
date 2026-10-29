@@ -20,7 +20,7 @@ QA: `open -n Epiphany.app --args -qaSection Markets` opens on a section (Debug b
 - Every colour works in light and dark. Never hard-code white text or white fills; use `.primary` and `.secondary`.
 - Glass only on the functional layer (the bottom bar, floating controls). Content uses plain fills or materials.
 - The map stays steady: no jumps on load.
-- No haptics, no emojis.
+- No haptics. No emojis, except the ✈️ flight markers.
 
 ## Key files
 

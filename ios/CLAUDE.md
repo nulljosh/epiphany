@@ -23,7 +23,7 @@ QA launch arguments: `-qaTab N` opens on a tab, `UITEST_DEMO` uses demo data.
 - Launch loads stocks, crypto, commodities, finance and Fear & Greed in parallel, behind the splash.
 - Sessions survive relaunch (cookie plus keychain).
 - Colours come from `Palette`, which adapts to light and dark. No `preferredColorScheme` lock except the user's own theme setting.
-- No emojis. Plain SF type, no rounded design.
+- No emojis, except the ✈️ flight markers Joshua asked for. Plain SF type, no rounded design.
 
 ## Key files
 
