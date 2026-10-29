@@ -4,10 +4,10 @@ import SwiftUI
 private let whatsNewVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 private let whatsNewBullets = [
     "Markets looks like iOS Stocks: bigger rows, filled sparklines, a dotted line at yesterday's close",
-    "Swipe or long press a row to watch it",
-    "Fear & Greed sits up top, and the ticker is easier to read",
-    "Business News slides up smoothly",
-    "A stock's page shows its earnings date when the report is two weeks out, one tap adds it to Calendar",
+    "Prices flash green or red the moment they tick",
+    "Crypto and commodities get their own page with day, 52-week and 24h ranges",
+    "Filter the list by Long, Hold or Short, and swipe or long press a row to watch it",
+    "Earnings show on a stock's page when the report is two weeks out, one tap adds it to Calendar",
     "Meet Spark, plus a short tour for new accounts",
 ]
 
