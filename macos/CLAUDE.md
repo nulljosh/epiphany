@@ -1,6 +1,6 @@
 # Epiphany macOS
 
-v14.0.0. Mac app with five sections (Situation, Markets, People, Portfolio, Settings) on a Liquid Glass bottom bar. Boots with the same lyre splash as iPhone. Shared Swift lives in `../Shared`.
+v15.0.0. Mac app with five sections (Situation, Markets, People, Portfolio, Settings) on a Liquid Glass bottom bar. Boots with the same lyre splash as iPhone. Shared Swift lives in `../Shared`.
 
 ## Run
 
@@ -27,6 +27,7 @@ QA: `open -n Epiphany.app --args -qaSection Markets` opens on a section (Debug b
 - `Views/ContentView.swift`: sections, bottom bar.
 - `Views/MarketsView.swift`: list column on the left, overview or the picked asset on the right.
 - `Views/StockDetailView.swift`: stock chart, indicators, scrub, bigger-chart toggle (Cmd-Shift-F).
+- `Views/MenuBarTicker.swift`: watchlist prices in the menu bar; its label runs the price refresh and the alert check (`Shared/AlertWatcher.swift`).
 - `Views/SituationView.swift`: the map and its layers.
 - `Views/PortfolioView.swift`: spending, holdings, budget, statements.
 - `API/EpiphanyAPI.swift`: every request.

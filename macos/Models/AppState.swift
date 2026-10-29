@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 import LocalAuthentication
 import WidgetKit
 
@@ -503,6 +504,9 @@ final class AppState {
         guard isLoggedIn else { return }
         do {
             alerts = try await EpiphanyAPI.shared.fetchAlerts()
+            if !activeAlerts.isEmpty {
+                _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+            }
         } catch {
             handleError(error)
         }

@@ -5,9 +5,10 @@ struct EpiphanyApp: App {
     @State private var appState = AppState()
     @AppStorage("app_theme") private var rawTheme = "system"
     @State private var showSplash = true
+    @AppStorage("epiphany_menu_bar_ticker") private var showMenuBar = true
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             Group {
                 if showSplash {
                     SplashView()
@@ -33,5 +34,12 @@ struct EpiphanyApp: App {
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
         .defaultSize(width: 1200, height: 800)
+
+        MenuBarExtra(isInserted: $showMenuBar) {
+            MenuBarTicker(appState: appState)
+        } label: {
+            MenuBarTickerLabel(appState: appState)
+        }
+        .menuBarExtraStyle(.window)
     }
 }

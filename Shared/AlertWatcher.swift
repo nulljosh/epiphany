@@ -1,19 +1,24 @@
+#if os(iOS)
 import BackgroundTasks
+#endif
 import Foundation
 import UserNotifications
 
-/// Price alerts that fire with the app closed. iOS wakes the app for a background refresh (best effort,
-/// usually every 15 to 60 minutes), we check active alerts against live quotes and post a local notification.
+/// Price alerts as local notifications. iOS wakes the app for a background refresh (best effort,
+/// usually every 15 to 60 minutes); the Mac checks on a timer while it runs, menu bar included.
+/// Either way we check active alerts against live quotes and post to Notification Center.
 /// ponytail: on-device polling, not APNs. Server push needs an APNs key; swap this out when one exists.
 enum AlertWatcher {
     static let taskID = "com.heyitsmejosh.epiphany.alerts"
     private static let firedKey = "alert_watcher_fired_ids"
 
+    #if os(iOS)
     static func schedule() {
         let request = BGAppRefreshTaskRequest(identifier: taskID)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
         try? BGTaskScheduler.shared.submit(request)
     }
+    #endif
 
     /// Notifies once for each active alert whose target the live price has crossed.
     static func check() async {

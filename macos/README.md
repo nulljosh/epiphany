@@ -1,6 +1,6 @@
 <img src="icon.svg" width="80">
 
-![version](https://img.shields.io/badge/version-v14.0.0-blue)
+![version](https://img.shields.io/badge/version-v15.0.0-blue)
 
 Epiphany for Mac. The map, the markets and your money, laid out for a big screen.
 
@@ -10,6 +10,7 @@ Epiphany for Mac. The map, the markets and your money, laid out for a big screen
 - **Markets.** The list sits in a column and the stock you pick opens beside it, with a chart you can scrub and grow. Index cards, top movers and Fear & Greed when nothing is picked.
 - **People.** Search anyone and see how they connect.
 - **Portfolio.** Spending, holdings, budget and statements.
+- **Menu bar.** Your watchlist one click away, and price alerts in Notification Center.
 - Light and dark, a Liquid Glass bar, Cmd-1 to Cmd-5.
 
 ## Run

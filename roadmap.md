@@ -30,7 +30,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 12.0 | First run for everyone: empty fallbacks, no personal demo data, the drop-a-statement card (done 12.0.0) |
 | 13.0 | Google sign-in on iPhone and Mac (server is done; blocked on the new callback URL in Google console, #210) |
 | 14.0 | Multiple named watchlists (done 14.0.0) |
-| 15.0 | Mac extras: menu bar ticker, Notification Center alerts |
+| 15.0 | Mac extras: menu bar ticker, Notification Center alerts (done 15.0.0) |
 | 16.0 | APNs price alerts (#180), alerts on web |
 | 17.0 | Commodity and crypto detail parity with stocks |
 | 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua) |

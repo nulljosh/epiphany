@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.openURL) private var openURL
     @AppStorage("app_theme") private var rawTheme = "system"
+    @AppStorage("epiphany_menu_bar_ticker") private var showMenuBar = true
     @State private var showUpgradeAlert = false
     @State private var upgradeTarget: SubscriptionTier?
     @State private var showChangeEmail = false
@@ -278,6 +279,7 @@ struct SettingsView: View {
                 set: { UserDefaults.standard.set($0, forKey: "epiphany_show_ticker") }
             ))
             .padding(.top, 4)
+            Toggle("Show prices in the menu bar", isOn: $showMenuBar)
         }
     }
 
