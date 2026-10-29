@@ -400,6 +400,13 @@ struct MarketsView: View {
                 }
             }
 
+            if !isSearching, !appState.stocks.isEmpty {
+                MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0 }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+
             if !appState.watchlistStocks.isEmpty {
                 Section("Watchlist") {
                     ForEach(appState.watchlistStocks) { stock in

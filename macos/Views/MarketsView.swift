@@ -425,6 +425,11 @@ struct MarketsView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     searchResultRows
+                    if searchText.isEmpty, !appState.stocks.isEmpty {
+                        MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0 }
+                            .padding(.horizontal, -16)
+                            .task { for s in ["SPY", "QQQ", "DIA"] { await appState.loadSparkline(s) } }
+                    }
                     ForEach(filteredItems) { item in
                         marketRow(item)
                     }
