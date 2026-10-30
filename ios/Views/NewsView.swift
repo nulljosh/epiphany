@@ -6,7 +6,8 @@ struct NewsView: View {
     @State private var isLoading = false
     @State private var error: String?
     @State private var hasLoaded = false
-    @State private var topic = NewsTopics.all
+    /// The followed topic sticks between launches; it falls back to All when today's headlines have none of it.
+    @AppStorage("news_topic") private var topic = NewsTopics.all
     @State private var selectedNewsURL: URL?
 
     private static let englishStops: Set<String> = [
