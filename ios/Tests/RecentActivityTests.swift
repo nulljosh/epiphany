@@ -24,4 +24,10 @@ final class RecentActivityTests: XCTestCase {
         let json = #"[{"filename":"a","transactions":[{"date":"2026-07-01","description":"R","amount":-900,"category":"rent"},{"date":"2026-08-01","description":"R","amount":-450,"category":"rent"},{"date":"2026-08-09","description":"F","amount":-60,"category":"food"},{"date":"2026-08-10","description":"X","amount":-999}]}]"#
         XCTAssertEqual(RecentActivity.biggest(try JSONDecoder().decode([Statement].self, from: Data(json.utf8)))?.amount, -450)
     }
+
+    func testLastSevenDays() throws {
+        let json = #"[{"filename":"a","transactions":[{"date":"2026-08-30","description":"a","amount":-10,"category":"food"},{"date":"2026-08-30","description":"b","amount":-5,"category":"food"},{"date":"2026-08-25","description":"c","amount":-20,"category":"fun"},{"date":"2026-08-20","description":"d","amount":-99,"category":"x"},{"date":"2026-08-29","description":"e","amount":-7}]}]"#
+        let week = RecentActivity.lastSevenDays(try JSONDecoder().decode([Statement].self, from: Data(json.utf8)))
+        XCTAssertEqual(week?.map(\.amount), [0, 20, 0, 0, 0, 0, 15])
+    }
 }

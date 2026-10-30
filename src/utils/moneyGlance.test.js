@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey, biggestExpense } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey, biggestExpense, lastSevenDays } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -155,5 +155,18 @@ describe('biggestExpense', () => {
     ] }];
     expect(biggestExpense(s)).toMatchObject({ date: '2026-08-01', amount: -450 });
     expect(biggestExpense([])).toBeNull();
+  });
+});
+
+describe('lastSevenDays', () => {
+  it('buckets the seven days ending at the newest debit', () => {
+    const s = [{ transactions: [
+      { date: '2026-08-30', amount: -10, category: 'food' }, { date: '2026-08-30', amount: -5, category: 'food' },
+      { date: '2026-08-25', amount: -20, category: 'fun' }, { date: '2026-08-20', amount: -99, category: 'x' }, { date: '2026-08-29', amount: -7 },
+    ] }];
+    const r = lastSevenDays(s);
+    expect(r.days.map((d) => d.date)).toEqual(['2026-08-24', '2026-08-25', '2026-08-26', '2026-08-27', '2026-08-28', '2026-08-29', '2026-08-30']);
+    expect(r.days.map((d) => d.amount)).toEqual([0, 20, 0, 0, 0, 0, 15]);
+    expect(r.total).toBe(35);
   });
 });

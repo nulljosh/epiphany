@@ -78,7 +78,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Yield on each holding row | M1 Finance | S | 95.0 | done 95.0.0 |
 | Your yearly dividend from a stock, in its Your Position card | M1 Finance | S | 96.0 | done 96.0.0 |
 | Biggest single expense this month as an insight | Origin | S | 97.0 | done 97.0.0 |
-| The last seven days of spending as daily bars | Origin | S | 98.0 | open |
+| The last seven days of spending as daily bars | Origin | S | 98.0 | done 98.0.0 |
 | Polish pass over the cards 91 to 98 | apple skill | S | 99.0 | open |
 
 Skipped: AI advisor chat and partner sharing (Origin, M1), cash advances, credit building and the money quiz (Cleo), margin loans and auto-invest (M1, a brokerage), copy trading (eToro, social). The apple audit found no teal, purple or indigo.

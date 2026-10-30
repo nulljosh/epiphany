@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1750,6 +1750,29 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
                 <div style={sectionStyle}>
                   <div style={labelStyle}>Recent Activity</div>
+                  {(() => {
+                    // The last seven statement days as bars, ending at the newest transaction.
+                    const week = lastSevenDays(statementFiles);
+                    if (!week) return null;
+                    const top = Math.max(...week.days.map((d) => d.amount), 1);
+                    return (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 6 }}>
+                          Last seven days: <span style={{ fontWeight: 600, color: t.text }}>{formatCurrency(week.total)}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 56 }}>
+                          {week.days.map((d) => (
+                            <div key={d.date} title={`${d.date}: ${formatCurrency(d.amount)}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, height: '100%' }}>
+                              <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end' }}>
+                                <div style={{ width: '100%', height: `${d.amount > 0 ? Math.max(6, (d.amount / top) * 100) : 2}%`, background: d.amount > 0 ? '#0071e3' : t.border, borderRadius: 3 }} />
+                              </div>
+                              <span style={{ fontSize: 10, color: t.textTertiary }}>{new Date(`${d.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'narrow' })}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {(() => {
                     const big = biggestExpense(statementFiles);
                     return big && (

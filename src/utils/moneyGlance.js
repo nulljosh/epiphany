@@ -200,3 +200,17 @@ export function biggestExpense(statements = []) {
   const month = debits.map((t) => t.date.slice(0, 7)).sort().at(-1);
   return debits.filter((t) => t.date.startsWith(month)).reduce((a, b) => (b.amount < a.amount ? b : a));
 }
+
+// Spending on each of the last seven statement days (ending at the newest transaction, since statements lag),
+// counting debits with a category like Money in vs spending. Mirrors RecentActivity.lastSevenDays.
+export function lastSevenDays(statements = []) {
+  const debits = statements.flatMap((s) => s.transactions || []).filter((t) => t?.amount < 0 && t.category && /^\d{4}-\d{2}-\d{2}$/.test(t.date || ''));
+  if (!debits.length) return null;
+  const end = new Date(`${debits.map((t) => t.date).sort().at(-1)}T12:00:00`);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(end); d.setDate(end.getDate() - (6 - i));
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return { date: key, amount: debits.filter((t) => t.date === key).reduce((s, t) => s - t.amount, 0) };
+  });
+  return { days, total: days.reduce((s, d) => s + d.amount, 0) };
+}

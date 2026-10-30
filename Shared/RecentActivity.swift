@@ -13,6 +13,20 @@ enum RecentActivity {
         return debits.filter { $0.date.hasPrefix(month) }.min { $0.amount < $1.amount }
     }
 
+    /// Spending on each of the last seven statement days, ending at the newest transaction (statements lag).
+    /// Mirrors lastSevenDays in moneyGlance.js.
+    static func lastSevenDays(_ statements: [Statement]) -> [(date: Date, amount: Double)]? {
+        let debits = statements.flatMap(\.transactions).filter { $0.amount < 0 && !($0.category ?? "").isEmpty && $0.date.count == 10 }
+        guard let last = debits.map(\.date).max(), let end = ISO8601DateFormatter.dateOnly(last) else { return nil }
+        let cal = Calendar.current
+        return (0..<7).reversed().compactMap { back in
+            cal.date(byAdding: .day, value: -back, to: end).map { d in
+                let key = String(format: "%04d-%02d-%02d", cal.component(.year, from: d), cal.component(.month, from: d), cal.component(.day, from: d))
+                return (d, debits.filter { $0.date == key }.reduce(0) { $0 - $1.amount })
+            }
+        }
+    }
+
     /// Dividends and interest paid to you this year, from statement descriptions. Mirrors earnedThisYear in moneyGlance.js.
     static func earned(_ statements: [Statement], year: Int = Calendar.current.component(.year, from: .now)) -> (dividends: Double, interest: Double) {
         var out = (dividends: 0.0, interest: 0.0)
@@ -73,6 +87,25 @@ struct RecentActivityCard: View {
         if !txns.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Recent Activity").font(.headline)
+                if let week = RecentActivity.lastSevenDays(statements) {
+                    let top = max(week.map(\.amount).max() ?? 1, 1)
+                    (Text("Last seven days: ") + Text(CurrencyFormatter.formatPrice(week.reduce(0) { $0 + $1.amount })).fontWeight(.semibold).foregroundColor(.primary))
+                        .font(.footnote).foregroundStyle(.secondary)
+                    HStack(alignment: .bottom, spacing: 6) {
+                        ForEach(week, id: \.date) { d in
+                            VStack(spacing: 3) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(d.amount > 0 ? Palette.appleBlue : Color.primary.opacity(0.1))
+                                    .frame(height: d.amount > 0 ? max(4, 48 * d.amount / top) : 2)
+                                    .frame(maxHeight: 48, alignment: .bottom)
+                                Text(d.date.formatted(.dateTime.weekday(.narrow))).font(.caption2).foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel("\(d.date.formatted(.dateTime.weekday(.wide))): \(CurrencyFormatter.formatPrice(d.amount))")
+                        }
+                    }
+                }
                 if let big = RecentActivity.biggest(statements) {
                     (Text("Biggest in \(ISO8601DateFormatter.dateOnly(big.date)?.formatted(.dateTime.month(.wide)) ?? ""): ")
                      + Text(CurrencyFormatter.formatPrice(abs(big.amount))).fontWeight(.semibold).foregroundColor(.primary)
