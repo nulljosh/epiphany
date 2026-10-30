@@ -14,6 +14,45 @@ enum TopSpending {
         if rest > 0 { rows.append((name: "other", amount: rest)) }
         return rows.map { Row(name: $0.name, amount: $0.amount, share: $0.amount / total) }
     }
+
+    /// This year's spending per category across statement months, biggest first, leaving out uncategorized.
+    /// Mirrors yearToDate in moneyGlance.js.
+    static func yearToDate(_ months: [FinanceData.SpendingMonth], year: Int = Calendar.current.component(.year, from: .now), top n: Int = 3) -> (months: Int, rows: [(name: String, amount: Double)]) {
+        let these = months.filter { $0.sortKey.hasPrefix("\(year)-") }
+        var sums: [String: Double] = [:]
+        for m in these { for (k, v) in m.categories where v > 0 && k != "uncategorized" { sums[k, default: 0] += v } }
+        return (these.count, sums.sorted { $0.value > $1.value }.prefix(n).map { (name: $0.key, amount: $0.value) })
+    }
+}
+
+/// "So far this year": the biggest category this year, then the next two.
+struct YearToDateCard: View {
+    let months: [FinanceData.SpendingMonth]
+
+    var body: some View {
+        let ytd = TopSpending.yearToDate(months)
+        if let first = ytd.rows.first {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("SO FAR THIS YEAR").font(.caption2.weight(.bold)).foregroundStyle(.secondary).tracking(1.0)
+                Text("\(CurrencyFormatter.formatPrice(first.amount)) on \(Self.label(first.name)) across \(ytd.months) \(ytd.months == 1 ? "statement" : "statements")")
+                    .font(.subheadline.weight(.semibold))
+                ForEach(ytd.rows.dropFirst(), id: \.name) { r in
+                    HStack {
+                        Text(Self.label(r.name))
+                        Spacer()
+                        Text(CurrencyFormatter.formatPrice(r.amount)).monospacedDigit()
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    private static func label(_ name: String) -> String { name.replacingOccurrences(of: "_", with: " ").capitalized }
 }
 
 /// "Top spending" for one statement month: one stacked bar and a legend with each share, with arrows to step back

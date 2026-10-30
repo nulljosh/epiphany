@@ -664,6 +664,7 @@ struct PortfolioView: View {
                         .padding(.horizontal)
 
                     TopSpendingBar(months: months).padding(.horizontal)
+                    YearToDateCard(months: months).padding(.horizontal)
 
                     scenarioToggles
                         .padding(.horizontal)

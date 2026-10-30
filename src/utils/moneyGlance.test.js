@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -74,5 +74,16 @@ describe('billsByMonth', () => {
 describe('compactSigned', () => {
   it('signs and shortens', () => {
     expect([compactSigned(953.75), compactSigned(-1234), compactSigned(0)]).toEqual(['+$954', '-$1.2K', '+$0']);
+  });
+});
+
+describe('yearToDate', () => {
+  it('sums this year by category, skipping uncategorized and other years', () => {
+    const months = [
+      { sortKey: '2025-12', categories: { food: 999 } },
+      { sortKey: '2026-07', categories: { food: 300, rent: 1500, uncategorized: 5000 } },
+      { sortKey: '2026-08', categories: { food: 200, fun: 50 } },
+    ];
+    expect(yearToDate(months, 2026)).toEqual({ months: 2, rows: [{ name: 'rent', amount: 1500 }, { name: 'food', amount: 500 }, { name: 'fun', amount: 50 }] });
   });
 });

@@ -635,6 +635,7 @@ struct PortfolioView: View {
                 emptyState("No transaction data")
             } else {
                 TopSpendingBar(months: spendingMonths.reversed()).padding(.horizontal)
+                YearToDateCard(months: spendingMonths).padding(.horizontal)
                 VStack(alignment: .leading, spacing: 4) {
                     if let total = displayTotal {
                         Text(total, format: .currency(code: currencyCode).precision(.fractionLength(0)))

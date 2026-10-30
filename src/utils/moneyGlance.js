@@ -104,3 +104,19 @@ export function restOfMonth(bills = [], income = [], today = new Date()) {
 
 // "+$954", "-$1.2K": short enough to sit under a bar. Mirrors MoneyGlance.compactSigned.
 export const compactSigned = (n) => `${n < 0 ? '-' : '+'}${Math.abs(n) >= 1000 ? `$${(Math.abs(n) / 1000).toFixed(1)}K` : `$${Math.round(Math.abs(n))}`}`;
+
+// This year's spending per category across statement months, biggest first, leaving out uncategorized.
+// Mirrors TopSpending.yearToDate.
+export function yearToDate(months = [], year = new Date().getFullYear(), n = 3) {
+  const sums = {};
+  let count = 0;
+  for (const m of months) {
+    if (!String(m.sortKey || '').startsWith(`${year}-`)) continue;
+    count++;
+    for (const [name, v] of Object.entries(m.categories || {})) {
+      if (v > 0 && name !== 'uncategorized') sums[name] = (sums[name] || 0) + v;
+    }
+  }
+  const rows = Object.entries(sums).sort((a, b) => b[1] - a[1]).slice(0, n).map(([name, amount]) => ({ name, amount }));
+  return { months: count, rows };
+}

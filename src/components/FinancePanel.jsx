@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1758,6 +1758,24 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             </Card>
 
             {spendingRecentFirst.length > 0 && <TopSpendingCard months={spendingRecentFirst} dark={dark} t={t} labelStyle={labelStyle} />}
+            {(() => {
+              const ytd = yearToDate(spendingChronological);
+              if (!ytd.rows.length) return null;
+              return (
+                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                  <div style={labelStyle}>So Far This Year</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
+                    {formatCurrency(ytd.rows[0].amount)} on {capitalize(ytd.rows[0].name.replace(/_/g, ' '))} across {ytd.months} {ytd.months === 1 ? 'statement' : 'statements'}
+                  </div>
+                  {ytd.rows.slice(1).map((r) => (
+                    <div key={r.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: t.textSecondary, padding: '2px 0' }}>
+                      <span>{capitalize(r.name.replace(/_/g, ' '))}</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</span>
+                    </div>
+                  ))}
+                </Card>
+              );
+            })()}
 
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
               <div style={labelStyle}>Category Breakdown</div>
