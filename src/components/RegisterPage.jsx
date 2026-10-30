@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import './auth.css';
 import OAuthButtons from './OAuthButtons';
 
-const FONT = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
-const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
-const card = { background: 'rgba(255,255,255,0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(40px)' };
+const FONT = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(var(--auth-fg), 0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
+const card = { background: 'rgba(var(--auth-fg), 0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(var(--auth-fg), 0.06)', backdropFilter: 'blur(40px)' };
 const errorBox = { color: '#ff5555', fontSize: 13, marginBottom: 20, padding: '10px 14px', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 10 };
 
 function fadeStyle(mounted, delay = 0) {
@@ -40,27 +40,26 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
   const displayError = localError || error;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060a0f', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '30%', left: '50%', width: 800, height: 800, transform: 'translate(-50%, -50%)', background: 'rgba(255,255,255,0.01)', pointerEvents: 'none' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--auth-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
 
       <div style={{ width: '100%', maxWidth: 900, position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32, ...fadeStyle(mounted, 0.05) }}>
           <img src="/epiphany-icon.svg" alt="Epiphany" style={{ width: 44, height: 44, margin: '0 auto 18px', borderRadius: 12 }} />
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>Create your account to get started</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--auth-ink)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
+          <p style={{ fontSize: 13, color: 'rgba(var(--auth-fg), 0.55)', margin: 0 }}>Create your account to get started</p>
         </div>
 
         {/* Pricing tiers */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 28, ...fadeStyle(mounted, 0.1) }}>
           {TIERS.map(tier => (
-            <div key={tier.name} style={{ background: 'rgba(255,255,255,0.025)', border: tier.highlight ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 22, backdropFilter: 'blur(20px)' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: tier.highlight ? '#ffffff' : 'rgba(255,255,255,0.7)', marginBottom: 6 }}>{tier.name}</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-                {tier.price}<span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontWeight: 400, marginLeft: 2 }}>{tier.period}</span>
+            <div key={tier.name} style={{ background: 'rgba(var(--auth-fg), 0.025)', border: tier.highlight ? '1px solid rgba(var(--auth-fg), 0.15)' : '1px solid rgba(var(--auth-fg), 0.06)', borderRadius: 16, padding: 22, backdropFilter: 'blur(20px)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: tier.highlight ? 'var(--auth-ink)' : 'rgba(var(--auth-fg), 0.7)', marginBottom: 6 }}>{tier.name}</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--auth-ink)', letterSpacing: '-0.02em' }}>
+                {tier.price}<span style={{ fontSize: 12, color: 'rgba(var(--auth-fg), 0.25)', fontWeight: 400, marginLeft: 2 }}>{tier.period}</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0 0' }}>
-                {tier.features.map(f => <li key={f} style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 7, lineHeight: 1.3 }}>{f}</li>)}
+                {tier.features.map(f => <li key={f} style={{ fontSize: 12, color: 'rgba(var(--auth-fg), 0.4)', marginBottom: 7, lineHeight: 1.3 }}>{f}</li>)}
               </ul>
             </div>
           ))}
@@ -71,9 +70,9 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
           <div style={{ marginBottom: 20 }}>
             <OAuthButtons verb="Sign up" />
             {/* ponytail: Facebook sign-up wired but not linked — FACEBOOK_APP_ID/SECRET not set yet. Uncomment once Josh creates the Facebook app (roadmap.md). */}
-            {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with Facebook</a> */}
+            {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: 'var(--auth-ink)', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign up with Facebook</a> */}
             {/* ponytail: X sign-up disabled 2026-07-21 — dev X account deleted, TWITTER_CLIENT_ID/SECRET dead. Re-enable once a new account + keys exist. */}
-            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '14px 0' }}>or</div>
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(var(--auth-fg), 0.5)', margin: '14px 0' }}>or</div>
           </div>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 18 }}>
@@ -89,15 +88,15 @@ export default function RegisterPage({ onRegister, onSwitchToLogin, error }) {
               <input id="reg-confirm" name="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} className="auth-input" placeholder="Repeat password" />
             </div>
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'rgba(var(--auth-fg), 0.6)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={tosChecked} onChange={e => setTosChecked(e.target.checked)} />
-                I agree to the <a href="/tos" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }}>Terms of Service</a>
+                I agree to the <a href="/tos" target="_blank" style={{ color: 'rgba(var(--auth-fg), 0.5)' }}>Terms of Service</a>
               </label>
             </div>
             {displayError && <div role="alert" style={errorBox}>{displayError}</div>}
             <button type="submit" disabled={submitting} className="auth-btn">{submitting ? 'Creating account...' : 'Create Account'}</button>
           </form>
-          <p style={{ textAlign: 'center', marginTop: 22, marginBottom: 0, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+          <p style={{ textAlign: 'center', marginTop: 22, marginBottom: 0, fontSize: 13, color: 'rgba(var(--auth-fg), 0.55)' }}>
             Already have an account? <button onClick={onSwitchToLogin} className="auth-link-accent">Sign in</button>
           </p>
         </div>

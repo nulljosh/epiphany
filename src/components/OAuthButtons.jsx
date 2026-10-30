@@ -24,10 +24,10 @@ const GitHubMark = () => (
 export default function OAuthButtons({ verb = 'Sign in' }) {
   return (
     <>
-      <a href="/api/auth?action=google" style={{ ...pill, background: '#fff', color: '#1f1f1f' }}>
+      <a href="/api/auth?action=google" style={{ ...pill, background: '#fff', color: '#1f1f1f', border: '1px solid rgba(var(--auth-fg), 0.12)' }}>
         <GoogleMark /> {verb} with Google
       </a>
-      <a href="/api/auth?action=github" style={{ ...pill, background: 'rgba(255,255,255,0.06)', color: '#fff', border: '1px solid rgba(255,255,255,0.14)' }}>
+      <a href="/api/auth?action=github" style={{ ...pill, background: 'rgba(var(--auth-fg), 0.06)', color: 'var(--auth-ink)', border: '1px solid rgba(var(--auth-fg), 0.14)' }}>
         <GitHubMark /> {verb} with GitHub
       </a>
     </>

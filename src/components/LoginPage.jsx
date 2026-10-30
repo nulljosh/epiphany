@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './auth.css';
 import OAuthButtons from './OAuthButtons';
 
-const FONT = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif";
+const FONT = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
 function NetworkCanvas() {
   const canvasRef = useRef(null);
@@ -54,7 +54,7 @@ function NetworkCanvas() {
           }
         }
       }
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillStyle = 'rgba(255,255,255,0.08)'; // canvas can't read CSS vars; white fades out on the light screen
       for (const n of nodes) {
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
@@ -69,8 +69,8 @@ function NetworkCanvas() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.6, pointerEvents: 'none' }} />;
 }
 
-const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
-const card = { background: 'rgba(255,255,255,0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(40px)' };
+const label = { display: 'block', fontSize: 11, fontWeight: 500, color: 'rgba(var(--auth-fg), 0.6)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' };
+const card = { background: 'rgba(var(--auth-fg), 0.025)', borderRadius: 20, padding: '36px 32px 32px', border: '1px solid rgba(var(--auth-fg), 0.06)', backdropFilter: 'blur(40px)' };
 const errorBox = { color: '#ff5555', fontSize: 13, marginBottom: 20, padding: '10px 14px', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 10 };
 
 function fadeStyle(mounted, delay = 0) {
@@ -83,7 +83,7 @@ function UserAvatar({ name, avatarUrl }) {
       <img
         src={avatarUrl}
         alt={name || 'User'}
-        style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }}
+        style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(var(--auth-fg), 0.2)' }}
       />
     );
   }
@@ -91,9 +91,9 @@ function UserAvatar({ name, avatarUrl }) {
   return (
     <div style={{
       width: 56, height: 56, borderRadius: '50%',
-      background: 'rgba(255,255,255,0.06)', border: '2px solid rgba(255,255,255,0.15)',
+      background: 'rgba(var(--auth-fg), 0.06)', border: '2px solid rgba(var(--auth-fg), 0.15)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 20, fontWeight: 700, color: '#ffffff', fontFamily: FONT,
+      fontSize: 20, fontWeight: 700, color: 'var(--auth-ink)', fontFamily: FONT,
     }}>
       {initials}
     </div>
@@ -163,16 +163,15 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--auth-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT, padding: 20, position: 'relative', overflow: 'hidden' }}>
       <NetworkCanvas />
-      <div style={{ position: 'absolute', top: '35%', left: '50%', width: 700, height: 700, transform: 'translate(-50%, -50%)', background: 'rgba(255,255,255,0.01)', animation: 'authPulse 6s ease-in-out infinite', pointerEvents: 'none' }} />
 
       <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36, ...fadeStyle(mounted, 0.05) }}>
           <img src="/epiphany-icon.svg" alt="Epiphany" style={{ width: 48, height: 48, margin: '0 auto 20px', borderRadius: 14 }} />
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0 }}>Personal intelligence platform</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--auth-ink)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Epiphany</h1>
+          <p style={{ fontSize: 13, color: 'rgba(var(--auth-fg), 0.55)', margin: 0 }}>Personal intelligence platform</p>
         </div>
 
         {/* Step 1: Email */}
@@ -180,9 +179,9 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
           <div style={{ ...card, ...fadeStyle(mounted, 0.12) }}>
             <OAuthButtons verb="Sign in" />
             {/* ponytail: Facebook sign-in wired but not linked — FACEBOOK_APP_ID/SECRET not set yet. Uncomment once Josh creates the Facebook app (roadmap.md). */}
-            {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: '#fff', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with Facebook</a> */}
+            {/* <a href="/api/auth?action=facebook" style={{ display: 'block', textAlign: 'center', padding: '11px', background: '#1877f2', color: 'var(--auth-ink)', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 500, marginBottom: 12 }}>Sign in with Facebook</a> */}
             {/* ponytail: X sign-in disabled 2026-07-21 — dev X account deleted, TWITTER_CLIENT_ID/SECRET dead. Re-enable once a new account + keys exist. */}
-            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>or</div>
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(var(--auth-fg), 0.5)', marginBottom: 20 }}>or</div>
             <form onSubmit={handleEmailSubmit}>
               <div style={{ marginBottom: 24 }}>
                 <label htmlFor="login-email" style={label}>Email</label>
@@ -203,7 +202,7 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
                 {lookingUp ? 'Looking up...' : 'Continue'}
               </button>
             </form>
-            <p style={{ textAlign: 'center', marginTop: 24, marginBottom: 0, fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>
+            <p style={{ textAlign: 'center', marginTop: 24, marginBottom: 0, fontSize: 13, color: 'rgba(var(--auth-fg), 0.25)' }}>
               No account? <button onClick={onSwitchToRegister} className="auth-link-accent">Create one</button>
             </p>
           </div>
@@ -213,15 +212,15 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
         {step === 'password' && (
           <div style={{ ...card, animation: 'authFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
             {/* User identity card */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28, padding: '12px 14px', background: 'rgba(var(--auth-fg), 0.03)', borderRadius: 12, border: '1px solid rgba(var(--auth-fg), 0.06)' }}>
               <UserAvatar name={lookupData?.name} avatarUrl={lookupData?.avatarUrl} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 {lookupData?.name && (
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#fff', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--auth-ink)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {lookupData.name}
                   </div>
                 )}
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, color: 'rgba(var(--auth-fg), 0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {email}
                 </div>
               </div>
@@ -262,11 +261,11 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
 
         {/* Forgot password */}
         {forgotMode && (
-          <div style={{ marginTop: 16, padding: 24, background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(30px)', animation: 'authFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
-            <h3 style={{ color: '#fff', fontSize: 15, fontWeight: 600, margin: '0 0 14px' }}>Reset Password</h3>
+          <div style={{ marginTop: 16, padding: 24, background: 'rgba(var(--auth-fg), 0.03)', borderRadius: 16, border: '1px solid rgba(var(--auth-fg), 0.06)', backdropFilter: 'blur(30px)', animation: 'authFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+            <h3 style={{ color: 'var(--auth-ink)', fontSize: 15, fontWeight: 600, margin: '0 0 14px' }}>Reset Password</h3>
             {forgotMsg ? (
               <>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{forgotMsg}</p>
+                <p style={{ color: 'rgba(var(--auth-fg), 0.5)', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{forgotMsg}</p>
                 <button onClick={() => setForgotMode(false)} className="auth-link-accent" style={{ marginTop: 14, fontSize: 12 }}>Back to login</button>
               </>
             ) : (
@@ -274,14 +273,14 @@ export default function LoginPage({ onLogin, onSwitchToRegister, error }) {
                 <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required placeholder="Your email address" className="auth-input-sm" style={{ marginBottom: 12 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="submit" disabled={forgotSubmitting} className="auth-btn" style={{ borderRadius: 10, fontSize: 13, padding: 11 }}>{forgotSubmitting ? 'Sending...' : 'Send Reset Link'}</button>
-                  <button type="button" onClick={() => setForgotMode(false)} style={{ padding: '11px 18px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 13, fontFamily: FONT, cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" onClick={() => setForgotMode(false)} style={{ padding: '11px 18px', background: 'rgba(var(--auth-fg), 0.05)', color: 'rgba(var(--auth-fg), 0.4)', border: '1px solid rgba(var(--auth-fg), 0.08)', borderRadius: 10, fontSize: 13, fontFamily: FONT, cursor: 'pointer' }}>Cancel</button>
                 </div>
               </form>
             )}
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 10, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', ...fadeStyle(mounted, 0.25) }}>{typeof __APP_VERSION__ !== 'undefined' ? `v${__APP_VERSION__}` : ''}</div>
+        <div style={{ textAlign: 'center', marginTop: 32, fontSize: 10, color: 'rgba(var(--auth-fg), 0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', ...fadeStyle(mounted, 0.25) }}>{typeof __APP_VERSION__ !== 'undefined' ? `v${__APP_VERSION__}` : ''}</div>
       </div>
     </div>
   );

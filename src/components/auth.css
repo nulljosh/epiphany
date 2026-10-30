@@ -1,65 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap');
+/* Auth colours: night by default, paper when the pre-auth screen is light (App.jsx adds .light). */
+:root { --auth-fg: 255, 255, 255; --auth-ink: #fff; --auth-bg: #060a0f; }
+.epiphany-preauth.light { --auth-fg: 29, 29, 31; --auth-ink: #1d1d1f; --auth-bg: #fbfbfd; }
+
 
 /* Shared auth page animations */
 @keyframes authFadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes authPulse {
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.07; }
-}
 
 /* Shared input styles */
 .auth-input {
   width: 100%;
   padding: 14px 16px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(var(--auth-fg), 0.03);
+  border: 1px solid rgba(var(--auth-fg), 0.08);
   border-radius: 10px;
-  color: #f0f0f0;
+  color: var(--auth-ink);
   font-size: 14px;
-  font-family: 'Sora', -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.25s ease, background 0.25s ease;
   letter-spacing: 0.01em;
 }
 .auth-input::placeholder {
-  color: rgba(255,255,255,0.2);
+  color: rgba(var(--auth-fg), 0.2);
 }
 .auth-input:focus {
-  border-color: rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.05);
+  border-color: rgba(var(--auth-fg), 0.2);
+  background: rgba(var(--auth-fg), 0.05);
 }
 .auth-input-sm {
   width: 100%;
   padding: 11px 14px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(var(--auth-fg), 0.04);
+  border: 1px solid rgba(var(--auth-fg), 0.1);
   border-radius: 8px;
-  color: #f0f0f0;
+  color: var(--auth-ink);
   font-size: 13px;
-  font-family: 'Sora', -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
 .auth-input-sm:focus {
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(var(--auth-fg), 0.2);
 }
 
 /* Primary CTA button */
 .auth-btn {
   width: 100%;
   padding: 15px;
-  background: #ffffff;
-  color: #000;
+  background: var(--auth-ink);
+  color: var(--auth-bg);
   border: none;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  font-family: 'Sora', -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   cursor: pointer;
   letter-spacing: 0.02em;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
@@ -79,29 +78,29 @@
 .auth-link {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.35);
+  color: rgba(var(--auth-fg), 0.35);
   cursor: pointer;
   font-size: 12px;
-  font-family: 'Sora', -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   padding: 0;
   transition: color 0.2s;
   letter-spacing: 0.01em;
 }
 .auth-link:hover {
-  color: rgba(255,255,255,0.6);
+  color: rgba(var(--auth-fg), 0.6);
 }
 .auth-link-accent {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.85);
+  color: rgba(var(--auth-fg), 0.85);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Sora', -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   padding: 0;
   transition: color 0.2s;
   letter-spacing: 0.01em;
 }
 .auth-link-accent:hover {
-  color: #ffffff;
+  color: var(--auth-ink);
 }
