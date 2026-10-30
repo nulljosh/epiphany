@@ -81,11 +81,12 @@ const styles = {
   },
 };
 
-const KINDS = [['price', 'Price'], ['high52', '52W high'], ['low52', '52W low'], ['earnings', 'Earnings']];
+const KINDS = [['price', 'Price'], ['high52', '52W high'], ['low52', '52W low'], ['earnings', 'Earnings'], ['digest', 'Weekly']];
 
 function describeAlert(a) {
   const target = `$${Number(a.targetPrice ?? a.target_price).toFixed(2)}`;
   if (a.kind === 'earnings') return 'earnings day';
+  if (a.kind === 'digest') return 'Sunday email: what reports this week';
   if (a.kind === 'high52') return `new 52 week high, past ${target}`;
   if (a.kind === 'low52') return `new 52 week low, under ${target}`;
   return `${a.direction} ${target}`;
@@ -113,7 +114,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
     if (!isPro) { showPricing(); return; } // price alerts are Premium
     const sym = symbol.trim().toUpperCase();
     const p = parseFloat(price);
-    if (!sym || (kind === 'price' && (isNaN(p) || p <= 0))) return;
+    if ((!sym && kind !== 'digest') || (kind === 'price' && (isNaN(p) || p <= 0))) return;
     const made = await onAdd(sym, kind === 'price' ? p : null, direction, kind);
     if (made?.error) { setError(made.error); return; }
     setError('');
@@ -137,7 +138,8 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           ))}
         </div>
         <div style={styles.form}>
-          <div style={{ position: 'relative', flex: 1, minWidth: 80 }}>
+          {kind === 'digest' && <div style={{ ...styles.detail, flex: 1, alignSelf: 'center' }}>Every stock on your watchlists</div>}
+          {kind !== 'digest' && <div style={{ position: 'relative', flex: 1, minWidth: 80 }}>
             <input
               style={styles.input}
               placeholder="Symbol"
@@ -157,7 +159,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
                 ))}
               </div>
             )}
-          </div>
+          </div>}
           {kind === 'price' && <>
           <input
             style={{ ...styles.input, maxWidth: 100 }}
@@ -174,7 +176,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           <button style={styles.addBtn} onClick={handleAdd}>{isPro ? 'Add' : 'Unlock'}</button>
         </div>
         {error && <div style={{ ...styles.detail, color: 'var(--danger, #ef4444)', marginBottom: 8 }}>{error}</div>}
-        <div style={{ ...styles.detail, marginBottom: 16 }}>We email you when it hits, even with Epiphany closed.</div>
+        <div style={{ ...styles.detail, marginBottom: 16 }}>{kind === 'digest' ? 'One email each Sunday with what reports that week.' : 'We email you when it hits, even with Epiphany closed.'}</div>
 
         <div style={styles.section}>
           <div style={styles.sectionLabel}>Active ({activeAlerts.length})</div>
@@ -182,7 +184,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           {activeAlerts.map(a => (
             <div key={a.id} style={styles.alertRow}>
               <div style={styles.alertInfo}>
-                <span style={styles.symbol}>{a.symbol}</span>{' '}
+                <span style={styles.symbol}>{a.kind === 'digest' ? 'Watchlist' : a.symbol}</span>{' '}
                 <span style={styles.detail}>{describeAlert(a)}</span>
               </div>
               <button style={styles.deleteBtn} onClick={() => onRemove(a.id)}>&times;</button>

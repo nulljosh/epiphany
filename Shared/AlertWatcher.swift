@@ -31,7 +31,7 @@ enum AlertWatcher {
 
         var fired = Set(UserDefaults.standard.stringArray(forKey: firedKey) ?? [])
         // Earnings alerts need the report date, so only the server's email check fires them.
-        for alert in active where !fired.contains(alert.id) && alert.kind != "earnings" {
+        for alert in active where !fired.contains(alert.id) && alert.kind != "earnings" && alert.kind != "digest" {
             guard let price = prices[alert.symbol], crossed(alert, price) else { continue }
             let content = UNMutableNotificationContent()
             content.title = "\(alert.symbol): \(alert.summary)"
@@ -52,13 +52,14 @@ enum AlertWatcher {
 }
 
 extension PriceAlert {
-    static let kinds: [(id: String, label: String)] = [("price", "Price"), ("high52", "52W High"), ("low52", "52W Low"), ("earnings", "Earnings")]
+    static let kinds: [(id: String, label: String)] = [("price", "Price"), ("high52", "52W High"), ("low52", "52W Low"), ("earnings", "Earnings"), ("digest", "Weekly")]
 
     /// One line for lists and banners, for every kind.
     var summary: String {
         let target = CurrencyFormatter.formatPrice(targetPrice)
         switch kind {
         case "earnings": return "earnings day"
+        case "digest": return "Sunday email: what reports this week"
         case "high52": return "new 52 week high, past \(target)"
         case "low52": return "new 52 week low, under \(target)"
         default: return "\(direction == .above ? "above" : "below") \(target)"

@@ -104,7 +104,7 @@ struct AlertsView: View {
     private func alertRow(_ alert: PriceAlert) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(alert.symbol)
+                Text(alert.kind == "digest" ? "Watchlist" : alert.symbol)
                     .font(.headline.monospaced())
                 Text(alert.summary)
                     .font(.caption)
@@ -112,7 +112,7 @@ struct AlertsView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                if alert.kind != "earnings" {
+                if alert.kind != "earnings" && alert.kind != "digest" {
                     Text(CurrencyFormatter.formatPrice(alert.targetPrice))
                         .font(.body.monospaced())
                 }
@@ -142,10 +142,12 @@ struct CreateAlertSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Symbol") {
-                    TextField("e.g. AAPL", text: $symbol)
-                        .autocorrectionDisabled()
-                        .font(.body.monospaced())
+                if kind != "digest" {
+                    Section("Symbol") {
+                        TextField("e.g. AAPL", text: $symbol)
+                            .autocorrectionDisabled()
+                            .font(.body.monospaced())
+                    }
                 }
 
                 Section {
@@ -157,7 +159,7 @@ struct CreateAlertSheet: View {
                     Text("Kind")
                 } footer: {
                     if kind != "price" {
-                        Text(kind == "earnings" ? "Emails you the day before the report." : "Uses today's 52 week range. We email you when it hits, even with Epiphany closed.")
+                        Text(kind == "digest" ? "Every Sunday, one email with the stocks on your watchlists that report that week." : kind == "earnings" ? "Emails you the day before the report." : "Uses today's 52 week range. We email you when it hits, even with Epiphany closed.")
                     }
                 }
 
@@ -196,7 +198,7 @@ struct CreateAlertSheet: View {
                             .frame(maxWidth: .infinity)
                             .fontWeight(.semibold)
                     }
-                    .disabled(symbol.isEmpty || (kind == "price" && targetPrice.isEmpty) || isCreating)
+                    .disabled((symbol.isEmpty && kind != "digest") || (kind == "price" && targetPrice.isEmpty) || isCreating)
                     .tint(Palette.appleBlue)
                 }
             }
@@ -210,7 +212,7 @@ struct CreateAlertSheet: View {
     }
 
     private func createAlert() async {
-        guard !symbol.isEmpty else {
+        guard !symbol.isEmpty || kind == "digest" else {
             error = "Enter a symbol"
             return
         }

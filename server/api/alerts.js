@@ -2,13 +2,14 @@ import { sparkRequest, sparkConfigured } from './spark.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { fetchYahooBatch } from './stocks-free.js';
 
-export const KINDS = ['price', 'high52', 'low52', 'earnings'];
+export const KINDS = ['price', 'high52', 'low52', 'earnings', 'digest'];
 
 /** The stored target and direction for a kind. 52 week alerts are price alerts pinned to today's high or low. */
 export function alertTarget(kind, quote, body) {
   if (kind === 'price') return { target_price: Number(body.target_price), direction: body.direction };
   if (kind === 'high52') return quote?.fiftyTwoWeekHigh ? { target_price: quote.fiftyTwoWeekHigh, direction: 'above' } : null;
   if (kind === 'low52') return quote?.fiftyTwoWeekLow ? { target_price: quote.fiftyTwoWeekLow, direction: 'below' } : null;
+  if (kind === 'digest') return { target_price: 0, direction: 'above' };
   return quote?.nextEarnings ? { target_price: 0, direction: 'above' } : null;
 }
 
@@ -31,13 +32,14 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const body = req.body || {};
     const kind = body.kind || 'price';
-    const symbol = String(body.symbol || '').toUpperCase().trim();
+    // The weekly earnings email covers the whole watchlist, so it has no symbol of its own.
+    const symbol = kind === 'digest' ? 'WATCHLIST' : String(body.symbol || '').toUpperCase().trim();
     if (!symbol || !KINDS.includes(kind)) return res.status(400).json({ error: 'symbol and a known kind required' });
     if (kind === 'price' && (!body.target_price || !['above', 'below'].includes(body.direction))) {
       return res.status(400).json({ error: 'target_price and direction ("above" or "below") required' });
     }
 
-    const quote = kind === 'price' ? null : (await fetchYahooBatch([symbol]))?.[0];
+    const quote = kind === 'price' || kind === 'digest' ? null : (await fetchYahooBatch([symbol]))?.[0];
     const target = alertTarget(kind, quote, body);
     if (!target) return res.status(400).json({ error: kind === 'earnings' ? `No earnings date for ${symbol}` : `No 52 week range for ${symbol}` });
 

@@ -5,9 +5,9 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
+    "A Sunday email with the watched stocks reporting that week",
     "RSI and MACD in a pane under the stock chart",
     "An allocation donut splits your portfolio into stocks, crypto and cash",
-    "A bills calendar marks the days your bills are due",
     "A review queue for uncategorized transactions, with Mark all reviewed",
 ]
 

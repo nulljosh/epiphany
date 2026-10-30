@@ -31,10 +31,10 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | done 25.0.0 |
 | Allocation donut on the portfolio (stocks, crypto, cash, funds) | Delta, Robinhood | M | 26.0 | done 26.0.0 (no funds bucket: holdings carry no asset type) |
 | RSI and MACD in a pane under the price chart, not only in the signal | TradingView, Webull | M | 27.0 | done 27.0.0 (web already had them) |
-| Gain chart toggles: value, amount invested, cost basis | Delta | M | 28.0 | open |
+| Gain chart toggles: value, amount invested, cost basis | Delta | M | 28.0 | parked: needs a value history. `portfolio_history` has an API but nothing writes snapshots; the clear path is a daily cron that values each portfolio server-side in CAD, then the chart reads it |
 | Spending flow (Sankey) from income to categories | Monarch | L | 29.0 | open |
 | Incident status on map pins: active or resolved | Citizen | S | 29.0 | open, needs a status field in the feeds |
-| Weekly earnings digest by email, Sunday, for watched stocks | Yahoo | S | 29.0 | open, rides the 16.0 alert cron |
+| Weekly earnings digest by email, Sunday, for watched stocks | Yahoo | S | 29.0 | done 29.0.0 (opt-in "Weekly" alert) |
 
 ## Version plan to v100
 One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.

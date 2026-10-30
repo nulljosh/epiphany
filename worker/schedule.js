@@ -7,6 +7,7 @@ export function cronPaths(scheduledTime) {
   if (weekday && h === 8 && m === 0) paths.push('cron');                  // was '0 8 * * 1-5'
   if (weekday && h === 14 && m === 30) paths.push('broker/morning-run');  // was '30 14 * * 1-5'
   if (h === 12 && m === 0) paths.push('broker/crypto-paper');             // was '0 12 * * *': crypto trades on weekends
+  if (d.getUTCDay() === 0 && h === 15 && m === 0) paths.push('earnings-digest'); // Sunday morning in Vancouver
   paths.push('alerts-check');
   return paths;
 }

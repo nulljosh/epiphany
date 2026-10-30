@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
   if (!sparkConfigured()) return res.status(503).json({ error: 'Database not configured' });
 
-  const active = (await sparkRequest('alerts?triggered=eq.false&select=*')) || [];
+  const active = ((await sparkRequest('alerts?triggered=eq.false&select=*')) || []).filter((a) => a.kind !== 'digest');
   if (!active.length) return res.status(200).json({ checked: 0, fired: 0 });
 
   const symbols = [...new Set(active.map((a) => a.symbol))];

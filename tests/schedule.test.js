@@ -7,6 +7,11 @@ describe('cronPaths', () => {
     expect(cronPaths(Date.UTC(2026, 9, 29, 14, 30))).toEqual(['broker/morning-run', 'alerts-check']);
     expect(cronPaths(Date.UTC(2026, 9, 29, 12, 0))).toEqual(['broker/crypto-paper', 'alerts-check']);
   });
+  it('sends the earnings digest Sunday at 15:00 UTC only', () => {
+    expect(cronPaths(Date.UTC(2026, 10, 1, 15, 0))).toEqual(['earnings-digest', 'alerts-check']);   // Sunday
+    expect(cronPaths(Date.UTC(2026, 10, 2, 15, 0))).toEqual(['alerts-check']);                      // Monday
+  });
+
   it('skips the weekday jobs on weekends but not crypto', () => {
     expect(cronPaths(Date.UTC(2026, 9, 31, 8, 0))).toEqual(['alerts-check']);                  // Saturday
     expect(cronPaths(Date.UTC(2026, 9, 31, 12, 0))).toEqual(['broker/crypto-paper', 'alerts-check']);
