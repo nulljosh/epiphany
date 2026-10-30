@@ -1270,33 +1270,48 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
     return undefined;
   }, [payload, mapLoaded]);
 
-  // Rain radar: RainViewer's newest frame as a raster layer. Free tiles stop at zoom 7, MapLibre stretches them past it.
-  const [rainPath, setRainPath] = useState(null);
+  // Rain radar: RainViewer's last two hours (13 frames, 10 minutes apart) as one raster layer each, played as a loop
+  // by switching which layer is visible. Free tiles stop at zoom 7; MapLibre stretches them past it.
+  const [rainFrames, setRainFrames] = useState([]);
+  const [rainTick, setRainTick] = useState(0);
   useVisibilityPolling(async () => {
     if (!mapLayers?.rain) return;
     try {
       const j = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
-      const last = j?.radar?.past?.at(-1);
-      if (last) setRainPath(`${j.host}${last.path}`);
+      const past = j?.radar?.past || [];
+      if (past.length) setRainFrames(past.map((f) => ({ url: `${j.host}${f.path}`, time: f.time })));
     } catch { /* radar is optional */ }
   }, 10 * 60_000, [mapLayers?.rain]);
+  useVisibilityPolling(() => { if (mapLayers?.rain) setRainTick((n) => n + 1); }, 700, [mapLayers?.rain]);
+  // Hold on the newest frame for three beats before the loop restarts.
+  const rainIndex = rainFrames.length ? Math.min(rainTick % (rainFrames.length + 3), rainFrames.length - 1) : -1;
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
     const sync = () => {
       try {
-        if (map.getLayer('rain-layer')) map.removeLayer('rain-layer');
-        if (map.getSource('rain-source')) map.removeSource('rain-source');
-        if (!mapLayers?.rain || !rainPath) return;
-        map.addSource('rain-source', { type: 'raster', tiles: [`${rainPath}/256/{z}/{x}/{y}/2/1_1.png`], tileSize: 256, maxzoom: 7, attribution: 'RainViewer' });
+        for (const l of map.getStyle().layers.filter((l) => l.id.startsWith('rain-'))) map.removeLayer(l.id);
+        for (const id of Object.keys(map.getStyle().sources).filter((id) => id.startsWith('rain-'))) map.removeSource(id);
+        if (!mapLayers?.rain) return;
         // Under the first label layer so place names stay readable.
-        map.addLayer({ id: 'rain-layer', type: 'raster', source: 'rain-source', paint: { 'raster-opacity': 0.6 } }, map.getStyle().layers.find((l) => l.type === 'symbol')?.id);
+        const below = map.getStyle().layers.find((l) => l.type === 'symbol')?.id;
+        rainFrames.forEach((f, i) => {
+          map.addSource(`rain-src-${i}`, { type: 'raster', tiles: [`${f.url}/256/{z}/{x}/{y}/2/1_1.png`], tileSize: 256, maxzoom: 7, attribution: 'RainViewer' });
+          map.addLayer({ id: `rain-${i}`, type: 'raster', source: `rain-src-${i}`, paint: { 'raster-opacity': 0, 'raster-opacity-transition': { duration: 200 } } }, below);
+        });
       } catch { /* style still loading; style.load runs sync again */ }
     };
     sync();
     map.on('style.load', sync);
     return () => map.off('style.load', sync);
-  }, [mapLayers?.rain, rainPath, mapLoaded]);
+  }, [mapLayers?.rain, rainFrames, mapLoaded]);
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    rainFrames.forEach((_, i) => {
+      try { if (map.getLayer(`rain-${i}`)) map.setPaintProperty(`rain-${i}`, 'raster-opacity', i === rainIndex ? 0.6 : 0); } catch { /* layer gone */ }
+    });
+  }, [rainIndex, rainFrames]);
 
   // Warning areas: each alert's polygon shaded in its risk colour (Environment Canada and NWS send shapes).
   useEffect(() => {
@@ -1574,6 +1589,13 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
             ))}
           </div>}
         </section>
+      )}
+      {mapLayers.rain && rainIndex >= 0 && (
+        <div style={{ position: 'absolute', bottom: 82, left: 12, zIndex: 3, pointerEvents: 'none' }}>
+          <div style={{ background: 'rgba(2,6,23,0.72)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '5px 10px', color: '#e2e8f0', fontSize: 11, fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+            Radar {new Date(rainFrames[rainIndex].time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}{rainIndex === rainFrames.length - 1 ? ' · latest' : ''}
+          </div>
+        </div>
       )}
       {mapLayers.flights !== false && payload.noFlights && (
         <div style={{ position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 3, pointerEvents: 'none' }}>

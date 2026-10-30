@@ -6,9 +6,9 @@ private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundl
     .split(separator: ".").prefix(2).joined(separator: ".")
 // Three short bullets at most, a few words each (Joshua, 2026-10-30).
 private let whatsNewBullets = [
+    "Rain radar plays the last two hours",
     "Weather on the map: radar, warnings, storms",
     "Insiders and owners on stock pages",
-    "Today’s big moves in your stocks",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

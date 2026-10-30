@@ -73,7 +73,7 @@ One row per minor version. Skipped: trading, prediction markets, crypto staking,
 
 | Gap | Seen in | Size | Version | Status |
 |---|---|---|---|---|
-| Rain radar plays the last two hours as a loop, with a time label | CARROT Weather | M | 6.1 | open, RainViewer `radar.past` frames |
+| Rain radar plays the last two hours as a loop, with a time label | CARROT Weather | M | 6.1 | done 6.1.0 (13 frames, the newest held three beats) |
 | A banner when the map's centre is inside a weather warning area | CARROT Weather | S | 6.2 | open, from the 5.2 polygons |
 | "Your holdings vs the S&P 500 today" line over the portfolio | Copilot Money | S | 6.3 | open, today's change against SPY |
 | Markets chips: Now, Macro, Crypto | Robinhood | S | 6.4 | open |

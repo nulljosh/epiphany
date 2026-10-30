@@ -128,7 +128,7 @@ struct SituationView: View {
     @AppStorage("showRainRadar") private var showRainRadar = false
     @AppStorage("showStorms") private var showStorms = true
     @State private var storms: [Storm] = []
-    @State private var radarPath: String?
+    @State private var radarFrames: [RainRadar.Frame] = []
     @State private var radarCenter: CLLocationCoordinate2D?
     @State private var radarLonDelta: Double = 0
     @State private var mapWidth: CGFloat = 0
@@ -684,14 +684,12 @@ struct SituationView: View {
 
     @MapContentBuilder
     private var rainRadarAnnotation: some MapContent {
-        if showRainRadar, let path = radarPath {
+        if showRainRadar, !radarFrames.isEmpty {
             let center = radarCenter ?? (visibleRegion ?? currentRegion).center
-            if let url = RainRadar.imageURL(path: path, center: center) {
-                Annotation("Rain radar", coordinate: center, anchor: .center) {
-                    RainRadarImage(url: url, side: RainRadar.side(mapWidth: mapWidth, longitudeDelta: radarLonDelta > 0 ? radarLonDelta : (visibleRegion ?? currentRegion).span.longitudeDelta))
-                }
-                .annotationTitles(.hidden)
+            Annotation("Rain radar", coordinate: center, anchor: .center) {
+                RainRadarLoop(frames: radarFrames, center: center, side: RainRadar.side(mapWidth: mapWidth, longitudeDelta: radarLonDelta > 0 ? radarLonDelta : (visibleRegion ?? currentRegion).span.longitudeDelta))
             }
+            .annotationTitles(.hidden)
         }
     }
 
@@ -731,9 +729,12 @@ struct SituationView: View {
         }
         .task(id: showRainRadar) {
             while showRainRadar, !Task.isCancelled {
-                radarPath = await RainRadar.latestPath()
+                radarFrames = await RainRadar.frames()
                 try? await Task.sleep(for: .seconds(600))
             }
+        }
+        .overlay(alignment: .bottomLeading) {
+            if showRainRadar, !radarFrames.isEmpty { RadarClock(frames: radarFrames).padding(.leading, 12).padding(.bottom, 96) }
         }
         .background(GeometryReader { g in
             Color.clear.onAppear { mapWidth = g.size.width }.onChange(of: g.size.width) { _, w in mapWidth = w }
