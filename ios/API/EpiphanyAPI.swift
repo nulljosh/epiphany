@@ -268,6 +268,12 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return try decode(Wrapper.self, from: try await perform(URLRequest(url: try makeURL("/api/flight-route", query: ["callsign": callsign])))).route
     }
 
+    /// Active tropical storms with their forecast track and cone, from /api/storms.
+    func fetchStorms() async throws -> [Storm] {
+        struct Wrapper: Decodable { let storms: [Storm] }
+        return try decode(Wrapper.self, from: try await perform(URLRequest(url: try makeURL("/api/storms")))).storms
+    }
+
     /// The next Fed rate decision day ("2026-12-09") from /api/fomc.
     func fetchNextFedDecision() async throws -> String? {
         struct Wrapper: Decodable { let next: String? }

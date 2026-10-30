@@ -126,6 +126,8 @@ struct SituationView: View {
     @AppStorage("showHighAltFlights") private var showHighAltFlights = false
     @AppStorage("flights.hidden") private var hiddenFlightKinds = ""
     @AppStorage("showRainRadar") private var showRainRadar = false
+    @AppStorage("showStorms") private var showStorms = true
+    @State private var storms: [Storm] = []
     @State private var radarPath: String?
     @State private var radarCenter: CLLocationCoordinate2D?
     @State private var radarLonDelta: Double = 0
@@ -696,6 +698,7 @@ struct SituationView: View {
     private var mapView: some View {
         Map(position: $mapPosition) {
             rainRadarAnnotation
+            StormContent(storms: storms)
             earthquakeAnnotations
             flightAnnotations
             incidentAnnotations
@@ -718,6 +721,13 @@ struct SituationView: View {
             guard showRainRadar else { return }
             radarLonDelta = context.region.span.longitudeDelta
             if RainRadar.needsRecentre(radarCenter, for: context.region.center) { radarCenter = context.region.center }
+        }
+        .task(id: showStorms) {
+            guard showStorms else { storms = []; return }
+            while !Task.isCancelled {
+                if let latest = try? await EpiphanyAPI.shared.fetchStorms() { storms = latest }
+                try? await Task.sleep(for: .seconds(1800))
+            }
         }
         .task(id: showRainRadar) {
             while showRainRadar, !Task.isCancelled {

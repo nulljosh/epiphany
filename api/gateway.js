@@ -63,6 +63,7 @@ const ROUTES = {
   traffic:              lazy(() => import('../server/api/traffic.js')),
   'validate-link':      lazy(() => import('../server/api/validate-link.js')),
   'weather-alerts':     lazy(() => import('../server/api/weather-alerts.js')),
+  storms:               lazy(() => import('../server/api/storms.js')),
   weather:              lazy(() => import('../server/api/weather.js')),
   webhook:              lazy(() => import('../server/api/webhook.js')),
   wildfires:            lazy(() => import('../server/api/wildfires.js')),
@@ -113,7 +114,7 @@ const CACHE_TTL = {
   commodities: 300, crime: 3600, 'fear-greed': 300, earthquakes: 300, events: 600, flights: 120,
   history: 3600, incidents: 600, latest: 60, 'local-events': 600, places: 600, macro: 3600,
   markets: 60, news: 300, prices: 60, 'stocks-free': 60, traffic: 300,
-  weather: 300, 'weather-alerts': 300, wildfires: 600, ontology: 3600, crypto: 60, reddit: 300,
+  weather: 300, 'weather-alerts': 300, storms: 900, wildfires: 600, ontology: 3600, crypto: 60, reddit: 300,
   dispatch: 60, emergency: 60, 'venue-details': 86400, search: 600,
 };
 

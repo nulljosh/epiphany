@@ -16,6 +16,7 @@ const LAYERS = [
   ['wildfires',      'fires',       { lat: '49.2', lon: '-123.1' }],
   ['aqi',            'readings',    { lat: '49.2', lon: '-123.1' }],
   ['emergency',      'incidents',   { lat: '49.2', lon: '-123.1', lamin: '48.2', lomin: '-124.1', lamax: '50.2', lomax: '-122.1' }],
+  ['storms',         'storms',      {}],
   ['flights',        'states',      { lamin: '48.2', lomin: '-124.1', lamax: '50.2', lomax: '-122.1' }],
 ];
 

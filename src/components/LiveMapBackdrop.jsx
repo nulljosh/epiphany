@@ -25,7 +25,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 // Emoji pins at Joshua's ask (2026-10-29): the glyph says what it is, no legend needed.
 const EMOJI_CSS = 'width:24px;height:24px;font-size:18px;line-height:24px;text-align:center;cursor:pointer;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));';
 const WINDOW_CHOICES = [[1, 'Last hour'], [6, 'Last 6 hours'], [24, 'Last 24 hours'], [0, 'Any time']];
-const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality'], ['rain', 'Rain radar']];
+const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality'], ['storms', 'Storms'], ['rain', 'Rain radar']];
 // Sub-filters under Flights, keyed into mapLayers like the layers above; `kind` comes from /api/flights.
 const FLIGHT_KINDS = [['passenger', 'Passenger'], ['cargo', 'Cargo'], ['military', 'Military'], ['private', 'Private']];
 const flightKey = (kind) => `flights_${kind || 'private'}`;
@@ -108,7 +108,7 @@ function geoKeywordMatch(text) {
 function emptyPayload() {
   return {
     incidents: [], trafficIncidents: [], earthquakes: [], events: [],
-    markets: [], flights: [],
+    markets: [], flights: [], storms: [],
   };
 }
 
@@ -293,7 +293,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
   const [isLocating, setIsLocating] = useState(false);
   const isLocatingRef = useRef(false);
   const STATIC_PLACE_CATEGORIES = new Set(['education', 'cemetery', 'recreation', 'place', 'venue']);
-  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [], aqiReadings: [], emergencyIncidents: [], noFlights: false });
+  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [], newsArticles: [], crimeIncidents: [], localEvents: [], weatherAlerts: [], wildfires: [], flights: [], aqiReadings: [], emergencyIncidents: [], storms: [], noFlights: false });
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -684,7 +684,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
           }
           return FAILED;
         };
-        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl, aqi, emerg] = await Promise.all([
+        const [inc, traffic, eq, ev, mk, news, crime, localEv, weather, fires, fl, aqi, emerg, st] = await Promise.all([
           safeFetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)),
           safeFetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)),
           safeFetch(apiPath(`/api/earthquakes?lat=${center.lat}&lon=${center.lon}&radius=500`)),
@@ -698,6 +698,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
           safeFetch(apiPath(`/api/flights?${bboxQ}`)),
           safeFetch(apiPath(`/api/aqi?lat=${center.lat}&lon=${center.lon}`)),
           safeFetch(apiPath(`/api/emergency?lat=${center.lat}&lon=${center.lon}&${bboxQ}`)),
+          safeFetch(apiPath('/api/storms')),
         ]);
         if (!cancelled) {
           fetchCountRef.current += 1;
@@ -720,6 +721,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
               noFlights: fl == null ? prev.noFlights : (fl.noFlights === true),
               aqiReadings: merge(aqi, 'readings', prev.aqiReadings),
               emergencyIncidents: merge(emerg, 'incidents', prev.emergencyIncidents),
+              storms: merge(st, 'storms', prev.storms),
             };
           });
         }
@@ -1010,6 +1012,12 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
         { type: 'weather', title: wa.event || 'Weather Alert', detail: [wa.headline || wa.event, ago(wa.sent)].filter(Boolean).join(' · '), level: wa.severity || 'Moderate', source: wa.source || 'Weather service', link: mapsLink(lat, lon), linkLabel: 'Get Directions' },
         lon, lat, 'weather', '⛈️'
       );
+    });
+
+    // Tropical storms (NHC): a pin at the centre; the cone and track are drawn as map layers below.
+    if (mapLayers.storms !== false)
+    (payload.storms || []).forEach((st) => {
+      addMarker(EMOJI_CSS, st.name, { type: 'storm', title: `${st.kind} ${st.name}`, detail: [st.windKt && `${st.windKt} kt winds`, st.pressureMb && `${st.pressureMb} mb`, st.movement && `moving ${st.movement}`].filter(Boolean).join(' · '), level: /hurricane/i.test(st.kind) ? 'Severe' : 'Moderate', source: 'National Hurricane Center', link: 'https://www.nhc.noaa.gov/', linkLabel: 'NHC' }, st.lon, st.lat, 'storms', '🌀');
     });
 
     // Wildfires
@@ -1310,6 +1318,30 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
     map.on('style.load', sync);
     return () => map.off('style.load', sync);
   }, [payload.weatherAlerts, mapLayers?.weather, mapLoaded]);
+
+  // Storm forecast cones and tracks, same layer pattern as the warning areas above.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const sync = () => {
+      try {
+        const storms = mapLayers?.storms === false ? [] : (payload.storms || []);
+        const data = { type: 'FeatureCollection', features: [
+          ...storms.filter((st) => st.cone).map((st) => ({ type: 'Feature', geometry: st.cone, properties: { part: 'cone' } })),
+          ...storms.filter((st) => st.track?.length > 1).map((st) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: st.track }, properties: { part: 'track' } })),
+        ] };
+        if (map.getSource('storm-shapes')) { map.getSource('storm-shapes').setData(data); return; }
+        map.addSource('storm-shapes', { type: 'geojson', data });
+        const below = map.getStyle().layers.find((l) => l.type === 'symbol')?.id;
+        map.addLayer({ id: 'storm-cone', type: 'fill', source: 'storm-shapes', filter: ['==', ['get', 'part'], 'cone'], paint: { 'fill-color': '#f97316', 'fill-opacity': 0.15 } }, below);
+        map.addLayer({ id: 'storm-cone-line', type: 'line', source: 'storm-shapes', filter: ['==', ['get', 'part'], 'cone'], paint: { 'line-color': '#f97316', 'line-width': 1.5, 'line-opacity': 0.8 } }, below);
+        map.addLayer({ id: 'storm-track', type: 'line', source: 'storm-shapes', filter: ['==', ['get', 'part'], 'track'], paint: { 'line-color': '#ef4444', 'line-width': 2, 'line-dasharray': [2, 1.5] } }, below);
+      } catch { /* style still loading; style.load runs sync again */ }
+    };
+    sync();
+    map.on('style.load', sync);
+    return () => map.off('style.load', sync);
+  }, [payload.storms, mapLayers?.storms, mapLoaded]);
 
   // Toggle heatmap visibility
   useEffect(() => {

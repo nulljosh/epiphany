@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var rawTheme = "system"
     @AppStorage("epiphany_menu_bar_ticker") private var showMenuBar = true
     @AppStorage("showRainRadar") private var showRainRadar = false
+    @AppStorage("showStorms") private var showStorms = true
     @State private var showUpgradeAlert = false
     @State private var upgradeTarget: SubscriptionTier?
     @State private var showChangeEmail = false
@@ -344,6 +345,12 @@ struct SettingsView: View {
                     subtitle: "Latest radar frame from RainViewer",
                     systemImage: "cloud.rain",
                     isOn: $showRainRadar
+                )
+                sourceToggleRow(
+                    title: "Tropical Storms",
+                    subtitle: "Hurricane tracks and cones from the NHC",
+                    systemImage: "hurricane",
+                    isOn: $showStorms
                 )
             }
         }

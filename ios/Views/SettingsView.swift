@@ -574,6 +574,7 @@ struct MapSourcesSettingsView: View {
     @AppStorage("showTraffic") private var showTraffic = true
     @AppStorage("showWildfires") private var showWildfires = true
     @AppStorage("showRainRadar") private var showRainRadar = false
+    @AppStorage("showStorms") private var showStorms = true
 
     var body: some View {
         List {
@@ -595,6 +596,7 @@ struct MapSourcesSettingsView: View {
                 Toggle("Traffic", isOn: $showTraffic)
                 Toggle("Wildfires", isOn: $showWildfires)
                 Toggle("Rain Radar", isOn: $showRainRadar)
+                Toggle("Tropical Storms", isOn: $showStorms)
             }
         }
         .navigationTitle("Map Sources")
