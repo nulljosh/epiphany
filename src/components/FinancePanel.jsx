@@ -16,7 +16,7 @@ import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealized
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
 import MoneyGlance from './MoneyGlance';
-import { budgetActual, perDayLeft } from '../utils/budgetActual';
+import { budgetActual, perDayLeft, coverPlan, moveBudget } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -1358,6 +1358,20 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                             {daily && ` · ${formatCurrency(daily.perDay)} a day for ${daily.days} days`}
                           </div>
                         )}
+                        {(() => {
+                          const plan = coverPlan(budget.expenses, latest, index);
+                          if (!plan) return null;
+                          const cover = () => {
+                            // The budget on screen, so indexes match even when nothing custom is saved yet.
+                            const result = saveData({ ...exportData(), budget: { ...budget, expenses: moveBudget(budget.expenses, plan.from, index, plan.amount) } });
+                            if (!result.success) setImportError(result.error);
+                          };
+                          return (
+                            <button onClick={cover} style={{ ...pillButtonStyle, marginTop: 6, fontSize: 11 }}>
+                              Cover {formatCurrency(plan.amount)} from {budget.expenses[plan.from].name}
+                            </button>
+                          );
+                        })()}
                       </div>
                       <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>-{formatCurrency(item.amount)}</div>
                       {actual && (

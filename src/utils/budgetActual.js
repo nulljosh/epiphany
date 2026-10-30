@@ -41,3 +41,22 @@ export function perDayLeft(item = {}, month, now = new Date()) {
   const left = item.amount - actual.spent;
   return left > 0 ? { perDay: Math.floor(left / days), days } : null;
 }
+
+// YNAB's "move money": cover an overspent line from the line with the most left. Linked lines only, since an
+// unlinked line has no spending to say what it can spare. Mirrors FinanceData.Budget.coverPlan.
+const cents = (n) => Math.round(n * 100) / 100;
+export function coverPlan(expenses = [], month, index) {
+  const target = budgetActual(expenses[index], month);
+  if (!target || target.spent <= expenses[index].amount) return null;
+  let best = null;
+  expenses.forEach((item, i) => {
+    const a = i === index ? null : budgetActual(item, month);
+    const room = a ? cents(item.amount - a.spent) : 0;
+    if (room > 0 && (!best || room > best.room)) best = { from: i, room };
+  });
+  return best && { from: best.from, amount: Math.min(cents(target.spent - expenses[index].amount), best.room) };
+}
+
+// The total budget doesn't change: what one line gives, the other gets.
+export const moveBudget = (expenses, from, to, amount) =>
+  expenses.map((e, i) => (i === from ? { ...e, amount: cents(e.amount - amount) } : i === to ? { ...e, amount: cents(e.amount + amount) } : e));

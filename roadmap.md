@@ -62,7 +62,7 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 | Projected cash balance for the next 30 days, a line with a Today marker, from cash, bills and income | Simplifi | M | 45.0 | done 45.0.0 (paydays from recurring money in) |
 | News topic filter: Markets, Crypto, Earnings, Economy | Seeking Alpha | S | 46.0 | done 46.0.0 (feed has no tags: keyword topics; iPhone and Mac, the web has no headline list) |
 | Siri and Shortcuts: "What's my portfolio worth" as an App Intent on iPhone and Mac | YNAB | M | 47.0 | done 47.0.0 (metadata checked in both builds; a spoken Siri run waits on a real device) |
-| Move money between budget lines to cover one that went over | YNAB | M | 48.0 | open |
+| Move money between budget lines to cover one that went over | YNAB | M | 48.0 | done 48.0.0 (linked lines only, total unchanged) |
 | Net worth over time, assets against debts, from the daily snapshots | YNAB | M | 49.0 | waits for a few weeks of 38.0 rows |
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
@@ -94,6 +94,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 
 ## 2026-10-29 QA leftovers (open)
 - [ ] Web allocation donut adds USD holdings to CAD cash at face value, so its total disagrees with net worth; convert holdings with `toCad` like `stocksValue` does.
+- [ ] Web Budget tab with no budget shows empty Monthly Income and Monthly Expenses cards; give it one empty state with a way to add a line.
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)

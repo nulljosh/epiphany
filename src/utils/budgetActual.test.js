@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { budgetCategories, budgetActual, perDayLeft } from './budgetActual';
+import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget } from './budgetActual';
 
 describe('budgetActual', () => {
   const aug = { month: 'Aug 2026', categories: { food: 180, coffee: 60, cannabis: 90, vape: 40 } };
@@ -27,5 +27,24 @@ describe('perDayLeft', () => {
   it('says nothing for an older statement or a spent budget', () => {
     expect(perDayLeft(line, { sortKey: '2026-09', categories: { food: 76 } }, now)).toBeNull();
     expect(perDayLeft(line, { sortKey: '2026-10', categories: { food: 800 } }, now)).toBeNull();
+  });
+});
+
+describe('coverPlan', () => {
+  const month = { month: 'Oct', categories: { food: 500, shopping: 50, cannabis: 120 } };
+  const expenses = [{ name: 'Food', amount: 400 }, { name: 'Shopping', amount: 200 }, { name: 'Weed', amount: 150 }, { name: 'Phone', amount: 80 }];
+  it('covers the overspend from the line with the most left, skipping unlinked lines', () => {
+    expect(coverPlan(expenses, month, 0)).toEqual({ from: 1, amount: 100 });
+    expect(coverPlan(expenses, month, 1)).toBeNull();
+    expect(coverPlan(expenses, month, 3)).toBeNull();
+  });
+  it('gives only what the donor has left', () => {
+    const tight = [{ name: 'Food', amount: 400 }, { name: 'Shopping', amount: 80 }];
+    expect(coverPlan(tight, month, 0)).toEqual({ from: 1, amount: 30 });
+  });
+  it('moves money without changing the total', () => {
+    const moved = moveBudget(expenses, 1, 0, 100);
+    expect(moved.map((e) => e.amount)).toEqual([500, 100, 150, 80]);
+    expect(moved.reduce((s, e) => s + e.amount, 0)).toBe(830);
   });
 });

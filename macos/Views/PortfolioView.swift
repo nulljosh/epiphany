@@ -400,6 +400,15 @@ struct PortfolioView: View {
                                 progress: min(ratio, 1),
                                 color: ratio <= 0.9 ? Palette.successGreen : ratio <= 1.1 ? Palette.warningAmber : Palette.dangerRed
                             )
+                            if let plan = budget.coverPlan(for: line, in: lastMonth) {
+                                Button("Cover \(CurrencyFormatter.formatPrice(plan.amount)) from \(budget.expenses[plan.from].name)") {
+                                    appState.financeData?.budget?.moveMoney(from: plan.from, to: plan.to, amount: plan.amount)
+                                    Task { await appState.saveFinanceData() }
+                                }
+                                .font(.caption.weight(.semibold))
+                                .buttonStyle(.bordered)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
                         }
                     }
                 }

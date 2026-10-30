@@ -141,18 +141,23 @@ struct FinanceData: Codable {
 
     struct Budget: Codable {
         let income: [BudgetLine]
-        let expenses: [BudgetLine]
+        var expenses: [BudgetLine]
 
         struct BudgetLine: Codable, Identifiable {
             let name: String
-            let amount: Double
+            var amount: Double
             let frequency: String
             let note: String?
+            /// Set on the web; kept so a native save doesn't drop them.
+            var categories: [String]? = nil
+            var category: String? = nil
 
             var id: String { name }
 
             /// Statement categories this hand-typed line covers; mirrors src/utils/budgetActual.js.
             var statementCategories: [String] {
+                if let categories, !categories.isEmpty { return categories }
+                if let category { return [category] }
                 let keywords: [(String, [String])] = [
                     ("food|eat|dining|restaurant", ["food", "groceries", "coffee", "starbucks"]),
                     ("grocer", ["groceries"]), ("coffee|starbucks", ["coffee", "starbucks"]),
