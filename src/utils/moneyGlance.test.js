@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -92,5 +92,16 @@ describe('recentActivity', () => {
   it('takes the newest transactions across statements', () => {
     const s = [{ transactions: [{ date: '2026-08-01', amount: -5 }, { date: '2026-08-20', amount: 100 }] }, { transactions: [{ date: '2026-08-10', amount: -9 }, { date: '2026-08-30' }] }, {}];
     expect(recentActivity(s, 2).map((t) => t.date)).toEqual(['2026-08-20', '2026-08-10']);
+  });
+});
+
+describe('earnedThisYear', () => {
+  it('adds this year\'s dividends and interest paid in', () => {
+    const s = [{ transactions: [
+      { date: '2026-03-01', description: 'Dividend AAPL', amount: 2.5 }, { date: '2026-06-01', description: 'DIV XEQT', amount: 1.5 },
+      { date: '2026-08-31', description: 'Interest earned', amount: 0.12 }, { date: '2025-12-31', description: 'Interest earned', amount: 9 },
+      { date: '2026-05-01', description: 'Interest charge', amount: -3 }, { date: '2026-05-02', description: 'Diversity fund', amount: 5 },
+    ] }];
+    expect(earnedThisYear(s, 2026)).toEqual({ dividends: 4, interest: 0.12 });
   });
 });

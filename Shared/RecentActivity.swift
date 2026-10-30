@@ -5,6 +5,40 @@ enum RecentActivity {
     static func latest(_ statements: [Statement], count n: Int = 5) -> [Transaction] {
         Array(statements.flatMap(\.transactions).sorted { $0.date > $1.date }.prefix(n))
     }
+
+    /// Dividends and interest paid to you this year, from statement descriptions. Mirrors earnedThisYear in moneyGlance.js.
+    static func earned(_ statements: [Statement], year: Int = Calendar.current.component(.year, from: .now)) -> (dividends: Double, interest: Double) {
+        var out = (dividends: 0.0, interest: 0.0)
+        for t in statements.flatMap(\.transactions) where t.amount > 0 && t.date.hasPrefix("\(year)-") {
+            if t.description.range(of: #"\bdiv(idend)?s?\b"#, options: [.regularExpression, .caseInsensitive]) != nil { out.dividends += t.amount }
+            else if t.description.range(of: #"\binterest\b"#, options: [.regularExpression, .caseInsensitive]) != nil { out.interest += t.amount }
+        }
+        return out
+    }
+}
+
+/// "Earned this year": dividends and interest paid in, from statements. Nothing when both are zero.
+struct EarnedThisYearCard: View {
+    let statements: [Statement]
+
+    var body: some View {
+        let e = RecentActivity.earned(statements)
+        if e.dividends > 0 || e.interest > 0 {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("EARNED THIS YEAR").font(.caption2.weight(.bold)).foregroundStyle(.secondary).tracking(1.0)
+                ForEach([("Dividends", e.dividends), ("Interest", e.interest)].filter { $0.1 > 0 }, id: \.0) { label, v in
+                    HStack {
+                        Text(label).font(.subheadline)
+                        Spacer()
+                        Text("+" + CurrencyFormatter.formatPrice(v)).font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Palette.successGreen)
+                    }
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
 }
 
 /// "Recent activity": the last few transactions, money in green. Nothing without statements.

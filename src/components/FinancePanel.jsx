@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1676,6 +1676,23 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           <>
             <MoneyGlance recurring={recurring} cashflow={cashflow} insights={insights} income={income} cash={cashValue} dark={dark} t={t} />
             <ReviewQueue statements={statementFiles} onChanged={refreshStatements} t={t} />
+            {(() => {
+              const e = earnedThisYear(statementFiles);
+              if (e.dividends <= 0 && e.interest <= 0) return null;
+              return (
+                <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+                  <div style={sectionStyle}>
+                    <div style={labelStyle}>Earned This Year</div>
+                    {[['Dividends', e.dividends], ['Interest', e.interest]].filter(([, v]) => v > 0).map(([label, v]) => (
+                      <div key={label} style={rowStyle}>
+                        <span style={{ fontSize: 14 }}>{label}</span>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: t.green, fontVariantNumeric: 'tabular-nums' }}>+{formatCurrency(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              );
+            })()}
             {recentActivity(statementFiles).length > 0 && (
               <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
                 <div style={sectionStyle}>

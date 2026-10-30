@@ -195,6 +195,8 @@ struct PortfolioView: View {
 
                                 .padding(.horizontal)
 
+                            EarnedThisYearCard(statements: appState.statements)
+                                .padding(.horizontal)
                             RecentActivityCard(statements: appState.statements)
                                 .padding(.horizontal)
 

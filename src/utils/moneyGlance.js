@@ -128,3 +128,15 @@ export function recentActivity(statements = [], n = 5) {
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
     .slice(0, n);
 }
+
+// Dividends and interest paid to you this year, read from statement descriptions. Mirrors RecentActivity.earned.
+// ponytail: matches "dividend"/"div" and "interest" in the description; a bank that words it otherwise reads as zero.
+export function earnedThisYear(statements = [], year = new Date().getFullYear()) {
+  const out = { dividends: 0, interest: 0 };
+  for (const t of statements.flatMap((s) => s.transactions || [])) {
+    if (!(t?.amount > 0) || !String(t.date || '').startsWith(`${year}-`)) continue;
+    if (/\bdiv(idend)?s?\b/i.test(t.description || '')) out.dividends += t.amount;
+    else if (/\binterest\b/i.test(t.description || '')) out.interest += t.amount;
+  }
+  return out;
+}
