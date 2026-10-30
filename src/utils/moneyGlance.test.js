@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -103,5 +103,16 @@ describe('earnedThisYear', () => {
       { date: '2026-05-01', description: 'Interest charge', amount: -3 }, { date: '2026-05-02', description: 'Diversity fund', amount: 5 },
     ] }];
     expect(earnedThisYear(s, 2026)).toEqual({ dividends: 4, interest: 0.12 });
+  });
+});
+
+describe('greeting and sinceLastVisit', () => {
+  it('greets by the hour and says what moved since the last visit', () => {
+    expect([greeting(8), greeting(14), greeting(21), greeting(2)]).toEqual(['Good morning', 'Good afternoon', 'Good evening', 'Good evening']);
+    const now = new Date(2026, 9, 30, 9);
+    expect(sinceLastVisit({ value: 100, at: now.getTime() - 30 * 3600000 }, 112.4, now)).toEqual({ diff: 12.400000000000006, when: 'yesterday' });
+    expect(sinceLastVisit({ value: 100, at: now.getTime() - 5 * 86400000 }, 90, now).when).toBe('5 days ago');
+    expect(sinceLastVisit({ value: 100, at: now.getTime() - 600000 }, 90, now)).toBeNull();
+    expect(sinceLastVisit(null, 90, now)).toBeNull();
   });
 });

@@ -76,7 +76,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Recent activity: the last few transactions on the spending screen | Betterment, SoFi | S | 83.0 | done 83.0.0 |
 | Dividends received this year, read from statements | Betterment | S | 84.0 | done 84.0.0 |
 | Interest earned this year, read from statements | Wealthfront, SoFi | S | 84.0 | done 84.0.0, same card |
-| A greeting over the portfolio with what changed since your last visit | Betterment | S | 85.0 | open |
+| A greeting over the portfolio with what changed since your last visit | Betterment | S | 85.0 | done 85.0.0 |
 | Concentration flag when one holding is over a quarter of the portfolio | Simply Wall St | S | 86.0 | open |
 | Analyst price target and consensus on a stock page | Simply Wall St, Stash | S | 87.0 | open, Yahoo `financialData` |
 | Tap an account to see its recent transactions | Betterment, SoFi | M | 88.0 | open |

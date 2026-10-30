@@ -441,6 +441,7 @@ struct PortfolioView: View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
                 if let portfolio = resolvedPortfolio {
+                    if appState.isLoggedIn { GreetingLine(total: portfolio.totalValue) }
                     Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
                         .font(.system(size: 32, weight: .heavy))
                         .foregroundStyle(Palette.text)

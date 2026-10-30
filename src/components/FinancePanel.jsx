@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -738,6 +738,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [holdingFilter, setHoldingFilter] = useState('All');
   const [importError, setImportError] = useState(null);
   const [statementFiles, setStatementFiles] = useState([]);
+  // Net worth as of the last visit, read once; this visit's value is written for next time.
+  const [lastVisit] = useState(() => { try { return JSON.parse(localStorage.getItem('epiphany_last_visit') || 'null'); } catch { return null; } });
   const [recurring, setRecurring] = useState([]);
   const [cashflow, setCashflow] = useState([]);
   const [income, setIncome] = useState([]);
@@ -788,6 +790,10 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   };
 
   // Holdings are priced in their listing currency and cash in CAD; the pies add the two, so holdings go to CAD first.
+  useEffect(() => {
+    if (!portfolioFetchedAt || isDemo || !Number.isFinite(netWorth)) return;
+    try { localStorage.setItem('epiphany_last_visit', JSON.stringify({ value: netWorth, at: Date.now() })); } catch { /* private mode */ }
+  }, [netWorth, isDemo, portfolioFetchedAt]);
   const holdingsCad = holdings.map((h) => ({ ...h, value: toCad(h.value, quoteCurrency(h.symbol), usdPerCad) ?? 0 }));
   const pieData = [
     ...holdingsCad.filter((holding) => holding.value > 0).map((holding) => ({ label: holding.symbol, value: holding.value })),
@@ -1029,6 +1035,15 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       </div>
 
       <div style={{ padding: '16px 16px 12px' }}>
+        {isAuthenticated && !isDemo && (() => {
+          const since = sinceLastVisit(lastVisit, netWorth);
+          return (
+            <div style={{ fontSize: 14, fontWeight: 600, color: t.text, marginBottom: 8 }}>
+              {greeting(new Date().getHours())}.
+              {since && <span style={{ fontWeight: 500, color: since.diff >= 0 ? t.green : t.red }}> {since.diff >= 0 ? 'Up' : 'Down'} {formatCurrency(Math.abs(since.diff), 'CAD')} since {since.when}.</span>}
+            </div>
+          );
+        })()}
         <div style={{ fontSize: 11, color: t.textTertiary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Net Worth</div>
         <div style={{ fontSize: 'clamp(28px, 6vw, 40px)', fontWeight: 700, color: netWorth >= 0 ? t.text : t.red, fontVariantNumeric: 'tabular-nums', letterSpacing: '-1.5px', lineHeight: 1 }}>
           {formatCurrency(netWorth, 'CAD')}

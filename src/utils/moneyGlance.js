@@ -140,3 +140,16 @@ export function earnedThisYear(statements = [], year = new Date().getFullYear())
   }
   return out;
 }
+
+// "Good morning" by the hour, and what net worth did since the last visit ("Up CA$12.40 since yesterday").
+// Mirrors Greeting in Shared/Greeting.swift.
+export const greeting = (hour) => (hour < 5 ? 'Good evening' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
+export function sinceLastVisit(prev, value, now = new Date()) {
+  if (!prev || typeof prev.value !== 'number' || !(prev.at > 0) || typeof value !== 'number') return null;
+  const diff = value - prev.value;
+  if (Math.abs(diff) < 0.01) return null;
+  const hours = (now.getTime() - prev.at) / 3600000;
+  if (hours < 1) return null;
+  const when = hours < 24 ? 'earlier today' : hours < 48 ? 'yesterday' : `${Math.floor(hours / 24)} days ago`;
+  return { diff, when };
+}

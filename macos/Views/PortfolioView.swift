@@ -314,6 +314,7 @@ struct PortfolioView: View {
                 }
             }
             VStack(spacing: 8) {
+                if appState.isLoggedIn { GreetingLine(total: portfolio.totalValue) }
                 Text("Total Value")
                     .font(.caption)
                     .foregroundStyle(.secondary)
