@@ -28,7 +28,7 @@ A push deploys nothing. CI only runs tests. Native ships with `asc workflow run 
 - Docs: `docs/` (API, ARCHITECTURE, LOOP-HANDOFF). Old notes: `docs/reference/`.
 
 ## Versioning
-Semver, honestly. A feature is a minor (5.1.0), a fix is a patch (5.1.1), a major only for a big change to how the app works (a redesign, a new tab, trading) and only on Joshua's call. Never one major per roadmap row and never a loop target like "to v110": loops run to the end of a list, not to a number. The 5.0.0 to 102.0.0 commits were that mistake; App Store 5.0.0 ships them together.
+Semver, honestly. A feature is a minor (5.1.0), a fix is a patch (5.1.1), a major only for a big change to how the app works (a redesign, a new tab, trading) and only on Joshua's call. Never one major per roadmap row and never a loop target like "to v110": loops run to the end of a list, not to a number. The 5.0.0 to 102.0.0 commits were that mistake; App Store 5.0.0 ships them together. Each major ships a Mobbin pass (a new roadmap table) and a new commercial made with the opus-ad skill.
 
 ## The loop
 Handoff and restart prompt: [docs/LOOP-HANDOFF.md](docs/LOOP-HANDOFF.md).

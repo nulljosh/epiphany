@@ -25,7 +25,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Next, in order
 
-1. 6.1.0: rain radar plays the last two hours. Then 6.2 to 6.6 from Mobbin pass 11; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
+1. The 6.0 commercial with the opus-ad skill (every major gets one, Joshua 2026-10-30; held for weekly usage and disk). Then 6.1.0: rain radar plays the last two hours. Then 6.2 to 6.6 from Mobbin pass 11; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
 2. Confirm the first `portfolio_history` row after 21:30 UTC, then 28.0 and 37.0 once a few weeks exist down that table (38.0, the daily value snapshot cron, unblocks 28.0 and 37.0), and 40.0 is the next Mobbin pass. The 29.0 leftovers (Sankey, incident status) and 28.0 once a value history exists. 18.0 trading waits on Joshua. APNs push (#180) waits on an APNs key.
 3. When Apple clears 4.0.0, refresh the App Store screenshots (#145, #153) and submit the newest build on Joshua's yes.
 
