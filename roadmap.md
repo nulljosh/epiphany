@@ -67,6 +67,22 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
 
+## Mobbin pass 9 (90.0, 2026-10-30: Origin, Cleo, M1 Finance, eToro)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| "Due in 3 days" on upcoming bills | Origin | S | 91.0 | open |
+| This month's spending day by day against last month's | Origin | M | 92.0 | open |
+| "Spent less than you earned in 4 of the last 6 months", with a dot per month | Cleo | S | 93.0 | open |
+| A repeat mark on recurring charges in Recent Activity | Origin | S | 94.0 | open |
+| Yield on each holding row | M1 Finance | S | 95.0 | open |
+| Your yearly dividend from a stock, in its Your Position card | M1 Finance | S | 96.0 | open |
+| Biggest single expense this month as an insight | Origin | S | 97.0 | open |
+| The last seven days of spending as daily bars | Origin | S | 98.0 | open |
+| Polish pass over the cards 91 to 98 | apple skill | S | 99.0 | open |
+
+Skipped: AI advisor chat and partner sharing (Origin, M1), cash advances, credit building and the money quiz (Cleo), margin loans and auto-invest (M1, a brokerage), copy trading (eToro, social). The apple audit found no teal, purple or indigo.
+
 ## Mobbin pass 8 (80.0, 2026-10-30: Simply Wall St, Wealthfront, Betterment, SoFi, Stash)
 
 | Gap | Seen in | Size | Version | Status |
@@ -163,7 +179,10 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 71 to 79 | One row each from "Mobbin pass 7" (done 79.0.0) |
 | 80 | Mobbin pass 8 plus an apple audit (done 80.0.0) |
 | 81 to 89 | One row each from "Mobbin pass 8" (done 89.0.0) |
-| 90 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 90 | Mobbin pass 9 plus an apple audit (done 90.0.0) |
+| 91 to 99 | One row each from "Mobbin pass 9" |
+| 100 | Mobbin pass 10, an apple audit, and the 58 and 59 rows if snapshots exist |
+| after 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
 - [ ] iPhone and Mac allocation donut adds USD holdings to CAD cash at face value (the web was fixed in 49.0.0); the native apps need the CADUSD=X rate first.

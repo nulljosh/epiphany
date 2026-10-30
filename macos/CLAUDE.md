@@ -1,6 +1,6 @@
 # Epiphany macOS
 
-v89.0.0. Mac app with five sections (Situation, Markets, People, Portfolio, Settings) on a Liquid Glass bottom bar. Boots with the same lyre splash as iPhone. Shared Swift lives in `../Shared`.
+v90.0.0. Mac app with five sections (Situation, Markets, People, Portfolio, Settings) on a Liquid Glass bottom bar. Boots with the same lyre splash as iPhone. Shared Swift lives in `../Shared`.
 
 ## Run
 
