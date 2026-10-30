@@ -608,6 +608,9 @@ struct PortfolioView: View {
                     MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights)
                         .padding(.horizontal)
 
+                    ReviewQueueCard()
+                        .padding(.horizontal)
+
                     scenarioToggles
                         .padding(.horizontal)
 

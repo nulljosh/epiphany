@@ -27,7 +27,7 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | More alert kinds: 52 week high or low, and earnings day for a followed stock, as toggles | Yahoo | S | 21.0 | done 21.0.0 |
 | Budget left per day ("$48 a day for 13 days") on the budget card | Rocket Money | S | 22.0 | done 22.0.0 |
 | Live price chip under a headline for each symbol it names | Yahoo | S | 23.0 | done 23.0.0 (iPhone and Mac; the web has no headline list) |
-| Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | open (#179) |
+| Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | done 24.0.0 |
 | Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | open |
 | Allocation donut on the portfolio (stocks, crypto, cash, funds) | Delta, Robinhood | M | 26.0 | open |
 | RSI and MACD in a pane under the price chart, not only in the signal | TradingView, Webull | M | 27.0 | open |

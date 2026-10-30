@@ -642,6 +642,14 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         return wrapper.statements
     }
 
+    func markStatementsReviewed() async throws -> [Statement] {
+        var request = URLRequest(url: try makeURL("/api/statements", query: ["action": "mark-reviewed"]))
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Data("{}".utf8)
+        return try decode(StatementsWrapper.self, from: try await perform(request)).statements
+    }
+
     func editStatementTransaction(id: String, transactionId: String, category: String) async throws -> [Statement] {
         let url = try makeURL("/api/statements", query: ["action": "edit-transaction"])
         var request = URLRequest(url: url)

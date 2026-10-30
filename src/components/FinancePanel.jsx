@@ -9,6 +9,7 @@ import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
+import ReviewQueue from './ReviewQueue';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1452,6 +1453,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         {tab === 'spending' && (
           <>
             <MoneyGlance recurring={recurring} cashflow={cashflow} insights={insights} dark={dark} t={t} />
+            <ReviewQueue statements={statementFiles} onChanged={refreshStatements} t={t} />
             {importError && (
               <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,69,58,0.15)', borderRadius: 8, fontSize: 11, color: t.red }}>
                 {importError}

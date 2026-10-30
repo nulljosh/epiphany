@@ -37,6 +37,8 @@ struct Transaction: Codable, Identifiable {
     let amount: Double
     let balance: Double?
     let category: String?
+    /// Waved through the review queue without a category ("Mark all reviewed").
+    var reviewed: Bool? = nil
 
     var id: String {
         "\(date)|\(description)|\(amount)"
@@ -48,6 +50,7 @@ struct Transaction: Codable, Identifiable {
         case amount
         case balance
         case category
+        case reviewed
     }
 
     init(date: String, description: String, amount: Double, balance: Double? = nil, category: String? = nil) {
@@ -65,5 +68,9 @@ struct Transaction: Codable, Identifiable {
         amount = try container.decodeIfPresent(Double.self, forKey: .amount) ?? 0
         balance = try container.decodeIfPresent(Double.self, forKey: .balance)
         category = try container.decodeIfPresent(String.self, forKey: .category)
+        reviewed = try container.decodeIfPresent(Bool.self, forKey: .reviewed)
     }
+
+    /// In the review queue: nothing categorized it and nobody waved it through. Mirrors needsReview on the server.
+    var needsReview: Bool { (category ?? "uncategorized") == "uncategorized" && reviewed != true }
 }

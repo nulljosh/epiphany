@@ -184,6 +184,11 @@ struct PortfolioView: View {
                             MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights)
                                 .padding(.horizontal)
 
+
+                            ReviewQueueCard()
+
+                                .padding(.horizontal)
+
                             if let portfolio = resolvedPortfolio, !portfolio.holdings.isEmpty {
                                 holdingsContent(portfolio)
                             }

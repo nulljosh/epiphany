@@ -231,6 +231,9 @@ export function normalizeMerchant(description = '') {
 
 // rules maps a merchant key to the category the user chose for it. Returns the
 // same transaction objects when nothing changes, so callers can detect a no-op.
+// The review queue: rows nothing could categorize that the person hasn't waved through yet.
+export const needsReview = (txn) => (!txn?.category || txn.category === 'uncategorized') && !txn?.reviewed;
+
 export function applyCategoryRules(transactions = [], rules = {}) {
   if (!rules || typeof rules !== 'object') return transactions;
   return transactions.map((txn) => {

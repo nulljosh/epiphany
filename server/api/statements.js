@@ -13,6 +13,7 @@ import {
   summarizeCashflow,
   findInsights,
   MIN_MERCHANT_KEY_LENGTH,
+  needsReview,
 } from './statements-shared.js';
 
 function transactionId(txn) {
@@ -236,6 +237,17 @@ export default async function handler(req, res) {
       }
       await kv.del(`statement-file:${id}`);
 
+      return res.status(200).json({ ok: true, statements: nextStatements });
+    }
+
+    // Mark all reviewed: every row still in the review queue leaves it as is.
+    if (req.method === 'PATCH' && action === 'mark-reviewed') {
+      const statements = await kv.get(statementsKey);
+      const list = Array.isArray(statements) ? statements : [];
+      const nextStatements = list.map((item) => (item?.transactions || []).some(needsReview)
+        ? { ...item, transactions: item.transactions.map((txn) => (needsReview(txn) ? { ...txn, reviewed: true } : txn)) }
+        : item);
+      await kv.set(statementsKey, nextStatements);
       return res.status(200).json({ ok: true, statements: nextStatements });
     }
 

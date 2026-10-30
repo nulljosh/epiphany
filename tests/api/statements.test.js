@@ -274,4 +274,14 @@ describe('categorization that sticks', () => {
     expect(res.body.statements[0].transactions.map((t) => t.category)).toEqual(['dining', 'uncategorized']);
     expect(store.has('category-rules:user-1')).toBe(false);
   });
+
+  it('marks every row in the review queue reviewed and leaves categorized rows alone', async () => {
+    store.get('statements:user-1')[0].transactions[1].category = 'gas';
+    const res = mockRes();
+    await handler(mockReq({ method: 'PATCH', query: { action: 'mark-reviewed' }, body: {} }), res);
+    const [jan, feb] = res.body.statements;
+    expect(jan.transactions.map((t) => !!t.reviewed)).toEqual([true, false]);
+    expect(feb.transactions[0].reviewed).toBe(true);
+    expect(store.get('statements:user-1')[1].transactions[0].reviewed).toBe(true);
+  });
 });
