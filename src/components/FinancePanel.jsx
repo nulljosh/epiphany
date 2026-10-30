@@ -740,6 +740,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [statementFiles, setStatementFiles] = useState([]);
   // Net worth as of the last visit, read once; this visit's value is written for next time.
   const [lastVisit] = useState(() => { try { return JSON.parse(localStorage.getItem('epiphany_last_visit') || 'null'); } catch { return null; } });
+  const [openAccount, setOpenAccount] = useState(null);
   const [recurring, setRecurring] = useState([]);
   const [cashflow, setCashflow] = useState([]);
   const [income, setIncome] = useState([]);
@@ -1308,14 +1309,41 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                       <span>{capitalize(group.type)}</span>
                       <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(group.total, 'CAD')}</span>
                     </div>
-                    {group.accounts.map((account, index) => (
-                      <div key={`${account.name}-${index}`} style={rowStyle}>
-                        <div style={{ fontWeight: 600, fontSize: 14 }}>{account.name}</div>
-                        <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
-                          {formatCurrency(account.balance, account.currency)}
+                    {group.accounts.map((account, index) => {
+                      // Tap an account to see what's in it: its holdings and the cash not invested.
+                      const inside = holdings.filter((h) => h.account === account.name && h.value > 0);
+                      const open = openAccount === account.name;
+                      const canOpen = inside.length > 0 || account.cash != null;
+                      return (
+                        <div key={`${account.name}-${index}`}>
+                          <div role={canOpen ? 'button' : undefined} tabIndex={canOpen ? 0 : undefined} aria-expanded={canOpen ? open : undefined}
+                            onClick={() => canOpen && setOpenAccount(open ? null : account.name)}
+                            onKeyDown={(e) => canOpen && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setOpenAccount(open ? null : account.name))}
+                            style={{ ...rowStyle, cursor: canOpen ? 'pointer' : 'default' }}>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{canOpen ? (open ? '▾ ' : '▸ ') : ''}{account.name}</div>
+                            <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+                              {formatCurrency(account.balance, account.currency)}
+                            </div>
+                          </div>
+                          {open && (
+                            <div style={{ padding: '4px 0 8px 16px' }}>
+                              {inside.map((h) => (
+                                <div key={h.symbol} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: t.textSecondary, padding: '3px 0' }}>
+                                  <span>{h.symbol} · {Number(h.shares).toLocaleString(undefined, { maximumFractionDigits: 6 })} shares</span>
+                                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(h.value)}</span>
+                                </div>
+                              ))}
+                              {account.cash != null && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: t.textSecondary, padding: '3px 0' }}>
+                                  <span>Cash</span>
+                                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(account.cash, 'CAD')}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))}
               </div>

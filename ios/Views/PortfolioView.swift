@@ -502,7 +502,7 @@ struct PortfolioView: View {
     private func accountsBreakdown(_ accounts: [FinanceData.Account]) -> some View {
         guard accounts.contains(where: { $0.balance >= 1.0 }) else { return AnyView(EmptyView()) }
         return AnyView(sectionCard("Accounts") {
-            AccountGroupsList(accounts: accounts)
+            AccountGroupsList(accounts: accounts, holdings: appState.financeData?.holdings ?? [], stocks: appState.stocks)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 16)
         })

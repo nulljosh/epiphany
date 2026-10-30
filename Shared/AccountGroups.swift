@@ -14,9 +14,12 @@ enum AccountGroups {
     }
 }
 
-/// "Accounts" with a header and total per type.
+/// "Accounts" with a header and total per type. Tap an account to see what's in it: holdings and uninvested cash.
 struct AccountGroupsList: View {
     let accounts: [FinanceData.Account]
+    var holdings: [FinanceData.Holding] = []
+    var stocks: [Stock] = []
+    @State private var open: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -30,10 +33,41 @@ struct AccountGroupsList: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     ForEach(group.accounts) { account in
-                        HStack {
-                            Text(account.displayName).font(.callout.weight(.semibold))
-                            Spacer(minLength: 12)
-                            Text(CurrencyFormatter.formatPrice(account.balance)).font(.callout.weight(.semibold)).monospacedDigit()
+                        let inside = holdings.filter { $0.account == account.name && $0.shares > 0 }
+                        let canOpen = !inside.isEmpty || account.cash != nil
+                        Button {
+                            if canOpen { withAnimation(.snappy) { open = open == account.name ? nil : account.name } }
+                        } label: {
+                            HStack {
+                                if canOpen {
+                                    Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+                                        .rotationEffect(.degrees(open == account.name ? 90 : 0))
+                                }
+                                Text(account.displayName).font(.callout.weight(.semibold))
+                                Spacer(minLength: 12)
+                                Text(CurrencyFormatter.formatPrice(account.balance)).font(.callout.weight(.semibold)).monospacedDigit()
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(canOpen ? "Shows what's in this account" : "")
+                        if open == account.name {
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(inside, id: \.symbol) { h in
+                                    let price = stocks.first { $0.symbol == h.symbol }?.price ?? (h.marketValue.map { $0 / h.shares } ?? 0)
+                                    HStack {
+                                        Text("\(h.symbol) · \(h.shares.formatted(.number.precision(.fractionLength(0...6)))) shares")
+                                        Spacer()
+                                        Text(CurrencyFormatter.formatPrice(price * h.shares)).monospacedDigit()
+                                    }
+                                }
+                                if let cash = account.cash {
+                                    HStack { Text("Cash"); Spacer(); Text(CurrencyFormatter.formatPrice(cash)).monospacedDigit() }
+                                }
+                            }
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 18)
                         }
                     }
                 }

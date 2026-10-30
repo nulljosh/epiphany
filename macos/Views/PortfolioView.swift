@@ -310,7 +310,7 @@ struct PortfolioView: View {
                 .padding(.horizontal)
             if let accounts = appState.financeData?.accounts, accounts.contains(where: { $0.balance >= 1 }) {
                 sectionCard("Accounts") {
-                    AccountGroupsList(accounts: accounts).padding()
+                    AccountGroupsList(accounts: accounts, holdings: appState.financeData?.holdings ?? [], stocks: appState.stocks).padding()
                 }
             }
             VStack(spacing: 8) {
