@@ -319,10 +319,15 @@ struct PortfolioView: View {
                     .font(.system(size: 44, weight: .bold))
                 HStack(spacing: 4) {
                     Text(CurrencyFormatter.formatSignedPrice(portfolio.dayChange))
-                    Text(String(format: "(%.2f%%)", portfolio.dayChangePercent))
+                    Text(String(format: "(%.2f%%) today", portfolio.dayChangePercent))
                 }
                 .font(.caption)
                 .foregroundStyle(changeColor)
+                if let total = Allocation.unrealizedGain(portfolio.holdings) {
+                    Text("\(CurrencyFormatter.formatSignedPrice(total.gain)) total")
+                        .font(.caption)
+                        .foregroundStyle(total.gain >= 0 ? Palette.successGreen : Palette.dangerRed)
+                }
             }
             .padding(.top, 6)
 

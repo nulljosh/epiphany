@@ -1018,6 +1018,20 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           {totalDebt > 0 && <span style={{ color: t.red }}>Debt: -{formatCurrency(totalDebt)}</span>}
         </div>
         {(() => {
+          // Holdings only: today's move in CAD and the unrealized gain where there's a cost basis.
+          const day = holdingsCad.reduce((sum, h) => sum + (h.value > 0 ? todayGain(h.value, h.changePercent || 0) : 0), 0);
+          const total = unrealizedGain(holdings);
+          if (Math.abs(day) < 0.005 && !total) return null;
+          // Today is summed in CAD; the total gain stays in listing currency, like the Unrealized gain row.
+          const sign = (n, cur) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n), cur)}`;
+          return (
+            <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap', fontVariantNumeric: 'tabular-nums' }}>
+              {Math.abs(day) >= 0.005 && <span style={{ color: day >= 0 ? t.green : t.red }}>{sign(day, 'CAD')} ({(day / Math.max(stocksValue - day, 0.01) * 100).toFixed(2)}%) today</span>}
+              {total && <span style={{ color: total.gain >= 0 ? t.green : t.red }}>{sign(total.gain)} total</span>}
+            </div>
+          );
+        })()}
+        {(() => {
           const ageMs = portfolioFetchedAt ? Date.now() - portfolioFetchedAt.getTime() : null;
           if (isAuthenticated && (ageMs === null || ageMs > 60 * 60 * 1000)) {
             return <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', color: '#d4a843', background: 'rgba(212,168,67,0.15)', borderRadius: 4, padding: '2px 6px', marginTop: 4, display: 'inline-block' }}>STALE</span>;
