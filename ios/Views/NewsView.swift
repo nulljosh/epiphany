@@ -116,6 +116,8 @@ private struct NewsRow: View {
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(3)
 
+                HeadlineChips(title: cleanTitle)
+
                 Text(bylineText)
                     .font(.caption2)
                     .foregroundStyle(.secondary)

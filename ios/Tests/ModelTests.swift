@@ -377,6 +377,13 @@ final class FinanceDataModelTests: XCTestCase {
         XCTAssertEqual(other.typeLabel, "Savings")
     }
 
+    func testHeadlineSymbols() {
+        XCTAssertEqual(HeadlineSymbols.shortName("Apple Inc."), "Apple")
+        XCTAssertNil(HeadlineSymbols.shortName("General Motors Company"))
+        XCTAssertNil(HeadlineSymbols.shortName("IBM"))  // too short to trust as a word; the ticker still matches
+        XCTAssertEqual(HeadlineSymbols.shortName("NVIDIA Corporation"), "NVIDIA")
+    }
+
     func testBudgetPerDayLeft() {
         let food = FinanceData.Budget.BudgetLine(name: "Food", amount: 700, frequency: "monthly", note: nil)
         let oct19 = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 19))!

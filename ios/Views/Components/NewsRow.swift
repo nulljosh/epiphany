@@ -39,6 +39,8 @@ struct CompactNewsRow: View {
                     .lineLimit(2)
                     .foregroundStyle(.primary)
 
+                HeadlineChips(title: article.title)
+
                 HStack(spacing: 6) {
                     Text(article.source)
                         .font(.caption2.weight(.medium))
