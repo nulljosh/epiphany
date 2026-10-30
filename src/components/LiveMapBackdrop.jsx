@@ -196,7 +196,7 @@ function addClusterMarker(maplibregl, map, markersArray, lon, lat, count, color)
   markersArray.push(new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map));
 }
 
-function buildPopupHTML(data) {
+export function buildPopupHTML(data) {
   const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   return `<div style="font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif">
     ${data.image ? `<img src="${esc(data.image)}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px" />` : ''}
@@ -987,7 +987,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       el.title = inc.name || inc.type || 'Emergency service';
       el._layerType = 'incidents';
       const popup = new maplibreRef.current.Popup({ offset: 10, closeButton: false, maxWidth: '200px', className: 'epiphany-map-popup' })
-        .setHTML(`<b>${inc.name || inc.type}</b><br><span style="opacity:0.6;font-size:11px">${inc.address || ''}</span>`);
+        .setHTML(buildPopupHTML({ title: inc.name || inc.type, detail: inc.address, level: 'emergency services', source: 'OpenStreetMap' }));
       new maplibreRef.current.Marker({ element: el }).setLngLat([lon, lat]).setPopup(popup).addTo(mapInstanceRef.current);
       markersRef.current.push({ remove: () => el.remove() });
     });

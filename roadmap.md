@@ -71,14 +71,13 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 21 to 29 | One row each from "Mobbin pass 2" (done except 28.0 and two 29.0 rows) |
 | 30 | Mobbin pass 3 plus an apple audit (done 30.0.0) |
 | 31 to 38 | One row each from "Mobbin pass 3" (done except 35, parked, and 37, waiting on history) |
+| 39 | Map popups: OpenStreetMap names escaped in the emergency pins; event filtering and event detail were already covered by 10.0 (done 39.0.0) |
 | 40 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
-- [ ] Better event filtering on the map
-- [ ] More info on event tap
 - [ ] Search UX pass beyond the contrast fix
 
 ## 2026-10-04 map QA leftovers (open)
