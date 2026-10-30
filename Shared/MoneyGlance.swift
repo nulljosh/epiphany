@@ -182,6 +182,22 @@ struct MoneyGlance: View {
     private var cashflowChart: some View {
         VStack(alignment: .leading, spacing: 10) {
             heading("MONEY IN VS SPENDING")
+            if cashflow.count > 1 {
+                // Months where money in beat spending, as a count and a dot per month.
+                HStack {
+                    Text("Spent less than you earned in \(cashflow.filter { $0.in > $0.out }.count) of the last \(cashflow.count) months")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer(minLength: 8)
+                    HStack(spacing: 4) {
+                        ForEach(cashflow) { m in
+                            Circle().strokeBorder(m.in > m.out ? Palette.successGreen : Color.secondary, lineWidth: 1.5)
+                                .background(Circle().fill(m.in > m.out ? Palette.successGreen : .clear))
+                                .frame(width: 10, height: 10)
+                        }
+                    }
+                    .accessibilityHidden(true)
+                }
+            }
             Chart {
                 ForEach(cashflow) { m in
                     BarMark(x: .value("Month", m.label), y: .value("Amount", m.in))

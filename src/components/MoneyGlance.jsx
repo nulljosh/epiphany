@@ -153,6 +153,18 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
             <span>Money in vs spending</span>
             <span><span style={{ color: t.green }}>In</span> · <span style={{ color: t.red }}>Spent</span></span>
           </div>
+          {cashflow.length > 1 && (() => {
+            // Months where money in beat spending, as a count and a dot per month.
+            const kept = cashflow.filter((m) => m.in > m.out).length;
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 13, fontWeight: 600 }}>
+                <span>Spent less than you earned in {kept} of the last {cashflow.length} months</span>
+                <span style={{ display: 'flex', gap: 4, marginLeft: 'auto' }} aria-hidden="true">
+                  {cashflow.map((m) => <span key={m.month} title={monthName(m.month)} style={{ width: 10, height: 10, borderRadius: 5, background: m.in > m.out ? t.green : 'transparent', border: `1.5px solid ${m.in > m.out ? t.green : t.textTertiary}` }} />)}
+                </span>
+              </div>
+            );
+          })()}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 120 }}>
             {cashflow.map((m) => (
               <div key={m.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%' }}>

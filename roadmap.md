@@ -73,7 +73,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 |---|---|---|---|---|
 | "Due in 3 days" on upcoming bills | Origin | S | 91.0 | done 91.0.0 |
 | This month's spending day by day against last month's | Origin | M | 92.0 | done 92.0.0 |
-| "Spent less than you earned in 4 of the last 6 months", with a dot per month | Cleo | S | 93.0 | open |
+| "Spent less than you earned in 4 of the last 6 months", with a dot per month | Cleo | S | 93.0 | done 93.0.0 |
 | A repeat mark on recurring charges in Recent Activity | Origin | S | 94.0 | open |
 | Yield on each holding row | M1 Finance | S | 95.0 | open |
 | Your yearly dividend from a stock, in its Your Position card | M1 Finance | S | 96.0 | open |
