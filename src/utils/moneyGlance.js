@@ -101,3 +101,6 @@ export function restOfMonth(bills = [], income = [], today = new Date()) {
   const out = days > 0 ? -sum(bills, []) : 0;
   return { in: inn, out, left: inn - out, month: today.toLocaleDateString(undefined, { month: 'long' }) };
 }
+
+// "+$954", "-$1.2K": short enough to sit under a bar. Mirrors MoneyGlance.compactSigned.
+export const compactSigned = (n) => `${n < 0 ? '-' : '+'}${Math.abs(n) >= 1000 ? `$${(Math.abs(n) / 1000).toFixed(1)}K` : `$${Math.round(Math.abs(n))}`}`;

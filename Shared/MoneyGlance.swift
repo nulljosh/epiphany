@@ -195,7 +195,24 @@ struct MoneyGlance: View {
             .chartForegroundStyleScale(["In": Palette.successGreen, "Spent": Palette.dangerRed])
             .chartLegend(position: .top, alignment: .trailing)
             .frame(height: 160)
+            // Net per month under the bars: what was left, or how far over.
+            HStack(spacing: 0) {
+                ForEach(cashflow) { m in
+                    Text(Self.compactSigned(m.in - m.out))
+                        .font(.caption2.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(m.in >= m.out ? Palette.successGreen : Palette.dangerRed)
+                        .frame(maxWidth: .infinity)
+                        .accessibilityLabel("\(m.label): net \(CurrencyFormatter.formatSignedPrice(m.in - m.out))")
+                }
+            }
         }
+    }
+
+    /// "+$954", "-$1.2K": short enough to sit under a bar. Mirrors compactSigned in moneyGlance.js.
+    static func compactSigned(_ n: Double) -> String {
+        let a = abs(n)
+        let body = a >= 1000 ? String(format: "$%.1fK", a / 1000) : String(format: "$%.0f", a)
+        return (n < 0 ? "-" : "+") + body
     }
 }
 

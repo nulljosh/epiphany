@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -68,5 +68,11 @@ describe('billsByMonth', () => {
     expect(g.map((m) => [m.month, m.total, m.items.map((b) => b.merchant)])).toEqual([
       ['2026-10', 40, ['gym']], ['2026-11', 1540, ['rent', 'gym']], ['2026-12', 1500, ['rent']],
     ]);
+  });
+});
+
+describe('compactSigned', () => {
+  it('signs and shortens', () => {
+    expect([compactSigned(953.75), compactSigned(-1234), compactSigned(0)]).toEqual(['+$954', '-$1.2K', '+$0']);
   });
 });

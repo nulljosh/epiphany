@@ -1,6 +1,6 @@
 import { Card } from './ui';
 import { formatCurrency } from '../utils/formatting';
-import { projectCash, leftThisMonth, billHistory, restOfMonth, billsByMonth } from '../utils/moneyGlance';
+import { projectCash, leftThisMonth, billHistory, restOfMonth, billsByMonth, compactSigned } from '../utils/moneyGlance';
 
 const label = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 };
 const monthName = (ym) => new Date(`${ym}-01T12:00:00`).toLocaleDateString(undefined, { month: 'short' });
@@ -162,6 +162,7 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
                   <div style={{ width: '40%', maxWidth: 18, height: `${(m.out / peak) * 100}%`, background: t.red, borderRadius: 3 }} />
                 </div>
                 <div style={{ fontSize: 10, color: t.textTertiary }}>{monthName(m.month)}</div>
+                <div style={{ fontSize: 10, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: m.in >= m.out ? t.green : t.red }}>{compactSigned(m.in - m.out)}</div>
               </div>
             ))}
           </div>
