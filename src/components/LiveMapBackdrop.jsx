@@ -4,6 +4,7 @@ import { routeHTML } from '../utils/flightRoute';
 import { SYSTEM_FONT } from '../utils/formatting';
 import { inWindow } from '../utils/mapWindow';
 import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
+import { alertHere } from '../utils/alertHere';
 
 // Brookswood/Langley, BC -- home base. Used while geolocation resolves and
 // as the fallback if IP geolocation fails or returns junk.
@@ -1590,6 +1591,18 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
           </div>}
         </section>
       )}
+      {(() => {
+        // A weather warning whose area covers the map's centre, worst first.
+        const here = mapLayers.weather !== false ? alertHere(payload.weatherAlerts, center.lon, center.lat) : null;
+        return here && (
+          <div role="status" style={{ position: 'absolute', top: 96, left: '50%', transform: 'translateX(-50%)', zIndex: 3, pointerEvents: 'none', maxWidth: 'calc(100% - 32px)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(2,6,23,0.78)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, padding: '6px 14px', color: '#f8fafc', fontSize: 12, fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif' }}>
+              <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 4, flex: 'none', background: ALERT_FILL[here.colour] || ALERT_FILL.yellow }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{here.event} here{here.area ? ` · ${here.area}` : ''}</span>
+            </div>
+          </div>
+        );
+      })()}
       {mapLayers.rain && rainIndex >= 0 && (
         <div style={{ position: 'absolute', bottom: 82, left: 12, zIndex: 3, pointerEvents: 'none' }}>
           <div style={{ background: 'rgba(2,6,23,0.72)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '5px 10px', color: '#e2e8f0', fontSize: 11, fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>

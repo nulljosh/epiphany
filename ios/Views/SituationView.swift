@@ -733,6 +733,11 @@ struct SituationView: View {
                 try? await Task.sleep(for: .seconds(600))
             }
         }
+        .overlay(alignment: .top) {
+            if showWeatherAlerts, let here = WeatherAlert.here(weatherAlerts, at: (visibleRegion ?? currentRegion).center) {
+                WarningBanner(alert: here).padding(.top, 140).allowsHitTesting(false)
+            }
+        }
         .overlay(alignment: .bottomLeading) {
             if showRainRadar, !radarFrames.isEmpty { RadarClock(frames: radarFrames).padding(.leading, 12).padding(.bottom, 96) }
         }

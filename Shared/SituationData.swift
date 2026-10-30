@@ -359,6 +359,29 @@ struct WeatherAlert: Codable, Identifiable {
         switch colour { case "red": .red; case "orange": .orange; default: .yellow }
     }
 
+    /// Whether the warned area covers a point (ray casting on each outer ring). Mirrors covers in alertHere.js.
+    func covers(_ p: CLLocationCoordinate2D) -> Bool {
+        polygons.contains { ring in
+            var inside = false
+            var j = ring.count - 1
+            for i in ring.indices {
+                let (a, b) = (ring[i], ring[j])
+                if (a.latitude > p.latitude) != (b.latitude > p.latitude),
+                   p.longitude < (b.longitude - a.longitude) * (p.latitude - a.latitude) / (b.latitude - a.latitude) + a.longitude {
+                    inside.toggle()
+                }
+                j = i
+            }
+            return inside
+        }
+    }
+
+    /// The worst warning (red, then orange, then yellow) whose area covers `p`.
+    static func here(_ alerts: [WeatherAlert], at p: CLLocationCoordinate2D) -> WeatherAlert? {
+        let rank = ["red": 3, "orange": 2, "yellow": 1]
+        return alerts.filter { $0.covers(p) }.max { (rank[$0.colour ?? ""] ?? 0) < (rank[$1.colour ?? ""] ?? 0) }
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, title, severity, summary, lat, lon, colour
         case shape = "geometry"

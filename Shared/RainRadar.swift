@@ -99,3 +99,19 @@ struct RadarClock: View {
         .allowsHitTesting(false)
     }
 }
+
+/// "Rainfall (warning) here · Metro Vancouver" across the top of the map when a warned area covers its centre.
+struct WarningBanner: View {
+    let alert: WeatherAlert
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle().fill(alert.fill).frame(width: 8, height: 8).accessibilityHidden(true)
+            Text(alert.title + " here").fontWeight(.semibold).lineLimit(1)
+        }
+        .font(.footnote)
+        .padding(.horizontal, 14).padding(.vertical, 7)
+        .background(.regularMaterial, in: Capsule())
+        .accessibilityElement(children: .combine)
+    }
+}
