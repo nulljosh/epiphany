@@ -810,6 +810,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           currentIndex={pagerItems.findIndex(s => s.symbol === selectedStock.symbol)}
           totalCount={pagerItems.length}
           onNavigate={(idx) => setSelectedStock(pagerItems[idx])}
+          marketPE={stocks?.SPY?.peRatio}
         />
       )}
 

@@ -60,3 +60,25 @@ struct PositionCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+/// A stock's P/E against the S&P 500's (SPY's), as one plain line. Mirrors valuationLine in allocation.js.
+enum Valuation {
+    static func line(pe: Double?, market: Double?) -> String? {
+        guard let pe, pe > 0, let market, market > 0 else { return nil }
+        let diff = Int((pe / market - 1) * 100 + (pe >= market ? 0.5 : -0.5))
+        let place = abs(diff) < 5 ? "about level with" : "\(abs(diff))% \(diff > 0 ? "above" : "below")"
+        return "P/E \(String(format: "%.1f", pe)) is \(place) the S&P 500's \(String(format: "%.1f", market))"
+    }
+}
+
+/// The valuation line under a stock's stats; nothing for SPY itself or without both P/Es.
+struct ValuationLine: View {
+    let stock: Stock
+    @Environment(AppState.self) private var appState
+
+    var body: some View {
+        if stock.symbol != "SPY", let text = Valuation.line(pe: stock.peRatio, market: appState.stocks.first { $0.symbol == "SPY" }?.peRatio) {
+            Text(text).font(.footnote).foregroundStyle(.secondary).padding(.horizontal)
+        }
+    }
+}

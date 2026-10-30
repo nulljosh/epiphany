@@ -77,7 +77,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Budget ring: how much is left of the month's total budget | Emma | S | 64.0 | done 64.0.0 |
 | Subscriptions split into active and stopped | Emma, PocketGuard | M | 65.0 | done 65.0.0 |
 | Accounts grouped by type with a total per group | Emma | M | 66.0 | done 66.0.0 |
-| Valuation line on a stock: its P/E against the S&P 500's | Finimize | S | 67.0 | open |
+| Valuation line on a stock: its P/E against the S&P 500's | Finimize | S | 67.0 | done 67.0.0 |
 | Top Spending steps back through past months | PocketGuard | S | 68.0 | open |
 | Read the daily brief aloud on device | Finimize | M | 69.0 | open |
 

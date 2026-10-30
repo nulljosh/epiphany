@@ -164,6 +164,8 @@ struct StockDetailView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
 
+                ValuationLine(stock: liveStock ?? stock)
+
                 if (liveStock ?? stock).earningsSoon, let ts = (liveStock ?? stock).nextEarnings {
                     Button {
                         addEarningsToCalendar(ts)

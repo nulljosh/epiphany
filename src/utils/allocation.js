@@ -106,3 +106,11 @@ export function groupAccounts(accounts = []) {
     .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
     .map((type) => ({ type, total: groups[type].reduce((s, a) => s + a.balance, 0), accounts: groups[type] }));
 }
+
+// A stock's P/E against the S&P 500's (SPY's), as one plain line. Mirrors Valuation.line in Shared/Position.swift.
+export function valuationLine(pe, marketPE) {
+  if (!(pe > 0) || !(marketPE > 0)) return null;
+  const diff = Math.round((pe / marketPE - 1) * 100);
+  const where = Math.abs(diff) < 5 ? 'about level with' : `${Math.abs(diff)}% ${diff > 0 ? 'above' : 'below'}`;
+  return `P/E ${pe.toFixed(1)} is ${where} the S&P 500's ${marketPE.toFixed(1)}`;
+}

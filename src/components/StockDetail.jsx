@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { createChart, ColorType, LineType, CrosshairMode, CandlestickSeries, BarSeries, LineSeries, AreaSeries, BaselineSeries, HistogramSeries } from 'lightweight-charts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 import { signal as computeSignal } from '../utils/indicators';
-import { position } from '../utils/allocation';
+import { position, valuationLine } from '../utils/allocation';
 import { storedHoldings } from '../hooks/usePortfolio';
 import { usePremium, showPricing, PREMIUM_INDICATORS } from '../context/PremiumContext.js';
 
@@ -287,7 +287,7 @@ const earningsSoon = (ts) => {
   return days > -1 && days <= 14;
 };
 
-export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount }) {
+export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount, marketPE }) {
   const [range, setRange] = useState('1mo');
   const [chartType, setChartType] = useState('heikinAshi');
   const [history, setHistory] = useState([]);
@@ -1203,6 +1203,10 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             </div>
           ))}
         </div>
+
+        {stock?.symbol !== 'SPY' && valuationLine(d.peRatio, marketPE) && (
+          <div style={{ fontSize: 13, color: t.textSecondary, margin: '-4px 2px 16px' }}>{valuationLine(d.peRatio, marketPE)}</div>
+        )}
 
         {/* News -- Apple Stocks style */}
         <div ref={newsRef} style={{ marginTop: 4 }}>

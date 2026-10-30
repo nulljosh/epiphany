@@ -150,6 +150,8 @@ struct StockDetailView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
 
+                ValuationLine(stock: stock)
+
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Related News")
                         .font(.headline)

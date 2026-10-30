@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts, valuationLine } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -56,5 +56,12 @@ describe('allocation', () => {
       { name: 'Gift', type: 'gift', balance: 5 }, { name: 'Spend', type: 'cash', balance: 0.32 }, { name: 'Old', type: 'cash', balance: 0 },
     ]);
     expect(g.map((x) => [x.type, x.total, x.accounts.length])).toEqual([['cash', 1000.32, 2], ['investment', 250, 1], ['gift', 5, 1]]);
+  });
+
+  it('puts a P/E against the market in one line', () => {
+    expect(valuationLine(40, 24.4)).toBe("P/E 40.0 is 64% above the S&P 500's 24.4");
+    expect(valuationLine(14.4, 24.4)).toBe("P/E 14.4 is 41% below the S&P 500's 24.4");
+    expect(valuationLine(25, 24.4)).toBe("P/E 25.0 is about level with the S&P 500's 24.4");
+    expect(valuationLine(null, 24.4)).toBeNull();
   });
 });

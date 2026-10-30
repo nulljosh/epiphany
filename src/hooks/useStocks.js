@@ -169,6 +169,7 @@ const parseStockData = (raw) => {
         nextEarnings: s.nextEarnings ?? null,
         dividendDate: s.dividendDate ?? null,
         yield: s.yield ?? null,
+        peRatio: s.peRatio ?? null,
       };
     }
   });

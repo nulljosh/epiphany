@@ -15,4 +15,11 @@ final class PositionTests: XCTestCase {
         XCTAssertEqual(p?.value, 10)
         XCTAssertNil(p?.gain)
     }
+
+    func testValuationLine() {
+        XCTAssertEqual(Valuation.line(pe: 40, market: 24.4), "P/E 40.0 is 64% above the S&P 500's 24.4")
+        XCTAssertEqual(Valuation.line(pe: 14.4, market: 24.4), "P/E 14.4 is 41% below the S&P 500's 24.4")
+        XCTAssertEqual(Valuation.line(pe: 25, market: 24.4), "P/E 25.0 is about level with the S&P 500's 24.4")
+        XCTAssertNil(Valuation.line(pe: nil, market: 24.4))
+    }
 }
