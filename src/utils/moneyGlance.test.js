@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -85,5 +85,12 @@ describe('yearToDate', () => {
       { sortKey: '2026-08', categories: { food: 200, fun: 50 } },
     ];
     expect(yearToDate(months, 2026)).toEqual({ months: 2, rows: [{ name: 'rent', amount: 1500 }, { name: 'food', amount: 500 }, { name: 'fun', amount: 50 }] });
+  });
+});
+
+describe('recentActivity', () => {
+  it('takes the newest transactions across statements', () => {
+    const s = [{ transactions: [{ date: '2026-08-01', amount: -5 }, { date: '2026-08-20', amount: 100 }] }, { transactions: [{ date: '2026-08-10', amount: -9 }, { date: '2026-08-30' }] }, {}];
+    expect(recentActivity(s, 2).map((t) => t.date)).toEqual(['2026-08-20', '2026-08-10']);
   });
 });

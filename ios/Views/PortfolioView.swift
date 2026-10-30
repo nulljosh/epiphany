@@ -195,6 +195,9 @@ struct PortfolioView: View {
 
                                 .padding(.horizontal)
 
+                            RecentActivityCard(statements: appState.statements)
+                                .padding(.horizontal)
+
                             if let portfolio = resolvedPortfolio, !portfolio.holdings.isEmpty {
                                 holdingsContent(portfolio)
                             }

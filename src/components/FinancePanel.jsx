@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1676,6 +1676,27 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           <>
             <MoneyGlance recurring={recurring} cashflow={cashflow} insights={insights} income={income} cash={cashValue} dark={dark} t={t} />
             <ReviewQueue statements={statementFiles} onChanged={refreshStatements} t={t} />
+            {recentActivity(statementFiles).length > 0 && (
+              <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+                <div style={sectionStyle}>
+                  <div style={labelStyle}>Recent Activity</div>
+                  {recentActivity(statementFiles).map((txn, i) => (
+                    <div key={`${txn.date}-${i}`} style={rowStyle}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{txn.description}</div>
+                        <div style={{ fontSize: 11, color: t.textTertiary }}>
+                          {new Date(`${txn.date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          {txn.category && txn.category !== 'uncategorized' ? ` · ${capitalize(txn.category.replace(/_/g, ' '))}` : ''}
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums', color: txn.amount >= 0 ? t.green : t.text, flexShrink: 0, marginLeft: 12 }}>
+                        {txn.amount >= 0 ? '+' : '-'}{formatCurrency(Math.abs(txn.amount))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
             {importError && (
               <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,69,58,0.15)', borderRadius: 8, fontSize: 11, color: t.red }}>
                 {importError}

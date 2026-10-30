@@ -120,3 +120,11 @@ export function yearToDate(months = [], year = new Date().getFullYear(), n = 3) 
   const rows = Object.entries(sums).sort((a, b) => b[1] - a[1]).slice(0, n).map(([name, amount]) => ({ name, amount }));
   return { months: count, rows };
 }
+
+// The newest `n` transactions across statements, newest first. Mirrors RecentActivity.latest.
+export function recentActivity(statements = [], n = 5) {
+  return statements.flatMap((s) => s.transactions || [])
+    .filter((t) => typeof t?.amount === 'number' && t.date)
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+    .slice(0, n);
+}

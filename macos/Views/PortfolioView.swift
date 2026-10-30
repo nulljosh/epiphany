@@ -663,6 +663,9 @@ struct PortfolioView: View {
                     ReviewQueueCard()
                         .padding(.horizontal)
 
+                    RecentActivityCard(statements: appState.statements)
+                        .padding(.horizontal)
+
                     TopSpendingBar(months: months).padding(.horizontal)
                     YearToDateCard(months: months).padding(.horizontal)
 
