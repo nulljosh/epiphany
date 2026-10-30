@@ -7,7 +7,7 @@ import { quoteCurrency, toCad } from '../utils/currency';
 import { normalizeSpendingMonths, UPCOMING_PAYMENTS } from '../utils/financeData';
 import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
-import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPayoff';
+import { debtMonthsToPayoff, debtPayoffLabel, owedDebts, debtFreeBy } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
@@ -378,7 +378,7 @@ function DebtPayoffProjection({ debt, t }) {
       <div style={{ fontSize: 12, fontWeight: 600, color: hasUnpayableDebt ? t.textSecondary : t.green, marginTop: 8 }}>
         {hasUnpayableDebt
           ? 'Payoff time unknown. Set a monthly payment on every debt'
-          : `Debt-free in ${debtPayoffLabel(cumulativeMonths)} total`}
+          : `Debt-free in ${debtPayoffLabel(cumulativeMonths)} total, by ${debtFreeBy(cumulativeMonths)}`}
       </div>
     </div>
   );

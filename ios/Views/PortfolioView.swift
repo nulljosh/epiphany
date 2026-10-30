@@ -531,6 +531,8 @@ struct PortfolioView: View {
         DisclosureGroup("Debt", isExpanded: $showDebt) {
             debtBreakdownSection
                 .padding(.top, 8)
+            DebtPayoffCard(debt: appState.financeData?.debt ?? [])
+                .padding(.top, 12)
         }
         .font(.subheadline.weight(.semibold))
         .padding(.horizontal)
@@ -1236,62 +1238,6 @@ struct PortfolioView: View {
         .background(Palette.overlay.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func debtPayoffProjection(debt: [FinanceData.DebtItem], surplus: Double) -> some View {
-        let sorted = debt.sorted { $0.balance < $1.balance }
-        var projections: [(name: String, balance: Double, months: Double, cumulative: Double)] = []
-        var cumulative: Double = 0
-
-        for item in sorted {
-            guard item.balance > 0 else { continue }
-            let payment = max(item.minPayment, surplus)
-            let months = payment > 0 ? item.balance / payment : 0
-            cumulative += months
-            projections.append((name: item.name, balance: item.balance, months: months, cumulative: cumulative))
-        }
-
-        return VStack(alignment: .leading, spacing: 12) {
-            Text("Payoff Projection")
-                .font(.headline)
-
-            ForEach(Array(projections.enumerated()), id: \.offset) { _, proj in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(proj.name)
-                            .font(.subheadline.weight(.semibold))
-                        Spacer()
-                        Text(CurrencyFormatter.formatPrice(proj.balance))
-                            .font(.caption)
-                            .monospacedDigit()
-                    }
-                    Text(payoffTimeLabel(proj.months))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    ProgressView(value: 1.0)
-                        .tint(Palette.successGreen)
-                }
-            }
-
-            if let last = projections.last {
-                Text("Debt-free in \(payoffTimeLabel(last.cumulative))")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Palette.successGreen)
-            }
-        }
-    }
-
-    private func payoffTimeLabel(_ months: Double) -> String {
-        if months < 0.07 { return "< 1 week" }
-        if months < 0.23 { return "~1 week" }
-        if months < 0.5 { return "~2 weeks" }
-        if months < 0.9 { return "~3 weeks" }
-        if months < 1.5 { return "~1 month" }
-        let rounded = Int(ceil(months))
-        if rounded < 12 { return "~\(rounded) months" }
-        let years = rounded / 12
-        let remaining = rounded % 12
-        if remaining == 0 { return "~\(years) year\(years > 1 ? "s" : "")" }
-        return "~\(years)y \(remaining)mo"
-    }
 
     private func spendingChartDomain(
         months: [FinanceData.SpendingMonth],

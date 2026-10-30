@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sumDebt, sumReceivable, owedDebts } from './debtPayoff';
+import { sumDebt, sumReceivable, owedDebts, debtFreeBy } from './debtPayoff';
 
 const rows = [
   { name: 'Visa', balance: 5000 },
@@ -11,4 +11,11 @@ describe('debt direction', () => {
   it('sums receivables separately', () => expect(sumReceivable(rows)).toBe(100));
   it('filters payoff inputs to real debts', () => expect(owedDebts(rows).map(d => d.name)).toEqual(['Visa']));
   it('tolerates a missing list', () => expect(sumDebt(undefined)).toBe(0));
+});
+
+describe('debtFreeBy', () => {
+  it('names the month after the payoff', () => {
+    expect(debtFreeBy(15, new Date(2026, 9, 30))).toBe('January 2028');
+    expect(debtFreeBy(Infinity)).toBeNull();
+  });
 });

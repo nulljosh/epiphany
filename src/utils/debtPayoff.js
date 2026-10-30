@@ -23,3 +23,9 @@ export function debtPayoffLabel(months) {
   if (days < 30) return `${Math.round(days)}d`;
   return `~${Math.round(months)}mo`;
 }
+
+// The month you'd be debt-free after `months`, as "May 2027". Mirrors DebtPayoff.plan's finish.
+export function debtFreeBy(months, now = new Date()) {
+  if (!isFinite(months)) return null;
+  return new Date(now.getFullYear(), now.getMonth() + Math.ceil(months), 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}

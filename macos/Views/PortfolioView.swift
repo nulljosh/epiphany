@@ -498,12 +498,10 @@ struct PortfolioView: View {
                         .padding(.horizontal)
                         .padding(.vertical, 12)
 
-                        if let budget = appState.financeData?.budget, budget.monthlySurplus > 0 {
-                            Divider().padding(.horizontal)
-                            debtPayoffProjection(debt: debtItems, surplus: budget.monthlySurplus)
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
-                        }
+                        Divider().padding(.horizontal)
+                        DebtPayoffCard(debt: debtItems)
+                            .padding(.horizontal)
+                            .padding(.vertical, 12)
                     }
                 }
             }
@@ -1523,59 +1521,6 @@ struct PortfolioView: View {
         let days = months * 30.44
         if days < 30 { return "\(Int(round(days)))d" }
         return "~\(Int(round(months)))mo"
-    }
-
-    private func debtPayoffProjection(debt: [FinanceData.DebtItem], surplus: Double) -> some View {
-        let sorted = debt.sorted { $0.balance < $1.balance }
-        var projections: [(name: String, balance: Double, months: Double, cumulative: Double)] = []
-        var cumulative: Double = 0
-        // ponytail: a debt with no minimum payment never pays off, so
-        // debtMonthsToPayoff returns .infinity. Folding that in as 0 made the total
-        // read "Debt-free in now", claiming the debt is already cleared when the
-        // truth is the payoff time is unknowable. Mirrors the web fix in
-        // src/components/FinancePanel.jsx.
-        var hasUnpayableDebt = false
-
-        for item in sorted {
-            guard item.balance > 0 else { continue }
-            let months = debtMonthsToPayoff(item)
-            if !months.isFinite { hasUnpayableDebt = true }
-            cumulative += months.isFinite ? months : 0
-            projections.append((name: item.name, balance: item.balance, months: months, cumulative: cumulative))
-        }
-
-        return VStack(alignment: .leading, spacing: 12) {
-            Text("Payoff Projection")
-                .font(.headline)
-
-            ForEach(Array(projections.enumerated()), id: \.offset) { _, proj in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(proj.name)
-                            .font(.subheadline.weight(.semibold))
-                        Spacer()
-                        Text(CurrencyFormatter.formatPrice(proj.balance))
-                            .font(.caption)
-                            .monospacedDigit()
-                    }
-                    Text(debtPayoffLabel(proj.months))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    ProgressView(value: 1.0)
-                        .tint(Palette.successGreen)
-                }
-            }
-
-            if hasUnpayableDebt {
-                Text("Payoff time unknown, set a monthly payment on every debt")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            } else if let last = projections.last {
-                Text("Debt-free in \(debtPayoffLabel(last.cumulative))")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Palette.successGreen)
-            }
-        }
     }
 
     private func spendingChartDomain(
