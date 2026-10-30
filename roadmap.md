@@ -67,6 +67,22 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
 
+## Mobbin pass 6 (60.0, 2026-10-30: Fidelity, Acorns, PocketGuard, Emma, Revolut, Finimize)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Today's gain in dollars on each holding row | Fidelity | S | 61.0 | open |
+| Leftover this month: expected income minus the bills still to come | PocketGuard | S | 62.0 | open |
+| Bills grouped by month with a total per month, next 60 days | PocketGuard | S | 63.0 | open |
+| Budget ring: how much is left of the month's total budget | Emma | S | 64.0 | open |
+| Subscriptions split into active and stopped | Emma, PocketGuard | M | 65.0 | open |
+| Accounts grouped by type with a total per group | Emma | M | 66.0 | open |
+| Valuation line on a stock: its P/E against the S&P 500's | Finimize | S | 67.0 | open |
+| Top Spending steps back through past months | PocketGuard | S | 68.0 | open |
+| Read the daily brief aloud on device | Finimize | M | 69.0 | open |
+
+Skipped: round-ups, recurring buys and cash-back offers (Acorns, needs trading and a card), joint accounts, payments and cards (Revolut, banking), live chat with an advisor (Fidelity), expert articles and a members' club (Finimize, Acorns, content we don't have), cancelling subscriptions for you (PocketGuard, needs a concierge). The apple audit found no teal, purple or indigo, white text only on solid fills, gradients only as chart area fades, and no em dashes in UI strings.
+
 ## Mobbin pass 5 (50.0, 2026-10-30: Stock Events, getquin, Snowball Analytics, Bloomberg, Credit Karma, Flighty)
 
 | Gap | Seen in | Size | Version | Status |
@@ -108,7 +124,9 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 41 to 49 | One row each from "Mobbin pass 4" (done; net worth over time parked, 49.0.0 took QA leftovers) |
 | 50 | Mobbin pass 5 plus an apple audit (done 50.0.0) |
 | 51 to 59 | One row each from "Mobbin pass 5" (51 to 57 done; 58 and 59 wait on snapshots) |
-| 60 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 60 | Mobbin pass 6 plus an apple audit (done 60.0.0) |
+| 61 to 69 | One row each from "Mobbin pass 6"; 58 and 59 slot in once snapshots exist |
+| 70 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
 - [ ] iPhone and Mac allocation donut adds USD holdings to CAD cash at face value (the web was fixed in 49.0.0); the native apps need the CADUSD=X rate first.
