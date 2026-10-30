@@ -152,6 +152,8 @@ struct StockDetailView: View {
 
                 ValuationLine(stock: stock)
 
+                EarningsHistoryCard(symbol: stock.symbol)
+
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Related News")
                         .font(.headline)

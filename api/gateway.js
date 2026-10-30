@@ -40,6 +40,7 @@ const ROUTES = {
   cron:                 lazy(() => import('../server/api/cron.js')),
   defuddle:             lazy(() => import('../server/api/defuddle.js')),
   earthquakes:          lazy(() => import('../server/api/earthquakes.js')),
+  'earnings-history':   lazy(() => import('../server/api/earnings-history.js')),
   events:               lazy(() => import('../server/api/events.js')),
   flights:              lazy(() => import('../server/api/flights.js')),
   history:              lazy(() => import('../server/api/history.js')),

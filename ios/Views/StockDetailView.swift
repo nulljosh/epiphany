@@ -166,6 +166,8 @@ struct StockDetailView: View {
 
                 ValuationLine(stock: liveStock ?? stock)
 
+                EarningsHistoryCard(symbol: (liveStock ?? stock).symbol)
+
                 if (liveStock ?? stock).earningsSoon, let ts = (liveStock ?? stock).nextEarnings {
                     Button {
                         addEarningsToCalendar(ts)

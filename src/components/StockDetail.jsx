@@ -712,6 +712,15 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const positive = changePercent >= 0;
   const changeColor = positive ? '#30D158' : '#FF453A';
   const pos = useMemo(() => position(storedHoldings(), stock?.symbol, price, changePercent), [stock?.symbol, price, changePercent]);
+  const [earnings, setEarnings] = useState([]);
+  useEffect(() => {
+    if (!stock?.symbol) return undefined;
+    let gone = false;
+    setEarnings([]);
+    fetch(`/api/earnings-history?symbol=${encodeURIComponent(stock.symbol)}`).then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!gone && Array.isArray(d?.quarters)) setEarnings(d.quarters); }).catch(() => {});
+    return () => { gone = true; };
+  }, [stock?.symbol]);
   const signed = (n) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n))}`;
   const gainColor = (n) => (n >= 0 ? '#30D158' : '#FF453A');
 
@@ -1203,6 +1212,34 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             </div>
           ))}
         </div>
+
+        {/* Earnings history: EPS actual against the estimate, last four quarters */}
+        {earnings.length > 0 && (() => {
+          const top = Math.max(...earnings.flatMap((q) => [q.actual, q.estimate]).map(Math.abs), 0.01);
+          return (
+            <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Earnings</div>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${earnings.length}, 1fr)`, gap: 8, alignItems: 'end' }}>
+                {earnings.map((q) => {
+                  const beat = q.actual >= q.estimate;
+                  return (
+                    <div key={q.quarter} style={{ textAlign: 'center' }} title={`Actual ${q.actual.toFixed(2)}, estimate ${q.estimate.toFixed(2)}`}>
+                      <div style={{ display: 'flex', gap: 3, justifyContent: 'center', alignItems: 'flex-end', height: 56 }}>
+                        <div style={{ width: 10, height: `${Math.abs(q.estimate) / top * 100}%`, background: t.textTertiary || t.textSecondary, opacity: 0.4, borderRadius: 2 }} />
+                        <div style={{ width: 10, height: `${Math.abs(q.actual) / top * 100}%`, background: beat ? '#30D158' : '#FF453A', borderRadius: 2 }} />
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: beat ? '#30D158' : '#FF453A', marginTop: 4 }}>
+                        {q.surprise != null ? `${beat ? 'Beat' : 'Missed'} ${Math.abs(q.surprise).toFixed(1)}%` : beat ? 'Beat' : 'Missed'}
+                      </div>
+                      <div style={{ fontSize: 10, color: t.textTertiary || t.textSecondary }}>{q.quarter}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 10, color: t.textTertiary || t.textSecondary, marginTop: 8 }}>EPS: grey is the estimate, colour is what it reported.</div>
+            </div>
+          );
+        })()}
 
         {stock?.symbol !== 'SPY' && valuationLine(d.peRatio, marketPE) && (
           <div style={{ fontSize: 13, color: t.textSecondary, margin: '-4px 2px 16px' }}>{valuationLine(d.peRatio, marketPE)}</div>

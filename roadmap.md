@@ -78,7 +78,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Year to date spend per category as a plain insight | Spendee | S | 75.0 | done 75.0.0 |
 | Watchlist sort by name, price or percent change on iPhone and Mac | CNBC | S | 76.0 | done 76.0.0 (Mac already sorted it with the list) |
 | Debt payoff chart with a finish date on iPhone and Mac | Goodbudget | M | 77.0 | done 77.0.0 |
-| Earnings history on a stock: EPS actual against estimate, last four quarters | Investing.com | M | 78.0 | open, needs a source |
+| Earnings history on a stock: EPS actual against estimate, last four quarters | Investing.com | M | 78.0 | done 78.0.0 |
 | Economic calendar: next CPI, jobs report and rate decision | Investing.com | M | 79.0 | open, needs a source (BLS key) |
 
 Skipped: live TV (CNBC), options, custom indexes and agentic trades (Questrade, trading), shared envelopes and bank connections (Goodbudget, Wallet, we read statements), community sentiment and expert picks (Investing.com, social and opinion). The apple audit found no teal, purple or indigo and no em dashes in UI strings.

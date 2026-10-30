@@ -262,6 +262,13 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     }
 
     /// Quotes for symbols outside the default list, like a searched-and-added watchlist ticker.
+    /// The last four quarters of EPS against the estimate (/api/earnings-history).
+    func fetchEarningsHistory(symbol: String) async throws -> [EarningsQuarter] {
+        struct Wrapper: Decodable { let quarters: [EarningsQuarter] }
+        let url = try makeURL("/api/earnings-history", query: ["symbol": symbol])
+        return try decode(Wrapper.self, from: try await perform(URLRequest(url: url))).quarters
+    }
+
     func fetchQuotes(symbols: [String]) async throws -> [Stock] {
         guard !symbols.isEmpty else { return [] }
         let url = try makeURL("/api/stocks-free", query: ["symbols": symbols.joined(separator: ",")])
