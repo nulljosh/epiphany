@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -36,5 +36,17 @@ describe('allocation', () => {
     expect(p).toMatchObject({ shares: 4, value: 800, today: 160, avgCost: 125, gain: 300, gainPercent: 60 });
     expect(position([{ symbol: 'BTC-USD', shares: 1, costBasis: null }], 'BTC-USD', 10).gain).toBeNull();
     expect(position(h, 'TSLA', 10)).toBeNull();
+  });
+
+  it('spreads a quarterly payer across the next year from its pay date', () => {
+    const now = new Date(2026, 9, 30);
+    const ts = new Date(2026, 10, 15).getTime() / 1000;
+    const { calendar, next } = dividendCalendar(
+      [{ symbol: 'TD', value: 4000 }, { symbol: 'AAPL', value: 1000 }, { symbol: 'NONE', value: 500 }],
+      { TD: { yield: 4, dividendDate: ts }, AAPL: { yield: 0.4 }, NONE: {} }, now);
+    expect(calendar).toHaveLength(12);
+    expect(calendar.filter((m) => m.amount > 0).map((m) => m.month)).toEqual(['2026-11', '2027-02', '2027-05', '2027-08']);
+    expect(calendar[1].amount).toBe(40);
+    expect(next).toEqual([{ symbol: 'TD', date: new Date(ts * 1000), amount: 40 }]);
   });
 });

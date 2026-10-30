@@ -168,6 +168,7 @@ const parseStockData = (raw) => {
         low52: s.fiftyTwoWeekLow ?? s.low52 ?? price,
         nextEarnings: s.nextEarnings ?? null,
         dividendDate: s.dividendDate ?? null,
+        yield: s.yield ?? null,
       };
     }
   });

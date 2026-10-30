@@ -288,6 +288,8 @@ struct PortfolioView: View {
             .padding(.horizontal)
             SectorBars(holdings: portfolio.holdings)
                 .padding(.horizontal)
+            DividendCalendarCard(holdings: portfolio.holdings, stocks: appState.stocks)
+                .padding(.horizontal)
             sectionCardWithAccessory("Holdings", accessory: {
                 Menu {
                     Picker("Sort by", selection: $holdingSort) {

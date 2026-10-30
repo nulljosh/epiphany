@@ -304,6 +304,8 @@ struct PortfolioView: View {
             .padding(.horizontal)
             SectorBars(holdings: portfolio.holdings)
                 .padding(.horizontal)
+            DividendCalendarCard(holdings: portfolio.holdings, stocks: appState.stocks)
+                .padding(.horizontal)
             VStack(spacing: 8) {
                 Text("Total Value")
                     .font(.caption)

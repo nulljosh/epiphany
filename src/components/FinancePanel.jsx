@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1176,6 +1176,35 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 )}
               </div>
             </Card>
+
+            {(() => {
+              const { calendar, next } = dividendCalendar(holdings, stocks || {});
+              if (!next.length && !calendar.some((m) => m.amount > 0)) return null;
+              const peak = Math.max(...calendar.map((m) => m.amount));
+              return (
+                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                  <div style={labelStyle}>Dividend Calendar</div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 72 }}>
+                    {calendar.map((m) => (
+                      <div key={m.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%' }}
+                        title={`${new Date(`${m.month}-01T12:00:00`).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}: about ${formatCurrency(m.amount)}`}>
+                        <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end' }}>
+                          <div style={{ width: '100%', height: `${m.amount > 0 ? Math.max(8, (m.amount / peak) * 100) : 0}%`, background: t.green, borderRadius: 3 }} />
+                        </div>
+                        <span style={{ fontSize: 10, color: t.textTertiary }}>{new Date(`${m.month}-01T12:00:00`).toLocaleDateString(undefined, { month: 'narrow' })}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {next.slice(0, 5).map((n) => (
+                    <div key={n.symbol} style={{ ...rowStyle, fontSize: 13 }}>
+                      <span><b>{n.symbol}</b> <span style={{ color: t.textSecondary }}>{n.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span></span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums', color: t.textSecondary }}>about {formatCurrency(n.amount)}</span>
+                    </div>
+                  ))}
+                  <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 8 }}>Estimated from each stock's yield, paid quarterly.</div>
+                </Card>
+              );
+            })()}
 
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>

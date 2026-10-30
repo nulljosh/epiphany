@@ -5,10 +5,10 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
+    "A dividend calendar estimates what your stocks pay each month",
     "Bill history shows which months each recurring bill was paid",
     "News opens on the topic you follow",
     "This month’s top spending as one stacked bar with each category’s share",
-    "Holdings by sector as bars, with each sector's value and share",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

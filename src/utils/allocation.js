@@ -60,3 +60,30 @@ export function position(holdings = [], symbol, price, changePercent = 0) {
     gainPercent: cost != null ? ((value - cost) / cost) * 100 : null,
   };
 }
+
+// Dividend calendar: estimated payments per month for the next `months`, from each holding's next pay date
+// and trailing yield. Mirrors Allocation.dividendCalendar.
+// ponytail: assumes quarterly payers (most US and Canadian stocks); monthly and yearly payers read a bit off.
+export function dividendCalendar(holdings = [], quotes = {}, now = new Date(), months = 12) {
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + months, 1);
+  const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const byMonth = {};
+  const next = [];
+  for (const h of holdings) {
+    const q = quotes[h.symbol];
+    if (!(h.value > 0) || !(q?.yield > 0) || typeof q.dividendDate !== 'number') continue;
+    const each = (h.value * q.yield) / 100 / 4;
+    const first = new Date(q.dividendDate * 1000);
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(first.getFullYear(), first.getMonth() + i * 3, first.getDate());
+      if (d >= start && d < end) byMonth[key(d)] = (byMonth[key(d)] || 0) + each;
+    }
+    if (first >= start) next.push({ symbol: h.symbol, date: first, amount: each });
+  }
+  const calendar = Array.from({ length: months }, (_, i) => {
+    const m = key(new Date(start.getFullYear(), start.getMonth() + i, 1));
+    return { month: m, amount: byMonth[m] || 0 };
+  });
+  return { calendar, next: next.sort((a, b) => a.date - b.date) };
+}
