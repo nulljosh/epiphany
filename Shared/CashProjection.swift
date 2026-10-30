@@ -7,6 +7,37 @@ import SwiftUI
 enum CashProjection {
     struct Point: Equatable { let day: Int; let balance: Double }
 
+    struct MonthBills: Equatable { let month: String; let total: Double; let items: [Due] }
+    struct Due: Equatable { let charge: RecurringCharge; let date: Date }
+
+    /// Bills in the next `days`, rolled forward by cadence like `project`, grouped by month with a total each.
+    /// Mirrors billsByMonth in moneyGlance.js.
+    static func billsByMonth(_ bills: [RecurringCharge], today: Date = .now, days: Int = 60) -> [MonthBills] {
+        let cal = Calendar.current
+        let day0 = cal.startOfDay(for: today)
+        let end = cal.date(byAdding: .day, value: days, to: day0) ?? day0
+        var groups: [String: [Due]] = [:]
+        for r in bills where r.amount > 0 {
+            guard var d = ISO8601DateFormatter.dateOnly(r.nextDate) else { continue }
+            let step: (Date) -> Date = { date in
+                switch r.cadence {
+                case "biweekly": cal.date(byAdding: .day, value: 14, to: date) ?? end
+                case "yearly": cal.date(byAdding: .year, value: 1, to: date) ?? end
+                default: cal.date(byAdding: .month, value: 1, to: date) ?? end
+                }
+            }
+            while d < day0 { d = step(d) }
+            while d <= end {
+                groups[String(format: "%04d-%02d", cal.component(.year, from: d), cal.component(.month, from: d)), default: []].append(Due(charge: r, date: d))
+                d = step(d)
+            }
+        }
+        return groups.keys.sorted().map { m in
+            let items = groups[m]!.sorted { $0.date < $1.date }
+            return MonthBills(month: m, total: items.reduce(0) { $0 + $1.charge.amount }, items: items)
+        }
+    }
+
     /// Paydays in and bills out from tomorrow to the end of this month, and what that leaves. Mirrors restOfMonth in moneyGlance.js.
     static func restOfMonth(bills: [RecurringCharge], income: [RecurringCharge], today: Date = .now) -> (in: Double, out: Double, left: Double) {
         let cal = Calendar.current

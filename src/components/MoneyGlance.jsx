@@ -1,8 +1,7 @@
 import { Card } from './ui';
 import { formatCurrency } from '../utils/formatting';
-import { projectCash, leftThisMonth, billHistory, restOfMonth } from '../utils/moneyGlance';
+import { projectCash, leftThisMonth, billHistory, restOfMonth, billsByMonth } from '../utils/moneyGlance';
 
-const DAY = 86400000;
 const label = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 };
 const monthName = (ym) => new Date(`${ym}-01T12:00:00`).toLocaleDateString(undefined, { month: 'short' });
 
@@ -71,12 +70,8 @@ function BillsCalendar({ recurring, t }) {
 // Top of Spending: what changed, what's due in the next 30 days, money in vs out.
 // Each part hides when it has no data. Same shape as Shared/MoneyGlance.swift.
 export default function MoneyGlance({ recurring = [], cashflow = [], insights = [], income = [], cash = 0, dark, t }) {
-  const today = new Date(new Date().toDateString()).getTime();
-  const upcoming = recurring
-    .map((r) => ({ ...r, at: new Date(`${r.nextDate}T12:00:00`).getTime() }))
-    .filter((r) => r.at >= today && r.at <= today + 30 * DAY)
-    .sort((a, b) => a.at - b.at)
-    .slice(0, 5);
+  // Lagging statements leave nextDate in the past; billsByMonth rolls each bill forward by its cadence.
+  const upcoming = billsByMonth(recurring);
   const peak = Math.max(1, ...cashflow.flatMap((m) => [m.in, m.out]));
   if (!insights.length && !upcoming.length && !cashflow.length) return null;
 
@@ -124,19 +119,27 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
       {upcoming.length > 0 && (
         <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
           <div style={{ ...label, color: t.textTertiary, display: 'flex', justifyContent: 'space-between' }}>
-            <span>Next 30 days</span>
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(upcoming.reduce((s, r) => s + r.amount, 0))}</span>
+            <span>Next 60 days</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(upcoming.reduce((s, m) => s + m.total, 0))}</span>
           </div>
           <BillsCalendar recurring={recurring} t={t} />
-          {upcoming.map((r) => (
-            <div key={`${r.merchant}-${r.amount}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${t.border}` }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
-                <div style={{ fontSize: 11, color: t.textTertiary }}>
-                  {new Date(r.at).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                </div>
+          {upcoming.map((m) => (
+            <div key={m.month} style={{ marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: t.textSecondary, paddingBottom: 4, borderBottom: `1px solid ${t.border}` }}>
+                <span>{new Date(`${m.month}-01T12:00:00`).toLocaleDateString(undefined, { month: 'long' })}</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(m.total)}</span>
               </div>
-              <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</div>
+              {m.items.map((r) => (
+                <div key={`${r.merchant}-${r.date.getTime()}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${t.border}` }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
+                    <div style={{ fontSize: 11, color: t.textTertiary }}>
+                      {r.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</div>
+                </div>
+              ))}
             </div>
           ))}
         </Card>

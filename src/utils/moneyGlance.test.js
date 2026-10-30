@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -56,5 +56,17 @@ describe('restOfMonth', () => {
       [{ amount: 1000, cadence: 'biweekly', nextDate: '2026-10-16' }],
       today);
     expect(r).toMatchObject({ in: 1000, out: 100, left: 900 });
+  });
+});
+
+describe('billsByMonth', () => {
+  it('rolls lagging dates forward and groups the next 60 days by month', () => {
+    const g = billsByMonth([
+      { merchant: 'rent', amount: 1500, cadence: 'monthly', nextDate: '2026-08-01' },
+      { merchant: 'gym', amount: 40, cadence: 'monthly', nextDate: '2026-10-25' },
+    ], new Date(2026, 9, 20, 12));
+    expect(g.map((m) => [m.month, m.total, m.items.map((b) => b.merchant)])).toEqual([
+      ['2026-10', 40, ['gym']], ['2026-11', 1540, ['rent', 'gym']], ['2026-12', 1500, ['rent']],
+    ]);
   });
 });

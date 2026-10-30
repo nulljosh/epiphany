@@ -73,7 +73,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 |---|---|---|---|---|
 | Today's gain in dollars on each holding row | Fidelity | S | 61.0 | done 61.0.0 |
 | Leftover this month: expected income minus the bills still to come | PocketGuard | S | 62.0 | done 62.0.0 |
-| Bills grouped by month with a total per month, next 60 days | PocketGuard | S | 63.0 | open |
+| Bills grouped by month with a total per month, next 60 days | PocketGuard | S | 63.0 | done 63.0.0 |
 | Budget ring: how much is left of the month's total budget | Emma | S | 64.0 | open |
 | Subscriptions split into active and stopped | Emma, PocketGuard | M | 65.0 | open |
 | Accounts grouped by type with a total per group | Emma | M | 66.0 | open |

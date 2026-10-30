@@ -31,16 +31,8 @@ struct MoneyGlance: View {
     var income: [RecurringCharge] = []
     var cash: Double = 0
 
-    private var upcoming: [(charge: RecurringCharge, date: Date)] {
-        let today = Calendar.current.startOfDay(for: .now)
-        let horizon = Calendar.current.date(byAdding: .day, value: 30, to: today) ?? today
-        return recurring
-            .compactMap { c in ISO8601DateFormatter.dateOnly(c.nextDate).map { (charge: c, date: $0) } }
-            .filter { $0.date >= today && $0.date <= horizon }
-            .sorted { $0.date < $1.date }
-            .prefix(5)
-            .map { $0 }
-    }
+    /// Lagging statements leave nextDate in the past; billsByMonth rolls each bill forward by its cadence.
+    private var upcoming: [CashProjection.MonthBills] { CashProjection.billsByMonth(recurring) }
 
     /// Money in minus out for the newest statement month. Says "this month" only when it is; a statement that lags
     /// reads "Left in September". Mirrors leftThisMonth in src/utils/moneyGlance.js.
@@ -123,21 +115,30 @@ struct MoneyGlance: View {
 
     private var upcomingList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            heading("NEXT 30 DAYS",
-                    trailing: CurrencyFormatter.formatPrice(upcoming.map(\.charge.amount).reduce(0, +)))
+            heading("NEXT 60 DAYS", trailing: CurrencyFormatter.formatPrice(upcoming.map(\.total).reduce(0, +)))
             billsCalendar
-            ForEach(upcoming, id: \.charge.id) { item in
+            ForEach(upcoming, id: \.month) { m in
                 HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.charge.merchant.capitalized)
-                            .font(.subheadline.weight(.semibold))
-                        Text(item.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(ISO8601DateFormatter.dateOnly(m.month + "-01")?.formatted(.dateTime.month(.wide)) ?? m.month)
                     Spacer()
-                    Text(CurrencyFormatter.formatPrice(item.charge.amount))
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                    Text(CurrencyFormatter.formatPrice(m.total)).monospacedDigit()
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
+                ForEach(Array(m.items.enumerated()), id: \.offset) { _, item in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.charge.merchant.capitalized)
+                                .font(.subheadline.weight(.semibold))
+                            Text(item.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(CurrencyFormatter.formatPrice(item.charge.amount))
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                    }
                 }
             }
         }

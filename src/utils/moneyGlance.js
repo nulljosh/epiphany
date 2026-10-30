@@ -9,6 +9,28 @@ const step = (d, cadence) => {
   return n;
 };
 
+// Bills in the next `days`, rolled forward by cadence like projectCash, grouped by month with a total each.
+// Mirrors CashProjection.billsByMonth.
+export function billsByMonth(bills = [], today = new Date(), days = 60) {
+  const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = new Date(day0); end.setDate(end.getDate() + days);
+  const groups = {};
+  for (const r of bills) {
+    let d = new Date(`${r.nextDate}T00:00:00`);
+    if (Number.isNaN(d.getTime()) || !(r.amount > 0)) continue;
+    while (d < day0) d = step(d, r.cadence);
+    for (; d <= end; d = step(d, r.cadence)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      (groups[key] ||= []).push({ merchant: r.merchant, amount: r.amount, date: d });
+    }
+  }
+  return Object.keys(groups).sort().map((month) => ({
+    month,
+    total: groups[month].reduce((s, b) => s + b.amount, 0),
+    items: groups[month].sort((a, b) => a.date - b.date),
+  }));
+}
+
 export function projectCash(start, bills = [], income = [], today = new Date(), days = 30) {
   const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const end = new Date(day0); end.setDate(end.getDate() + days);

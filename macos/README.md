@@ -1,6 +1,6 @@
 <img src="icon.svg" width="80">
 
-![version](https://img.shields.io/badge/version-v62.0.0-blue)
+![version](https://img.shields.io/badge/version-v63.0.0-blue)
 
 Epiphany for Mac. The map, the markets and your money, laid out for a big screen.
 

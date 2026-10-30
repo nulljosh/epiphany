@@ -27,4 +27,11 @@ final class CashProjectionTests: XCTestCase {
         XCTAssertEqual(rest.out, 100)
         XCTAssertEqual(rest.left, 900)
     }
+
+    func testBillsByMonthRollsForward() {
+        let today = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 20, hour: 12))!
+        let g = CashProjection.billsByMonth([r("2026-08-01", 1500, "monthly"), r("2026-10-25", 40, "monthly")], today: today)
+        XCTAssertEqual(g.map(\.month), ["2026-10", "2026-11", "2026-12"])
+        XCTAssertEqual(g.map(\.total), [40, 1540, 1500])
+    }
 }
