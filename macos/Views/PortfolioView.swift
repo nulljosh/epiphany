@@ -304,6 +304,8 @@ struct PortfolioView: View {
             .padding(.horizontal)
             SectorBars(holdings: portfolio.holdings)
                 .padding(.horizontal)
+            SectorBars(holdings: portfolio.holdings, title: "By Country", split: SectorHeat.byCountry)
+                .padding(.horizontal)
             DividendCalendarCard(holdings: portfolio.holdings, stocks: appState.stocks)
                 .padding(.horizontal)
             if let accounts = appState.financeData?.accounts, accounts.contains(where: { $0.balance >= 1 }) {

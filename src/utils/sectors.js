@@ -27,7 +27,9 @@ export function holdingsBySector(holdings = [], map = SECTOR_MAP) {
   const sums = {};
   for (const h of holdings) {
     if (!(h.value > 0)) continue;
-    const sector = isCrypto(h.symbol) ? 'Crypto' : (map[h.symbol] && !NOT_SECTORS.has(map[h.symbol]) ? map[h.symbol] : 'Other');
+    // TD.TO is TD in the map: try the symbol without its Canadian exchange suffix.
+    const mapped = map[h.symbol] ?? map[h.symbol.replace(/\.(TO|V|NE|CN)$/i, '')];
+    const sector = isCrypto(h.symbol) ? 'Crypto' : (mapped && !NOT_SECTORS.has(mapped) ? mapped : 'Other');
     sums[sector] = (sums[sector] || 0) + h.value;
   }
   const total = Object.values(sums).reduce((a, b) => a + b, 0);

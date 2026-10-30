@@ -114,3 +114,15 @@ export function valuationLine(pe, marketPE) {
   const where = Math.abs(diff) < 5 ? 'about level with' : `${Math.abs(diff)}% ${diff > 0 ? 'above' : 'below'}`;
   return `P/E ${pe.toFixed(1)} is ${where} the S&P 500's ${marketPE.toFixed(1)}`;
 }
+
+// Holdings value by where they list: US, Canada (by symbol suffix), or Crypto, biggest first. Mirrors Allocation.byCountry.
+export function holdingsByCountry(holdings = []) {
+  const sums = {};
+  for (const h of holdings) {
+    if (!(h.value > 0)) continue;
+    const where = isCrypto(h.symbol) ? 'Crypto' : isCad(h.symbol) ? 'Canada' : 'US';
+    sums[where] = (sums[where] || 0) + h.value;
+  }
+  const total = Object.values(sums).reduce((a, b) => a + b, 0);
+  return Object.entries(sums).map(([sector, value]) => ({ sector, value, share: value / total })).sort((a, b) => b.value - a.value);
+}

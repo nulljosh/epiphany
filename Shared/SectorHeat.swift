@@ -40,24 +40,38 @@ enum SectorHeat {
     static func holdings(_ holdings: [Portfolio.Holding]) -> [Slice] {
         var sums: [String: Double] = [:]
         for h in holdings where h.marketValue > 0 {
-            let sector = Allocation.isCrypto(h.symbol) ? "Crypto" : (sectorOf[h.symbol] ?? "Other")
+            // TD.TO is TD in the map: try the symbol without its Canadian exchange suffix.
+            let bare = h.symbol.replacingOccurrences(of: #"\.(TO|V|NE|CN)$"#, with: "", options: [.regularExpression, .caseInsensitive])
+            let sector = Allocation.isCrypto(h.symbol) ? "Crypto" : (sectorOf[h.symbol] ?? sectorOf[bare] ?? "Other")
             sums[sector, default: 0] += h.marketValue
         }
         let total = sums.values.reduce(0, +)
         return sums.map { Slice(sector: $0.key, value: $0.value, share: $0.value / total) }
             .sorted { $0.value > $1.value }
     }
+
+    /// Holdings value by where they list: US, Canada (by symbol suffix) or Crypto. Mirrors holdingsByCountry in allocation.js.
+    static func byCountry(_ holdings: [Portfolio.Holding]) -> [Slice] {
+        var sums: [String: Double] = [:]
+        for h in holdings where h.marketValue > 0 {
+            sums[Allocation.isCrypto(h.symbol) ? "Crypto" : Allocation.isCad(h.symbol) ? "Canada" : "US", default: 0] += h.marketValue
+        }
+        let total = sums.values.reduce(0, +)
+        return sums.map { Slice(sector: $0.key, value: $0.value, share: $0.value / total) }.sorted { $0.value > $1.value }
+    }
 }
 
-/// "By sector" bars under the allocation donut; nothing when everything sits in one sector.
+/// Holdings split into named shares as bars ("By Sector", "By Country"); nothing with fewer than two.
 struct SectorBars: View {
     let holdings: [Portfolio.Holding]
+    var title = "By Sector"
+    var split: ([Portfolio.Holding]) -> [SectorHeat.Slice] = SectorHeat.holdings
 
     var body: some View {
-        let slices = SectorHeat.holdings(holdings)
+        let slices = split(holdings)
         if slices.count > 1 {
             VStack(alignment: .leading, spacing: 10) {
-                Text("By Sector").font(.headline)
+                Text(title).font(.headline)
                 ForEach(slices, id: \.sector) { s in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {

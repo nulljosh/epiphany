@@ -19,4 +19,9 @@ final class SectorHeatTests: XCTestCase {
         XCTAssertEqual(slices.map(\.sector), ["Tech", "Crypto", "Financials", "Other"])
         XCTAssertEqual(slices[0], SectorHeat.Slice(sector: "Tech", value: 400, share: 0.4))
     }
+
+    func testByCountry() {
+        let h = [("AAPL", 600.0), ("TD.TO", 300), ("BTC-USD", 100)].map { Portfolio.Holding(symbol: $0.0, shares: 1, avgCost: 0, currentPrice: $0.1) }
+        XCTAssertEqual(SectorHeat.byCountry(h), [.init(sector: "US", value: 600, share: 0.6), .init(sector: "Canada", value: 300, share: 0.3), .init(sector: "Crypto", value: 100, share: 0.1)])
+    }
 }

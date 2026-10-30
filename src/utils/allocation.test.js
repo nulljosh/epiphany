@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts, valuationLine } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts, valuationLine, holdingsByCountry } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -63,5 +63,10 @@ describe('allocation', () => {
     expect(valuationLine(14.4, 24.4)).toBe("P/E 14.4 is 41% below the S&P 500's 24.4");
     expect(valuationLine(25, 24.4)).toBe("P/E 25.0 is about level with the S&P 500's 24.4");
     expect(valuationLine(null, 24.4)).toBeNull();
+  });
+
+  it('splits holdings by listing country', () => {
+    expect(holdingsByCountry([{ symbol: 'AAPL', value: 600 }, { symbol: 'TD.TO', value: 300 }, { symbol: 'BTC-USD', value: 100 }, { symbol: 'X', value: 0 }]))
+      .toEqual([{ sector: 'US', value: 600, share: 0.6 }, { sector: 'Canada', value: 300, share: 0.3 }, { sector: 'Crypto', value: 100, share: 0.1 }]);
   });
 });

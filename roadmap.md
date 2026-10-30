@@ -71,7 +71,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 
 | Gap | Seen in | Size | Version | Status |
 |---|---|---|---|---|
-| Exposure by listing country (US, Canada, crypto) as bars | Simply Wall St | S | 81.0 | open |
+| Exposure by listing country (US, Canada, crypto) as bars | Simply Wall St | S | 81.0 | done 81.0.0 |
 | News about your holdings: a Holdings chip on the news list | Simply Wall St | S | 82.0 | open |
 | Recent activity: the last few transactions on the spending screen | Betterment, SoFi | S | 83.0 | open |
 | Dividends received this year, read from statements | Betterment | S | 84.0 | open |

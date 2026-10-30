@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS, yearToDate } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -293,6 +293,27 @@ function StackedBarChart({ spending, t }) {
         ))}
       </div>
     </div>
+  );
+}
+
+// Holdings split into named shares as bars (By Sector, By Country); nothing with fewer than two.
+function ShareBars({ title, rows, dark, t, labelStyle }) {
+  if (rows.length < 2) return null;
+  return (
+    <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+      <div style={labelStyle}>{title}</div>
+      {rows.map(({ sector, value, share }) => (
+        <div key={sector} style={{ marginTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+            <span style={{ color: t.text, fontWeight: 600 }}>{sector}</span>
+            <span style={{ color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(value, 'CAD')} · {Math.round(share * 100)}%</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+            <div style={{ width: `${share * 100}%`, height: '100%', borderRadius: 3, background: '#0071e3' }} />
+          </div>
+        </div>
+      ))}
+    </Card>
   );
 }
 
@@ -1141,22 +1162,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 <PieChart data={allocation(holdingsCad, cashValue)} t={t} currency="CAD" />
               </Card>
             )}
-            {holdingsBySector(holdingsCad).length > 1 && (
-              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-                <div style={labelStyle}>By Sector</div>
-                {holdingsBySector(holdingsCad).map(({ sector, value, share }) => (
-                  <div key={sector} style={{ marginTop: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
-                      <span style={{ color: t.text, fontWeight: 600 }}>{sector}</span>
-                      <span style={{ color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(value, 'CAD')} · {Math.round(share * 100)}%</span>
-                    </div>
-                    <div style={{ height: 6, borderRadius: 3, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
-                      <div style={{ width: `${share * 100}%`, height: '100%', borderRadius: 3, background: '#0071e3' }} />
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            )}
+            <ShareBars title="By Sector" rows={holdingsBySector(holdingsCad)} dark={dark} t={t} labelStyle={labelStyle} />
+            <ShareBars title="By Country" rows={holdingsByCountry(holdingsCad)} dark={dark} t={t} labelStyle={labelStyle} />
 
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
