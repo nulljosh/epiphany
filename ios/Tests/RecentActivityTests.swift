@@ -14,4 +14,9 @@ final class RecentActivityTests: XCTestCase {
         XCTAssertEqual(e.dividends, 4)
         XCTAssertEqual(e.interest, 0.12, accuracy: 0.0001)
     }
+
+    func testMerchantKeyMatchesServer() {
+        XCTAssertEqual(MerchantKey.of("SPOTIFY #789 STOCKHOLM SE"), "spotify stockholm")
+        XCTAssertEqual(MerchantKey.of("PRE AUTHORIZED DEBIT TO ABC CLUB FITNESS"), "abc club")
+    }
 }

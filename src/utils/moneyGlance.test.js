@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -137,5 +137,12 @@ describe('spendRace', () => {
     expect(r.before.slice(0, 3)).toEqual([10, 10, 30]);
     expect([r.total, r.beforeAtDay]).toEqual([15, 30]);
     expect(spendRace([{ transactions: [{ date: '2026-08-01', amount: -1, category: 'x' }] }])).toBeNull();
+  });
+});
+
+describe('recurringKey', () => {
+  it('matches the server merchant key', () => {
+    expect(recurringKey('SPOTIFY #789 STOCKHOLM SE')).toBe('spotify stockholm');
+    expect(recurringKey('PRE AUTHORIZED DEBIT TO ABC CLUB FITNESS')).toBe('abc club');
   });
 });

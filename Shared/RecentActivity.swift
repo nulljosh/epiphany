@@ -41,9 +41,25 @@ struct EarnedThisYearCard: View {
     }
 }
 
-/// "Recent activity": the last few transactions, money in green. Nothing without statements.
+/// The merchant key detectRecurring groups by (server/api/recurring.js). Mirrors recurringKey in moneyGlance.js.
+enum MerchantKey {
+    static func of(_ description: String) -> String {
+        var s = description.uppercased()
+        for (pattern, with) in [(#"\d{1,4}[/.-]\d{1,2}(?:[/.-]\d{1,4})?"#, " "), ("#", " "), (#"[^A-Z&' ]+"#, " ")] {
+            s = s.replacingOccurrences(of: pattern, with: with, options: .regularExpression)
+        }
+        var tokens = s.split(separator: " ").map(String.init)
+        while tokens.count > 1, tokens.last!.count == 2, tokens.last!.allSatisfy(\.isLetter) { tokens.removeLast() }
+        let joined = tokens.joined(separator: " ").lowercased()
+            .replacingOccurrences(of: #"^(pre ?authorized debit( to)?|pad( to)?|pos purchase|purchase)\s+"#, with: "", options: .regularExpression)
+        return joined.split(separator: " ").prefix(2).joined(separator: " ")
+    }
+}
+
+/// "Recent activity": the last few transactions, money in green, recurring ones marked. Nothing without statements.
 struct RecentActivityCard: View {
     let statements: [Statement]
+    var recurring: [RecurringCharge] = []
 
     var body: some View {
         let txns = RecentActivity.latest(statements)
@@ -53,7 +69,13 @@ struct RecentActivityCard: View {
                 ForEach(Array(txns.enumerated()), id: \.offset) { _, t in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(t.description).font(.subheadline.weight(.semibold)).lineLimit(1)
+                            HStack(spacing: 4) {
+                                Text(t.description).font(.subheadline.weight(.semibold)).lineLimit(1)
+                                if recurring.contains(where: { $0.merchant == MerchantKey.of(t.description) }) {
+                                    Image(systemName: "arrow.triangle.2.circlepath").font(.caption2).foregroundStyle(.secondary)
+                                        .accessibilityLabel("Recurring")
+                                }
+                            }
                             Text((ISO8601DateFormatter.dateOnly(t.date)?.formatted(.dateTime.month(.abbreviated).day()) ?? t.date)
                                  + (t.category.flatMap { $0 == "uncategorized" ? nil : " · " + $0.replacingOccurrences(of: "_", with: " ").capitalized } ?? ""))
                                 .font(.caption).foregroundStyle(.secondary)

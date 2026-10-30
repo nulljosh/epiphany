@@ -181,3 +181,14 @@ export function spendRace(statements = []) {
   const lastDay = Math.max(...Object.keys(byMonth[cur]).filter((d) => byMonth[cur][d] > 0).map(Number));
   return { month: cur, prev, cur: curRun.slice(0, lastDay), before: prevRun, total: curRun[lastDay - 1], beforeAtDay: prevRun[lastDay - 1] };
 }
+
+// The merchant key detectRecurring groups by (server/api/recurring.js), so a transaction can be matched to its bill.
+export function recurringKey(description = '') {
+  const tokens = String(description).toUpperCase()
+    .replace(/\d{1,4}[/.-]\d{1,2}(?:[/.-]\d{1,4})?/g, ' ').replace(/#/g, ' ').replace(/[^A-Z&' ]+/g, ' ')
+    .split(/\s+/).filter(Boolean);
+  while (tokens.length > 1 && /^[A-Z]{2}$/.test(tokens[tokens.length - 1])) tokens.pop();
+  return tokens.join(' ').toLowerCase()
+    .replace(/^(pre ?authorized debit( to)?|pad( to)?|pos purchase|purchase)\s+/, '')
+    .split(' ').slice(0, 2).join(' ');
+}

@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1752,7 +1752,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                   {recentActivity(statementFiles).map((txn, i) => (
                     <div key={`${txn.date}-${i}`} style={rowStyle}>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{txn.description}</div>
+                        <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {txn.description}
+                          {recurring.some((r) => r.merchant === recurringKey(txn.description)) && (
+                            <span title="Recurring" aria-label="Recurring" style={{ marginLeft: 6, color: t.textTertiary, fontWeight: 500 }}>↻</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 11, color: t.textTertiary }}>
                           {new Date(`${txn.date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           {txn.category && txn.category !== 'uncategorized' ? ` · ${capitalize(txn.category.replace(/_/g, ' '))}` : ''}

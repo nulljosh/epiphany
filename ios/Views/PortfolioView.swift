@@ -197,7 +197,7 @@ struct PortfolioView: View {
 
                             EarnedThisYearCard(statements: appState.statements)
                                 .padding(.horizontal)
-                            RecentActivityCard(statements: appState.statements)
+                            RecentActivityCard(statements: appState.statements, recurring: appState.recurring)
                                 .padding(.horizontal)
 
                             if let portfolio = resolvedPortfolio, !portfolio.holdings.isEmpty {
