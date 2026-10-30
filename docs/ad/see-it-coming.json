@@ -1,0 +1,316 @@
+{
+ "out": "see-it-coming.mp4",
+ "size": [
+  1920,
+  1080
+ ],
+ "fps": 30,
+ "font": "/Users/joshua/.claude/jobs/f881aca2/tmp/fonts/SF-Medium.ttf",
+ "font_bold": "/Users/joshua/.claude/jobs/f881aca2/tmp/fonts/SF-Bold.ttf",
+ "font_size": 100,
+ "palette": {
+  "night": "#0b1020",
+  "paper": "#f5f7fb",
+  "accent": "#1462e0",
+  "accentlight": "#5aaeff",
+  "red": "#ef4444",
+  "orange": "#f97316",
+  "yellow": "#eab308"
+ },
+ "sky": "night",
+ "light": "paper",
+ "glow": [
+  "paper",
+  "accent"
+ ],
+ "open": {
+  "secs": 1.6
+ },
+ "pool": [
+  {
+   "image": "shots/v51-dark.jpg",
+   "focus": [
+    0.14,
+    0.3
+   ],
+   "zoom": 1.6,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v61-light.jpg",
+   "focus": [
+    0.38,
+    0.66
+   ],
+   "zoom": 1.4,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v53-light.jpg",
+   "focus": [
+    0.6,
+    0.68
+   ],
+   "zoom": 1.3,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v62-ios.jpg",
+   "focus": [
+    0.5,
+    0.3
+   ],
+   "zoom": 1.0,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v54-dark.jpg",
+   "focus": [
+    0.5,
+    0.52
+   ],
+   "zoom": 1.5,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v52-light.jpg",
+   "focus": [
+    0.55,
+    0.4
+   ],
+   "zoom": 1.0,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v101-dark.jpg",
+   "focus": [
+    0.5,
+    0.45
+   ],
+   "zoom": 1.6,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v55-light.jpg",
+   "focus": [
+    0.5,
+    0.62
+   ],
+   "zoom": 1.5,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v56-light.jpg",
+   "focus": [
+    0.78,
+    0.58
+   ],
+   "zoom": 2.0,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v61-ios.jpg",
+   "focus": [
+    0.5,
+    0.32
+   ],
+   "zoom": 1.0,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v53-dark.jpg",
+   "focus": [
+    0.58,
+    0.62
+   ],
+   "zoom": 1.6,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v62-light.jpg",
+   "focus": [
+    0.45,
+    0.26
+   ],
+   "zoom": 1.8,
+   "sky": "paper"
+  },
+  {
+   "image": "shots/v52-dark.jpg",
+   "focus": [
+    0.4,
+    0.45
+   ],
+   "zoom": 1.4,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v102-dark.jpg",
+   "focus": [
+    0.14,
+    0.58
+   ],
+   "zoom": 2.2,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v55-dark.jpg",
+   "focus": [
+    0.5,
+    0.58
+   ],
+   "zoom": 1.8,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v54-dark.jpg",
+   "focus": [
+    0.5,
+    0.62
+   ],
+   "zoom": 1.8,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v56-dark.jpg",
+   "focus": [
+    0.78,
+    0.6
+   ],
+   "zoom": 2.2,
+   "sky": "night"
+  },
+  {
+   "image": "shots/v51-dark.jpg",
+   "focus": [
+    0.35,
+    0.86
+   ],
+   "zoom": 2.0,
+   "sky": "night"
+  },
+  {
+   "fill": "accent",
+   "sky": "night"
+  },
+  {
+   "image": "shots/v54-dark.jpg",
+   "focus": [
+    0.3,
+    0.5
+   ],
+   "zoom": 2.4,
+   "sky": "night"
+  },
+  {
+   "fill": "red",
+   "sky": "night"
+  },
+  {
+   "image": "shots/v53-light.jpg",
+   "focus": [
+    0.62,
+    0.4
+   ],
+   "zoom": 2.0,
+   "sky": "paper"
+  },
+  {
+   "fill": "orange",
+   "sky": "night"
+  },
+  {
+   "image": "shots/v61-light.jpg",
+   "focus": [
+    0.2,
+    0.3
+   ],
+   "zoom": 2.0,
+   "sky": "paper"
+  },
+  {
+   "fill": "yellow",
+   "sky": "night"
+  },
+  {
+   "image": "shots/v101-dark.jpg",
+   "focus": [
+    0.45,
+    0.5
+   ],
+   "zoom": 2.4,
+   "sky": "night"
+  },
+  {
+   "fill": "accentlight",
+   "sky": "night"
+  },
+  {
+   "image": "shots/v62-ios.jpg",
+   "focus": [
+    0.5,
+    0.18
+   ],
+   "zoom": 1.4,
+   "sky": "paper"
+  },
+  {
+   "fill": "accent",
+   "sky": "night"
+  },
+  {
+   "image": "shots/v56-light.jpg",
+   "focus": [
+    0.75,
+    0.62
+   ],
+   "zoom": 2.6,
+   "sky": "paper"
+  },
+  {
+   "fill": "red",
+   "sky": "night"
+  },
+  {
+   "fill": "orange",
+   "sky": "night"
+  },
+  {
+   "fill": "yellow",
+   "sky": "night"
+  },
+  {
+   "fill": "accent",
+   "sky": "night"
+  }
+ ],
+ "grain": 0.2,
+ "schedule": {
+  "count": 34,
+  "first": 1.0,
+  "last": 0.12
+ },
+ "words": [
+  [
+   12,
+   "See"
+  ],
+  [
+   16,
+   "it"
+  ],
+  [
+   18,
+   "coming."
+  ]
+ ],
+ "title": {
+  "text": "Epiphany",
+  "secs": 1.6
+ },
+ "end": {
+  "mark": "mark.png",
+  "name": "Epiphany 6",
+  "secs": 2.2
+ }
+}
