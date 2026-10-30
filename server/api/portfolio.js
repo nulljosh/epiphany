@@ -76,29 +76,7 @@ export default async function handler(req, res) {
       || { holdings: [], accounts: [], debt: [], goals: [], spending: [], giving: [], incomePhases: [] };
     console.log(`[portfolio] GET ${kvKey}:`, `${JSON.stringify(data).length} bytes`);
 
-    // Overlay the latest broker snapshot so native clients always see fresh
-    // SnapTrade holdings, even if the web app hasn't re-persisted them yet.
-    const snapshot = await kv.get(`broker:snapshot:${session.userId}`);
-    if (Array.isArray(snapshot?.holdings) && snapshot.holdings.length > 0
-        && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
-      data.holdings = snapshot.holdings.map(h => ({
-        symbol: h.symbol, shares: h.shares, costBasis: null,
-        marketValue: h.marketValue, account: h.account, source: 'broker',
-      }));
-    }
-    if (Array.isArray(snapshot?.accounts) && snapshot.accounts.length > 0
-        && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
-      const brokerNames = new Set(snapshot.accounts.map(a => a.name));
-      // Filter both the explicit `source: 'broker'` tag AND legacy untagged
-      // rows that share a broker account's name -- pre-dedup KV saves never
-      // set `source`, so those stale rows survived every overlay since and
-      // kept duplicating alongside the fresh broker copy.
-      const manualAccounts = (data.accounts || []).filter(a => a.source !== 'broker' && !brokerNames.has(a.name));
-      const brokerAccounts = snapshot.accounts.map(a => ({
-        name: a.name, type: a.type, balance: a.balance, cash: a.cash, source: 'broker',
-      }));
-      data.accounts = [...manualAccounts, ...brokerAccounts];
-    }
+    withBrokerOverlay(data, await kv.get(`broker:snapshot:${session.userId}`));
     return res.status(200).json(data);
   }
 
@@ -189,4 +167,30 @@ export default async function handler(req, res) {
   }
 
   return errorResponse(res, 400, 'Unknown action. Use: get, update, summary');
+}
+
+// Overlay the latest broker snapshot so native clients (and the daily value snapshot) always see fresh
+// SnapTrade holdings, even if the web app hasn't re-persisted them yet. Mutates and returns data.
+export function withBrokerOverlay(data, snapshot) {
+  if (Array.isArray(snapshot?.holdings) && snapshot.holdings.length > 0
+      && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
+    data.holdings = snapshot.holdings.map(h => ({
+      symbol: h.symbol, shares: h.shares, costBasis: null,
+      marketValue: h.marketValue, account: h.account, source: 'broker',
+    }));
+  }
+  if (Array.isArray(snapshot?.accounts) && snapshot.accounts.length > 0
+      && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
+    const brokerNames = new Set(snapshot.accounts.map(a => a.name));
+    // Filter both the explicit `source: 'broker'` tag AND legacy untagged
+    // rows that share a broker account's name -- pre-dedup KV saves never
+    // set `source`, so those stale rows survived every overlay since and
+    // kept duplicating alongside the fresh broker copy.
+    const manualAccounts = (data.accounts || []).filter(a => a.source !== 'broker' && !brokerNames.has(a.name));
+    const brokerAccounts = snapshot.accounts.map(a => ({
+      name: a.name, type: a.type, balance: a.balance, cash: a.cash, source: 'broker',
+    }));
+    data.accounts = [...manualAccounts, ...brokerAccounts];
+  }
+  return data;
 }

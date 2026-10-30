@@ -46,8 +46,8 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Estimated yearly dividend income on the portfolio, with a bar per month | Public, Wealthsimple | M | 34.0 | done 34.0.0 (yearly estimate from trailing yield; per-month bars wait on a dividend schedule in the quotes) |
 | Chart metric tabs on a stock: Price, Market cap, P/E | Public | M | 35.0 | parked: needs EPS and share count history, or the tabs are the price line rescaled |
 | Gas stations near you as a list sorted by distance, under the Gas map chip | Waze | M | 36.0 | done 36.0.0 on web (no prices; the server never tagged fuel, so the chip found nothing). iPhone and Mac have no places list yet |
-| Rate of return, annualized and cumulative, with a custom range | Empower | M | 37.0 | blocked on the same value history as 28.0 |
-| Daily value snapshot cron (unblocks 28.0 and 37.0) | Delta, Empower | M | 38.0 | open |
+| Rate of return, annualized and cumulative, with a custom range | Empower | M | 37.0 | waits for a few weeks of daily snapshots (38.0) |
+| Daily value snapshot cron (unblocks 28.0 and 37.0) | Delta, Empower | M | 38.0 | done 38.0.0 (21:30 UTC daily, `server/api/portfolio-snapshot.js`) |
 
 Skipped: AI agents and prediction markets (Public), credit card and chequing (Wealthsimple), bias ratings (Ground News, not our news), driver reports and voice packs (Waze, social).
 
@@ -70,7 +70,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 20.0 | A fresh Mobbin pass, written into a new table (done 20.0.0, "Mobbin pass 2" above) |
 | 21 to 29 | One row each from "Mobbin pass 2" (done except 28.0 and two 29.0 rows) |
 | 30 | Mobbin pass 3 plus an apple audit (done 30.0.0) |
-| 31 to 38 | One row each from "Mobbin pass 3" |
+| 31 to 38 | One row each from "Mobbin pass 3" (done except 35, parked, and 37, waiting on history) |
 | 40 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-01 brain dump (open)

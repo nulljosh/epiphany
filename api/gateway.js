@@ -73,6 +73,7 @@ const ROUTES = {
   alerts:               lazy(() => import('../server/api/alerts.js')),
   'alerts-check':       lazy(() => import('../server/api/alerts-check.js')),
   'earnings-digest':    lazy(() => import('../server/api/earnings-digest.js')),
+  'portfolio-snapshot': lazy(() => import('../server/api/portfolio-snapshot.js')),
   avatar:               lazy(() => import('../server/api/avatar.js')),
   ontology:             lazy(() => import('../server/api/ontology.js')),
   'portfolio/history':  lazy(() => import('../server/api/portfolio-history.js')),

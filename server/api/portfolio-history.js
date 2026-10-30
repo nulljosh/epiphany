@@ -24,40 +24,32 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'total_value required' });
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-
-    try {
-      // Try upsert via POST with on_conflict
-      const rows = await sparkRequest('portfolio_history?on_conflict=user_email,snapshot_date', {
-        method: 'POST',
-        body: {
-          user_email: email,
-          total_value: Number(total_value),
-          day_change: day_change != null ? Number(day_change) : null,
-          snapshot_date: today,
-          holdings: holdings || null,
-        },
-      });
-      return res.status(201).json(Array.isArray(rows) ? rows[0] : rows);
-    } catch (err) {
-      // If conflict, update instead
-      if (err.status === 409 || (err.message && err.message.includes('duplicate'))) {
-        const rows = await sparkRequest(
-          `portfolio_history?user_email=eq.${encodeURIComponent(email)}&snapshot_date=eq.${today}`,
-          {
-            method: 'PATCH',
-            body: {
-              total_value: Number(total_value),
-              day_change: day_change != null ? Number(day_change) : null,
-              holdings: holdings || null,
-            },
-          }
-        );
-        return res.status(200).json(Array.isArray(rows) ? rows[0] : rows);
-      }
-      throw err;
-    }
+    const row = await saveSnapshot(email, { total_value, day_change, holdings });
+    return res.status(201).json(row);
   }
 
   return errorResponse(res, 405, 'Method not allowed');
+}
+
+/** Upsert today's row for one user. Shared by POST above and the daily cron (portfolio-snapshot.js). */
+export async function saveSnapshot(email, { total_value, day_change = null, holdings = null }, today = new Date().toISOString().slice(0, 10)) {
+  const fields = {
+    total_value: Number(total_value),
+    day_change: day_change != null ? Number(day_change) : null,
+    holdings: holdings || null,
+  };
+  try {
+    const rows = await sparkRequest('portfolio_history?on_conflict=user_email,snapshot_date', {
+      method: 'POST',
+      body: { user_email: email, snapshot_date: today, ...fields },
+    });
+    return Array.isArray(rows) ? rows[0] : rows;
+  } catch (err) {
+    if (err.status !== 409 && !err.message?.includes('duplicate')) throw err;
+    const rows = await sparkRequest(
+      `portfolio_history?user_email=eq.${encodeURIComponent(email)}&snapshot_date=eq.${today}`,
+      { method: 'PATCH', body: fields },
+    );
+    return Array.isArray(rows) ? rows[0] : rows;
+  }
 }

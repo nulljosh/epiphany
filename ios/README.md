@@ -1,6 +1,6 @@
 <img src="icon.svg" width="80">
 
-![version](https://img.shields.io/badge/version-v36.0.0-blue) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175)
+![version](https://img.shields.io/badge/version-v38.0.0-blue) [![appstore](https://img.shields.io/badge/App%20Store-live-success)](https://apps.apple.com/app/epiphany/id6779522175)
 
 <p align="center">
   <img src="screenshots/appstore/1-situation.png" width="180">

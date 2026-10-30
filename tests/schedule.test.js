@@ -16,6 +16,10 @@ describe('cronPaths', () => {
     expect(cronPaths(Date.UTC(2026, 9, 31, 8, 0))).toEqual(['alerts-check']);                  // Saturday
     expect(cronPaths(Date.UTC(2026, 9, 31, 12, 0))).toEqual(['broker/crypto-paper', 'alerts-check']);
   });
+  it('snapshots portfolio values daily at 21:30 UTC, weekends too', () => {
+    expect(cronPaths(Date.UTC(2026, 9, 29, 21, 30))).toEqual(['portfolio-snapshot', 'alerts-check']);
+    expect(cronPaths(Date.UTC(2026, 9, 31, 21, 30))).toEqual(['portfolio-snapshot', 'alerts-check']);
+  });
   it('runs only the alert check on other ticks', () => {
     expect(cronPaths(Date.UTC(2026, 9, 29, 8, 15))).toEqual(['alerts-check']);
   });
