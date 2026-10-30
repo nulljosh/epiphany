@@ -41,3 +41,15 @@ export function leftThisMonth(cashflow = [], now = new Date()) {
     : `Left in ${new Date(`${m.month}-01T12:00:00`).toLocaleDateString('en-US', { month: 'long' })}`;
   return { title, left: m.in - m.out, in: m.in, out: m.out };
 }
+
+// One month's spending as its top `n` categories plus Other, with shares, biggest first. Mirrors MoneyGlance.topSpending.
+export const SPEND_COLORS = ['#0071e3', '#30D158', '#FF9F0A', '#FF453A', '#8E8E93'];
+export function topSpending(categories = {}, n = 4) {
+  const rows = Object.entries(categories).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const total = rows.reduce((s, [, v]) => s + v, 0);
+  if (!total) return [];
+  const top = rows.slice(0, n).map(([name, amount]) => ({ name, amount }));
+  const rest = rows.slice(n).reduce((s, [, v]) => s + v, 0);
+  if (rest > 0) top.push({ name: 'other', amount: rest });
+  return top.map((r) => ({ ...r, share: r.amount / total }));
+}

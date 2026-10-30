@@ -14,6 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
+import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1631,6 +1632,26 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               </div>
               <SpendingChart spending={spendingChronological} t={t} totalIncome={totalIncome} totalExpenses={totalExpenses} activeScenarios={activeScenarios} />
             </Card>
+
+            {spendingRecentFirst[0] && topSpending(spendingRecentFirst[0].categories).length > 1 && (
+              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                <div style={labelStyle}>Top Spending, {spendingRecentFirst[0].month}</div>
+                <div style={{ display: 'flex', height: 14, borderRadius: 7, overflow: 'hidden', gap: 2 }}>
+                  {topSpending(spendingRecentFirst[0].categories).map((r, i) => (
+                    <div key={r.name} title={`${capitalize(r.name.replace(/_/g, ' '))} ${formatCurrency(r.amount)}`} style={{ width: `${r.share * 100}%`, background: SPEND_COLORS[i] }} />
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px 16px', marginTop: 12 }}>
+                  {topSpending(spendingRecentFirst[0].categories).map((r, i) => (
+                    <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: 2, background: SPEND_COLORS[i], flexShrink: 0 }} />
+                      <span style={{ color: t.text }}>{capitalize(r.name.replace(/_/g, ' '))}</span>
+                      <span style={{ marginLeft: 'auto', color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{Math.round(r.share * 100)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
               <div style={labelStyle}>Category Breakdown</div>

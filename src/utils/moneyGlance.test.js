@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash } from './moneyGlance';
+import { projectCash, topSpending } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -19,5 +19,15 @@ describe('projectCash', () => {
     const { points, events } = projectCash(50, [], [], today);
     expect(points.every((p) => p.balance === 50)).toBe(true);
     expect(events).toBe(0);
+  });
+});
+
+describe('topSpending', () => {
+  it('keeps the top four and folds the rest into other', () => {
+    const rows = topSpending({ food: 300, rent: 500, fun: 100, gas: 50, gym: 30, tea: 20, zero: 0 });
+    expect(rows.map((r) => r.name)).toEqual(['rent', 'food', 'fun', 'gas', 'other']);
+    expect(rows[0].share).toBe(0.5);
+    expect(rows[4].amount).toBe(50);
+    expect(topSpending({})).toEqual([]);
   });
 });
