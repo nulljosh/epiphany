@@ -1290,8 +1290,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                       </div>
                     ))}
                   </div>
-                  {next.slice(0, 5).map((n) => (
-                    <div key={n.symbol} style={{ ...rowStyle, fontSize: 13 }}>
+                  {next.slice(0, 5).map((n, i, arr) => (
+                    <div key={n.symbol} style={{ ...rowStyle, fontSize: 13, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
                       <span><b>{n.symbol}</b> <span style={{ color: t.textSecondary }}>{n.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span></span>
                       <span style={{ fontVariantNumeric: 'tabular-nums', color: t.textSecondary }}>about {formatCurrency(n.amount)}</span>
                     </div>
@@ -1736,8 +1736,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
                   <div style={sectionStyle}>
                     <div style={labelStyle}>Earned This Year</div>
-                    {[['Dividends', e.dividends], ['Interest', e.interest]].filter(([, v]) => v > 0).map(([label, v]) => (
-                      <div key={label} style={rowStyle}>
+                    {[['Dividends', e.dividends], ['Interest', e.interest]].filter(([, v]) => v > 0).map(([label, v], i, arr) => (
+                      <div key={label} style={{ ...rowStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
                         <span style={{ fontSize: 14 }}>{label}</span>
                         <span style={{ fontWeight: 600, fontSize: 14, color: t.green, fontVariantNumeric: 'tabular-nums' }}>+{formatCurrency(v)}</span>
                       </div>
@@ -1782,8 +1782,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                       </div>
                     );
                   })()}
-                  {recentActivity(statementFiles).map((txn, i) => (
-                    <div key={`${txn.date}-${i}`} style={rowStyle}>
+                  {recentActivity(statementFiles).map((txn, i, arr) => (
+                    <div key={`${txn.date}-${i}`} style={{ ...rowStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {txn.description}
@@ -2020,8 +2020,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
                   <div style={sectionStyle}>
                     <div style={labelStyle}>Stopped</div>
-                    {stopped.map((r) => (
-                      <div key={`${r.merchant}-${r.amount}`} style={rowStyle}>
+                    {stopped.map((r, i, arr) => (
+                      <div key={`${r.merchant}-${r.amount}`} style={{ ...rowStyle, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
                           <div style={{ fontSize: 11, color: t.textTertiary }}>

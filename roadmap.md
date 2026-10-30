@@ -79,7 +79,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Your yearly dividend from a stock, in its Your Position card | M1 Finance | S | 96.0 | done 96.0.0 |
 | Biggest single expense this month as an insight | Origin | S | 97.0 | done 97.0.0 |
 | The last seven days of spending as daily bars | Origin | S | 98.0 | done 98.0.0 |
-| Polish pass over the cards 91 to 98 | apple skill | S | 99.0 | open |
+| Polish pass over the cards 91 to 98 | apple skill | S | 99.0 | done 99.0.0 |
 
 Skipped: AI advisor chat and partner sharing (Origin, M1), cash advances, credit building and the money quiz (Cleo), margin loans and auto-invest (M1, a brokerage), copy trading (eToro, social). The apple audit found no teal, purple or indigo.
 
@@ -180,7 +180,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 80 | Mobbin pass 8 plus an apple audit (done 80.0.0) |
 | 81 to 89 | One row each from "Mobbin pass 8" (done 89.0.0) |
 | 90 | Mobbin pass 9 plus an apple audit (done 90.0.0) |
-| 91 to 99 | One row each from "Mobbin pass 9" |
+| 91 to 99 | One row each from "Mobbin pass 9" (done 99.0.0) |
 | 100 | Mobbin pass 10, an apple audit, and the 58 and 59 rows if snapshots exist |
 | after 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
