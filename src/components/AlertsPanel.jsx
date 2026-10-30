@@ -81,11 +81,12 @@ const styles = {
   },
 };
 
-const KINDS = [['price', 'Price'], ['high52', '52W high'], ['low52', '52W low'], ['earnings', 'Earnings'], ['digest', 'Weekly']];
+const KINDS = [['price', 'Price'], ['move', 'Moves %'], ['high52', '52W high'], ['low52', '52W low'], ['earnings', 'Earnings'], ['digest', 'Weekly']];
 
 function describeAlert(a) {
   const target = `$${Number(a.targetPrice ?? a.target_price).toFixed(2)}`;
   if (a.kind === 'earnings') return 'earnings day';
+  if (a.kind === 'move') return `moves ${Number(a.targetPrice ?? a.target_price)}% in a day`;
   if (a.kind === 'digest') return 'Sunday email: what reports this week';
   if (a.kind === 'high52') return `new 52 week high, past ${target}`;
   if (a.kind === 'low52') return `new 52 week low, under ${target}`;
@@ -114,8 +115,8 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
     if (!isPro) { showPricing(); return; } // price alerts are Premium
     const sym = symbol.trim().toUpperCase();
     const p = parseFloat(price);
-    if ((!sym && kind !== 'digest') || (kind === 'price' && (isNaN(p) || p <= 0))) return;
-    const made = await onAdd(sym, kind === 'price' ? p : null, direction, kind);
+    if ((!sym && kind !== 'digest') || ((kind === 'price' || kind === 'move') && (isNaN(p) || p <= 0))) return;
+    const made = await onAdd(sym, kind === 'price' || kind === 'move' ? p : null, direction, kind);
     if (made?.error) { setError(made.error); return; }
     setError('');
     setSymbol('');
@@ -160,6 +161,10 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
               </div>
             )}
           </div>}
+          {kind === 'move' && (
+            <input style={{ ...styles.input, maxWidth: 100 }} placeholder="Percent" aria-label="Move in a day, percent" type="number" step="0.5"
+              value={price} onChange={e => setPrice(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          )}
           {kind === 'price' && <>
           <input
             style={{ ...styles.input, maxWidth: 100 }}

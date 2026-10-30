@@ -59,7 +59,10 @@ export function useAlerts(authUser) {
       const target = alert.targetPrice ?? alert.target_price;
       if (typeof price !== 'number' || typeof target !== 'number') return alert;
 
-      const hit = alert.direction === 'above' ? price >= target : price <= target;
+      // A move alert's target is a percent: a day's move that big, up or down.
+      const hit = alert.kind === 'move'
+        ? Math.abs(stock.changePercent ?? 0) >= target
+        : alert.direction === 'above' ? price >= target : price <= target;
       if (!hit) return alert;
 
       // Send browser notification (once per alert)
@@ -68,7 +71,9 @@ export function useAlerts(authUser) {
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           try {
             new Notification(`${alert.symbol} Alert`, {
-              body: `${alert.symbol} hit $${price.toFixed(2)} (target: ${alert.direction} $${target.toFixed(2)})`,
+              body: alert.kind === 'move'
+                ? `${alert.symbol} moved ${(stock.changePercent ?? 0).toFixed(1)}% today, now $${price.toFixed(2)}`
+                : `${alert.symbol} hit $${price.toFixed(2)} (target: ${alert.direction} $${target.toFixed(2)})`,
               icon: '/icon-192.svg',
             });
           } catch {}

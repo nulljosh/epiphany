@@ -158,8 +158,20 @@ struct CreateAlertSheet: View {
                 } header: {
                     Text("Kind")
                 } footer: {
-                    if kind != "price" {
+                    if kind != "price" && kind != "move" {
                         Text(kind == "digest" ? "Every Sunday, one email with the stocks on your watchlists that report that week." : kind == "earnings" ? "Emails you the day before the report." : "Uses today's 52 week range. We email you when it hits, even with Epiphany closed.")
+                    }
+                }
+
+                if kind == "move" {
+                    Section {
+                        TextField("10", text: $targetPrice)
+                            .keyboardType(.decimalPad)
+                            .font(.body.weight(.medium))
+                    } header: {
+                        Text("Move in a day (%)")
+                    } footer: {
+                        Text("We email you when it moves that much in a day, up or down.")
                     }
                 }
 
@@ -199,7 +211,7 @@ struct CreateAlertSheet: View {
                             .frame(maxWidth: .infinity)
                             .fontWeight(.semibold)
                     }
-                    .disabled((symbol.isEmpty && kind != "digest") || (kind == "price" && targetPrice.isEmpty) || isCreating)
+                    .disabled((symbol.isEmpty && kind != "digest") || ((kind == "price" || kind == "move") && targetPrice.isEmpty) || isCreating)
                     .tint(Palette.appleBlue)
                 }
             }
@@ -219,7 +231,7 @@ struct CreateAlertSheet: View {
             return
         }
         let price = parseAmount(targetPrice)
-        if kind == "price", (price ?? 0) <= 0 {
+        if kind == "price" || kind == "move", (price ?? 0) <= 0 {
             error = "Enter a valid price"
             return
         }
@@ -228,7 +240,7 @@ struct CreateAlertSheet: View {
         defer { isCreating = false }
         await appState.createAlert(
             symbol: symbol.uppercased().trimmingCharacters(in: .whitespaces),
-            targetPrice: kind == "price" ? price : nil,
+            targetPrice: kind == "price" || kind == "move" ? price : nil,
             direction: direction,
             kind: kind
         )

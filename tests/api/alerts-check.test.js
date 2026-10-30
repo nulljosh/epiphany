@@ -35,6 +35,12 @@ describe('kinds', () => {
     const [out] = pickFired([h], [{ symbol: 'AAPL', price: 300 }]);
     expect(alertLine(out)).toBe('AAPL hit a new 52 week high, past $299.00. Now $300.00.');
   });
+  it('fires a move alert on a big day either way and says how big', () => {
+    const m = { ...a('7', 'TSLA', 'above', 10), kind: 'move' };
+    expect(pickFired([m], [{ symbol: 'TSLA', price: 200, changePercent: 4 }])).toHaveLength(0);
+    const [out] = pickFired([m], [{ symbol: 'TSLA', price: 180, changePercent: -11.24 }]);
+    expect(alertLine(out)).toBe('TSLA moved -11.2% today. Now $180.00.');
+  });
 });
 
 describe('alertEmail', () => {

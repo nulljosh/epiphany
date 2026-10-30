@@ -28,11 +28,14 @@ enum AlertWatcher {
         let symbols = Array(Set(active.map(\.symbol)))
         guard let quotes = try? await EpiphanyAPI.shared.fetchQuotes(symbols: symbols) else { return }
         let prices = Dictionary(quotes.map { ($0.symbol, $0.price) }, uniquingKeysWith: { a, _ in a })
+        let moves = Dictionary(quotes.map { ($0.symbol, $0.changePercent) }, uniquingKeysWith: { a, _ in a })
 
         var fired = Set(UserDefaults.standard.stringArray(forKey: firedKey) ?? [])
         // Earnings alerts need the report date, so only the server's email check fires them.
         for alert in active where !fired.contains(alert.id) && alert.kind != "earnings" && alert.kind != "digest" {
-            guard let price = prices[alert.symbol], crossed(alert, price) else { continue }
+            guard let price = prices[alert.symbol] else { continue }
+            // A move alert's target is a percent: fire on a day's move that big, up or down.
+            guard alert.kind == "move" ? abs(moves[alert.symbol] ?? 0) >= alert.targetPrice : crossed(alert, price) else { continue }
             let content = UNMutableNotificationContent()
             content.title = "\(alert.symbol): \(alert.summary)"
             content.body = "Now \(CurrencyFormatter.formatPrice(price))."
@@ -52,13 +55,14 @@ enum AlertWatcher {
 }
 
 extension PriceAlert {
-    static let kinds: [(id: String, label: String)] = [("price", "Price"), ("high52", "52W High"), ("low52", "52W Low"), ("earnings", "Earnings"), ("digest", "Weekly")]
+    static let kinds: [(id: String, label: String)] = [("price", "Price"), ("move", "Moves %"), ("high52", "52W High"), ("low52", "52W Low"), ("earnings", "Earnings"), ("digest", "Weekly")]
 
     /// One line for lists and banners, for every kind.
     var summary: String {
         let target = CurrencyFormatter.formatPrice(targetPrice)
         switch kind {
         case "earnings": return "earnings day"
+        case "move": return "moves \(targetPrice.formatted())% in a day"
         case "digest": return "Sunday email: what reports this week"
         case "high52": return "new 52 week high, past \(target)"
         case "low52": return "new 52 week low, under \(target)"
