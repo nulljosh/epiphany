@@ -766,13 +766,14 @@ const reset = useCallback(() => {
       setTimeout(go, 600);
     };
     return (
-      <div className="epiphany-preauth">
+      <div className={`epiphany-preauth${dark ? '' : ' light'}`}>
         <div className="preauth-map" aria-hidden="true">
-          <Suspense fallback={null}><LiveMapBackdrop dark mapLayers={PREAUTH_LAYERS} autoGeo={false} chrome={false} onMapReady={handleMapReady} /></Suspense>
+          <Suspense fallback={null}><LiveMapBackdrop dark={dark} mapLayers={PREAUTH_LAYERS} autoGeo={false} chrome={false} onMapReady={handleMapReady} /></Suspense>
         </div>
         <div className="preauth-content">
           {showLanding && !resetToken ? (
             <LandingPage
+              dark={dark}
               zooming={zooming}
               onRegister={() => enterAuth('register')}
               onRegisterPaid={() => {

@@ -26,7 +26,7 @@ const PLANS = [
   { tier: 'The app', price: '$1', note: 'on the App Store', body: 'iPhone, Mac and Apple Watch, with widgets.', cta: 'Get the app', href: APP_STORE },
 ];
 
-export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zooming = false }) {
+export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zooming = false, dark = true }) {
   // Reveal once on intersect, with a safety net so nothing stays hidden.
   useEffect(() => {
     const els = document.querySelectorAll('.lp .reveal');
@@ -46,7 +46,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
   };
 
   return (
-    <div id="top" className={`lp${zooming ? ' zooming' : ''}`}>
+    <div id="top" className={`lp${dark ? '' : ' light'}${zooming ? ' zooming' : ''}`}>
       <header className="nav" aria-label="Site">
         <nav className="nav-links" aria-label="Main">
           <a href="#features">Features</a>
@@ -81,8 +81,9 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             </div>
           </div>
           <figure className="stage reveal">
-            <img src="/landing/mac-markets.jpg" width="1200" height="800" loading="lazy" alt="Epiphany on the Mac: the market list in a column, Mastercard's chart and stats beside it." />
-            <figcaption>The Mac app, on live prices.</figcaption>
+            {/* The screenshot matches the page: dark page, dark app. */}
+            <img src={`/landing/web-${dark ? 'dark' : 'light'}.jpg`} width="1600" height="1000" loading="lazy" alt="Epiphany on the web: the live map of Maple Ridge beside the market indexes and a watchlist." />
+            <figcaption>The web app, on live prices.</figcaption>
           </figure>
           <div className="frows">
             {ROWS.map((r) => (
