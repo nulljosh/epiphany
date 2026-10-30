@@ -307,6 +307,7 @@ export function detectRecurring(transactions = [], today = new Date(), { income 
         nextDate: next.toISOString().slice(0, 10),
         priceDelta: Math.round((amount - prev) * 100) / 100,
         count: txns.length,
+        months: [...new Set(txns.map((t) => t.date.slice(0, 7)))].sort(),
       });
     }
   }

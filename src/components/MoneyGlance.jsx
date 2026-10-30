@@ -1,6 +1,6 @@
 import { Card } from './ui';
 import { formatCurrency } from '../utils/formatting';
-import { projectCash, leftThisMonth } from '../utils/moneyGlance';
+import { projectCash, leftThisMonth, billHistory } from '../utils/moneyGlance';
 
 const DAY = 86400000;
 const label = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 };
@@ -151,6 +151,31 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
           </div>
         </Card>
       )}
+
+      <BillHistory recurring={recurring} dark={dark} t={t} />
     </>
+  );
+}
+
+// A row of paid months per recurring bill, newest statement month on the right.
+function BillHistory({ recurring, dark, t }) {
+  const { months, rows } = billHistory(recurring);
+  if (!rows.length) return null;
+  const cols = `minmax(0, 1fr) repeat(${months.length}, 22px)`;
+  return (
+    <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
+      <div style={{ ...label, color: t.textTertiary }}>Bill history</div>
+      <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '8px 6px', alignItems: 'center' }}>
+        <span />
+        {months.map((m) => <span key={m} style={{ fontSize: 10, color: t.textTertiary, textAlign: 'center' }}>{monthName(m).slice(0, 1)}</span>)}
+        {rows.map((r) => [
+          <span key={r.name} style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={formatCurrency(r.amount)}>{r.name}</span>,
+          ...r.paid.map((p, i) => (
+            <span key={`${r.name}-${months[i]}`} title={`${monthName(months[i])}: ${p ? 'paid' : 'not seen'}`}
+              style={{ width: 22, height: 22, borderRadius: 6, background: p ? t.green : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') }} />
+          )),
+        ])}
+      </div>
+    </Card>
   );
 }

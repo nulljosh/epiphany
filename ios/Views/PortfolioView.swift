@@ -187,6 +187,9 @@ struct PortfolioView: View {
                                         cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? ($1.type == "investment" ? 0 : $1.balance)) })
                                 .padding(.horizontal)
 
+                            BillHistoryCard(recurring: appState.recurring)
+                                .padding(.horizontal)
+
 
                             ReviewQueueCard()
 

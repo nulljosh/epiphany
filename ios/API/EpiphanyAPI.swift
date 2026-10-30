@@ -1150,6 +1150,8 @@ struct RecurringCharge: Decodable, Identifiable, Hashable {
     let cadence: String
     let nextDate: String
     let priceDelta: Double
+    /// Statement months it was paid in ("2026-08"), oldest first; nil from an older server.
+    var months: [String]? = nil
     var id: String { "\(merchant)-\(amount)" }
 
     /// What it costs per month, so biweekly and yearly bills add up with the rest.

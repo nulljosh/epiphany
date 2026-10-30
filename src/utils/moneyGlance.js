@@ -53,3 +53,18 @@ export function topSpending(categories = {}, n = 4) {
   if (rest > 0) top.push({ name: 'other', amount: rest });
   return top.map((r) => ({ ...r, share: r.amount / total }));
 }
+
+// Bill history grid: the last `n` statement months and, per bill, whether it was paid in each.
+// The months end at the newest month any bill was paid, since statements lag the clock. Mirrors BillHistory.grid.
+export function billHistory(recurring = [], n = 6) {
+  const all = recurring.flatMap((r) => r.months || []);
+  if (!all.length) return { months: [], rows: [] };
+  const [y, m] = all.sort().at(-1).split('-').map(Number);
+  const months = Array.from({ length: n }, (_, i) => {
+    const d = new Date(y, m - 1 - (n - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const rows = recurring.filter((r) => r.months?.length)
+    .map((r) => ({ name: r.merchant || r.name, amount: r.amount, paid: months.map((mo) => r.months.includes(mo)) }));
+  return { months, rows };
+}

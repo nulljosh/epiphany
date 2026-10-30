@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending } from './moneyGlance';
+import { projectCash, topSpending, billHistory } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -29,5 +29,21 @@ describe('topSpending', () => {
     expect(rows[0].share).toBe(0.5);
     expect(rows[4].amount).toBe(50);
     expect(topSpending({})).toEqual([]);
+  });
+});
+
+describe('billHistory', () => {
+  it('ends at the newest paid month and marks each bill per month', () => {
+    const g = billHistory([
+      { name: 'Rent', amount: 1500, months: ['2026-05', '2026-06', '2026-07', '2026-08'] },
+      { name: 'Gym', amount: 40, months: ['2026-01', '2026-06', '2026-08'] },
+      { name: 'Odd', amount: 9 },
+    ], 4);
+    expect(g.months).toEqual(['2026-05', '2026-06', '2026-07', '2026-08']);
+    expect(g.rows).toEqual([
+      { name: 'Rent', amount: 1500, paid: [true, true, true, true] },
+      { name: 'Gym', amount: 40, paid: [false, true, false, true] },
+    ]);
+    expect(billHistory([]).rows).toEqual([]);
   });
 });

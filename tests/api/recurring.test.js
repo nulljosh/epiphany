@@ -15,7 +15,7 @@ describe('detectRecurring', () => {
       txn('2026-09-14', 'PAYROLL', 2000),
     ], today);
     expect(out).toHaveLength(1);
-    expect(out[0]).toMatchObject({ merchant: 'spotify stockholm', cadence: 'monthly', amount: 12.99, priceDelta: 1, nextDate: '2026-10-03' });
+    expect(out[0]).toMatchObject({ merchant: 'spotify stockholm', cadence: 'monthly', amount: 12.99, priceDelta: 1, nextDate: '2026-10-03', months: ['2026-07', '2026-08', '2026-09'] });
   });
 
   it('skips one-offs, uneven amounts and charges that stopped', () => {

@@ -76,7 +76,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Holdings by sector, as bars, from the sector map 41.0 added | getquin | S | 53.0 | done 53.0.0 |
 | This month's top spending as one stacked bar with a legend | Credit Karma | S | 54.0 | done 54.0.0 |
 | News remembers the topic you follow | Bloomberg | S | 55.0 | done 55.0.0 |
-| Bill payment history: a row of paid months per recurring bill | Credit Karma | M | 56.0 | open |
+| Bill payment history: a row of paid months per recurring bill | Credit Karma | M | 56.0 | done 56.0.0 |
 | Dividend calendar: next pay dates and estimated amounts by month | Snowball, getquin, Stock Events | M | 57.0 | open, estimate from `dividendDate` and yield |
 | Portfolio against the S&P 500 over 1M, 3M, YTD | Snowball, getquin | M | 58.0 | waits for weeks of 38.0 snapshots |
 | Monthly returns heat grid | getquin | M | 59.0 | waits for weeks of 38.0 snapshots |
@@ -107,7 +107,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 40 | Mobbin pass 4 plus an apple audit (done 40.0.0) |
 | 41 to 49 | One row each from "Mobbin pass 4" (done; net worth over time parked, 49.0.0 took QA leftovers) |
 | 50 | Mobbin pass 5 plus an apple audit (done 50.0.0) |
-| 51 to 59 | One row each from "Mobbin pass 5" (51 to 55 done) |
+| 51 to 59 | One row each from "Mobbin pass 5" (51 to 56 done) |
 | 60 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
