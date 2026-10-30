@@ -33,6 +33,54 @@ enum SectorHeat {
 
     /// A 3 percent day is full colour.
     static func alpha(_ change: Double) -> Double { min(abs(change) / 3, 1) * 0.7 + 0.12 }
+
+    struct Slice: Equatable { let sector: String; let value: Double; let share: Double }
+
+    /// Holdings value per sector, biggest first; coins are Crypto, unmapped stocks Other. Mirrors holdingsBySector in sectors.js.
+    static func holdings(_ holdings: [Portfolio.Holding]) -> [Slice] {
+        var sums: [String: Double] = [:]
+        for h in holdings where h.marketValue > 0 {
+            let sector = Allocation.isCrypto(h.symbol) ? "Crypto" : (sectorOf[h.symbol] ?? "Other")
+            sums[sector, default: 0] += h.marketValue
+        }
+        let total = sums.values.reduce(0, +)
+        return sums.map { Slice(sector: $0.key, value: $0.value, share: $0.value / total) }
+            .sorted { $0.value > $1.value }
+    }
+}
+
+/// "By sector" bars under the allocation donut; nothing when everything sits in one sector.
+struct SectorBars: View {
+    let holdings: [Portfolio.Holding]
+
+    var body: some View {
+        let slices = SectorHeat.holdings(holdings)
+        if slices.count > 1 {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("By Sector").font(.headline)
+                ForEach(slices, id: \.sector) { s in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(s.sector).fontWeight(.semibold)
+                            Spacer()
+                            Text("\(CurrencyFormatter.formatPrice(s.value)) · \(Int((s.share * 100).rounded()))%")
+                                .foregroundStyle(.secondary).monospacedDigit()
+                        }
+                        .font(.subheadline)
+                        GeometryReader { g in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.primary.opacity(0.08))
+                                Capsule().fill(Palette.appleBlue).frame(width: g.size.width * s.share)
+                            }
+                        }
+                        .frame(height: 6)
+                    }
+                }
+            }
+            .padding()
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
 }
 
 /// One tile per sector, green or red by today's average move.

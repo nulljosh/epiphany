@@ -189,7 +189,8 @@ export function usePortfolio(stocks, isAuthenticated) {
     () => valuedHoldings.reduce((sum, h) => sum + (toCad(h.value, quoteCurrency(h.symbol), usdPerCad) ?? 0), 0),
     [valuedHoldings, usdPerCad],
   );
-  const cashValue = useMemo(() => accounts.reduce((sum, a) => sum + (a.cash ?? a.balance), 0), [accounts]);
+  // An investment account's balance is mostly holdings; only its `cash` field is cash.
+  const cashValue = useMemo(() => accounts.reduce((sum, a) => sum + (a.cash ?? (a.type === 'investment' ? 0 : a.balance)), 0), [accounts]);
   const totalDebt = useMemo(() => sumDebt(debt), [debt]);
   const totalReceivable = useMemo(() => sumReceivable(debt), [debt]);
 

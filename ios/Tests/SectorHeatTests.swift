@@ -11,4 +11,12 @@ final class SectorHeatTests: XCTestCase {
                                                   .init(sector: "Financials", change: -0.5, count: 1)])
         XCTAssertEqual(SectorHeat.alpha(-6), 0.82, accuracy: 0.001)
     }
+
+    func testHoldingsBySectorBiggestFirst() {
+        let h = [("AAPL", 300.0), ("MSFT", 100), ("JPM", 200), ("BTC-USD", 250), ("ZZZZ", 150), ("NVDA", 0)]
+            .map { Portfolio.Holding(symbol: $0.0, shares: 1, avgCost: 0, currentPrice: $0.1) }
+        let slices = SectorHeat.holdings(h)
+        XCTAssertEqual(slices.map(\.sector), ["Tech", "Crypto", "Financials", "Other"])
+        XCTAssertEqual(slices[0], SectorHeat.Slice(sector: "Tech", value: 400, share: 0.4))
+    }
 }

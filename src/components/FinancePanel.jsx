@@ -13,6 +13,7 @@ import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain } from '../utils/allocation';
+import { holdingsBySector } from '../utils/sectors';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1080,6 +1081,22 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                 <div style={labelStyle}>Allocation</div>
                 <PieChart data={allocation(holdingsCad, cashValue)} t={t} currency="CAD" />
+              </Card>
+            )}
+            {holdingsBySector(holdingsCad).length > 1 && (
+              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                <div style={labelStyle}>By Sector</div>
+                {holdingsBySector(holdingsCad).map(({ sector, value, share }) => (
+                  <div key={sector} style={{ marginTop: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                      <span style={{ color: t.text, fontWeight: 600 }}>{sector}</span>
+                      <span style={{ color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(value, 'CAD')} · {Math.round(share * 100)}%</span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+                      <div style={{ width: `${share * 100}%`, height: '100%', borderRadius: 3, background: '#0071e3' }} />
+                    </div>
+                  </div>
+                ))}
               </Card>
             )}
 

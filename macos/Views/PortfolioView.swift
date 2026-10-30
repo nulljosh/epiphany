@@ -299,9 +299,11 @@ struct PortfolioView: View {
         VStack(spacing: 24) {
             AllocationDonut(slices: Allocation.slices(
                 holdings: portfolio.holdings,
-                cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? $1.balance) }
+                cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? ($1.type == "investment" ? 0 : $1.balance)) }
             ))
             .padding(.horizontal)
+            SectorBars(holdings: portfolio.holdings)
+                .padding(.horizontal)
             VStack(spacing: 8) {
                 Text("Total Value")
                     .font(.caption)
@@ -636,7 +638,7 @@ struct PortfolioView: View {
                 VStack(spacing: 16) {
                     MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights,
                                         income: EpiphanyAPI.shared.lastIncome,
-                                        cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? $1.balance) })
+                                        cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? ($1.type == "investment" ? 0 : $1.balance)) })
                         .padding(.horizontal)
 
                     ReviewQueueCard()
