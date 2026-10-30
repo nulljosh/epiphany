@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1942,7 +1942,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
                           <div style={{ fontSize: 11, color: t.textTertiary }}>
-                            {r.cadence} · next {new Date(`${r.nextDate}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            {/* Statements lag: roll nextDate forward by cadence to the next one still to come. */}
+                            {r.cadence} · next {(billsByMonth([r], new Date(), 400)[0]?.items[0]?.date ?? new Date(`${r.nextDate}T12:00:00`)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             {r.priceDelta > 0 ? ` · up ${formatCurrency(r.priceDelta)}` : r.priceDelta < 0 ? ` · down ${formatCurrency(-r.priceDelta)}` : ''}
                           </div>
                         </div>

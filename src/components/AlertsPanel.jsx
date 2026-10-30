@@ -1,6 +1,12 @@
 import { useState, useMemo } from 'react';
 import { usePremium, showPricing } from '../context/PremiumContext.js';
 
+// The panel reads these variables with dark fallbacks; in light mode the overlay sets the light ones.
+const LIGHT_VARS = {
+  '--bg-secondary': '#ffffff', '--bg': '#f2f2f7', '--border': '#e5e5ea', '--border-muted': 'rgba(0,0,0,0.05)',
+  '--text-primary': '#1d1d1f', '--text-secondary': '#6e6e73', '--text-tertiary': '#8e8e93', '--overlay': 'rgba(0,0,0,0.25)',
+};
+
 const styles = {
   overlay: {
     position: 'fixed', inset: 0, background: 'var(--overlay, rgba(0,0,0,0.5))',
@@ -93,7 +99,7 @@ function describeAlert(a) {
   return `${a.direction} ${target}`;
 }
 
-export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearTriggered, watchlist = [] }) {
+export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearTriggered, watchlist = [], dark = true }) {
   const [symbol, setSymbol] = useState('');
   const [price, setPrice] = useState('');
   const [direction, setDirection] = useState('above');
@@ -124,7 +130,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
   };
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
+    <div style={{ ...styles.overlay, ...(dark ? {} : LIGHT_VARS) }} onClick={onClose}>
       <div style={styles.panel} onClick={e => e.stopPropagation()}>
         <div style={styles.header}>
           <h3 style={styles.title}>Price Alerts</h3>

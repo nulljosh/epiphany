@@ -2,7 +2,7 @@
   "name": "epiphany",
   "license": "Apache-2.0",
   "private": true,
-  "version": "88.0.0",
+  "version": "89.0.0",
   "description": "Everything happening in your world, on one screen. The map, the markets, the people.",
   "keywords": [
     "dashboard",

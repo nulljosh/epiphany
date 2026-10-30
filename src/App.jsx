@@ -982,6 +982,7 @@ const reset = useCallback(() => {
 
       {showAlerts && (
         <AlertsPanel
+          dark={dark}
           onClose={() => setShowAlerts(false)}
           alerts={alerts}
           onAdd={addAlert}

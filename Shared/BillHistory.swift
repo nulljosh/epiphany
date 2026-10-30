@@ -29,7 +29,7 @@ struct BillHistoryCard: View {
         let g = BillHistory.grid(recurring)
         if !g.rows.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Bill history").font(.headline)
+                Text("Bill History").font(.headline)
                 Grid(alignment: .leading, horizontalSpacing: 6, verticalSpacing: 8) {
                     GridRow {
                         Color.clear.frame(height: 1)

@@ -33,7 +33,7 @@ struct YearToDateCard: View {
         let ytd = TopSpending.yearToDate(months)
         if let first = ytd.rows.first {
             VStack(alignment: .leading, spacing: 6) {
-                Text("SO FAR THIS YEAR").font(.caption2.weight(.bold)).foregroundStyle(.secondary).tracking(1.0)
+                Text("So Far This Year").font(.headline)
                 Text("\(CurrencyFormatter.formatPrice(first.amount)) on \(Self.label(first.name)) across \(ytd.months) \(ytd.months == 1 ? "statement" : "statements")")
                     .font(.subheadline.weight(.semibold))
                 ForEach(ytd.rows.dropFirst(), id: \.name) { r in
@@ -67,7 +67,7 @@ struct TopSpendingBar: View {
             let rows = TopSpending.rows(month.categories)
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Top spending, \(month.month)").font(.headline)
+                    Text("Top Spending, \(month.month)").font(.headline)
                     Spacer()
                     Button { index += 1 } label: { Image(systemName: "chevron.left") }
                         .disabled(index >= months.count - 1).accessibilityLabel("Older month")

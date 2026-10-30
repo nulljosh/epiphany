@@ -25,7 +25,7 @@ struct EarnedThisYearCard: View {
         let e = RecentActivity.earned(statements)
         if e.dividends > 0 || e.interest > 0 {
             VStack(alignment: .leading, spacing: 8) {
-                Text("EARNED THIS YEAR").font(.caption2.weight(.bold)).foregroundStyle(.secondary).tracking(1.0)
+                Text("Earned This Year").font(.headline)
                 ForEach([("Dividends", e.dividends), ("Interest", e.interest)].filter { $0.1 > 0 }, id: \.0) { label, v in
                     HStack {
                         Text(label).font(.subheadline)
@@ -49,7 +49,7 @@ struct RecentActivityCard: View {
         let txns = RecentActivity.latest(statements)
         if !txns.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                Text("RECENT ACTIVITY").font(.caption2.weight(.bold)).foregroundStyle(.secondary).tracking(1.0)
+                Text("Recent Activity").font(.headline)
                 ForEach(Array(txns.enumerated()), id: \.offset) { _, t in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {

@@ -745,7 +745,8 @@ struct PortfolioView: View {
 
     private func recurringDetail(_ charge: RecurringCharge) -> String {
         var parts = [charge.cadence]
-        if let date = ISO8601DateFormatter.dateOnly(charge.nextDate) {
+        // Statements lag, so roll nextDate forward by cadence to the next one still to come.
+        if let date = CashProjection.billsByMonth([charge], days: 400).first?.items.first?.date {
             parts.append("next " + date.formatted(.dateTime.month(.abbreviated).day()))
         }
         if charge.priceDelta != 0 {
