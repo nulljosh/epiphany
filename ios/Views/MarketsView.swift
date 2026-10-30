@@ -12,6 +12,7 @@ struct MarketsView: View {
     @State private var selectedStock: Stock?
     @State private var activeList: String?  // nil = the main watchlist
     @State private var sortField: MarketSortField = .changePercent
+    @AppStorage("watchlist_sort") private var watchlistSort: WatchlistSort = .manual
     @State private var sortAscending = false
     @State private var marketFilter: MarketFilter = .all
     @State private var gainersOnly = false
@@ -446,9 +447,12 @@ struct MarketsView: View {
                         .contextMenu { watchlistSwipe(stock.symbol); listMenu(stock.symbol) }
                     }
                 } header: {
-                    WatchlistListPicker(lists: appState.watchlistLists, active: $activeList,
-                                        onCreate: { appState.updateWatchlistLists(appState.watchlistLists + [WatchlistList(name: $0, symbols: [])]) },
-                                        onDelete: { name in appState.updateWatchlistLists(appState.watchlistLists.filter { $0.name != name }); activeList = nil })
+                    HStack {
+                        WatchlistListPicker(lists: appState.watchlistLists, active: $activeList,
+                                            onCreate: { appState.updateWatchlistLists(appState.watchlistLists + [WatchlistList(name: $0, symbols: [])]) },
+                                            onDelete: { name in appState.updateWatchlistLists(appState.watchlistLists.filter { $0.name != name }); activeList = nil })
+                        WatchlistSortMenu(sort: $watchlistSort)
+                    }
                         .padding(.horizontal, 16)
                         .textCase(nil)
                 }
@@ -539,9 +543,9 @@ struct MarketsView: View {
     /// The picked list's stocks: the main watchlist, or a named list's symbols from the loaded quotes.
     private var shownListStocks: [Stock] {
         guard let name = activeList, let list = appState.watchlistLists.first(where: { $0.name == name }) else {
-            return appState.watchlistStocks
+            return watchlistSort.apply(appState.watchlistStocks)
         }
-        return list.symbols.compactMap { sym in appState.stocks.first { $0.symbol == sym } }
+        return watchlistSort.apply(list.symbols.compactMap { sym in appState.stocks.first { $0.symbol == sym } })
     }
 
     private func listMenu(_ symbol: String) -> some View {
