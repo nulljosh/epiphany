@@ -806,7 +806,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
           }}>
             <div style={{ position: 'sticky', top: 0, padding: '12px 16px', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'inherit', zIndex: 1 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{selectedStock?.symbol} news</span>
-              <button onClick={() => setShowNewsDrawer(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.textSecondary, fontSize: 18 }}>✕</button>
+              <button onClick={() => setShowNewsDrawer(false)} aria-label="Close news" style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.textSecondary, fontSize: 18 }}>✕</button>
             </div>
             <div style={{ padding: 16 }}>
               <div style={{ color: t.textSecondary, fontSize: 13, textAlign: 'center' }}>No news yet for this ticker</div>

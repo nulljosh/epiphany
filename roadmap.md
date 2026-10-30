@@ -67,6 +67,22 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
 
+## Mobbin pass 5 (50.0, 2026-10-30: Stock Events, getquin, Snowball Analytics, Bloomberg, Credit Karma, Flighty)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Your position on a stock's page: shares, average cost, today's and total gain | Stock Events | S | 51.0 | open |
+| Upcoming card: earnings and dividend dates for holdings and the watchlist in the next 14 days | Stock Events, Snowball | M | 52.0 | open, `nextEarnings` and `dividendDate` are on each quote |
+| Holdings by sector, as bars, from the sector map 41.0 added | getquin | S | 53.0 | open |
+| This month's top spending as one stacked bar with a legend | Credit Karma | S | 54.0 | open |
+| News remembers the topic you follow | Bloomberg | S | 55.0 | open |
+| Bill payment history: a row of paid months per recurring bill | Credit Karma | M | 56.0 | open |
+| Dividend calendar: next pay dates and estimated amounts by month | Snowball, getquin, Stock Events | M | 57.0 | open, estimate from `dividendDate` and yield |
+| Portfolio against the S&P 500 over 1M, 3M, YTD | Snowball, getquin | M | 58.0 | waits for weeks of 38.0 snapshots |
+| Monthly returns heat grid | getquin | M | 59.0 | waits for weeks of 38.0 snapshots |
+
+Skipped: credit scores, cards, loans, insurance and tax (Credit Karma, needs a credit bureau), AI investment scores (getquin, a made-up number), live TV, radio and CarPlay audio (Bloomberg), friends and shared trips (Flighty, social), Live Activities (Flighty, L; later). The apple audit found no teal, purple or indigo, white text only on solid fills, emoji only on map pins and their chips, and em dashes only as lone placeholders for missing values; it labelled the web news drawer's close button.
+
 ## Version plan to v100
 One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.
 
@@ -89,8 +105,10 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 31 to 38 | One row each from "Mobbin pass 3" (done except 35, parked, and 37, waiting on history) |
 | 39 | Map popups: OpenStreetMap names escaped in the emergency pins; event filtering and event detail were already covered by 10.0 (done 39.0.0) |
 | 40 | Mobbin pass 4 plus an apple audit (done 40.0.0) |
-| 41 to 49 | One row each from "Mobbin pass 4" |
-| 50 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 41 to 49 | One row each from "Mobbin pass 4" (done; net worth over time parked, 49.0.0 took QA leftovers) |
+| 50 | Mobbin pass 5 plus an apple audit (done 50.0.0) |
+| 51 to 59 | One row each from "Mobbin pass 5" |
+| 60 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
 - [ ] iPhone and Mac allocation donut adds USD holdings to CAD cash at face value (the web was fixed in 49.0.0); the native apps need the CADUSD=X rate first.
