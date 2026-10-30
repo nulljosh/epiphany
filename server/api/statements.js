@@ -162,6 +162,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         statements: refreshed,
         recurring: detectRecurring(all),
+        income: detectRecurring(all, new Date(), { income: true }),
         cashflow: summarizeCashflow(all),
         insights: findInsights(all),
       });

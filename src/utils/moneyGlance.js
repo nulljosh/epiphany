@@ -1,0 +1,43 @@
+// Cash for the next `days` days: today's cash, minus each bill on its day, plus each payday.
+// Statements lag, so a nextDate in the past rolls forward by its cadence until it lands on or after today.
+// Mirrors CashProjection in Shared/CashProjection.swift.
+const step = (d, cadence) => {
+  const n = new Date(d);
+  if (cadence === 'biweekly') n.setDate(n.getDate() + 14);
+  else if (cadence === 'yearly') n.setFullYear(n.getFullYear() + 1);
+  else n.setMonth(n.getMonth() + 1);
+  return n;
+};
+
+export function projectCash(start, bills = [], income = [], today = new Date(), days = 30) {
+  const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = new Date(day0); end.setDate(end.getDate() + days);
+  const delta = new Array(days + 1).fill(0);
+  let events = 0;
+  for (const [items, sign] of [[bills, -1], [income, 1]]) {
+    for (const r of items) {
+      let d = new Date(`${r.nextDate}T00:00:00`);
+      if (Number.isNaN(d.getTime()) || !(r.amount > 0)) continue;
+      while (d < day0) d = step(d, r.cadence);
+      for (; d <= end; d = step(d, r.cadence)) {
+        delta[Math.round((d - day0) / 86400000)] += sign * r.amount;
+        events++;
+      }
+    }
+  }
+  let balance = start;
+  const points = delta.map((x, day) => ({ day, balance: (balance += x) }));
+  const low = points.reduce((a, b) => (b.balance < a.balance ? b : a));
+  return { points, low, events };
+}
+
+// Money in minus money out for the newest statement month. Says "this month" only when it is this month,
+// so a statement that lags a month reads "Left in September" instead of passing as current.
+export function leftThisMonth(cashflow = [], now = new Date()) {
+  const m = cashflow.at(-1);
+  if (!m) return null;
+  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const title = m.month === current ? 'Left this month'
+    : `Left in ${new Date(`${m.month}-01T12:00:00`).toLocaleDateString('en-US', { month: 'long' })}`;
+  return { title, left: m.in - m.out, in: m.in, out: m.out };
+}

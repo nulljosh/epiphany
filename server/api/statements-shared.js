@@ -253,10 +253,12 @@ const CADENCES = [
   { name: 'monthly', min: 26, max: 35, days: 30, perMonth: 1.5 },
   { name: 'yearly', min: 350, max: 380, days: 365, perMonth: 1.1 },
 ];
-export function detectRecurring(transactions = [], today = new Date()) {
+// Bills by default; `income: true` finds paydays the same way (money in that repeats on a cadence).
+export function detectRecurring(transactions = [], today = new Date(), { income = false } = {}) {
   const groups = new Map();
   for (const txn of transactions) {
-    if (!(txn?.amount < 0) || !DATE_RE.test(txn?.date || '')) continue;
+    const side = income ? txn?.amount > 0 && isMoneyIn(txn) : txn?.amount < 0;
+    if (!side || !DATE_RE.test(txn?.date || '')) continue;
     // Banks rename the same biller ("PRE AUTHORIZED DEBIT TO ABC CLUB", "ABC CLUB
     // FITNESS"), so recurring matching drops the bank prefix and keeps two words.
     const key = normalizeMerchant(txn.description)

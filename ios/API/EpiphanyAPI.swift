@@ -609,6 +609,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let data = try await perform(request)
         let wrapper = try decode(StatementsWrapper.self, from: data)
         lastRecurring = wrapper.recurring ?? []
+        lastIncome = wrapper.income ?? []
         lastCashflow = wrapper.cashflow ?? []
         lastInsights = wrapper.insights ?? []
         return wrapper.statements
@@ -616,6 +617,8 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
 
     /// Recurring charges from the most recent fetchStatements call.
     private(set) var lastRecurring: [RecurringCharge] = []
+    /// Paydays the server found repeating (detectRecurring with income), for the 30 day cash line.
+    private(set) var lastIncome: [RecurringCharge] = []
     private(set) var lastCashflow: [CashflowMonth] = []
     private(set) var lastInsights: [MoneyInsight] = []
 
@@ -1123,6 +1126,7 @@ private struct NewsWrapper: Decodable {
 private struct StatementsWrapper: Decodable {
     let statements: [Statement]
     let recurring: [RecurringCharge]?
+    let income: [RecurringCharge]?
     let cashflow: [CashflowMonth]?
     let insights: [MoneyInsight]?
 }

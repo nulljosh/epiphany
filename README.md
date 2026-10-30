@@ -1,6 +1,6 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
-[![web](https://img.shields.io/badge/web-v44.0.0-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v44.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v44.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![web](https://img.shields.io/badge/web-v45.0.0-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v45.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v45.0.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Everything happening in your world, on one screen. The map, the markets, the people.
 

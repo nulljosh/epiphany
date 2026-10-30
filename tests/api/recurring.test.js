@@ -24,4 +24,11 @@ describe('detectRecurring', () => {
       txn('2026-03-01', 'GYM', -40), txn('2026-04-01', 'GYM', -40),
     ], today)).toEqual([]);
   });
+
+  it('finds paydays when asked for income, and leaves them out of bills', () => {
+    const pay = [txn('2026-09-04', 'PAYROLL DEPOSIT ACME', 1500), txn('2026-09-18', 'PAYROLL DEPOSIT ACME', 1500),
+      txn('2026-10-02', 'PAYROLL DEPOSIT ACME', 1500), txn('2026-09-20', 'SPOTIFY', -12)];
+    expect(detectRecurring(pay, today, { income: true })[0]).toMatchObject({ cadence: 'biweekly', amount: 1500, nextDate: '2026-10-16' });
+    expect(detectRecurring(pay, today)).toEqual([]);
+  });
 });

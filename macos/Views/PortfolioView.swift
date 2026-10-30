@@ -625,7 +625,9 @@ struct PortfolioView: View {
                 emptyState("No spending data available")
             } else {
                 VStack(spacing: 16) {
-                    MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights)
+                    MoneyGlance(recurring: appState.recurring, cashflow: appState.cashflow, insights: appState.insights,
+                                        income: EpiphanyAPI.shared.lastIncome,
+                                        cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? $1.balance) })
                         .padding(.horizontal)
 
                     ReviewQueueCard()

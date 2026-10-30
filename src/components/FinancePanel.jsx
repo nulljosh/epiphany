@@ -676,6 +676,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [statementFiles, setStatementFiles] = useState([]);
   const [recurring, setRecurring] = useState([]);
   const [cashflow, setCashflow] = useState([]);
+  const [income, setIncome] = useState([]);
   const [insights, setInsights] = useState([]);
   const [statementLoading, setStatementLoading] = useState(false);
   const [statementUploading, setStatementUploading] = useState(false);
@@ -798,6 +799,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       setStatementFiles(files);
       setRecurring(Array.isArray(data?.recurring) ? data.recurring : []);
       setCashflow(Array.isArray(data?.cashflow) ? data.cashflow : []);
+      setIncome(Array.isArray(data?.income) ? data.income : []);
       setInsights(Array.isArray(data?.insights) ? data.insights : []);
       const result = syncSpendingMonthsRef.current(files.map((item) => item.spendingMonth));
       setImportError(result.success ? null : result.error);
@@ -1499,7 +1501,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
         {tab === 'spending' && (
           <>
-            <MoneyGlance recurring={recurring} cashflow={cashflow} insights={insights} dark={dark} t={t} />
+            <MoneyGlance recurring={recurring} cashflow={cashflow} insights={insights} income={income} cash={cashValue} dark={dark} t={t} />
             <ReviewQueue statements={statementFiles} onChanged={refreshStatements} t={t} />
             {importError && (
               <div style={{ marginBottom: 12, padding: '8px 12px', background: 'rgba(255,69,58,0.15)', borderRadius: 8, fontSize: 11, color: t.red }}>

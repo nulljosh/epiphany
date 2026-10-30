@@ -28,6 +28,8 @@ struct MoneyGlance: View {
     let recurring: [RecurringCharge]
     let cashflow: [CashflowMonth]
     let insights: [MoneyInsight]
+    var income: [RecurringCharge] = []
+    var cash: Double = 0
 
     private var upcoming: [(charge: RecurringCharge, date: Date)] {
         let today = Calendar.current.startOfDay(for: .now)
@@ -41,7 +43,7 @@ struct MoneyGlance: View {
     }
 
     /// Money in minus out for the newest statement month. Says "this month" only when it is; a statement that lags
-    /// reads "Left in September". Mirrors leftThisMonth in src/components/MoneyGlance.jsx.
+    /// reads "Left in September". Mirrors leftThisMonth in src/utils/moneyGlance.js.
     static func left(_ cashflow: [CashflowMonth], now: Date = .now) -> (title: String, left: Double, month: CashflowMonth)? {
         guard let m = cashflow.last else { return nil }
         let c = Calendar.current.dateComponents([.year, .month], from: now)
@@ -72,6 +74,7 @@ struct MoneyGlance: View {
                 }
             }
             if !upcoming.isEmpty { upcomingList }
+            if cash > 0 { CashLineCard(cash: cash, bills: recurring, income: income) }
             if !cashflow.isEmpty { cashflowChart }
         }
     }

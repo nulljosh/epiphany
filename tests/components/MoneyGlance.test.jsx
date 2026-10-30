@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import MoneyGlance, { leftThisMonth } from '../../src/components/MoneyGlance.jsx';
+import MoneyGlance from '../../src/components/MoneyGlance.jsx';
+import { leftThisMonth } from '../../src/utils/moneyGlance.js';
 
 const t = { text: '#000', textSecondary: '#555', textTertiary: '#999', border: '#ddd', green: 'green', red: 'red' };
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
