@@ -657,9 +657,7 @@ struct PortfolioView: View {
                     ReviewQueueCard()
                         .padding(.horizontal)
 
-                    if let latest = months.first {
-                        TopSpendingBar(month: latest).padding(.horizontal)
-                    }
+                    TopSpendingBar(months: months).padding(.horizontal)
 
                     scenarioToggles
                         .padding(.horizontal)

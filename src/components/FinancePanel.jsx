@@ -296,6 +296,46 @@ function StackedBarChart({ spending, t }) {
   );
 }
 
+// One month's top spending as a stacked bar, with arrows to step back through older statements.
+function TopSpendingCard({ months, dark, t, labelStyle }) {
+  const [i, setI] = useState(0);
+  const month = months[Math.min(i, months.length - 1)];
+  const rows = topSpending(month.categories);
+  const arrow = (label, disabled, onClick, glyph) => (
+    <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
+      style={{ background: 'none', border: 'none', color: disabled ? t.textTertiary : t.text, fontSize: 18, cursor: disabled ? 'default' : 'pointer', padding: '0 6px' }}>{glyph}</button>
+  );
+  return (
+    <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ ...labelStyle, marginBottom: 0 }}>Top Spending, {month.month}</div>
+        <div>
+          {arrow('Older month', i >= months.length - 1, () => setI(i + 1), '‹')}
+          {arrow('Newer month', i === 0, () => setI(i - 1), '›')}
+        </div>
+      </div>
+      {rows.length === 0 ? <div style={{ fontSize: 13, color: t.textTertiary, marginTop: 12 }}>No spending this month</div> : (
+        <>
+          <div style={{ display: 'flex', height: 14, borderRadius: 7, overflow: 'hidden', gap: 2, marginTop: 12 }}>
+            {rows.map((r, k) => (
+              <div key={r.name} title={`${capitalize(r.name.replace(/_/g, ' '))} ${formatCurrency(r.amount)}`} style={{ width: `${r.share * 100}%`, background: SPEND_COLORS[k] }} />
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px 16px', marginTop: 12 }}>
+            {rows.map((r, k) => (
+              <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: SPEND_COLORS[k], flexShrink: 0 }} />
+                <span style={{ color: t.text }}>{capitalize(r.name.replace(/_/g, ' '))}</span>
+                <span style={{ marginLeft: 'auto', color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{Math.round(r.share * 100)}%</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
 function DebtPayoffProjection({ debt, t }) {
   const owed = owedDebts(debt);
   if (owed.length === 0) return null;
@@ -1694,25 +1734,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <SpendingChart spending={spendingChronological} t={t} totalIncome={totalIncome} totalExpenses={totalExpenses} activeScenarios={activeScenarios} />
             </Card>
 
-            {spendingRecentFirst[0] && topSpending(spendingRecentFirst[0].categories).length > 1 && (
-              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-                <div style={labelStyle}>Top Spending, {spendingRecentFirst[0].month}</div>
-                <div style={{ display: 'flex', height: 14, borderRadius: 7, overflow: 'hidden', gap: 2 }}>
-                  {topSpending(spendingRecentFirst[0].categories).map((r, i) => (
-                    <div key={r.name} title={`${capitalize(r.name.replace(/_/g, ' '))} ${formatCurrency(r.amount)}`} style={{ width: `${r.share * 100}%`, background: SPEND_COLORS[i] }} />
-                  ))}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px 16px', marginTop: 12 }}>
-                  {topSpending(spendingRecentFirst[0].categories).map((r, i) => (
-                    <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: SPEND_COLORS[i], flexShrink: 0 }} />
-                      <span style={{ color: t.text }}>{capitalize(r.name.replace(/_/g, ' '))}</span>
-                      <span style={{ marginLeft: 'auto', color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{Math.round(r.share * 100)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+            {spendingRecentFirst.length > 0 && <TopSpendingCard months={spendingRecentFirst} dark={dark} t={t} labelStyle={labelStyle} />}
 
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
               <div style={labelStyle}>Category Breakdown</div>

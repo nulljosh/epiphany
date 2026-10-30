@@ -16,33 +16,48 @@ enum TopSpending {
     }
 }
 
-/// "Top spending" for the newest month: one stacked bar and a legend with each share. Nothing with one category or none.
+/// "Top spending" for one statement month: one stacked bar and a legend with each share, with arrows to step back
+/// through older months. `months` is newest first.
 struct TopSpendingBar: View {
-    let month: FinanceData.SpendingMonth
+    let months: [FinanceData.SpendingMonth]
+    @State private var index = 0
 
     var body: some View {
-        let rows = TopSpending.rows(month.categories)
-        if rows.count > 1 {
+        if !months.isEmpty {
+            let month = months[min(index, months.count - 1)]
+            let rows = TopSpending.rows(month.categories)
             VStack(alignment: .leading, spacing: 12) {
-                Text("Top spending, \(month.month)").font(.headline)
-                GeometryReader { g in
-                    HStack(spacing: 2) {
-                        ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
-                            TopSpending.colors[i].frame(width: max(0, (g.size.width - CGFloat(rows.count - 1) * 2) * r.share))
+                HStack {
+                    Text("Top spending, \(month.month)").font(.headline)
+                    Spacer()
+                    Button { index += 1 } label: { Image(systemName: "chevron.left") }
+                        .disabled(index >= months.count - 1).accessibilityLabel("Older month")
+                    Button { index -= 1 } label: { Image(systemName: "chevron.right") }
+                        .disabled(index == 0).accessibilityLabel("Newer month")
+                }
+                .buttonStyle(.borderless)
+                if rows.isEmpty {
+                    Text("No spending this month").font(.caption).foregroundStyle(.secondary)
+                } else {
+                    GeometryReader { g in
+                        HStack(spacing: 2) {
+                            ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
+                                TopSpending.colors[i].frame(width: max(0, (g.size.width - CGFloat(rows.count - 1) * 2) * r.share))
+                            }
                         }
                     }
-                }
-                .frame(height: 14)
-                .clipShape(Capsule())
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 8) {
-                    ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
-                        HStack(spacing: 6) {
-                            RoundedRectangle(cornerRadius: 2).fill(TopSpending.colors[i]).frame(width: 8, height: 8)
-                            Text(r.name.replacingOccurrences(of: "_", with: " ").capitalized)
-                            Spacer()
-                            Text("\(Int((r.share * 100).rounded()))%").foregroundStyle(.secondary).monospacedDigit()
+                    .frame(height: 14)
+                    .clipShape(Capsule())
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 8) {
+                        ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
+                            HStack(spacing: 6) {
+                                RoundedRectangle(cornerRadius: 2).fill(TopSpending.colors[i]).frame(width: 8, height: 8)
+                                Text(r.name.replacingOccurrences(of: "_", with: " ").capitalized)
+                                Spacer()
+                                Text("\(Int((r.share * 100).rounded()))%").foregroundStyle(.secondary).monospacedDigit()
+                            }
+                            .font(.caption)
                         }
-                        .font(.caption)
                     }
                 }
             }

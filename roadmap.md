@@ -78,7 +78,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Subscriptions split into active and stopped | Emma, PocketGuard | M | 65.0 | done 65.0.0 |
 | Accounts grouped by type with a total per group | Emma | M | 66.0 | done 66.0.0 |
 | Valuation line on a stock: its P/E against the S&P 500's | Finimize | S | 67.0 | done 67.0.0 |
-| Top Spending steps back through past months | PocketGuard | S | 68.0 | open |
+| Top Spending steps back through past months | PocketGuard | S | 68.0 | done 68.0.0 |
 | Read the daily brief aloud on device | Finimize | M | 69.0 | open |
 
 Skipped: round-ups, recurring buys and cash-back offers (Acorns, needs trading and a card), joint accounts, payments and cards (Revolut, banking), live chat with an advisor (Fidelity), expert articles and a members' club (Finimize, Acorns, content we don't have), cancelling subscriptions for you (PocketGuard, needs a concierge). The apple audit found no teal, purple or indigo, white text only on solid fills, gradients only as chart area fades, and no em dashes in UI strings.
