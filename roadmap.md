@@ -61,7 +61,7 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 | "Left this month" headline: money in minus money out this month, from statements | Simplifi, YNAB | S | 44.0 | done 44.0.0 (newest statement month; says the month by name when statements lag) |
 | Projected cash balance for the next 30 days, a line with a Today marker, from cash, bills and income | Simplifi | M | 45.0 | done 45.0.0 (paydays from recurring money in) |
 | News topic filter: Markets, Crypto, Earnings, Economy | Seeking Alpha | S | 46.0 | done 46.0.0 (feed has no tags: keyword topics; iPhone and Mac, the web has no headline list) |
-| Siri and Shortcuts: "What's my portfolio worth" as an App Intent on iPhone and Mac | YNAB | M | 47.0 | open |
+| Siri and Shortcuts: "What's my portfolio worth" as an App Intent on iPhone and Mac | YNAB | M | 47.0 | done 47.0.0 (metadata checked in both builds; a spoken Siri run waits on a real device) |
 | Move money between budget lines to cover one that went over | YNAB | M | 48.0 | open |
 | Net worth over time, assets against debts, from the daily snapshots | YNAB | M | 49.0 | waits for a few weeks of 38.0 rows |
 
