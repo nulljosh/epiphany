@@ -85,6 +85,12 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             <img src={`/landing/web-${dark ? 'dark' : 'light'}.jpg`} width="1600" height="1000" loading="lazy" alt="Epiphany on the web: the live map of Maple Ridge beside the market indexes and a watchlist." />
             <figcaption>The web app, on live prices.</figcaption>
           </figure>
+          <figure className="stage reveal">
+            {/* The 6.0 film, made from the app's own screens (docs/ad). Click to play: no autoplay, it has sound. */}
+            <video src="/epiphany-6.mp4" poster="/epiphany-6-poster.jpg" controls playsInline preload="none" width="1920" height="1080"
+              aria-label="Epiphany 6 film: rain radar, weather warnings, storms, insiders, owners and today's big moves." />
+            <figcaption>Epiphany 6, in twenty seconds.</figcaption>
+          </figure>
           <div className="frows">
             {ROWS.map((r) => (
               <article className="frow reveal" key={r.label}>

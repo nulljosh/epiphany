@@ -86,8 +86,8 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp.light .band-art { filter: invert(1) hue-rotate(180deg) contrast(1.15) brightness(1.05); mix-blend-mode: multiply; }
 .lp .band-head h2 { margin-bottom: 8px; }
 .lp .stage { max-width: 960px; margin: 0 auto 48px; }
-.lp .stage img { display: block; width: 100%; height: auto; border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); }
-.lp.light .stage img { box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12); }
+.lp .stage img, .lp .stage video { display: block; width: 100%; height: auto; border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); }
+.lp.light .stage img, .lp.light .stage video { box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12); }
 .lp .stage figcaption { margin-top: 12px; text-align: center; font-size: 13px; color: var(--dim); }
 .lp .frows { max-width: 960px; margin: 0 auto; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; }
 .lp .frow { background: var(--bg); padding: 32px; }
