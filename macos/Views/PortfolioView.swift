@@ -582,19 +582,7 @@ struct PortfolioView: View {
                 } else {
                     VStack(spacing: 0) {
                         ForEach(goals) { goal in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(goal.name)
-                                        .font(.headline)
-                                    Spacer()
-                                    Text("\(CurrencyFormatter.formatPrice(goal.saved, decimals: 0)) / \(CurrencyFormatter.formatPrice(goal.target, decimals: 0))")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .monospacedDigit()
-                                }
-                                ProgressView(value: goal.progress)
-                                    .tint(Palette.appleBlue)
-                            }
+                            GoalRow(goal: goal)
                             .padding(.horizontal)
                             .padding(.vertical, 10)
 

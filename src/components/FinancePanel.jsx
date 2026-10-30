@@ -223,6 +223,20 @@ function ProgressBar({ value, max, color, t }) {
   );
 }
 
+// One goal's progress as a ring with the percent inside. Mirrors GoalRow in Shared/GoalRing.swift.
+function GoalRing({ value, max, t }) {
+  const pct = max > 0 ? Math.min(1, value / max) : 0;
+  const r = 19, c = 2 * Math.PI * r;
+  return (
+    <svg width={44} height={44} viewBox="0 0 44 44" role="img" aria-label={`${Math.round(pct * 100)}% of goal`} style={{ flexShrink: 0 }}>
+      <circle cx={22} cy={22} r={r} fill="none" stroke={t.border} strokeWidth={5} />
+      <circle cx={22} cy={22} r={r} fill="none" stroke={pct >= 1 ? t.green : t.blue} strokeWidth={5}
+        strokeLinecap="round" strokeDasharray={`${pct * c} ${c}`} transform="rotate(-90 22 22)" />
+      <text x={22} y={26} textAnchor="middle" fontSize={11} fontWeight={600} fill={t.text}>{Math.round(pct * 100)}%</text>
+    </svg>
+  );
+}
+
 function StackedBarChart({ spending, t }) {
   if (!spending || spending.length === 0) return null;
 
@@ -1139,33 +1153,22 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               </div>
             </Card>
 
-            {SHOW_GOALS && (
+            {SHOW_GOALS && goals.length > 0 && (
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
                 <div style={labelStyle}>Goals</div>
-                {goals.map((goal, index) => {
-                  const pct = goal.target > 0 ? (goal.saved / goal.target) * 100 : 0;
-                  const priorityColor = goal.priority === 'high' ? t.red : goal.priority === 'medium' ? t.orange : t.green;
-                  return (
-                    <div key={`${goal.name}-${index}`} style={{ marginBottom: 16 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 3, height: 20, borderRadius: 2, background: priorityColor }} />
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: 14 }}>{goal.name}</div>
-                            {goal.note && <div style={{ fontSize: 11, color: t.textTertiary }}>{goal.note}</div>}
-                          </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(goal.target)}</div>
-                          {goal.deadline && <div style={{ fontSize: 10, color: t.textTertiary }}>{goal.deadline}</div>}
-                        </div>
+                {goals.map((goal, index) => (
+                  <div key={`${goal.name}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                    <GoalRing value={goal.saved} max={goal.target} t={t} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{goal.name}</div>
+                      <div style={{ fontSize: 11, color: t.textTertiary, fontVariantNumeric: 'tabular-nums' }}>
+                        {formatCurrency(goal.saved)} of {formatCurrency(goal.target)}{goal.note ? ` · ${goal.note}` : ''}
                       </div>
-                      <ProgressBar value={goal.saved} max={goal.target} color={priorityColor} t={t} />
-                      <div style={{ fontSize: 10, color: t.textTertiary, marginTop: 2 }}>{pct.toFixed(0)}% saved</div>
                     </div>
-                  );
-                })}
+                    {goal.deadline && <div style={{ fontSize: 11, color: t.textTertiary }}>{goal.deadline}</div>}
+                  </div>
+                ))}
               </div>
             </Card>
             )}

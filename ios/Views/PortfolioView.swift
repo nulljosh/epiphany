@@ -196,6 +196,17 @@ struct PortfolioView: View {
 
                             planningCard
 
+                            if let goals = appState.financeData?.goals, !goals.isEmpty {
+                                sectionCard("Goals") {
+                                    ForEach(goals) { goal in
+                                        GoalRow(goal: goal)
+                                            .padding(.horizontal)
+                                            .padding(.vertical, 10)
+                                        if goal.id != goals.last?.id { Divider().padding(.horizontal) }
+                                    }
+                                }
+                            }
+
                             subscriptionsSection
 
                             debtSection
