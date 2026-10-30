@@ -28,7 +28,7 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Budget left per day ("$48 a day for 13 days") on the budget card | Rocket Money | S | 22.0 | done 22.0.0 |
 | Live price chip under a headline for each symbol it names | Yahoo | S | 23.0 | done 23.0.0 (iPhone and Mac; the web has no headline list) |
 | Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | done 24.0.0 |
-| Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | open |
+| Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | done 25.0.0 |
 | Allocation donut on the portfolio (stocks, crypto, cash, funds) | Delta, Robinhood | M | 26.0 | open |
 | RSI and MACD in a pane under the price chart, not only in the signal | TradingView, Webull | M | 27.0 | open |
 | Gain chart toggles: value, amount invested, cost basis | Delta | M | 28.0 | open |

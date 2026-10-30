@@ -87,6 +87,7 @@ struct MoneyGlance: View {
         VStack(alignment: .leading, spacing: 10) {
             heading("NEXT 30 DAYS",
                     trailing: CurrencyFormatter.formatPrice(upcoming.map(\.charge.amount).reduce(0, +)))
+            billsCalendar
             ForEach(upcoming, id: \.charge.id) { item in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
@@ -99,6 +100,41 @@ struct MoneyGlance: View {
                     Spacer()
                     Text(CurrencyFormatter.formatPrice(item.charge.amount))
                         .font(.subheadline.weight(.semibold).monospacedDigit())
+                }
+            }
+        }
+    }
+
+    /// This month as a grid, with the days a recurring charge is due marked.
+    private var billsCalendar: some View {
+        let cal = Calendar.current
+        let now = Date.now
+        let today = cal.component(.day, from: now)
+        let first = cal.date(from: cal.dateComponents([.year, .month], from: now)) ?? now
+        let lead = (cal.component(.weekday, from: first) - cal.firstWeekday + 7) % 7
+        let length = cal.range(of: .day, in: .month, for: now)?.count ?? 30
+        // Monthly bills land on the same day every month; the rest only on their next date.
+        let due = Set(recurring.compactMap { charge -> Int? in
+            guard let date = ISO8601DateFormatter.dateOnly(charge.nextDate) else { return nil }
+            if charge.cadence == "monthly" { return min(cal.component(.day, from: date), length) }
+            return cal.isDate(date, equalTo: now, toGranularity: .month) ? cal.component(.day, from: date) : nil
+        })
+        let symbols = Array(cal.veryShortWeekdaySymbols[(cal.firstWeekday - 1)...] + cal.veryShortWeekdaySymbols[..<(cal.firstWeekday - 1)])
+        let cells: [Int?] = Array(repeating: nil, count: lead) + (1...length).map { $0 }
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
+            ForEach(Array(symbols.enumerated()), id: \.offset) { _, s in
+                Text(s).font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
+            }
+            ForEach(Array(cells.enumerated()), id: \.offset) { _, day in
+                if let day {
+                    Text("\(day)")
+                        .font(.caption2.monospacedDigit().weight(due.contains(day) || day == today ? .bold : .regular))
+                        .foregroundStyle(due.contains(day) ? .primary : day < today ? .tertiary : .secondary)
+                        .frame(maxWidth: .infinity, minHeight: 24)
+                        .background(due.contains(day) ? Palette.warningAmber.opacity(0.22) : .clear, in: Capsule())
+                        .overlay { if day == today { Capsule().strokeBorder(.secondary, lineWidth: 1) } }
+                } else {
+                    Color.clear.frame(height: 24)
                 }
             }
         }

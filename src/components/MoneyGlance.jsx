@@ -5,6 +5,36 @@ const DAY = 86400000;
 const label = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 };
 const monthName = (ym) => new Date(`${ym}-01T12:00:00`).toLocaleDateString(undefined, { month: 'short' });
 
+// This month as a grid, with the days a recurring charge is due marked. Sunday first.
+// Mirrors billsCalendar in Shared/MoneyGlance.swift.
+function BillsCalendar({ recurring, t }) {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const days = new Date(y, m + 1, 0).getDate();
+  // Monthly bills land on the same day every month; the rest only on their next date.
+  const due = new Set(recurring.flatMap((r) => {
+    const d = new Date(`${r.nextDate}T12:00:00`);
+    if (r.cadence === 'monthly') return [Math.min(d.getDate(), days)];
+    return d.getFullYear() === y && d.getMonth() === m ? [d.getDate()] : [];
+  }));
+  const lead = new Date(y, m, 1).getDay();
+  const cells = [...Array(lead).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12, textAlign: 'center', fontSize: 11 }}>
+      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={`h${i}`} style={{ color: t.textTertiary, fontWeight: 600 }}>{d}</div>)}
+      {cells.map((d, i) => (
+        <div key={i} style={{
+          height: 24, lineHeight: '24px', borderRadius: 12, fontVariantNumeric: 'tabular-nums',
+          color: d == null ? 'transparent' : due.has(d) ? t.text : d < now.getDate() ? t.textTertiary : t.textSecondary,
+          fontWeight: due.has(d) || d === now.getDate() ? 700 : 400,
+          background: due.has(d) ? 'rgba(255,159,10,0.22)' : 'transparent',
+          boxShadow: d === now.getDate() ? `inset 0 0 0 1px ${t.textSecondary}` : 'none',
+        }}>{d ?? ''}</div>
+      ))}
+    </div>
+  );
+}
+
 // Top of Spending: what changed, what's due in the next 30 days, money in vs out.
 // Each part hides when it has no data. Same shape as Shared/MoneyGlance.swift.
 export default function MoneyGlance({ recurring = [], cashflow = [], insights = [], dark, t }) {
@@ -37,6 +67,7 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
             <span>Next 30 days</span>
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(upcoming.reduce((s, r) => s + r.amount, 0))}</span>
           </div>
+          <BillsCalendar recurring={recurring} t={t} />
           {upcoming.map((r) => (
             <div key={`${r.merchant}-${r.amount}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${t.border}` }}>
               <div>
