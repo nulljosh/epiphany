@@ -67,6 +67,19 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
 
+## Mobbin pass 11 (6.0, 2026-10-30: Robinhood, Yahoo Finance, Copilot Money, CARROT Weather)
+
+One row per minor version. Skipped: trading, prediction markets, crypto staking, IRA match and managed portfolios (Robinhood, paid or brokerage), the chat assistant (Copilot), community bullish and bearish votes (Yahoo), custom layouts (CARROT).
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Rain radar plays the last two hours as a loop, with a time label | CARROT Weather | M | 6.1 | open, RainViewer `radar.past` frames |
+| A banner when the map's centre is inside a weather warning area | CARROT Weather | S | 6.2 | open, from the 5.2 polygons |
+| "Your holdings vs the S&P 500 today" line over the portfolio | Copilot Money | S | 6.3 | open, today's change against SPY |
+| Markets chips: Now, Macro, Crypto | Robinhood | S | 6.4 | open |
+| "2 recent updates" on a stock page: news since you last opened it | Yahoo Finance | S | 6.5 | open, last-seen time per symbol |
+| Earnings results alert for stocks you follow | Yahoo Finance | M | 6.6 | open, reuses the alerts email |
+
 ## Mobbin pass 10 (100.0, 2026-10-30: Flightradar24, Windy, TipRanks, Monefy)
 
 Versions 5.0.0 to 102.0.0 in git history were internal builds, one major per row, which was inflated. They ship together as App Store 5.0.0. From here each row is one minor (5.1, 5.2, ...), see Versioning in `CLAUDE.md`.
