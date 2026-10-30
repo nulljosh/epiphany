@@ -5,7 +5,7 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
-    "Ask Siri "What's my portfolio worth in Epiphany", or use it in Shortcuts",
+    "Ask Siri “What’s my portfolio worth in Epiphany”, or use it in Shortcuts",
     "News topics on iPhone and Mac: Markets, Crypto, Earnings and Economy",
     "Cash in 30 days: your cash as a line, bills off and paydays on, with the low point",
     "Left this month: money in minus spending for the newest statement month",
