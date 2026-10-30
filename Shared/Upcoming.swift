@@ -25,11 +25,12 @@ struct UpcomingCard: View {
     let stocks: [Stock]
     let onSelect: (Stock) -> Void
     @Environment(AppState.self) private var appState
+    @State private var nextFed: Date?
 
     var body: some View {
         let follow = appState.watchlistSymbols.union((appState.financeData?.holdings ?? []).map(\.symbol))
         let events = Upcoming.events(stocks, following: follow).prefix(8)
-        if !events.isEmpty {
+        Group { if !events.isEmpty || nextFed != nil {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Upcoming").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                 ForEach(events) { e in
@@ -48,9 +49,21 @@ struct UpcomingCard: View {
                     }
                     .buttonStyle(.plain)
                 }
+                if let nextFed {
+                    if !events.isEmpty { Divider() }
+                    HStack(spacing: 10) {
+                        Text(nextFed.formatted(.dateTime.month(.abbreviated).day()))
+                            .foregroundStyle(.secondary).monospacedDigit().frame(width: 52, alignment: .leading)
+                        Text("Fed rate decision").fontWeight(.semibold)
+                        Spacer()
+                        Text("Economy").foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline)
+                }
             }
             .padding(12)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        }
+        } }
+        .task { nextFed = (try? await EpiphanyAPI.shared.fetchNextFedDecision()).flatMap { $0.flatMap(ISO8601DateFormatter.dateOnly) } }
     }
 }

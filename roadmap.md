@@ -79,7 +79,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Watchlist sort by name, price or percent change on iPhone and Mac | CNBC | S | 76.0 | done 76.0.0 (Mac already sorted it with the list) |
 | Debt payoff chart with a finish date on iPhone and Mac | Goodbudget | M | 77.0 | done 77.0.0 |
 | Earnings history on a stock: EPS actual against estimate, last four quarters | Investing.com | M | 78.0 | done 78.0.0 |
-| Economic calendar: next CPI, jobs report and rate decision | Investing.com | M | 79.0 | open, needs a source (BLS key) |
+| Economic calendar: next CPI, jobs report and rate decision | Investing.com | M | 79.0 | rate decisions done 79.0.0; CPI and jobs wait on a BLS key (bls.gov blocks scripted requests) |
 
 Skipped: live TV (CNBC), options, custom indexes and agentic trades (Questrade, trading), shared envelopes and bank connections (Goodbudget, Wallet, we read statements), community sentiment and expert picks (Investing.com, social and opinion). The apple audit found no teal, purple or indigo and no em dashes in UI strings.
 
@@ -143,7 +143,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 60 | Mobbin pass 6 plus an apple audit (done 60.0.0) |
 | 61 to 69 | One row each from "Mobbin pass 6" (done 69.0.0); the 58 and 59 rows ship as the next version once snapshots exist |
 | 70 | Mobbin pass 7 plus an apple audit (done 70.0.0) |
-| 71 to 79 | One row each from "Mobbin pass 7" |
+| 71 to 79 | One row each from "Mobbin pass 7" (done 79.0.0) |
 | 80 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)

@@ -43,6 +43,7 @@ const ROUTES = {
   'earnings-history':   lazy(() => import('../server/api/earnings-history.js')),
   events:               lazy(() => import('../server/api/events.js')),
   flights:              lazy(() => import('../server/api/flights.js')),
+  fomc:                 lazy(() => import('../server/api/fomc.js')),
   history:              lazy(() => import('../server/api/history.js')),
   incidents:            lazy(() => import('../server/api/incidents.js')),
   'local-events':       lazy(() => import('../server/api/local-events.js')),

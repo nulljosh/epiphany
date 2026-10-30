@@ -778,6 +778,12 @@ final class EpiphanyAPI {
     }
 
     /// Quotes for symbols outside the default list, like a searched-and-added watchlist ticker.
+    /// The next Fed rate decision day ("2026-12-09") from /api/fomc.
+    func fetchNextFedDecision() async throws -> String? {
+        struct Wrapper: Decodable { let next: String? }
+        return try decode(Wrapper.self, from: try await perform(URLRequest(url: try makeURL("/api/fomc")))).next
+    }
+
     /// The last four quarters of EPS against the estimate (/api/earnings-history).
     func fetchEarningsHistory(symbol: String) async throws -> [EarningsQuarter] {
         struct Wrapper: Decodable { let quarters: [EarningsQuarter] }

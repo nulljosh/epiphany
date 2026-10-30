@@ -510,6 +510,11 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   }, [filtered]);
 
   const sectors = useMemo(() => sectorMoves(allItems), [allItems]);
+  // Next Fed rate decision from the Fed's calendar (server/api/fomc.js).
+  const [nextFed, setNextFed] = useState(null);
+  useEffect(() => {
+    fetch('/api/fomc').then((r) => (r.ok ? r.json() : null)).then((d) => d?.next && setNextFed(d.next)).catch(() => {});
+  }, []);
   const upcoming = useMemo(
     () => upcomingEvents(Object.values(stocks || {}), [...(watchlist || []), ...storedHoldings().map(h => h.symbol)]).slice(0, 8),
     [stocks, watchlist],
@@ -710,7 +715,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
       )}
 
       {/* Upcoming: earnings and dividend dates for your watchlist and holdings, next 14 days */}
-      {upcoming.length > 0 && !search && (
+      {(upcoming.length > 0 || nextFed) && !search && (
         <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
             Upcoming
@@ -725,6 +730,15 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               <span style={{ marginLeft: 'auto', fontSize: 12, color: e.kind === 'Earnings' ? '#0071e3' : '#30D158' }}>{e.kind}</span>
             </button>
           ))}
+          {nextFed && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderTop: upcoming.length ? `1px solid ${t.border}` : 'none', marginTop: upcoming.length ? 4 : 0 }}>
+              <span style={{ width: 52, fontSize: 12, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>
+                {new Date(`${nextFed}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Fed rate decision</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: t.textSecondary }}>Economy</span>
+            </div>
+          )}
         </div>
       )}
 
