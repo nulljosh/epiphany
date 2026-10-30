@@ -337,6 +337,19 @@ struct PortfolioView: View {
                             Divider().padding(.horizontal)
                         }
                     }
+                    let dividends = Allocation.yearlyDividends(portfolio.holdings, stocks: appState.stocks)
+                    if dividends > 0 {
+                        Divider().padding(.horizontal)
+                        HStack {
+                            Text("Est. dividends")
+                            Spacer()
+                            Text("\(CurrencyFormatter.formatPrice(dividends)) a year").monospacedDigit()
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                        .padding(.vertical, 10)
+                    }
                 }
             }
         }

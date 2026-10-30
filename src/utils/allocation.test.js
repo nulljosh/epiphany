@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -18,5 +18,10 @@ describe('allocation', () => {
     expect(filterHoldings(h, 'CAD').map((x) => x.symbol)).toEqual(['SHOP.TO']);
     expect(filterHoldings(h, 'Stocks').map((x) => x.symbol)).toEqual(['AAPL', 'SHOP.TO']);
     expect(filterHoldings(h, 'All')).toBe(h);
+  });
+  it('estimates yearly dividends from trailing yield', () => {
+    const h = [{ symbol: 'KO', value: 1000 }, { symbol: 'BTC-USD', value: 500 }];
+    expect(yearlyDividends(h, { KO: { yield: 3 }, 'BTC-USD': { yield: null } })).toBeCloseTo(30);
+    expect(yearlyDividends(h, {})).toBe(0);
   });
 });

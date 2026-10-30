@@ -28,3 +28,8 @@ export const holdingFilters = (holdings = []) =>
 
 export const filterHoldings = (holdings = [], filter = 'All') =>
   FILTERS[filter] ? holdings.filter((h) => FILTERS[filter](h.symbol)) : holdings;
+
+// Estimated yearly dividends: each holding's value times its trailing yield. Mirrors Allocation.yearlyDividends.
+// ponytail: trailing yield, no payment months, so no per-month bars until quotes carry a dividend schedule.
+export const yearlyDividends = (holdings = [], quotes = {}) =>
+  holdings.reduce((sum, h) => sum + (h.value > 0 && quotes[h.symbol]?.yield > 0 ? h.value * quotes[h.symbol].yield / 100 : 0), 0);

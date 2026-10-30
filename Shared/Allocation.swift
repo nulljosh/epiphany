@@ -36,6 +36,15 @@ enum Allocation {
         }
     }
 
+    /// Estimated yearly dividends: value times trailing yield. Mirrors yearlyDividends in src/utils/allocation.js.
+    static func yearlyDividends(_ holdings: [Portfolio.Holding], stocks: [Stock]) -> Double {
+        let yields = Dictionary(stocks.compactMap { s in s.yield.map { (s.symbol, $0) } }, uniquingKeysWith: { a, _ in a })
+        return holdings.reduce(0) { sum, h in
+            guard h.marketValue > 0, let y = yields[h.symbol], y > 0 else { return sum }
+            return sum + h.marketValue * y / 100
+        }
+    }
+
     static func slices(holdings: [Portfolio.Holding], cash: Double) -> [(label: String, value: Double)] {
         let values = holdings.filter { $0.marketValue > 0 }
         let crypto = values.filter { isCrypto($0.symbol) }.reduce(0) { $0 + $1.marketValue }

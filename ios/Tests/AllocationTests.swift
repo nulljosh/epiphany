@@ -11,4 +11,11 @@ final class AllocationTests: XCTestCase {
         XCTAssertEqual(holdings.filter { Allocation.passes($0.symbol, "CAD") }.map(\.symbol), ["SHOP.TO"])
         XCTAssertEqual(holdings.filter { Allocation.passes($0.symbol, "Stocks") }.map(\.symbol), ["AAPL", "SHOP.TO"])
     }
+
+    func testYearlyDividends() {
+        let ko = Portfolio.Holding(symbol: "KO", shares: 10, avgCost: 50, currentPrice: 100)
+        let stocks = [Stock(symbol: "KO", name: "Coca-Cola", price: 100, yield: 3)]
+        XCTAssertEqual(Allocation.yearlyDividends([ko, h("BTC-USD")], stocks: stocks), 30, accuracy: 0.001)
+        XCTAssertEqual(Allocation.yearlyDividends([ko], stocks: []), 0)
+    }
 }

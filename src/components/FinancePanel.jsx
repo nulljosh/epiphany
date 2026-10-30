@@ -10,7 +10,7 @@ import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPay
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends } from '../utils/allocation';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1133,6 +1133,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                   <span>Total</span>
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(holdingFilter === 'All' ? stocksValue : filterHoldings(holdings, holdingFilter).reduce((sum, h) => sum + (h.value || 0), 0))}</span>
                 </div>
+                {yearlyDividends(holdings, stocks) > 0 && (
+                  <div style={{ ...rowStyle, borderBottom: 'none', fontSize: 13, color: t.textSecondary }}>
+                    <span>Est. dividends</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(yearlyDividends(holdings, stocks))} a year</span>
+                  </div>
+                )}
               </div>
             </Card>
 
