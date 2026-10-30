@@ -67,6 +67,22 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
 
+## Mobbin pass 8 (80.0, 2026-10-30: Simply Wall St, Wealthfront, Betterment, SoFi, Stash)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Exposure by listing country (US, Canada, crypto) as bars | Simply Wall St | S | 81.0 | open |
+| News about your holdings: a Holdings chip on the news list | Simply Wall St | S | 82.0 | open |
+| Recent activity: the last few transactions on the spending screen | Betterment, SoFi | S | 83.0 | open |
+| Dividends received this year, read from statements | Betterment | S | 84.0 | open |
+| Interest earned this year, read from statements | Wealthfront, SoFi | S | 85.0 | open |
+| A greeting over the portfolio with what changed since your last visit | Betterment | S | 86.0 | open |
+| Concentration flag when one holding is over a quarter of the portfolio | Simply Wall St | S | 87.0 | open |
+| Analyst price target and consensus on a stock page | Simply Wall St, Stash | S | 88.0 | open, Yahoo `financialData` |
+| Tap an account to see its recent transactions | Betterment, SoFi | M | 89.0 | open |
+
+Skipped: high-yield cash, robo portfolios, tax-loss harvesting and direct indexing (Wealthfront, Betterment, need a brokerage), fair value estimates and community narratives (Simply Wall St, a made-up number and social), round-ups and stock rewards (Stash). The apple audit found no teal, purple or indigo.
+
 ## Mobbin pass 7 (70.0, 2026-10-30: CNBC, Investing.com, Questrade, Spendee, Goodbudget, Wallet)
 
 | Gap | Seen in | Size | Version | Status |
@@ -144,7 +160,9 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 61 to 69 | One row each from "Mobbin pass 6" (done 69.0.0); the 58 and 59 rows ship as the next version once snapshots exist |
 | 70 | Mobbin pass 7 plus an apple audit (done 70.0.0) |
 | 71 to 79 | One row each from "Mobbin pass 7" (done 79.0.0) |
-| 80 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 80 | Mobbin pass 8 plus an apple audit (done 80.0.0) |
+| 81 to 89 | One row each from "Mobbin pass 8" |
+| 90 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
 - [ ] iPhone and Mac allocation donut adds USD holdings to CAD cash at face value (the web was fixed in 49.0.0); the native apps need the CADUSD=X rate first.
