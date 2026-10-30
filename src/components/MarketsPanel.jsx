@@ -782,7 +782,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
             willChange: 'transform',
           }}>
             <div style={{ position: 'sticky', top: 0, padding: '12px 16px', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'inherit', zIndex: 1 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>News — {selectedStock?.symbol}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{selectedStock?.symbol} news</span>
               <button onClick={() => setShowNewsDrawer(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.textSecondary, fontSize: 18 }}>✕</button>
             </div>
             <div style={{ padding: 16 }}>

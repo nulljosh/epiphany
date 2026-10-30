@@ -1679,7 +1679,7 @@ export default function PeoplePanel({ dark, t, isAuthenticated, isPro = false })
   if (isAuthenticated && !isPro) {
     return (
       <div style={{ padding: 16, fontFamily: font, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 240, textAlign: 'center' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary }}>People — Pro feature</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary }}>People is a Pro feature</div>
         <div style={{ fontSize: 11, color: t.textSecondary, maxWidth: 280 }}>Search and track people, cross-referenced with live news mentions.</div>
         <button
           onClick={() => window.dispatchEvent(new Event('epiphany:show-pricing'))}

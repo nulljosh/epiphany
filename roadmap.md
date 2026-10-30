@@ -36,6 +36,21 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Incident status on map pins: active or resolved | Citizen | S | 29.0 | open, needs a status field in the feeds |
 | Weekly earnings digest by email, Sunday, for watched stocks | Yahoo | S | 29.0 | done 29.0.0 (opt-in "Weekly" alert) |
 
+## Mobbin pass 3 (30.0, 2026-10-29: Apple Stocks, Public, Wealthsimple, Empower, Ground News, Waze)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Holdings filter chips: Stocks, ETFs, Crypto, CAD, USD | Wealthsimple | S | 31.0 | open |
+| Goal progress ring on each goal ("85% of goal") | Empower | S | 32.0 | open |
+| Key stats grid under every stock chart (open, high, low, volume, P/E, market cap, 52W high and low, average volume) on all three, same order | Apple Stocks | S | 33.0 | open, check what each platform already shows |
+| Estimated yearly dividend income on the portfolio, with a bar per month | Public, Wealthsimple | M | 34.0 | open, needs dividend yield per holding |
+| Chart metric tabs on a stock: Price, Market cap, P/E | Public | M | 35.0 | open |
+| Gas stations near you as a list sorted by distance, under the Gas map chip | Waze | M | 36.0 | open, needs a price source or list without prices |
+| Rate of return, annualized and cumulative, with a custom range | Empower | M | 37.0 | blocked on the same value history as 28.0 |
+| Daily value snapshot cron (unblocks 28.0 and 37.0) | Delta, Empower | M | 38.0 | open |
+
+Skipped: AI agents and prediction markets (Public), credit card and chequing (Wealthsimple), bias ratings (Ground News, not our news), driver reports and voice packs (Waze, social).
+
 ## Version plan to v100
 One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.
 
@@ -53,8 +68,10 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 18.0 | Trading: size by allocation, live autopilot caps (needs Joshua, skipped for now) |
 | 19.0 | Design debt: colour rule violations (done 19.0.0; the news drawer drag still needs an on-device look, see below) |
 | 20.0 | A fresh Mobbin pass, written into a new table (done 20.0.0, "Mobbin pass 2" above) |
-| 21 to 29 | One row each from "Mobbin pass 2" |
-| 30 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 21 to 29 | One row each from "Mobbin pass 2" (done except 28.0 and two 29.0 rows) |
+| 30 | Mobbin pass 3 plus an apple audit (done 30.0.0) |
+| 31 to 38 | One row each from "Mobbin pass 3" |
+| 40 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)

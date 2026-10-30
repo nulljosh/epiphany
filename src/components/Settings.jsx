@@ -270,7 +270,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
         {section === 'brokerage' && (
           <>
             <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textTertiary, marginBottom: 12 }}>Read-only sync</div>
-            <p style={{ fontSize: 12, color: t.textSecondary, margin: '0 0 12px' }}>Link a brokerage through SnapTrade — you pick which one (Wealthsimple, Questrade, Interactive Brokers, and more) in the connection portal. Holdings auto-refresh every few minutes while the app is open.</p>
+            <p style={{ fontSize: 12, color: t.textSecondary, margin: '0 0 12px' }}>Link a brokerage through SnapTrade. You pick which one (Wealthsimple, Questrade, Interactive Brokers, and more) in the connection portal. Holdings auto-refresh every few minutes while the app is open.</p>
             {/* No manual "Sync now": the tab auto-syncs on open and FinancePanel
                 polls every 5 min while visible. Only the connect action is manual. */}
             {!brokerSnapshot?.linked && (

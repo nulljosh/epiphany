@@ -879,7 +879,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
               Why {tradeSignal.label.toLowerCase()}?
             </div>
-            {(tradeSignal.reasons?.length ? tradeSignal.reasons : ['No strong technical signals either way — momentum and trend indicators are neutral.']).map((r, i) => {
+            {(tradeSignal.reasons?.length ? tradeSignal.reasons : ['No strong technical signals either way. Momentum and trend indicators are neutral.']).map((r, i) => {
               const explainer = tradeSignal.reasons?.length ? explainReason(r) : null;
               return (
                 <div key={i} style={{ padding: '3px 0' }}>
