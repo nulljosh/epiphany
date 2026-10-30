@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v5.3.0. iPhone app with four tabs (Situation, Markets, Portfolio, Settings), portrait only, follows system light and dark. API: epiphany.jaybulb.com. Shared Swift lives in `../Shared`.
+v5.4.0. iPhone app with four tabs (Situation, Markets, Portfolio, Settings), portrait only, follows system light and dark. API: epiphany.jaybulb.com. Shared Swift lives in `../Shared`.
 
 ## Run
 

@@ -6,6 +6,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Where things stand
 
+- 5.4.0: an Insiders card on stock pages (web, iPhone, Mac): open-market buys and sells by officers and directors in the last 90 days, counts, dollar totals and the three newest. `/api/earnings-history` now also asks for `insiderTransactions` (`parseInsiders`); `InsiderActivity` and `InsiderCard` in `Shared/EarningsHistory.swift`.
 - 5.3.0: tropical storms on web, iPhone and Mac: a pin at each storm's centre (kind, wind, pressure, movement), its forecast cone shaded orange and its forecast track dashed red. `/api/storms` reads NHC `CurrentStorms.json` and asks NOAA's tropical map service for the Forecast Track and Forecast Cone layers of active slots only (AT1, EP2, ...), cached 30 minutes (`parseStorms`). Native: `Shared/Storms.swift` (`Storm`, `StormContent`), a Tropical Storms toggle (`showStorms`, on). No storm was active on 2026-10-30, so the web shot used a made-up page-only storm and native was checked by build only.
 - 5.2.0: weather warning areas shaded in their risk colour (red, orange, yellow) on web, iPhone and Mac. Environment Canada's RSS warning feeds 404 and its region codes were renumbered, so `/api/weather-alerts` now asks MSC GeoMet (`api.weather.gc.ca/collections/weather-alerts`) by a small box around the point; NWS alerts carry their polygons too (`parseGeoMet`, `slimGeometry` thins rings to 300 points). Web draws a fill and outline under the labels; native decodes `geometry` into `AlertShape` and draws `MapPolygon`s (the Mac map shows them too, it had no weather pins). The What's New card is now 3 short bullets at most.
 - 5.1.0: rain radar on web, iPhone and Mac, off by default. Web: a Rain radar checkbox in the map filter adds RainViewer's newest frame as a raster layer under the labels, refreshed every 10 minutes (`LiveMapBackdrop.jsx`). Native: a Rain Radar toggle in map settings (`showRainRadar`); SwiftUI's Map has no tile overlays, so `Shared/RainRadar.swift` pins one 512 px zoom-7 image in an Annotation sized from the camera span and re-centres it when the view moves a quarter image away.
@@ -21,7 +22,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Next, in order
 
-1. 5.4.0: insider buys and sells on a stock page (Yahoo `insiderTransactions`). Then the rows marked 5.5 and 5.6; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
+1. 5.5.0: institutional ownership on a stock page (Yahoo `institutionOwnership`). Then 5.6; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
 2. Confirm the first `portfolio_history` row after 21:30 UTC, then 28.0 and 37.0 once a few weeks exist down that table (38.0, the daily value snapshot cron, unblocks 28.0 and 37.0), and 40.0 is the next Mobbin pass. The 29.0 leftovers (Sankey, incident status) and 28.0 once a value history exists. 18.0 trading waits on Joshua. APNs push (#180) waits on an APNs key.
 3. When Apple clears 4.0.0, refresh the App Store screenshots (#145, #153) and submit the newest build on Joshua's yes.
 

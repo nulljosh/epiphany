@@ -1,5 +1,5 @@
 // A stock's last four quarters of earnings (EPS actual against the estimate) and the analysts' price target,
-// from Yahoo's quoteSummary earningsHistory and financialData modules (same cookie and crumb session as the fundamentals).
+// plus insider buys and sells, from Yahoo's quoteSummary earningsHistory, financialData and insiderTransactions modules (same cookie and crumb session as the fundamentals).
 import { getYahooCrumb, YAHOO_HEADERS } from './stocks-shared.js';
 import { errorResponse } from './auth-helpers.js';
 
@@ -34,6 +34,28 @@ export function parseAnalysts(json) {
   };
 }
 
+// "NEWSTEAD JENNIFER" -> "Jennifer Newstead". SEC filer names come last name first.
+// ponytail: moves the first word to the end; a two-word last name ("DE LA CRUZ") reads a little off.
+const filerName = (n = '') => {
+  const words = n.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()).split(/\s+/).filter(Boolean);
+  return words.length > 1 ? [...words.slice(1), words[0]].join(' ') : words.join('');
+};
+
+/** Open-market insider buys and sells in the last 90 days: counts, dollar totals and the three newest. Awards, gifts and option exercises are left out. */
+export function parseInsiders(json, now = Date.now()) {
+  const since = now / 1000 - 90 * 86400;
+  const rows = (json?.quoteSummary?.result?.[0]?.insiderTransactions?.transactions || [])
+    .map((t) => ({ side: /^sale\b/i.test(t.transactionText || '') ? 'sell' : /^purchase\b|^buy\b/i.test(t.transactionText || '') ? 'buy' : null, t }))
+    .filter(({ side, t }) => side && (t.startDate?.raw || 0) >= since)
+    .map(({ side, t }) => ({ name: filerName(t.filerName), role: t.filerRelation || null, side, shares: t.shares?.raw ?? null, value: t.value?.raw ?? null, date: t.startDate?.fmt || null }));
+  if (!rows.length) return null;
+  const total = (side) => rows.filter((r) => r.side === side).reduce((sum, r) => sum + (r.value || 0), 0);
+  return {
+    buys: rows.filter((r) => r.side === 'buy').length, sells: rows.filter((r) => r.side === 'sell').length,
+    bought: total('buy'), sold: total('sell'), recent: rows.slice(0, 3),
+  };
+}
+
 export default async function handler(req, res) {
   const symbol = String(req.query?.symbol || '').toUpperCase().trim();
   if (!/^[A-Z0-9.\-^=]{1,15}$/.test(symbol)) return errorResponse(res, 400, 'symbol required');
@@ -42,13 +64,13 @@ export default async function handler(req, res) {
       const session = await getYahooCrumb({ force: attempt > 0 });
       const crumb = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
       try {
-        const r = await fetch(`${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=earningsHistory,financialData${crumb}`,
+        const r = await fetch(`${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=earningsHistory,financialData,insiderTransactions${crumb}`,
           { headers: session.cookie ? { ...YAHOO_HEADERS, Cookie: session.cookie } : YAHOO_HEADERS, signal: AbortSignal.timeout(8000) });
         if (r.status === 401 && attempt === 0) continue;
         if (!r.ok) break;
         res.setHeader('Cache-Control', 'public, max-age=3600');
         const json = await r.json();
-        return res.status(200).json({ symbol, quarters: parseEarningsHistory(json), analysts: parseAnalysts(json) });
+        return res.status(200).json({ symbol, quarters: parseEarningsHistory(json), analysts: parseAnalysts(json), insiders: parseInsiders(json) });
       } catch {
         break;
       }

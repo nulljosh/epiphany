@@ -78,7 +78,7 @@ Versions 5.0.0 to 102.0.0 in git history were internal builds, one major per row
 | Rain radar layer on the map | Windy | M | 5.1 | done 5.1.0 (RainViewer newest frame, free tiles stop at zoom 7; native pins one 512 px image in an Annotation) |
 | Severe weather warnings near you on the map | Windy | M | 5.2 | done 5.2.0 (Environment Canada moved to GeoMet, its RSS feeds 404; areas shaded by risk colour) |
 | Storm tracks on the map during hurricane season | Windy | M | 5.3 | done 5.3.0 (NHC CurrentStorms.json plus NOAA map service track and cone, Atlantic and East and Central Pacific) |
-| Insider buys and sells on a stock page | TipRanks | M | 5.4 | open, Yahoo `insiderTransactions` |
+| Insider buys and sells on a stock page | TipRanks | M | 5.4 | done 5.4.0 (open-market only, last 90 days) |
 | Institutional ownership on a stock page | TipRanks | S | 5.5 | open, Yahoo `institutionOwnership` |
 | A feed of what happened to your stocks (earnings, big moves, targets) | TipRanks | M | 5.6 | open |
 | Portfolio hit rate and return over time | TipRanks | M | 5.7 | waits for weeks of snapshots, like 58 and 59 |

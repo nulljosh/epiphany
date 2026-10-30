@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { createChart, ColorType, LineType, CrosshairMode, CandlestickSeries, BarSeries, LineSeries, AreaSeries, BaselineSeries, HistogramSeries } from 'lightweight-charts';
-import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
+import { formatCurrency, formatVolume, formatMarketCap, relativeTime, compactCurrency } from '../utils/formatting';
 import { signal as computeSignal } from '../utils/indicators';
 import { position, valuationLine } from '../utils/allocation';
 import { storedHoldings } from '../hooks/usePortfolio';
@@ -714,13 +714,15 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const pos = useMemo(() => position(storedHoldings(), stock?.symbol, price, changePercent), [stock?.symbol, price, changePercent]);
   const [earnings, setEarnings] = useState([]);
   const [analysts, setAnalysts] = useState(null);
+  const [insiders, setInsiders] = useState(null);
   useEffect(() => {
     if (!stock?.symbol) return undefined;
     let gone = false;
     setEarnings([]);
     setAnalysts(null);
+    setInsiders(null);
     fetch(`/api/earnings-history?symbol=${encodeURIComponent(stock.symbol)}`).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (gone || !d) return; if (Array.isArray(d.quarters)) setEarnings(d.quarters); setAnalysts(d.analysts || null); }).catch(() => {});
+      .then((d) => { if (gone || !d) return; if (Array.isArray(d.quarters)) setEarnings(d.quarters); setAnalysts(d.analysts || null); setInsiders(d.insiders || null); }).catch(() => {});
     return () => { gone = true; };
   }, [stock?.symbol]);
   const signed = (n) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n))}`;
@@ -1228,6 +1230,24 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }}>
               {analysts.count} analysts{analysts.low != null && analysts.high != null ? `, from ${formatCurrency(analysts.low)} to ${formatCurrency(analysts.high)}` : ''}. Their view, not advice.
             </div>
+          </div>
+        )}
+
+        {/* Insiders: open-market buys and sells by officers and directors, last 90 days */}
+        {insiders && (
+          <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Insiders, last 90 days</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: t.text }}>
+              <span style={{ color: '#30D158' }}>{insiders.buys} {insiders.buys === 1 ? 'buy' : 'buys'}{insiders.bought ? ` (${compactCurrency(insiders.bought)})` : ''}</span>
+              {' · '}
+              <span style={{ color: '#FF453A' }}>{insiders.sells} {insiders.sells === 1 ? 'sell' : 'sells'}{insiders.sold ? ` (${compactCurrency(insiders.sold)})` : ''}</span>
+            </div>
+            {insiders.recent.map((r, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: t.textSecondary, marginTop: 6 }}>
+                <span>{r.name}{r.role ? ` · ${r.role}` : ''}</span>
+                <span style={{ whiteSpace: 'nowrap' }}>{r.side === 'buy' ? 'Bought' : 'Sold'} {r.value ? compactCurrency(r.value) : `${r.shares} shares`} · {r.date}</span>
+              </div>
+            ))}
           </div>
         )}
 

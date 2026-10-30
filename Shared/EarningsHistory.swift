@@ -27,6 +27,55 @@ struct AnalystTarget: Decodable, Equatable {
     func upside(from price: Double) -> Double { price > 0 ? (mean / price - 1) * 100 : 0 }
 }
 
+/// Open-market insider buys and sells in the last 90 days. From /api/earnings-history.
+struct InsiderActivity: Decodable, Equatable {
+    struct Trade: Decodable, Equatable {
+        let name: String
+        let role: String?
+        let side: String
+        let shares: Double?
+        let value: Double?
+        let date: String?
+    }
+    let buys: Int
+    let sells: Int
+    let bought: Double
+    let sold: Double
+    let recent: [Trade]
+}
+
+struct InsiderCard: View {
+    let activity: InsiderActivity
+
+    /// "$94.6M"; `.notation(.compactName)` on currency needs iOS 18.
+    private func money(_ v: Double) -> String {
+        let (n, unit) = v >= 1e9 ? (v / 1e9, "B") : v >= 1e6 ? (v / 1e6, "M") : v >= 1e3 ? (v / 1e3, "K") : (v, "")
+        return "$" + String(format: unit.isEmpty ? "%.0f" : "%.1f", n) + unit
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Insiders, Last 90 Days").font(.headline)
+            (Text("\(activity.buys) \(activity.buys == 1 ? "buy" : "buys")" + (activity.bought > 0 ? " (\(money(activity.bought)))" : "")).foregroundColor(Palette.successGreen)
+             + Text(" · ")
+             + Text("\(activity.sells) \(activity.sells == 1 ? "sell" : "sells")" + (activity.sold > 0 ? " (\(money(activity.sold)))" : "")).foregroundColor(Palette.dangerRed))
+                .font(.subheadline.weight(.semibold))
+            ForEach(Array(activity.recent.enumerated()), id: \.offset) { _, t in
+                HStack(alignment: .firstTextBaseline) {
+                    Text(t.name + (t.role.map { " · \($0)" } ?? "")).lineLimit(1)
+                    Spacer(minLength: 8)
+                    Text("\(t.side == "buy" ? "Bought" : "Sold") \(t.value.map(money) ?? "\(Int(t.shares ?? 0)) shares")" + (t.date.map { " · \($0)" } ?? ""))
+                }
+                .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+    }
+}
+
 /// Consensus and target against today's price; nothing without coverage.
 struct AnalystLine: View {
     let target: AnalystTarget
@@ -55,10 +104,12 @@ struct EarningsHistoryCard: View {
     var price: Double = 0
     @State private var quarters: [EarningsQuarter] = []
     @State private var analysts: AnalystTarget?
+    @State private var insiders: InsiderActivity?
 
     var body: some View {
         Group {
             if let analysts, price > 0 { AnalystLine(target: analysts, price: price) }
+            if let insiders { InsiderCard(activity: insiders) }
             if !quarters.isEmpty {
                 let top = max(quarters.flatMap { [abs($0.actual), abs($0.estimate)] }.max() ?? 0.01, 0.01)
                 VStack(alignment: .leading, spacing: 10) {
@@ -93,6 +144,7 @@ struct EarningsHistoryCard: View {
             let h = try? await EpiphanyAPI.shared.fetchEarningsHistory(symbol: symbol)
             quarters = h?.quarters ?? []
             analysts = h?.analysts
+            insiders = h?.insiders
         }
     }
 }
