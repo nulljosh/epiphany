@@ -19,7 +19,7 @@ import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
 import MoneyGlance from './MoneyGlance';
-import { budgetActual, perDayLeft, coverPlan, moveBudget } from '../utils/budgetActual';
+import { budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -1386,6 +1386,25 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         )}
         {tab === 'budget' && (budget.income?.length > 0 || budget.expenses?.length > 0) && (
           <>
+            {(() => {
+              const ring = budgetLeft(budget.expenses, spendingChronological[spendingChronological.length - 1]);
+              if (!ring) return null;
+              const r = 52, c = 2 * Math.PI * r, over = ring.left < 0;
+              return (
+                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20, display: 'flex', alignItems: 'center', gap: 20 }}>
+                  <svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label={`${formatCurrency(Math.abs(ring.left))} ${over ? 'over' : 'left of'} ${formatCurrency(ring.budget)}`}>
+                    <circle cx="64" cy="64" r={r} fill="none" stroke={dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'} strokeWidth="12" />
+                    <circle cx="64" cy="64" r={r} fill="none" stroke={over ? t.red : '#0071e3'} strokeWidth="12" strokeLinecap="round"
+                      strokeDasharray={`${c * Math.min(ring.ratio, 1)} ${c}`} transform="rotate(-90 64 64)" />
+                  </svg>
+                  <div>
+                    <div style={labelStyle}>{ring.month}</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: over ? t.red : t.text }}>{formatCurrency(Math.abs(ring.left))}</div>
+                    <div style={{ fontSize: 13, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{over ? 'over' : 'left of'} {formatCurrency(ring.budget)}, {formatCurrency(ring.spent)} spent</div>
+                  </div>
+                </Card>
+              );
+            })()}
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
                 <div style={labelStyle}>Monthly Income</div>

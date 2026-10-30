@@ -60,3 +60,11 @@ export function coverPlan(expenses = [], month, index) {
 // The total budget doesn't change: what one line gives, the other gets.
 export const moveBudget = (expenses, from, to, amount) =>
   expenses.map((e, i) => (i === from ? { ...e, amount: cents(e.amount - amount) } : i === to ? { ...e, amount: cents(e.amount + amount) } : e));
+
+// The month's whole budget against everything spent in the newest statement month. Mirrors BudgetRing.left.
+export function budgetLeft(expenses = [], month) {
+  const budget = expenses.reduce((s, e) => s + (e.amount > 0 ? e.amount : 0), 0);
+  if (!(budget > 0) || !month) return null;
+  const spent = month.total || 0;
+  return { budget, spent, left: budget - spent, ratio: spent / budget, month: month.month };
+}

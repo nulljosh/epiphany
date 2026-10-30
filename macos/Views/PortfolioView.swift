@@ -366,6 +366,9 @@ struct PortfolioView: View {
         sectionCard("Budget") {
             if let budget = appState.financeData?.budget {
                 VStack(alignment: .leading, spacing: 16) {
+                    if let ring = BudgetRing.left(budget, month: spendingMonths.last) {
+                        BudgetRingCard(left: ring)
+                    }
                     budgetMetricRow(
                         title: "Monthly Income",
                         value: budget.totalMonthlyIncome,

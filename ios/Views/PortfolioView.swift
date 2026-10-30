@@ -368,6 +368,9 @@ struct PortfolioView: View {
                 let surplus = budget.totalMonthlyIncome - actualExpenses
 
                 VStack(alignment: .leading, spacing: 16) {
+                    if let ring = BudgetRing.left(budget, month: spendingMonths.last) {
+                        BudgetRingCard(left: ring)
+                    }
                     budgetMetricRow(
                         title: "Monthly Income",
                         value: budget.totalMonthlyIncome,

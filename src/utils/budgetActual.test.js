@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget } from './budgetActual';
+import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft } from './budgetActual';
 
 describe('budgetActual', () => {
   const aug = { month: 'Aug 2026', categories: { food: 180, coffee: 60, cannabis: 90, vape: 40 } };
@@ -46,5 +46,13 @@ describe('coverPlan', () => {
     const moved = moveBudget(expenses, 1, 0, 100);
     expect(moved.map((e) => e.amount)).toEqual([500, 100, 150, 80]);
     expect(moved.reduce((s, e) => s + e.amount, 0)).toBe(830);
+  });
+});
+
+describe('budgetLeft', () => {
+  it('sets the whole budget against the month spend', () => {
+    expect(budgetLeft([{ amount: 2000 }, { amount: 1500 }], { month: 'Aug 2026', total: 1433 }))
+      .toEqual({ budget: 3500, spent: 1433, left: 2067, ratio: 1433 / 3500, month: 'Aug 2026' });
+    expect(budgetLeft([], { total: 1 })).toBeNull();
   });
 });
