@@ -55,6 +55,10 @@ function loadFromStorage() {
   }
 }
 
+// The signed-in portfolio's holdings as last saved, for screens outside Finance (the stock page).
+// ponytail: reads the cache usePortfolio writes, so it is empty until Finance has loaded once on this device.
+export const storedHoldings = () => loadFromStorage()?.holdings ?? [];
+
 function saveToStorage(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -28,5 +28,13 @@ describe('allocation', () => {
     const h = [{ shares: 2, costBasis: 50, gain: 20 }, { shares: 1, costBasis: 100, gain: -10 }, { shares: 5, costBasis: null, gain: null }];
     expect(unrealizedGain(h)).toEqual({ gain: 10, percent: 5 });
     expect(unrealizedGain([{ shares: 1, gain: null }])).toBeNull();
+  });
+
+  it('sums a position across accounts, skips cost when a row has none', () => {
+    const h = [{ symbol: 'AAPL', shares: 2, costBasis: 100 }, { symbol: 'AAPL', shares: 2, costBasis: 150 }, { symbol: 'MSFT', shares: 9, costBasis: 1 }];
+    const p = position(h, 'AAPL', 200, 25);
+    expect(p).toMatchObject({ shares: 4, value: 800, today: 160, avgCost: 125, gain: 300, gainPercent: 60 });
+    expect(position([{ symbol: 'BTC-USD', shares: 1, costBasis: null }], 'BTC-USD', 10).gain).toBeNull();
+    expect(position(h, 'TSLA', 10)).toBeNull();
   });
 });

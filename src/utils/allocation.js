@@ -42,3 +42,21 @@ export function unrealizedGain(holdings = []) {
   const cost = known.reduce((sum, h) => sum + h.shares * h.costBasis, 0);
   return { gain, percent: (gain / cost) * 100 };
 }
+
+// Your position in one symbol, summed across accounts. Mirrors Allocation.position.
+// Cost and total gain stay null for broker rows with no cost basis.
+export function position(holdings = [], symbol, price, changePercent = 0) {
+  const rows = holdings.filter((h) => h.symbol === symbol && h.shares > 0);
+  if (!rows.length || !(price > 0)) return null;
+  const shares = rows.reduce((s, h) => s + h.shares, 0);
+  const value = shares * price;
+  const today = changePercent > -100 ? value - value / (1 + changePercent / 100) : 0;
+  const costed = rows.every((h) => h.costBasis > 0);
+  const cost = costed ? rows.reduce((s, h) => s + h.shares * h.costBasis, 0) : null;
+  return {
+    shares, value, today,
+    avgCost: cost != null ? cost / shares : null,
+    gain: cost != null ? value - cost : null,
+    gainPercent: cost != null ? ((value - cost) / cost) * 100 : null,
+  };
+}

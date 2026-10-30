@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { createChart, ColorType, LineType, CrosshairMode, CandlestickSeries, BarSeries, LineSeries, AreaSeries, BaselineSeries, HistogramSeries } from 'lightweight-charts';
 import { formatCurrency, formatVolume, formatMarketCap, relativeTime } from '../utils/formatting';
 import { signal as computeSignal } from '../utils/indicators';
+import { position } from '../utils/allocation';
+import { storedHoldings } from '../hooks/usePortfolio';
 import { usePremium, showPricing, PREMIUM_INDICATORS } from '../context/PremiumContext.js';
 
 // Unix seconds from Yahoo, as 'Oct 28'.
@@ -709,6 +711,9 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const changePercent = d.changePercent ?? stock?.changePercent ?? 0;
   const positive = changePercent >= 0;
   const changeColor = positive ? '#30D158' : '#FF453A';
+  const pos = useMemo(() => position(storedHoldings(), stock?.symbol, price, changePercent), [stock?.symbol, price, changePercent]);
+  const signed = (n) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n))}`;
+  const gainColor = (n) => (n >= 0 ? '#30D158' : '#FF453A');
 
   // Apple Stocks order, same as KeyStats.rows in Shared/KeyStats.swift.
   const stats = useMemo(() => [
@@ -1160,6 +1165,28 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
                 No data
               </div>
             )}
+          </div>
+        )}
+
+        {/* Your position, when you hold it */}
+        {pos && (
+          <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Your Position</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px 12px' }}>
+              {[
+                { label: 'Shares', value: pos.shares.toLocaleString(undefined, { maximumFractionDigits: 6 }) },
+                { label: 'Value', value: formatCurrency(pos.value) },
+                { label: 'Avg Cost', value: pos.avgCost != null ? formatCurrency(pos.avgCost) : '--' },
+                { label: 'Today', value: signed(pos.today), color: gainColor(pos.today) },
+                { label: 'Total Gain', value: pos.gain != null ? signed(pos.gain) : '--', color: pos.gain != null ? gainColor(pos.gain) : undefined },
+                { label: 'Return', value: pos.gainPercent != null ? `${pos.gainPercent >= 0 ? '+' : ''}${pos.gainPercent.toFixed(2)}%` : '--', color: pos.gainPercent != null ? gainColor(pos.gainPercent) : undefined },
+              ].map(s => (
+                <div key={s.label}>
+                  <div style={{ fontSize: 11, color: t.textTertiary || t.textSecondary, marginBottom: 2 }}>{s.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: s.color || t.text }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

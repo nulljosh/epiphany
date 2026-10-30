@@ -92,6 +92,8 @@ struct StockDetailView: View {
                 }
                 .padding(.top, 8)
 
+                PositionCard(stock: liveStock ?? stock)
+
                 if isLoading {
                     ProgressView()
                         .frame(height: 220)

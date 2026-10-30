@@ -155,6 +155,15 @@ struct MarketsView: View {
         #if DEBUG
         // QA: `-qaFeed news` opens the news list on launch, like `-qaTab` in ContentView.
         if UserDefaults.standard.string(forKey: "qaFeed") == "news" { feedDest = .news }
+        // QA: `-qaStock AAPL` opens that stock's page once quotes arrive.
+        if let sym = UserDefaults.standard.string(forKey: "qaStock") {
+            Task { @MainActor in
+                for _ in 0..<40 {
+                    if !filteredItems.isEmpty, let s = appState.stocks.first(where: { $0.symbol == sym }) { selectedStock = s; return }
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+            }
+        }
         #endif
         Task { @MainActor in rebuildItems() }
         Task {
@@ -255,7 +264,10 @@ struct MarketsView: View {
                 if case .stock(let s) = item.kind { return s }
                 return nil
             }
-            let stocks = visible.contains(where: { $0.symbol == stock.symbol }) ? visible : appState.watchlistStocks
+            let watch = appState.watchlistStocks
+            // A stock in neither list (search, a deep link) pages alone instead of opening the first watchlist row.
+            let stocks = visible.contains(where: { $0.symbol == stock.symbol }) ? visible
+                : watch.contains(where: { $0.symbol == stock.symbol }) ? watch : [stock]
             let initialIndex = stocks.firstIndex(where: { $0.symbol == stock.symbol }) ?? 0
             NavigationStack {
                 StockDetailPageView(stocks: stocks, initialIndex: initialIndex)

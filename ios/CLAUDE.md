@@ -1,6 +1,6 @@
 # Epiphany iOS
 
-v50.0.0. iPhone app with four tabs (Situation, Markets, Portfolio, Settings), portrait only, follows system light and dark. API: epiphany.jaybulb.com. Shared Swift lives in `../Shared`.
+v51.0.0. iPhone app with four tabs (Situation, Markets, Portfolio, Settings), portrait only, follows system light and dark. API: epiphany.jaybulb.com. Shared Swift lives in `../Shared`.
 
 ## Run
 
@@ -14,7 +14,7 @@ xcodebuild test -project Epiphany.xcodeproj -scheme Epiphany -destination 'platf
 
 Debug builds sign in on their own from `Configs/Secrets.xcconfig` (gitignored, `DEV_EMAIL` and `DEV_PASSWORD`, escape `$` as `$$`). A fresh clone needs that file before `xcodegen generate`. Never put credentials in `project.yml` or the scheme.
 
-QA launch arguments: `-qaTab N` opens on a tab, `UITEST_DEMO` uses demo data.
+QA launch arguments: `-qaTab N` opens on a tab, `-qaStock AAPL` opens a stock's page, `UITEST_DEMO` uses demo data.
 
 ## Rules
 
