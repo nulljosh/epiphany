@@ -7,4 +7,9 @@ final class EarningsHistoryTests: XCTestCase {
         let q = try JSONDecoder().decode([EarningsQuarter].self, from: Data(json.utf8))
         XCTAssertEqual(q.map(\.verdict), ["Beat 6.7%", "Missed 4.5%", "Beat"])
     }
+
+    func testAnalystUpside() throws {
+        let t = try JSONDecoder().decode(AnalystTarget.self, from: Data(#"{"mean":605.12,"high":870,"low":440,"count":53,"consensus":"strong buy"}"#.utf8))
+        XCTAssertEqual(t.upside(from: 530), 14.17, accuracy: 0.01)
+    }
 }

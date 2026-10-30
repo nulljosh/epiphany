@@ -1,5 +1,5 @@
-// A stock's last four quarters of earnings: EPS actual against the estimate, from Yahoo's quoteSummary
-// earningsHistory module (same cookie and crumb session as the fundamentals).
+// A stock's last four quarters of earnings (EPS actual against the estimate) and the analysts' price target,
+// from Yahoo's quoteSummary earningsHistory and financialData modules (same cookie and crumb session as the fundamentals).
 import { getYahooCrumb, YAHOO_HEADERS } from './stocks-shared.js';
 import { errorResponse } from './auth-helpers.js';
 
@@ -22,6 +22,18 @@ export function parseEarningsHistory(json) {
     .slice(-4);
 }
 
+/** Analysts' mean target, range, count and consensus ("buy", "hold"...), or null when there's no coverage. */
+export function parseAnalysts(json) {
+  const f = json?.quoteSummary?.result?.[0]?.financialData;
+  const mean = f?.targetMeanPrice?.raw;
+  if (typeof mean !== 'number' || !(f?.numberOfAnalystOpinions?.raw > 0)) return null;
+  return {
+    mean, high: f.targetHighPrice?.raw ?? null, low: f.targetLowPrice?.raw ?? null,
+    count: f.numberOfAnalystOpinions.raw,
+    consensus: typeof f.recommendationKey === 'string' && f.recommendationKey !== 'none' ? f.recommendationKey.replace(/_/g, ' ') : null,
+  };
+}
+
 export default async function handler(req, res) {
   const symbol = String(req.query?.symbol || '').toUpperCase().trim();
   if (!/^[A-Z0-9.\-^=]{1,15}$/.test(symbol)) return errorResponse(res, 400, 'symbol required');
@@ -30,12 +42,13 @@ export default async function handler(req, res) {
       const session = await getYahooCrumb({ force: attempt > 0 });
       const crumb = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
       try {
-        const r = await fetch(`${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=earningsHistory${crumb}`,
+        const r = await fetch(`${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=earningsHistory,financialData${crumb}`,
           { headers: session.cookie ? { ...YAHOO_HEADERS, Cookie: session.cookie } : YAHOO_HEADERS, signal: AbortSignal.timeout(8000) });
         if (r.status === 401 && attempt === 0) continue;
         if (!r.ok) break;
         res.setHeader('Cache-Control', 'public, max-age=3600');
-        return res.status(200).json({ symbol, quarters: parseEarningsHistory(await r.json()) });
+        const json = await r.json();
+        return res.status(200).json({ symbol, quarters: parseEarningsHistory(json), analysts: parseAnalysts(json) });
       } catch {
         break;
       }

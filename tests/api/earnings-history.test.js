@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseEarningsHistory } from '../../server/api/earnings-history.js';
+import { parseEarningsHistory, parseAnalysts } from '../../server/api/earnings-history.js';
 
 describe('parseEarningsHistory', () => {
   it('keeps quarters with both numbers, labels them, and turns surprise into percent', () => {
@@ -12,5 +12,13 @@ describe('parseEarningsHistory', () => {
     expect(out[0]).toMatchObject({ actual: 1.5, estimate: 1.4 });
     expect(out[0].surprise).toBeCloseTo(7.14);
     expect(parseEarningsHistory({})).toEqual([]);
+  });
+});
+
+describe('parseAnalysts', () => {
+  it('reads the target, range, count and consensus', () => {
+    const json = { quoteSummary: { result: [{ financialData: { targetMeanPrice: { raw: 300 }, targetHighPrice: { raw: 350 }, targetLowPrice: { raw: 200 }, numberOfAnalystOpinions: { raw: 41 }, recommendationKey: 'strong_buy' } }] } };
+    expect(parseAnalysts(json)).toEqual({ mean: 300, high: 350, low: 200, count: 41, consensus: 'strong buy' });
+    expect(parseAnalysts({ quoteSummary: { result: [{ financialData: { targetMeanPrice: { raw: 1 }, numberOfAnalystOpinions: { raw: 0 } } }] } })).toBeNull();
   });
 });

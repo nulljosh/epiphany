@@ -152,7 +152,7 @@ struct StockDetailView: View {
 
                 ValuationLine(stock: stock)
 
-                EarningsHistoryCard(symbol: stock.symbol)
+                EarningsHistoryCard(symbol: stock.symbol, price: stock.price)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Related News")

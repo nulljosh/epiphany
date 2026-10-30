@@ -15,13 +15,50 @@ struct EarningsQuarter: Decodable, Equatable {
     }
 }
 
+/// Analysts' mean price target, range, count and consensus. From /api/earnings-history.
+struct AnalystTarget: Decodable, Equatable {
+    let mean: Double
+    let high: Double?
+    let low: Double?
+    let count: Int
+    let consensus: String?
+
+    /// "+14.2%" from today's price.
+    func upside(from price: Double) -> Double { price > 0 ? (mean / price - 1) * 100 : 0 }
+}
+
+/// Consensus and target against today's price; nothing without coverage.
+struct AnalystLine: View {
+    let target: AnalystTarget
+    let price: Double
+
+    var body: some View {
+        let up = target.upside(from: price)
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Analysts").font(.headline)
+            (Text((target.consensus.map { $0.capitalized + " · " } ?? "") + "target \(CurrencyFormatter.formatPrice(target.mean))")
+             + Text(String(format: " (%+.1f%%)", up)).foregroundColor(up >= 0 ? Palette.successGreen : Palette.dangerRed))
+                .font(.subheadline.weight(.semibold))
+            Text("\(target.count) analysts" + (target.low.flatMap { lo in target.high.map { ", from \(CurrencyFormatter.formatPrice(lo)) to \(CurrencyFormatter.formatPrice($0))" } } ?? "") + ". Their view, not advice.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+    }
+}
+
 /// Last four quarters as estimate and actual bars on a stock's page; nothing when there's no history (funds, crypto).
 struct EarningsHistoryCard: View {
     let symbol: String
+    var price: Double = 0
     @State private var quarters: [EarningsQuarter] = []
+    @State private var analysts: AnalystTarget?
 
     var body: some View {
         Group {
+            if let analysts, price > 0 { AnalystLine(target: analysts, price: price) }
             if !quarters.isEmpty {
                 let top = max(quarters.flatMap { [abs($0.actual), abs($0.estimate)] }.max() ?? 0.01, 0.01)
                 VStack(alignment: .leading, spacing: 10) {
@@ -52,6 +89,10 @@ struct EarningsHistoryCard: View {
                 .padding(.horizontal)
             }
         }
-        .task(id: symbol) { quarters = (try? await EpiphanyAPI.shared.fetchEarningsHistory(symbol: symbol)) ?? [] }
+        .task(id: symbol) {
+            let h = try? await EpiphanyAPI.shared.fetchEarningsHistory(symbol: symbol)
+            quarters = h?.quarters ?? []
+            analysts = h?.analysts
+        }
     }
 }

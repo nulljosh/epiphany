@@ -713,12 +713,14 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const changeColor = positive ? '#30D158' : '#FF453A';
   const pos = useMemo(() => position(storedHoldings(), stock?.symbol, price, changePercent), [stock?.symbol, price, changePercent]);
   const [earnings, setEarnings] = useState([]);
+  const [analysts, setAnalysts] = useState(null);
   useEffect(() => {
     if (!stock?.symbol) return undefined;
     let gone = false;
     setEarnings([]);
+    setAnalysts(null);
     fetch(`/api/earnings-history?symbol=${encodeURIComponent(stock.symbol)}`).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (!gone && Array.isArray(d?.quarters)) setEarnings(d.quarters); }).catch(() => {});
+      .then((d) => { if (gone || !d) return; if (Array.isArray(d.quarters)) setEarnings(d.quarters); setAnalysts(d.analysts || null); }).catch(() => {});
     return () => { gone = true; };
   }, [stock?.symbol]);
   const signed = (n) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n))}`;
@@ -1212,6 +1214,20 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             </div>
           ))}
         </div>
+
+        {/* Analysts: consensus and mean price target against today's price */}
+        {analysts && price > 0 && (
+          <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Analysts</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: t.text }}>
+              {analysts.consensus ? `${analysts.consensus.replace(/\b\w/g, (c) => c.toUpperCase())} · ` : ''}target {formatCurrency(analysts.mean)}
+              <span style={{ color: analysts.mean >= price ? '#30D158' : '#FF453A' }}> ({analysts.mean >= price ? '+' : ''}{((analysts.mean / price - 1) * 100).toFixed(1)}%)</span>
+            </div>
+            <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }}>
+              {analysts.count} analysts{analysts.low != null && analysts.high != null ? `, from ${formatCurrency(analysts.low)} to ${formatCurrency(analysts.high)}` : ''}. Their view, not advice.
+            </div>
+          </div>
+        )}
 
         {/* Earnings history: EPS actual against the estimate, last four quarters */}
         {earnings.length > 0 && (() => {

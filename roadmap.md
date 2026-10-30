@@ -78,7 +78,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Interest earned this year, read from statements | Wealthfront, SoFi | S | 84.0 | done 84.0.0, same card |
 | A greeting over the portfolio with what changed since your last visit | Betterment | S | 85.0 | done 85.0.0 |
 | Concentration flag when one holding is over a quarter of the portfolio | Simply Wall St | S | 86.0 | done 86.0.0 |
-| Analyst price target and consensus on a stock page | Simply Wall St, Stash | S | 87.0 | open, Yahoo `financialData` |
+| Analyst price target and consensus on a stock page | Simply Wall St, Stash | S | 87.0 | done 87.0.0 |
 | Tap an account to see its recent transactions | Betterment, SoFi | M | 88.0 | open |
 | Polish pass over the cards 51 to 88 added: spacing, type, light and dark | apple skill | S | 89.0 | open |
 
