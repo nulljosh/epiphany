@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react';
 import Supercluster from 'supercluster';
 import { routeHTML } from '../utils/flightRoute';
 import { SYSTEM_FONT } from '../utils/formatting';
@@ -25,6 +25,9 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 const EMOJI_CSS = 'width:24px;height:24px;font-size:18px;line-height:24px;text-align:center;cursor:pointer;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));';
 const WINDOW_CHOICES = [[1, 'Last hour'], [6, 'Last 6 hours'], [24, 'Last 24 hours'], [0, 'Any time']];
 const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality']];
+// Sub-filters under Flights, keyed into mapLayers like the layers above; `kind` comes from /api/flights.
+const FLIGHT_KINDS = [['passenger', 'Passenger'], ['cargo', 'Cargo'], ['military', 'Military'], ['private', 'Private']];
+const flightKey = (kind) => `flights_${kind || 'private'}`;
 const CATEGORY_EMOJI = { Restaurants: '🍽️', Coffee: '☕', Gas: '⛽', Parks: '🌳', Shopping: '🛍️', Groceries: '🛒' };
 const CATEGORY_TERMS = { Restaurants: 'food & drink', Coffee: 'coffee', Gas: 'gas', Parks: 'park', Shopping: 'shopping', Groceries: 'grocery' };
 
@@ -1022,7 +1025,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
     // Flights — markers stored in flightMarkersRef for dead-reckoning animation
     if (mapLayers.flights !== false && Array.isArray(payload.flights)) {
       payload.flights.slice(0, 120).forEach((fl) => {
-        if (fl.lat == null || fl.lon == null) return;
+        if (fl.lat == null || fl.lon == null || mapLayers[flightKey(fl.kind)] === false) return;
         const id = fl.icao24 || fl.callsign;
         const retained = id && staleFlights.get(id);
         if (retained) {
@@ -1277,7 +1280,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       el.style.display = mapLayers?.[type] === false ? 'none' : '';
     }
     for (const entry of flightMarkersRef.current) {
-      entry.el.style.display = mapLayers?.flights === false ? 'none' : '';
+      entry.el.style.display = mapLayers?.flights === false || mapLayers?.[flightKey(entry.flight?.kind)] === false ? 'none' : '';
     }
   }, [mapLayers]);
 
@@ -1380,11 +1383,24 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
                 <>
                   <div style={{ fontSize: 11, color: P.sub, margin: '6px 0 2px' }}>Show</div>
                   {FILTER_LAYERS.map(([key, text]) => (
-                    <label key={key} style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 28, cursor: 'pointer' }}>
+                    <Fragment key={key}>
+                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 28, cursor: 'pointer' }}>
                       <input type="checkbox" checked={mapLayers[key] !== false}
                         onChange={(e) => onLayersChange((prev) => ({ ...prev, [key]: e.target.checked }))} />
                       {text}
                     </label>
+                  {key === 'flights' && mapLayers.flights !== false && (
+                    <div role="group" aria-label="Flight kinds" style={{ display: 'flex', flexWrap: 'wrap', gap: '0 12px', paddingLeft: 24 }}>
+                      {FLIGHT_KINDS.map(([kind, text]) => (
+                        <label key={kind} style={{ display: 'flex', gap: 6, alignItems: 'center', minHeight: 28, cursor: 'pointer', color: P.sub }}>
+                          <input type="checkbox" checked={mapLayers[flightKey(kind)] !== false}
+                            onChange={(e) => onLayersChange((prev) => ({ ...prev, [flightKey(kind)]: e.target.checked }))} />
+                          {text}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                    </Fragment>
                   ))}
                 </>
               )}

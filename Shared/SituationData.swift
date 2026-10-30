@@ -142,6 +142,8 @@ struct Flight: Codable, Identifiable {
     let velocityKnots: Int?
     let headingDeg: Int?
     let status: String?
+    /// passenger, cargo, military or private, from /api/flights; nil in old snapshots.
+    var kind: String? = nil
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
@@ -157,7 +159,7 @@ struct Flight: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, callsign, origin, destination, latitude, longitude, status
+        case id, callsign, origin, destination, latitude, longitude, status, kind
         case icao24, lat, lon, altitude, velocity, heading
         case altitudeFeet = "altitude_feet"
         case velocityKnots = "velocity_knots"
@@ -174,7 +176,8 @@ struct Flight: Codable, Identifiable {
         altitudeFeet: Int?,
         velocityKnots: Int?,
         headingDeg: Int?,
-        status: String?
+        status: String?,
+        kind: String? = nil
     ) {
         self.id = id
         self.callsign = callsign
@@ -186,6 +189,7 @@ struct Flight: Codable, Identifiable {
         self.velocityKnots = velocityKnots
         self.headingDeg = headingDeg
         self.status = status
+        self.kind = kind
     }
 
     init(from decoder: Decoder) throws {
@@ -208,6 +212,7 @@ struct Flight: Codable, Identifiable {
         headingDeg = container.lossyInt(forKey: .headingDeg)
             ?? container.lossyInt(forKey: .heading)
         status = container.lossyString(forKey: .status)
+        kind = container.lossyString(forKey: .kind)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -222,6 +227,7 @@ struct Flight: Codable, Identifiable {
         try container.encodeIfPresent(velocityKnots, forKey: .velocityKnots)
         try container.encodeIfPresent(headingDeg, forKey: .headingDeg)
         try container.encodeIfPresent(status, forKey: .status)
+        try container.encodeIfPresent(kind, forKey: .kind)
     }
 }
 

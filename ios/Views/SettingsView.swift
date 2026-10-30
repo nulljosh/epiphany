@@ -583,6 +583,9 @@ struct MapSourcesSettingsView: View {
                     Toggle("High-Altitude Flights (>35,000 ft)", isOn: $showHighAltFlights)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    FlightKindToggles()
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
                 Toggle("Incidents", isOn: $showIncidents)
                 Toggle("Weather Alerts", isOn: $showWeatherAlerts)

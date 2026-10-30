@@ -66,3 +66,29 @@ struct FlightRouteCard: View {
         }
     }
 }
+
+/// Map filter by plane kind. Hidden kinds live in one "flights.hidden" list so map views can observe it with one @AppStorage.
+enum FlightKind {
+    static let all = [("passenger", "Passenger"), ("cargo", "Cargo"), ("military", "Military"), ("private", "Private")]
+
+    static func isShown(_ flight: Flight, hidden: String) -> Bool {
+        !hidden.split(separator: ",").contains(Substring(flight.kind ?? "private"))
+    }
+}
+
+struct FlightKindToggles: View {
+    @AppStorage("flights.hidden") private var hidden = ""
+
+    var body: some View {
+        ForEach(FlightKind.all, id: \.0) { kind, label in
+            Toggle(label, isOn: Binding(
+                get: { !hidden.split(separator: ",").contains(Substring(kind)) },
+                set: { on in
+                    var set = Set(hidden.split(separator: ",").map(String.init))
+                    if on { set.remove(kind) } else { set.insert(kind) }
+                    hidden = set.sorted().joined(separator: ",")
+                }
+            ))
+        }
+    }
+}

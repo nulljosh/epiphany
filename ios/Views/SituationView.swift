@@ -124,6 +124,7 @@ struct SituationView: View {
     @AppStorage("showAQI") private var showAQI = true
     @AppStorage("mapWindowHours") private var mapWindowHours = 0
     @AppStorage("showHighAltFlights") private var showHighAltFlights = false
+    @AppStorage("flights.hidden") private var hiddenFlightKinds = ""
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
     @State private var selectedVenueCategories: Set<VenueCategory> = Set(VenueCategory.allCases)
     @State private var venueResults: [VenueCategory: [MKMapItem]] = [:]
@@ -225,7 +226,7 @@ struct SituationView: View {
     }
 
     private var visibleFlights: [Flight] {
-        flights.filter { showHighAltFlights || ($0.altitudeFeet ?? 0) <= 35000 }
+        flights.filter { (showHighAltFlights || ($0.altitudeFeet ?? 0) <= 35000) && FlightKind.isShown($0, hidden: hiddenFlightKinds) }
     }
 
     @MapContentBuilder

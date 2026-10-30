@@ -112,6 +112,7 @@ struct SituationView: View {
     @AppStorage("settings.situation.crime") private var showCrime = true
     @AppStorage("settings.situation.traffic") private var showTraffic = true
     @AppStorage("settings.situation.flights") private var showFlights = true
+    @AppStorage("flights.hidden") private var hiddenFlightKinds = ""
     @AppStorage("settings.situation.weather") private var showWeather = true
     @AppStorage("settings.situation.earthquakes") private var showEarthquakes = true
     @AppStorage("settings.situation.wildfires") private var showWildfires = true
@@ -230,7 +231,7 @@ struct SituationView: View {
                 }
             }
 
-            ForEach(appState.situationFlightsEnabled ? flights : []) { flight in
+            ForEach(appState.situationFlightsEnabled ? flights.filter { FlightKind.isShown($0, hidden: hiddenFlightKinds) } : []) { flight in
                 Annotation(flight.callsign, coordinate: flight.coordinate) {
                     Button {
                         selectedEvent = .flight(flight)

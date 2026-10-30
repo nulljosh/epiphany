@@ -69,6 +69,19 @@ export function parseBbox(query = {}) {
   return { lamin: la1, lomin: lo1, lamax: la2, lomax: lo2 };
 }
 
+// Plane kind for the map filter. readsb dbFlags bit 1 marks military airframes;
+// the rest goes by the callsign's airline prefix.
+// ponytail: short prefix lists, add an operator when a known one shows up as passenger.
+const MILITARY = /^(RCH|CFC|CNV|PAT|SAM|RRR|ASY|GAF|IAM|FAF|BAF|NAVY|ARMY|EVAC)/;
+const CARGO = /^(FDX|UPS|GTI|CLX|ABW|BOX|CKS|ATN|PAC|CAO|DHK|BCS|DAE|ABX|NCA|CKK|GEC|MPH|KFA|CJT|SWN)\d/;
+export function flightKind(callsign = '', dbFlags = 0) {
+  const cs = callsign.trim().toUpperCase();
+  if ((dbFlags & 1) || MILITARY.test(cs)) return 'military';
+  if (CARGO.test(cs)) return 'cargo';
+  if (/^[A-Z]{3}\d/.test(cs)) return 'passenger';
+  return 'private';
+}
+
 // Both sources emit readsb aircraft records (adsb.lol under `ac`, adsb.fi under
 // `aircraft`). The API is point+radius, so we query the bbox's circumscribed
 // circle and re-filter to the exact bbox.
@@ -87,6 +100,7 @@ export function normalize(json, bbox, toReadsb = readsb) {
     registration: a.r ?? null,
     aircraftType: a.t ?? null,
     vertRate: a.baro_rate ?? null,
+    kind:     flightKind(a.flight ?? '', a.dbFlags),
   })).filter((f) =>
     typeof f.lat === 'number' && typeof f.lon === 'number' &&
     !f.onGround &&

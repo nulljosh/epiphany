@@ -72,7 +72,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Gap | Seen in | Size | Version | Status |
 |---|---|---|---|---|
 | Tap a plane for its route, altitude, speed and a progress bar from origin to destination | Flightradar24 | M | 101.0 | done 101.0.0 (adsbdb by callsign) |
-| Plane filters: passenger, cargo, military | Flightradar24 | S | 102.0 | open |
+| Plane filters: passenger, cargo, military | Flightradar24 | S | 102.0 | done 102.0.0 (callsign prefix plus readsb military flag) |
 | Rain radar layer on the map | Windy | M | 103.0 | open, a free tile source (RainViewer) |
 | Severe weather warnings near you on the map | Windy | M | 104.0 | open, Environment Canada and NWS alerts |
 | Storm tracks on the map during hurricane season | Windy | M | 105.0 | open, NHC feeds |

@@ -298,6 +298,10 @@ struct SettingsView: View {
                     systemImage: "airplane",
                     isOn: sourceBinding(\.situationFlightsEnabled)
                 )
+                if appState.situationFlightsEnabled {
+                    FlightKindToggles()
+                        .padding(.leading, 36)
+                }
                 sourceToggleRow(
                     title: "Incidents",
                     subtitle: "Closures, alerts, and disruptions",
