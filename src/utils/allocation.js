@@ -90,3 +90,19 @@ export function dividendCalendar(holdings = [], quotes = {}, now = new Date(), m
   });
   return { calendar, next: next.sort((a, b) => a.date - b.date) };
 }
+
+// Accounts with money in them, grouped by type with a total each: cash first, then chequing, investment, the rest.
+// Mirrors Allocation.groupAccounts. Totals add balances as net worth does (already in CAD).
+const ACCOUNT_ORDER = ['cash', 'chequing', 'investment'];
+export function groupAccounts(accounts = []) {
+  const groups = {};
+  for (const a of accounts) {
+    if (!(a.balance > 0)) continue;
+    const type = a.type || 'other';
+    (groups[type] ||= []).push(a);
+  }
+  const rank = (t) => (ACCOUNT_ORDER.includes(t) ? ACCOUNT_ORDER.indexOf(t) : ACCOUNT_ORDER.length);
+  return Object.keys(groups)
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+    .map((type) => ({ type, total: groups[type].reduce((s, a) => s + a.balance, 0), accounts: groups[type] }));
+}

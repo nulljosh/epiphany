@@ -306,6 +306,11 @@ struct PortfolioView: View {
                 .padding(.horizontal)
             DividendCalendarCard(holdings: portfolio.holdings, stocks: appState.stocks)
                 .padding(.horizontal)
+            if let accounts = appState.financeData?.accounts, accounts.contains(where: { $0.balance >= 1 }) {
+                sectionCard("Accounts") {
+                    AccountGroupsList(accounts: accounts).padding()
+                }
+            }
             VStack(spacing: 8) {
                 Text("Total Value")
                     .font(.caption)

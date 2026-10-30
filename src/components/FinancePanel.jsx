@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1216,16 +1216,21 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
-                <div style={labelStyle}>Cash Accounts</div>
-                {accounts.filter(a => a.balance > 0).map((account, index) => (
-                  <div key={`${account.name}-${index}`} style={rowStyle}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{account.name}</div>
-                      <div style={{ fontSize: 11, color: t.textTertiary }}>{capitalize(account.type)}</div>
+                <div style={labelStyle}>Accounts</div>
+                {groupAccounts(accounts).map((group) => (
+                  <div key={group.type} style={{ marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: t.textSecondary, padding: '8px 0 4px' }}>
+                      <span>{capitalize(group.type)}</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(group.total, 'CAD')}</span>
                     </div>
-                    <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
-                      {formatCurrency(account.balance, account.currency)}
-                    </div>
+                    {group.accounts.map((account, index) => (
+                      <div key={`${account.name}-${index}`} style={rowStyle}>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{account.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+                          {formatCurrency(account.balance, account.currency)}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

@@ -485,32 +485,11 @@ struct PortfolioView: View {
     }
 
     private func accountsBreakdown(_ accounts: [FinanceData.Account]) -> some View {
-        let nonEmpty = accounts.filter { $0.balance >= 1.0 }
-        guard !nonEmpty.isEmpty else { return AnyView(EmptyView()) }
+        guard accounts.contains(where: { $0.balance >= 1.0 }) else { return AnyView(EmptyView()) }
         return AnyView(sectionCard("Accounts") {
-            VStack(spacing: 12) {
-                ForEach(nonEmpty) { account in
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(account.displayName)
-                                .font(.callout.weight(.semibold))
-                                .foregroundStyle(Palette.text)
-                            if account.type != nil {
-                                Text(account.typeLabel)
-                                    .font(.caption2)
-                                    .foregroundStyle(Palette.textSecondary)
-                            }
-                        }
-                        Spacer(minLength: 12)
-                        Text(CurrencyFormatter.formatPrice(account.balance))
-                            .font(.callout.weight(.semibold))
-                            .foregroundStyle(Palette.text)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                }
-            }
-            .padding(.vertical, 8)
+            AccountGroupsList(accounts: accounts)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 16)
         })
     }
 

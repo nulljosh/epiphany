@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -48,5 +48,13 @@ describe('allocation', () => {
     expect(calendar.filter((m) => m.amount > 0).map((m) => m.month)).toEqual(['2026-11', '2027-02', '2027-05', '2027-08']);
     expect(calendar[1].amount).toBe(40);
     expect(next).toEqual([{ symbol: 'TD', date: new Date(ts * 1000), amount: 40 }]);
+  });
+
+  it('groups accounts by type, cash first, with totals, skipping empty ones', () => {
+    const g = groupAccounts([
+      { name: 'TFSA', type: 'investment', balance: 250 }, { name: 'MSB', type: 'cash', balance: 1000 },
+      { name: 'Gift', type: 'gift', balance: 5 }, { name: 'Spend', type: 'cash', balance: 0.32 }, { name: 'Old', type: 'cash', balance: 0 },
+    ]);
+    expect(g.map((x) => [x.type, x.total, x.accounts.length])).toEqual([['cash', 1000.32, 2], ['investment', 250, 1], ['gift', 5, 1]]);
   });
 });
