@@ -154,45 +154,8 @@ struct StockDetailView: View {
                 }
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    if stock.open > 0 {
-                        statCell("Open", value: CurrencyFormatter.formatPrice(stock.open))
-                    }
-                    if stock.prevClose > 0 {
-                        statCell("Prev Close", value: CurrencyFormatter.formatPrice(stock.prevClose))
-                    }
-                    if let range = stock.dayRange {
-                        statCell("Day Range", value: range)
-                    }
-                    if let range = stock.yearRange {
-                        statCell("52W Range", value: range)
-                    }
-                    if stock.volume > 0 {
-                        statCell("Volume", value: stock.formattedVolume)
-                    }
-                    let enriched = liveStock ?? stock
-                    if let cap = enriched.formattedMarketCap {
-                        statCell("Market Cap", value: "$\(cap)")
-                    }
-                    if let pe = enriched.formattedPERatio {
-                        statCell("P/E Ratio", value: pe)
-                    }
-                    if let e = enriched.formattedEPS {
-                        statCell("EPS", value: e)
-                    }
-                    if let b = enriched.formattedBeta {
-                        statCell("Beta", value: b)
-                    }
-                    if enriched.earningsSoon, let date = enriched.formattedNextEarnings {
-                        statCell("Earnings", value: date)
-                    }
-                    if let date = enriched.formattedDividendDate {
-                        statCell("Dividend", value: date)
-                    }
-                    if let y = enriched.formattedYield {
-                        statCell("Yield", value: y)
-                    }
-                    if let av = enriched.formattedAvgVolume {
-                        statCell("Avg Vol", value: av)
+                    ForEach(KeyStats.rows(liveStock ?? stock), id: \.label) { row in
+                        statCell(row.label, value: row.value)
                     }
                 }
                 .padding()

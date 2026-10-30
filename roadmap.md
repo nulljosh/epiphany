@@ -42,7 +42,7 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 |---|---|---|---|---|
 | Holdings filter chips: Stocks, ETFs, Crypto, CAD, USD | Wealthsimple | S | 31.0 | done 31.0.0 (no ETF chip until holdings carry an asset type) |
 | Goal progress ring on each goal ("85% of goal") | Empower | S | 32.0 | done 32.0.0 |
-| Key stats grid under every stock chart (open, high, low, volume, P/E, market cap, 52W high and low, average volume) on all three, same order | Apple Stocks | S | 33.0 | open, check what each platform already shows |
+| Key stats grid under every stock chart (open, high, low, volume, P/E, market cap, 52W high and low, average volume) on all three, same order | Apple Stocks | S | 33.0 | done 33.0.0 (all three had a grid; now one order from `KeyStats.rows`) |
 | Estimated yearly dividend income on the portfolio, with a bar per month | Public, Wealthsimple | M | 34.0 | open, needs dividend yield per holding |
 | Chart metric tabs on a stock: Price, Market cap, P/E | Public | M | 35.0 | open |
 | Gas stations near you as a list sorted by distance, under the Gas map chip | Waze | M | 36.0 | open, needs a price source or list without prices |

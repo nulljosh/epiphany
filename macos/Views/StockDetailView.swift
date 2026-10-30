@@ -140,53 +140,8 @@ struct StockDetailView: View {
                 }
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    if let b = stock.bid {
-                        statCell("Bid", value: CurrencyFormatter.formatPrice(b))
-                    }
-                    if let a = stock.ask {
-                        statCell("Ask", value: CurrencyFormatter.formatPrice(a))
-                    }
-                    if stock.open > 0 {
-                        statCell("Open", value: CurrencyFormatter.formatPrice(stock.open))
-                    }
-                    if stock.prevClose > 0 {
-                        statCell("Prev Close", value: CurrencyFormatter.formatPrice(stock.prevClose))
-                    }
-                    if let range = stock.dayRange {
-                        statCell("Day Range", value: range)
-                    }
-                    if let range = stock.yearRange {
-                        statCell("52W Range", value: range)
-                    }
-                    if stock.volume > 0 {
-                        statCell("Volume", value: stock.formattedVolume)
-                    }
-                    if let cap = stock.formattedMarketCap {
-                        statCell("Market Cap", value: "$\(cap)")
-                    }
-                    if let pe = stock.formattedPERatio {
-                        statCell("P/E Ratio", value: pe)
-                    }
-                    if let e = stock.formattedEPS {
-                        statCell("EPS", value: e)
-                    }
-                    if let b = stock.formattedBeta {
-                        statCell("Beta", value: b)
-                    }
-                    if stock.earningsSoon, let date = stock.formattedNextEarnings {
-                        statCell("Earnings", value: date)
-                    }
-                    if let date = stock.formattedDividendDate {
-                        statCell("Dividend", value: date)
-                    }
-                    if let y = stock.formattedYield {
-                        statCell("Yield", value: y)
-                    }
-                    if let av = stock.formattedAvgVolume {
-                        statCell("Avg Vol", value: av)
-                    }
-                    if let ex = stock.exchange {
-                        statCell("Exchange", value: ex)
+                    ForEach(KeyStats.rows(stock), id: \.label) { row in
+                        statCell(row.label, value: row.value)
                     }
                 }
                 .padding()
