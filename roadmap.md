@@ -57,7 +57,7 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 |---|---|---|---|---|
 | Sector heat map on Markets: one tile per sector, coloured by today's move | moomoo, Morningstar | M | 41.0 | done 41.0.0 (web sector map reused; equal weight) |
 | Compound growth calculator in Outlook: monthly amount, years, return, with the curve | Kubera, Simplifi | S | 42.0 | done 42.0.0 |
-| Total unrealized gain on the portfolio, dollars and percent | Kubera, Morningstar | S | 43.0 | open |
+| Total unrealized gain on the portfolio, dollars and percent | Kubera, Morningstar | S | 43.0 | done 43.0.0 (hidden for broker rows without a cost basis) |
 | "Left this month" headline: money in minus money out this month, from statements | Simplifi, YNAB | S | 44.0 | open |
 | Projected cash balance for the next 30 days, a line with a Today marker, from cash, bills and income | Simplifi | M | 45.0 | open |
 | News topic filter: Markets, Crypto, Earnings, Economy | Seeking Alpha | S | 46.0 | open, check what the feed tags |
@@ -91,6 +91,9 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 40 | Mobbin pass 4 plus an apple audit (done 40.0.0) |
 | 41 to 49 | One row each from "Mobbin pass 4" |
 | 50 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+
+## 2026-10-29 QA leftovers (open)
+- [ ] Web allocation donut adds USD holdings to CAD cash at face value, so its total disagrees with net worth; convert holdings with `toCad` like `stocksValue` does.
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)

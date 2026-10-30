@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -23,5 +23,10 @@ describe('allocation', () => {
     const h = [{ symbol: 'KO', value: 1000 }, { symbol: 'BTC-USD', value: 500 }];
     expect(yearlyDividends(h, { KO: { yield: 3 }, 'BTC-USD': { yield: null } })).toBeCloseTo(30);
     expect(yearlyDividends(h, {})).toBe(0);
+  });
+  it('sums unrealized gain over holdings with a cost basis', () => {
+    const h = [{ shares: 2, costBasis: 50, gain: 20 }, { shares: 1, costBasis: 100, gain: -10 }, { shares: 5, costBasis: null, gain: null }];
+    expect(unrealizedGain(h)).toEqual({ gain: 10, percent: 5 });
+    expect(unrealizedGain([{ shares: 1, gain: null }])).toBeNull();
   });
 });

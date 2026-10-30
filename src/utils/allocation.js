@@ -33,3 +33,12 @@ export const filterHoldings = (holdings = [], filter = 'All') =>
 // ponytail: trailing yield, no payment months, so no per-month bars until quotes carry a dividend schedule.
 export const yearlyDividends = (holdings = [], quotes = {}) =>
   holdings.reduce((sum, h) => sum + (h.value > 0 && quotes[h.symbol]?.yield > 0 ? h.value * quotes[h.symbol].yield / 100 : 0), 0);
+
+// Unrealized gain across holdings that have a cost basis (broker rows without one are skipped). Mirrors Allocation.unrealizedGain.
+export function unrealizedGain(holdings = []) {
+  const known = holdings.filter((h) => h.gain != null && h.shares * h.costBasis > 0);
+  if (!known.length) return null;
+  const gain = known.reduce((sum, h) => sum + h.gain, 0);
+  const cost = known.reduce((sum, h) => sum + h.shares * h.costBasis, 0);
+  return { gain, percent: (gain / cost) * 100 };
+}

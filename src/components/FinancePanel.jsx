@@ -11,7 +11,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain } from '../utils/allocation';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1132,8 +1132,19 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 ))}
                 <div style={{ ...rowStyle, borderBottom: 'none', fontWeight: 700, fontSize: 16 }}>
                   <span>Total</span>
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(holdingFilter === 'All' ? stocksValue : filterHoldings(holdings, holdingFilter).reduce((sum, h) => sum + (h.value || 0), 0))}</span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{holdingFilter === 'All' ? formatCurrency(stocksValue, 'CAD') : formatCurrency(filterHoldings(holdings, holdingFilter).reduce((sum, h) => sum + (h.value || 0), 0))}</span>
                 </div>
+                {(() => {
+                  const u = unrealizedGain(filterHoldings(holdings, holdingFilter));
+                  return u && (
+                    <div style={{ ...rowStyle, borderBottom: 'none', fontSize: 13, color: t.textSecondary }}>
+                      <span>Unrealized gain</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: u.gain >= 0 ? t.green : t.red }}>
+                        {u.gain >= 0 ? '+' : '-'}{formatCurrency(Math.abs(u.gain))} ({u.percent >= 0 ? '+' : ''}{u.percent.toFixed(1)}%)
+                      </span>
+                    </div>
+                  );
+                })()}
                 {yearlyDividends(holdings, stocks) > 0 && (
                   <div style={{ ...rowStyle, borderBottom: 'none', fontSize: 13, color: t.textSecondary }}>
                     <span>Est. dividends</span>

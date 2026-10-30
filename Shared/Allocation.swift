@@ -45,6 +45,33 @@ enum Allocation {
         }
     }
 
+    /// Unrealized gain over holdings with a cost basis (broker rows without one are skipped). Mirrors unrealizedGain in allocation.js.
+    static func unrealizedGain(_ holdings: [Portfolio.Holding]) -> (gain: Double, percent: Double)? {
+        let known = holdings.filter { $0.avgCost > 0 && $0.shares > 0 }
+        let cost = known.reduce(0) { $0 + $1.avgCost * $1.shares }
+        guard cost > 0 else { return nil }
+        let gain = known.reduce(0) { $0 + $1.gainLoss }
+        return (gain, gain / cost * 100)
+    }
+
+    /// Unrealized gain row under the holdings; nothing when no holding has a cost basis.
+    @ViewBuilder static func gainRow(_ holdings: [Portfolio.Holding]) -> some View {
+        if let u = unrealizedGain(holdings) {
+            Divider().padding(.horizontal)
+            HStack {
+                Text("Unrealized gain").foregroundStyle(.secondary)
+                Spacer()
+                Text("\(CurrencyFormatter.formatSignedPrice(u.gain)) (\(String(format: "%+.1f%%", u.percent)))")
+                    .fontWeight(.semibold)
+                    .monospacedDigit()
+                    .foregroundStyle(u.gain >= 0 ? Palette.successGreen : Palette.dangerRed)
+            }
+            .font(.subheadline)
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+        }
+    }
+
     static func slices(holdings: [Portfolio.Holding], cash: Double) -> [(label: String, value: Double)] {
         let values = holdings.filter { $0.marketValue > 0 }
         let crypto = values.filter { isCrypto($0.symbol) }.reduce(0) { $0 + $1.marketValue }
