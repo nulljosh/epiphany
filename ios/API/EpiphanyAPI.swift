@@ -1132,6 +1132,8 @@ extension ISO8601DateFormatter {
     static func dateOnly(_ string: String) -> Date? {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withFullDate]
+        // Local midnight: the default is GMT, which put every bill and month a day early west of Greenwich.
+        f.timeZone = .current
         return f.date(from: string)
     }
 }

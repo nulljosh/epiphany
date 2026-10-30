@@ -58,7 +58,7 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 | Sector heat map on Markets: one tile per sector, coloured by today's move | moomoo, Morningstar | M | 41.0 | done 41.0.0 (web sector map reused; equal weight) |
 | Compound growth calculator in Outlook: monthly amount, years, return, with the curve | Kubera, Simplifi | S | 42.0 | done 42.0.0 |
 | Total unrealized gain on the portfolio, dollars and percent | Kubera, Morningstar | S | 43.0 | done 43.0.0 (hidden for broker rows without a cost basis) |
-| "Left this month" headline: money in minus money out this month, from statements | Simplifi, YNAB | S | 44.0 | open |
+| "Left this month" headline: money in minus money out this month, from statements | Simplifi, YNAB | S | 44.0 | done 44.0.0 (newest statement month; says the month by name when statements lag) |
 | Projected cash balance for the next 30 days, a line with a Today marker, from cash, bills and income | Simplifi | M | 45.0 | open |
 | News topic filter: Markets, Crypto, Earnings, Economy | Seeking Alpha | S | 46.0 | open, check what the feed tags |
 | Siri and Shortcuts: "What's my portfolio worth" as an App Intent on iPhone and Mac | YNAB | M | 47.0 | open |

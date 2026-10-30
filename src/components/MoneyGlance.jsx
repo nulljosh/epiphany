@@ -7,6 +7,17 @@ const monthName = (ym) => new Date(`${ym}-01T12:00:00`).toLocaleDateString(undef
 
 // This month as a grid, with the days a recurring charge is due marked. Sunday first.
 // Mirrors billsCalendar in Shared/MoneyGlance.swift.
+// Money in minus money out for the newest statement month. Says "this month" only when it is this month,
+// so a statement that lags a month reads "Left in September" instead of passing as current.
+export function leftThisMonth(cashflow = [], now = new Date()) {
+  const m = cashflow.at(-1);
+  if (!m) return null;
+  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const title = m.month === current ? 'Left this month'
+    : `Left in ${new Date(`${m.month}-01T12:00:00`).toLocaleDateString('en-US', { month: 'long' })}`;
+  return { title, left: m.in - m.out, in: m.in, out: m.out };
+}
+
 function BillsCalendar({ recurring, t }) {
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth();
@@ -47,8 +58,22 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
   const peak = Math.max(1, ...cashflow.flatMap((m) => [m.in, m.out]));
   if (!insights.length && !upcoming.length && !cashflow.length) return null;
 
+  const left = leftThisMonth(cashflow);
+
   return (
     <>
+      {left && (
+        <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
+          <div style={{ ...label, color: t.textTertiary, marginBottom: 4 }}>{left.title}</div>
+          <div style={{ fontSize: 28, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: left.left >= 0 ? t.text : t.red }}>
+            {left.left < 0 ? '-' : ''}{formatCurrency(Math.abs(left.left))}
+          </div>
+          <div style={{ fontSize: 13, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>
+            {formatCurrency(left.in)} in, {formatCurrency(left.out)} spent
+          </div>
+        </Card>
+      )}
+
       {insights.length > 0 && (
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 16 }}>
           {insights.map((i) => (

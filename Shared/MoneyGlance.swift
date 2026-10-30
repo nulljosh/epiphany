@@ -40,8 +40,30 @@ struct MoneyGlance: View {
             .map { $0 }
     }
 
+    /// Money in minus out for the newest statement month. Says "this month" only when it is; a statement that lags
+    /// reads "Left in September". Mirrors leftThisMonth in src/components/MoneyGlance.jsx.
+    static func left(_ cashflow: [CashflowMonth], now: Date = .now) -> (title: String, left: Double, month: CashflowMonth)? {
+        guard let m = cashflow.last else { return nil }
+        let c = Calendar.current.dateComponents([.year, .month], from: now)
+        let current = String(format: "%04d-%02d", c.year ?? 0, c.month ?? 0)
+        let name = ISO8601DateFormatter.dateOnly(m.month + "-01")?.formatted(.dateTime.month(.wide)) ?? m.month
+        return (m.month == current ? "Left this month" : "Left in \(name)", m.in - m.out, m)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
+            if let left = Self.left(cashflow) {
+                VStack(alignment: .leading, spacing: 4) {
+                    heading(left.title.uppercased())
+                    Text((left.left < 0 ? "-" : "") + CurrencyFormatter.formatPrice(abs(left.left)))
+                        .font(.title.weight(.bold).monospacedDigit())
+                        .foregroundStyle(left.left >= 0 ? Color.primary : Palette.dangerRed)
+                    Text("\(CurrencyFormatter.formatPrice(left.month.in)) in, \(CurrencyFormatter.formatPrice(left.month.out)) spent")
+                        .font(.footnote.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+            }
             if !insights.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
