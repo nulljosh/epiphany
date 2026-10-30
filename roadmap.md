@@ -75,7 +75,7 @@ Versions 5.0.0 to 102.0.0 in git history were internal builds, one major per row
 |---|---|---|---|---|
 | Tap a plane for its route, altitude, speed and a progress bar from origin to destination | Flightradar24 | M | 101.0 | done 101.0.0 (adsbdb by callsign) |
 | Plane filters: passenger, cargo, military | Flightradar24 | S | 102.0 | done 102.0.0 (callsign prefix plus readsb military flag) |
-| Rain radar layer on the map | Windy | M | 5.1 | open, a free tile source (RainViewer) |
+| Rain radar layer on the map | Windy | M | 5.1 | done 5.1.0 (RainViewer newest frame, free tiles stop at zoom 7; native pins one 512 px image in an Annotation) |
 | Severe weather warnings near you on the map | Windy | M | 5.2 | open, Environment Canada and NWS alerts |
 | Storm tracks on the map during hurricane season | Windy | M | 5.3 | open, NHC feeds |
 | Insider buys and sells on a stock page | TipRanks | M | 5.4 | open, Yahoo `insiderTransactions` |

@@ -152,7 +152,7 @@ const SYMS = Object.keys(ASSETS);
 
 // Pre-auth landing runs the real map, so every anonymous visit costs a fan-out of
 // /api/* calls. Only the layers that read as "alive" at a glance are on.
-const PREAUTH_LAYERS = { flights: true, incidents: true, localEvents: true, weather: true, crime: true, earthquakes: false, news: false, traffic: false, predictions: false, heatmap: false, wildfires: false, aqi: false };
+const PREAUTH_LAYERS = { flights: true, incidents: true, localEvents: true, weather: true, crime: true, earthquakes: false, news: false, traffic: false, predictions: false, heatmap: false, wildfires: false, aqi: false, rain: false };
 
 export default function App() {
   const { user, loading: authLoading, error: authError, isAuthenticated, login, register, logout, refresh, changeName, changeEmail, changePassword } = useAuth();
@@ -174,7 +174,7 @@ export default function App() {
     try { return localStorage.getItem('epiphany_ticker_visible') !== 'false'; } catch { return true; }
   });
   const [activeTab, setActiveTab] = useState('situation');
-  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false, incidents: true, crime: true, localEvents: true, wildfires: true, aqi: true });
+  const [mapLayers, setMapLayers] = useState({ flights: true, earthquakes: true, news: true, traffic: true, predictions: true, weather: true, heatmap: false, incidents: true, crime: true, localEvents: true, wildfires: true, aqi: true, rain: false });
   const mapInstanceRef = useRef(null);
   useEffect(() => { applyResolvedTheme(dark ? 'dark' : 'light'); }, [dark]);
   useEffect(() => { try { localStorage.setItem('epiphany_ticker_visible', tickerVisible); } catch {} }, [tickerVisible]);

@@ -113,6 +113,11 @@ struct SituationView: View {
     @AppStorage("settings.situation.traffic") private var showTraffic = true
     @AppStorage("settings.situation.flights") private var showFlights = true
     @AppStorage("flights.hidden") private var hiddenFlightKinds = ""
+    @AppStorage("showRainRadar") private var showRainRadar = false
+    @State private var radarPath: String?
+    @State private var radarCenter: CLLocationCoordinate2D?
+    @State private var radarLonDelta: Double = 0
+    @State private var mapWidth: CGFloat = 0
     @AppStorage("settings.situation.weather") private var showWeather = true
     @AppStorage("settings.situation.earthquakes") private var showEarthquakes = true
     @AppStorage("settings.situation.wildfires") private var showWildfires = true
@@ -207,8 +212,22 @@ struct SituationView: View {
         }
     }
 
+    @MapContentBuilder
+    private var rainRadarAnnotation: some MapContent {
+        if showRainRadar, let path = radarPath {
+            let center = radarCenter ?? visibleRegion.center
+            if let url = RainRadar.imageURL(path: path, center: center) {
+                Annotation("Rain radar", coordinate: center, anchor: .center) {
+                    RainRadarImage(url: url, side: RainRadar.side(mapWidth: mapWidth, longitudeDelta: radarLonDelta > 0 ? radarLonDelta : visibleRegion.span.longitudeDelta))
+                }
+                .annotationTitles(.hidden)
+            }
+        }
+    }
+
     private var mapView: some View {
         Map(position: $mapPosition) {
+            rainRadarAnnotation
             if let currentLocation = locationManager.currentLocation {
                 Annotation("Current Location", coordinate: currentLocation.coordinate) {
                     mapPin(
@@ -349,6 +368,20 @@ struct SituationView: View {
             }
         }
         .mapStyle(activeMapStyle)
+        .onMapCameraChange(frequency: .continuous) { context in
+            guard showRainRadar else { return }
+            radarLonDelta = context.region.span.longitudeDelta
+            if RainRadar.needsRecentre(radarCenter, for: context.region.center) { radarCenter = context.region.center }
+        }
+        .task(id: showRainRadar) {
+            while showRainRadar, !Task.isCancelled {
+                radarPath = await RainRadar.latestPath()
+                try? await Task.sleep(for: .seconds(600))
+            }
+        }
+        .background(GeometryReader { g in
+            Color.clear.onAppear { mapWidth = g.size.width }.onChange(of: g.size.width) { _, w in mapWidth = w }
+        })
         .overlay(alignment: .topLeading) { mapSearchBar }
         .overlay(alignment: .bottom) { venueCategoryBar }
         .overlay(alignment: .bottomTrailing) { layerPickerButton }

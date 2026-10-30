@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @AppStorage("app_theme") private var rawTheme = "system"
     @AppStorage("epiphany_menu_bar_ticker") private var showMenuBar = true
+    @AppStorage("showRainRadar") private var showRainRadar = false
     @State private var showUpgradeAlert = false
     @State private var upgradeTarget: SubscriptionTier?
     @State private var showChangeEmail = false
@@ -337,6 +338,12 @@ struct SettingsView: View {
                     subtitle: "Active wildfire hotspots from NASA",
                     systemImage: "flame",
                     isOn: sourceBinding(\.situationWildfiresEnabled)
+                )
+                sourceToggleRow(
+                    title: "Rain Radar",
+                    subtitle: "Latest radar frame from RainViewer",
+                    systemImage: "cloud.rain",
+                    isOn: $showRainRadar
                 )
             }
         }

@@ -3,6 +3,7 @@ import Supercluster from 'supercluster';
 import { routeHTML } from '../utils/flightRoute';
 import { SYSTEM_FONT } from '../utils/formatting';
 import { inWindow } from '../utils/mapWindow';
+import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 
 // Brookswood/Langley, BC -- home base. Used while geolocation resolves and
 // as the fallback if IP geolocation fails or returns junk.
@@ -24,7 +25,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 // Emoji pins at Joshua's ask (2026-10-29): the glyph says what it is, no legend needed.
 const EMOJI_CSS = 'width:24px;height:24px;font-size:18px;line-height:24px;text-align:center;cursor:pointer;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));';
 const WINDOW_CHOICES = [[1, 'Last hour'], [6, 'Last 6 hours'], [24, 'Last 24 hours'], [0, 'Any time']];
-const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality']];
+const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic', 'Traffic'], ['flights', 'Flights'], ['weather', 'Weather'], ['earthquakes', 'Earthquakes'], ['wildfires', 'Wildfires'], ['aqi', 'Air quality'], ['rain', 'Rain radar']];
 // Sub-filters under Flights, keyed into mapLayers like the layers above; `kind` comes from /api/flights.
 const FLIGHT_KINDS = [['passenger', 'Passenger'], ['cargo', 'Cargo'], ['military', 'Military'], ['private', 'Private']];
 const flightKey = (kind) => `flights_${kind || 'private'}`;
@@ -1259,6 +1260,34 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
 
     return undefined;
   }, [payload, mapLoaded]);
+
+  // Rain radar: RainViewer's newest frame as a raster layer. Free tiles stop at zoom 7, MapLibre stretches them past it.
+  const [rainPath, setRainPath] = useState(null);
+  useVisibilityPolling(async () => {
+    if (!mapLayers?.rain) return;
+    try {
+      const j = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
+      const last = j?.radar?.past?.at(-1);
+      if (last) setRainPath(`${j.host}${last.path}`);
+    } catch { /* radar is optional */ }
+  }, 10 * 60_000, [mapLayers?.rain]);
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const sync = () => {
+      try {
+        if (map.getLayer('rain-layer')) map.removeLayer('rain-layer');
+        if (map.getSource('rain-source')) map.removeSource('rain-source');
+        if (!mapLayers?.rain || !rainPath) return;
+        map.addSource('rain-source', { type: 'raster', tiles: [`${rainPath}/256/{z}/{x}/{y}/2/1_1.png`], tileSize: 256, maxzoom: 7, attribution: 'RainViewer' });
+        // Under the first label layer so place names stay readable.
+        map.addLayer({ id: 'rain-layer', type: 'raster', source: 'rain-source', paint: { 'raster-opacity': 0.6 } }, map.getStyle().layers.find((l) => l.type === 'symbol')?.id);
+      } catch { /* style still loading; style.load runs sync again */ }
+    };
+    sync();
+    map.on('style.load', sync);
+    return () => map.off('style.load', sync);
+  }, [mapLayers?.rain, rainPath, mapLoaded]);
 
   // Toggle heatmap visibility
   useEffect(() => {
