@@ -3,6 +3,7 @@ import { Card } from './ui';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
+import { quoteCurrency, toCad } from '../utils/currency';
 import { normalizeSpendingMonths, UPCOMING_PAYMENTS } from '../utils/financeData';
 import { fileToBase64 } from '../utils/helpers';
 import { buildSpendingForecast } from '../utils/spendingForecast';
@@ -132,7 +133,7 @@ function ActionMenu({ t, font, actions }) {
   );
 }
 
-function PieChart({ data, size = 160, t }) {
+function PieChart({ data, size = 160, t, currency }) {
   const [hovered, setHovered] = useState(null);
   if (!data || data.length === 0) return null;
   const total = data.reduce((sum, entry) => sum + entry.value, 0);
@@ -191,7 +192,7 @@ function PieChart({ data, size = 160, t }) {
           {slices}
           <circle cx={size / 2} cy={size / 2} r={size / 2 - 30} fill={t.bg} />
           <text x={size / 2} y={size / 2 - 6} textAnchor="middle" fill={t.text} fontSize="14" fontWeight="700" fontFamily="-apple-system, system-ui, sans-serif">
-            {hoveredEntry ? formatCurrency(hoveredEntry.value) : formatCurrency(total)}
+            {formatCurrency(hoveredEntry ? hoveredEntry.value : total, currency)}
           </text>
           <text x={size / 2} y={size / 2 + 10} textAnchor="middle" fill={t.textTertiary} fontSize="9" fontFamily="-apple-system, system-ui, sans-serif">
             {hoveredEntry ? `${hoveredEntry.label} (${(hoveredEntry.value / total * 100).toFixed(1)}%)` : 'TOTAL'}
@@ -207,7 +208,7 @@ function PieChart({ data, size = 160, t }) {
           >
             <div style={{ width: 8, height: 8, borderRadius: 2, background: colors[index % colors.length] }} />
             <span style={{ color: t.textSecondary }}>{entry.label}</span>
-            <span style={{ color: t.text, fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(entry.value)}</span>
+            <span style={{ color: t.text, fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(entry.value, currency)}</span>
           </div>
         ))}
       </div>
@@ -690,7 +691,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
   const {
     holdings, accounts, budget, debt, goals, spending, giving, incomePhases, subscriptions, bills, telecom,
-    stocksValue, cashValue, totalDebt, totalIncome, totalExpenses,
+    stocksValue, cashValue, totalDebt, totalIncome, totalExpenses, usdPerCad,
     surplus, netWorth, isDemo, portfolioFetchedAt, brokerSnapshot, syncBroker,
     importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
@@ -722,8 +723,10 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
     boxShadow: 'none',
   };
 
+  // Holdings are priced in their listing currency and cash in CAD; the pies add the two, so holdings go to CAD first.
+  const holdingsCad = holdings.map((h) => ({ ...h, value: toCad(h.value, quoteCurrency(h.symbol), usdPerCad) ?? 0 }));
   const pieData = [
-    ...holdings.filter((holding) => holding.value > 0).map((holding) => ({ label: holding.symbol, value: holding.value })),
+    ...holdingsCad.filter((holding) => holding.value > 0).map((holding) => ({ label: holding.symbol, value: holding.value })),
     ...accounts.filter((account) => (account.cash ?? account.balance) > 0).map((account) => ({ label: account.name, value: account.cash ?? account.balance })),
   ];
 
@@ -1071,12 +1074,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           <>
             <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
               <div style={labelStyle}>Holdings</div>
-              <PieChart data={pieData} t={t} />
+              <PieChart data={pieData} t={t} currency="CAD" />
             </Card>
-            {allocation(holdings, cashValue).length > 1 && (
+            {allocation(holdingsCad, cashValue).length > 1 && (
               <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
                 <div style={labelStyle}>Allocation</div>
-                <PieChart data={allocation(holdings, cashValue)} t={t} />
+                <PieChart data={allocation(holdingsCad, cashValue)} t={t} currency="CAD" />
               </Card>
             )}
 
@@ -1322,7 +1325,14 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           </>
         )}
 
-        {tab === 'budget' && (
+        {tab === 'budget' && !budget.income?.length && !budget.expenses?.length && (
+          <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>No budget yet</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, margin: '4px 0 12px' }}>Set a monthly number for income, rent, food and the rest.</div>
+            <button onClick={() => { setTab('portfolio'); startEditingPortfolio(); }} style={pillButtonStyle}>Add budget lines</button>
+          </Card>
+        )}
+        {tab === 'budget' && (budget.income?.length > 0 || budget.expenses?.length > 0) && (
           <>
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>

@@ -327,6 +327,7 @@ export function usePortfolio(stocks, isAuthenticated) {
     telecom,
     stocksValue,
     cashValue,
+    usdPerCad,
     totalDebt,
     totalReceivable,
     totalIncome,
