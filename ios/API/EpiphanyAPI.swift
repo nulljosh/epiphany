@@ -281,11 +281,11 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     }
 
     /// The last four quarters of EPS against the estimate (/api/earnings-history).
-    func fetchEarningsHistory(symbol: String) async throws -> (quarters: [EarningsQuarter], analysts: AnalystTarget?, insiders: InsiderActivity?) {
-        struct Wrapper: Decodable { let quarters: [EarningsQuarter]; let analysts: AnalystTarget?; let insiders: InsiderActivity? }
+    func fetchEarningsHistory(symbol: String) async throws -> (quarters: [EarningsQuarter], analysts: AnalystTarget?, insiders: InsiderActivity?, ownership: Ownership?) {
+        struct Wrapper: Decodable { let quarters: [EarningsQuarter]; let analysts: AnalystTarget?; let insiders: InsiderActivity?; let ownership: Ownership? }
         let url = try makeURL("/api/earnings-history", query: ["symbol": symbol])
         let w = try decode(Wrapper.self, from: try await perform(URLRequest(url: url)))
-        return (w.quarters, w.analysts, w.insiders)
+        return (w.quarters, w.analysts, w.insiders, w.ownership)
     }
 
     func fetchQuotes(symbols: [String]) async throws -> [Stock] {

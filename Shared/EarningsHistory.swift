@@ -76,6 +76,61 @@ struct InsiderCard: View {
     }
 }
 
+/// Who owns the stock: institution and insider shares (0 to 1), fund count and the biggest holders. From /api/earnings-history.
+struct Ownership: Decodable, Equatable {
+    struct Holder: Decodable, Equatable {
+        let name: String
+        let pct: Double?
+        let change: Double?
+    }
+    let institutions: Double
+    let insiders: Double?
+    let count: Int?
+    let top: [Holder]
+}
+
+struct OwnershipCard: View {
+    let ownership: Ownership
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Who Owns It").font(.headline)
+            Text("Institutions \(ownership.institutions.formatted(.percent.precision(.fractionLength(1))))" + (ownership.insiders.map { " · insiders \($0.formatted(.percent.precision(.fractionLength(1))))" } ?? ""))
+                .font(.subheadline.weight(.semibold))
+            GeometryReader { g in
+                HStack(spacing: 0) {
+                    Rectangle().fill(Palette.appleBlue).frame(width: g.size.width * min(ownership.institutions, 1))
+                    Rectangle().fill(.orange).frame(width: g.size.width * min(ownership.insiders ?? 0, 1))
+                    Spacer(minLength: 0)
+                }
+            }
+            .frame(height: 6)
+            .background(Color.secondary.opacity(0.2))
+            .clipShape(Capsule())
+            .accessibilityHidden(true)
+            ForEach(ownership.top, id: \.name) { o in
+                HStack(alignment: .firstTextBaseline) {
+                    Text(o.name).lineLimit(1)
+                    Spacer(minLength: 8)
+                    Text(o.pct.map { $0.formatted(.percent.precision(.fractionLength(2))) } ?? "")
+                    if let c = o.change {
+                        Text(c.formatted(.percent.precision(.fractionLength(1)).sign(strategy: .always()))).foregroundStyle(c >= 0 ? Palette.successGreen : Palette.dangerRed)
+                    }
+                }
+                .font(.caption).foregroundStyle(.secondary)
+            }
+            if let count = ownership.count {
+                Text("\(count.formatted()) institutions in the latest filings. Change is since their last quarter.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+    }
+}
+
 /// Consensus and target against today's price; nothing without coverage.
 struct AnalystLine: View {
     let target: AnalystTarget
@@ -105,11 +160,13 @@ struct EarningsHistoryCard: View {
     @State private var quarters: [EarningsQuarter] = []
     @State private var analysts: AnalystTarget?
     @State private var insiders: InsiderActivity?
+    @State private var ownership: Ownership?
 
     var body: some View {
         Group {
             if let analysts, price > 0 { AnalystLine(target: analysts, price: price) }
             if let insiders { InsiderCard(activity: insiders) }
+            if let ownership { OwnershipCard(ownership: ownership) }
             if !quarters.isEmpty {
                 let top = max(quarters.flatMap { [abs($0.actual), abs($0.estimate)] }.max() ?? 0.01, 0.01)
                 VStack(alignment: .leading, spacing: 10) {
@@ -145,6 +202,7 @@ struct EarningsHistoryCard: View {
             quarters = h?.quarters ?? []
             analysts = h?.analysts
             insiders = h?.insiders
+            ownership = h?.ownership
         }
     }
 }

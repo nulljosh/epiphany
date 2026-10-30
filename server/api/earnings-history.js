@@ -1,5 +1,5 @@
 // A stock's last four quarters of earnings (EPS actual against the estimate) and the analysts' price target,
-// plus insider buys and sells, from Yahoo's quoteSummary earningsHistory, financialData and insiderTransactions modules (same cookie and crumb session as the fundamentals).
+// plus insider buys and sells, from Yahoo's quoteSummary earningsHistory, financialData, insiderTransactions, institutionOwnership and majorHoldersBreakdown modules (same cookie and crumb session as the fundamentals).
 import { getYahooCrumb, YAHOO_HEADERS } from './stocks-shared.js';
 import { errorResponse } from './auth-helpers.js';
 
@@ -56,6 +56,21 @@ export function parseInsiders(json, now = Date.now()) {
   };
 }
 
+/** Who owns the stock: institution and insider shares of it, fund count, and the five biggest holders with their last quarterly change. */
+export function parseOwnership(json) {
+  const r = json?.quoteSummary?.result?.[0];
+  const m = r?.majorHoldersBreakdown;
+  if (typeof m?.institutionsPercentHeld?.raw !== 'number') return null;
+  return {
+    institutions: m.institutionsPercentHeld.raw,
+    insiders: m.insidersPercentHeld?.raw ?? null,
+    count: m.institutionsCount?.raw ?? null,
+    top: (r.institutionOwnership?.ownershipList || []).slice(0, 5).map((o) => ({
+      name: o.organization, pct: o.pctHeld?.raw ?? null, change: o.pctChange?.raw ?? null, date: o.reportDate?.fmt || null,
+    })),
+  };
+}
+
 export default async function handler(req, res) {
   const symbol = String(req.query?.symbol || '').toUpperCase().trim();
   if (!/^[A-Z0-9.\-^=]{1,15}$/.test(symbol)) return errorResponse(res, 400, 'symbol required');
@@ -64,13 +79,13 @@ export default async function handler(req, res) {
       const session = await getYahooCrumb({ force: attempt > 0 });
       const crumb = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
       try {
-        const r = await fetch(`${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=earningsHistory,financialData,insiderTransactions${crumb}`,
+        const r = await fetch(`${base}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=earningsHistory,financialData,insiderTransactions,institutionOwnership,majorHoldersBreakdown${crumb}`,
           { headers: session.cookie ? { ...YAHOO_HEADERS, Cookie: session.cookie } : YAHOO_HEADERS, signal: AbortSignal.timeout(8000) });
         if (r.status === 401 && attempt === 0) continue;
         if (!r.ok) break;
         res.setHeader('Cache-Control', 'public, max-age=3600');
         const json = await r.json();
-        return res.status(200).json({ symbol, quarters: parseEarningsHistory(json), analysts: parseAnalysts(json), insiders: parseInsiders(json) });
+        return res.status(200).json({ symbol, quarters: parseEarningsHistory(json), analysts: parseAnalysts(json), insiders: parseInsiders(json), ownership: parseOwnership(json) });
       } catch {
         break;
       }

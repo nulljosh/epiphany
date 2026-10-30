@@ -715,14 +715,16 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const [earnings, setEarnings] = useState([]);
   const [analysts, setAnalysts] = useState(null);
   const [insiders, setInsiders] = useState(null);
+  const [ownership, setOwnership] = useState(null);
   useEffect(() => {
     if (!stock?.symbol) return undefined;
     let gone = false;
     setEarnings([]);
     setAnalysts(null);
     setInsiders(null);
+    setOwnership(null);
     fetch(`/api/earnings-history?symbol=${encodeURIComponent(stock.symbol)}`).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (gone || !d) return; if (Array.isArray(d.quarters)) setEarnings(d.quarters); setAnalysts(d.analysts || null); setInsiders(d.insiders || null); }).catch(() => {});
+      .then((d) => { if (gone || !d) return; if (Array.isArray(d.quarters)) setEarnings(d.quarters); setAnalysts(d.analysts || null); setInsiders(d.insiders || null); setOwnership(d.ownership || null); }).catch(() => {});
     return () => { gone = true; };
   }, [stock?.symbol]);
   const signed = (n) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n))}`;
@@ -1248,6 +1250,30 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
                 <span style={{ whiteSpace: 'nowrap' }}>{r.side === 'buy' ? 'Bought' : 'Sold'} {r.value ? compactCurrency(r.value) : `${r.shares} shares`} · {r.date}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Who owns it: institutions, insiders and the rest as one bar, then the five biggest holders */}
+        {ownership && (
+          <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Who owns it</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: t.text }}>
+              Institutions {(ownership.institutions * 100).toFixed(1)}%{ownership.insiders != null ? ` · insiders ${(ownership.insiders * 100).toFixed(1)}%` : ''}
+            </div>
+            <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', background: t.border, margin: '8px 0' }} aria-hidden="true">
+              <div style={{ width: `${Math.min(ownership.institutions, 1) * 100}%`, background: '#0A84FF' }} />
+              <div style={{ width: `${Math.min(ownership.insiders || 0, 1) * 100}%`, background: '#FF9F0A' }} />
+            </div>
+            {ownership.top.map((o) => (
+              <div key={o.name} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: t.textSecondary, marginTop: 6 }}>
+                <span>{o.name}</span>
+                <span style={{ whiteSpace: 'nowrap' }}>
+                  {o.pct != null ? `${(o.pct * 100).toFixed(2)}%` : ''}
+                  {o.change != null && <span style={{ color: o.change >= 0 ? '#30D158' : '#FF453A' }}> {o.change >= 0 ? '+' : ''}{(o.change * 100).toFixed(1)}%</span>}
+                </span>
+              </div>
+            ))}
+            {ownership.count != null && <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 8 }}>{ownership.count.toLocaleString()} institutions in the latest filings. Change is since their last quarter.</div>}
           </div>
         )}
 

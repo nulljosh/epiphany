@@ -17,3 +17,16 @@ describe('parseInsiders', () => {
     expect(parseInsiders({}, NOW)).toBeNull();
   });
 });
+
+import { parseOwnership } from '../server/api/earnings-history.js';
+
+describe('parseOwnership', () => {
+  it('reads holder shares and the biggest holders, null without data', () => {
+    const out = parseOwnership({ quoteSummary: { result: [{
+      majorHoldersBreakdown: { institutionsPercentHeld: { raw: 0.66 }, insidersPercentHeld: { raw: 0.02 }, institutionsCount: { raw: 7719 } },
+      institutionOwnership: { ownershipList: [{ organization: 'Example Fund', pctHeld: { raw: 0.08 }, pctChange: { raw: 0.016 }, reportDate: { fmt: '2026-06-30' } }] },
+    }] } });
+    expect(out).toMatchObject({ institutions: 0.66, insiders: 0.02, count: 7719, top: [{ name: 'Example Fund', pct: 0.08, change: 0.016 }] });
+    expect(parseOwnership({})).toBeNull();
+  });
+});
