@@ -343,7 +343,8 @@ struct PortfolioView: View {
                         if let spent = line.spent(in: lastMonth) {
                             let ratio = spent / line.amount
                             budgetMetricRow(
-                                title: "\(line.name) · \(lastMonth?.month ?? "") of \(CurrencyFormatter.formatPrice(line.amount))",
+                                title: "\(line.name) · \(lastMonth?.month ?? "") of \(CurrencyFormatter.formatPrice(line.amount))"
+                                    + (line.perDayLeft(in: lastMonth).map { " · \(CurrencyFormatter.formatPrice($0.perDay)) a day for \($0.days) days" } ?? ""),
                                 value: spent,
                                 progress: min(ratio, 1),
                                 color: ratio <= 0.9 ? Palette.successGreen : ratio <= 1.1 ? Palette.warningAmber : Palette.dangerRed

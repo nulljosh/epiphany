@@ -13,7 +13,7 @@ import EpiphanyFinance from './EpiphanyFinance';
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
 import MoneyGlance from './MoneyGlance';
-import { budgetActual } from '../utils/budgetActual';
+import { budgetActual, perDayLeft } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -1293,7 +1293,9 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 <div style={labelStyle}>Monthly Expenses</div>
                 {budget.expenses.map((item, index) => {
                   // Last statement's spending in this line's categories, against the budget.
-                  const actual = budgetActual(item, spendingChronological[spendingChronological.length - 1]);
+                  const latest = spendingChronological[spendingChronological.length - 1];
+                  const actual = budgetActual(item, latest);
+                  const daily = perDayLeft(item, latest);
                   const tone = actual && { ok: t.green, close: '#f59e0b', over: t.red }[actual.status];
                   return (
                     <div key={`${item.name}-${index}`} style={{ ...rowStyle, flexWrap: 'wrap' }}>
@@ -1303,6 +1305,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                         {actual && (
                           <div style={{ fontSize: 11, color: tone, fontVariantNumeric: 'tabular-nums' }}>
                             {actual.month}: {formatCurrency(actual.spent)} of {formatCurrency(item.amount)}
+                            {daily && ` · ${formatCurrency(daily.perDay)} a day for ${daily.days} days`}
                           </div>
                         )}
                       </div>

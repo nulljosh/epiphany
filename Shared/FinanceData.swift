@@ -170,6 +170,19 @@ struct FinanceData: Codable {
                 return cats.reduce(0) { $0 + (month.categories[$1] ?? 0) }
             }
 
+            /// What's left, spread over the days left this month; nil unless `month` is this month's statement
+            /// and some is left. Mirrors perDayLeft in src/utils/budgetActual.js.
+            func perDayLeft(in month: SpendingMonth?, now: Date = .now) -> (perDay: Double, days: Int)? {
+                let cal = Calendar.current
+                let parts = cal.dateComponents([.year, .month, .day], from: now)
+                guard let spent = spent(in: month), let year = parts.year, let mon = parts.month, let day = parts.day,
+                      month?.sortKey == String(format: "%04d-%02d", year, mon),
+                      let length = cal.range(of: .day, in: .month, for: now)?.count else { return nil }
+                let days = length - day + 1
+                let left = amount - spent
+                return left > 0 ? ((left / Double(days)).rounded(.down), days) : nil
+            }
+
             var monthlyAmount: Double {
                 switch frequency {
                 case "biweekly": return amount * 26 / 12

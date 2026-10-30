@@ -25,7 +25,7 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Gap | Who has it | Size | Target | Status |
 |---|---|---|---|---|
 | More alert kinds: 52 week high or low, and earnings day for a followed stock, as toggles | Yahoo | S | 21.0 | done 21.0.0 |
-| Budget left per day ("$48 a day for 13 days") on the budget card | Rocket Money | S | 22.0 | open |
+| Budget left per day ("$48 a day for 13 days") on the budget card | Rocket Money | S | 22.0 | done 22.0.0 |
 | Live price chip under a headline for each symbol it names | Yahoo | S | 23.0 | open |
 | Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | open (#179) |
 | Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | open |

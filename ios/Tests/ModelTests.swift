@@ -377,6 +377,17 @@ final class FinanceDataModelTests: XCTestCase {
         XCTAssertEqual(other.typeLabel, "Savings")
     }
 
+    func testBudgetPerDayLeft() {
+        let food = FinanceData.Budget.BudgetLine(name: "Food", amount: 700, frequency: "monthly", note: nil)
+        let oct19 = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 19))!
+        let october = FinanceData.SpendingMonth(month: "Oct 2026", sortKey: "2026-10", total: 76, categories: ["food": 76])
+        let result = food.perDayLeft(in: october, now: oct19)
+        XCTAssertEqual(result?.perDay, 48)
+        XCTAssertEqual(result?.days, 13)
+        let september = FinanceData.SpendingMonth(month: "Sep 2026", sortKey: "2026-09", total: 76, categories: ["food": 76])
+        XCTAssertNil(food.perDayLeft(in: september, now: oct19))
+    }
+
     func testBudgetLineMonthlyAmount() {
         let biweekly = FinanceData.Budget.BudgetLine(name: "Salary", amount: 2000, frequency: "biweekly", note: nil)
         XCTAssertEqual(biweekly.monthlyAmount, 2000 * 26 / 12, accuracy: 0.01)

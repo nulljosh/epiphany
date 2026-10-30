@@ -30,3 +30,14 @@ export function budgetActual(item = {}, month) {
   const ratio = spent / item.amount;
   return { spent, ratio, status: ratio <= 0.9 ? 'ok' : ratio <= 1.1 ? 'close' : 'over', month: month.month };
 }
+
+// What's left of the line's budget, spread over the days left this month ("$48 a day for 13 days").
+// Only when `month` is this calendar month's statement and some is left; an older statement says nothing about today.
+export function perDayLeft(item = {}, month, now = new Date()) {
+  const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const actual = budgetActual(item, month);
+  if (!actual || month.sortKey !== key) return null;
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
+  const left = item.amount - actual.spent;
+  return left > 0 ? { perDay: Math.floor(left / days), days } : null;
+}
