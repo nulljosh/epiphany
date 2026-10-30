@@ -41,6 +41,7 @@ struct MarketPulse: View {
                 }
                 .scrollClipDisabled()
             }
+            TodayCard(stocks: stocks, onSelect: onSelect)
             UpcomingCard(stocks: stocks, onSelect: onSelect)
             SectorHeatGrid(stocks: stocks)
         }

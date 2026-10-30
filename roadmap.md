@@ -80,7 +80,7 @@ Versions 5.0.0 to 102.0.0 in git history were internal builds, one major per row
 | Storm tracks on the map during hurricane season | Windy | M | 5.3 | done 5.3.0 (NHC CurrentStorms.json plus NOAA map service track and cone, Atlantic and East and Central Pacific) |
 | Insider buys and sells on a stock page | TipRanks | M | 5.4 | done 5.4.0 (open-market only, last 90 days) |
 | Institutional ownership on a stock page | TipRanks | S | 5.5 | done 5.5.0 (majorHoldersBreakdown plus the five biggest holders) |
-| A feed of what happened to your stocks (earnings, big moves, targets) | TipRanks | M | 5.6 | open |
+| A feed of what happened to your stocks (earnings, big moves, targets) | TipRanks | M | 5.6 | done 5.6.0 (moves of 3% or more and 52-week highs and lows; earnings dates stay in Upcoming) |
 | Portfolio hit rate and return over time | TipRanks | M | 5.7 | waits for weeks of snapshots, like 58 and 59 |
 
 Skipped: 3D aircraft and camera views (Flightradar24), Smart Scores and blogger opinions (TipRanks, made-up numbers and opinion), surf and wave forecasts (Windy), a manual expense keypad (Monefy, we read statements). The apple audit found no teal, purple or indigo and no em dashes in UI strings.

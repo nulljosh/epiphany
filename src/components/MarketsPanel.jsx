@@ -6,7 +6,7 @@ import useFearGreed from '../hooks/useFearGreed';
 import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 import { SECTOR_MAP, SECTOR_ORDER } from '../hooks/useStocks';
 import { sectorMoves, heatAlpha } from '../utils/sectors';
-import { upcomingEvents } from '../utils/upcoming';
+import { upcomingEvents, todayEvents } from '../utils/upcoming';
 import { storedHoldings } from '../hooks/usePortfolio';
 
 const ASSET_DIMENSIONS = [
@@ -519,6 +519,10 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     () => upcomingEvents(Object.values(stocks || {}), [...(watchlist || []), ...storedHoldings().map(h => h.symbol)]).slice(0, 8),
     [stocks, watchlist],
   );
+  const today = useMemo(
+    () => todayEvents(Object.values(stocks || {}), [...(watchlist || []), ...storedHoldings().map(h => h.symbol)]),
+    [stocks, watchlist],
+  );
 
   const glass = {
     background: t.glass,
@@ -710,6 +714,22 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               t={t}
               onClick={() => setSelectedStock(item)}
             />
+          ))}
+        </div>
+      )}
+
+      {/* Today: big moves and 52-week highs or lows in your watchlist and holdings */}
+      {today.length > 0 && !search && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+            Today in your stocks
+          </div>
+          {today.map(e => (
+            <button key={`${e.symbol}-${e.text}`} onClick={() => { const item = allItems.find(i => i.symbol === e.symbol); if (item) setSelectedStock(item); }}
+              style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 10, padding: '7px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit' }}>
+              <span style={{ width: 52, fontSize: 13, fontWeight: 600, color: t.text }}>{e.symbol}</span>
+              <span style={{ fontSize: 12, color: e.up ? '#30D158' : '#FF453A' }}>{e.text}</span>
+            </button>
           ))}
         </div>
       )}
