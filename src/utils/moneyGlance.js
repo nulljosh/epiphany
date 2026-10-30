@@ -161,3 +161,23 @@ export function dueLabel(date, today = new Date()) {
   const n = Math.round((d - day0) / 86400000);
   return n <= 0 ? 'Due today' : n === 1 ? 'Due tomorrow' : `Due in ${n} days`;
 }
+
+// The newest statement month's spending added up day by day, beside the month before. Mirrors SpendRace.build.
+// Counts debits with a category, the same rule as Money in vs spending (summarizeCashflow), so the totals agree.
+export function spendRace(statements = []) {
+  const byMonth = {};
+  for (const t of statements.flatMap((s) => s.transactions || [])) {
+    if (!(t?.amount < 0) || !t.category || !/^\d{4}-\d{2}-\d{2}$/.test(t.date || '')) continue;
+    const m = t.date.slice(0, 7);
+    const day = Number(t.date.slice(8, 10));
+    (byMonth[m] ||= new Array(32).fill(0))[day] += -t.amount;
+  }
+  const months = Object.keys(byMonth).sort();
+  if (months.length < 2) return null;
+  const [prev, cur] = months.slice(-2);
+  const run = (arr) => arr.slice(1).reduce((acc, v) => [...acc, (acc.at(-1) || 0) + v], []);
+  const curRun = run(byMonth[cur]);
+  const prevRun = run(byMonth[prev]);
+  const lastDay = Math.max(...Object.keys(byMonth[cur]).filter((d) => byMonth[cur][d] > 0).map(Number));
+  return { month: cur, prev, cur: curRun.slice(0, lastDay), before: prevRun, total: curRun[lastDay - 1], beforeAtDay: prevRun[lastDay - 1] };
+}

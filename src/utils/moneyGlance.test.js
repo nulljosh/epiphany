@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -121,5 +121,21 @@ describe('dueLabel', () => {
   it('counts days to the bill', () => {
     const today = new Date(2026, 9, 30, 15);
     expect([new Date(2026, 9, 30), new Date(2026, 9, 31), new Date(2026, 10, 2)].map((d) => dueLabel(d, today))).toEqual(['Due today', 'Due tomorrow', 'Due in 3 days']);
+  });
+});
+
+describe('spendRace', () => {
+  it('runs this month and last month up by day, to the last day with spending', () => {
+    const s = [{ transactions: [
+      { date: '2026-07-01', amount: -10, category: 'food' }, { date: '2026-07-03', amount: -20, category: 'rent' }, { date: '2026-07-20', amount: -5, category: 'fun' },
+      { date: '2026-08-02', amount: -7, category: 'food' }, { date: '2026-08-03', amount: -8, category: 'food' }, { date: '2026-08-04', amount: 500 },
+      { date: '2026-08-05', amount: -99 },
+    ] }];
+    const r = spendRace(s);
+    expect(r.month).toBe('2026-08');
+    expect(r.cur).toEqual([0, 7, 15]);
+    expect(r.before.slice(0, 3)).toEqual([10, 10, 30]);
+    expect([r.total, r.beforeAtDay]).toEqual([15, 30]);
+    expect(spendRace([{ transactions: [{ date: '2026-08-01', amount: -1, category: 'x' }] }])).toBeNull();
   });
 });

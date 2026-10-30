@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1855,6 +1855,31 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             </Card>
 
             {spendingRecentFirst.length > 0 && <TopSpendingCard months={spendingRecentFirst} dark={dark} t={t} labelStyle={labelStyle} />}
+            {(() => {
+              const race = spendRace(statementFiles);
+              if (!race) return null;
+              const name = (ym) => new Date(`${ym}-01T12:00:00`).toLocaleDateString(undefined, { month: 'long' });
+              const top = Math.max(...race.before, ...race.cur, 1);
+              const line = (arr) => arr.map((v, i) => `${4 + (i / 30) * 302},${96 - (v / top) * 88}`).join(' ');
+              const diff = race.total - race.beforeAtDay;
+              return (
+                <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                  <div style={labelStyle}>{name(race.month)} vs {name(race.prev)}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
+                    {formatCurrency(race.total)} spent by day {race.cur.length},{' '}
+                    <span style={{ color: diff <= 0 ? t.green : t.red }}>{formatCurrency(Math.abs(diff))} {diff <= 0 ? 'less' : 'more'} than {name(race.prev)}</span>
+                  </div>
+                  <svg viewBox="0 0 310 100" width="100%" height="100" role="img" aria-label={`${name(race.month)} spending by day against ${name(race.prev)}`}>
+                    <polyline points={line(race.before)} fill="none" stroke={t.textTertiary || '#8e8e93'} strokeWidth="2" strokeDasharray="4 3" />
+                    <polyline points={line(race.cur)} fill="none" stroke="#0071e3" strokeWidth="2.5" strokeLinejoin="round" />
+                  </svg>
+                  <div style={{ display: 'flex', gap: 14, fontSize: 11, color: t.textSecondary, marginTop: 4 }}>
+                    <span><span style={{ color: '#0071e3' }}>━</span> {name(race.month)}</span>
+                    <span><span style={{ color: t.textTertiary }}>┅</span> {name(race.prev)}</span>
+                  </div>
+                </Card>
+              );
+            })()}
             {(() => {
               const ytd = yearToDate(spendingChronological);
               if (!ytd.rows.length) return null;
