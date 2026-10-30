@@ -1217,6 +1217,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                         {holding.costBasis != null
                           ? <>{holding.shares.toFixed(4)} shares @ {formatCurrency(holding.costBasis)}</>
                           : <>{holding.shares} shares</>}
+                        {stocks?.[holding.symbol]?.yield > 0 && <> · {stocks[holding.symbol].yield.toFixed(2)}% yield</>}
                       </div>
                       {holding.value > 0 && holding.changePercent ? (
                         <div style={{ fontSize: 11, fontVariantNumeric: 'tabular-nums', color: holding.changePercent >= 0 ? t.green : t.red }}>

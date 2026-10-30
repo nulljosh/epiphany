@@ -19,7 +19,8 @@ struct HoldingRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(holding.symbol)
                     .font(.headline)
-                Text("\(CurrencyFormatter.formatShares(holding.shares)) shares")
+                Text("\(CurrencyFormatter.formatShares(holding.shares)) shares"
+                     + (appState.stocks.first { $0.symbol == holding.symbol }?.yield.flatMap { $0 > 0 ? String(format: " · %.2f%% yield", $0) : nil } ?? ""))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let today {

@@ -20,7 +20,8 @@ struct HoldingRow: View {
                 Text(holding.symbol)
                     .font(.headline.weight(.bold))
                     .foregroundStyle(Palette.text)
-                Text("\(CurrencyFormatter.formatShares(holding.shares)) shares")
+                Text("\(CurrencyFormatter.formatShares(holding.shares)) shares"
+                     + (appState.stocks.first { $0.symbol == holding.symbol }?.yield.flatMap { $0 > 0 ? String(format: " · %.2f%% yield", $0) : nil } ?? ""))
                     .font(.caption)
                     .foregroundStyle(Palette.textSecondary)
                 if let today {
