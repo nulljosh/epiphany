@@ -18,7 +18,7 @@ Build Epiphany one major version at a time toward v100, using the Mobbin gap tab
 
 1. 25.0.0: bills calendar, the next row of "Mobbin pass 2".
 2. Then 26.0 to 29.0 down that table, and 30.0 is the next Mobbin pass plus an `apple` audit. 18.0 trading waits on Joshua. APNs push (#180) waits on an APNs key.
-4. When Apple clears 4.0.0, refresh the App Store screenshots (#145, #153) and submit the newest build on Joshua's yes.
+3. When Apple clears 4.0.0, refresh the App Store screenshots (#145, #153) and submit the newest build on Joshua's yes.
 
 Blocked on Joshua: App Store submissions, GitHub releases and tags (v5.0.0 and later), placing the App Store header video, the production KV subscriptions cleanup, the BLS API key, the Google callback URL for the new domain (#210).
 
