@@ -30,7 +30,7 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | done 24.0.0 |
 | Bills as a month calendar with the due days marked | Rocket Money | S | 25.0 | done 25.0.0 |
 | Allocation donut on the portfolio (stocks, crypto, cash, funds) | Delta, Robinhood | M | 26.0 | done 26.0.0 (no funds bucket: holdings carry no asset type) |
-| RSI and MACD in a pane under the price chart, not only in the signal | TradingView, Webull | M | 27.0 | open |
+| RSI and MACD in a pane under the price chart, not only in the signal | TradingView, Webull | M | 27.0 | done 27.0.0 (web already had them) |
 | Gain chart toggles: value, amount invested, cost basis | Delta | M | 28.0 | open |
 | Spending flow (Sankey) from income to categories | Monarch | L | 29.0 | open |
 | Incident status on map pins: active or resolved | Citizen | S | 29.0 | open, needs a status field in the feeds |

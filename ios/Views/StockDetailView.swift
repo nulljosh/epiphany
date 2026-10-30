@@ -678,6 +678,7 @@ struct StockDetailView: View {
             .padding(.horizontal)
 
             if height != nil { indicatorBar }
+            if height != nil, chartPoints.count > 30 { OscillatorPane(prices: chartPoints).padding(.horizontal) }
         }
     }
 

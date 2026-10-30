@@ -377,6 +377,18 @@ final class FinanceDataModelTests: XCTestCase {
         XCTAssertEqual(other.typeLabel, "Savings")
     }
 
+    func testOscillatorSeriesMatchSignalMath() {
+        let start = Date(timeIntervalSince1970: 0)
+        let closes: [Double] = (0..<80).map { i -> Double in
+            let x = Double(i)
+            return 100 + sin(x / 3) * 5 + x * 0.1
+        }
+        let prices: [(Date, Double)] = closes.enumerated().map { (start.addingTimeInterval(Double($0.offset) * 86400), $0.element) }
+        XCTAssertEqual(Indicators.rsiSeries(prices: prices).last!.value, Indicators.rsi(closes)!, accuracy: 1e-9)
+        let (line, signal) = Indicators.macdSeries(prices: prices)
+        XCTAssertEqual(line.last!.value - signal.last!.value, Indicators.macdHistogram(closes)!, accuracy: 1e-9)
+    }
+
     func testHeadlineSymbols() {
         XCTAssertEqual(HeadlineSymbols.shortName("Apple Inc."), "Apple")
         XCTAssertNil(HeadlineSymbols.shortName("General Motors Company"))

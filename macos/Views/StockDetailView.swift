@@ -83,6 +83,8 @@ struct StockDetailView: View {
                         .frame(height: 220)
                 } else if priceHistory.count >= 2 {
                     chartView
+                    let closes = priceHistory.compactMap { p in p.parsedDate.map { ($0, p.close) } }
+                    if closes.count > 30 { OscillatorPane(prices: closes).padding(.horizontal) }
                 } else {
                     VStack(spacing: 8) {
                         Text(priceHistory.isEmpty ? "No chart data available" : "Not enough data for intraday chart")
