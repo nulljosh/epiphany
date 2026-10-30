@@ -152,6 +152,10 @@ struct MarketsView: View {
         isVisible = true
         guard !hasLoaded else { return }
         hasLoaded = true
+        #if DEBUG
+        // QA: `-qaFeed news` opens the news list on launch, like `-qaTab` in ContentView.
+        if UserDefaults.standard.string(forKey: "qaFeed") == "news" { feedDest = .news }
+        #endif
         Task { @MainActor in rebuildItems() }
         Task {
             if appState.dailyBrief == nil { await appState.loadDailyBrief() }

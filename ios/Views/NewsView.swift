@@ -6,6 +6,7 @@ struct NewsView: View {
     @State private var isLoading = false
     @State private var error: String?
     @State private var hasLoaded = false
+    @State private var topic = NewsTopics.all
     @State private var selectedNewsURL: URL?
 
     private static let englishStops: Set<String> = [
@@ -59,7 +60,17 @@ struct NewsView: View {
                                 )
                         }
 
-                        ForEach(cleanArticles) { article in
+                        let chips = NewsTopics.chips(cleanArticles.map(\.title))
+                        if chips.count > 1 {
+                            Picker("Topic", selection: $topic) {
+                                ForEach(chips, id: \.self) { Text($0).tag($0) }
+                            }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                            .listRowBackground(Color.clear)
+                        }
+
+                        ForEach(cleanArticles.filter { NewsTopics.passes($0.title, chips.contains(topic) ? topic : NewsTopics.all) }) { article in
                             Button {
                                 guard !article.url.isEmpty, let url = URL(string: article.url) else { return }
                                 selectedNewsURL = url
