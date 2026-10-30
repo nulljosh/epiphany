@@ -333,7 +333,7 @@ function DebtPayoffProjection({ debt, t }) {
       ))}
       <div style={{ fontSize: 12, fontWeight: 600, color: hasUnpayableDebt ? t.textSecondary : t.green, marginTop: 8 }}>
         {hasUnpayableDebt
-          ? 'Payoff time unknown — set a monthly payment on every debt'
+          ? 'Payoff time unknown. Set a monthly payment on every debt'
           : `Debt-free in ${debtPayoffLabel(cumulativeMonths)} total`}
       </div>
     </div>
@@ -828,7 +828,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
     const MAX_STATEMENT_BYTES = 25 * 1024 * 1024;
     const oversized = files.find((file) => file.size > MAX_STATEMENT_BYTES);
     if (oversized) {
-      setImportError(`${oversized.name} is too large (${(oversized.size / 1024 / 1024).toFixed(1)}MB) — statements must be under 25MB`);
+      setImportError(`${oversized.name} is too large (${(oversized.size / 1024 / 1024).toFixed(1)}MB). Statements must be under 25MB`);
       return;
     }
 

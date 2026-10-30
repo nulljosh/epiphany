@@ -1110,7 +1110,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
       addMarker(
         `width:${size}px;height:${size}px;border-radius:50%;background:${aqiColor}22;border:2px solid ${aqiColor};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${aqiColor};font-family:-apple-system,sans-serif;`,
         `AQI ${aqi} - ${reading.city || 'Station'}`,
-        { type: 'aqi', title: `AQI ${aqi}`, detail: `${reading.parameter || 'PM2.5'}: ${reading.value || aqi} ${reading.unit || 'µg/m³'} — ${reading.city || 'Air Quality Station'}`, level: aqiLevel, source: 'OpenAQ', link: `https://openaq.org/#/location/${reading.id || ''}` },
+        { type: 'aqi', title: `AQI ${aqi}`, detail: `${reading.parameter || 'PM2.5'}: ${reading.value || aqi} ${reading.unit || 'µg/m³'}, ${reading.city || 'Air Quality Station'}`, level: aqiLevel, source: 'OpenAQ', link: `https://openaq.org/#/location/${reading.id || ''}` },
         reading.lon, reading.lat, 'aqi', `${Math.round(aqi)}`
       );
     });

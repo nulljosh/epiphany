@@ -51,6 +51,22 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 
 Skipped: AI agents and prediction markets (Public), credit card and chequing (Wealthsimple), bias ratings (Ground News, not our news), driver reports and voice packs (Waze, social).
 
+## Mobbin pass 4 (40.0, 2026-10-29: Seeking Alpha, moomoo, YNAB, Quicken Simplifi, BMD Kubera, Morningstar)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Sector heat map on Markets: one tile per sector, coloured by today's move | moomoo, Morningstar | M | 41.0 | open, check the S&P feed carries a sector |
+| Compound growth calculator in Outlook: monthly amount, years, return, with the curve | Kubera, Simplifi | S | 42.0 | open |
+| Total unrealized gain on the portfolio, dollars and percent | Kubera, Morningstar | S | 43.0 | open |
+| "Left this month" headline: money in minus money out this month, from statements | Simplifi, YNAB | S | 44.0 | open |
+| Projected cash balance for the next 30 days, a line with a Today marker, from cash, bills and income | Simplifi | M | 45.0 | open |
+| News topic filter: Markets, Crypto, Earnings, Economy | Seeking Alpha | S | 46.0 | open, check what the feed tags |
+| Siri and Shortcuts: "What's my portfolio worth" as an App Intent on iPhone and Mac | YNAB | M | 47.0 | open |
+| Move money between budget lines to cover one that went over | YNAB | M | 48.0 | open |
+| Net worth over time, assets against debts, from the daily snapshots | YNAB | M | 49.0 | waits for a few weeks of 38.0 rows |
+
+Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
+
 ## Version plan to v100
 One theme per major, built from the open items below. Each major ships on web, iPhone and Mac together.
 
@@ -72,7 +88,9 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 30 | Mobbin pass 3 plus an apple audit (done 30.0.0) |
 | 31 to 38 | One row each from "Mobbin pass 3" (done except 35, parked, and 37, waiting on history) |
 | 39 | Map popups: OpenStreetMap names escaped in the emergency pins; event filtering and event detail were already covered by 10.0 (done 39.0.0) |
-| 40 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
+| 40 | Mobbin pass 4 plus an apple audit (done 40.0.0) |
+| 41 to 49 | One row each from "Mobbin pass 4" |
+| 50 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
