@@ -19,4 +19,9 @@ final class RecentActivityTests: XCTestCase {
         XCTAssertEqual(MerchantKey.of("SPOTIFY #789 STOCKHOLM SE"), "spotify stockholm")
         XCTAssertEqual(MerchantKey.of("PRE AUTHORIZED DEBIT TO ABC CLUB FITNESS"), "abc club")
     }
+
+    func testBiggest() throws {
+        let json = #"[{"filename":"a","transactions":[{"date":"2026-07-01","description":"R","amount":-900,"category":"rent"},{"date":"2026-08-01","description":"R","amount":-450,"category":"rent"},{"date":"2026-08-09","description":"F","amount":-60,"category":"food"},{"date":"2026-08-10","description":"X","amount":-999}]}]"#
+        XCTAssertEqual(RecentActivity.biggest(try JSONDecoder().decode([Statement].self, from: Data(json.utf8)))?.amount, -450)
+    }
 }

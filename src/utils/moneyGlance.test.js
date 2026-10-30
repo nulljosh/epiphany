@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey, biggestExpense } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -144,5 +144,16 @@ describe('recurringKey', () => {
   it('matches the server merchant key', () => {
     expect(recurringKey('SPOTIFY #789 STOCKHOLM SE')).toBe('spotify stockholm');
     expect(recurringKey('PRE AUTHORIZED DEBIT TO ABC CLUB FITNESS')).toBe('abc club');
+  });
+});
+
+describe('biggestExpense', () => {
+  it('picks the largest categorized debit in the newest month', () => {
+    const s = [{ transactions: [
+      { date: '2026-07-01', amount: -900, category: 'rent' }, { date: '2026-08-01', amount: -450, category: 'rent' },
+      { date: '2026-08-09', amount: -60, category: 'food' }, { date: '2026-08-10', amount: -999 },
+    ] }];
+    expect(biggestExpense(s)).toMatchObject({ date: '2026-08-01', amount: -450 });
+    expect(biggestExpense([])).toBeNull();
   });
 });

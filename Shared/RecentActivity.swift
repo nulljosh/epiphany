@@ -6,6 +6,13 @@ enum RecentActivity {
         Array(statements.flatMap(\.transactions).sorted { $0.date > $1.date }.prefix(n))
     }
 
+    /// The newest statement month's biggest single expense (debits with a category). Mirrors biggestExpense in moneyGlance.js.
+    static func biggest(_ statements: [Statement]) -> Transaction? {
+        let debits = statements.flatMap(\.transactions).filter { $0.amount < 0 && !($0.category ?? "").isEmpty && $0.date.count >= 7 }
+        guard let month = debits.map({ String($0.date.prefix(7)) }).max() else { return nil }
+        return debits.filter { $0.date.hasPrefix(month) }.min { $0.amount < $1.amount }
+    }
+
     /// Dividends and interest paid to you this year, from statement descriptions. Mirrors earnedThisYear in moneyGlance.js.
     static func earned(_ statements: [Statement], year: Int = Calendar.current.component(.year, from: .now)) -> (dividends: Double, interest: Double) {
         var out = (dividends: 0.0, interest: 0.0)
@@ -66,6 +73,12 @@ struct RecentActivityCard: View {
         if !txns.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Recent Activity").font(.headline)
+                if let big = RecentActivity.biggest(statements) {
+                    (Text("Biggest in \(ISO8601DateFormatter.dateOnly(big.date)?.formatted(.dateTime.month(.wide)) ?? ""): ")
+                     + Text(CurrencyFormatter.formatPrice(abs(big.amount))).fontWeight(.semibold).foregroundColor(.primary)
+                     + Text(" at \(big.description)"))
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 ForEach(Array(txns.enumerated()), id: \.offset) { _, t in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {

@@ -192,3 +192,11 @@ export function recurringKey(description = '') {
     .replace(/^(pre ?authorized debit( to)?|pad( to)?|pos purchase|purchase)\s+/, '')
     .split(' ').slice(0, 2).join(' ');
 }
+
+// The newest statement month's biggest single expense (debits with a category). Mirrors RecentActivity.biggest.
+export function biggestExpense(statements = []) {
+  const debits = statements.flatMap((s) => s.transactions || []).filter((t) => t?.amount < 0 && t.category && /^\d{4}-\d{2}/.test(t.date || ''));
+  if (!debits.length) return null;
+  const month = debits.map((t) => t.date.slice(0, 7)).sort().at(-1);
+  return debits.filter((t) => t.date.startsWith(month)).reduce((a, b) => (b.amount < a.amount ? b : a));
+}

@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1750,6 +1750,15 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
                 <div style={sectionStyle}>
                   <div style={labelStyle}>Recent Activity</div>
+                  {(() => {
+                    const big = biggestExpense(statementFiles);
+                    return big && (
+                      <div style={{ fontSize: 13, color: t.textSecondary, marginBottom: 8 }}>
+                        Biggest in {new Date(`${big.date}T12:00:00`).toLocaleDateString(undefined, { month: 'long' })}:{' '}
+                        <span style={{ fontWeight: 600, color: t.text }}>{formatCurrency(Math.abs(big.amount))}</span> at {big.description}
+                      </div>
+                    );
+                  })()}
                   {recentActivity(statementFiles).map((txn, i) => (
                     <div key={`${txn.date}-${i}`} style={rowStyle}>
                       <div style={{ minWidth: 0 }}>
