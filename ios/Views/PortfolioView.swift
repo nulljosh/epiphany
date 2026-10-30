@@ -407,7 +407,8 @@ struct PortfolioView: View {
                                     + (line.perDayLeft(in: lastMonth).map { " · \(CurrencyFormatter.formatPrice($0.perDay)) a day for \($0.days) days" } ?? ""),
                                 value: spent,
                                 progress: min(ratio, 1),
-                                color: ratio <= 0.9 ? Palette.successGreen : ratio <= 1.1 ? Palette.warningAmber : Palette.dangerRed
+                                color: ratio <= 0.9 ? Palette.successGreen : ratio <= 1.1 ? Palette.warningAmber : Palette.dangerRed,
+                                pace: BudgetRing.pace(lastMonth)
                             )
                             if let plan = budget.coverPlan(for: line, in: lastMonth) {
                                 Button("Cover \(CurrencyFormatter.formatPrice(plan.amount)) from \(budget.expenses[plan.from].name)") {
@@ -768,7 +769,7 @@ struct PortfolioView: View {
         .padding(.horizontal)
     }
 
-    private func budgetMetricRow(title: String, value: Double, progress: Double, color: Color) -> some View {
+    private func budgetMetricRow(title: String, value: Double, progress: Double, color: Color, pace: Double? = nil) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
@@ -780,8 +781,7 @@ struct PortfolioView: View {
                     .monospacedDigit()
                     .foregroundStyle(value < 0 ? Palette.dangerRed : Palette.text)
             }
-            ProgressView(value: max(min(progress, 1), 0))
-                .tint(color)
+            BudgetBar(progress: progress, color: color, pace: pace)
         }
     }
 

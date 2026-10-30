@@ -19,7 +19,7 @@ import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
 import MoneyGlance from './MoneyGlance';
-import { budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft } from '../utils/budgetActual';
+import { budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -1499,6 +1499,15 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                           <div style={{ fontSize: 11, color: tone, fontVariantNumeric: 'tabular-nums' }}>
                             {actual.month}: {formatCurrency(actual.spent)} of {formatCurrency(item.amount)}
                             {daily && ` · ${formatCurrency(daily.perDay)} a day for ${daily.days} days`}
+                          </div>
+                        )}
+                        {actual && (
+                          <div style={{ position: 'relative', height: 6, marginTop: 6, width: 180, background: t.glass, borderRadius: 3 }}
+                            role="img" aria-label={`${Math.round(actual.ratio * 100)}% of the budget used`}>
+                            <div style={{ width: `${Math.min(actual.ratio, 1) * 100}%`, height: '100%', background: tone, borderRadius: 3 }} />
+                            {monthPace(latest) != null && (
+                              <div title="Today" style={{ position: 'absolute', top: -3, bottom: -3, width: 2, borderRadius: 1, left: `calc(${monthPace(latest) * 100}% - 1px)`, background: t.text, opacity: 0.6 }} />
+                            )}
                           </div>
                         )}
                         {(() => {

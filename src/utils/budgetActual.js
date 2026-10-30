@@ -68,3 +68,11 @@ export function budgetLeft(expenses = [], month) {
   const spent = month.total || 0;
   return { budget, spent, left: budget - spent, ratio: spent / budget, month: month.month };
 }
+
+// How far through the month today is (0 to 1), for a marker on budget bars. Only for this month's statement;
+// a lagging statement's month is over, so no marker. Mirrors BudgetRing.pace.
+export function monthPace(month, now = new Date()) {
+  const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  if (month?.sortKey !== key) return null;
+  return now.getDate() / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+}

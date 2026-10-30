@@ -11,4 +11,12 @@ final class BudgetRingTests: XCTestCase {
         XCTAssertEqual(r?.left, 2067)
         XCTAssertNil(BudgetRing.left(budget, month: nil))
     }
+
+    func testPaceOnlyThisMonth() throws {
+        let now = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 15))!
+        let oct = try JSONDecoder().decode(FinanceData.SpendingMonth.self, from: Data(#"{"month":"Oct 2026","sortKey":"2026-10","total":1,"categories":{}}"#.utf8))
+        let aug = try JSONDecoder().decode(FinanceData.SpendingMonth.self, from: Data(#"{"month":"Aug 2026","sortKey":"2026-08","total":1,"categories":{}}"#.utf8))
+        XCTAssertEqual(BudgetRing.pace(oct, now: now)!, 15.0 / 31, accuracy: 0.0001)
+        XCTAssertNil(BudgetRing.pace(aug, now: now))
+    }
 }

@@ -9,6 +9,15 @@ enum BudgetRing {
         guard total > 0, let month else { return nil }
         return Left(budget: total, spent: month.total, left: total - month.total, ratio: month.total / total, month: month.month)
     }
+
+    /// How far through the month today is (0 to 1), for a marker on budget bars. Only for this month's statement;
+    /// a lagging statement's month is over. Mirrors monthPace in budgetActual.js.
+    static func pace(_ month: FinanceData.SpendingMonth?, now: Date = .now) -> Double? {
+        let cal = Calendar.current
+        guard let month, month.sortKey == String(format: "%04d-%02d", cal.component(.year, from: now), cal.component(.month, from: now)),
+              let days = cal.range(of: .day, in: .month, for: now)?.count else { return nil }
+        return Double(cal.component(.day, from: now)) / Double(days)
+    }
 }
 
 /// A ring of the month's budget used, with what's left (or over) beside it.
@@ -36,5 +45,28 @@ struct BudgetRingCard: View {
             Spacer(minLength: 0)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A budget bar with a thin today marker when the statement is this month's.
+struct BudgetBar: View {
+    let progress: Double
+    let color: Color
+    var pace: Double? = nil
+
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.primary.opacity(0.08))
+                Capsule().fill(color).frame(width: g.size.width * max(min(progress, 1), 0))
+                if let pace {
+                    RoundedRectangle(cornerRadius: 1).fill(Color.primary.opacity(0.6))
+                        .frame(width: 2, height: 12)
+                        .offset(x: g.size.width * pace - 1)
+                }
+            }
+        }
+        .frame(height: 6)
+        .accessibilityLabel("\(Int((progress * 100).rounded())) percent used")
     }
 }

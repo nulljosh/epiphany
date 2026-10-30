@@ -74,7 +74,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Percent-move price alerts: tell me when it moves 10 percent | Investing.com | S | 71.0 | done 71.0.0 |
 | Portfolio header with today's and total gain for the holdings | Investing.com, Questrade | S | 72.0 | done 72.0.0 |
 | Net per month on the money in vs spending chart | Goodbudget, Wallet | S | 73.0 | done 73.0.0 |
-| Today marker on each budget bar, so pace reads at a glance | Spendee, Goodbudget | S | 74.0 | open |
+| Today marker on each budget bar, so pace reads at a glance | Spendee, Goodbudget | S | 74.0 | done 74.0.0 |
 | Year to date spend per category as a plain insight | Spendee | S | 75.0 | open |
 | Watchlist sort by name, price or percent change on iPhone and Mac | CNBC | S | 76.0 | open |
 | Debt payoff chart with a finish date on iPhone and Mac | Goodbudget | M | 77.0 | open |

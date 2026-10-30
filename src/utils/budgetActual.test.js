@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft } from './budgetActual';
+import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace } from './budgetActual';
 
 describe('budgetActual', () => {
   const aug = { month: 'Aug 2026', categories: { food: 180, coffee: 60, cannabis: 90, vape: 40 } };
@@ -54,5 +54,13 @@ describe('budgetLeft', () => {
     expect(budgetLeft([{ amount: 2000 }, { amount: 1500 }], { month: 'Aug 2026', total: 1433 }))
       .toEqual({ budget: 3500, spent: 1433, left: 2067, ratio: 1433 / 3500, month: 'Aug 2026' });
     expect(budgetLeft([], { total: 1 })).toBeNull();
+  });
+});
+
+describe('monthPace', () => {
+  it('is the share of this month gone, and nothing for an older statement', () => {
+    const now = new Date(2026, 9, 15);
+    expect(monthPace({ sortKey: '2026-10' }, now)).toBeCloseTo(15 / 31);
+    expect(monthPace({ sortKey: '2026-08' }, now)).toBeNull();
   });
 });
