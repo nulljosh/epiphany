@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import Supercluster from 'supercluster';
+import { routeHTML } from '../utils/flightRoute';
 import { SYSTEM_FONT } from '../utils/formatting';
 import { inWindow } from '../utils/mapWindow';
 
@@ -1057,11 +1058,20 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
           const callsign = (current.callsign || '').trim();
           const trackLink = callsign ? `https://www.flightaware.com/live/flight/${callsign}` : null;
           const aircraftDetail = [current.aircraftType, current.registration].filter(Boolean).join(' · ');
+          const base = buildPopupHTML({ type: 'flight', title: callsign || current.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${current.altitude || '?'}ft | ${current.velocity || '?'}kts | Hdg: ${current.heading || '?'}°`, level: 'monitor', source: 'ADS-B', link: trackLink });
           const popup = new maplibreRef.current.Popup({ offset: 14, closeButton: true, maxWidth: '320px', className: 'epiphany-map-popup' })
             .setLngLat([entry.lon, entry.lat])
-            .setHTML(buildPopupHTML({ type: 'flight', title: callsign || current.icao24 || 'Aircraft', detail: `${aircraftDetail ? aircraftDetail + ' | ' : ''}Alt: ${current.altitude || '?'}ft | ${current.velocity || '?'}kts | Hdg: ${current.heading || '?'}°`, level: 'monitor', source: 'ADS-B', link: trackLink }))
+            .setHTML(base)
             .addTo(mapInstanceRef.current);
           activePopupRef.current = popup;
+          if (callsign) {
+            fetch(apiPath(`/api/flight-route?callsign=${encodeURIComponent(callsign)}`))
+              .then((r) => r.json())
+              .then(({ route }) => {
+                if (route && activePopupRef.current === popup) popup.setHTML(base + routeHTML(route, { lat: entry.lat, lon: entry.lon }));
+              })
+              .catch(() => {});
+          }
         });
         const mapMarker = new maplibreRef.current.Marker({ element: el }).setLngLat([fl.lon, fl.lat]).addTo(mapInstanceRef.current);
         entry = {

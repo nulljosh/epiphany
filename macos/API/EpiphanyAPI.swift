@@ -778,6 +778,12 @@ final class EpiphanyAPI {
     }
 
     /// Quotes for symbols outside the default list, like a searched-and-added watchlist ticker.
+    /// Where a flight is going, by callsign (/api/flight-route); nil when the route is unknown.
+    func fetchFlightRoute(callsign: String) async throws -> FlightRoute? {
+        struct Wrapper: Decodable { let route: FlightRoute? }
+        return try decode(Wrapper.self, from: try await perform(URLRequest(url: try makeURL("/api/flight-route", query: ["callsign": callsign])))).route
+    }
+
     /// The next Fed rate decision day ("2026-12-09") from /api/fomc.
     func fetchNextFedDecision() async throws -> String? {
         struct Wrapper: Decodable { let next: String? }

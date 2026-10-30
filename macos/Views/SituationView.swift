@@ -997,6 +997,8 @@ private struct SituationEventDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
 
+                if case .flight(let flight) = event { FlightRouteCard(flight: flight) }
+
                 ForEach(rows, id: \.label) { row in
                     HStack(alignment: .top) {
                         Text(row.label)

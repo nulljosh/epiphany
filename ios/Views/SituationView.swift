@@ -1547,6 +1547,8 @@ private struct SituationEventDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
 
+                if case .flight(let flight) = event { FlightRouteCard(flight: flight) }
+
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                         HStack(alignment: .top) {
