@@ -45,6 +45,11 @@ enum Allocation {
         }
     }
 
+    /// Today's move in dollars for a value that moved `changePercent` today. Mirrors todayGain in allocation.js.
+    static func todayGain(_ value: Double, changePercent: Double) -> Double {
+        changePercent > -100 ? value - value / (1 + changePercent / 100) : 0
+    }
+
     /// Unrealized gain over holdings with a cost basis (broker rows without one are skipped). Mirrors unrealizedGain in allocation.js.
     static func unrealizedGain(_ holdings: [Portfolio.Holding]) -> (gain: Double, percent: Double)? {
         let known = holdings.filter { $0.avgCost > 0 && $0.shares > 0 }

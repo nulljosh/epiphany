@@ -71,7 +71,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 
 | Gap | Seen in | Size | Version | Status |
 |---|---|---|---|---|
-| Today's gain in dollars on each holding row | Fidelity | S | 61.0 | open |
+| Today's gain in dollars on each holding row | Fidelity | S | 61.0 | done 61.0.0 |
 | Leftover this month: expected income minus the bills still to come | PocketGuard | S | 62.0 | open |
 | Bills grouped by month with a total per month, next 60 days | PocketGuard | S | 63.0 | open |
 | Budget ring: how much is left of the month's total budget | Emma | S | 64.0 | open |
@@ -125,7 +125,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 50 | Mobbin pass 5 plus an apple audit (done 50.0.0) |
 | 51 to 59 | One row each from "Mobbin pass 5" (51 to 57 done; 58 and 59 wait on snapshots) |
 | 60 | Mobbin pass 6 plus an apple audit (done 60.0.0) |
-| 61 to 69 | One row each from "Mobbin pass 6"; 58 and 59 slot in once snapshots exist |
+| 61 to 69 | One row each from "Mobbin pass 6"; the 58 and 59 rows ship as the next version once snapshots exist |
 | 70 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)

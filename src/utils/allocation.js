@@ -43,6 +43,9 @@ export function unrealizedGain(holdings = []) {
   return { gain, percent: (gain / cost) * 100 };
 }
 
+// Today's move in dollars for a value that moved `changePercent` today. Mirrors Allocation.todayGain.
+export const todayGain = (value, changePercent = 0) => (changePercent > -100 ? value - value / (1 + changePercent / 100) : 0);
+
 // Your position in one symbol, summed across accounts. Mirrors Allocation.position.
 // Cost and total gain stay null for broker rows with no cost basis.
 export function position(holdings = [], symbol, price, changePercent = 0) {
@@ -50,7 +53,7 @@ export function position(holdings = [], symbol, price, changePercent = 0) {
   if (!rows.length || !(price > 0)) return null;
   const shares = rows.reduce((s, h) => s + h.shares, 0);
   const value = shares * price;
-  const today = changePercent > -100 ? value - value / (1 + changePercent / 100) : 0;
+  const today = todayGain(value, changePercent);
   const costed = rows.every((h) => h.costBasis > 0);
   const cost = costed ? rows.reduce((s, h) => s + h.shares * h.costBasis, 0) : null;
   return {

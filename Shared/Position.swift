@@ -11,7 +11,7 @@ struct Position: Equatable {
         guard !rows.isEmpty, price > 0 else { return nil }
         let shares = rows.reduce(0) { $0 + $1.shares }
         let value = shares * price
-        let today = changePercent > -100 ? value - value / (1 + changePercent / 100) : 0
+        let today = Allocation.todayGain(value, changePercent: changePercent)
         guard rows.allSatisfy({ $0.costBasis > 0 }) else {
             return Position(shares: shares, value: value, today: today, avgCost: nil, gain: nil, gainPercent: nil)
         }

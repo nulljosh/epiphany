@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1138,6 +1138,11 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                           ? <>{holding.shares.toFixed(4)} shares @ {formatCurrency(holding.costBasis)}</>
                           : <>{holding.shares} shares</>}
                       </div>
+                      {holding.value > 0 && holding.changePercent ? (
+                        <div style={{ fontSize: 11, fontVariantNumeric: 'tabular-nums', color: holding.changePercent >= 0 ? t.green : t.red }}>
+                          {todayGain(holding.value, holding.changePercent) >= 0 ? '+' : '-'}{formatCurrency(Math.abs(todayGain(holding.value, holding.changePercent)))} today
+                        </div>
+                      ) : null}
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
