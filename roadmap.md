@@ -76,7 +76,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | "Spent less than you earned in 4 of the last 6 months", with a dot per month | Cleo | S | 93.0 | done 93.0.0 |
 | A repeat mark on recurring charges in Recent Activity | Origin | S | 94.0 | done 94.0.0 |
 | Yield on each holding row | M1 Finance | S | 95.0 | done 95.0.0 |
-| Your yearly dividend from a stock, in its Your Position card | M1 Finance | S | 96.0 | open |
+| Your yearly dividend from a stock, in its Your Position card | M1 Finance | S | 96.0 | done 96.0.0 |
 | Biggest single expense this month as an insight | Origin | S | 97.0 | open |
 | The last seven days of spending as daily bars | Origin | S | 98.0 | open |
 | Polish pass over the cards 91 to 98 | apple skill | S | 99.0 | open |

@@ -38,6 +38,8 @@ struct PositionCard: View {
                     cell("Today", CurrencyFormatter.formatSignedPrice(p.today), tint: p.today)
                     cell("Total Gain", p.gain.map(CurrencyFormatter.formatSignedPrice) ?? "—", tint: p.gain)
                     cell("Return", p.gainPercent.map { String(format: "%+.2f%%", $0) } ?? "—", tint: p.gainPercent)
+                    // Your yearly dividend at today's trailing yield.
+                    if let y = stock.yield, y > 0 { cell("Dividend / yr", "about " + CurrencyFormatter.formatPrice(p.value * y / 100)) }
                 }
             }
             .padding()

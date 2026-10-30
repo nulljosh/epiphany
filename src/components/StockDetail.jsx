@@ -1191,6 +1191,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
                 { label: 'Today', value: signed(pos.today), color: gainColor(pos.today) },
                 { label: 'Total Gain', value: pos.gain != null ? signed(pos.gain) : '--', color: pos.gain != null ? gainColor(pos.gain) : undefined },
                 { label: 'Return', value: pos.gainPercent != null ? `${pos.gainPercent >= 0 ? '+' : ''}${pos.gainPercent.toFixed(2)}%` : '--', color: pos.gainPercent != null ? gainColor(pos.gainPercent) : undefined },
+                // Your yearly dividend at today's trailing yield.
+                ...((d.yield ?? stock?.yield) > 0 ? [{ label: 'Dividend / yr', value: `about ${formatCurrency(pos.value * (d.yield ?? stock.yield) / 100)}` }] : []),
               ].map(s => (
                 <div key={s.label}>
                   <div style={{ fontSize: 11, color: t.textTertiary || t.textSecondary, marginBottom: 2 }}>{s.label}</div>
