@@ -66,6 +66,19 @@ struct MoneyGlance: View {
                 }
                 .accessibilityElement(children: .combine)
             }
+            let rest = CashProjection.restOfMonth(bills: recurring, income: income)
+            if rest.in > 0 || rest.out > 0 {
+                VStack(alignment: .leading, spacing: 4) {
+                    heading("REST OF \(Date.now.formatted(.dateTime.month(.wide)).uppercased())")
+                    Text((rest.left < 0 ? "-" : "+") + CurrencyFormatter.formatPrice(abs(rest.left)))
+                        .font(.title.weight(.bold).monospacedDigit())
+                        .foregroundStyle(rest.left >= 0 ? Color.primary : Palette.dangerRed)
+                    Text("\(CurrencyFormatter.formatPrice(rest.in)) in paydays, \(CurrencyFormatter.formatPrice(rest.out)) in bills still to come")
+                        .font(.footnote.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+            }
             if !insights.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {

@@ -1,6 +1,6 @@
 import { Card } from './ui';
 import { formatCurrency } from '../utils/formatting';
-import { projectCash, leftThisMonth, billHistory } from '../utils/moneyGlance';
+import { projectCash, leftThisMonth, billHistory, restOfMonth } from '../utils/moneyGlance';
 
 const DAY = 86400000;
 const label = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 };
@@ -81,6 +81,7 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
   if (!insights.length && !upcoming.length && !cashflow.length) return null;
 
   const left = leftThisMonth(cashflow);
+  const rest = restOfMonth(recurring, income);
 
   return (
     <>
@@ -92,6 +93,18 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
           </div>
           <div style={{ fontSize: 13, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>
             {formatCurrency(left.in)} in, {formatCurrency(left.out)} spent
+          </div>
+        </Card>
+      )}
+
+      {(rest.in > 0 || rest.out > 0) && (
+        <Card dark={dark} t={t} style={{ marginBottom: 16, padding: '16px 20px' }}>
+          <div style={{ ...label, color: t.textTertiary, marginBottom: 4 }}>Rest of {rest.month}</div>
+          <div style={{ fontSize: 28, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: rest.left >= 0 ? t.text : t.red }}>
+            {rest.left >= 0 ? '+' : '-'}{formatCurrency(Math.abs(rest.left))}
+          </div>
+          <div style={{ fontSize: 13, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>
+            {formatCurrency(rest.in)} in paydays, {formatCurrency(rest.out)} in bills still to come
           </div>
         </Card>
       )}

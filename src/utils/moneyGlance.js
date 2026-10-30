@@ -68,3 +68,14 @@ export function billHistory(recurring = [], n = 6) {
     .map((r) => ({ name: r.merchant || r.name, amount: r.amount, paid: months.map((mo) => r.months.includes(mo)) }));
   return { months, rows };
 }
+
+// What is still to come between tomorrow and the end of this month: paydays in, bills out, and what that leaves.
+// Reuses projectCash's cadence roll-forward. Mirrors CashProjection.restOfMonth.
+export function restOfMonth(bills = [], income = [], today = new Date()) {
+  const days = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() - today.getDate();
+  // Tomorrow to month end; anything due today counts as already gone.
+  const sum = (b, i) => { const { points } = projectCash(0, b, i, today, days); return points[days].balance - points[0].balance; };
+  const inn = days > 0 ? sum([], income) : 0;
+  const out = days > 0 ? -sum(bills, []) : 0;
+  return { in: inn, out, left: inn - out, month: today.toLocaleDateString(undefined, { month: 'long' }) };
+}

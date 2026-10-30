@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -45,5 +45,16 @@ describe('billHistory', () => {
       { name: 'Gym', amount: 40, paid: [false, true, false, true] },
     ]);
     expect(billHistory([]).rows).toEqual([]);
+  });
+});
+
+describe('restOfMonth', () => {
+  it('adds paydays and takes off bills from tomorrow to month end, skipping today', () => {
+    const today = new Date(2026, 9, 20, 12);
+    const r = restOfMonth(
+      [{ amount: 100, cadence: 'monthly', nextDate: '2026-10-25' }, { amount: 50, cadence: 'monthly', nextDate: '2026-10-20' }, { amount: 9, cadence: 'monthly', nextDate: '2026-11-02' }],
+      [{ amount: 1000, cadence: 'biweekly', nextDate: '2026-10-16' }],
+      today);
+    expect(r).toMatchObject({ in: 1000, out: 100, left: 900 });
   });
 });

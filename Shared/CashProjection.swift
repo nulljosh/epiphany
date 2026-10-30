@@ -7,6 +7,20 @@ import SwiftUI
 enum CashProjection {
     struct Point: Equatable { let day: Int; let balance: Double }
 
+    /// Paydays in and bills out from tomorrow to the end of this month, and what that leaves. Mirrors restOfMonth in moneyGlance.js.
+    static func restOfMonth(bills: [RecurringCharge], income: [RecurringCharge], today: Date = .now) -> (in: Double, out: Double, left: Double) {
+        let cal = Calendar.current
+        let days = (cal.range(of: .day, in: .month, for: today)?.count ?? 30) - cal.component(.day, from: today)
+        guard days > 0 else { return (0, 0, 0) }
+        // Tomorrow to month end; anything due today counts as already gone.
+        func net(_ b: [RecurringCharge], _ i: [RecurringCharge]) -> Double {
+            let p = project(start: 0, bills: b, income: i, today: today, days: days).points
+            return (p.last?.balance ?? 0) - (p.first?.balance ?? 0)
+        }
+        let inn = net([], income), out = -net(bills, [])
+        return (inn, out, inn - out)
+    }
+
     static func project(start: Double, bills: [RecurringCharge], income: [RecurringCharge],
                         today: Date = .now, days: Int = 30) -> (points: [Point], low: Point, events: Int) {
         let cal = Calendar.current
