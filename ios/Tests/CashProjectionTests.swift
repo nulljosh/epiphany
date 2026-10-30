@@ -34,4 +34,11 @@ final class CashProjectionTests: XCTestCase {
         XCTAssertEqual(g.map(\.month), ["2026-10", "2026-11", "2026-12"])
         XCTAssertEqual(g.map(\.total), [40, 1540, 1500])
     }
+
+    func testDueLabel() {
+        let cal = Calendar.current
+        let today = cal.date(from: DateComponents(year: 2026, month: 10, day: 30, hour: 15))!
+        let d = { (m: Int, day: Int) in cal.date(from: DateComponents(year: 2026, month: m, day: day))! }
+        XCTAssertEqual([d(10, 30), d(10, 31), d(11, 2)].map { CashProjection.dueLabel($0, today: today) }, ["Due today", "Due tomorrow", "Due in 3 days"])
+    }
 }

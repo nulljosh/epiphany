@@ -153,3 +153,11 @@ export function sinceLastVisit(prev, value, now = new Date()) {
   const when = hours < 24 ? 'earlier today' : hours < 48 ? 'yesterday' : `${Math.floor(hours / 24)} days ago`;
   return { diff, when };
 }
+
+// "Due today", "Due tomorrow", "Due in 3 days". Mirrors CashProjection.dueLabel.
+export function dueLabel(date, today = new Date()) {
+  const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const n = Math.round((d - day0) / 86400000);
+  return n <= 0 ? 'Due today' : n === 1 ? 'Due tomorrow' : `Due in ${n} days`;
+}

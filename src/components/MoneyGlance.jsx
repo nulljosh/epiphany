@@ -1,6 +1,6 @@
 import { Card } from './ui';
 import { formatCurrency } from '../utils/formatting';
-import { projectCash, leftThisMonth, billHistory, restOfMonth, billsByMonth, compactSigned } from '../utils/moneyGlance';
+import { projectCash, leftThisMonth, billHistory, restOfMonth, billsByMonth, compactSigned, dueLabel } from '../utils/moneyGlance';
 
 const label = { fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 };
 const monthName = (ym) => new Date(`${ym}-01T12:00:00`).toLocaleDateString(undefined, { month: 'short' });
@@ -134,7 +134,7 @@ export default function MoneyGlance({ recurring = [], cashflow = [], insights = 
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
                     <div style={{ fontSize: 11, color: t.textTertiary }}>
-                      {r.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {r.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · {dueLabel(r.date)}
                     </div>
                   </div>
                   <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</div>

@@ -38,6 +38,13 @@ enum CashProjection {
         }
     }
 
+    /// "Due today", "Due tomorrow", "Due in 3 days". Mirrors dueLabel in moneyGlance.js.
+    static func dueLabel(_ date: Date, today: Date = .now) -> String {
+        let cal = Calendar.current
+        let n = cal.dateComponents([.day], from: cal.startOfDay(for: today), to: cal.startOfDay(for: date)).day ?? 0
+        return n <= 0 ? "Due today" : n == 1 ? "Due tomorrow" : "Due in \(n) days"
+    }
+
     /// Paydays in and bills out from tomorrow to the end of this month, and what that leaves. Mirrors restOfMonth in moneyGlance.js.
     static func restOfMonth(bills: [RecurringCharge], income: [RecurringCharge], today: Date = .now) -> (in: Double, out: Double, left: Double) {
         let cal = Calendar.current

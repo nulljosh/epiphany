@@ -131,7 +131,7 @@ struct MoneyGlance: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(item.charge.merchant.capitalized)
                                 .font(.subheadline.weight(.semibold))
-                            Text(item.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
+                            Text(item.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()) + " · " + CashProjection.dueLabel(item.date))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -114,5 +114,12 @@ describe('greeting and sinceLastVisit', () => {
     expect(sinceLastVisit({ value: 100, at: now.getTime() - 5 * 86400000 }, 90, now).when).toBe('5 days ago');
     expect(sinceLastVisit({ value: 100, at: now.getTime() - 600000 }, 90, now)).toBeNull();
     expect(sinceLastVisit(null, 90, now)).toBeNull();
+  });
+});
+
+describe('dueLabel', () => {
+  it('counts days to the bill', () => {
+    const today = new Date(2026, 9, 30, 15);
+    expect([new Date(2026, 9, 30), new Date(2026, 9, 31), new Date(2026, 10, 2)].map((d) => dueLabel(d, today))).toEqual(['Due today', 'Due tomorrow', 'Due in 3 days']);
   });
 });
