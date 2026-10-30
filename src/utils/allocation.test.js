@@ -76,3 +76,14 @@ describe('allocation', () => {
     expect(concentration([{ symbol: 'BTC-USD', value: 100 }])).toBeNull();
   });
 });
+
+import { vsMarket } from './allocation.js';
+
+describe('vsMarket', () => {
+  it('compares today\'s move with the S&P 500 in points', () => {
+    expect(vsMarket(-1.2, -2.0)).toEqual({ text: 'Ahead of the S&P 500 by 0.8 pts today', ahead: true });
+    expect(vsMarket(0.5, 1.75).text).toBe('Behind the S&P 500 by 1.3 pts today');
+    expect(vsMarket(1.01, 1.0).text).toBe('Even with the S&P 500 today');
+    expect(vsMarket(1, undefined)).toBeNull();
+  });
+});

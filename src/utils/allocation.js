@@ -135,3 +135,11 @@ export function concentration(holdings = [], limit = 0.25) {
   const top = live.reduce((a, b) => (b.value > a.value ? b : a));
   return top.value / total > limit ? { symbol: top.symbol, share: top.value / total } : null;
 }
+
+// Your holdings' move today against the S&P 500's, in percentage points. Mirrors Allocation.vsMarket.
+export function vsMarket(mine, spy) {
+  if (!Number.isFinite(mine) || !Number.isFinite(spy)) return null;
+  const gap = mine - spy;
+  if (Math.abs(gap) < 0.05) return { text: 'Even with the S&P 500 today', ahead: true };
+  return { text: `${gap > 0 ? 'Ahead of' : 'Behind'} the S&P 500 by ${Math.abs(gap).toFixed(1)} pts today`, ahead: gap > 0 };
+}

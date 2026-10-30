@@ -467,6 +467,9 @@ struct PortfolioView: View {
                         }
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(changeColor)
+                        if let vs = Allocation.vsMarket(portfolio.dayChangePercent, spy: appState.stocks.first { $0.symbol == "SPY" }?.changePercent) {
+                            Text(vs).font(.caption2).foregroundStyle(Palette.textSecondary)
+                        }
                     }
                     if let total = Allocation.unrealizedGain(portfolio.holdings) {
                         Text("\(CurrencyFormatter.formatSignedPrice(total.gain)) total")

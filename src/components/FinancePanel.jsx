@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
+import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1065,6 +1065,10 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap', fontVariantNumeric: 'tabular-nums' }}>
               {Math.abs(day) >= 0.005 && <span style={{ color: day >= 0 ? t.green : t.red }}>{sign(day, 'CAD')} ({(day / Math.max(stocksValue - day, 0.01) * 100).toFixed(2)}%) today</span>}
               {total && <span style={{ color: total.gain >= 0 ? t.green : t.red }}>{sign(total.gain)} total</span>}
+              {(() => {
+                const vs = Math.abs(day) >= 0.005 ? vsMarket(day / Math.max(stocksValue - day, 0.01) * 100, stocks?.SPY?.changePercent) : null;
+                return vs && <span style={{ flexBasis: '100%', fontWeight: 500, color: t.textSecondary }}>{vs.text}</span>;
+              })()}
             </div>
           );
         })()}

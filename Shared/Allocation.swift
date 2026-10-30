@@ -45,6 +45,14 @@ enum Allocation {
         }
     }
 
+    /// Your holdings' move today against the S&P 500's, in percentage points. Mirrors vsMarket in allocation.js.
+    static func vsMarket(_ mine: Double, spy: Double?) -> String? {
+        guard let spy else { return nil }
+        let gap = mine - spy
+        if abs(gap) < 0.05 { return "Even with the S&P 500 today" }
+        return "\(gap > 0 ? "Ahead of" : "Behind") the S&P 500 by \(String(format: "%.1f", abs(gap))) pts today"
+    }
+
     /// Today's move in dollars for a value that moved `changePercent` today. Mirrors todayGain in allocation.js.
     static func todayGain(_ value: Double, changePercent: Double) -> Double {
         changePercent > -100 ? value - value / (1 + changePercent / 100) : 0

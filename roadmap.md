@@ -75,7 +75,7 @@ One row per minor version. Skipped: trading, prediction markets, crypto staking,
 |---|---|---|---|---|
 | Rain radar plays the last two hours as a loop, with a time label | CARROT Weather | M | 6.1 | done 6.1.0 (13 frames, the newest held three beats) |
 | A banner when the map's centre is inside a weather warning area | CARROT Weather | S | 6.2 | done 6.2.0 (ray casting on the 5.2 shapes, worst colour first) |
-| "Your holdings vs the S&P 500 today" line over the portfolio | Copilot Money | S | 6.3 | open, today's change against SPY |
+| "Your holdings vs the S&P 500 today" line over the portfolio | Copilot Money | S | 6.3 | done 6.3.0 (percentage points against SPY) |
 | Markets chips: Now, Macro, Crypto | Robinhood | S | 6.4 | open |
 | "2 recent updates" on a stock page: news since you last opened it | Yahoo Finance | S | 6.5 | open, last-seen time per symbol |
 | Earnings results alert for stocks you follow | Yahoo Finance | M | 6.6 | open, reuses the alerts email |

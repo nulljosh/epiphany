@@ -6,6 +6,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Where things stand
 
+- 6.3.0: under today's portfolio move on web, iPhone and Mac, "Ahead of the S&P 500 by 0.8 pts today" (or behind, or even), holdings' day change against SPY's (`vsMarket` in `src/utils/allocation.js`, `Allocation.vsMarket`).
 - 6.2.0: a banner across the top of the map when a weather warning's area covers the map's centre, worst colour first ("Freezing drizzle (advisory) here"), on web, iPhone and Mac (`alertHere` in `src/utils/alertHere.js`, `WeatherAlert.covers` and `here`, `WarningBanner`).
 - 6.1.0: rain radar plays its last two hours (13 RainViewer frames, 0.7 s each, the newest held for three beats) with a "Radar 10:50 AM" pill, on web, iPhone and Mac. Web: one raster layer per frame, switched by opacity. Native: `RainRadarLoop` decodes the frames once and `RadarClock` reads the same wall-clock index, so the two stay in step with no shared state. The loop view must be sized up front: an annotation that starts at zero size never grows.
 - 6.0.0 (Joshua's call for the major): Mobbin pass 11 (Robinhood, Yahoo Finance, Copilot Money, CARROT Weather) wrote the "Mobbin pass 11" table in `roadmap.md` for 6.1 to 6.6, and the What's New card sums up 5.1 to 5.6 in three lines. Checked the new cards for title case on native and no em dashes or stray emoji.
@@ -27,7 +28,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Next, in order
 
-1. The 6.0 commercial with the opus-ad skill (every major gets one, Joshua 2026-10-30; held for weekly usage and disk). Then 6.3.0: your holdings against the S&P 500 today. Then 6.4 to 6.6 from Mobbin pass 11; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
+1. The 6.0 commercial with the opus-ad skill (every major gets one, Joshua 2026-10-30; held for weekly usage and disk). Then 6.4.0: Now, Macro and Crypto chips on Markets. Then 6.5 and 6.6 from Mobbin pass 11; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
 2. Confirm the first `portfolio_history` row after 21:30 UTC, then 28.0 and 37.0 once a few weeks exist down that table (38.0, the daily value snapshot cron, unblocks 28.0 and 37.0), and 40.0 is the next Mobbin pass. The 29.0 leftovers (Sankey, incident status) and 28.0 once a value history exists. 18.0 trading waits on Joshua. APNs push (#180) waits on an APNs key.
 3. When Apple clears 4.0.0, refresh the App Store screenshots (#145, #153) and submit the newest build on Joshua's yes.
 
