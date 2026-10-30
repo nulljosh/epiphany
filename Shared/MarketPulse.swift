@@ -41,6 +41,7 @@ struct MarketPulse: View {
                 }
                 .scrollClipDisabled()
             }
+            SectorHeatGrid(stocks: stocks)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

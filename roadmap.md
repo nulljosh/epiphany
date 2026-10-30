@@ -55,7 +55,7 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 | Gap | Seen in | Size | Version | Status |
 |---|---|---|---|---|
-| Sector heat map on Markets: one tile per sector, coloured by today's move | moomoo, Morningstar | M | 41.0 | open, check the S&P feed carries a sector |
+| Sector heat map on Markets: one tile per sector, coloured by today's move | moomoo, Morningstar | M | 41.0 | done 41.0.0 (web sector map reused; equal weight) |
 | Compound growth calculator in Outlook: monthly amount, years, return, with the curve | Kubera, Simplifi | S | 42.0 | open |
 | Total unrealized gain on the portfolio, dollars and percent | Kubera, Morningstar | S | 43.0 | open |
 | "Left this month" headline: money in minus money out this month, from statements | Simplifi, YNAB | S | 44.0 | open |

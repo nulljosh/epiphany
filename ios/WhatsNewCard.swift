@@ -5,10 +5,10 @@ import SwiftUI
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
 private let whatsNewBullets = [
+    "A sector heat map on Markets: one tile per sector, green or red by today's move",
     "Clearer wording in a few error and map messages",
     "Safer map popups for hospitals and fire stations",
     "Your portfolio value is now saved once a day",
-    "Gas, coffee, parks and groceries chips find real places, nearest first",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

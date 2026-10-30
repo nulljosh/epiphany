@@ -5,6 +5,7 @@ import SparklineChart from './SparklineChart';
 import useFearGreed from '../hooks/useFearGreed';
 import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 import { SECTOR_MAP, SECTOR_ORDER } from '../hooks/useStocks';
+import { sectorMoves, heatAlpha } from '../utils/sectors';
 
 const ASSET_DIMENSIONS = [
   { key: 'all', label: 'All' },
@@ -506,6 +507,8 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
     return [...top, ...bottom];
   }, [filtered]);
 
+  const sectors = useMemo(() => sectorMoves(allItems), [allItems]);
+
   const glass = {
     background: t.glass,
     backdropFilter: 'blur(20px) saturate(150%)',
@@ -700,6 +703,26 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         </div>
       )}
 
+      {/* Sector heat map: one tile per sector, coloured by today's average move */}
+      {sectors.length > 1 && !search && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            Sectors
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 6 }}>
+            {sectors.map(({ sector, change, count }) => (
+              <div key={sector} title={`${count} stocks`} style={{
+                borderRadius: 8, padding: '10px 8px',
+                background: change >= 0 ? `rgba(48,209,88,${heatAlpha(change)})` : `rgba(255,69,58,${heatAlpha(change)})`,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: t.text }}>{sector}</div>
+                <div style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums', color: t.text }}>{change >= 0 ? '+' : ''}{change.toFixed(2)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Top Movers */}
       {filtered.length > 0 && !search && (
         <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
@@ -737,7 +760,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
-            ⚙️ Sort & Filter
+            Sort & Filter
           </button>
         </div>
       )}
