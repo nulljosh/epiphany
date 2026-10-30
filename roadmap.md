@@ -69,17 +69,19 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 
 ## Mobbin pass 10 (100.0, 2026-10-30: Flightradar24, Windy, TipRanks, Monefy)
 
+Versions 5.0.0 to 102.0.0 in git history were internal builds, one major per row, which was inflated. They ship together as App Store 5.0.0. From here each row is one minor (5.1, 5.2, ...), see Versioning in `CLAUDE.md`.
+
 | Gap | Seen in | Size | Version | Status |
 |---|---|---|---|---|
 | Tap a plane for its route, altitude, speed and a progress bar from origin to destination | Flightradar24 | M | 101.0 | done 101.0.0 (adsbdb by callsign) |
 | Plane filters: passenger, cargo, military | Flightradar24 | S | 102.0 | done 102.0.0 (callsign prefix plus readsb military flag) |
-| Rain radar layer on the map | Windy | M | 103.0 | open, a free tile source (RainViewer) |
-| Severe weather warnings near you on the map | Windy | M | 104.0 | open, Environment Canada and NWS alerts |
-| Storm tracks on the map during hurricane season | Windy | M | 105.0 | open, NHC feeds |
-| Insider buys and sells on a stock page | TipRanks | M | 106.0 | open, Yahoo `insiderTransactions` |
-| Institutional ownership on a stock page | TipRanks | S | 107.0 | open, Yahoo `institutionOwnership` |
-| A feed of what happened to your stocks (earnings, big moves, targets) | TipRanks | M | 108.0 | open |
-| Portfolio hit rate and return over time | TipRanks | M | 109.0 | waits for weeks of snapshots, like 58 and 59 |
+| Rain radar layer on the map | Windy | M | 5.1 | open, a free tile source (RainViewer) |
+| Severe weather warnings near you on the map | Windy | M | 5.2 | open, Environment Canada and NWS alerts |
+| Storm tracks on the map during hurricane season | Windy | M | 5.3 | open, NHC feeds |
+| Insider buys and sells on a stock page | TipRanks | M | 5.4 | open, Yahoo `insiderTransactions` |
+| Institutional ownership on a stock page | TipRanks | S | 5.5 | open, Yahoo `institutionOwnership` |
+| A feed of what happened to your stocks (earnings, big moves, targets) | TipRanks | M | 5.6 | open |
+| Portfolio hit rate and return over time | TipRanks | M | 5.7 | waits for weeks of snapshots, like 58 and 59 |
 
 Skipped: 3D aircraft and camera views (Flightradar24), Smart Scores and blogger opinions (TipRanks, made-up numbers and opinion), surf and wave forecasts (Windy), a manual expense keypad (Monefy, we read statements). The apple audit found no teal, purple or indigo and no em dashes in UI strings.
 
