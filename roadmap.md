@@ -67,6 +67,22 @@ Skipped: AI agents and prediction markets (Public), credit card and chequing (We
 
 Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and guru portfolios, options and level 2 (moomoo, trading), shared budgets (YNAB, social), invoices (Simplifi, business), mutual fund buying (Kubera). The apple audit found white text only on solid fills and no teal, purple or indigo; it took three em dashes out of web UI strings.
 
+## Mobbin pass 10 (100.0, 2026-10-30: Flightradar24, Windy, TipRanks, Monefy)
+
+| Gap | Seen in | Size | Version | Status |
+|---|---|---|---|---|
+| Tap a plane for its route, altitude, speed and a progress bar from origin to destination | Flightradar24 | M | 101.0 | open |
+| Plane filters: passenger, cargo, military | Flightradar24 | S | 102.0 | open |
+| Rain radar layer on the map | Windy | M | 103.0 | open, a free tile source (RainViewer) |
+| Severe weather warnings near you on the map | Windy | M | 104.0 | open, Environment Canada and NWS alerts |
+| Storm tracks on the map during hurricane season | Windy | M | 105.0 | open, NHC feeds |
+| Insider buys and sells on a stock page | TipRanks | M | 106.0 | open, Yahoo `insiderTransactions` |
+| Institutional ownership on a stock page | TipRanks | S | 107.0 | open, Yahoo `institutionOwnership` |
+| A feed of what happened to your stocks (earnings, big moves, targets) | TipRanks | M | 108.0 | open |
+| Portfolio hit rate and return over time | TipRanks | M | 109.0 | waits for weeks of snapshots, like 58 and 59 |
+
+Skipped: 3D aircraft and camera views (Flightradar24), Smart Scores and blogger opinions (TipRanks, made-up numbers and opinion), surf and wave forecasts (Windy), a manual expense keypad (Monefy, we read statements). The apple audit found no teal, purple or indigo and no em dashes in UI strings.
+
 ## Mobbin pass 9 (90.0, 2026-10-30: Origin, Cleo, M1 Finance, eToro)
 
 | Gap | Seen in | Size | Version | Status |
@@ -181,7 +197,8 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 81 to 89 | One row each from "Mobbin pass 8" (done 89.0.0) |
 | 90 | Mobbin pass 9 plus an apple audit (done 90.0.0) |
 | 91 to 99 | One row each from "Mobbin pass 9" (done 99.0.0) |
-| 100 | Mobbin pass 10, an apple audit, and the 58 and 59 rows if snapshots exist |
+| 100 | Mobbin pass 10 plus an apple audit (done 100.0.0; snapshots not in yet, so 58 and 59 still wait) |
+| 101 to 109 | One row each from "Mobbin pass 10" |
 | after 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
