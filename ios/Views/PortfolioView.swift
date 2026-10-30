@@ -1465,6 +1465,8 @@ extension PortfolioView {
             }
             .padding(.horizontal)
         }
+        StoppedBillsList(stopped: EpiphanyAPI.shared.lastStopped)
+            .padding(.horizontal)
         if !subs.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 // Totals stay per currency: adding US$ to CAD gave a number that was neither.

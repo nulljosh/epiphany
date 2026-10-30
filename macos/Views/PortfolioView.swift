@@ -765,6 +765,8 @@ struct PortfolioView: View {
                     }
                 }
             }
+            StoppedBillsList(stopped: EpiphanyAPI.shared.lastStopped)
+                .padding(.horizontal)
             sectionCard("Active · " + (usdTotal > 0 ? "US\(CurrencyFormatter.formatPrice(usdTotal)) + " : "") + "\(CurrencyFormatter.formatPrice(monthlyTotal))/mo") {
                 if active.isEmpty {
                     emptyState("No active subscriptions")

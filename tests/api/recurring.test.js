@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectRecurring } from '../../server/api/statements-shared.js';
+import { detectRecurring } from '../../server/api/recurring.js';
 
 const txn = (date, description, amount) => ({ date, description, amount });
 
@@ -23,6 +23,14 @@ describe('detectRecurring', () => {
       txn('2026-07-01', 'AMAZON', -20), txn('2026-08-01', 'AMAZON', -90),
       txn('2026-03-01', 'GYM', -40), txn('2026-04-01', 'GYM', -40),
     ], today)).toEqual([]);
+  });
+
+  it('returns the stopped ones when asked', () => {
+    const out = detectRecurring([
+      txn('2026-07-01', 'AMAZON', -20), txn('2026-08-01', 'AMAZON', -90),
+      txn('2026-03-01', 'GYM', -40), txn('2026-04-01', 'GYM', -40),
+    ], today, { stopped: true });
+    expect(out.map((r) => [r.merchant, r.lastDate])).toEqual([['gym', '2026-04-01']]);
   });
 
   it('finds paydays when asked for income, and leaves them out of bills', () => {

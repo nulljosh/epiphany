@@ -57,3 +57,34 @@ struct BillHistoryCard: View {
         }
     }
 }
+
+/// Bills the statements show stopping (two missed cycles), with the last time each was paid. Nothing when none stopped.
+struct StoppedBillsList: View {
+    let stopped: [RecurringCharge]
+
+    var body: some View {
+        if !stopped.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("STOPPED")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .tracking(1.0)
+                ForEach(stopped) { charge in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(charge.merchant.capitalized).font(.subheadline.weight(.semibold))
+                            if let last = charge.lastDate.flatMap(ISO8601DateFormatter.dateOnly) {
+                                Text("Last paid \(last.formatted(.dateTime.month(.abbreviated).day().year()))")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        Text(CurrencyFormatter.formatPrice(charge.amount))
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+}

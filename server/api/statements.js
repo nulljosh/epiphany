@@ -9,12 +9,12 @@ import {
   SUMMARY_VERSION,
   normalizeMerchant,
   applyCategoryRules,
-  detectRecurring,
   summarizeCashflow,
   findInsights,
   MIN_MERCHANT_KEY_LENGTH,
   needsReview,
 } from './statements-shared.js';
+import { detectRecurring } from './recurring.js';
 
 function transactionId(txn) {
   return `${txn?.date}|${txn?.description}|${txn?.amount}`;
@@ -163,6 +163,7 @@ export default async function handler(req, res) {
         statements: refreshed,
         recurring: detectRecurring(all),
         income: detectRecurring(all, new Date(), { income: true }),
+        stopped: detectRecurring(all, new Date(), { stopped: true }),
         cashflow: summarizeCashflow(all),
         insights: findInsights(all),
       });

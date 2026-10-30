@@ -610,6 +610,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let wrapper = try decode(StatementsWrapper.self, from: data)
         lastRecurring = wrapper.recurring ?? []
         lastIncome = wrapper.income ?? []
+        lastStopped = wrapper.stopped ?? []
         lastCashflow = wrapper.cashflow ?? []
         lastInsights = wrapper.insights ?? []
         return wrapper.statements
@@ -618,6 +619,8 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     /// Recurring charges from the most recent fetchStatements call.
     private(set) var lastRecurring: [RecurringCharge] = []
     /// Paydays the server found repeating (detectRecurring with income), for the 30 day cash line.
+    /// Bills that missed two cycles: subscriptions that stopped.
+    private(set) var lastStopped: [RecurringCharge] = []
     private(set) var lastIncome: [RecurringCharge] = []
     private(set) var lastCashflow: [CashflowMonth] = []
     private(set) var lastInsights: [MoneyInsight] = []
@@ -1127,6 +1130,7 @@ private struct StatementsWrapper: Decodable {
     let statements: [Statement]
     let recurring: [RecurringCharge]?
     let income: [RecurringCharge]?
+    let stopped: [RecurringCharge]?
     let cashflow: [CashflowMonth]?
     let insights: [MoneyInsight]?
 }
@@ -1152,6 +1156,8 @@ struct RecurringCharge: Decodable, Identifiable, Hashable {
     let priceDelta: Double
     /// Statement months it was paid in ("2026-08"), oldest first; nil from an older server.
     var months: [String]? = nil
+    /// Last statement date it was paid ("2026-04-01").
+    var lastDate: String? = nil
     var id: String { "\(merchant)-\(amount)" }
 
     /// What it costs per month, so biweekly and yearly bills add up with the rest.

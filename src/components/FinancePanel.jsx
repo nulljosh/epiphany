@@ -680,6 +680,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [recurring, setRecurring] = useState([]);
   const [cashflow, setCashflow] = useState([]);
   const [income, setIncome] = useState([]);
+  const [stopped, setStopped] = useState([]);
   const [insights, setInsights] = useState([]);
   const [statementLoading, setStatementLoading] = useState(false);
   const [statementUploading, setStatementUploading] = useState(false);
@@ -805,6 +806,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       setRecurring(Array.isArray(data?.recurring) ? data.recurring : []);
       setCashflow(Array.isArray(data?.cashflow) ? data.cashflow : []);
       setIncome(Array.isArray(data?.income) ? data.income : []);
+      setStopped(Array.isArray(data?.stopped) ? data.stopped : []);
       setInsights(Array.isArray(data?.insights) ? data.insights : []);
       const result = syncSpendingMonthsRef.current(files.map((item) => item.spendingMonth));
       setImportError(result.success ? null : result.error);
@@ -821,7 +823,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   }, []);
 
   useEffect(() => {
-    if (tab !== 'spending') return;
+    // Subscriptions lists what the statements found, so it needs them too.
+    if (tab !== 'spending' && tab !== 'subscriptions') return;
     refreshStatements();
   }, [refreshStatements, tab]);
 
@@ -1779,6 +1782,24 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                           </div>
                         </div>
                         <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+              {stopped.length > 0 && (
+                <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
+                  <div style={sectionStyle}>
+                    <div style={labelStyle}>Stopped</div>
+                    {stopped.map((r) => (
+                      <div key={`${r.merchant}-${r.amount}`} style={rowStyle}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{r.merchant}</div>
+                          <div style={{ fontSize: 11, color: t.textTertiary }}>
+                            Last paid {new Date(`${r.lastDate}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(r.amount)}</div>
                       </div>
                     ))}
                   </div>
