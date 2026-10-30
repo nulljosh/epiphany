@@ -72,6 +72,7 @@ struct PortfolioView: View {
     @Environment(AppState.self) private var appState
     @State private var selectedTab: FinanceTab = .spending
     @State private var hasLoaded = false
+    @State private var holdingFilter = "All"
     @State private var selectedSpendingMonth: String?
     @State private var selectedSpendingX: CGFloat?
     @State private var activeScenarios: Set<IncomeScenario> = []
@@ -318,11 +319,21 @@ struct PortfolioView: View {
                 if portfolio.holdings.isEmpty {
                     emptyState("No holdings in portfolio")
                 } else {
-                    ForEach(portfolio.holdings) { holding in
+                    if Allocation.filterNames(portfolio.holdings).count > 1 {
+                        Picker("Show", selection: $holdingFilter) {
+                            ForEach(Allocation.filterNames(portfolio.holdings), id: \.self) { Text($0).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                    }
+                    let shown = portfolio.holdings.filter { Allocation.passes($0.symbol, holdingFilter) }
+                    ForEach(shown) { holding in
                         HoldingRow(holding: holding)
                             .padding(.horizontal)
                             .padding(.vertical, 10)
-                        if holding.id != portfolio.holdings.last?.id {
+                        if holding.id != shown.last?.id {
                             Divider().padding(.horizontal)
                         }
                     }

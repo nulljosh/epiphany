@@ -10,7 +10,7 @@ import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPay
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import ReviewQueue from './ReviewQueue';
-import { allocation } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings } from '../utils/allocation';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -656,6 +656,7 @@ function EditorSection({ title, children, t }) {
 
 export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
   const [tab, setTab] = useState('portfolio');
+  const [holdingFilter, setHoldingFilter] = useState('All');
   const [importError, setImportError] = useState(null);
   const [statementFiles, setStatementFiles] = useState([]);
   const [recurring, setRecurring] = useState([]);
@@ -1072,7 +1073,25 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                     </div>
                   )}
                 </div>
-                {holdings.map((holding) => (
+                {holdingFilters(holdings).length > 1 && (
+                  <div style={{ display: 'flex', gap: 6, padding: '8px 0', overflowX: 'auto' }}>
+                    {holdingFilters(holdings).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setHoldingFilter(f)}
+                        style={{
+                          padding: '4px 12px', borderRadius: 999, border: 'none', fontSize: 12, fontWeight: 600,
+                          fontFamily: font, cursor: 'pointer', whiteSpace: 'nowrap',
+                          background: holdingFilter === f ? t.text : t.border,
+                          color: holdingFilter === f ? t.bg : t.text,
+                        }}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {filterHoldings(holdings, holdingFilter).map((holding) => (
                   <div key={holding.symbol} style={rowStyle}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{holding.symbol}</div>
@@ -1098,7 +1117,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 ))}
                 <div style={{ ...rowStyle, borderBottom: 'none', fontWeight: 700, fontSize: 16 }}>
                   <span>Total</span>
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(stocksValue)}</span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(holdingFilter === 'All' ? stocksValue : filterHoldings(holdings, holdingFilter).reduce((sum, h) => sum + (h.value || 0), 0))}</span>
                 </div>
               </div>
             </Card>

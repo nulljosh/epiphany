@@ -98,6 +98,7 @@ struct PortfolioView: View {
     @State private var lastPredictionKey: String = ""
     @State private var showStatementManager = false
     @AppStorage("holdingSort") private var holdingSort: HoldingSort = .valueHighLow
+    @State private var holdingFilter = "All"
 
 
     private var currencyCode: String {
@@ -282,7 +283,16 @@ struct PortfolioView: View {
                 if portfolio.holdings.isEmpty {
                     emptyState("No holdings in portfolio")
                 } else {
-                    let sorted = holdingSort.sorted(portfolio.holdings)
+                    if Allocation.filterNames(portfolio.holdings).count > 1 {
+                        Picker("Show", selection: $holdingFilter) {
+                            ForEach(Allocation.filterNames(portfolio.holdings), id: \.self) { Text($0).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                    }
+                    let sorted = holdingSort.sorted(portfolio.holdings).filter { Allocation.passes($0.symbol, holdingFilter) }
                     ForEach(sorted) { holding in
                         HoldingRow(holding: holding)
                             .padding(.horizontal)

@@ -12,6 +12,30 @@ enum Allocation {
             || coins.contains(symbol.uppercased())
     }
 
+    /// Listing currency by suffix. Mirrors isCad in src/utils/allocation.js.
+    static func isCad(_ symbol: String) -> Bool {
+        symbol.range(of: "\\.(TO|V|NE|CN)$|-CAD$", options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// Holdings filter chips. ponytail: no ETF chip until holdings carry an asset type.
+    static func passes(_ symbol: String, _ filter: String) -> Bool {
+        switch filter {
+        case "Stocks": !isCrypto(symbol)
+        case "Crypto": isCrypto(symbol)
+        case "CAD": isCad(symbol)
+        case "USD": !isCad(symbol)
+        default: true
+        }
+    }
+
+    /// "All" plus each chip that actually splits the list.
+    static func filterNames(_ holdings: [Portfolio.Holding]) -> [String] {
+        ["All"] + ["Stocks", "Crypto", "CAD", "USD"].filter { f in
+            let n = holdings.filter { passes($0.symbol, f) }.count
+            return n > 0 && n < holdings.count
+        }
+    }
+
     static func slices(holdings: [Portfolio.Holding], cash: Double) -> [(label: String, value: Double)] {
         let values = holdings.filter { $0.marketValue > 0 }
         let crypto = values.filter { isCrypto($0.symbol) }.reduce(0) { $0 + $1.marketValue }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -10,5 +10,13 @@ describe('allocation', () => {
   it('knows a coin ticker from a stock', () => {
     expect(isCrypto('ETH')).toBe(true);
     expect(isCrypto('COIN')).toBe(false);
+  });
+  it('offers only the chips that split the list', () => {
+    const h = [{ symbol: 'AAPL' }, { symbol: 'SHOP.TO' }, { symbol: 'BTC-USD' }];
+    expect(holdingFilters(h)).toEqual(['All', 'Stocks', 'Crypto', 'CAD', 'USD']);
+    expect(holdingFilters([{ symbol: 'AAPL' }, { symbol: 'MSFT' }])).toEqual(['All']);
+    expect(filterHoldings(h, 'CAD').map((x) => x.symbol)).toEqual(['SHOP.TO']);
+    expect(filterHoldings(h, 'Stocks').map((x) => x.symbol)).toEqual(['AAPL', 'SHOP.TO']);
+    expect(filterHoldings(h, 'All')).toBe(h);
   });
 });

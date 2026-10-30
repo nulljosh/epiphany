@@ -14,3 +14,17 @@ export function allocation(holdings = [], cash = 0) {
     .filter(([, v]) => v > 0)
     .map(([label, value]) => ({ label, value }));
 }
+
+// Holdings filter chips. ponytail: listing currency by symbol suffix (.TO, .V, .NE, -CAD is CAD,
+// everything else USD); no ETF chip until holdings carry an asset type.
+export const isCad = (symbol = '') => /\.(TO|V|NE|CN)$|-CAD$/i.test(symbol);
+const FILTERS = { Stocks: (s) => !isCrypto(s), Crypto: isCrypto, CAD: isCad, USD: (s) => !isCad(s) };
+
+export const holdingFilters = (holdings = []) =>
+  ['All', ...Object.keys(FILTERS).filter((f) => {
+    const n = holdings.filter((h) => FILTERS[f](h.symbol)).length;
+    return n > 0 && n < holdings.length;
+  })];
+
+export const filterHoldings = (holdings = [], filter = 'All') =>
+  FILTERS[filter] ? holdings.filter((h) => FILTERS[filter](h.symbol)) : holdings;
