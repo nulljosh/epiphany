@@ -17,20 +17,21 @@ export function useAlerts(authUser) {
       .finally(() => setLoading(false));
   }, [authUser?.email]);
 
-  const addAlert = useCallback(async (symbol, targetPrice, direction) => {
+  /** Resolves to the new alert, or { error } with the server's reason (no earnings date, say). */
+  const addAlert = useCallback(async (symbol, targetPrice, direction, kind = 'price') => {
     try {
       const res = await fetch('/api/alerts', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol, target_price: targetPrice, direction }),
+        body: JSON.stringify({ symbol, target_price: targetPrice, direction, kind }),
       });
-      if (!res.ok) return null;
+      if (!res.ok) return { error: (await res.json().catch(() => ({}))).error || 'Could not add that alert' };
       const alert = await res.json();
       setAlerts(prev => [alert, ...prev]);
       return alert;
     } catch {
-      return null;
+      return { error: 'Could not add that alert' };
     }
   }, []);
 
@@ -51,7 +52,7 @@ export function useAlerts(authUser) {
   const checkAlerts = useCallback((stocks) => {
     if (!stocks || alerts.length === 0) return;
     setAlerts(prev => prev.map(alert => {
-      if (alert.triggered) return alert;
+      if (alert.triggered || alert.kind === 'earnings') return alert; // the server emails earnings
       const stock = stocks[alert.symbol];
       if (!stock) return alert;
       const price = stock.price;

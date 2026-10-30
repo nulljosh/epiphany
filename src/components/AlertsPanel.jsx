@@ -81,10 +81,22 @@ const styles = {
   },
 };
 
+const KINDS = [['price', 'Price'], ['high52', '52W high'], ['low52', '52W low'], ['earnings', 'Earnings']];
+
+function describeAlert(a) {
+  const target = `$${Number(a.targetPrice ?? a.target_price).toFixed(2)}`;
+  if (a.kind === 'earnings') return 'earnings day';
+  if (a.kind === 'high52') return `new 52 week high, past ${target}`;
+  if (a.kind === 'low52') return `new 52 week low, under ${target}`;
+  return `${a.direction} ${target}`;
+}
+
 export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearTriggered, watchlist = [] }) {
   const [symbol, setSymbol] = useState('');
   const [price, setPrice] = useState('');
   const [direction, setDirection] = useState('above');
+  const [kind, setKind] = useState('price');
+  const [error, setError] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const activeAlerts = useMemo(() => alerts.filter(a => !a.triggered), [alerts]);
@@ -97,12 +109,14 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
   }, [symbol, watchlist]);
 
   const isPro = usePremium();
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!isPro) { showPricing(); return; } // price alerts are Premium
     const sym = symbol.trim().toUpperCase();
     const p = parseFloat(price);
-    if (!sym || isNaN(p) || p <= 0) return;
-    onAdd(sym, p, direction);
+    if (!sym || (kind === 'price' && (isNaN(p) || p <= 0))) return;
+    const made = await onAdd(sym, kind === 'price' ? p : null, direction, kind);
+    if (made?.error) { setError(made.error); return; }
+    setError('');
     setSymbol('');
     setPrice('');
   };
@@ -117,6 +131,11 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
 
         {!isPro && <div style={{ ...styles.empty, paddingTop: 0 }}>Price alerts are part of Premium. $1, once.</div>}
 
+        <div style={{ ...styles.form, marginBottom: 8 }}>
+          {KINDS.map(([k, label]) => (
+            <button key={k} style={styles.dirBtn(kind === k)} onClick={() => setKind(k)}>{label}</button>
+          ))}
+        </div>
         <div style={styles.form}>
           <div style={{ position: 'relative', flex: 1, minWidth: 80 }}>
             <input
@@ -139,6 +158,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
               </div>
             )}
           </div>
+          {kind === 'price' && <>
           <input
             style={{ ...styles.input, maxWidth: 100 }}
             placeholder="Price"
@@ -150,8 +170,10 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           />
           <button style={styles.dirBtn(direction === 'above')} onClick={() => setDirection('above')}>Above</button>
           <button style={styles.dirBtn(direction === 'below')} onClick={() => setDirection('below')}>Below</button>
+          </>}
           <button style={styles.addBtn} onClick={handleAdd}>{isPro ? 'Add' : 'Unlock'}</button>
         </div>
+        {error && <div style={{ ...styles.detail, color: 'var(--danger, #ef4444)', marginBottom: 8 }}>{error}</div>}
         <div style={{ ...styles.detail, marginBottom: 16 }}>We email you when it hits, even with Epiphany closed.</div>
 
         <div style={styles.section}>
@@ -161,7 +183,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
             <div key={a.id} style={styles.alertRow}>
               <div style={styles.alertInfo}>
                 <span style={styles.symbol}>{a.symbol}</span>{' '}
-                <span style={styles.detail}>{a.direction} ${a.targetPrice.toFixed(2)}</span>
+                <span style={styles.detail}>{describeAlert(a)}</span>
               </div>
               <button style={styles.deleteBtn} onClick={() => onRemove(a.id)}>&times;</button>
             </div>
@@ -179,7 +201,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
                 <div style={styles.alertInfo}>
                   <span style={styles.symbol}>{a.symbol}</span>{' '}
                   <span style={styles.triggered}>
-                    Hit ${a.triggeredPrice?.toFixed(2)} ({a.direction} ${a.targetPrice.toFixed(2)})
+                    {a.triggeredPrice ? `Hit $${a.triggeredPrice.toFixed(2)} ` : 'Hit '}({describeAlert(a)})
                   </span>
                 </div>
                 <button style={styles.deleteBtn} onClick={() => onRemove(a.id)}>&times;</button>

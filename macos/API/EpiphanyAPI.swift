@@ -542,17 +542,15 @@ final class EpiphanyAPI {
         return try decode([PriceAlert].self, from: data)
     }
 
-    func createAlert(symbol: String, targetPrice: Double, direction: PriceAlert.Direction) async throws -> PriceAlert {
+    /// The server fills the target for 52 week and earnings alerts, so those send no price.
+    func createAlert(symbol: String, targetPrice: Double?, direction: PriceAlert.Direction, kind: String = "price") async throws -> PriceAlert {
         let url = try makeURL("/api/alerts")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body: [String: Any] = [
-            "symbol": symbol,
-            "target_price": targetPrice,
-            "direction": direction.rawValue
-        ]
+        var body: [String: Any] = ["symbol": symbol, "direction": direction.rawValue, "kind": kind]
+        if let targetPrice { body["target_price"] = targetPrice }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let data = try await perform(request)

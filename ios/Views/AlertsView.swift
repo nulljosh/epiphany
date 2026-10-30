@@ -105,14 +105,16 @@ struct AlertsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(alert.symbol)
                     .font(.headline)
-                Text(alert.direction == .above ? "Above" : "Below")
+                Text(alert.summary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(CurrencyFormatter.formatPrice(alert.targetPrice))
-                    .font(.body.weight(.medium))
+                if alert.kind != "earnings" {
+                    Text(CurrencyFormatter.formatPrice(alert.targetPrice))
+                        .font(.body.weight(.medium))
+                }
                 if alert.triggered {
                     Text("TRIGGERED")
                         .font(.caption2.weight(.bold))
@@ -132,6 +134,7 @@ struct CreateAlertSheet: View {
     @State private var symbol = ""
     @State private var targetPrice = ""
     @State private var direction: PriceAlert.Direction = .above
+    @State private var kind = "price"
     @State private var error: String?
     @State private var isCreating = false
 
@@ -145,22 +148,37 @@ struct CreateAlertSheet: View {
                         .font(.body.weight(.medium))
                 }
 
-                Section("Target Price") {
-                    TextField("0.00", text: $targetPrice)
-                        .keyboardType(.decimalPad)
-                        .font(.body.weight(.medium))
-                }
-
                 Section {
-                    Picker("Trigger when price goes", selection: $direction) {
-                        Text("Above").tag(PriceAlert.Direction.above)
-                        Text("Below").tag(PriceAlert.Direction.below)
+                    Picker("Alert me on", selection: $kind) {
+                        ForEach(PriceAlert.kinds, id: \.id) { Text($0.label).tag($0.id) }
                     }
                     .pickerStyle(.segmented)
                 } header: {
-                    Text("Direction")
+                    Text("Kind")
                 } footer: {
-                    Text("We email you when it hits, even with Epiphany closed.")
+                    if kind != "price" {
+                        Text(kind == "earnings" ? "Emails you the day before the report." : "Uses today's 52 week range. We email you when it hits, even with Epiphany closed.")
+                    }
+                }
+
+                if kind == "price" {
+                    Section("Target Price") {
+                        TextField("0.00", text: $targetPrice)
+                            .keyboardType(.decimalPad)
+                            .font(.body.weight(.medium))
+                    }
+
+                    Section {
+                        Picker("Trigger when price goes", selection: $direction) {
+                            Text("Above").tag(PriceAlert.Direction.above)
+                            Text("Below").tag(PriceAlert.Direction.below)
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text("Direction")
+                    } footer: {
+                        Text("We email you when it hits, even with Epiphany closed.")
+                    }
                 }
 
                 if let error {
@@ -179,7 +197,7 @@ struct CreateAlertSheet: View {
                             .frame(maxWidth: .infinity)
                             .fontWeight(.semibold)
                     }
-                    .disabled(symbol.isEmpty || targetPrice.isEmpty || isCreating)
+                    .disabled(symbol.isEmpty || (kind == "price" && targetPrice.isEmpty) || isCreating)
                     .tint(Palette.appleBlue)
                 }
             }
@@ -198,7 +216,8 @@ struct CreateAlertSheet: View {
             error = "Enter a symbol"
             return
         }
-        guard let price = parseAmount(targetPrice), price > 0 else {
+        let price = parseAmount(targetPrice)
+        if kind == "price", (price ?? 0) <= 0 {
             error = "Enter a valid price"
             return
         }
@@ -207,8 +226,9 @@ struct CreateAlertSheet: View {
         defer { isCreating = false }
         await appState.createAlert(
             symbol: symbol.uppercased().trimmingCharacters(in: .whitespaces),
-            targetPrice: price,
-            direction: direction
+            targetPrice: kind == "price" ? price : nil,
+            direction: direction,
+            kind: kind
         )
         dismiss()
     }

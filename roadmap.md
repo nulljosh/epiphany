@@ -24,7 +24,7 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 
 | Gap | Who has it | Size | Target | Status |
 |---|---|---|---|---|
-| More alert kinds: 52 week high or low, and earnings day for a followed stock, as toggles | Yahoo | S | 21.0 | open |
+| More alert kinds: 52 week high or low, and earnings day for a followed stock, as toggles | Yahoo | S | 21.0 | done 21.0.0 |
 | Budget left per day ("$48 a day for 13 days") on the budget card | Rocket Money | S | 22.0 | open |
 | Live price chip under a headline for each symbol it names | Yahoo | S | 23.0 | open |
 | Review queue: swipe to mark a transaction reviewed, "N to review" badge | Monarch, Copilot | M | 24.0 | open (#179) |
@@ -138,6 +138,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
   an orphan; otherwise just re-upload June, then July, and confirm both now appear as separate
   months.
 - [ ] iOS: fix "Login with …" (social sign-in buttons), **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set them as Worker secrets (`npx wrangler secret put`). No code change unblocks this.
+- [ ] Web price alerts panel stays dark in light mode: its `var(--bg-secondary, #18181b)` fallbacks win because those CSS variables aren't defined; move it to the theme tokens (seen in 21.0 QA).
 - [ ] Web landing page needs a light mode (looks great otherwise), note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
 

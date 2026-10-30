@@ -645,13 +645,14 @@ final class AppState {
         }
     }
 
-    func createAlert(symbol: String, targetPrice: Double, direction: PriceAlert.Direction) async {
+    func createAlert(symbol: String, targetPrice: Double?, direction: PriceAlert.Direction, kind: String = "price") async {
         guard isLoggedIn else { return }
         do {
             let alert = try await EpiphanyAPI.shared.createAlert(
                 symbol: symbol,
                 targetPrice: targetPrice,
-                direction: direction
+                direction: direction,
+                kind: kind
             )
             alerts.append(alert)
             // First alert is the moment to ask; the background check posts local notifications.

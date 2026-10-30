@@ -30,7 +30,7 @@ describe('web freemium: price alerts are Premium', () => {
 
   it('a Premium account creates the alert', () => {
     const { onAdd, pricing } = setup(true);
-    expect(onAdd).toHaveBeenCalledWith('AAPL', 200, 'above');
+    expect(onAdd).toHaveBeenCalledWith('AAPL', 200, 'above', 'price');
     expect(pricing).not.toHaveBeenCalled();
   });
 

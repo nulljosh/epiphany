@@ -9,19 +9,35 @@ import { verifyCronSecret } from './_shared-secret.js';
 export const crossed = (alert, price) =>
   alert.direction === 'above' ? price >= alert.target_price : price <= alert.target_price;
 
-/** Alerts whose symbol has a live price past the target, each with that price attached. */
-export function pickFired(alerts, quotes) {
-  const prices = new Map(quotes.map((q) => [q.symbol, q.price]));
+const DAY = 24 * 3600 * 1000;
+
+/** Earnings alerts fire within a day of the report; every other kind is a price crossing. */
+export function hit(alert, quote, now = Date.now()) {
+  if (alert.kind === 'earnings') return typeof quote.nextEarnings === 'number' && quote.nextEarnings * 1000 - now <= DAY;
+  return typeof quote.price === 'number' && crossed(alert, quote.price);
+}
+
+/** Alerts whose quote hit, each with the live price attached. */
+export function pickFired(alerts, quotes, now = Date.now()) {
+  const bySymbol = new Map(quotes.map((q) => [q.symbol, q]));
   return alerts
-    .filter((a) => typeof prices.get(a.symbol) === 'number' && crossed(a, prices.get(a.symbol)))
-    .map((a) => ({ ...a, price: prices.get(a.symbol) }));
+    .filter((a) => bySymbol.has(a.symbol) && hit(a, bySymbol.get(a.symbol), now))
+    .map((a) => ({ ...a, price: bySymbol.get(a.symbol).price }));
+}
+
+export function alertLine(r) {
+  const s = esc(r.symbol);
+  if (r.kind === 'earnings') return `${s} reports earnings within a day. Now ${money(r.price)}.`;
+  if (r.kind === 'high52') return `${s} hit a new 52 week high, past ${money(r.target_price)}. Now ${money(r.price)}.`;
+  if (r.kind === 'low52') return `${s} hit a new 52 week low, under ${money(r.target_price)}. Now ${money(r.price)}.`;
+  return `${s} is ${r.direction} ${money(r.target_price)}. Now ${money(r.price)}.`;
 }
 
 const money = (n) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 export function alertEmail(rows) {
-  const lines = rows.map((r) => `${esc(r.symbol)} is ${r.direction} ${money(r.target_price)}. Now ${money(r.price)}.`);
+  const lines = rows.map(alertLine);
   return {
     subject: rows.length === 1 ? lines[0].split('.')[0] : `${rows.length} price alerts hit`,
     html: `<p>${lines.join('<br>')}</p><p><a href="https://epiphany.jaybulb.com">Open Epiphany</a></p>`

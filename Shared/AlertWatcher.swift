@@ -30,10 +30,11 @@ enum AlertWatcher {
         let prices = Dictionary(quotes.map { ($0.symbol, $0.price) }, uniquingKeysWith: { a, _ in a })
 
         var fired = Set(UserDefaults.standard.stringArray(forKey: firedKey) ?? [])
-        for alert in active where !fired.contains(alert.id) {
+        // Earnings alerts need the report date, so only the server's email check fires them.
+        for alert in active where !fired.contains(alert.id) && alert.kind != "earnings" {
             guard let price = prices[alert.symbol], crossed(alert, price) else { continue }
             let content = UNMutableNotificationContent()
-            content.title = "\(alert.symbol) is \(alert.direction == .above ? "above" : "below") \(CurrencyFormatter.formatPrice(alert.targetPrice))"
+            content.title = "\(alert.symbol): \(alert.summary)"
             content.body = "Now \(CurrencyFormatter.formatPrice(price))."
             content.sound = .default
             try? await UNUserNotificationCenter.current()
@@ -47,5 +48,20 @@ enum AlertWatcher {
 
     static func crossed(_ alert: PriceAlert, _ price: Double) -> Bool {
         alert.direction == .above ? price >= alert.targetPrice : price <= alert.targetPrice
+    }
+}
+
+extension PriceAlert {
+    static let kinds: [(id: String, label: String)] = [("price", "Price"), ("high52", "52W High"), ("low52", "52W Low"), ("earnings", "Earnings")]
+
+    /// One line for lists and banners, for every kind.
+    var summary: String {
+        let target = CurrencyFormatter.formatPrice(targetPrice)
+        switch kind {
+        case "earnings": return "earnings day"
+        case "high52": return "new 52 week high, past \(target)"
+        case "low52": return "new 52 week low, under \(target)"
+        default: return "\(direction == .above ? "above" : "below") \(target)"
+        }
     }
 }

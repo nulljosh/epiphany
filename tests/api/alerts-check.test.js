@@ -8,7 +8,7 @@ vi.mock('../../server/api/stocks-free.js', () => ({
   fetchYahooBatch: async () => [{ symbol: 'AAPL', price: 300 }, { symbol: 'TSLA', price: 200 }],
 }));
 
-const { default: handler, pickFired, alertEmail } = await import('../../server/api/alerts-check.js');
+const { default: handler, pickFired, alertEmail, alertLine } = await import('../../server/api/alerts-check.js');
 
 const a = (id, symbol, direction, target_price, user_email = 'me@x.com') => ({ id, symbol, direction, target_price, user_email });
 const res = () => { const r = { code: 0, body: null }; r.status = (c) => { r.code = c; return r; }; r.json = (b) => { r.body = b; return r; }; return r; };
@@ -19,6 +19,21 @@ describe('pickFired', () => {
       [{ symbol: 'AAPL', price: 300 }, { symbol: 'TSLA', price: 200 }]);
     expect(out.map((x) => x.id)).toEqual(['1', '3']);
     expect(out[0].price).toBe(300);
+  });
+});
+
+describe('kinds', () => {
+  const now = Date.UTC(2026, 9, 29);
+  it('fires earnings within a day of the report, not before', () => {
+    const e = { ...a('5', 'AAPL', 'above', 0), kind: 'earnings' };
+    expect(pickFired([e], [{ symbol: 'AAPL', price: 300, nextEarnings: now / 1000 + 3600 }], now)).toHaveLength(1);
+    expect(pickFired([e], [{ symbol: 'AAPL', price: 300, nextEarnings: now / 1000 + 3 * 86400 }], now)).toHaveLength(0);
+    expect(pickFired([e], [{ symbol: 'AAPL', price: 300 }], now)).toHaveLength(0);
+  });
+  it('fires a 52 week high as a crossing of the pinned high and says so', () => {
+    const h = { ...a('6', 'AAPL', 'above', 299), kind: 'high52' };
+    const [out] = pickFired([h], [{ symbol: 'AAPL', price: 300 }]);
+    expect(alertLine(out)).toBe('AAPL hit a new 52 week high, past $299.00. Now $300.00.');
   });
 });
 
