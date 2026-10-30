@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry } from '../utils/allocation';
+import { allocation, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1249,6 +1249,15 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                       <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: u.gain >= 0 ? t.green : t.red }}>
                         {u.gain >= 0 ? '+' : '-'}{formatCurrency(Math.abs(u.gain))} ({u.percent >= 0 ? '+' : ''}{u.percent.toFixed(1)}%)
                       </span>
+                    </div>
+                  );
+                })()}
+                {(() => {
+                  const c = concentration(holdingsCad);
+                  return c && (
+                    <div style={{ ...rowStyle, borderBottom: 'none', fontSize: 13, color: '#f59e0b' }}>
+                      <span>{c.symbol} is {Math.round(c.share * 100)}% of your holdings</span>
+                      <span style={{ color: t.textTertiary, fontSize: 11 }}>one stock carries a lot</span>
                     </div>
                   );
                 })()}

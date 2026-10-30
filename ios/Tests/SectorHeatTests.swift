@@ -24,4 +24,11 @@ final class SectorHeatTests: XCTestCase {
         let h = [("AAPL", 600.0), ("TD.TO", 300), ("BTC-USD", 100)].map { Portfolio.Holding(symbol: $0.0, shares: 1, avgCost: 0, currentPrice: $0.1) }
         XCTAssertEqual(SectorHeat.byCountry(h), [.init(sector: "US", value: 600, share: 0.6), .init(sector: "Canada", value: 300, share: 0.3), .init(sector: "Crypto", value: 100, share: 0.1)])
     }
+
+    func testConcentration() {
+        let h = { (pairs: [(String, Double)]) in pairs.map { Portfolio.Holding(symbol: $0.0, shares: 1, avgCost: 0, currentPrice: $0.1) } }
+        XCTAssertEqual(Allocation.concentration(h([("AAPL", 60), ("MSFT", 40)]))?.symbol, "AAPL")
+        XCTAssertNil(Allocation.concentration(h([("A", 25), ("B", 25), ("C", 25), ("D", 25)])))
+        XCTAssertNil(Allocation.concentration(h([("BTC-USD", 100)])))
+    }
 }

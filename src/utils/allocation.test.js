@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts, valuationLine, holdingsByCountry } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts, valuationLine, holdingsByCountry, concentration } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -68,5 +68,11 @@ describe('allocation', () => {
   it('splits holdings by listing country', () => {
     expect(holdingsByCountry([{ symbol: 'AAPL', value: 600 }, { symbol: 'TD.TO', value: 300 }, { symbol: 'BTC-USD', value: 100 }, { symbol: 'X', value: 0 }]))
       .toEqual([{ sector: 'US', value: 600, share: 0.6 }, { sector: 'Canada', value: 300, share: 0.3 }, { sector: 'Crypto', value: 100, share: 0.1 }]);
+  });
+
+  it('flags one holding over a quarter, not a lone holding', () => {
+    expect(concentration([{ symbol: 'AAPL', value: 60 }, { symbol: 'MSFT', value: 40 }])).toEqual({ symbol: 'AAPL', share: 0.6 });
+    expect(concentration([{ symbol: 'A', value: 25 }, { symbol: 'B', value: 25 }, { symbol: 'C', value: 25 }, { symbol: 'D', value: 25 }])).toBeNull();
+    expect(concentration([{ symbol: 'BTC-USD', value: 100 }])).toBeNull();
   });
 });

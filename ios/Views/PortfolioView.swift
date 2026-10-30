@@ -332,6 +332,7 @@ struct PortfolioView: View {
                         }
                     }
                     Allocation.gainRow(sorted)
+                    Allocation.concentrationRow(sorted)
                     let dividends = Allocation.yearlyDividends(portfolio.holdings, stocks: appState.stocks)
                     if dividends > 0 {
                         Divider().padding(.horizontal)

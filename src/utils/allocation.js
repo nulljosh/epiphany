@@ -126,3 +126,12 @@ export function holdingsByCountry(holdings = []) {
   const total = Object.values(sums).reduce((a, b) => a + b, 0);
   return Object.entries(sums).map(([sector, value]) => ({ sector, value, share: value / total })).sort((a, b) => b.value - a.value);
 }
+
+// The holding that's over `limit` of the holdings' value, if any (two or more holdings). Mirrors Allocation.concentration.
+export function concentration(holdings = [], limit = 0.25) {
+  const live = holdings.filter((h) => h.value > 0);
+  if (live.length < 2) return null;
+  const total = live.reduce((s, h) => s + h.value, 0);
+  const top = live.reduce((a, b) => (b.value > a.value ? b : a));
+  return top.value / total > limit ? { symbol: top.symbol, share: top.value / total } : null;
+}

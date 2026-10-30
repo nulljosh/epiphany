@@ -50,6 +50,27 @@ enum Allocation {
         changePercent > -100 ? value - value / (1 + changePercent / 100) : 0
     }
 
+    /// The holding that's over `limit` of the holdings' value, if any (two or more holdings). Mirrors concentration in allocation.js.
+    static func concentration(_ holdings: [Portfolio.Holding], limit: Double = 0.25) -> (symbol: String, share: Double)? {
+        let live = holdings.filter { $0.marketValue > 0 }
+        guard live.count > 1, let top = live.max(by: { $0.marketValue < $1.marketValue }) else { return nil }
+        let share = top.marketValue / live.reduce(0) { $0 + $1.marketValue }
+        return share > limit ? (top.symbol, share) : nil
+    }
+
+    /// "AAPL is 41% of your holdings" under the list, in amber.
+    @ViewBuilder static func concentrationRow(_ holdings: [Portfolio.Holding]) -> some View {
+        if let c = concentration(holdings) {
+            Divider().padding(.horizontal)
+            Text("\(c.symbol) is \(Int((c.share * 100).rounded()))% of your holdings")
+                .font(.subheadline)
+                .foregroundStyle(Palette.warningAmber)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+        }
+    }
+
     /// Unrealized gain over holdings with a cost basis (broker rows without one are skipped). Mirrors unrealizedGain in allocation.js.
     static func unrealizedGain(_ holdings: [Portfolio.Holding]) -> (gain: Double, percent: Double)? {
         let known = holdings.filter { $0.avgCost > 0 && $0.shares > 0 }
