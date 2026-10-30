@@ -6,6 +6,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Where things stand
 
+- 5.2.0: weather warning areas shaded in their risk colour (red, orange, yellow) on web, iPhone and Mac. Environment Canada's RSS warning feeds 404 and its region codes were renumbered, so `/api/weather-alerts` now asks MSC GeoMet (`api.weather.gc.ca/collections/weather-alerts`) by a small box around the point; NWS alerts carry their polygons too (`parseGeoMet`, `slimGeometry` thins rings to 300 points). Web draws a fill and outline under the labels; native decodes `geometry` into `AlertShape` and draws `MapPolygon`s (the Mac map shows them too, it had no weather pins). The What's New card is now 3 short bullets at most.
 - 5.1.0: rain radar on web, iPhone and Mac, off by default. Web: a Rain radar checkbox in the map filter adds RainViewer's newest frame as a raster layer under the labels, refreshed every 10 minutes (`LiveMapBackdrop.jsx`). Native: a Rain Radar toggle in map settings (`showRainRadar`); SwiftUI's Map has no tile overlays, so `Shared/RainRadar.swift` pins one 512 px zoom-7 image in an Annotation sized from the camera span and re-centres it when the view moves a quarter image away.
 - 5.0.0 (2026-10-30): the repo went from 102.0.0 back to 5.0.0. The commits titled 5.0.0 to 102.0.0 were internal builds, one major per row, which was inflated; App Store 5.0.0 ships all of them. iOS 100.0.0 was pulled from review on Joshua's ask, renamed 5.0.0 and resubmitted with build 202610301027 (WAITING_FOR_REVIEW). Mac 4.0.0 is still in review; Mac 5.0.0 follows it.
 - Commit 102.0.0: filter planes on the map by passenger, cargo, military or private on web, iPhone and Mac. `/api/flights` tags each plane with `kind` (`flightKind` in `server/api/flights.js`: readsb military flag, cargo and military callsign prefixes, airline-style callsigns are passenger, the rest private); web checkboxes sit under Flights in the map filter, native toggles under Flights in Map Sources (`FlightKindToggles`, one `flights.hidden` list).
@@ -19,7 +20,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Next, in order
 
-1. 5.2.0: severe weather warnings (Environment Canada, NWS). Then the rows marked 5.3 to 5.6; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
+1. 5.3.0: storm tracks (NHC). Then the rows marked 5.4 to 5.6; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
 2. Confirm the first `portfolio_history` row after 21:30 UTC, then 28.0 and 37.0 once a few weeks exist down that table (38.0, the daily value snapshot cron, unblocks 28.0 and 37.0), and 40.0 is the next Mobbin pass. The 29.0 leftovers (Sankey, incident status) and 28.0 once a value history exists. 18.0 trading waits on Joshua. APNs push (#180) waits on an APNs key.
 3. When Apple clears 4.0.0, refresh the App Store screenshots (#145, #153) and submit the newest build on Joshua's yes.
 

@@ -50,6 +50,9 @@ async function fetchNoaa(lat, lon) {
       expires: f.properties.expires,
       sent: f.properties.sent || f.properties.effective || null,
       description: f.properties.description?.slice(0, 300) || null,
+      colour: NWS_COLOUR[f.properties.severity] || 'yellow',
+      area: f.properties.areaDesc || null,
+      geometry: slimGeometry(f.geometry),
       lat,
       lon,
     }));
@@ -58,105 +61,63 @@ async function fetchNoaa(lat, lon) {
   }
 }
 
-// Environment Canada alerts via weather.gc.ca RSS feeds
-// EC organizes alerts by region code; we look up the nearest city code
-const EC_REGION_CODES = {
-  // BC major regions
-  'bc-vancouver': 'bc-74',
-  'bc-surrey': 'bc-74',
-  'bc-langley': 'bc-74',
-  'bc-burnaby': 'bc-74',
-  'bc-richmond': 'bc-74',
-  'bc-victoria': 'bc-85',
-  'bc-kelowna': 'bc-32',
-  'bc-kamloops': 'bc-30',
-  'bc-prince-george': 'bc-53',
-  'bc-nanaimo': 'bc-44',
-  // AB
-  'ab-calgary': 'ab-52',
-  'ab-edmonton': 'ab-50',
-  // ON
-  'on-toronto': 'on-143',
-  'on-ottawa': 'on-118',
-};
+// Environment Canada alerts from MSC GeoMet: polygons with a risk colour, queried by a small box
+// around the point. The old weather.gc.ca/rss/warning feeds 404 since 2026 and the battleboard
+// region codes were renumbered, so this needs no region table.
+const GEOMET = 'https://api.weather.gc.ca/collections/weather-alerts/items';
+const NWS_COLOUR = { Extreme: 'red', Severe: 'orange' };
+const MAX_RING = 300;
 
-function getECRegionCode(lat, lon) {
-  // Lower Mainland BC (Vancouver, Surrey, Langley, etc.)
-  if (lat > 49.0 && lat < 49.5 && lon > -123.3 && lon < -122.3) return 'bc-74';
-  // Victoria / Vancouver Island south
-  if (lat > 48.3 && lat < 48.9 && lon > -124.0 && lon < -123.0) return 'bc-85';
-  // Kelowna / Okanagan
-  if (lat > 49.7 && lat < 50.1 && lon > -119.8 && lon < -119.2) return 'bc-32';
-  // Kamloops
-  if (lat > 50.5 && lat < 51.0 && lon > -120.8 && lon < -120.0) return 'bc-30';
-  // Calgary
-  if (lat > 50.8 && lat < 51.3 && lon > -114.4 && lon < -113.8) return 'ab-52';
-  // Edmonton
-  if (lat > 53.3 && lat < 53.8 && lon > -113.8 && lon < -113.2) return 'ab-50';
-  // Toronto / GTA
-  if (lat > 43.4 && lat < 44.0 && lon > -79.8 && lon < -79.0) return 'on-143';
-  // Fallback: use province-level default
-  const prov = getCanadianProvince(lat, lon);
-  if (prov === 'bc') return 'bc-74';
-  if (prov === 'ab') return 'ab-52';
-  if (prov === 'on') return 'on-143';
-  return null;
+// Round to ~100 m and thin long rings so a payload stays small; the map draws it as a shaded area.
+// ponytail: every-nth thinning, swap for Douglas-Peucker if an area edge ever looks jagged.
+export function slimGeometry(g) {
+  if (!g || !['Polygon', 'MultiPolygon'].includes(g.type)) return null;
+  const ring = (r) => {
+    const step = Math.ceil(r.length / MAX_RING);
+    const kept = r.filter((_, i) => i % step === 0).map(([x, y]) => [+x.toFixed(3), +y.toFixed(3)]);
+    kept.push(kept[0]);
+    return kept;
+  };
+  return g.type === 'Polygon'
+    ? { type: 'Polygon', coordinates: g.coordinates.map(ring) }
+    : { type: 'MultiPolygon', coordinates: g.coordinates.map((p) => p.map(ring)) };
+}
+
+/** Active alerts from a GeoMet weather-alerts response, one per alert and area. */
+export function parseGeoMet(json, lat, lon) {
+  const seen = new Set();
+  return (json?.features || []).filter((f) => {
+    const p = f.properties || {};
+    const id = `${p.alert_name_en}|${p.feature_name_en}`;
+    if (p.status_en === 'ended' || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  }).slice(0, 10).map((f) => {
+    const p = f.properties;
+    return {
+      source: 'environment_canada',
+      event: p.alert_short_name_en || p.alert_name_en,
+      severity: p.alert_type === 'warning' ? 'Severe' : p.alert_type === 'watch' ? 'Moderate' : 'Minor',
+      colour: p.risk_colour_en || 'yellow',
+      area: p.feature_name_en || null,
+      headline: `${p.alert_name_en} in effect for ${p.feature_name_en}`,
+      description: p.alert_text_en?.slice(0, 300) || null,
+      expires: p.event_end_datetime || p.expiration_datetime || null,
+      sent: p.publication_datetime || null,
+      geometry: slimGeometry(f.geometry),
+      lat,
+      lon,
+    };
+  });
 }
 
 async function fetchEnvironmentCanada(lat, lon) {
-  const regionCode = getECRegionCode(lat, lon);
-  if (!regionCode) return [];
-
-  const alerts = [];
   try {
-    const rssUrl = `https://weather.gc.ca/rss/warning/${regionCode}_e.xml`;
-    const rssText = await timedFetchText(rssUrl, 6000);
-    if (!rssText) return [];
-
-    const entries = rssText.match(/<entry>[\s\S]*?<\/entry>/g) || [];
-    for (const entry of entries.slice(0, 10)) {
-      const titleMatch = entry.match(/<title[^>]*>(.*?)<\/title>/);
-      const summaryMatch = entry.match(/<summary[^>]*>([\s\S]*?)<\/summary>/);
-      const updatedMatch = entry.match(/<updated>(.*?)<\/updated>/);
-      const title = titleMatch?.[1]?.trim();
-      if (!title || title.includes('No watches or warnings')) continue;
-
-      const summary = summaryMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || null;
-
-      alerts.push({
-        source: 'environment_canada',
-        event: title,
-        severity: title.toLowerCase().includes('warning') ? 'Severe'
-          : title.toLowerCase().includes('watch') ? 'Moderate'
-          : 'Minor',
-        headline: summary || title,
-        description: summary?.slice(0, 300) || null,
-        expires: null,
-        updated: updatedMatch?.[1] || null,
-        lat,
-        lon,
-      });
-    }
-  } catch { /* EC unavailable */ }
-  return alerts;
-}
-
-function getCanadianProvince(lat, lon) {
-  if (lat < 41 || lat > 84) return null;
-  if (lon > -53 && lon < -52) return 'nl';
-  if (lon >= -68 && lon < -59) return 'ns';
-  if (lon >= -70 && lon < -63 && lat < 48) return 'nb';
-  if (lon >= -65 && lon < -61 && lat > 45 && lat < 48) return 'pe';
-  if (lon >= -80 && lon < -57 && lat > 45) return 'qc';
-  if (lon >= -95 && lon < -74) return 'on';
-  if (lon >= -102 && lon < -88) return 'mb';
-  if (lon >= -110 && lon < -101) return 'sk';
-  if (lon >= -120 && lon < -110) return 'ab';
-  if (lon >= -139 && lon < -114 && lat < 60) return 'bc';
-  if (lon >= -141 && lon < -114 && lat >= 60) return 'yt';
-  if (lon >= -137 && lon < -102 && lat >= 60) return 'nt';
-  if (lat >= 60 && lon < -60) return 'nu';
-  return null;
+    const d = 0.05;
+    return parseGeoMet(await timedFetch(`${GEOMET}?f=json&limit=50&bbox=${lon - d},${lat - d},${lon + d},${lat + d}`, {}, 6000), lat, lon);
+  } catch {
+    return [];
+  }
 }
 
 async function fetchOpenMeteo(lat, lon) {

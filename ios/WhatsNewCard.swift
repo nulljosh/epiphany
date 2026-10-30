@@ -4,11 +4,11 @@ import SwiftUI
 // Major.minor only: a patch (10.0.1) is a fix, so it never brings the card back.
 private let whatsNewVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
     .split(separator: ".").prefix(2).joined(separator: ".")
+// Three short bullets at most, a few words each (Joshua, 2026-10-30).
 private let whatsNewBullets = [
-    "Rain radar on the map: see where it’s raining right now",
-    "A redesigned Mac app, and a live map that shows planes, incidents, weather and wildfires",
-    "Tap a plane to see where it’s going, and filter planes by passenger, cargo, military or private",
-    "Money cards: spending, bills, budgets, dividends and recent activity",
+    "Weather warnings shaded on the map",
+    "Rain radar on the map",
+    "Tap a plane to see where it’s going",
 ]
 
 /// A card drawn over the app, not a system sheet. As a sheet it was a third modal presenter at the app

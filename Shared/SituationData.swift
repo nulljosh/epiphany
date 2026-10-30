@@ -1,5 +1,6 @@
 import CoreLocation
 import Foundation
+import SwiftUI
 
 private extension KeyedDecodingContainer {
     func lossyString(forKey key: Key) -> String? {
@@ -341,14 +342,26 @@ struct WeatherAlert: Codable, Identifiable {
     let expiresAt: String?
     let lat: Double?
     let lon: Double?
+    /// red, orange or yellow risk colour and the warned area's outline, when the source sends one.
+    var colour: String? = nil
+    var shape: AlertShape? = nil
 
     var coordinate: CLLocationCoordinate2D? {
         guard let lat, let lon else { return nil }
         return CLLocationCoordinate2D(latitude: lat, longitude: lon)
     }
 
+    var polygons: [[CLLocationCoordinate2D]] {
+        (shape?.rings ?? []).map { $0.compactMap { $0.count >= 2 ? CLLocationCoordinate2D(latitude: $0[1], longitude: $0[0]) : nil } }
+    }
+
+    var fill: Color {
+        switch colour { case "red": .red; case "orange": .orange; default: .yellow }
+    }
+
     enum CodingKeys: String, CodingKey {
-        case id, title, severity, summary, lat, lon
+        case id, title, severity, summary, lat, lon, colour
+        case shape = "geometry"
         case event, headline, expires
         case effectiveAt = "effective_at"
         case expiresAt = "expires_at"
@@ -390,10 +403,14 @@ struct WeatherAlert: Codable, Identifiable {
             ?? "\(fallbackTitle)-\(expiresAt ?? "none")"
         lat = container.lossyDouble(forKey: .lat)
         lon = container.lossyDouble(forKey: .lon)
+        colour = container.lossyString(forKey: .colour)
+        shape = try? container.decodeIfPresent(AlertShape.self, forKey: .shape)
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(colour, forKey: .colour)
+        try container.encodeIfPresent(shape, forKey: .shape)
         try container.encode(id, forKey: .id)
         try container.encode(title, forKey: .title)
         try container.encode(severity, forKey: .severity)
@@ -402,6 +419,28 @@ struct WeatherAlert: Codable, Identifiable {
         try container.encodeIfPresent(expiresAt, forKey: .expiresAt)
         try container.encodeIfPresent(lat, forKey: .lat)
         try container.encodeIfPresent(lon, forKey: .lon)
+    }
+}
+
+/// Outer rings of a GeoJSON Polygon or MultiPolygon, as [lon, lat] pairs. Holes are dropped; a shaded area doesn't need them.
+struct AlertShape: Codable {
+    let rings: [[[Double]]]
+
+    enum CodingKeys: String, CodingKey { case type, coordinates }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        switch try c.decode(String.self, forKey: .type) {
+        case "Polygon": rings = Array(try c.decode([[[Double]]].self, forKey: .coordinates).prefix(1))
+        case "MultiPolygon": rings = try c.decode([[[[Double]]]].self, forKey: .coordinates).compactMap(\.first)
+        default: rings = []
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode("MultiPolygon", forKey: .type)
+        try c.encode(rings.map { [$0] }, forKey: .coordinates)
     }
 }
 

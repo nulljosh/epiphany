@@ -29,6 +29,7 @@ const FILTER_LAYERS = [['incidents', 'Incidents'], ['crime', 'Crime'], ['traffic
 // Sub-filters under Flights, keyed into mapLayers like the layers above; `kind` comes from /api/flights.
 const FLIGHT_KINDS = [['passenger', 'Passenger'], ['cargo', 'Cargo'], ['military', 'Military'], ['private', 'Private']];
 const flightKey = (kind) => `flights_${kind || 'private'}`;
+const ALERT_FILL = { red: '#ef4444', orange: '#f97316', yellow: '#eab308' };
 const CATEGORY_EMOJI = { Restaurants: '🍽️', Coffee: '☕', Gas: '⛽', Parks: '🌳', Shopping: '🛍️', Groceries: '🛒' };
 const CATEGORY_TERMS = { Restaurants: 'food & drink', Coffee: 'coffee', Gas: 'gas', Parks: 'park', Shopping: 'shopping', Groceries: 'grocery' };
 
@@ -1288,6 +1289,27 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
     map.on('style.load', sync);
     return () => map.off('style.load', sync);
   }, [mapLayers?.rain, rainPath, mapLoaded]);
+
+  // Warning areas: each alert's polygon shaded in its risk colour (Environment Canada and NWS send shapes).
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const sync = () => {
+      try {
+        const features = mapLayers?.weather === false ? [] : payload.weatherAlerts.filter((a) => a.geometry)
+          .map((a) => ({ type: 'Feature', geometry: a.geometry, properties: { fill: ALERT_FILL[a.colour] || ALERT_FILL.yellow } }));
+        const data = { type: 'FeatureCollection', features };
+        if (map.getSource('alert-areas')) { map.getSource('alert-areas').setData(data); return; }
+        map.addSource('alert-areas', { type: 'geojson', data });
+        const below = map.getStyle().layers.find((l) => l.type === 'symbol')?.id;
+        map.addLayer({ id: 'alert-areas-fill', type: 'fill', source: 'alert-areas', paint: { 'fill-color': ['get', 'fill'], 'fill-opacity': 0.18 } }, below);
+        map.addLayer({ id: 'alert-areas-line', type: 'line', source: 'alert-areas', paint: { 'line-color': ['get', 'fill'], 'line-width': 1.5, 'line-opacity': 0.7 } }, below);
+      } catch { /* style still loading; style.load runs sync again */ }
+    };
+    sync();
+    map.on('style.load', sync);
+    return () => map.off('style.load', sync);
+  }, [payload.weatherAlerts, mapLayers?.weather, mapLoaded]);
 
   // Toggle heatmap visibility
   useEffect(() => {

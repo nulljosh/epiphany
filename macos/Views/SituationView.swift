@@ -250,6 +250,16 @@ struct SituationView: View {
                 }
             }
 
+            if appState.situationWeatherEnabled {
+                ForEach(weatherAlerts) { alert in
+                    ForEach(Array(alert.polygons.enumerated()), id: \.offset) { _, ring in
+                        MapPolygon(coordinates: ring)
+                            .foregroundStyle(alert.fill.opacity(0.18))
+                            .stroke(alert.fill.opacity(0.7), lineWidth: 1.5)
+                    }
+                }
+            }
+
             ForEach(appState.situationFlightsEnabled ? flights.filter { FlightKind.isShown($0, hidden: hiddenFlightKinds) } : []) { flight in
                 Annotation(flight.callsign, coordinate: flight.coordinate) {
                     Button {

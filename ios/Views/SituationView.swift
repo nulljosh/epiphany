@@ -352,6 +352,13 @@ struct SituationView: View {
     private var weatherAnnotations: some MapContent {
         if showWeatherAlerts {
             ForEach(weatherAlerts) { alert in
+                ForEach(Array(alert.polygons.enumerated()), id: \.offset) { _, ring in
+                    MapPolygon(coordinates: ring)
+                        .foregroundStyle(alert.fill.opacity(0.18))
+                        .stroke(alert.fill.opacity(0.7), lineWidth: 1.5)
+                }
+            }
+            ForEach(weatherAlerts) { alert in
                 if let coord = alert.coordinate {
                     Annotation(alert.title, coordinate: coord) {
                         Button {
