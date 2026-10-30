@@ -44,8 +44,8 @@ Read from each app's App Store screens. Daily use first, polish before novelty. 
 | Goal progress ring on each goal ("85% of goal") | Empower | S | 32.0 | done 32.0.0 |
 | Key stats grid under every stock chart (open, high, low, volume, P/E, market cap, 52W high and low, average volume) on all three, same order | Apple Stocks | S | 33.0 | done 33.0.0 (all three had a grid; now one order from `KeyStats.rows`) |
 | Estimated yearly dividend income on the portfolio, with a bar per month | Public, Wealthsimple | M | 34.0 | done 34.0.0 (yearly estimate from trailing yield; per-month bars wait on a dividend schedule in the quotes) |
-| Chart metric tabs on a stock: Price, Market cap, P/E | Public | M | 35.0 | open |
-| Gas stations near you as a list sorted by distance, under the Gas map chip | Waze | M | 36.0 | open, needs a price source or list without prices |
+| Chart metric tabs on a stock: Price, Market cap, P/E | Public | M | 35.0 | parked: needs EPS and share count history, or the tabs are the price line rescaled |
+| Gas stations near you as a list sorted by distance, under the Gas map chip | Waze | M | 36.0 | done 36.0.0 on web (no prices; the server never tagged fuel, so the chip found nothing). iPhone and Mac have no places list yet |
 | Rate of return, annualized and cumulative, with a custom range | Empower | M | 37.0 | blocked on the same value history as 28.0 |
 | Daily value snapshot cron (unblocks 28.0 and 37.0) | Delta, Empower | M | 38.0 | open |
 

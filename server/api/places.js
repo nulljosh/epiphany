@@ -5,9 +5,14 @@ import { overpassQuery } from './_overpass.js';
 const TAGS = ['amenity', 'shop', 'tourism', 'leisure', 'historic', 'healthcare', 'office', 'craft'];
 const RADIUS_KM = 3;
 
-function category(tags) {
+export function category(tags) {
   if (['school', 'college', 'university', 'kindergarten'].includes(tags.amenity)) return 'Education';
   if (tags.amenity === 'grave_yard' || tags.landuse === 'cemetery') return 'Cemetery';
+  // Buckets the map chips search for (CATEGORY_TERMS in LiveMapBackdrop.jsx).
+  if (tags.amenity === 'fuel') return 'Gas station';
+  if (['supermarket', 'grocery', 'greengrocer', 'convenience'].includes(tags.shop)) return 'Grocery';
+  if (tags.amenity === 'cafe' || tags.shop === 'coffee') return 'Coffee';
+  if (tags.leisure === 'park') return 'Park';
   if (tags.shop) return 'Shopping';
   if (tags.tourism || tags.historic) return 'Attraction';
   if (tags.leisure) return 'Recreation';

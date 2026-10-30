@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createReqRes } from './_mocks.js';
+import { category } from '../../server/api/places.js';
 
 vi.mock('../../server/api/_overpass.js', () => ({
   overpassQuery: vi.fn(async query => {
@@ -24,5 +25,12 @@ describe('/api/places', () => {
       expect.objectContaining({ title: 'Local Pizza', category: 'Food & drink' }),
       expect.objectContaining({ title: 'Local Cemetery', category: 'Cemetery' }),
     ]));
+  });
+  it('buckets places the map chips search for', () => {
+    expect(category({ amenity: 'fuel' })).toBe('Gas station');
+    expect(category({ shop: 'supermarket' })).toBe('Grocery');
+    expect(category({ amenity: 'cafe' })).toBe('Coffee');
+    expect(category({ leisure: 'park' })).toBe('Park');
+    expect(category({ shop: 'clothes' })).toBe('Shopping');
   });
 });

@@ -134,15 +134,17 @@ function markerCss({ size = 10, color, pulse, shape = 'circle', extra = '' }) {
   return `width:${size}px;height:${size}px;border-radius:${radius};background:${color};${shadow}${extra}`;
 }
 
-// Events within a kilometre of a saved place (equirectangular distance is plenty at this scale).
+// Equirectangular distance in km; plenty at city scale.
+export function km(a, b) {
+  const k = Math.cos((a.lat * Math.PI) / 180);
+  return Math.hypot((b.lon - a.lon) * 111.32 * k, (b.lat - a.lat) * 110.57);
+}
+
+// Events within a kilometre of a saved place.
 function nearbyCount(place, items, radiusKm = 1) {
-  const k = Math.cos((place.lat * Math.PI) / 180);
   return items.filter((it) => {
     const c = extractCoords(it);
-    if (!c) return false;
-    const dx = (c.lon - place.lon) * 111.32 * k;
-    const dy = (c.lat - place.lat) * 110.57;
-    return Math.hypot(dx, dy) <= radiusKm;
+    return c ? km(place, c) <= radiusKm : false;
   }).length;
 }
 
@@ -1272,7 +1274,9 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
   const listedPlaces = (placesSection === 'places' ? places : payload.localEvents
     .filter(event => event.kind === 'event' && event.source !== 'news_rss' && Number.isFinite(event.lat) && Number.isFinite(event.lng ?? event.lon))
     .map((event, index) => ({ id: `${event.source}-${index}-${event.title}`, title: event.title, category: 'Event', lat: event.lat, lon: event.lng ?? event.lon })))
-    .filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase()));
+    .filter(place => `${place.title} ${place.category}`.toLowerCase().includes(placesQuery.toLowerCase()))
+    .map(place => ({ ...place, km: placesCenter ? km(placesCenter, place) : null }))
+    .sort((a, b) => (a.km ?? 0) - (b.km ?? 0));
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -1456,7 +1460,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
                 setShowPlaces(false);
               }} style={{ display: 'block', width: '100%', padding: '9px 12px', textAlign: 'left', border: 0, borderTop: `1px solid ${P.line}`, background: 'none', color: P.ink, cursor: 'pointer' }}>
                 <span style={{ display: 'block', fontSize: 13 }}>{place.title}</span>
-                <span style={{ color: P.sub, fontSize: 11 }}>{place.category}</span>
+                <span style={{ color: P.sub, fontSize: 11 }}>{place.category}{place.km != null && ` · ${place.km < 1 ? `${Math.round(place.km * 1000)} m` : `${place.km.toFixed(1)} km`}`}</span>
               </button>
             ))}
           </div>}
