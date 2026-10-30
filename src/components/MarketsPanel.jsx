@@ -6,6 +6,8 @@ import useFearGreed from '../hooks/useFearGreed';
 import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
 import { SECTOR_MAP, SECTOR_ORDER } from '../hooks/useStocks';
 import { sectorMoves, heatAlpha } from '../utils/sectors';
+import { upcomingEvents } from '../utils/upcoming';
+import { storedHoldings } from '../hooks/usePortfolio';
 
 const ASSET_DIMENSIONS = [
   { key: 'all', label: 'All' },
@@ -508,6 +510,10 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   }, [filtered]);
 
   const sectors = useMemo(() => sectorMoves(allItems), [allItems]);
+  const upcoming = useMemo(
+    () => upcomingEvents(Object.values(stocks || {}), [...(watchlist || []), ...storedHoldings().map(h => h.symbol)]).slice(0, 8),
+    [stocks, watchlist],
+  );
 
   const glass = {
     background: t.glass,
@@ -699,6 +705,25 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
               t={t}
               onClick={() => setSelectedStock(item)}
             />
+          ))}
+        </div>
+      )}
+
+      {/* Upcoming: earnings and dividend dates for your watchlist and holdings, next 14 days */}
+      {upcoming.length > 0 && !search && (
+        <div style={{ ...glass, padding: 14, marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+            Upcoming
+          </div>
+          {upcoming.map(e => (
+            <button key={`${e.symbol}-${e.kind}`} onClick={() => { const item = allItems.find(i => i.symbol === e.symbol); if (item) setSelectedStock(item); }}
+              style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 10, padding: '7px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit' }}>
+              <span style={{ width: 52, fontSize: 12, color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>
+                {new Date(e.ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{e.symbol}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: e.kind === 'Earnings' ? '#0071e3' : '#30D158' }}>{e.kind}</span>
+            </button>
           ))}
         </div>
       )}
