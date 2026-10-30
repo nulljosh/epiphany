@@ -18,4 +18,12 @@ final class NewsTopicsTests: XCTestCase {
         XCTAssertTrue(NewsTopics.passes("Bitcoin jumps", "Crypto"))
         XCTAssertFalse(NewsTopics.passes("Stocks rally", "Crypto"))
     }
+
+    func testYoursChip() {
+        let mine = [Stock(symbol: "AAPL", name: "Apple Inc.", price: 1)]
+        let titles = ["Apple beats on iPhone sales", "Oil slides as OPEC meets"]
+        XCTAssertEqual(NewsTopics.chips(titles, mine: mine).prefix(2), ["All", "Yours"])
+        XCTAssertEqual(titles.filter { NewsTopics.passes($0, NewsTopics.yours, mine: mine) }, ["Apple beats on iPhone sales"])
+        XCTAssertFalse(NewsTopics.chips(["Oil slides"], mine: mine).contains("Yours"))
+    }
 }

@@ -61,17 +61,15 @@ struct NewsView: View {
                                 )
                         }
 
-                        let chips = NewsTopics.chips(cleanArticles.map(\.title))
+                        let follow = appState.watchlistSymbols.union((appState.financeData?.holdings ?? []).map(\.symbol))
+                        let mine = appState.stocks.filter { follow.contains($0.symbol) }
+                        let chips = NewsTopics.chips(cleanArticles.map(\.title), mine: mine)
                         if chips.count > 1 {
-                            Picker("Topic", selection: $topic) {
-                                ForEach(chips, id: \.self) { Text($0).tag($0) }
-                            }
-                            .pickerStyle(.segmented)
-                            .labelsHidden()
+                            TopicChips(chips: chips, selection: $topic)
                             .listRowBackground(Color.clear)
                         }
 
-                        ForEach(cleanArticles.filter { NewsTopics.passes($0.title, chips.contains(topic) ? topic : NewsTopics.all) }) { article in
+                        ForEach(cleanArticles.filter { NewsTopics.passes($0.title, chips.contains(topic) ? topic : NewsTopics.all, mine: mine) }) { article in
                             Button {
                                 guard !article.url.isEmpty, let url = URL(string: article.url) else { return }
                                 openURL(url)
