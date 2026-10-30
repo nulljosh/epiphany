@@ -1,10 +1,25 @@
 import { useEffect, useState } from 'react';
+import { briefSpeech } from '../utils/brief';
 
 export default function DailyBrief({ t, font, dark, isPro }) {
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(true);
   const [locked, setLocked] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  // Stop talking when the brief goes away.
+  useEffect(() => () => { if (canSpeak) window.speechSynthesis.cancel(); }, [canSpeak]);
+
+  const toggleSpeech = () => {
+    if (speaking) { window.speechSynthesis.cancel(); setSpeaking(false); return; }
+    const u = new SpeechSynthesisUtterance(briefSpeech(brief));
+    u.onend = () => setSpeaking(false);
+    u.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(u);
+    setSpeaking(true);
+  };
 
   useEffect(() => {
     if (!isPro) { setLoading(false); setLocked(true); return; }
@@ -68,12 +83,20 @@ export default function DailyBrief({ t, font, dark, isPro }) {
           <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: t.textSecondary }}>Daily Brief</span>
           {ts && <span style={{ fontSize: 9, color: t.textTertiary }}>{ts}</span>}
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {canSpeak && brief.points?.length > 0 && (
+          <button onClick={toggleSpeech} aria-label={speaking ? 'Stop reading the brief' : 'Read the brief aloud'}
+            style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: 6, color: t.textSecondary, cursor: 'pointer', fontSize: 10, padding: '2px 8px', fontFamily: font }}>
+            {speaking ? 'Stop' : 'Listen'}
+          </button>
+        )}
         <button
           onClick={() => setExpanded(v => !v)}
           style={{ background: 'none', border: 'none', color: t.textTertiary, cursor: 'pointer', fontSize: 10, padding: '0 2px', fontFamily: font }}
         >
           {expanded ? '▲' : '▼'}
         </button>
+        </div>
       </div>
 
 

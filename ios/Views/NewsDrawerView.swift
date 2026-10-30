@@ -38,6 +38,12 @@ struct NewsDrawerView: View {
             Divider()
                 .padding(.horizontal, 20)
 
+            if isExpanded, let brief {
+                DailyBriefCard(brief: brief)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+            }
+
             if isLoading {
                 if isExpanded {
                     ProgressView()

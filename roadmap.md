@@ -79,7 +79,7 @@ Skipped: analyst picks and quant grades (Seeking Alpha, paid research), 13F and 
 | Accounts grouped by type with a total per group | Emma | M | 66.0 | done 66.0.0 |
 | Valuation line on a stock: its P/E against the S&P 500's | Finimize | S | 67.0 | done 67.0.0 |
 | Top Spending steps back through past months | PocketGuard | S | 68.0 | done 68.0.0 |
-| Read the daily brief aloud on device | Finimize | M | 69.0 | open |
+| Read the daily brief aloud on device | Finimize | M | 69.0 | done 69.0.0 |
 
 Skipped: round-ups, recurring buys and cash-back offers (Acorns, needs trading and a card), joint accounts, payments and cards (Revolut, banking), live chat with an advisor (Fidelity), expert articles and a members' club (Finimize, Acorns, content we don't have), cancelling subscriptions for you (PocketGuard, needs a concierge). The apple audit found no teal, purple or indigo, white text only on solid fills, gradients only as chart area fades, and no em dashes in UI strings.
 
@@ -125,7 +125,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 | 50 | Mobbin pass 5 plus an apple audit (done 50.0.0) |
 | 51 to 59 | One row each from "Mobbin pass 5" (51 to 57 done; 58 and 59 wait on snapshots) |
 | 60 | Mobbin pass 6 plus an apple audit (done 60.0.0) |
-| 61 to 69 | One row each from "Mobbin pass 6"; the 58 and 59 rows ship as the next version once snapshots exist |
+| 61 to 69 | One row each from "Mobbin pass 6" (done 69.0.0); the 58 and 59 rows ship as the next version once snapshots exist |
 | 70 to 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)

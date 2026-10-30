@@ -298,9 +298,13 @@ struct MarketsView: View {
 
                 if let brief = appState.dailyBrief, !brief.points.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Daily Brief")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            Text("Daily Brief")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            BriefListenButton(brief: brief)
+                        }
                         ForEach(brief.points, id: \.self) { point in
                             HStack(alignment: .top, spacing: 6) {
                                 Circle()
