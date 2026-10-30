@@ -9,6 +9,7 @@ import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
+import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, holdingFilters, filterHoldings, yearlyDividends } from '../utils/allocation';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1708,6 +1709,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             incomePhases={incomePhases}
           />
         )}
+        {tab === 'dashboard' && <GrowthCalculator t={t} dark={dark} />}
         {tab === 'roadmap' && <EpiphanyFinance t={t} spending={spendingChronological} />}
       </div>
     </div>

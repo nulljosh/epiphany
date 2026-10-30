@@ -207,6 +207,9 @@ struct PortfolioView: View {
                                 }
                             }
 
+                            GrowthCalculatorCard()
+                                .padding(.horizontal)
+
                             subscriptionsSection
 
                             debtSection
