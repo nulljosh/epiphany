@@ -294,6 +294,11 @@ struct PortfolioView: View {
 
     private func holdingsContent(_ portfolio: Portfolio) -> some View {
         VStack(spacing: 24) {
+            AllocationDonut(slices: Allocation.slices(
+                holdings: portfolio.holdings,
+                cash: (appState.financeData?.accounts ?? []).reduce(0) { $0 + ($1.cash ?? $1.balance) }
+            ))
+            .padding(.horizontal)
             VStack(spacing: 8) {
                 Text("Total Value")
                     .font(.caption)

@@ -10,6 +10,7 @@ import { debtMonthsToPayoff, debtPayoffLabel, owedDebts } from '../utils/debtPay
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import ReviewQueue from './ReviewQueue';
+import { allocation } from '../utils/allocation';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1054,6 +1055,12 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <div style={labelStyle}>Holdings</div>
               <PieChart data={pieData} t={t} />
             </Card>
+            {allocation(holdings, cashValue).length > 1 && (
+              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
+                <div style={labelStyle}>Allocation</div>
+                <PieChart data={allocation(holdings, cashValue)} t={t} />
+              </Card>
+            )}
 
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
