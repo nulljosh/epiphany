@@ -18,7 +18,9 @@ struct WhatsNewCard: View {
 
     var body: some View {
         // Older builds stored the full x.y.z; compare that the same way.
-        if seenVersion.split(separator: ".").prefix(2).joined(separator: ".") != whatsNewVersion {
+        // Never over the App Store screenshots: UITEST_DEMO is the screenshot mode.
+        if seenVersion.split(separator: ".").prefix(2).joined(separator: ".") != whatsNewVersion,
+           !CommandLine.arguments.contains("UITEST_DEMO") {
             VStack(alignment: .leading, spacing: 20) {
                 Text("What's New in v\(whatsNewVersion)")
                     .font(.title2.bold())
