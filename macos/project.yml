@@ -1,5 +1,6 @@
 name: Epiphany
 options:
+  createIntermediateGroups: true  # Xcode 27 rejects a folder listed in two groups, which xcodegen does without this
   bundleIdPrefix: com.heyitsmejosh
   deploymentTarget:
     macOS: "14.0"
