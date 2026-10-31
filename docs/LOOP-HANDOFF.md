@@ -26,6 +26,8 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 - iOS 4.0.0 is live; iOS 5.0.0 is in review; Mac 4.0.0 is still in review. Do not cancel a review.
 - Stage files by exact path. Never commit `.claude/skills/compose-app-icon/` or `ios/fastlane/screenshots/en-US/`.
 
+- Tonight (2026-10-30): the allocation donut on iPhone and Mac converts US dollars to Canadian before it adds cash (Shared/Allocation.swift, from Tripwire's fix for issue #232). It is in the repo, not in a build yet, so the roadmap item on the donut stays open until one ships.
+
 ## Next, in order
 
 1. The 6.0 commercial with the opus-ad skill (every major gets one, Joshua 2026-10-30; held for weekly usage and disk). Then 6.4.0: Now, Macro and Crypto chips on Markets. Then 6.5 and 6.6 from Mobbin pass 11; 58, 59 and the hit-rate row (5.7) once weeks of `portfolio_history` rows exist; then the next Mobbin pass
