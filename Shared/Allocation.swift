@@ -106,40 +106,85 @@ enum Allocation {
         }
     }
 
-    static func slices(holdings: [Portfolio.Holding], cash: Double) -> [(label: String, value: Double)] {
-        let values = holdings.filter { $0.marketValue > 0 }
-        let crypto = values.filter { isCrypto($0.symbol) }.reduce(0) { $0 + $1.marketValue }
-        let stocks = values.reduce(0) { $0 + $1.marketValue } - crypto
-        return [("Stocks", stocks), ("Crypto", crypto), ("Cash", cash)].filter { $0.1 > 0 }
+    /// Deferred slices: the donut keeps the holdings until it has the FX rate, rather than
+    /// summing USD market values with CAD cash at face value.
+    struct Slices {
+        let holdings: [Portfolio.Holding]
+        let cash: Double
+
+        var needsUsdPerCad: Bool {
+            holdings.contains { $0.marketValue > 0 && !Allocation.isCad($0.symbol) }
+        }
+
+        func values(usdPerCad: Double?) -> [(label: String, value: Double)] {
+            let live = holdings.filter { $0.marketValue > 0 }
+            // No rate is better than a knowingly wrong total. CAD-only portfolios need no quote.
+            guard !needsUsdPerCad || (usdPerCad ?? 0) > 0 else { return [] }
+            let rate = usdPerCad ?? 1
+            var stocks = 0.0
+            var crypto = 0.0
+            for holding in live {
+                // CADUSD=X is USD per CAD, so USD / rate gives CAD.
+                let value = Allocation.isCad(holding.symbol) ? holding.marketValue : holding.marketValue / rate
+                if Allocation.isCrypto(holding.symbol) { crypto += value } else { stocks += value }
+            }
+            return [("Stocks", stocks), ("Crypto", crypto), ("Cash", cash)].filter { $0.1 > 0 }
+        }
+    }
+
+    static func slices(holdings: [Portfolio.Holding], cash: Double) -> Slices {
+        Slices(holdings: holdings, cash: cash)
     }
 }
 
 /// The portfolio as a donut by asset class, with each share beside it. Hidden with fewer than two classes.
 struct AllocationDonut: View {
-    let slices: [(label: String, value: Double)]
+    private let source: Allocation.Slices?
+    private let fixedSlices: [(label: String, value: Double)]
+    @State private var usdPerCad: Double?
     private static let colors: [String: Color] = ["Stocks": Palette.appleBlue, "Crypto": Palette.warningAmber, "Cash": Palette.successGreen]
 
+    init(slices: Allocation.Slices) {
+        source = slices
+        fixedSlices = []
+    }
+
+    /// Already-converted slices remain useful for previews.
+    init(slices: [(label: String, value: Double)]) {
+        source = nil
+        fixedSlices = slices
+    }
+
     var body: some View {
+        let slices = source?.values(usdPerCad: usdPerCad) ?? fixedSlices
         let total = slices.reduce(0) { $0 + $1.value }
-        if slices.count > 1, total > 0 {
-            HStack(spacing: 20) {
-                Chart(slices, id: \.label) { slice in
-                    SectorMark(angle: .value("Value", slice.value), innerRadius: .ratio(0.62), angularInset: 1.5)
-                        .foregroundStyle(Self.colors[slice.label] ?? .gray)
-                }
-                .frame(width: 96, height: 96)
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(slices, id: \.label) { slice in
-                        HStack(spacing: 8) {
-                            Circle().fill(Self.colors[slice.label] ?? .gray).frame(width: 8, height: 8)
-                            Text(slice.label).font(.subheadline)
-                            Spacer()
-                            Text(String(format: "%.0f%%", slice.value / total * 100))
-                                .font(.subheadline.weight(.semibold).monospacedDigit())
+        Group {
+            if slices.count > 1, total > 0 {
+                HStack(spacing: 20) {
+                    Chart(slices, id: \.label) { slice in
+                        SectorMark(angle: .value("Value", slice.value), innerRadius: .ratio(0.62), angularInset: 1.5)
+                            .foregroundStyle(Self.colors[slice.label] ?? .gray)
+                    }
+                    .frame(width: 96, height: 96)
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(slices, id: \.label) { slice in
+                            HStack(spacing: 8) {
+                                Circle().fill(Self.colors[slice.label] ?? .gray).frame(width: 8, height: 8)
+                                Text(slice.label).font(.subheadline)
+                                Spacer()
+                                Text(String(format: "%.0f%%", slice.value / total * 100))
+                                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                            }
                         }
                     }
                 }
             }
+        }
+        .task(id: source?.needsUsdPerCad ?? false) {
+            guard source?.needsUsdPerCad == true, usdPerCad == nil else { return }
+            let quotes = try? await EpiphanyAPI.shared.fetchQuotes(symbols: ["CADUSD=X"])
+            guard let rate = quotes?.first(where: { $0.symbol == "CADUSD=X" })?.price, rate > 0 else { return }
+            usdPerCad = rate
         }
     }
 }
