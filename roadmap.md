@@ -373,7 +373,6 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 ## QA loop 2026-10-01
 Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), place card A (Look Around nil on simulator only, works on device), Markets B (rows blank in demo, ticker fixed), Portfolio A-, Settings A.
 - [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
-- [x] (checked 2026-10-30, rows render) Markets list rows render blank in UITEST_DEMO mode
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
@@ -423,11 +422,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
-- [x] Map search bar needs better color and transparency (it reads as a flat dark slab over the map). (screenshot: notes/attachments/2026-10-30/epiphany-1.png)
-- [x] Markets: white space top left, the filter and search capsule sits alone on the right with an empty row beside it. (screenshot: notes/attachments/2026-10-30/epiphany-2.png)
-- [x] Portfolio: remove the "Good morning" greeting, and make the money full width so it uses all the space. (screenshot: notes/attachments/2026-10-30/epiphany-3.png)
 - [ ] Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
 - [ ] Remove the compound growth calculator, it's redundant and unnecessary (notes/attachments/2026-10-30/epiphany-5.png)
 - [ ] GitHub version out of sync with README tag
-- [x] README doesn't need the live link (already in the GitHub repo), the App Store link (on the website) or the whitepaper link. Remove the resume links at the top
 - [ ] Horizontal scrolling stocks bar should be scrollable and interactive: swipe and scroll it. Fear and greed should sit flush underneath it
