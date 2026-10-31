@@ -426,3 +426,8 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [x] Map search bar needs better color and transparency (it reads as a flat dark slab over the map). (screenshot: notes/attachments/2026-10-30/epiphany-1.png)
 - [x] Markets: white space top left, the filter and search capsule sits alone on the right with an empty row beside it. (screenshot: notes/attachments/2026-10-30/epiphany-2.png)
 - [x] Portfolio: remove the "Good morning" greeting, and make the money full width so it uses all the space. (screenshot: notes/attachments/2026-10-30/epiphany-3.png)
+- [ ] Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
+- [ ] Remove the compound growth calculator, it's redundant and unnecessary (notes/attachments/2026-10-30/epiphany-5.png)
+- [ ] GitHub version out of sync with README tag
+- [ ] README doesn't need the live link (already in the GitHub repo), the App Store link (on the website) or the whitepaper link. Remove the resume links at the top
+- [ ] Horizontal scrolling stocks bar should be scrollable and interactive: swipe and scroll it. Fear and greed should sit flush underneath it
