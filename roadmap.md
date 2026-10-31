@@ -305,7 +305,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## Design debt, standing colour rule violations
 - [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
-- [ ] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
+- [x] Make the "Buy/sell/hold" button clickable → opens a drawer of sources
 - [ ] Add themes (dark mode etc.) to the stocks view
 
 ## Ingested 2026-08-18
