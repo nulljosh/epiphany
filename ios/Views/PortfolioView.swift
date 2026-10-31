@@ -443,8 +443,11 @@ struct PortfolioView: View {
             VStack(alignment: .leading, spacing: 4) {
                 if let portfolio = resolvedPortfolio {
                     if appState.isLoggedIn { GreetingLine(total: portfolio.totalValue) }
+                    // Full width (Joshua, 2026-10-30): as big as the row allows, shrinking for long totals.
                     Text(CurrencyFormatter.formatPrice(portfolio.totalValue))
-                        .font(.system(size: 32, weight: .heavy))
+                        .font(.system(size: 64, weight: .heavy))
+                        .minimumScaleFactor(0.4)
+                        .lineLimit(1)
                         .foregroundStyle(Palette.text)
                     // Holdings are already inside totalValue (investment balances
                     // fold them in); cash is the remainder, not the raw balance sum.

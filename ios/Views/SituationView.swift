@@ -1308,8 +1308,9 @@ struct SituationView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
-        // Clear glass alone vanished over busy map tiles, so it sits on a mostly opaque fill.
-        .background(Capsule().fill(Color(.systemBackground).opacity(0.82)))
+        // Clear glass alone vanished over busy map tiles, but a near-opaque black fill read as a dark slab
+        // (Joshua, 2026-10-30). A lighter grey at about half opacity keeps the text readable and the map visible.
+        .background(Capsule().fill(Color(.secondarySystemBackground).opacity(0.55)))
         // Not interactive glass: on this container it took the taps meant for the clear button inside.
         .liquidGlass(in: Capsule(), fallback: .ultraThinMaterial)
         .shadow(color: .black.opacity(0.25), radius: 8, y: 2)

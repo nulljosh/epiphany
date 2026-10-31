@@ -110,6 +110,10 @@ struct MarketsView: View {
         }
     }
 
+    private var marketsTitle: some View {
+        Text("Markets").font(.title2.bold()).foregroundStyle(Palette.text).fixedSize()
+    }
+
     var body: some View {
         // Ticker above everything: it owns the strip under the status bar and the
         // nav stack starts below it.
@@ -208,6 +212,12 @@ struct MarketsView: View {
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { if !isSearching {
+                    // The title fills the bar's empty left side (Joshua, 2026-10-30: "white space top left").
+                    if #available(iOS 26, *) {
+                        ToolbarItem(placement: .topBarLeading) { marketsTitle }.sharedBackgroundVisibility(.hidden)
+                    } else {
+                        ToolbarItem(placement: .topBarLeading) { marketsTitle }
+                    }
                     ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Picker("Asset Type", selection: $marketFilter) {

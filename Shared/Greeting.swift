@@ -15,7 +15,7 @@ enum Greeting {
     }
 }
 
-/// The greeting over the portfolio total; remembers this visit's total for the next one.
+/// The line over the portfolio total ("Up $12 since yesterday"); remembers this visit's total for the next one.
 struct GreetingLine: View {
     let total: Double
     @AppStorage("last_visit_value") private var savedValue = 0.0
@@ -24,12 +24,11 @@ struct GreetingLine: View {
 
     var body: some View {
         let since = prev.flatMap { Greeting.since(prevValue: $0.value, prevAt: $0.at, value: total) }
-        (Text(Greeting.text(hour: Calendar.current.component(.hour, from: .now)) + ".")
-         + (since.map { s in
-             Text(" \(s.diff >= 0 ? "Up" : "Down") \(CurrencyFormatter.formatPrice(abs(s.diff))) since \(s.when).")
-                 .foregroundColor(s.diff >= 0 ? Palette.successGreen : Palette.dangerRed)
-         } ?? Text("")))
+        // No "Good morning" (Joshua, 2026-10-30): only what the total did since the last visit.
+        Text(since.map { s in "\(s.diff >= 0 ? "Up" : "Down") \(CurrencyFormatter.formatPrice(abs(s.diff))) since \(s.when)." } ?? "")
+            .foregroundStyle(since.map { $0.diff >= 0 ? Palette.successGreen : Palette.dangerRed } ?? Palette.textSecondary)
             .font(.subheadline.weight(.semibold))
+            .frame(maxHeight: since == nil ? 0 : nil)  // collapsed, not removed: the save below must still run
             .onAppear {
                 if prev == nil, savedAt > 0 { prev = (savedValue, Date(timeIntervalSince1970: savedAt)) }
             }

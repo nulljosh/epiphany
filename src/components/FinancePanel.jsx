@@ -14,7 +14,7 @@ import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -1038,10 +1038,10 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
       <div style={{ padding: '16px 16px 12px' }}>
         {isAuthenticated && !isDemo && (() => {
           const since = sinceLastVisit(lastVisit, netWorth);
-          return (
-            <div style={{ fontSize: 14, fontWeight: 600, color: t.text, marginBottom: 8 }}>
-              {greeting(new Date().getHours())}.
-              {since && <span style={{ fontWeight: 500, color: since.diff >= 0 ? t.green : t.red }}> {since.diff >= 0 ? 'Up' : 'Down'} {formatCurrency(Math.abs(since.diff), 'CAD')} since {since.when}.</span>}
+          // No "Good morning" (Joshua, 2026-10-30): only what net worth did since the last visit.
+          return since && (
+            <div style={{ fontSize: 14, fontWeight: 600, color: since.diff >= 0 ? t.green : t.red, marginBottom: 8 }}>
+              {since.diff >= 0 ? 'Up' : 'Down'} {formatCurrency(Math.abs(since.diff), 'CAD')} since {since.when}.
             </div>
           );
         })()}

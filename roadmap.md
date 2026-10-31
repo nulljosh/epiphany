@@ -423,6 +423,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
-- [ ] Map search bar needs better color and transparency (it reads as a flat dark slab over the map). (screenshot: notes/attachments/2026-10-30/epiphany-1.png)
-- [ ] Markets: white space top left, the filter and search capsule sits alone on the right with an empty row beside it. (screenshot: notes/attachments/2026-10-30/epiphany-2.png)
-- [ ] Portfolio: remove the "Good morning" greeting, and make the money full width so it uses all the space. (screenshot: notes/attachments/2026-10-30/epiphany-3.png)
+- [x] Map search bar needs better color and transparency (it reads as a flat dark slab over the map). (screenshot: notes/attachments/2026-10-30/epiphany-1.png)
+- [x] Markets: white space top left, the filter and search capsule sits alone on the right with an empty row beside it. (screenshot: notes/attachments/2026-10-30/epiphany-2.png)
+- [x] Portfolio: remove the "Good morning" greeting, and make the money full width so it uses all the space. (screenshot: notes/attachments/2026-10-30/epiphany-3.png)
