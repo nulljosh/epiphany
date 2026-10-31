@@ -4,8 +4,6 @@
 
 Everything happening in your world, on one screen. The map, the markets, the people.
 
-[Live](https://epiphany.jaybulb.com) | [App Store](https://apps.apple.com/app/epiphany/id6779522175) | [Whitepaper](WHITEPAPER.md)
-
 <p align="center">
   <img src="public/screenshots/screenshot-situation-new.png" width="170">
   <img src="public/screenshots/screenshot-markets-new.png" width="170">
