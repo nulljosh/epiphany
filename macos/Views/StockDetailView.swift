@@ -27,7 +27,7 @@ struct StockDetailView: View {
     @State private var scrubPrice: (date: Date, price: Double)?
     @State private var tallChart = false
 
-    private let ranges = ["1d", "5d", "1mo", "3mo", "1y"]
+    private let ranges = ["1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
 
     private var isWatchlisted: Bool {
         appState.isInWatchlist(stock.symbol)
@@ -103,7 +103,7 @@ struct StockDetailView: View {
                 HStack(spacing: 12) {
                     Picker("Range", selection: $selectedRange) {
                         ForEach(ranges, id: \.self) { range in
-                            Text(range.uppercased()).tag(range)
+                            Text(LivePrice.rangeLabel(range)).tag(range)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -442,6 +442,8 @@ struct StockDetailView: View {
             return .dateTime.weekday(.abbreviated).hour()
         case "1mo":
             return .dateTime.month(.abbreviated).day()
+        case "5y", "max":
+            return .dateTime.year()
         default:
             return .dateTime.month(.abbreviated)
         }

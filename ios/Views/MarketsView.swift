@@ -785,7 +785,7 @@ private struct MarketItemDetailView: View {
     @State private var showSMA = true
     @State private var showEMA = true
 
-    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
+    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
 
     private var price: Double { livePrice ?? item.price }
 
@@ -856,7 +856,7 @@ private struct MarketItemDetailView: View {
                 HStack(spacing: 12) {
                     Picker("Range", selection: $selectedRange) {
                         ForEach(ranges, id: \.self) { range in
-                            Text(range.uppercased()).tag(range)
+                            Text(LivePrice.rangeLabel(range)).tag(range)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -952,6 +952,7 @@ private struct MarketItemDetailView: View {
         }
         .task {
             guard let sym = item.yahooSymbol else { return }
+            await LivePrice.stream(sym) { livePrice = $0 }
             await LivePrice.poll(sym) { livePrice = $0 }
         }
     }
@@ -1022,7 +1023,7 @@ private struct MarketItemDetailView: View {
                     AxisValueLabel {
                         if let date = value.as(Date.self) {
                             // 15M spans five days, so it labels days like 5D; only single-day ranges show the time.
-                            Text(date, format: ["1m", "1d"].contains(selectedRange) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day())
+                            Text(date, format: axisFormat)
                                 .font(.caption2)
                         }
                     }
@@ -1090,12 +1091,18 @@ private struct MarketItemDetailView: View {
             }
 
             Picker("Range", selection: $selectedRange) {
-                ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+                ForEach(ranges, id: \.self) { Text(LivePrice.rangeLabel($0)).tag($0) }
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
         }
         .padding(.vertical)
+    }
+
+    private var axisFormat: Date.FormatStyle {
+        if ["1m", "1d"].contains(selectedRange) { return .dateTime.hour().minute() }
+        if ["5y", "max"].contains(selectedRange) { return .dateTime.year() }
+        return .dateTime.month(.abbreviated).day()
     }
 
     private func loadHistory() async {

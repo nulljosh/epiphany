@@ -763,7 +763,7 @@ private struct AssetDetailView: View {
     @State private var showSMA = true
     @State private var showEMA = true
 
-    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y"]
+    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
 
     private var price: Double { livePrice ?? item.price }
     private var points: [(Date, Double)] { history.compactMap { p in p.parsedDate.map { ($0, p.close) } } }
@@ -799,7 +799,7 @@ private struct AssetDetailView: View {
                     IndicatorChip(label: "SMA 20", isOn: $showSMA, color: Palette.warningAmber)
                     IndicatorChip(label: "EMA 50", isOn: $showEMA, color: Palette.slate)
                     Picker("Range", selection: $range) {
-                        ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+                        ForEach(ranges, id: \.self) { Text(LivePrice.rangeLabel($0)).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -850,6 +850,7 @@ private struct AssetDetailView: View {
         }
         .task {
             guard let sym = item.yahooSymbol else { return }
+            await LivePrice.stream(sym) { livePrice = $0 }
             await LivePrice.poll(sym) { livePrice = $0 }
         }
     }

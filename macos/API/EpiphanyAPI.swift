@@ -198,6 +198,7 @@ final class EpiphanyAPI {
         switch range {
         case "1m":  (finalRange, interval) = ("1d", "1m")
         case "15m": (finalRange, interval) = ("5d", "15m")
+        case "5y":  (finalRange, interval) = ("5y", "1wk")
         case "max": (finalRange, interval) = ("max", "1d")
         case "1d":  (finalRange, interval) = ("1d", "5m")
         case "5d":  (finalRange, interval) = ("5d", "15m")

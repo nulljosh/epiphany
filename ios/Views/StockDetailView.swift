@@ -46,7 +46,7 @@ struct StockDetailView: View {
     @State private var tradeLoading = false
     @State private var tradeError: String?
 
-    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "max"]
+    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
 
     private var isWatchlisted: Bool {
         appState.isInWatchlist(stock.symbol)
@@ -119,7 +119,7 @@ struct StockDetailView: View {
 
                 Picker("Range", selection: $selectedRange) {
                     ForEach(ranges, id: \.self) { range in
-                        Text(range.uppercased()).tag(range)
+                        Text(LivePrice.rangeLabel(range)).tag(range)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -681,7 +681,7 @@ struct StockDetailView: View {
             chartView(height: nil)
 
             Picker("Range", selection: $selectedRange) {
-                ForEach(ranges, id: \.self) { Text($0.uppercased()).tag($0) }
+                ForEach(ranges, id: \.self) { Text(LivePrice.rangeLabel($0)).tag($0) }
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
@@ -757,6 +757,8 @@ struct StockDetailView: View {
             return .dateTime.weekday(.abbreviated).hour()
         case "1mo":
             return .dateTime.month(.abbreviated).day()
+        case "5y", "max":
+            return .dateTime.year()
         default:
             return .dateTime.month(.abbreviated)
         }

@@ -8,6 +8,7 @@ enum Palette {
     static let bgDark = Color(hex: "111111")
     static let textLight = Color(hex: "000000")
     static let textDark = Color(hex: "e8e8e8")
+    static let textSecondary = Color.secondary
 
     // Semantic
     static let appleBlue = Color(hex: "0071e3")
