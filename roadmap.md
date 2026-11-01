@@ -416,7 +416,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 ## QA pass 2026-10-21 (web, iOS)
 - [x] (11-01: already fixed in fdc02aa 10-21, opacity 0.45 to 0.3 and a softer ramp) Web map heatmap renders as one opaque red blob over Maple Ridge/Langley. Lower opacity or radius so streets show through.
 - [ ] (same decision as the macro and fear-greed line above, Joshua's call 11-01) Web Fear & Greed is still empty: CNN blocks Workers egress (418). iOS and macOS now fetch CNN from the device when the server has nothing; web needs another source.
-- [ ] iOS Settings signed out: Map and Appearance sections added 2026-10-21, builds, not yet seen signed out in the simulator (keychain kept the session).
+- [x] (11-01: seen on the iPhone 17 Pro simulator after a keychain reset, `-qaTab 3`, light and dark: Sign In and Register, then Map Sources, then Appearance) iOS Settings signed out: Map and Appearance sections added 2026-10-21, builds, not yet seen signed out in the simulator (keychain kept the session).
 
 ## Ingested 2026-10-25
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
