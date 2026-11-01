@@ -398,3 +398,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 ## Ingested 2026-10-31
 - [x] (11-01: shipped 10-31 in 2bba301, crypto streams every second) Crypto needs real-time, second-by-second price updates (Bitcoin detail screen, notes/attachments/2026-10-31/epiphany-1.png). Related to the open "Stock view: add live mode" line above.
 - [x] (11-01: shipped 10-31 in 2bba301, 5Y and ALL on web, iPhone and Mac) Stocks need 5Y and All Time ranges, not just 1Y. The range bar today stops at 1M, 15M, 1D, 5D, 1MO, 3MO, 1Y.
+
+## Ingested 2026-11-01
+- [ ] Sync statements from Wealthsimple instead of uploading PDFs by hand (Joshua 2026-11-01: "a way to sync with Wealthsimple to get those statements, or a way to upload them"). Upload already exists on the web (Portfolio, statement PDFs) and September 2026 was loaded for him on 11-01 by script. Sync path: SnapTrade's `getActivities` in src/utils/brokers/snaptrade.js already pulls brokerage activity; Wealthsimple Cash (the prepaid card the statements come from) may not be on SnapTrade, so check that first, then map activities to statement rows with the same categorizer. Also make the upload easy to find on iPhone and Mac.
