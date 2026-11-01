@@ -381,7 +381,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] (11-01: native fixed, 3.0.0+ live on jaybulb; blocked: Google and GitHub OAuth console callbacks need Joshua's console login) Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
 - [ ] [P1] Stale App Store links. (2026-10-21: every epiphany link in code already points at id6779522175, so the stale ones are elsewhere. Which page or app? Need the URL.)
 - [ ] [P2] Map: places render on the map. What other details could we be displaying? (sheet today shows hours, phone, website, address, Get Directions) (notes/attachments/2026-10-21/epiphany-4.png)
-- [x] (11-01: gone since 5.0.0, "no Debt calendar") [P3] Remove Debt & Calendar's calendar unless we can find a use for it. (notes/attachments/2026-10-21/epiphany-6.png)
 
 ## QA pass 2026-10-21 (web, iOS)
 - [ ] (same decision as the macro and fear-greed line above, Joshua's call 11-01) Web Fear & Greed is still empty: CNN blocks Workers egress (418). iOS and macOS now fetch CNN from the device when the server has nothing; web needs another source.
@@ -392,12 +391,9 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
-- [x] (11-01: deposits, transfers and cash back no longer land in review; stored uncategorized rows get re-checked against a bigger keyword list on every load, learned rules still win) Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
 - [ ] (11-01: tag v6.3.0 pushed; blocked: gh release create needs Joshua's permission rule, 2026-11-01) GitHub version out of sync with README tag
 
 ## Ingested 2026-10-31
-- [x] (11-01: shipped 10-31 in 2bba301, crypto streams every second) Crypto needs real-time, second-by-second price updates (Bitcoin detail screen, notes/attachments/2026-10-31/epiphany-1.png). Related to the open "Stock view: add live mode" line above.
-- [x] (11-01: shipped 10-31 in 2bba301, 5Y and ALL on web, iPhone and Mac) Stocks need 5Y and All Time ranges, not just 1Y. The range bar today stops at 1M, 15M, 1D, 5D, 1MO, 3MO, 1Y.
 
 ## Ingested 2026-11-01
 - [ ] Sync statements from Wealthsimple instead of uploading PDFs by hand (Joshua 2026-11-01: "a way to sync with Wealthsimple to get those statements, or a way to upload them"). Upload already exists on the web (Portfolio, statement PDFs) and September 2026 was loaded for him on 11-01 by script. Sync path: SnapTrade's `getActivities` in src/utils/brokers/snaptrade.js already pulls brokerage activity; Wealthsimple Cash (the prepaid card the statements come from) may not be on SnapTrade, so check that first, then map activities to statement rows with the same categorizer. Also make the upload easy to find on iPhone and Mac.
