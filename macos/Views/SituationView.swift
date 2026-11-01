@@ -104,6 +104,7 @@ struct SituationView: View {
     @State private var hasLoaded = false
     @State private var selectedEvent: MapEventDetail?
     @State private var loadTask: Task<Void, Never>?
+    @State private var lastLoadedRegion: MKCoordinateRegion?
 
     @AppStorage("situation.mapLayer") private var mapLayerRaw = MapLayerStyle.standard.rawValue
     @AppStorage("mapWindowHours") private var mapWindowHours = 0
@@ -142,12 +143,17 @@ struct SituationView: View {
         .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { now in
             let elapsed = min(now.timeIntervalSince(lastFlightTick), 1)
             lastFlightTick = now
-            guard appState.situationFlightsEnabled else { return }
+            guard appState.situationFlightsEnabled, !flights.isEmpty, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
             flights = flights.map { flight in
                 var updated = flight
                 updated.advance(seconds: elapsed)
                 return updated
             }
+        }
+        // Live layers go stale; reload the visible area every 5 minutes while the map is open, as on iOS.
+        .onReceive(Timer.publish(every: 300, on: .main, in: .common).autoconnect()) { _ in
+            guard hasLoaded, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return }
+            Task { await loadData(for: visibleRegion) }
         }
         .onAppear {
             guard !hasLoaded else { return }
@@ -181,6 +187,8 @@ struct SituationView: View {
             loadTask = Task {
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
+                // A small pan at the same zoom keeps the loaded layers, as on iOS.
+                if let last = lastLoadedRegion, isSmallMove(from: last, to: region) { return }
                 await loadData(for: region)
             }
         }
@@ -753,9 +761,17 @@ struct SituationView: View {
         MapGlyph(symbol: symbol, tint: color, size: max(size * 1.2, 16))
     }
 
+    private func isSmallMove(from old: MKCoordinateRegion, to new: MKCoordinateRegion) -> Bool {
+        let zoom = new.span.latitudeDelta / max(old.span.latitudeDelta, 1e-9)
+        guard zoom > 0.5, zoom < 2 else { return false }
+        return abs(new.center.latitude - old.center.latitude) < old.span.latitudeDelta * 0.25
+            && abs(new.center.longitude - old.center.longitude) < old.span.longitudeDelta * 0.25
+    }
+
     private func loadData(for region: MKCoordinateRegion) async {
         error = nil
         flightStatusMessage = nil
+        lastLoadedRegion = region
         defer { saveSnapshot() }
 
         let center = region.center
