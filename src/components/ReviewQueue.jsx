@@ -1,6 +1,7 @@
 // The review queue: statement rows nothing could categorize. Picking a category teaches the merchant
 // for every statement (the server learns a rule); "Mark all reviewed" waves the rest through.
 import { formatCurrency } from '../utils/formatting';
+import { suggestCategories } from '../utils/reviewSuggest';
 
 const EDITABLE_CATEGORIES = [
   'food', 'groceries', 'coffee', 'pharmacy', 'shopping', 'tech', 'apps',
@@ -25,6 +26,7 @@ export default function ReviewQueue({ statements = [], onChanged, t }) {
   const queue = statements.flatMap((statement) => (statement.transactions || []).filter(needsReview).map((txn) => ({ statement, txn })));
   if (!queue.length) return null;
   const run = (action, body) => patch(action, body).then(onChanged).catch(() => {});
+  const all = statements.flatMap((statement) => statement.transactions || []);
 
   return (
     <div style={{ marginBottom: 16, border: `0.5px solid ${t.border}`, borderRadius: 12, padding: '12px 16px' }}>
@@ -38,6 +40,12 @@ export default function ReviewQueue({ statements = [], onChanged, t }) {
         <div key={`${statement.id}-${transactionId(txn)}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: `0.5px solid ${t.border}`, fontSize: 12 }}>
           <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{txn.description}</span>
           <span style={{ color: t.textSecondary, fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(Math.abs(txn.amount))}</span>
+          {suggestCategories(txn, all).map((category) => (
+            <button key={category} onClick={() => run('edit-transaction', { id: statement.id, transactionId: transactionId(txn), category })}
+              style={{ border: `0.5px solid ${t.border}`, background: 'transparent', color: t.text, borderRadius: 10, padding: '2px 8px', fontSize: 11, cursor: 'pointer' }}>
+              {category}
+            </button>
+          ))}
           <select
             value="uncategorized"
             onChange={(e) => run('edit-transaction', { id: statement.id, transactionId: transactionId(txn), category: e.target.value })}
