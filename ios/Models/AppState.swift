@@ -520,7 +520,12 @@ final class AppState {
         guard let defaults = UserDefaults(suiteName: "group.com.heyitsmejosh.epiphany") else { return }
         let income = financeData?.budget?.totalMonthlyIncome ?? 0
         let latest = statements.compactMap(\.spendingMonth).max { $0.sortKey < $1.sortKey }
-        defaults.set(["income": income, "spent": latest?.total ?? 0, "month": latest?.month ?? ""], forKey: "widget_budget")
+        // The three budget lines furthest through their money, for the medium widget (name, spent, budget).
+        let lines: [[String: Any]] = (financeData?.budget?.expenses ?? [])
+            .compactMap { line in line.spent(in: latest).map { (line.name, $0, line.amount) } }
+            .sorted { $0.1 / max($0.2, 1) > $1.1 / max($1.2, 1) }
+            .prefix(3).map { ["name": $0.0, "spent": $0.1, "amount": $0.2] }
+        defaults.set(["income": income, "spent": latest?.total ?? 0, "month": latest?.month ?? "", "lines": lines], forKey: "widget_budget")
         WidgetCenter.shared.reloadTimelines(ofKind: "BudgetWidget")
     }
 

@@ -88,7 +88,11 @@ struct WidgetAPI {
     static func cachedBudget() -> BudgetEntry? {
         guard let d = defaults?.dictionary(forKey: "widget_budget"),
               let income = d["income"] as? Double, let spent = d["spent"] as? Double else { return nil }
-        return BudgetEntry(date: .now, income: income, spent: spent, month: d["month"] as? String ?? "", isPlaceholder: false)
+        let lines = (d["lines"] as? [[String: Any]] ?? []).compactMap { l -> BudgetEntry.Line? in
+            guard let name = l["name"] as? String, let s = l["spent"] as? Double, let a = l["amount"] as? Double else { return nil }
+            return BudgetEntry.Line(name: name, spent: s, amount: a)
+        }
+        return BudgetEntry(date: .now, income: income, spent: spent, month: d["month"] as? String ?? "", isPlaceholder: false, lines: lines)
     }
 
     // MARK: - Internal

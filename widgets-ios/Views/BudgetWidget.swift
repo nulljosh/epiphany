@@ -10,7 +10,7 @@ struct BudgetWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("Budget")
-        .description("Spent this month against your income.")
+        .description("Spent this month against your income, and the budget lines closest to their limit.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline])
     }
 }
@@ -34,10 +34,27 @@ struct BudgetWidgetView: View {
         case .systemMedium:
             HStack(alignment: .top, spacing: 16) {
                 summary
-                Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(entry.isOver ? "Over by" : "Left").font(.caption).foregroundStyle(.secondary)
-                    Text(money(abs(entry.remaining))).font(.title3.weight(.semibold)).foregroundStyle(tint)
+                if entry.lines.isEmpty {
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(entry.isOver ? "Over by" : "Left").font(.caption).foregroundStyle(.secondary)
+                        Text(money(abs(entry.remaining))).font(.title3.weight(.semibold)).foregroundStyle(tint)
+                    }
+                } else {
+                    // Per line, the same on-track colours as the Budget tab: green to 90%, amber to 110%, red past it.
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(entry.lines, id: \.self) { l in
+                            VStack(alignment: .leading, spacing: 3) {
+                                HStack {
+                                    Text(l.name).font(.caption.weight(.semibold)).lineLimit(1)
+                                    Spacer()
+                                    Text("\(money(l.spent)) / \(money(l.amount))").font(.caption2).foregroundStyle(.secondary).monospacedDigit()
+                                }
+                                ProgressView(value: min(l.ratio, 1)).tint(l.ratio <= 0.9 ? .green : l.ratio <= 1.1 ? .orange : .red)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
             }
             .padding(.vertical, 2)

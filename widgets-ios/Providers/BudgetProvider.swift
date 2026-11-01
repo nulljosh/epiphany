@@ -7,13 +7,20 @@ struct BudgetEntry: TimelineEntry {
     let spent: Double
     let month: String
     let isPlaceholder: Bool
+    /// Up to three budget lines furthest through their money, written by the app.
+    var lines: [Line] = []
+
+    struct Line: Hashable { let name: String; let spent: Double; let amount: Double
+        var ratio: Double { amount > 0 ? spent / amount : 0 }
+    }
 
     var remaining: Double { income - spent }
     var progress: Double { income > 0 ? min(spent / income, 1) : 0 }
     var isOver: Bool { income > 0 && spent > income }
 
     static var placeholder: BudgetEntry {
-        BudgetEntry(date: .now, income: 3200, spent: 1840, month: "This month", isPlaceholder: true)
+        BudgetEntry(date: .now, income: 3200, spent: 1840, month: "This month", isPlaceholder: true,
+                    lines: [Line(name: "Food", spent: 420, amount: 500), Line(name: "Transit", spent: 90, amount: 140)])
     }
 }
 
