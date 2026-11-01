@@ -1,0 +1,78 @@
+BTC daily, 2011-08-18 to 2026-11-01, 5555 bars. Fee 0.1%/side.
+Pick on 2012-01-01..2019-12-31, score blind on 2020-01-01..2026-11-01.
+
+strategy               setting | train CAGR  maxDD |  TEST CAGR  maxDD  x money trades
+Hold                        () |       148%    85% |        42%    77%     10.9      1
+Single MA                (20,) |       168%    72% |        25%    67%      4.7    145
+Two MA                (10, 20) |       179%    70% |        27%    75%      5.2     66
+Three MA           (5, 10, 20) |       171%    66% |        21%    66%      3.7    103
+Donchian                 (55,) |       159%    73% |        37%    43%      8.8     12
+IBS                 (0.3, 0.7) |        13%    75% |         7%    61%      1.6    374
+Supertrend+RSI         (10, 2) |       153%    71% |        38%    54%      9.0     49
+RSI2 pullback         (10, 10) |        14%    54% |        10%    36%      1.9     52
+IBS + trend         (0.1, 0.7) |         9%    21% |        -3%    32%      0.8     59
+RSI2 exit high            (5,) |        13%    36% |         7%    29%      1.6     29
+Cumulative RSI        (35, 65) |        14%    43% |        10%    34%      1.9     61
+Double 7s                (10,) |         8%    72% |        17%    35%      2.9     53
+IBS + RSI2           (0.5, 10) |        10%    41% |        10%    33%      1.9     59
+D7 first up close         (10,) |        10%    35% |         7%    21%      1.6    111
+D7 + RSI2                (10,) |        16%    41% |         4%    33%      1.3     50
+D7 + market              (10,) |         8%    72% |        17%    35%      2.9     53
+D7 stacked                (7,) |         8%    31% |         3%    21%      1.2     52
+D7 + VIX fear             (5,) |         0%     0% |         0%     0%      1.0      0
+VIX stretch              (65,) |         0%     0% |         0%     0%      1.0      0
+Epiphany Kelly              () |         0%     1% |        -0%     2%      1.0    114
+Epiphany all-in             () |         9%    15% |        -0%    22%      1.0    114
+
+ETH daily, 2017-11-09 to 2026-11-01, 3280 bars. Fee 0.1%/side.
+Pick on 2017-11-09..2019-12-31, score blind on 2020-01-01..2026-11-01.
+
+strategy               setting | train CAGR  maxDD |  TEST CAGR  maxDD  x money trades
+Hold                        () |       -35%    94% |        52%    79%     17.3      1
+Single MA                (20,) |        29%    61% |        57%    50%     21.7    127
+Two MA                (10, 20) |        24%    70% |        54%    57%     19.1     67
+Three MA           (5, 10, 20) |        31%    55% |        39%    59%      9.6    100
+Donchian                 (10,) |        42%    65% |        56%    60%     20.9     49
+IBS                 (0.2, 0.8) |       -38%    86% |       -15%    84%      0.3    245
+Supertrend+RSI         (10, 2) |        36%    59% |        57%    56%     21.5     53
+RSI2 pullback           (5, 5) |        -1%    14% |         7%    19%      1.6     28
+IBS + trend         (0.2, 0.5) |        -3%    23% |         1%    55%      1.1    172
+RSI2 exit high            (5,) |         3%    13% |         8%    19%      1.7     28
+Cumulative RSI        (20, 70) |        -1%    14% |        18%    19%      3.1     37
+Double 7s                 (5,) |        -4%    29% |        21%    51%      3.7    119
+IBS + RSI2          (0.25, 10) |        -1%    28% |         6%    45%      1.5     38
+D7 first up close         (10,) |        14%     2% |         3%    45%      1.2    105
+D7 + RSI2                (10,) |         1%    28% |        -3%    47%      0.8     45
+D7 + market               (5,) |        -4%    29% |        21%    51%      3.7    119
+D7 stacked                (5,) |        10%     2% |         7%    13%      1.6     51
+D7 + VIX fear             (5,) |         0%     0% |         0%     0%      1.0      0
+VIX stretch              (65,) |         0%     0% |         0%     0%      1.0      0
+Epiphany Kelly              () |         0%     0% |         0%     1%      1.0     69
+Epiphany all-in             () |         3%     4% |         5%    20%      1.4     69
+
+GLD daily, 2004-11-18 to 2026-10-30, 5522 bars. Fee 0.1%/side.
+Pick on 2012-01-03..2019-12-30, score blind on 2020-01-02..2026-10-30.
+
+strategy               setting | train CAGR  maxDD |  TEST CAGR  maxDD  x money trades
+Hold                        () |        -1%    42% |        14%    28%      2.4      1
+Single MA               (150,) |        -0%    28% |         8%    36%      1.7     34
+Two MA                (20, 50) |         2%    13% |         9%    23%      1.8     18
+Three MA           (5, 20, 50) |         2%    14% |         8%    15%      1.7     36
+Donchian                 (20,) |         0%    24% |         7%    24%      1.6     23
+IBS                 (0.1, 0.9) |        -3%    39% |         8%    23%      1.7     89
+Supertrend+RSI         (10, 3) |         2%    15% |         3%    27%      1.2     35
+RSI2 pullback           (5, 5) |        -0%     6% |         2%     8%      1.2     25
+IBS + trend         (0.1, 0.7) |         0%    10% |         0%    12%      1.0     77
+RSI2 exit high            (5,) |         0%     5% |        -0%     7%      1.0     25
+Cumulative RSI        (35, 70) |        -0%    10% |         3%    14%      1.2     45
+Double 7s                (10,) |        -0%    20% |         4%    22%      1.3     42
+IBS + RSI2          (0.25, 20) |         0%     7% |        -0%    17%      1.0     58
+D7 first up close         (10,) |        -2%    18% |        -0%    17%      1.0     76
+D7 + RSI2                (10,) |        -0%     7% |        -0%    14%      1.0     41
+D7 + market              (10,) |        -0%    20% |         4%    22%      1.3     42
+D7 stacked                (7,) |        -0%     5% |        -2%    12%      0.9     30
+D7 + VIX fear             (5,) |         0%     0% |         0%     0%      1.0      0
+VIX stretch              (65,) |         0%     0% |         0%     0%      1.0      0
+Epiphany Kelly              () |        -0%     1% |         0%     2%      1.0     91
+Epiphany all-in             () |        -4%    37% |         3%    36%      1.3     91
+

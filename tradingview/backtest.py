@@ -8,6 +8,7 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
     python3 tradingview/backtest.py etfs     # index and sector ETFs
     python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
+    python3 tradingview/backtest.py assets   # the BTC table repeated on ETH and GLD
     python3 tradingview/backtest.py trend-spy  # hold the index only above its 200 day average, with and without leverage
     python3 tradingview/backtest.py portfolio  # Double 7s as one account over the index ETFs
     python3 tradingview/backtest.py sp-century  # S&P 500 index since 1927, per decade
@@ -600,11 +601,24 @@ def main():
         return universe(ETFS, "Index ETFs")
     if sys.argv[1:] == ["btc-years"]:
         return btc_years()
-    bars = fetch()
+    if sys.argv[1:] == ["assets"]:
+        return assets()
+    table("BTC", fetch())
+
+
+def assets():
+    """The same pick-then-score-blind table on BTC, ETH and gold, so neither crypto nor gold rests on one lucky asset.
+    ETH starts in Nov 2017 on Yahoo, so its pick window is short; GLD starts in 2004."""
+    for name, bars in (("BTC", fetch()), ("ETH", fetch_yahoo("ETH-USD")), ("GLD", fetch_yahoo("GLD"))):
+        table(name, bars)
+        print()
+
+
+def table(name, bars):
     o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
     tr, te = window(bars, *TRAIN), window(bars, *TEST)
     day = lambda i: datetime.fromtimestamp(bars[i][0], timezone.utc).date()
-    print(f"BTC daily, {day(0)} to {day(len(bars) - 1)}, {len(bars)} bars. Fee {FEE:.1%}/side.")
+    print(f"{name} daily, {day(0)} to {day(len(bars) - 1)}, {len(bars)} bars. Fee {FEE:.1%}/side.")
     print(f"Pick on {day(tr[0])}..{day(tr[1] - 1)}, score blind on {day(te[0])}..{day(te[1] - 1)}.\n")
     print(f"{'strategy':16}{'setting':>14} | {'train CAGR':>10} {'maxDD':>6} | {'TEST CAGR':>10} {'maxDD':>6} {'x money':>8} {'trades':>6}")
     for mode, grid in GRID.items():
