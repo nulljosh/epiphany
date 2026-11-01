@@ -9,7 +9,7 @@
 .lp {
   --ink: #fff;
   --sub: rgba(255, 255, 255, 0.62);
-  --dim: rgba(255, 255, 255, 0.4);
+  --dim: rgba(255, 255, 255, 0.5); /* 0.4 was 3.8:1 on the night ground */
   --line: rgba(255, 255, 255, 0.12);
   --bg: #070b16;
   --panel: rgba(255, 255, 255, 0.05);
@@ -27,7 +27,7 @@
 .lp.light {
   --ink: #1d1d1f;
   --sub: rgba(29, 29, 31, 0.7);
-  --dim: rgba(29, 29, 31, 0.5);
+  --dim: rgba(29, 29, 31, 0.64); /* 0.5 was 3.2:1 on paper */
   --line: rgba(0, 0, 0, 0.1);
   --bg: #fbfbfd;
   --panel: rgba(0, 0, 0, 0.03);
