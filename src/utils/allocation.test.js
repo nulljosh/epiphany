@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, groupAccounts, valuationLine, holdingsByCountry, concentration } from './allocation';
+import { allocation, isCrypto, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, position, dividendCalendar, earningsDates, earningsIcs, groupAccounts, valuationLine, holdingsByCountry, concentration } from './allocation';
 
 describe('allocation', () => {
   it('splits holdings into stocks and crypto, adds cash, drops empty buckets', () => {
@@ -85,5 +85,20 @@ describe('vsMarket', () => {
     expect(vsMarket(0.5, 1.75).text).toBe('Behind the S&P 500 by 1.3 pts today');
     expect(vsMarket(1.01, 1.0).text).toBe('Even with the S&P 500 today');
     expect(vsMarket(1, undefined)).toBeNull();
+  });
+});
+
+describe('earnings dates', () => {
+  const now = new Date(2026, 10, 1);
+  const quotes = { AAPL: { nextEarnings: Date.UTC(2026, 10, 20, 16) / 1000 }, OLD: { nextEarnings: Date.UTC(2026, 9, 1, 16) / 1000 }, MSFT: { nextEarnings: Date.UTC(2026, 10, 5, 16) / 1000 } };
+  it('lists each holding once, soonest first, and skips dates already past', () => {
+    const out = earningsDates([{ symbol: 'AAPL' }, { symbol: 'AAPL' }, { symbol: 'OLD' }, { symbol: 'MSFT' }, { symbol: 'NONE' }], quotes, now);
+    expect(out.map((e) => e.symbol)).toEqual(['MSFT', 'AAPL']);
+  });
+  it('writes one all-day calendar event', () => {
+    const ics = earningsIcs('AAPL', new Date(2026, 10, 20));
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261120');
+    expect(ics).toContain('DTEND;VALUE=DATE:20261121');
+    expect(ics).toContain('SUMMARY:AAPL earnings');
   });
 });

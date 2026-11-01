@@ -91,6 +91,31 @@ export function dividendCalendar(holdings = [], quotes = {}, now = new Date(), m
   return { calendar, next: next.sort((a, b) => a.date - b.date) };
 }
 
+// Each holding's next earnings date still to come, soonest first. Mirrors DividendCalendar.earnings.
+export function earningsDates(holdings = [], quotes = {}, now = new Date()) {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const seen = new Set();
+  const out = [];
+  for (const h of holdings) {
+    const ts = quotes[h.symbol]?.nextEarnings;
+    if (seen.has(h.symbol) || typeof ts !== 'number') continue;
+    seen.add(h.symbol);
+    const date = new Date(ts * 1000);
+    if (date >= start) out.push({ symbol: h.symbol, date });
+  }
+  return out.sort((a, b) => a.date - b.date);
+}
+
+// One all-day event as an .ics file, for Add to Calendar on the web.
+export function earningsIcs(symbol, date) {
+  const day = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const nextDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Epiphany//EN', 'BEGIN:VEVENT',
+    `UID:${symbol}-${day(date)}@epiphany.jaybulb.com`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+    `DTSTART;VALUE=DATE:${day(date)}`, `DTEND;VALUE=DATE:${day(nextDay)}`, `SUMMARY:${symbol} earnings`,
+    'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+}
+
 // Accounts with money in them, grouped by type with a total each: cash first, then chequing, investment, the rest.
 // Mirrors Allocation.groupAccounts. Totals add balances as net worth does (already in CAD).
 const ACCOUNT_ORDER = ['cash', 'chequing', 'investment'];

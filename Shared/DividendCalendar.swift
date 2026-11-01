@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import EventKit
+#endif
 
 /// Estimated dividend payments per month for the next year, from each holding's next pay date and trailing yield.
 /// Mirrors dividendCalendar in allocation.js.
@@ -28,16 +31,29 @@ enum DividendCalendar {
         let calendar = (0..<months).compactMap { cal.date(byAdding: .month, value: $0, to: start) }.map { Month(month: $0, amount: byMonth[$0] ?? 0) }
         return (calendar, next.sorted { $0.date < $1.date })
     }
+
+    /// Each holding's next earnings date still to come, soonest first.
+    static func earnings(_ holdings: [Portfolio.Holding], stocks: [Stock], now: Date = .now) -> [(symbol: String, date: Date)] {
+        let quotes = Dictionary(stocks.map { ($0.symbol, $0) }, uniquingKeysWith: { a, _ in a })
+        let start = Calendar.current.startOfDay(for: now)
+        return Set(holdings.map(\.symbol)).compactMap { sym -> (symbol: String, date: Date)? in
+            guard let ts = quotes[sym]?.nextEarnings else { return nil }
+            let d = Date(timeIntervalSince1970: ts)
+            return d >= start ? (sym, d) : nil
+        }.sorted { $0.date < $1.date }
+    }
 }
 
 /// Twelve monthly bars of estimated dividends and the next pay dates; nothing when no holding pays.
 struct DividendCalendarCard: View {
     let holdings: [Portfolio.Holding]
     let stocks: [Stock]
+    @State private var added: Set<String> = []
 
     var body: some View {
         let d = DividendCalendar.build(holdings, stocks: stocks)
-        if !d.next.isEmpty || d.calendar.contains(where: { $0.amount > 0 }) {
+        let earnings = DividendCalendar.earnings(holdings, stocks: stocks)
+        if !d.next.isEmpty || d.calendar.contains(where: { $0.amount > 0 }) || !earnings.isEmpty {
             let peak = d.calendar.map(\.amount).max() ?? 1
             VStack(alignment: .leading, spacing: 10) {
                 Text("Dividend Calendar").font(.headline)
@@ -65,9 +81,41 @@ struct DividendCalendarCard: View {
                     .font(.subheadline)
                 }
                 Text("Estimated from each stock's yield, paid quarterly.").font(.caption2).foregroundStyle(.secondary)
+                if !earnings.isEmpty {
+                    Text("Earnings").font(.subheadline.weight(.semibold)).padding(.top, 4)
+                    ForEach(earnings.prefix(5), id: \.symbol) { e in
+                        HStack {
+                            Text(e.symbol).fontWeight(.semibold)
+                            Text(e.date.formatted(.dateTime.month(.abbreviated).day())).foregroundStyle(.secondary)
+                            Spacer()
+                            #if os(iOS)
+                            Button(added.contains(e.symbol) ? "Added" : "Add to Calendar") { addToCalendar(e.symbol, e.date) }
+                                .font(.caption).disabled(added.contains(e.symbol))
+                            #endif
+                        }
+                        .font(.subheadline)
+                    }
+                }
             }
             .padding()
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
     }
+
+    #if os(iOS)
+    /// Write-only calendar access: one all-day event on the earnings date, as StockDetailView does.
+    private func addToCalendar(_ symbol: String, _ date: Date) {
+        let store = EKEventStore()
+        Task {
+            guard (try? await store.requestWriteOnlyAccessToEvents()) == true else { return }
+            let event = EKEvent(eventStore: store)
+            event.title = "\(symbol) earnings"
+            event.startDate = date
+            event.endDate = date
+            event.isAllDay = true
+            event.calendar = store.defaultCalendarForNewEvents
+            if (try? store.save(event, span: .thisEvent)) != nil { added.insert(symbol) }
+        }
+    }
+    #endif
 }

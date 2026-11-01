@@ -12,7 +12,7 @@ import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
-import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
+import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, earningsDates, earningsIcs, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1278,7 +1278,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
             {(() => {
               const { calendar, next } = dividendCalendar(holdings, stocks || {});
-              if (!next.length && !calendar.some((m) => m.amount > 0)) return null;
+              const earnings = earningsDates(holdings, stocks || {});
+              if (!next.length && !calendar.some((m) => m.amount > 0) && !earnings.length) return null;
               const peak = Math.max(...calendar.map((m) => m.amount));
               return (
                 <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
@@ -1301,6 +1302,14 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                     </div>
                   ))}
                   <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 8 }}>Estimated from each stock's yield, paid quarterly.</div>
+                  {earnings.length > 0 && <div style={{ ...labelStyle, marginTop: 16 }}>Earnings</div>}
+                  {earnings.slice(0, 5).map((e, i, arr) => (
+                    <div key={e.symbol} style={{ ...rowStyle, fontSize: 13, ...(i === arr.length - 1 ? { borderBottom: 'none' } : {}) }}>
+                      <span><b>{e.symbol}</b> <span style={{ color: t.textSecondary }}>{e.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span></span>
+                      <a href={`data:text/calendar;charset=utf-8,${encodeURIComponent(earningsIcs(e.symbol, e.date))}`} download={`${e.symbol}-earnings.ics`}
+                        style={{ fontSize: 12, color: t.accent || t.blue, textDecoration: 'none' }}>Add to Calendar</a>
+                    </div>
+                  ))}
                 </Card>
               );
             })()}
