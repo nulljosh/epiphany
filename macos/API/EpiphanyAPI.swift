@@ -196,7 +196,7 @@ final class EpiphanyAPI {
         // Same display-range to Yahoo range and interval pairs as iOS.
         let (finalRange, interval): (String, String)
         switch range {
-        case "1m":  (finalRange, interval) = ("1d", "1m")
+        case "1m", "live": (finalRange, interval) = ("1d", "1m")
         case "15m": (finalRange, interval) = ("5d", "15m")
         case "5y":  (finalRange, interval) = ("5y", "1wk")
         case "max": (finalRange, interval) = ("max", "1d")

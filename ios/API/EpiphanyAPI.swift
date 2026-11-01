@@ -307,7 +307,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
     func fetchPriceHistory(symbol: String, range: String = "1y") async throws -> PriceHistory {
         let (finalRange, finalInterval): (String, String)
         switch range {
-        case "1m":  (finalRange, finalInterval) = ("1d",  "1m")
+        case "1m", "live": (finalRange, finalInterval) = ("1d", "1m")
         case "15m": (finalRange, finalInterval) = ("5d",  "15m")
         case "5y":  (finalRange, finalInterval) = ("5y",  "1wk")
         case "max": (finalRange, finalInterval) = ("max", "1d")

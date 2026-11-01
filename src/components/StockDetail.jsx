@@ -264,7 +264,10 @@ function saveIndicators(indicators) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(indicators)); } catch {}
 }
 
+const LIVE_MS = 5000;
 const RANGES = [
+  // Live: today's minutes, then the quote every LIVE_MS, so the last candle moves while you watch.
+  { key: 'live', label: 'Live', range: '1d', interval: '1m' },
   { key: '1m',  label: '1m',  range: '1d',  interval: '1m'  },
   { key: '15m', label: '15m', range: '5d',  interval: '15m' },
   { key: '1d',  label: '1D',  range: '1d',  interval: '5m'  },
@@ -424,6 +427,28 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
 
   useEffect(() => { fetchHistory(); }, [range]);
 
+  // Live mode: poll the quote and fold it into the current minute's candle, or open the next one.
+  // ponytail: polling, 5s; a websocket feed if the quote source ever offers one for free.
+  useEffect(() => {
+    if (range !== 'live' || !symbol) return undefined;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/stocks-free?symbols=${encodeURIComponent(symbol)}`);
+        const price = res.ok ? (await res.json())?.[0]?.price : null;
+        if (typeof price !== 'number' || !isFinite(price)) return;
+        const minute = Math.floor(Date.now() / 60000) * 60;
+        setHistory(h => {
+          const last = h[h.length - 1];
+          if (last && last.time === minute) return [...h.slice(0, -1), { ...last, close: price, high: Math.max(last.high, price), low: Math.min(last.low, price) }];
+          if (last && last.time > minute) return h;
+          return [...h, { time: minute, open: last?.close ?? price, high: price, low: price, close: price }];
+        });
+      } catch { /* the next tick tries again */ }
+    };
+    const id = setInterval(tick, LIVE_MS);
+    return () => clearInterval(id);
+  }, [range, symbol]);
+
   // Keyboard navigation: Escape to close, ArrowLeft/Right to cycle stocks
   useEffect(() => {
     const handler = (e) => {
@@ -469,7 +494,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       },
       timeScale: {
         borderVisible: false,
-        timeVisible: range === '1d' || range === '5d',
+        timeVisible: range === '1d' || range === '5d' || range === 'live' || range === '1m',
         secondsVisible: false,
       },
       handleScroll: { vertTouchDrag: false },
@@ -758,7 +783,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   // so sparse news still surfaces a result.
   const displayedNews = useMemo(() => {
     if (!hoveredDate || news.length === 0) return news;
-    const windowMs = (range === '1m' || range === '15m' || range === '1d' || range === '5d')
+    const windowMs = (range === 'live' || range === '1m' || range === '15m' || range === '1d' || range === '5d')
       ? 24 * 60 * 60 * 1000
       : 3 * 24 * 60 * 60 * 1000;
     const filtered = news.filter(a => {

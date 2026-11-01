@@ -27,7 +27,7 @@ struct StockDetailView: View {
     @State private var scrubPrice: (date: Date, price: Double)?
     @State private var tallChart = false
 
-    private let ranges = ["1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
+    private let ranges = ["live", "1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
 
     private var isWatchlisted: Bool {
         appState.isInWatchlist(stock.symbol)
@@ -204,6 +204,11 @@ struct StockDetailView: View {
                     }
                 }
             }
+        }
+        // Live: the quote every 5 seconds, folded into the last minute's bar while the range is on.
+        .task(id: selectedRange) {
+            guard selectedRange == "live" else { return }
+            await LivePrice.poll(stock.symbol, every: .seconds(5)) { priceHistory = LivePrice.fold($0, into: priceHistory) }
         }
         .task(id: selectedRange) {
             await loadHistory()
@@ -436,7 +441,7 @@ struct StockDetailView: View {
 
     private var xAxisFormat: Date.FormatStyle {
         switch selectedRange {
-        case "1d":
+        case "live", "1d":
             return .dateTime.hour().minute()
         case "5d":
             return .dateTime.weekday(.abbreviated).hour()
@@ -530,7 +535,7 @@ private struct IntradayXScaleModifier: ViewModifier {
     }()
 
     func body(content: Content) -> some View {
-        if selectedRange == "1d", let first = firstDate {
+        if ["live", "1d"].contains(selectedRange), let first = firstDate {
             let cal = Self.easternCalendar
             let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
             let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first

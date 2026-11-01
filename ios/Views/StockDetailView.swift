@@ -46,7 +46,7 @@ struct StockDetailView: View {
     @State private var tradeLoading = false
     @State private var tradeError: String?
 
-    private let ranges = ["1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
+    private let ranges = ["live", "1m", "15m", "1d", "5d", "1mo", "3mo", "1y", "5y", "max"]
 
     private var isWatchlisted: Bool {
         appState.isInWatchlist(stock.symbol)
@@ -352,6 +352,11 @@ struct StockDetailView: View {
                 }
             }
         }
+        // Live: the quote every 5 seconds, folded into the last minute's bar while the range is on.
+        .task(id: selectedRange) {
+            guard selectedRange == "live" else { return }
+            await LivePrice.poll(stock.symbol, every: .seconds(5)) { priceHistory = LivePrice.fold($0, into: priceHistory) }
+        }
         .task(id: selectedRange) {
             await loadHistory()
         }
@@ -653,7 +658,7 @@ struct StockDetailView: View {
 
     /// The chart on its own, edge to edge. Drag to read any point.
     private var fullChartView: some View {
-        let intraday = ["1m", "15m", "1d", "5d"].contains(selectedRange)
+        let intraday = ["live", "1m", "15m", "1d", "5d"].contains(selectedRange)
         return VStack(spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -751,7 +756,7 @@ struct StockDetailView: View {
 
     private var xAxisFormat: Date.FormatStyle {
         switch selectedRange {
-        case "1m", "1d":
+        case "live", "1m", "1d":
             return .dateTime.hour().minute()
         case "15m", "5d":
             return .dateTime.weekday(.abbreviated).hour()
@@ -898,7 +903,7 @@ private struct IntradayXScaleModifier: ViewModifier {
     }()
 
     func body(content: Content) -> some View {
-        if ["1d", "1m", "15m"].contains(selectedRange), let first = firstDate {
+        if ["live", "1d", "1m", "15m"].contains(selectedRange), let first = firstDate {
             let cal = Self.easternCalendar
             let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
             let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first

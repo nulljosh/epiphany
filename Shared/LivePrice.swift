@@ -15,6 +15,19 @@ enum LivePrice {
         }
     }
 
+    /// Live chart: fold a fresh quote into the current minute's bar, or open the next bar.
+    static func fold(_ price: Double, into history: [PriceHistory.DataPoint], now: Date = .now) -> [PriceHistory.DataPoint] {
+        let minute = Date(timeIntervalSince1970: (now.timeIntervalSince1970 / 60).rounded(.down) * 60)
+        var h = history
+        if let last = h.last, let at = last.parsedDate, at >= minute {
+            guard at == minute else { return h }
+            h[h.count - 1] = .init(date: last.date, open: last.open, high: max(last.high ?? price, price), low: min(last.low ?? price, price), close: price, volume: last.volume)
+        } else {
+            h.append(.init(date: ISO8601DateFormatter().string(from: minute), open: h.last?.close ?? price, high: price, low: price, close: price, volume: nil))
+        }
+        return h
+    }
+
     /// Day change against the previous close the list row was built from, so a live tick moves it too.
     static func changePercent(listPrice: Double, listPercent: Double, live: Double?) -> Double {
         let prevClose = listPrice / (1 + listPercent / 100)
@@ -26,6 +39,7 @@ enum LivePrice {
     static func rangeLabel(_ range: String) -> String {
         switch range {
         case "1m", "15m": return range
+        case "live": return "Live"
         case "1mo": return "1M"
         case "3mo": return "3M"
         case "6mo": return "6M"
@@ -37,7 +51,7 @@ enum LivePrice {
     /// "1M High" reads as one month, so stats name intraday ranges plainly.
     static func rangeName(_ range: String) -> String {
         switch range {
-        case "1m", "1d": return "Day"
+        case "live", "1m", "1d": return "Day"
         case "15m": return "5D"  // 15-minute bars over five days
         case "max": return "All-Time"
         default: return rangeLabel(range)
