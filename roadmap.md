@@ -330,7 +330,7 @@ Scope: large UI change, do in a dedicated session.
 
 ## From Apple Notes (imported 2026-08-27)
 - [ ] (11-01: the only top bar is Safari's own smart banner from `apple-itunes-app` in index.html; InstallAnywhere is unused. Q: a screen recording of the glitch?) Loading glitch in the top App Store bar on web.
-- [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
+- [ ] (blocked: no web search key, Joshua signs up for a free Brave Search API key or a Google CSE key; without one People only finds Wikipedia names, 2026-11-01) People indexer does not work. Expand it and add AI support (Qwen etc).
 
 ### Open, security
 
