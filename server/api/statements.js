@@ -102,7 +102,8 @@ async function refreshStoredStatements(kv, statements, rules = {}) {
         // requiring rows here made every GET re-parse it, up to 12s a time.
         Array.isArray(statement?.transactions)
       ) {
-        return statement;
+        // Same object back when nothing changed, so the KV write below is skipped.
+        return applyRulesToSummary(statement, rules, statement.filename);
       }
       try {
         const buffer = await readStatementBuffer(kv, statement);

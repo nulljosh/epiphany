@@ -12,7 +12,7 @@ const EDITABLE_CATEGORIES = [
 ].sort();
 
 // Mirrors needsReview in server/api/statements-shared.js.
-const needsReview = (txn) => (!txn?.category || txn.category === 'uncategorized') && !txn?.reviewed;
+const needsReview = (txn) => (txn?.category === undefined || txn?.category === 'uncategorized') && !txn?.reviewed;
 const transactionId = (txn) => `${txn?.date}|${txn?.description}|${txn?.amount}`;
 
 async function patch(action, body) {

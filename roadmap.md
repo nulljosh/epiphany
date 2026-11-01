@@ -392,7 +392,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
-- [ ] Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
+- [x] (11-01: deposits, transfers and cash back no longer land in review; stored uncategorized rows get re-checked against a bigger keyword list on every load, learned rules still win) Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
 - [ ] (11-01: tag v6.3.0 pushed; blocked: gh release create needs Joshua's permission rule, 2026-11-01) GitHub version out of sync with README tag
 
 ## Ingested 2026-10-31

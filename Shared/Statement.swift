@@ -72,5 +72,5 @@ struct Transaction: Codable, Identifiable {
     }
 
     /// In the review queue: nothing categorized it and nobody waved it through. Mirrors needsReview on the server.
-    var needsReview: Bool { (category ?? "uncategorized") == "uncategorized" && reviewed != true }
+    var needsReview: Bool { category == "uncategorized" && reviewed != true } // nil is a deposit, payment or transfer, not spending
 }

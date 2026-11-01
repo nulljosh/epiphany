@@ -277,3 +277,27 @@ describe('findInsights', () => {
     expect(findInsights([])).toEqual([]);
   });
 });
+
+describe('review queue', async () => {
+  const { needsReview, applyCategoryRules } = await import('../../server/api/statements-shared.js');
+
+  it('leaves non-spending rows (null) out of review', () => {
+    expect(needsReview({ category: null })).toBe(false);
+    expect(needsReview({ category: 'uncategorized' })).toBe(true);
+    expect(needsReview({ category: 'uncategorized', reviewed: true })).toBe(false);
+    expect(needsReview({})).toBe(true);
+  });
+
+  it('re-categorizes stored uncategorized rows, rules still win', () => {
+    const rows = [
+      { description: 'Cash back - Prepaid card', category: 'uncategorized' },
+      { description: 'GLENTEL WIRELESSWAVE LA', category: 'uncategorized' },
+      { description: 'Berezan Lrs Willoughby', category: 'uncategorized' },
+      { description: 'Mystery Shop 42', category: 'uncategorized', reviewed: true },
+      { description: 'Telus Mobility', category: 'uncategorized' },
+    ];
+    const out = applyCategoryRules(rows, { 'telus mobility': 'phone' });
+    expect(out.map((t) => t.category)).toEqual([null, 'tech', 'liquor', 'uncategorized', 'phone']);
+    expect(out[3]).toBe(rows[3]);
+  });
+});

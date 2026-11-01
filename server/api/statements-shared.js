@@ -70,7 +70,9 @@ export function categorizeTransaction(description = '') {
   if (
     lower.includes('direct deposit') ||
     lower.includes('transfer in') ||
-    lower.includes('interest earned')
+    lower.includes('interest earned') ||
+    lower.includes('cash back') ||
+    lower.includes('cashback')
   ) {
     return null;
   }
@@ -84,6 +86,9 @@ export function categorizeTransaction(description = '') {
   if (lower.includes('transfer out')) return null;
   if (lower.includes('transfer')) return 'inter_account';
   if (lower.includes('starbucks')) return 'starbucks';
+  if (lower.includes('telus') || lower.includes('rogers') || lower.includes('bell mobility') || lower.includes('fido') || lower.includes('koodo') || lower.includes('freedom mobile') || lower.includes('shaw') || lower.includes('bc hydro') || lower.includes('fortis')) return 'utilities';
+  if (lower.includes('glentel') || lower.includes('wirelesswave') || lower.includes('best buy') || lower.includes('memory express')) return 'tech';
+  if (/\blrs\b/.test(lower) || lower.includes('bcl ') || lower.includes('bc liquor')) return 'liquor';
   if (lower.includes('subway') || lower.includes('wendy') || lower.includes('dominos') || lower.includes('pizza') || lower.includes("mcdonald") || lower.includes("triple o") || lower.includes("tripple o") || lower.includes("a&w") || lower.includes("chachi") || lower.includes('chipotle') || lower.includes('firehouse') || lower.includes('dairy queen') || lower.includes('freshslice') || lower.includes("moreno")) return 'food';
   if (lower.includes('apple.com') || lower.includes('mac mini') || lower.includes('macbook') || lower.includes('apple computer')) return 'tech';
   // ponytail: groceries, pharmacy and coffee used to fall into the generic
@@ -98,7 +103,7 @@ export function categorizeTransaction(description = '') {
   if (lower.includes('vapory') || lower.includes('vape street')) return 'vape';
   if (lower.includes('liquor') || lower.includes('shooter')) return 'liquor';
   if (lower.includes('cannabis') || lower.includes('420')) return 'cannabis';
-  if (lower.includes('claude') || lower.includes('anthropic') || lower.includes('openai') || lower.includes('chatgpt') || lower.includes('twilio') || lower.includes('codex')) return 'apps';
+  if (lower.includes('snaptrade') || lower.includes('claude') || lower.includes('anthropic') || lower.includes('openai') || lower.includes('chatgpt') || lower.includes('twilio') || lower.includes('codex')) return 'apps';
   if (lower.includes('compass') || lower.includes('chv')) return 'transit';
   if (lower.includes('chevron') || lower.includes('super save gas') || lower.includes('petro') || lower.includes('esso') || lower.includes('shell')) return 'gas';
   if (lower.includes('homes alive') || lower.includes('pet')) return 'pets';
@@ -232,14 +237,18 @@ export function normalizeMerchant(description = '') {
 // rules maps a merchant key to the category the user chose for it. Returns the
 // same transaction objects when nothing changes, so callers can detect a no-op.
 // The review queue: rows nothing could categorize that the person hasn't waved through yet.
-export const needsReview = (txn) => (!txn?.category || txn.category === 'uncategorized') && !txn?.reviewed;
+// A null category means "not spending" (deposits, card payments, transfers, cash back), so it never needs review;
+// only 'uncategorized', or a legacy row with no category at all, does.
+export const needsReview = (txn) => (txn?.category === undefined || txn?.category === 'uncategorized') && !txn?.reviewed;
 
 export function applyCategoryRules(transactions = [], rules = {}) {
   if (!rules || typeof rules !== 'object') return transactions;
   return transactions.map((txn) => {
+    // Rows saved before the keyword list grew get another look, so the review queue shrinks on its own.
+    const auto = txn?.category === 'uncategorized' && !txn?.reviewed ? categorizeTransaction(txn.description) : txn?.category;
     const key = normalizeMerchant(txn?.description);
-    if (key.length < MIN_MERCHANT_KEY_LENGTH || !Object.hasOwn(rules, key)) return txn;
-    return rules[key] === txn.category ? txn : { ...txn, category: rules[key] };
+    const next = key.length >= MIN_MERCHANT_KEY_LENGTH && Object.hasOwn(rules, key) ? rules[key] : auto;
+    return next === txn?.category ? txn : { ...txn, category: next };
   });
 }
 
