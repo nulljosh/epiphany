@@ -217,7 +217,6 @@ One theme per major, built from the open items below. Each major ships on web, i
 | after 100 | Every 10th major is a Mobbin pass and an `apple` skill audit; the nine in between take the next open group below, oldest first |
 
 ## 2026-10-29 QA leftovers (open)
-- [x] (2026-10-31: already fixed in 299c9a6, tripwire #235; Shared/Allocation.swift converts with CADUSD=X and shows nothing rather than a wrong total) iPhone and Mac allocation donut adds USD holdings to CAD cash at face value (the web was fixed in 49.0.0); the native apps need the CADUSD=X rate first.
 
 ## 2026-10-01 brain dump (open)
 - [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
@@ -299,7 +298,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
   an orphan; otherwise just re-upload June, then July, and confirm both now appear as separate
   months.
 - [ ] iOS: fix "Login with …" (social sign-in buttons), **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set them as Worker secrets (`npx wrangler secret put`). No code change unblocks this.
-- [x] (11-01: already fixed in 89.0.0, LIGHT_VARS on the overlay) Web price alerts panel stays dark in light mode: its `var(--bg-secondary, #18181b)` fallbacks win because those CSS variables aren't defined; move it to the theme tokens (seen in 21.0 QA).
 - [ ] Web landing page needs a light mode (looks great otherwise), note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
 
@@ -329,17 +327,8 @@ Scope: large UI change, do in a dedicated session.
 ## From Apple Notes (imported 2026-08-25)
 
 - [ ] Mobile web UI/UX is spotty overall, general pass needed.
-- [x] (11-01: fixed in cf83786, one Yahoo batch quote, per-symbol fallback capped at 20) `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
-  (2026-08-26 08:00 UTC) completed 200, but logged `[KV] set error: Too many
-  subrequests by single Worker invocation` twice, so part of the cache write was
-  dropped. The handler fans out to 111 stock symbols plus markets and commodities,
-  each its own fetch, then writes several KV keys, that is well past the
-  per-invocation subrequest limit. Fix is to batch the Yahoo fetches or split the run across the three cron
-  slots; raising the limit is a plan change, not a config flag. Also visible in
-  the same run and probably older: `Cron crypto fetch failed: HTTP 403`.
 
 ## From Apple Notes (imported 2026-08-27)
-- [x] (11-01: re-checked on live data, Vancouver incidents and traffic cluster to 14 to 20 markers at zoom 10 to 12, biggest badge 5; the single dot was empty layers) "One big dot for the entire city" on web: not yet root-caused. With almost every layer empty, the surviving markers cluster into a single badge (`clusterPoints` in `src/components/LiveMapBackdrop.jsx`, radius 60 at initial zoom 10.6). Re-check now that flights layer is returning real data.
 - [ ] (11-01: the only top bar is Safari's own smart banner from `apple-itunes-app` in index.html; InstallAnywhere is unused. Q: a screen recording of the glitch?) Loading glitch in the top App Store bar on web.
 - [ ] People indexer does not work. Expand it and add AI support (Qwen etc).
 
@@ -354,17 +343,11 @@ Scope: large UI change, do in a dedicated session.
   Run `scripts/rotate-keys.sh` to open the dashboards.
 
 ## Portfolio + Markets feedback (2026-09-03)
-- [x] (11-01: already there, the Signal picker in MarketsView on iOS and Mac) Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
-- [x] (11-01: `backtest.py assets`, table in tradingview/results-btc-eth-gld.txt. Blind 2020-now CAGR, Hold vs Double 7s: BTC 42% vs 17%, ETH 52% vs 21%, GLD 14% vs 4%. Holding wins on all three; Double 7s cuts drawdown, e.g. BTC 77% to 35%) ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
-- [x] (11-01: `backtest.py walk-forward` on BTC, ETH, GLD, table generated into WHITEPAPER from results.json. Re-tuned yearly, Double 7s falls to 8%/yr on BTC vs 57% holding; Donchian holds up best: 55% vs 57% on BTC, 24% vs 20% on ETH, smaller worst year) Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
-- [x] (11-01: `backtest.py assets` writes `tradingview/results.json`, `backtest.py whitepaper` fills the `<!-- results:assets -->` block, `tests/py/test_results_drift.py` fails on drift; BTC/ETH/GLD table is the first one generated) Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
 - [ ] Move the other WHITEPAPER benchmark tables (S&P 500 universe, ETFs, sp-century, everything-else) into results.json the same way the next time each is rerun
-- [x] (11-01: `backtest.py portfolio-sp500`, 428 stocks, biggest 10 day fall enters first; table generated into WHITEPAPER. About 96% invested, 2020-now 10.1% to 14.6% a year against SPY 14.8%, so it never beats holding; survivorship bias flatters it. Also fixed the invested column, which counted slots instead of money) Double 7s as a portfolio across all 429 stocks at once, so cash is always working (yearly return, not just per trade)
-- [x] (11-01: no, and no detail line either. Re-tuned yearly it makes 8% a year on BTC against 57% holding, and over all 428 S&P 500 stocks it never beats SPY, so showing it would point people at a rule that loses to doing nothing. Revisit only if a future benchmark flips that) Decide whether Double 7s belongs on the Buy/Hold/Sell badge. Held back on purpose: it says Hold most days, which would make the badge near useless. Better as an extra line in the stock detail view on web, iOS and macOS
 
 ## Ingested 2026-10-01
 - [ ] (11-01: the watch computes no signals, it shows what WatchAPI.swift reads from the server, so leaving out Shared/ is fine; the Android, Windows and Linux check is blocked here, no JDK) Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
@@ -373,14 +356,11 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 
 ## QA loop 2026-10-01
 Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), place card A (Look Around nil on simulator only, works on device), Markets B (rows blank in demo, ticker fixed), Portfolio A-, Settings A.
-- [x] (11-01: superseded, Joshua asked for emoji pins on 2026-10-29, b10e217; Shared/MapEmoji.swift is the deliberate exception) Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
-- [x] (11-01: written to metadata/version/next/en-CA.json, one line, three feature lines and a true trust line, no em dashes; applies when the next version opens, the live 5.0.0 text is locked. app-info privacy URL moved to epiphany.jaybulb.com) App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [x] (11-01: already done, FinancePanel extracts the text in the browser with unpdf and posts it with the PDF) Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
@@ -388,23 +368,13 @@ Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Ep
 ## Cloudflare audit 2026-10-01
 Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
 - [ ] (11-01: macro is fixed, /api/macro returns CPI and the rest live. Fear and Greed still answers unavailable: CNN refuses Cloudflare egress by IP and the KV fallback has nothing to serve. Options: our own mood gauge from VIX and SPX momentum, labelled ours not CNN's, or drop the widget. Joshua's call) macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
-- [x] (11-01: already fixed: list() walks every KV page, sorts newest first by uploadedAt and put() stores size in metadata) _blob.js list() is one unpaginated KV page sorted lexicographically, size always 0
 
 ## Competitor gaps (sweep 2026-10-01: Copilot, Monarch, Apple Stocks, Yahoo, Robinhood, Citizen, Google Maps)
-- [x] (11-01: already shipped, the map menu has a Show section with every layer toggle on iOS and Mac, and the web map has its own) Layers button on the map itself: toggle Flights, Traffic, Incidents, Weather, Quakes, Wildfires, AQI without leaving the map (vs Google Maps Layers sheet with Traffic, T). ios/Views/SituationView.swift:772 layerPickerButton is already a Menu of basemap styles; add a second `Section("Layers")` with `Toggle("Flights", isOn: $showFlights)` etc. bound to the nine @AppStorage flags that already exist at :115-124 (SettingsView.swift:649 keeps its copies, same keys). macos/Views/SituationView.swift:564 same Menu, bound to appState.situation*Enabled (the bindings SettingsView.swift:390 sourceB
-- [x] (11-01: iOS already had it; the Mac now matches: small pans keep the loaded layers, the flight timer stops with no flights or in Low Power Mode, and the map reloads every 5 minutes. Mac build clean) Map that is fast and stays alive: skip the refetch on tiny pans, stop the flight timer when there is nothing to move, honour Low Power Mode, and reload every 5 minutes while the tab is open (vs Google Maps and Apple Maps only re-searc). ios/Views/SituationView.swift: add `@State private var lastLoadedRegion: MKCoordinateRegion?`; in .onMapCameraChange (:687) compute centre delta vs lastLoadedRegion and if it moved under 25% of the previous span and latitudeDelta ratio is within 0.5 to 2, run only refreshVenues and return; set lastLoadedRegion at the end of loadData (:873). :169 flight timer: `guard showFlights, !flights.isEmpty, !ProcessInfo.process
-- [x] (11-01: already shipped in 5c7163f: /api/search live (q=shopify returns SHOP, SHOP.TO), web MarketsPanel and iOS MarketsView use it) Search any ticker or company name and add it to the watchlist (vs Apple Stocks search returns any symbol b). New server/api/search.js: GET ?q=, calls Yahoo `v1/finance/search?q=&quotesCount=8&newsCount=0` with YAHOO_HEADERS from stocks-shared.js (same unofficial endpoint family stocks-free.js:190 already uses), returns [{symbol, name, exchange, type}], KV cache 10 min keyed by lowercased q. Register in api/gateway.js (import plus the route map at :29 and the cache seconds table at :105). ios/Views/MarketsView.swift:274 bott
-- [x] (11-01: already shipped in 5c7163f, workbox caches cartocdn tiles StaleWhileRevalidate and the map APIs NetworkFirst) Web map keeps its last pins and tiles when the network drops (vs Apple Maps offline areas). vite.config.js:64 workbox block: add `runtimeCaching: [ { urlPattern: /basemaps\.cartocdn\.com/, handler: 'StaleWhileRevalidate', options: { cacheName: 'tiles', expiration: { maxEntries: 500, maxAgeSeconds: 7*24*3600 } } }, { urlPattern: /\/api\/(flights|traffic|incidents|earthquakes|weather-alerts|wildfires|aqi|crime|local-events|stocks-free|commodities|crypto)/, handler: 'NetworkFirst', options: { cacheName: 'api',
-- [x] (11-01: already shipped, quake sheets show ageText on iOS and Mac and the web map shows "42 min ago") Pin age for earthquakes and weather alerts: '42 min ago' in the sheet and faded pins past 24 h (vs Citizen colour-codes pins by age). Scoped down from the candidate: /api/incidents is an Overpass query for construction sites, police and fire stations, museums and bus stations (server/api/incidents.js:130-172), static map features with no event time, so incident age is not a thing. Real timestamps exist for quakes (server sends `time` epoch ms at earthquakes.js:57; Shared/SituationData.swift:62 already lists `time` as a coding key but only fills the
 Bigger, parked:
-- [x] (11-01: the Budget tab already had per-category actuals with the on-track colour on web, iOS and Mac; now each line also says "on pace for $X" once a tenth of the month has gone (projectedSpend, Swift projected(in:)). The medium Budget widget now lists the three lines furthest through their money with the same colours, from the App Group snapshot. Builds; not seen on a home screen) Per-category budget vs actual with an on-track colour, mid-month projection, in the Budget tab and the Budget widget (day, high): budget.expenses lines (src/components/FinancePanel.jsx:1257, server/api/portfolio.js mergeBudget, src/utils/financeData.js validatePortfolioData) have no category key, so first add one and a picker from the statement cat
-- [x] (11-01: the queue, Mark all reviewed and merchant rules already existed on web, iOS and Mac; each row now has two one-tap suggestions, the categories rows with a shared merchant word use most, topped up with the most used overall. reviewSuggest.js with tests, Swift twin in ReviewQueueCard) Review queue: 'N rows to sort' card after upload with two suggested categories per row and Mark all reviewed (day, medium): Builds on the rules map from the categorization quick win: suggestions come from the stored rules plus the most common category for similar merchant text. Web card at the top of the spending tab in src/components/Finance
 - [ ] Push notifications that fire with the phone in your pocket: price alerts, nearby severe weather, M4+ quakes, wildfires, bill reminders (week, high): Candidates 6, 7 and 15 collapse into one piece of infrastructure. Server: a 5-minute cron (wrangler.jsonc:27 triggers and the path map at worker/index.js:145; today the only data cron is 08:00 weekdays) sweeping Supabase
-- [x] (11-01: the Portfolio dividend card now lists each holding's next earnings date on web, iOS and Mac; Add to Calendar on iOS (EventKit write-only) and web (.ics); the Mac shows the dates without the button, it has no calendar entitlement) Earnings and dividend dates merged into the Portfolio financial calendar with Add to Calendar (hours, medium): Follow-up to the earnings quick win once nextEarnings is on the Stock model: ios/Views/PortfolioView.swift:555 buildCalendarEvents merges watchlist and holdings earnings dates, StockDetailView gets an EKEvent button. Lis
 Dropped on purpose: Copilot-style ML category prediction from amount, weekday and card: a per-user merchant ru; Rocket Money SMS assistant texting you about price increases and new subscriptions: needs ; Watch Duty evacuation orders subscribed by county: requires a regional evacuation-order fe; Citizen-style following an incident from first report to resolved: /api/incidents is an Op; Flightradar24 7700 emergency squawk alerts: needs continuous aircraft polling in the backg; Apple Maps-style full offline area download: MapKit exposes no tile download API and the C
 
 ## Ingested 2026-10-02
-- [x] Add the jobs report. (11-01: live, /api/macro returns Unemployment 4.2 and Nonfarm Payrolls for Sep 2026 from BLS.)
 - [ ] (blocked: a free FRED API key needs a signup, Joshua, 2026-11-01) Only the BLS and Yahoo backed macro series come back live (CPI, unemployment, payrolls, 10Y, 30Y). Fed Funds, GDP, jobless claims, consumer confidence, PCE, retail sales and the 2Y read the FRED CSV, which refuses Cloudflare egress. A FRED API key (free, fred.stlouisfed.org) as FRED_API_KEY plus api.stlouisfed.org in macro.js would bring all seven back.
 
 ## Ingested 2026-10-21
@@ -414,9 +384,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] [P3] Remove Debt & Calendar's calendar unless we can find a use for it. (notes/attachments/2026-10-21/epiphany-6.png)
 
 ## QA pass 2026-10-21 (web, iOS)
-- [x] (11-01: already fixed in fdc02aa 10-21, opacity 0.45 to 0.3 and a softer ramp) Web map heatmap renders as one opaque red blob over Maple Ridge/Langley. Lower opacity or radius so streets show through.
 - [ ] (same decision as the macro and fear-greed line above, Joshua's call 11-01) Web Fear & Greed is still empty: CNN blocks Workers egress (418). iOS and macOS now fetch CNN from the device when the server has nothing; web needs another source.
-- [x] (11-01: seen on the iPhone 17 Pro simulator after a keychain reset, `-qaTab 3`, light and dark: Sign In and Register, then Map Sources, then Appearance) iOS Settings signed out: Map and Appearance sections added 2026-10-21, builds, not yet seen signed out in the simulator (keychain kept the session).
 
 ## Ingested 2026-10-25
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
@@ -425,9 +393,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-30
 - [ ] Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
-- [x] (11-01: gone from web, iOS and Mac) Remove the compound growth calculator, it's redundant and unnecessary (notes/attachments/2026-10-30/epiphany-5.png)
 - [ ] (11-01: tag v6.3.0 pushed; blocked: gh release create needs Joshua's permission rule, 2026-11-01) GitHub version out of sync with README tag
-- [x] (11-01: iPhone ticker takes a swipe and carries on from there; Fear and Greed moved into the ticker inset, flush under it) Horizontal scrolling stocks bar should be scrollable and interactive: swipe and scroll it. Fear and greed should sit flush underneath it
 
 ## Ingested 2026-10-31
 - [ ] Crypto needs real-time, second-by-second price updates (Bitcoin detail screen, notes/attachments/2026-10-31/epiphany-1.png). Related to the open "Stock view: add live mode" line above.
