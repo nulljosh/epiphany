@@ -285,7 +285,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## Other open items
 - [ ] Portfolio/Settings tab audit, getting cluttered, decide what stays. Calendar view specifically flagged as possibly unnecessary.
-- [ ] iOS landscape support, one-line flag, but map/markets/portfolio are portrait-first; enabling without adapting layouts looks broken. Needs a per-screen pass (split layouts, wider charts, map controls). Same applies to other iOS apps. Also: Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss).
+- [ ] Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss). (Landscape pass done 11-01.)
 
 ## From Apple Notes (imported 2026-08-11)
 - [ ] **Needs Joshua: re-upload the June 2026 statement.** Consequence of the month-labelling
