@@ -1,4 +1,4 @@
-# Epiphany loop handoff (2026-10-30, afternoon)
+# Epiphany loop handoff (2026-10-31, evening)
 
 ## What the loop is
 
@@ -6,6 +6,7 @@ Work down the open Mobbin rows in `roadmap.md`, one row per minor version (5.1.0
 
 ## Where things stand
 
+- 2026-10-31: charts on iPhone and Mac got five-year and All Time ranges and shorter range labels, and crypto pages stream live prices about once a second, falling back to the 15 second poll. A shared greeting's iPhone-only colour had broken the Mac build; fixed. Pushed; the native part ships with the next build.
 - 6.3.0: under today's portfolio move on web, iPhone and Mac, "Ahead of the S&P 500 by 0.8 pts today" (or behind, or even), holdings' day change against SPY's (`vsMarket` in `src/utils/allocation.js`, `Allocation.vsMarket`).
 - 6.2.0: a banner across the top of the map when a weather warning's area covers the map's centre, worst colour first ("Freezing drizzle (advisory) here"), on web, iPhone and Mac (`alertHere` in `src/utils/alertHere.js`, `WeatherAlert.covers` and `here`, `WarningBanner`).
 - 6.1.0: rain radar plays its last two hours (13 RainViewer frames, 0.7 s each, the newest held for three beats) with a "Radar 10:50 AM" pill, on web, iPhone and Mac. Web: one raster layer per frame, switched by opacity. Native: `RainRadarLoop` decodes the frames once and `RadarClock` reads the same wall-clock index, so the two stay in step with no shared state. The loop view must be sized up front: an annotation that starts at zero size never grows.
