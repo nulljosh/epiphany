@@ -426,3 +426,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Remove the compound growth calculator, it's redundant and unnecessary (notes/attachments/2026-10-30/epiphany-5.png)
 - [ ] GitHub version out of sync with README tag
 - [ ] Horizontal scrolling stocks bar should be scrollable and interactive: swipe and scroll it. Fear and greed should sit flush underneath it
+
+## Ingested 2026-10-31
+- [ ] Crypto needs real-time, second-by-second price updates (Bitcoin detail screen, notes/attachments/2026-10-31/epiphany-1.png). Related to the open "Stock view: add live mode" line above.
+- [ ] Stocks need 5Y and All Time ranges, not just 1Y. The range bar today stops at 1M, 15M, 1D, 5D, 1MO, 3MO, 1Y.
