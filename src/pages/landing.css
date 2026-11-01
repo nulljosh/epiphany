@@ -133,3 +133,4 @@ html:has(.lp) { scroll-behavior: smooth; }
   .lp .reveal { opacity: 1; transform: none; transition: none; }
   .lp .btn, .lp { transition: none; }
 }
+.lp .word-band { color: var(--accent); position: relative; width: 100%; margin: 32px 0 0; height: clamp(120px, 16vw, 220px); } .lp .word-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; } .lp .word-band.live .word-canvas { display: block; }

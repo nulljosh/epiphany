@@ -61,6 +61,13 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
     return () => { document.removeEventListener('scroll', on, { capture: true }); cancelAnimationFrame(t); };
   }, []);
 
+  // Footer glyph band (public/footer-band.js): Epiphany's own things cut like an engraving. Loaded once the footer exists.
+  useEffect(() => {
+    const s = document.createElement('script');
+    s.src = '/footer-band.js'; s.defer = true; document.body.appendChild(s);
+    return () => s.remove();
+  }, []);
+
   const act = (action) => (e) => {
     e.preventDefault();
     if (action === 'paid') onRegisterPaid(); else if (action === 'login') onLogin(); else onRegister();
@@ -157,6 +164,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             <div><p className="label">Project</p><a href="/privacy.html">Privacy</a><a href="/terms.md">Terms</a><a href={`${REPO}/blob/main/SECURITY.md`}>Security</a><a href="https://jaybulb.com">More apps</a></div>
           </nav>
         </div>
+        <div className="word-band" aria-hidden="true"><canvas className="word-canvas" /></div>
         <p className="legal">© 2026 Joshua Trommel · Apache 2.0 · <a href="/privacy.html">Privacy</a></p>
         <p className="legal note">Epiphany provides educational and informational tools only and does not provide investment advice. Past performance does not guarantee future results. Brokerage connections are read-only.</p>
       </footer>
