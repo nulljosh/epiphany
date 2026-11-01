@@ -1,0 +1,40 @@
+{
+  "assets": {
+    "BTC": {
+      "Double 7s": {
+        "cagr": 0.1658,
+        "mdd": 0.3541,
+        "trades": 53
+      },
+      "Hold": {
+        "cagr": 0.4179,
+        "mdd": 0.7666,
+        "trades": 1
+      }
+    },
+    "ETH": {
+      "Double 7s": {
+        "cagr": 0.2117,
+        "mdd": 0.5057,
+        "trades": 119
+      },
+      "Hold": {
+        "cagr": 0.5182,
+        "mdd": 0.7935,
+        "trades": 1
+      }
+    },
+    "GLD": {
+      "Double 7s": {
+        "cagr": 0.0437,
+        "mdd": 0.2243,
+        "trades": 42
+      },
+      "Hold": {
+        "cagr": 0.1395,
+        "mdd": 0.2826,
+        "trades": 1
+      }
+    }
+  }
+}

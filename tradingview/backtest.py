@@ -8,7 +8,8 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py sp500    # every current S&P 500 stock with history back to 2011
     python3 tradingview/backtest.py etfs     # index and sector ETFs
     python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
-    python3 tradingview/backtest.py assets   # the BTC table repeated on ETH and GLD
+    python3 tradingview/backtest.py assets   # the BTC table repeated on ETH and GLD, saved to results.json
+    python3 tradingview/backtest.py whitepaper  # rewrite the WHITEPAPER tables generated from results.json
     python3 tradingview/backtest.py trend-spy  # hold the index only above its 200 day average, with and without leverage
     python3 tradingview/backtest.py portfolio  # Double 7s as one account over the index ETFs
     python3 tradingview/backtest.py sp-century  # S&P 500 index since 1927, per decade
@@ -603,15 +604,55 @@ def main():
         return btc_years()
     if sys.argv[1:] == ["assets"]:
         return assets()
+    if sys.argv[1:] == ["whitepaper"]:
+        return whitepaper()
     table("BTC", fetch())
 
 
 def assets():
     """The same pick-then-score-blind table on BTC, ETH and gold, so neither crypto nor gold rests on one lucky asset.
-    ETH starts in Nov 2017 on Yahoo, so its pick window is short; GLD starts in 2004."""
+    ETH starts in Nov 2017 on Yahoo, so its pick window is short; GLD starts in 2004.
+    Hold and Double 7s land in results.json; `whitepaper` turns them into the WHITEPAPER table."""
+    rows = {}
     for name, bars in (("BTC", fetch()), ("ETH", fetch_yahoo("ETH-USD")), ("GLD", fetch_yahoo("GLD"))):
-        table(name, bars)
+        test = table(name, bars)
+        rows[name] = {m: {k: round(test[m][k], 4) for k in ("cagr", "mdd", "trades")} for m in ("Hold", "Double 7s")}
         print()
+    save_results("assets", rows)
+
+
+RESULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results.json")
+WHITEPAPER = os.path.join(os.path.dirname(RESULTS), "..", "WHITEPAPER.md")
+
+
+def save_results(key, value):
+    data = json.load(open(RESULTS)) if os.path.exists(RESULTS) else {}
+    data[key] = value
+    json.dump(data, open(RESULTS, "w"), indent=2, sort_keys=True)
+    open(RESULTS, "a").write("\n")
+
+
+def render(key, data):
+    """Markdown for one generated WHITEPAPER block. Only `assets` is generated so far; the other tables are still typed in."""
+    if key == "assets":
+        lines = ["| Asset | Hold, yearly | Hold, worst drop | Double 7s, yearly | Double 7s, worst drop | Double 7s trades |", "|---|---|---|---|---|---|"]
+        for name, r in data.items():
+            h, d = r["Hold"], r["Double 7s"]
+            lines.append(f"| {name} | {h['cagr']:.0%} | {h['mdd']:.0%} | {d['cagr']:.0%} | {d['mdd']:.0%} | {d['trades']} |")
+        return "\n".join(lines)
+    raise KeyError(key)
+
+
+def blocks(text):
+    """{key: body} for every <!-- results:key --> ... <!-- /results --> block."""
+    return dict(re.findall(r"<!-- results:(\w+) -->\n(.*?)\n<!-- /results -->", text, re.S))
+
+
+def whitepaper():
+    data, text = json.load(open(RESULTS)), open(WHITEPAPER).read()
+    for key in blocks(text):
+        text = re.sub(rf"(<!-- results:{key} -->\n).*?(\n<!-- /results -->)", lambda m: m[1] + render(key, data[key]) + m[2], text, flags=re.S)
+    open(WHITEPAPER, "w").write(text)
 
 
 def table(name, bars):
@@ -621,11 +662,14 @@ def table(name, bars):
     print(f"{name} daily, {day(0)} to {day(len(bars) - 1)}, {len(bars)} bars. Fee {FEE:.1%}/side.")
     print(f"Pick on {day(tr[0])}..{day(tr[1] - 1)}, score blind on {day(te[0])}..{day(te[1] - 1)}.\n")
     print(f"{'strategy':16}{'setting':>14} | {'train CAGR':>10} {'maxDD':>6} | {'TEST CAGR':>10} {'maxDD':>6} {'x money':>8} {'trades':>6}")
+    out = {}
     for mode, grid in GRID.items():
         ohlc = (o, h, l, c)
         best = max(grid, key=lambda p: score(mode, p, bars, ohlc, *tr)["cagr"])
         a, b = score(mode, best, bars, ohlc, *tr), score(mode, best, bars, ohlc, *te)
         print(f"{mode:16}{str(best):>14} | {a['cagr']:>10.0%} {a['mdd']:>6.0%} | {b['cagr']:>10.0%} {b['mdd']:>6.0%} {b['mult']:>8.1f} {b['trades']:>6}")
+        out[mode] = b
+    return out
 
 
 if __name__ == "__main__":

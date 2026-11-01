@@ -139,6 +139,23 @@ day average) has its worst close in 10 days, buy. When it has its best close in
 The watchlist row reads the symbols straight off our TradingView watchlist
 (`backtest.py watchlist`), so the test follows whatever is on the list.
 
+**Bitcoin, Ether and gold, against holding.** Same test on three assets, so
+neither crypto nor gold rests on one lucky chart (`backtest.py assets`).
+Tuned on 2012 to 2019 (Ether only has data from late 2017), graded on 2020 to
+now. This table is written from `tradingview/results.json` by
+`backtest.py whitepaper`, and a test fails if the two disagree.
+
+<!-- results:assets -->
+| Asset | Hold, yearly | Hold, worst drop | Double 7s, yearly | Double 7s, worst drop | Double 7s trades |
+|---|---|---|---|---|---|
+| BTC | 42% | 77% | 17% | 35% | 53 |
+| ETH | 52% | 79% | 21% | 51% | 119 |
+| GLD | 14% | 28% | 4% | 22% | 42 |
+<!-- /results -->
+
+Holding made more money on all three. Double 7s cut the worst drop, by more
+than half on Bitcoin and by about a third on Ether.
+
 **Nearly 100 years of the S&P 500.** The index itself, tuned on 1928 to 1977
 and graded on 1977 to now, 49 years it never saw
 (`backtest.py sp-century`):
