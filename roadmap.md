@@ -329,7 +329,7 @@ Scope: large UI change, do in a dedicated session.
 ## From Apple Notes (imported 2026-08-25)
 
 - [ ] Mobile web UI/UX is spotty overall, general pass needed.
-- [ ] `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
+- [x] (11-01: fixed in cf83786, one Yahoo batch quote, per-symbol fallback capped at 20) `/api/cron` hits the Workers subrequest cap. The first Cloudflare-run cron
   (2026-08-26 08:00 UTC) completed 200, but logged `[KV] set error: Too many
   subrequests by single Worker invocation` twice, so part of the cache write was
   dropped. The handler fans out to 111 stock symbols plus markets and commodities,
