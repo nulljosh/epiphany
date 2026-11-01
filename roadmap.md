@@ -404,7 +404,8 @@ Bigger, parked:
 Dropped on purpose: Copilot-style ML category prediction from amount, weekday and card: a per-user merchant ru; Rocket Money SMS assistant texting you about price increases and new subscriptions: needs ; Watch Duty evacuation orders subscribed by county: requires a regional evacuation-order fe; Citizen-style following an incident from first report to resolved: /api/incidents is an Op; Flightradar24 7700 emergency squawk alerts: needs continuous aircraft polling in the backg; Apple Maps-style full offline area download: MapKit exposes no tile download API and the C
 
 ## Ingested 2026-10-02
-- [ ] Add the jobs report.
+- [x] Add the jobs report. (11-01: live, /api/macro returns Unemployment 4.2 and Nonfarm Payrolls for Sep 2026 from BLS.)
+- [ ] (blocked: a free FRED API key needs a signup, Joshua, 2026-11-01) Only the BLS and Yahoo backed macro series come back live (CPI, unemployment, payrolls, 10Y, 30Y). Fed Funds, GDP, jobless claims, consumer confidence, PCE, retail sales and the 2Y read the FRED CSV, which refuses Cloudflare egress. A FRED API key (free, fred.stlouisfed.org) as FRED_API_KEY plus api.stlouisfed.org in macro.js would bring all seven back.
 
 ## Ingested 2026-10-21
 - [ ] (11-01: native fixed, 3.0.0+ live on jaybulb; blocked: Google and GitHub OAuth console callbacks need Joshua's console login) Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
