@@ -358,7 +358,7 @@ Scope: large UI change, do in a dedicated session.
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
-- [x] (11-01: `backtest.py assets`, table in tradingview/assets.txt. Blind 2020-now CAGR, Hold vs Double 7s: BTC 42% vs 17%, ETH 52% vs 21%, GLD 14% vs 4%. Holding wins on all three; Double 7s cuts drawdown, e.g. BTC 77% to 35%) ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
+- [x] (11-01: `backtest.py assets`, table in tradingview/results-btc-eth-gld.txt. Blind 2020-now CAGR, Hold vs Double 7s: BTC 42% vs 17%, ETH 52% vs 21%, GLD 14% vs 4%. Holding wins on all three; Double 7s cuts drawdown, e.g. BTC 77% to 35%) ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
 - [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [ ] Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
