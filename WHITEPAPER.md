@@ -156,6 +156,26 @@ now. This table is written from `tradingview/results.json` by
 Holding made more money on all three. Double 7s cut the worst drop, by more
 than half on Bitcoin and by about a third on Ether.
 
+**Walk-forward: re-tune every year.** A single tuning window can get lucky. So
+each January we re-pick every strategy's setting using only the years before
+it, grade it on that one year, and chain the graded years together
+(`backtest.py walk-forward`). Each cell is the yearly return, with the deepest
+drop inside any one year in brackets. Generated from `results.json` like the
+table above.
+
+<!-- results:walkforward -->
+| Asset | Graded from | Hold | Double 7s | RSI2 pullback | Donchian | Two MA |
+|---|---|---|---|---|---|---|
+| BTC | 2015 | 57% (81%) | 8% (48%) | 9% (35%) | 55% (48%) | 44% (56%) |
+| ETH | 2021 | 20% (74%) | 2% (46%) | 3% (25%) | 24% (43%) | 16% (54%) |
+| GLD | 2008 | 7% (30%) | 2% (22%) | 1% (20%) | 5% (20%) | 5% (27%) |
+<!-- /results -->
+
+Double 7s and RSI(2) fall far behind holding once they are re-tuned every
+year. Donchian breakout, the trend rule that buys a new 10 to 100 day high,
+holds up best: about level with holding on Bitcoin, a little behind on gold, ahead on
+Ether, with a much smaller worst year on both coins.
+
 **Nearly 100 years of the S&P 500.** The index itself, tuned on 1928 to 1977
 and graded on 1977 to now, 49 years it never saw
 (`backtest.py sp-century`):
@@ -242,7 +262,7 @@ sits idle between trades, and that costs far more than the edge earns.
 - **Buying dips works more often than chasing trends.** Trend strategies made
   money on fewer than half their trades. They softened the crashes but gave
   back most of the gains.
-- **Nothing beat buying and holding on raw return.** On single stocks and the
+- **Almost nothing beat buying and holding on raw return.** The one exception is Donchian on Ether in the walk-forward test, graded since 2021. On single stocks and the
   S&P 500 index, Double 7s had smaller worst drops than holding (Bitcoin: -53%
   at worst against -72%). As one account over index funds the drop was no
   better (35% against 34%) and the return was far lower. It is a way to win

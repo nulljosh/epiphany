@@ -36,5 +36,88 @@
         "trades": 1
       }
     }
+  },
+  "walkforward": {
+    "BTC": {
+      "Donchian": {
+        "cagr": 0.5538,
+        "from": 2015,
+        "worst": 0.4845
+      },
+      "Double 7s": {
+        "cagr": 0.081,
+        "from": 2015,
+        "worst": 0.4818
+      },
+      "Hold": {
+        "cagr": 0.5723,
+        "from": 2015,
+        "worst": 0.8146
+      },
+      "RSI2 pullback": {
+        "cagr": 0.0858,
+        "from": 2015,
+        "worst": 0.3487
+      },
+      "Two MA": {
+        "cagr": 0.4444,
+        "from": 2015,
+        "worst": 0.5642
+      }
+    },
+    "ETH": {
+      "Donchian": {
+        "cagr": 0.2389,
+        "from": 2021,
+        "worst": 0.4311
+      },
+      "Double 7s": {
+        "cagr": 0.0181,
+        "from": 2021,
+        "worst": 0.4636
+      },
+      "Hold": {
+        "cagr": 0.1985,
+        "from": 2021,
+        "worst": 0.7405
+      },
+      "RSI2 pullback": {
+        "cagr": 0.0272,
+        "from": 2021,
+        "worst": 0.2456
+      },
+      "Two MA": {
+        "cagr": 0.165,
+        "from": 2021,
+        "worst": 0.5379
+      }
+    },
+    "GLD": {
+      "Donchian": {
+        "cagr": 0.0534,
+        "from": 2008,
+        "worst": 0.201
+      },
+      "Double 7s": {
+        "cagr": 0.0244,
+        "from": 2008,
+        "worst": 0.2177
+      },
+      "Hold": {
+        "cagr": 0.0681,
+        "from": 2008,
+        "worst": 0.2985
+      },
+      "RSI2 pullback": {
+        "cagr": 0.0066,
+        "from": 2008,
+        "worst": 0.2016
+      },
+      "Two MA": {
+        "cagr": 0.0501,
+        "from": 2008,
+        "worst": 0.271
+      }
+    }
   }
 }

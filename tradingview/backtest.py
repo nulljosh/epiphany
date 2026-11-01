@@ -9,6 +9,7 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py etfs     # index and sector ETFs
     python3 tradingview/backtest.py btc-years  # BTC, one row per calendar year
     python3 tradingview/backtest.py assets   # the BTC table repeated on ETH and GLD, saved to results.json
+    python3 tradingview/backtest.py walk-forward  # BTC, ETH, GLD: re-pick every year on the past only, chain the blind years
     python3 tradingview/backtest.py whitepaper  # rewrite the WHITEPAPER tables generated from results.json
     python3 tradingview/backtest.py trend-spy  # hold the index only above its 200 day average, with and without leverage
     python3 tradingview/backtest.py portfolio  # Double 7s as one account over the index ETFs
@@ -604,6 +605,8 @@ def main():
         return btc_years()
     if sys.argv[1:] == ["assets"]:
         return assets()
+    if sys.argv[1:] == ["walk-forward"]:
+        return walk_forward()
     if sys.argv[1:] == ["whitepaper"]:
         return whitepaper()
     table("BTC", fetch())
@@ -619,6 +622,40 @@ def assets():
         rows[name] = {m: {k: round(test[m][k], 4) for k in ("cagr", "mdd", "trades")} for m in ("Hold", "Double 7s")}
         print()
     save_results("assets", rows)
+
+
+WF_MODES = ["Hold", "Double 7s", "RSI2 pullback", "Donchian", "Two MA"]
+
+
+def walk_years(bars, modes=WF_MODES, first_pick=2):
+    """Each calendar year, pick every mode's setting on all earlier years only, then score that year blind.
+    Needs `first_pick` full years before the first graded one. Returns {mode: {cagr, worst, years}}:
+    cagr chains the blind years, worst is the deepest drop inside any one year (each year starts flat)."""
+    o, h, l, c = ([r[k] for r in bars] for k in (1, 2, 3, 4))
+    y0 = datetime.fromtimestamp(bars[200][0], timezone.utc).year + 1
+    last = datetime.fromtimestamp(bars[-1][0], timezone.utc).year
+    out = {m: {"mult": 1.0, "worst": 0.0, "days": 0.0} for m in modes}
+    for y in range(y0 + first_pick, last + 1):
+        tr = window(bars, f"{y0}-01-01", f"{y - 1}-12-31")
+        te = window(bars, f"{y}-01-01", f"{y}-12-31")
+        if te[1] - te[0] < 20:
+            continue
+        for m in modes:
+            best = max(GRID[m], key=lambda p: score(m, p, bars, (o, h, l, c), *tr)["cagr"])
+            r = score(m, best, bars, (o, h, l, c), *te)
+            out[m]["mult"] *= r["mult"]
+            out[m]["worst"] = max(out[m]["worst"], r["mdd"])
+            out[m]["days"] += (bars[te[1] - 1][0] - bars[te[0]][0]) / 86400
+    return {m: {"cagr": round(v["mult"] ** (365.25 / v["days"]) - 1, 4), "worst": round(v["worst"], 4),
+                "from": y0 + first_pick} for m, v in out.items()}
+
+
+def walk_forward():
+    rows = {}
+    for name, bars in (("BTC", fetch()), ("ETH", fetch_yahoo("ETH-USD")), ("GLD", fetch_yahoo("GLD"))):
+        rows[name] = walk_years(bars)
+        print(name, "graded from", rows[name]["Hold"]["from"], " ".join(f"{m}: {v['cagr']:.0%}/yr worst {v['worst']:.0%}" for m, v in rows[name].items()))
+    save_results("walkforward", rows)
 
 
 RESULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results.json")
@@ -639,6 +676,11 @@ def render(key, data):
         for name, r in data.items():
             h, d = r["Hold"], r["Double 7s"]
             lines.append(f"| {name} | {h['cagr']:.0%} | {h['mdd']:.0%} | {d['cagr']:.0%} | {d['mdd']:.0%} | {d['trades']} |")
+        return "\n".join(lines)
+    if key == "walkforward":
+        lines = ["| Asset | Graded from | " + " | ".join(WF_MODES) + " |", "|---|---|" + "---|" * len(WF_MODES)]
+        for name, r in data.items():
+            lines.append(f"| {name} | {r['Hold']['from']} | " + " | ".join(f"{r[m]['cagr']:.0%} ({r[m]['worst']:.0%})" for m in WF_MODES) + " |")
         return "\n".join(lines)
     raise KeyError(key)
 

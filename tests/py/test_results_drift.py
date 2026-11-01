@@ -22,5 +22,17 @@ class Drift(unittest.TestCase):
         self.assertIn("| X | 42% | 77% | 17% | 35% | 53 |", bt.render("assets", row))
 
 
+class WalkForward(unittest.TestCase):
+    def test_hold_on_a_steady_climb_chains_to_the_climb(self):
+        # 0.05% a day for 8 years: Hold re-buys each Jan 1, so the chain is the climb less two fees a year.
+        day = 86400
+        start = 1262304000  # 2010-01-01
+        bars = [[start + i * day, 100 * 1.0005 ** i, 100 * 1.0005 ** i * 1.001, 100 * 1.0005 ** i * 0.999, 100 * 1.0005 ** i] for i in range(8 * 365)]
+        r = bt.walk_years(bars, modes=["Hold"])["Hold"]
+        self.assertAlmostEqual(r["cagr"], 1.0005 ** 365.25 - 1, delta=0.01)
+        self.assertLess(r["worst"], 0.01)
+        self.assertEqual(r["from"], 2013)
+
+
 if __name__ == "__main__":
     unittest.main()

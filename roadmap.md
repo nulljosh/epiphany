@@ -359,7 +359,7 @@ Scope: large UI change, do in a dedicated session.
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
 - [x] (11-01: `backtest.py assets`, table in tradingview/results-btc-eth-gld.txt. Blind 2020-now CAGR, Hold vs Double 7s: BTC 42% vs 17%, ETH 52% vs 21%, GLD 14% vs 4%. Holding wins on all three; Double 7s cuts drawdown, e.g. BTC 77% to 35%) ETH and GLD next to BTC, so crypto and gold aren't one lucky asset each
-- [ ] Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
+- [x] (11-01: `backtest.py walk-forward` on BTC, ETH, GLD, table generated into WHITEPAPER from results.json. Re-tuned yearly, Double 7s falls to 8%/yr on BTC vs 57% holding; Donchian holds up best: 55% vs 57% on BTC, 24% vs 20% on ETH, smaller worst year) Walk-forward: re-pick settings each year on the past only, score the next year, chain the years
 - [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [x] (11-01: `backtest.py assets` writes `tradingview/results.json`, `backtest.py whitepaper` fills the `<!-- results:assets -->` block, `tests/py/test_results_drift.py` fails on drift; BTC/ETH/GLD table is the first one generated) Write results to `tradingview/results.json`, generate the WHITEPAPER benchmark section from it, add a test that fails if the two drift
 - [ ] Move the other WHITEPAPER benchmark tables (S&P 500 universe, ETFs, sp-century, everything-else) into results.json the same way the next time each is rerun
