@@ -40,6 +40,27 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
     return () => { io.disconnect(); clearTimeout(safety); };
   }, []);
 
+  // Parallax: the live map stays pinned, the hero copy lifts at 0.2 and fades. Off under reduced motion.
+  useEffect(() => {
+    const hero = document.querySelector('.lp .hero');
+    if (!hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    // The landing scrolls inside the app's wrapper div, not the window, so listen in the capture phase.
+    let t = 0, y = 0;
+    const on = (e) => {
+      y = e.target === document ? window.scrollY : e.target.scrollTop || 0;
+      if (t) return;
+      t = requestAnimationFrame(() => {
+        t = 0;
+        const h = window.innerHeight;
+        if (y > h * 1.2) return;
+        hero.style.transform = `translate3d(0, ${y * 0.2}px, 0)`;
+        hero.style.opacity = String(Math.max(0, 1 - y / (h * 0.7)));
+      });
+    };
+    document.addEventListener('scroll', on, { passive: true, capture: true });
+    return () => { document.removeEventListener('scroll', on, { capture: true }); cancelAnimationFrame(t); };
+  }, []);
+
   const act = (action) => (e) => {
     e.preventDefault();
     if (action === 'paid') onRegisterPaid(); else if (action === 'login') onLogin(); else onRegister();
