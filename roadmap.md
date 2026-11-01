@@ -300,7 +300,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] Mac app: thorough end-to-end test pass
 
 ## Design debt, standing colour rule violations
-- [ ] Stock view: add live mode (seconds-level timeframe, not just minute)
 
 ## Ingested 2026-08-18
 - [ ] Venue reviews via Google Places, DEFERRED 2026-09-07 (Joshua: later). Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Needs Joshua to add a card + accept ToS at console.cloud.google.com (project winnie-372220, Places API enable started). Then: create key, `wrangler secret put GOOGLE_PLACES_API_KEY`, port `server/api/venue-details.js` from Yelp to Places (New). `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
