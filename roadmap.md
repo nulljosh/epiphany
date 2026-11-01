@@ -377,7 +377,7 @@ Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), p
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
-- [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
+- [x] (11-01: written to metadata/version/next/en-CA.json, one line, three feature lines and a true trust line, no em dashes; applies when the next version opens, the live 5.0.0 text is locked. app-info privacy URL moved to epiphany.jaybulb.com) App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
 - [x] (11-01: already done, FinancePanel extracts the text in the browser with unpdf and posts it with the PDF) Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
