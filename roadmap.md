@@ -413,8 +413,8 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] [P3] Remove Debt & Calendar's calendar unless we can find a use for it. (notes/attachments/2026-10-21/epiphany-6.png)
 
 ## QA pass 2026-10-21 (web, iOS)
-- [ ] Web map heatmap renders as one opaque red blob over Maple Ridge/Langley. Lower opacity or radius so streets show through.
-- [ ] Web Fear & Greed is still empty: CNN blocks Workers egress (418). iOS and macOS now fetch CNN from the device when the server has nothing; web needs another source.
+- [x] (11-01: already fixed in fdc02aa 10-21, opacity 0.45 to 0.3 and a softer ramp) Web map heatmap renders as one opaque red blob over Maple Ridge/Langley. Lower opacity or radius so streets show through.
+- [ ] (same decision as the macro and fear-greed line above, Joshua's call 11-01) Web Fear & Greed is still empty: CNN blocks Workers egress (418). iOS and macOS now fetch CNN from the device when the server has nothing; web needs another source.
 - [ ] iOS Settings signed out: Map and Appearance sections added 2026-10-21, builds, not yet seen signed out in the simulator (keychain kept the session).
 
 ## Ingested 2026-10-25
