@@ -354,7 +354,7 @@ Scope: large UI change, do in a dedicated session.
   Run `scripts/rotate-keys.sh` to open the dashboards.
 
 ## Portfolio + Markets feedback (2026-09-03)
-- [ ] Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
+- [x] (11-01: already there, the Signal picker in MarketsView on iOS and Mac) Markets list: add a Buy/Hold/Sell group filter using `Indicators.TradeSignal` (ios/Helpers/Indicators.swift L75); needs per-symbol history so compute lazily/cached. Default sort is already `% Change` (MarketsView.swift L12).
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
