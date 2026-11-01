@@ -246,8 +246,6 @@ struct PortfolioView: View {
             incomeTimelineView
         case .goals:
             goalsContent
-            GrowthCalculatorCard()
-                .padding(.horizontal)
         case .subscriptions:
             subscriptionsContent
         case .statements:

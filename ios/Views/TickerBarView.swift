@@ -15,6 +15,12 @@ struct TickerBarView: View {
     var height: CGFloat = 32
 
     @State private var contentWidth: CGFloat = 0
+    // Swipe support: a drag pauses the auto-scroll and moves the strip by hand; on release the
+    // marquee carries on from where the finger left it.
+    @GestureState private var drag: CGFloat = 0
+    @State private var manualShift: CGFloat = 0
+    @State private var pausedAt: Date?
+    @State private var pausedTotal: TimeInterval = 0
     // Precomputed once per data change, not per animation frame -- formatting
     // currency + rebuilding this array at 60fps inside TimelineView was the
     // real cause of Markets-tab choppiness (competed with List scrolling).
@@ -67,6 +73,17 @@ struct TickerBarView: View {
                     }
                     .offset(x: -offset)
                 }
+                .contentShape(Rectangle())
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 8)
+                        .updating($drag) { value, state, _ in state = value.translation.width }
+                        .onChanged { _ in if pausedAt == nil { pausedAt = Date() } }
+                        .onEnded { value in
+                            manualShift -= value.translation.width
+                            if let pausedAt { pausedTotal += Date().timeIntervalSince(pausedAt) }
+                            pausedAt = nil
+                        }
+                )
                 .frame(height: height)
                 .clipped()
                 .background(.thinMaterial)
@@ -95,8 +112,10 @@ struct TickerBarView: View {
 
     private func scrollOffset(at date: Date) -> CGFloat {
         guard contentWidth > 50 else { return 0 }
-        let distance = CGFloat(date.timeIntervalSinceReferenceDate) * scrollSpeed
-        return distance.truncatingRemainder(dividingBy: contentWidth)
+        let clock = (pausedAt ?? date).timeIntervalSinceReferenceDate - pausedTotal
+        let distance = CGFloat(clock) * scrollSpeed + manualShift - drag
+        let wrapped = distance.truncatingRemainder(dividingBy: contentWidth)
+        return wrapped < 0 ? wrapped + contentWidth : wrapped
     }
 }
 

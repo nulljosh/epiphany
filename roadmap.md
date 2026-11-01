@@ -425,9 +425,9 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-30
 - [ ] Transactions need automatic reviewing instead of the majority appearing uncategorized (363 to review in the Portfolio tab, screenshot notes/attachments/2026-10-30/epiphany-4.png)
-- [ ] Remove the compound growth calculator, it's redundant and unnecessary (notes/attachments/2026-10-30/epiphany-5.png)
-- [ ] GitHub version out of sync with README tag
-- [ ] Horizontal scrolling stocks bar should be scrollable and interactive: swipe and scroll it. Fear and greed should sit flush underneath it
+- [x] (11-01: gone from web, iOS and Mac) Remove the compound growth calculator, it's redundant and unnecessary (notes/attachments/2026-10-30/epiphany-5.png)
+- [ ] (11-01: tag v6.3.0 pushed; blocked: gh release create needs Joshua's permission rule, 2026-11-01) GitHub version out of sync with README tag
+- [x] (11-01: iPhone ticker takes a swipe and carries on from there; Fear and Greed moved into the ticker inset, flush under it) Horizontal scrolling stocks bar should be scrollable and interactive: swipe and scroll it. Fear and greed should sit flush underneath it
 
 ## Ingested 2026-10-31
 - [ ] Crypto needs real-time, second-by-second price updates (Bitcoin detail screen, notes/attachments/2026-10-31/epiphany-1.png). Related to the open "Stock view: add live mode" line above.

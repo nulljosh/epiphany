@@ -10,7 +10,6 @@ import { buildSpendingForecast } from '../utils/spendingForecast';
 import { debtMonthsToPayoff, debtPayoffLabel, owedDebts, debtFreeBy } from '../utils/debtPayoff';
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
-import GrowthCalculator from './GrowthCalculator';
 import ReviewQueue from './ReviewQueue';
 import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, earningsDates, earningsIcs, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
@@ -2101,7 +2100,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             incomePhases={incomePhases}
           />
         )}
-        {tab === 'dashboard' && <GrowthCalculator t={t} dark={dark} />}
         {tab === 'roadmap' && <EpiphanyFinance t={t} spending={spendingChronological} />}
       </div>
     </div>

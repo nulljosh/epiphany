@@ -427,13 +427,6 @@ struct MarketsView: View {
                 }
             }
 
-            if !isSearching {
-                fearGreedView
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-            }
-
             if !isSearching, !appState.stocks.isEmpty {
                 MarketPulse(stocks: appState.stocks, sparklines: appState.sparklineCache) { selectedStock = $0 }
                     .listRowInsets(EdgeInsets())
@@ -601,6 +594,11 @@ struct MarketsView: View {
                     tickerSelectedStock = stock
                 }, height: 60)
                 .opacity(appState.isStockDataStale ? 0.65 : 1.0)
+            }
+            // Fear & Greed sits flush under the ticker, in the same inset, not as a list row below a gap.
+            if !isSearching {
+                fearGreedView
+                    .background(.thinMaterial)
             }
         }
         // The marquee is thousands of points wide; bound it here or the inset
