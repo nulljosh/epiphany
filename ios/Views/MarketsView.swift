@@ -317,7 +317,12 @@ struct MarketsView: View {
                 isLoadingNews = false
             }
         }
-        .overlay(alignment: .bottom) { if !isSearching, feedDest == nil { newsDrawerOverlay } }
+        // Landscape on a phone: the drawer becomes a side card on the right, like Maps, so it stops covering the charts.
+        .overlay(alignment: verticalSizeClass == .compact ? .bottomTrailing : .bottom) {
+            if !isSearching, feedDest == nil {
+                newsDrawerOverlay.frame(maxWidth: verticalSizeClass == .compact ? 380 : .infinity)
+            }
+        }
         .onChange(of: drawerState) { _, state in
             if state != .peek { loadNewsIfNeeded() }
         }
@@ -361,6 +366,7 @@ struct MarketsView: View {
     }
 
     @State private var drawerState: DrawerState = .peek
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     /// Past either end the drawer gives a little and resists, like a system sheet.
     static func rubberBand(_ value: CGFloat, min lo: CGFloat, max hi: CGFloat) -> CGFloat {
