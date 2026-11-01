@@ -299,7 +299,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
   an orphan; otherwise just re-upload June, then July, and confirm both now appear as separate
   months.
 - [ ] iOS: fix "Login with …" (social sign-in buttons), **blocked, not a code bug.** `server/api/auth.js` already has complete hand-rolled Google (`:202-268`) and Facebook (`:270-329`) flows; `GOOGLE_CLIENT_ID`/`SECRET` are present but empty and `FACEBOOK_CLIENT_ID`/`SECRET` are unset. Needs Joshua to register the apps in Google Cloud Console / Meta for Developers, then set them as Worker secrets (`npx wrangler secret put`). No code change unblocks this.
-- [ ] Web price alerts panel stays dark in light mode: its `var(--bg-secondary, #18181b)` fallbacks win because those CSS variables aren't defined; move it to the theme tokens (seen in 21.0 QA).
+- [x] (11-01: already fixed in 89.0.0, LIGHT_VARS on the overlay) Web price alerts panel stays dark in light mode: its `var(--bg-secondary, #18181b)` fallbacks win because those CSS variables aren't defined; move it to the theme tokens (seen in 21.0 QA).
 - [ ] Web landing page needs a light mode (looks great otherwise), note `CLAUDE.md`'s standing rule "Web: dark only (Gotham brand, hardcoded dark surfaces)"; this item contradicts it, so confirm the rule is being retired before implementing.
 - [ ] Mac app: thorough end-to-end test pass
 
@@ -372,7 +372,7 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 
 ## QA loop 2026-10-01
 Pass 1 (simulator, signed in): Map B (emoji pins, dense construction markers), place card A (Look Around nil on simulator only, works on device), Markets B (rows blank in demo, ticker fixed), Portfolio A-, Settings A.
-- [ ] Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
+- [x] (11-01: superseded, Joshua asked for emoji pins on 2026-10-29, b10e217; Shared/MapEmoji.swift is the deliberate exception) Map pins use emoji (car, warning, fire truck, construction); swap to SF Symbols per the no-emoji rule
 Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one grey badge per block at wide zoom; traffic and incident badges still overlap each other), icon A- (lines readable, hub glows; hub flat, uniform line weight), place card A, Portfolio A-, Settings A.
 - [ ] Promo video in the spirit of the Joshua Tree one, add to README and landing (which Joshua Tree video, the landing hero or something else?)
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
