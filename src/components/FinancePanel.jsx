@@ -19,7 +19,7 @@ import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, 
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
 import MoneyGlance from './MoneyGlance';
-import { budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace } from '../utils/budgetActual';
+import { budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace, projectedSpend } from '../utils/budgetActual';
 
 // Six leaf views merged under three top-level pills; a secondary pill row
 // switches between leaves within the active group.
@@ -1572,6 +1572,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                           <div style={{ fontSize: 11, color: tone, fontVariantNumeric: 'tabular-nums' }}>
                             {actual.month}: {formatCurrency(actual.spent)} of {formatCurrency(item.amount)}
                             {daily && ` · ${formatCurrency(daily.perDay)} a day for ${daily.days} days`}
+                            {projectedSpend(item, latest) != null && ` · on pace for ${formatCurrency(projectedSpend(item, latest))}`}
                           </div>
                         )}
                         {actual && (

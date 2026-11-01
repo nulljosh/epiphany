@@ -188,6 +188,18 @@ struct FinanceData: Codable {
                 return left > 0 ? ((left / Double(days)).rounded(.down), days) : nil
             }
 
+            /// Where this month's spending in the line's categories lands at today's pace; nil unless `month` is this
+            /// month's statement and a tenth of the month has gone. Mirrors projectedSpend in src/utils/budgetActual.js.
+            func projected(in month: SpendingMonth?, now: Date = .now) -> Double? {
+                let cal = Calendar.current
+                let parts = cal.dateComponents([.year, .month, .day], from: now)
+                guard let spent = spent(in: month), let year = parts.year, let mon = parts.month, let day = parts.day,
+                      month?.sortKey == String(format: "%04d-%02d", year, mon),
+                      let length = cal.range(of: .day, in: .month, for: now)?.count else { return nil }
+                let pace = Double(day) / Double(length)
+                return pace < 0.1 ? nil : (spent / pace).rounded()
+            }
+
             var monthlyAmount: Double {
                 switch frequency {
                 case "biweekly": return amount * 26 / 12

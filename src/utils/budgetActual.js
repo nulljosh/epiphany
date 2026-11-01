@@ -76,3 +76,11 @@ export function monthPace(month, now = new Date()) {
   if (month?.sortKey !== key) return null;
   return now.getDate() / new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 }
+
+// Where this month's spending in the line's categories lands at today's pace ("on pace for $640").
+// Only for this month's statement, and only once a tenth of the month has gone, so day one never reads as a forecast.
+export function projectedSpend(item = {}, month, now = new Date()) {
+  const actual = budgetActual(item, month), pace = monthPace(month, now);
+  if (!actual || pace == null || pace < 0.1) return null;
+  return Math.round(actual.spent / pace);
+}

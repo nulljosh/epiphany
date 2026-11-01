@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace } from './budgetActual';
+import { budgetCategories, budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace, projectedSpend } from './budgetActual';
 
 describe('budgetActual', () => {
   const aug = { month: 'Aug 2026', categories: { food: 180, coffee: 60, cannabis: 90, vape: 40 } };
@@ -62,5 +62,17 @@ describe('monthPace', () => {
     const now = new Date(2026, 9, 15);
     expect(monthPace({ sortKey: '2026-10' }, now)).toBeCloseTo(15 / 31);
     expect(monthPace({ sortKey: '2026-08' }, now)).toBeNull();
+  });
+});
+
+describe('projectedSpend', () => {
+  const line = { name: 'Food', amount: 600, categories: ['food'] };
+  const nov = { month: 'November 2026', sortKey: '2026-11', categories: { food: 200 } };
+  it('scales this month’s spending to the whole month at today’s pace', () => {
+    expect(projectedSpend(line, nov, new Date(2026, 10, 10))).toBe(600); // 200 in 10 of 30 days
+  });
+  it('says nothing in the first tenth of the month or for an older statement', () => {
+    expect(projectedSpend(line, nov, new Date(2026, 10, 2))).toBe(null);
+    expect(projectedSpend(line, nov, new Date(2026, 11, 10))).toBe(null);
   });
 });
