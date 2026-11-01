@@ -380,7 +380,7 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 - [ ] App Store "About this app" text: cut to the Wealthsimple shape, one line of what it is, three short feature lines, one trust line (metadata/app-info/en-CA.json)
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [ ] Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
+- [x] (11-01: already done, FinancePanel extracts the text in the browser with unpdf and posts it with the PDF) Web statement uploader still posts only the PDF; send pdf.js text like the native apps do so the Worker never parses
 - [ ] App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
