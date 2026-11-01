@@ -239,10 +239,34 @@ and the S&P 500 index (as a CFD) lost money, and gold barely won half its trades
 **As one account, it loses to holding.** We ran Double 7s the way you would run
 it for real: one account spread across the 16 index and sector funds, 10% per
 position, fees both ways (`backtest.py portfolio`). From 2020 it won 71% of its
-trades but grew about 2.7% a year, against 15.1% for holding SPY. It was
-invested only 47% of the time, and its worst drop was 35% against SPY's 34%.
-A $500 account ended near $600. The edge is real per trade, but the money
-sits idle between trades, and that costs far more than the edge earns.
+trades but grew about 2.7% a year, against 15.1% for holding SPY. On an
+average day only about 44% of the account was invested, and its worst drop
+was 35% against SPY's 34%. A $500 account ended near $600. The edge is real
+per trade, but the money sits idle between trades, and that costs far more
+than the edge earns.
+
+**Spread over every S&P 500 stock, the cash stays working.** The same account
+over all 428 stocks with history back to 2011 (`backtest.py portfolio-sp500`).
+When more stocks fire than there is cash, the ones that fell most in the last
+10 days go first. From 2020 to now, with every lookback shown so none is picked
+with hindsight:
+
+<!-- results:portfolio_sp500 -->
+| Per position | Lookback | Yearly | Worst drop | Trades won | Share invested |
+|---|---|---|---|---|---|
+| 5% | 5 | 10.1% | 33% | 65% | 96% |
+| 5% | 7 | 10.6% | 34% | 65% | 96% |
+| 5% | 10 | 13.1% | 39% | 67% | 95% |
+| 10% | 5 | 14.6% | 36% | 64% | 98% |
+| 10% | 7 | 10.9% | 34% | 65% | 97% |
+| 10% | 10 | 13.5% | 37% | 68% | 97% |
+| Hold SPY | | 14.8% | 34% | | 100% |
+<!-- /results -->
+
+About 96% of the money is in the market on an average day now, and the gap to
+holding shrinks from 12 points a year to between 0 and 5. It still never
+beats SPY. And this list is today's S&P 500, so companies that failed or were
+dropped are missing, which flatters every row.
 
 **Everything else we tried,** on the 429 S&P 500 stocks, 2020 to now:
 

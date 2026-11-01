@@ -13,6 +13,7 @@ Settings are picked on 2012-2019 and scored blind on 2020-now.
     python3 tradingview/backtest.py whitepaper  # rewrite the WHITEPAPER tables generated from results.json
     python3 tradingview/backtest.py trend-spy  # hold the index only above its 200 day average, with and without leverage
     python3 tradingview/backtest.py portfolio  # Double 7s as one account over the index ETFs
+    python3 tradingview/backtest.py portfolio-sp500  # the same account over every S&P 500 stock, 5% and 10% per position
     python3 tradingview/backtest.py sp-century  # S&P 500 index since 1927, per decade
     python3 tradingview/backtest.py watchlist  # live TradingView watchlist via the MCP, each symbol from its first bar
 """
@@ -485,11 +486,16 @@ def sp_century():
         print(f"{name + ' dd':8}" + "".join(f"{r['mdd']:>15.0%}" for r in rows))
 
 
-def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
+def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False, syms=None, label="index and sector ETFs", save=None):
     """Double 7s run as one account over the index and sector ETFs: each entry puts `cap` of equity in, fees both ways.
-    park=True keeps idle cash in SPY instead of cash (rotating out of SPY on a dip signal costs an extra fee each way)."""
-    data = {s: fetch_yahoo(s) for s in ETFS}
+    park=True keeps idle cash in SPY instead of cash (rotating out of SPY on a dip signal costs an extra fee each way).
+    syms swaps in another universe (SPY is still fetched as the yardstick). When more symbols fire than cash allows,
+    the ones that fell most over the last 10 days go first. save=key writes the 2020-now rows to results.json."""
+    syms = syms or ETFS
+    with ThreadPoolExecutor(8) as ex:
+        data = dict(zip(syms + ["SPY"], ex.map(fetch_yahoo, syms + ["SPY"])))
     data = {s: b for s, b in data.items() if len(b) > 400}
+    tradable = [s for s in syms if s in data]
     days = sorted({r[0] // 86400 for r in data["SPY"]})
     ts = lambda d: datetime.fromisoformat(d).replace(tzinfo=timezone.utc).timestamp() // 86400
 
@@ -498,7 +504,7 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
         for s, b in data.items():
             o, h, l, c = ([r[k] for r in b] for k in (1, 2, 3, 4))
             en, ex = signals("Double 7s", (lookback,), o, h, l, c)
-            rows[s] = {b[i][0] // 86400: (b[i][1], b[i][4], en[i - 1], ex[i - 1]) for i in range(1, len(b))}
+            rows[s] = {b[i][0] // 86400: (b[i][1], b[i][4], en[i - 1], ex[i - 1], c[i - 1] / c[max(i - 11, 0)]) for i in range(1, len(b))}
         cash, pos, last, curve, wins, trades = start, {}, {}, [], 0, 0
         window = [d for d in days if lo <= d <= hi]
         prev_spy, extra = None, (FEE if park else 0.0)
@@ -515,9 +521,8 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
                     wins += proceeds > cost
                     trades += 1
             equity = cash + sum(u * last.get(s, rows[s].get(d, (0, 0))[0]) for s, (u, _) in pos.items())
-            for s in rows:                           # then entries
-                if s in pos or d not in rows[s] or not rows[s][d][2]:
-                    continue
+            fired = sorted((s for s in tradable if s not in pos and d in rows[s] and rows[s][d][2]), key=lambda s: rows[s][d][4])
+            for s in fired:                          # then entries, biggest 10 day fall first
                 size = min(cap * equity, cash / (1 + FEE + extra))
                 if size < 1:
                     continue
@@ -526,7 +531,8 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
             for s in rows:
                 if d in rows[s]:
                     last[s] = rows[s][d][1]
-            curve.append((cash + sum(u * last.get(s, 0) for s, (u, _) in pos.items()), len(pos) * cap))
+            held = sum(u * last.get(s, 0) for s, (u, _) in pos.items())
+            curve.append((cash + held, held / max(cash + held, 1e-9)))
         return curve, wins, trades, window
 
     def stats(eq, window):
@@ -537,7 +543,8 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
             mdd = max(mdd, 1 - v / peak)
         return (eq[-1] / eq[0]) ** (1 / yrs) - 1, mdd, yrs
 
-    print(f"Double 7s as one account, {len(data)} index and sector ETFs, {cap:.0%} per position, ${start:,.0f} start. Fee {FEE:.1%}/side.\n")
+    print(f"Double 7s as one account, {len(tradable)} {label}, {cap:.0%} per position, ${start:,.0f} start. Fee {FEE:.1%}/side.\n")
+    saved = []
     print(f"{'period':14}{'lookback':>9}{'end value':>11}{'CAGR':>7}{'worst drop':>11}{'win rate':>9}{'trades/yr':>10}{'avg invested':>13} | {'SPY hold CAGR':>14}{'SPY worst drop':>15}")
     for label, a, b in (("2012 to now", "2012-01-01", "2099-01-01"), ("2020 to now", "2020-01-01", "2099-01-01")):
         lo, hi = ts(a), ts(b)
@@ -548,6 +555,12 @@ def portfolio(lookbacks=(5, 7, 10), cap=0.10, start=500.0, park=False):
             cagr, mdd, yrs = stats([v for v, _ in curve], window)
             inv = sum(x for _, x in curve) / len(curve)
             print(f"{label:14}{lb:>9}{curve[-1][0]:>11,.0f}{cagr:>7.1%}{mdd:>11.0%}{wins / max(trades, 1):>9.0%}{trades / yrs:>10.0f}{inv:>13.0%} | {hold[0]:>14.1%}{hold[1]:>15.0%}")
+            if a == "2020-01-01":
+                saved.append({"lookback": lb, "cap": cap, "cagr": round(cagr, 4), "mdd": round(mdd, 4), "win": round(wins / max(trades, 1), 4),
+                              "invested": round(inv, 4), "spy_cagr": round(hold[0], 4), "spy_mdd": round(hold[1], 4)})
+    if save:
+        data_ = json.load(open(RESULTS)) if os.path.exists(RESULTS) else {}
+        save_results(save, data_.get(save, []) + saved)
 
 
 def trend_spy(sma_len=200, margin=0.05):
@@ -593,6 +606,13 @@ def main():
         return trend_spy()
     if sys.argv[1:] == ["portfolio"]:
         return portfolio()
+    if sys.argv[1:] == ["portfolio-sp500"]:
+        cutoff = datetime(2011, 1, 1, tzinfo=timezone.utc).timestamp()
+        syms = [s for s in sp500() if (b := fetch_yahoo(s)) and b[0][0] <= cutoff]
+        save_results("portfolio_sp500", [])
+        for cap in (0.05, 0.10):
+            portfolio(cap=cap, syms=syms, label="S&P 500 stocks with history to 2011", save="portfolio_sp500")
+        return
     if sys.argv[1:] == ["sp-century"]:
         return sp_century()
     if sys.argv[1:] == ["watchlist"]:
@@ -681,6 +701,13 @@ def render(key, data):
         lines = ["| Asset | Graded from | " + " | ".join(WF_MODES) + " |", "|---|---|" + "---|" * len(WF_MODES)]
         for name, r in data.items():
             lines.append(f"| {name} | {r['Hold']['from']} | " + " | ".join(f"{r[m]['cagr']:.0%} ({r[m]['worst']:.0%})" for m in WF_MODES) + " |")
+        return "\n".join(lines)
+    if key == "portfolio_sp500":
+        lines = ["| Per position | Lookback | Yearly | Worst drop | Trades won | Share invested |", "|---|---|---|---|---|---|"]
+        for r in data:
+            lines.append(f"| {r['cap']:.0%} | {r['lookback']} | {r['cagr']:.1%} | {r['mdd']:.0%} | {r['win']:.0%} | {r['invested']:.0%} |")
+        r = data[0]
+        lines.append(f"| Hold SPY | | {r['spy_cagr']:.1%} | {r['spy_mdd']:.0%} | | 100% |")
         return "\n".join(lines)
     raise KeyError(key)
 

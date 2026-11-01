@@ -37,6 +37,68 @@
       }
     }
   },
+  "portfolio_sp500": [
+    {
+      "cagr": 0.1005,
+      "cap": 0.05,
+      "invested": 0.9588,
+      "lookback": 5,
+      "mdd": 0.3336,
+      "spy_cagr": 0.1475,
+      "spy_mdd": 0.3372,
+      "win": 0.6461
+    },
+    {
+      "cagr": 0.1056,
+      "cap": 0.05,
+      "invested": 0.9571,
+      "lookback": 7,
+      "mdd": 0.3414,
+      "spy_cagr": 0.1475,
+      "spy_mdd": 0.3372,
+      "win": 0.6505
+    },
+    {
+      "cagr": 0.1312,
+      "cap": 0.05,
+      "invested": 0.9546,
+      "lookback": 10,
+      "mdd": 0.3856,
+      "spy_cagr": 0.1475,
+      "spy_mdd": 0.3372,
+      "win": 0.6711
+    },
+    {
+      "cagr": 0.1463,
+      "cap": 0.1,
+      "invested": 0.9757,
+      "lookback": 5,
+      "mdd": 0.3624,
+      "spy_cagr": 0.1475,
+      "spy_mdd": 0.3372,
+      "win": 0.6407
+    },
+    {
+      "cagr": 0.1089,
+      "cap": 0.1,
+      "invested": 0.9736,
+      "lookback": 7,
+      "mdd": 0.3402,
+      "spy_cagr": 0.1475,
+      "spy_mdd": 0.3372,
+      "win": 0.6522
+    },
+    {
+      "cagr": 0.1352,
+      "cap": 0.1,
+      "invested": 0.9738,
+      "lookback": 10,
+      "mdd": 0.3684,
+      "spy_cagr": 0.1475,
+      "spy_mdd": 0.3372,
+      "win": 0.6827
+    }
+  ],
   "walkforward": {
     "BTC": {
       "Donchian": {
