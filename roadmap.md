@@ -406,7 +406,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Add the jobs report.
 
 ## Ingested 2026-10-21
-- [ ] Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
+- [ ] (11-01: native fixed, 3.0.0+ live on jaybulb; blocked: Google and GitHub OAuth console callbacks need Joshua's console login) Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
 - [ ] [P1] Stale App Store links. (2026-10-21: every epiphany link in code already points at id6779522175, so the stale ones are elsewhere. Which page or app? Need the URL.)
 - [ ] [P2] Map: places render on the map. What other details could we be displaying? (sheet today shows hours, phone, website, address, Get Directions) (notes/attachments/2026-10-21/epiphany-4.png)
 - [ ] [P3] Remove Debt & Calendar's calendar unless we can find a use for it. (notes/attachments/2026-10-21/epiphany-6.png)
