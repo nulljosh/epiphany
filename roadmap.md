@@ -219,7 +219,6 @@ One theme per major, built from the open items below. Each major ships on web, i
 ## 2026-10-29 QA leftovers (open)
 
 ## 2026-10-01 brain dump (open)
-- [ ] TradingView bot live testing (restart with --remote-debugging-port=9222, run `node scripts/tv-signal-agent.js --study Surf --dry-run`)
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
 - [ ] Search UX pass beyond the contrast fix
@@ -270,13 +269,11 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - Attempt 3: replaced per-drag resize with `.offset(y:)` compositor transform (textbook fix for this SwiftUI pattern), broke drag hit-testing (touch passed through to the row underneath instead of moving the drawer). Reverted. Suspected cause: the drag handle's `.overlay(alignment: .top)` is attached to the offset-shifted view, whose own layout frame stays fixed size, something in the offset→padding→overlay→clipped chain desyncs the touch target from the rendered position.
 
 ## Epiphany Mac merge (ASC)
-- [ ] Old orphaned "Epiphany Mac" app record (6782703473, bundle `com.heyitsmejosh.epiphany-macos`) needs Joshua's manual ASC dashboard deletion, no public API to delete an app record (confirmed on Talli's/Voxprint's equivalent orphans too). Do not upload anything further to it. Full merge history/blockers (upload error 90348, three widget compile fixes) preserved in CLAUDE.md.
 
 ## Brand & landing page
 
 ## Trading / brokerage
 - [ ] **IBKR broker adapter, blocked on IBKR account approval**: Joshua started an Interactive Brokers Canada individual application on 2026-09-06 and is filling KYC forms. Once approved, write `server/api/broker/ibkr.js` mirroring the existing `alpaca.js` stub interface (paper account endpoint, execute trade with symbol/qty/side). Wire it into `broker/morning-run.js:runLive()` in place of the Alpaca call. Alpaca is blocked because it rejects Canadian residents. IBKR is the funded path forward for live autopilot trading in Canada.
-- [ ] **Evaluate replacing SnapTrade with Interactive Brokers**, SnapTrade is read-only by design (blocks live trading, forced `AutopilotSection()` to be commented out); IBKR Web API would unblock it. Needs scoping: auth model, holdings/positions endpoints, cost, SnapTrade sync-layer reuse. (The SnapTrade billing outage above is a good moment to revisit this.)
 - [ ] Live trading blocked on a trade-permissioned brokerage, **needs Joshua**. Alpaca blocked: rejects Canadian residents, hides paper accounts behind US application. IBKR only if TSX/Canadian equities needed later. RBC confirmed no public trading API. Researched 2026-07-22: IBKR does not bridge to Wealthsimple; the only way to execute trades *in* a Wealthsimple account is unofficial reverse-engineered wrappers that violate WS's ToS, not viable. Real path is a separate IBKR/Alpaca account, SnapTrade/WS stay read-only for display only.
   **2026-09-03**: unlocked live-mode plumbing ahead of the broker swap: `autopilot.js` accepts `mode:'live'` from the client (was hardcoded to paper), `morning-run.js` runs the full watchlist in live mode (was BTC-only probe) with a hard $50/trade cap + 20-trade total cap then auto-revert to paper, `TradeWorkflow.jsx` has a Paper/Live toggle. Still wired to SnapTrade under the hood, which is a no-op for real fills against Wealthsimple (see above). Swap the execution call in `runLive()` to IBKR once the adapter exists and the account is approved, nothing else in this plumbing needs to change.
 - [ ] **BLOCKED (Joshua):** "Login with TradingView" to sync watchlist, no public TradingView API for reading a user's watchlist/account. Receiving endpoint already exists (`server/api/broker/webhook.js` accepts `{ticker, action, qty}`, places Alpaca paper orders), only remaining step needs Joshua's TradingView Pro+ account to configure an outbound webhook alert. Can't self-provision.
@@ -302,11 +299,9 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 ## Design debt, standing colour rule violations
 
 ## Ingested 2026-08-18
-- [ ] Venue reviews via Google Places, DEFERRED 2026-09-07 (Joshua: later). Yelp key is dead (400) and every reviews API (Yelp, Google Places, Foursquare, TripAdvisor) requires a credit card on file even for the free tier. Needs Joshua to add a card + accept ToS at console.cloud.google.com (project winnie-372220, Places API enable started). Then: create key, `wrangler secret put GOOGLE_PLACES_API_KEY`, port `server/api/venue-details.js` from Yelp to Places (New). `/api/venue-details` stays `{available:false}`. If photos alone are wanted later, Wikimedia Commons geosearch is keyless.
 
 ## Braindump 2026-08-19
 - [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
-- [ ] Social layer copying Loopt (friend map / presence). Reference: https://youtu.be/KhhId_WG7RA?si=c0cu-aQHq087KJeF
 
 ## Landing page: live demo background (2026-08-19)
 Splash/hero background is a static image preview of the app. Replace with a live,
@@ -316,8 +311,6 @@ app and the marketing chrome (Log in / Get Epiphany / Get started) hides.
 Scope: large UI change, do in a dedicated session.
 
 ## Ingested 2026-08-22
-- [ ] Add a police scanner feature.
-- [ ] Build upon the ontology / people index feature.
 - [ ] Portfolio syncing is laggy and unreliable, "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end.
 
 ## From Apple Notes (imported 2026-08-25)
@@ -342,7 +335,6 @@ Scope: large UI change, do in a dedicated session.
 
 ## Trading benchmark (loop, 2026-10-01)
 Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview/backtest.py`. One item per pass, commit each.
-- [ ] MCP parity: run one strategy in TradingView's Strategy Tester through the MCP, match its trades and P&L to the engine
 - [ ] Move the other WHITEPAPER benchmark tables (S&P 500 universe, ETFs, sp-century, everything-else) into results.json the same way the next time each is rerun
 
 ## Ingested 2026-10-01
