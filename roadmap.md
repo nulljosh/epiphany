@@ -221,7 +221,6 @@ One theme per major, built from the open items below. Each major ships on web, i
 ## 2026-10-01 brain dump (open)
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
 - [ ] Offline mode
-- [ ] Search UX pass beyond the contrast fix
 
 ## 2026-10-04 map QA leftovers (open)
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.

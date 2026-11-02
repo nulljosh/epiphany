@@ -826,9 +826,14 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
 
       {/* All Markets by Sector */}
       {filtered.length === 0 ? (
-        <div style={{ ...glass, padding: 14 }}>
-          <div style={{ padding: '20px 0', textAlign: 'center', color: t.textTertiary, fontSize: 13 }}>No results</div>
-        </div>
+        // Tickers found by the remote search already show above; "No results" only when both lists are empty.
+        searchResults.length > 0 ? null : (
+          <div style={{ ...glass, padding: 14 }}>
+            <div style={{ padding: '20px 0', textAlign: 'center', color: t.textTertiary, fontSize: 13 }}>
+              {search.trim() ? `No results for "${search.trim()}"` : 'No results'}
+            </div>
+          </div>
+        )
       ) : (
         <SectorGroups filtered={filtered} watchlist={watchlist} toggleSymbol={toggleSymbol}
           isAuthenticated={isAuthenticated} t={t} glass={glass} search={search}

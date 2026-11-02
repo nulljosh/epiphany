@@ -27,6 +27,8 @@ struct MarketsView: View {
     @State private var selectedStockForNews: Stock?
     @State private var isSearching = false
     @State private var searchResults: [EpiphanyAPI.SymbolSearchResult] = []
+    /// The query the remote ticker search last answered, so "no results" waits for it.
+    @State private var searchedQuery = ""
     @FocusState private var searchFieldFocused: Bool
 
     enum FeedDest: Identifiable {
@@ -340,12 +342,17 @@ struct MarketsView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .submitLabel(.search)
-                Image(systemName: "mic.fill")
-                    .foregroundStyle(.secondary)
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear search")
+                }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 14)
+            .frame(minHeight: 44)
+            .background(.ultraThinMaterial, in: Capsule())
 
             Button {
                 // Drop focus first so the field can't write the old text back as it resigns.
@@ -440,7 +447,8 @@ struct MarketsView: View {
                     .listRowSeparator(.hidden)
             }
 
-            if !appState.watchlistStocks.isEmpty || !appState.watchlistLists.isEmpty {
+            // While a query is typed the watchlist steps aside; matches from it still show in the list below.
+            if !isSearching || searchText.isEmpty, !appState.watchlistStocks.isEmpty || !appState.watchlistLists.isEmpty {
                 Section {
                     ForEach(shownListStocks) { stock in
                         Button {
@@ -467,6 +475,13 @@ struct MarketsView: View {
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
+            }
+
+            let query = searchText.trimmingCharacters(in: .whitespaces)
+            if isSearching, !query.isEmpty, searchedQuery == query, filteredItems.isEmpty, others.isEmpty {
+                ContentUnavailableView.search(text: query)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
 
             ForEach(filteredItems) { item in
@@ -497,10 +512,11 @@ struct MarketsView: View {
         .contentMargins(.horizontal, 0, for: .scrollContent)
         .task(id: searchText) {
             let query = searchText.trimmingCharacters(in: .whitespaces)
-            guard isSearching, !query.isEmpty else { searchResults = []; return }
+            guard isSearching, !query.isEmpty else { searchResults = []; searchedQuery = ""; return }
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
             searchResults = (try? await EpiphanyAPI.shared.searchSymbols(query)) ?? []
+            searchedQuery = query
         }
         // Clear the floating tab bar AND the news drawer's peek (which floats over
         // the list bottom) so the last stock rows scroll fully into view.

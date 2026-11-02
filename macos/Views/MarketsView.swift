@@ -5,6 +5,8 @@ struct MarketsView: View {
     @Environment(AppState.self) private var appState
     @State private var searchText = ""
     @State private var searchResults: [EpiphanyAPI.SymbolSearchResult] = []
+    /// The query the remote ticker search last answered, so "no results" waits for it.
+    @State private var searchedQuery = ""
     @State private var isVisible = false
     @State private var hasLoaded = false
     @State private var selectedStock: Stock?
@@ -483,6 +485,10 @@ struct MarketsView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     searchResultRows
+                    let query = searchText.trimmingCharacters(in: .whitespaces)
+                    if !query.isEmpty, searchedQuery == query, filteredItems.isEmpty, searchResults.isEmpty {
+                        ContentUnavailableView.search(text: query).padding(.top, 32)
+                    }
                     ForEach(filteredItems) { item in
                         marketRow(item)
                     }
@@ -494,10 +500,11 @@ struct MarketsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .task(id: searchText) {
             let query = searchText.trimmingCharacters(in: .whitespaces)
-            guard !query.isEmpty else { searchResults = []; return }
+            guard !query.isEmpty else { searchResults = []; searchedQuery = ""; return }
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
             searchResults = (try? await EpiphanyAPI.shared.searchSymbols(query)) ?? []
+            searchedQuery = query
         }
     }
 
