@@ -9,6 +9,11 @@ const step = (d, cadence) => {
   return n;
 };
 
+// Monthly pay from the paydays the server found repeating in statements (detectRecurring with income).
+// Mirrors CashProjection.monthlyPay. Zero when no payday repeats yet, so callers fall back to typed income.
+const PER_MONTH = { weekly: 52 / 12, biweekly: 26 / 12, monthly: 1, yearly: 1 / 12 };
+export const monthlyPay = (income = []) => income.reduce((sum, r) => sum + (r.amount > 0 ? r.amount * (PER_MONTH[r.cadence] ?? 1) : 0), 0);
+
 // Bills in the next `days`, rolled forward by cadence like projectCash, grouped by month with a total each.
 // Mirrors CashProjection.billsByMonth.
 export function billsByMonth(bills = [], today = new Date(), days = 60) {

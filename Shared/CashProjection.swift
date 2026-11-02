@@ -5,6 +5,16 @@ import SwiftUI
 /// nextDate in the past rolls forward by its cadence until it lands on or after today. Mirrors projectCash in
 /// src/utils/moneyGlance.js.
 enum CashProjection {
+    /// Monthly pay from the paydays the server found repeating in statements. Zero when none repeats yet, so the
+    /// typed budget income stands in. Mirrors monthlyPay in src/utils/moneyGlance.js.
+    static func monthlyPay(_ income: [RecurringCharge]) -> Double {
+        income.reduce(0) { sum, r in
+            guard r.amount > 0 else { return sum }
+            let perMonth: Double = switch r.cadence { case "weekly": 52 / 12; case "biweekly": 26 / 12; case "yearly": 1 / 12; default: 1 }
+            return sum + r.amount * perMonth
+        }
+    }
+
     struct Point: Equatable { let day: Int; let balance: Double }
 
     struct MonthBills: Equatable { let month: String; let total: Double; let items: [Due] }

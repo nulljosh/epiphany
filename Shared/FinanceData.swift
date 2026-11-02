@@ -229,8 +229,51 @@ struct FinanceData: Codable {
         var rate: Double
         var minPayment: Double
         var note: String?
+        /// Month the balance was true ("2026-08"). With a payment set, the debt pays itself down from there.
+        var since: String? = nil
 
         var id: String { name }
+
+        init(name: String, balance: Double, rate: Double, minPayment: Double, note: String? = nil, since: String? = nil) {
+            self.name = name; self.balance = balance; self.rate = rate; self.minPayment = minPayment; self.note = note; self.since = since
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            name = try c.decode(String.self, forKey: .name)
+            balance = try c.decode(Double.self, forKey: .balance)
+            rate = try c.decode(Double.self, forKey: .rate)
+            minPayment = try c.decode(Double.self, forKey: .minPayment)
+            note = try c.decodeIfPresent(String.self, forKey: .note)
+            since = try c.decodeIfPresent(String.self, forKey: .since)
+            self = paidDown()
+        }
+
+        /// Saved from an editor: a debt with a payment starts counting down from this month.
+        func anchored(now: Date = .now) -> DebtItem {
+            guard since == nil, minPayment > 0 else { return self }
+            var out = self
+            let cal = Calendar(identifier: .gregorian)
+            out.since = String(format: "%04d-%02d", cal.component(.year, from: now), cal.component(.month, from: now))
+            return out
+        }
+
+        /// One payment a month since `since`, interest first, then re-anchored to this month so a save-back never
+        /// counts the same months twice. Mirrors paidDown in src/utils/debtPayoff.js.
+        func paidDown(now: Date = .now) -> DebtItem {
+            guard let since, minPayment > 0, since.count == 7,
+                  let y = Int(since.prefix(4)), let m = Int(since.suffix(2)) else { return self }
+            let cal = Calendar(identifier: .gregorian)
+            let ny = cal.component(.year, from: now), nm = cal.component(.month, from: now)
+            let months = (ny - y) * 12 + nm - m
+            guard months > 0 else { return self }
+            var bal = balance
+            for _ in 0..<months where bal > 0 { bal = bal * (1 + rate / 1200) - minPayment }
+            var out = self
+            out.balance = (max(0, bal) * 100).rounded() / 100
+            out.since = String(format: "%04d-%02d", ny, nm)
+            return out
+        }
     }
 
     struct Goal: Codable, Identifiable {

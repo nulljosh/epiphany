@@ -369,8 +369,11 @@ struct PortfolioView: View {
     private var budgetContent: some View {
         sectionCard("Budget") {
             if let budget = appState.financeData?.budget {
+                // Paydays found in statements win; the typed figure stands in until one repeats.
+                let paydays = CashProjection.monthlyPay(EpiphanyAPI.shared.lastIncome)
+                let monthlyIncome = paydays > 0 ? paydays.rounded() : budget.totalMonthlyIncome
                 let actualExpenses = averageMonthlySpending > 0 ? averageMonthlySpending : budget.totalMonthlyExpenses
-                let surplus = budget.totalMonthlyIncome - actualExpenses
+                let surplus = monthlyIncome - actualExpenses
 
                 VStack(alignment: .leading, spacing: 16) {
                     if let ring = BudgetRing.left(budget, month: spendingMonths.last) {
@@ -378,13 +381,13 @@ struct PortfolioView: View {
                     }
                     budgetMetricRow(
                         title: "Monthly Income",
-                        value: budget.totalMonthlyIncome,
+                        value: monthlyIncome,
                         progress: 1,
                         color: Palette.successGreen
                     )
 
-                    let expenseProgress = budget.totalMonthlyIncome > 0
-                        ? min(actualExpenses / budget.totalMonthlyIncome, 1)
+                    let expenseProgress = monthlyIncome > 0
+                        ? min(actualExpenses / monthlyIncome, 1)
                         : 0
                     budgetMetricRow(
                         title: "Avg Monthly Spending",
@@ -396,8 +399,8 @@ struct PortfolioView: View {
                     budgetMetricRow(
                         title: "Monthly Surplus",
                         value: surplus,
-                        progress: budget.totalMonthlyIncome > 0
-                            ? max(min(surplus / budget.totalMonthlyIncome, 1), 0)
+                        progress: monthlyIncome > 0
+                            ? max(min(surplus / monthlyIncome, 1), 0)
                             : 0,
                         color: surplus >= 0 ? Palette.successGreen : Palette.dangerRed
                     )

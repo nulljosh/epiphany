@@ -337,7 +337,6 @@ Goal: a benchmark solid enough to quote in WHITEPAPER.md. Engine is `tradingview
 
 ## Ingested 2026-10-01
 - [ ] (11-01: the watch computes no signals, it shows what WatchAPI.swift reads from the server, so leaving out Shared/ is fine; the Android, Windows and Linux check is blocked here, no JDK) Platform sync: Apple Watch target does not include `Shared/`, so `double7s()` and the rest of the signal code are missing there; verify Android, Windows and Linux builds match web
-- [ ] Budget should read income statements dynamically instead of a typed Monthly Income; phone device debt should calculate dynamically too. Screenshot: notes/attachments/2026-10-01/epiphany-3.png. 2026-10-01: KV data fixed. Still open: statements can't tell paycheques from card payments, so income from statements needs a deposit/account tag first; phone debt needs a start date and monthly payment (minPayment is 0) before it can count down
 - [ ] Yelp key on Cloudflare returns 400 (key set but rejected, Yelp Fusion went paid). Needs a fresh key from the Yelp developer portal (Chrome job). It only adds review photos and ratings. Only the iOS 17 / macOS 14 fallback sheet uses `/api/venue-details` now, so drop it or swap the source.
 
 ## QA loop 2026-10-01

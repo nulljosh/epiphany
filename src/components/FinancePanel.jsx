@@ -13,7 +13,7 @@ import EpiphanyFinance from './EpiphanyFinance';
 import ReviewQueue from './ReviewQueue';
 import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, earningsDates, earningsIcs, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
-import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays } from '../utils/moneyGlance';
+import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays, monthlyPay } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
@@ -757,14 +757,19 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
 
   const {
     holdings, accounts, budget, debt, goals, spending, giving, incomePhases, subscriptions, bills, telecom,
-    stocksValue, cashValue, totalDebt, totalIncome, totalExpenses, usdPerCad,
-    surplus, netWorth, isDemo, portfolioFetchedAt, brokerSnapshot, syncBroker,
+    stocksValue, cashValue, totalDebt, totalIncome: typedIncome, totalExpenses, usdPerCad,
+    netWorth, isDemo, portfolioFetchedAt, brokerSnapshot, syncBroker,
     importData, syncSpendingMonths, exportData, saveData, resetToDemo,
   } = usePortfolio(stocks, isAuthenticated);
 
   // ponytail: syncSpendingMonths is re-created on every portfolio change. Depending
   // on it made refreshStatements re-fire in a loop (sync -> new callback -> refetch),
   // and importError was never cleared, so one transient failure stuck forever.
+  // Income comes from the paydays found in your statements; the typed budget figure only stands in until one repeats.
+  const paydays = monthlyPay(income);
+  const totalIncome = paydays > 0 ? Math.round(paydays) : typedIncome;
+  const surplus = totalIncome - totalExpenses;
+
   const syncSpendingMonthsRef = useRef(syncSpendingMonths);
   syncSpendingMonthsRef.current = syncSpendingMonths;
 
@@ -1542,7 +1547,9 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
               <div style={sectionStyle}>
                 <div style={labelStyle}>Monthly Income</div>
-                {budget.income.map((item, index) => (
+                {(paydays > 0
+                  ? income.map((r) => ({ name: r.name, amount: Math.round(monthlyPay([r])), note: `From your statements, paid ${r.cadence}` }))
+                  : budget.income).map((item, index) => (
                   <div key={`${item.name}-${index}`} style={rowStyle}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>

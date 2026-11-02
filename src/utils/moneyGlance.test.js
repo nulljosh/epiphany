@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey, biggestExpense, lastSevenDays } from './moneyGlance';
+import { projectCash, topSpending, billHistory, restOfMonth, billsByMonth, compactSigned, yearToDate, recentActivity, earnedThisYear, greeting, sinceLastVisit, dueLabel, spendRace, recurringKey, biggestExpense, lastSevenDays, monthlyPay } from './moneyGlance';
 
 describe('projectCash', () => {
   const today = new Date(2026, 9, 29);
@@ -168,5 +168,15 @@ describe('lastSevenDays', () => {
     expect(r.days.map((d) => d.date)).toEqual(['2026-08-24', '2026-08-25', '2026-08-26', '2026-08-27', '2026-08-28', '2026-08-29', '2026-08-30']);
     expect(r.days.map((d) => d.amount)).toEqual([0, 20, 0, 0, 0, 0, 15]);
     expect(r.total).toBe(35);
+  });
+});
+
+describe('monthlyPay', () => {
+  it('turns repeating paydays into one monthly figure', () => {
+    expect(monthlyPay([{ amount: 1200, cadence: 'biweekly' }, { amount: 500, cadence: 'monthly' }])).toBeCloseTo(1200 * 26 / 12 + 500);
+  });
+  it('is zero with no paydays, so the typed income stands in', () => {
+    expect(monthlyPay([])).toBe(0);
+    expect(monthlyPay()).toBe(0);
   });
 });

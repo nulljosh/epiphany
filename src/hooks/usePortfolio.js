@@ -1,4 +1,4 @@
-import { sumDebt, sumReceivable } from '../utils/debtPayoff';
+import { sumDebt, sumReceivable, paidDown } from '../utils/debtPayoff';
 import { FX_SYMBOL, quoteCurrency, toCad } from '../utils/currency';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -126,7 +126,7 @@ export function usePortfolio(stocks, isAuthenticated) {
   const holdings = customData?.holdings ?? DEMO_HOLDINGS;
   const accounts = customData?.accounts ?? DEMO_ACCOUNTS;
   const budget = customData?.budget ?? DEMO_BUDGET;
-  const debt = customData?.debt ?? DEMO_DEBT;
+  const debt = useMemo(() => (customData?.debt ?? DEMO_DEBT).map((d) => paidDown(d)), [customData?.debt]);
   const goals = customData?.goals ?? DEMO_GOALS;
   const spending = customData?.spending ?? DEMO_SPENDING;
   const giving = customData?.giving ?? DEMO_GIVING;

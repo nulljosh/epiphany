@@ -380,19 +380,23 @@ struct PortfolioView: View {
     private var budgetContent: some View {
         sectionCard("Budget") {
             if let budget = appState.financeData?.budget {
+                // Paydays found in statements win; the typed figure stands in until one repeats.
+                let paydays = CashProjection.monthlyPay(EpiphanyAPI.shared.lastIncome)
+                let monthlyIncome = paydays > 0 ? paydays.rounded() : budget.totalMonthlyIncome
+                let surplus = monthlyIncome - budget.totalMonthlyExpenses
                 VStack(alignment: .leading, spacing: 16) {
                     if let ring = BudgetRing.left(budget, month: spendingMonths.last) {
                         BudgetRingCard(left: ring)
                     }
                     budgetMetricRow(
                         title: "Monthly Income",
-                        value: budget.totalMonthlyIncome,
+                        value: monthlyIncome,
                         progress: 1,
                         color: Palette.successGreen
                     )
 
-                    let expenseProgress = budget.totalMonthlyIncome > 0
-                        ? min(budget.totalMonthlyExpenses / budget.totalMonthlyIncome, 1)
+                    let expenseProgress = monthlyIncome > 0
+                        ? min(budget.totalMonthlyExpenses / monthlyIncome, 1)
                         : 0
                     budgetMetricRow(
                         title: "Monthly Expenses",
@@ -403,11 +407,11 @@ struct PortfolioView: View {
 
                     budgetMetricRow(
                         title: "Monthly Surplus",
-                        value: budget.monthlySurplus,
-                        progress: budget.totalMonthlyIncome > 0
-                            ? max(min(budget.monthlySurplus / budget.totalMonthlyIncome, 1), 0)
+                        value: surplus,
+                        progress: monthlyIncome > 0
+                            ? max(min(surplus / monthlyIncome, 1), 0)
                             : 0,
-                        color: budget.monthlySurplus >= 0 ? Palette.successGreen : Palette.dangerRed
+                        color: surplus >= 0 ? Palette.successGreen : Palette.dangerRed
                     )
 
                     // Each linked line against last statement's spending: green under 90%, amber to 110%, red past it.
@@ -1658,6 +1662,7 @@ private struct DebtEditorSheet: View {
                 Text("Edit Debt").font(.headline)
                 Spacer()
                 Button("Save") {
+                    items = items.map { $0.anchored() }
                     onSave()
                     dismiss()
                 }

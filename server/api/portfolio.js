@@ -1,6 +1,7 @@
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import { checkRateLimit } from './_ratelimit.js';
+import { paidDown } from '../../src/utils/debtPayoff.js';
 
 const ARRAY_FIELDS = ['holdings', 'accounts', 'debt', 'goals', 'spending', 'giving', 'incomePhases', 'subscriptions', 'bills', 'credits'];
 
@@ -88,8 +89,9 @@ export default async function handler(req, res) {
     const stocksValue = (data.holdings || []).reduce((sum, h) => sum + (h.marketValue ?? (h.shares * (h.costBasis || 0))), 0);
     const cashValue = (data.accounts || []).reduce((sum, a) => sum + (a.cash ?? a.balance ?? 0), 0);
     const owed = (d) => d.owedToMe !== true;
-    const totalDebt = (data.debt || []).filter(owed).reduce((sum, d) => sum + (d.balance || 0), 0);
-    const totalReceivable = (data.debt || []).filter((d) => !owed(d)).reduce((sum, d) => sum + (d.balance || 0), 0);
+    const debts = (data.debt || []).map((d) => paidDown(d)); // fixed plans count down by month, same as the apps
+    const totalDebt = debts.filter(owed).reduce((sum, d) => sum + (d.balance || 0), 0);
+    const totalReceivable = debts.filter((d) => !owed(d)).reduce((sum, d) => sum + (d.balance || 0), 0);
     const netWorth = stocksValue + cashValue + totalReceivable - totalDebt;
 
     const totalIncome = data.budget?.income?.reduce((sum, i) => sum + (i.amount || 0), 0) || 0;
@@ -109,7 +111,7 @@ export default async function handler(req, res) {
         .map(h => ({ symbol: h.symbol, value: Math.round((h.marketValue ?? (h.shares * (h.costBasis || 0))) * 100) / 100 }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5),
-      debtItems: (data.debt || []).map(d => ({ name: d.name, balance: d.balance, owedToMe: d.owedToMe === true })),
+      debtItems: debts.map(d => ({ name: d.name, balance: d.balance, owedToMe: d.owedToMe === true })),
       updatedAt: data.updatedAt || null,
     });
   }

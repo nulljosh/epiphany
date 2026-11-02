@@ -51,6 +51,7 @@ struct DebtEditorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        items = items.map { $0.anchored() }
                         onSave()
                         dismiss()
                     }
