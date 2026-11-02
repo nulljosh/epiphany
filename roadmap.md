@@ -282,7 +282,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## Other open items
 - [ ] Portfolio/Settings tab audit, getting cluttered, decide what stays. Calendar view specifically flagged as possibly unnecessary.
-- [ ] Holdings "Display metric" row needs per-holding day-change data from backend (model only has marketValue + gainLoss). (Landscape pass done 11-01.)
 
 ## From Apple Notes (imported 2026-08-11)
 - [ ] **Needs Joshua: re-upload the June 2026 statement.** Consequence of the month-labelling
