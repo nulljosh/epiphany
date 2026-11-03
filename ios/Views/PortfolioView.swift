@@ -487,6 +487,11 @@ struct PortfolioView: View {
                 }
             }
             Spacer()
+            // Statement upload sat at the bottom of spending, and only once a month existed.
+            Button("Upload Statement", systemImage: "doc.badge.plus") { showStatementManager = true }
+                .labelStyle(.iconOnly)
+                .font(.title3)
+                .foregroundStyle(Palette.appleBlue)
             if let tally = appState.tallyPayment, let days = tally.daysUntilPayday {
                 VStack(alignment: .trailing, spacing: 2) {
                     Image(systemName: "calendar.badge.clock")
