@@ -523,10 +523,10 @@ struct PortfolioView: View {
                 stackedCategoryChart(months: spendingMonths)
                     .padding(.horizontal)
 
-                Button("Manage Statements") {
+                Button("Upload or Manage Statements", systemImage: "doc.badge.plus") {
                     showStatementManager = true
                 }
-                .font(.caption.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(Palette.appleBlue)
                 .padding(.bottom, 4)
             }
