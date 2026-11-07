@@ -7,20 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1C7ED4525247250570791322 /* 1-main.png in Resources */ = {isa = PBXBuildFile; fileRef = B03B3668652B7ABCD5DEED6D /* 1-main.png */; };
-		207E9C30E7398B59A8E9D1CC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3677C73F7619C5604216695 /* ContentView.swift */; };
+		1BD35F17ADD4A87C9F627DAE /* Epiphany.icon in Resources */ = {isa = PBXBuildFile; fileRef = C0127884247AFD0586C63AF1 /* Epiphany.icon */; };
 		35D3A57E08C04C4E5AFCB2B4 /* WatchlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF25DB0B1B81A44CA20A707 /* WatchlistView.swift */; };
 		3AAA93E40E2D1A8DFBCD2BF7 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC220DBC4759D9A806F864D7 /* WatchModels.swift */; };
 		3BC1C9EC9193F955AA45058C /* PortfolioGlance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161A09815360F68802F7CE3C /* PortfolioGlance.swift */; };
 		460239DB1E7B030DAFC425E4 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC220DBC4759D9A806F864D7 /* WatchModels.swift */; };
 		673D9E7A853D411BD1E4F060 /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA88ABC31FB3B303257392BF /* WatchAPI.swift */; };
-		9FD365B7652563ADD7C21A24 /* Epiphany.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9D1FAC340E9ED93F595CAD18 /* Epiphany.icon */; };
+		8397FCD8EA891A21D4A8C480 /* EpiphanyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AF4639CD79AF7937B9FE75 /* EpiphanyWatchApp.swift */; };
+		94FDE1C5CB23FCEABBA65DF0 /* EpiphanyComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD0BC976EBF61B19ABD57A5 /* EpiphanyComplication.swift */; };
 		A2500869A821B6B5D596C1B9 /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCEFF8E4A8351EE3EFD8E14E /* AlertsView.swift */; };
+		A78AB9C8F8B846A65760A6BC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D781ABE86CC6C68F99A10FAD /* Assets.xcassets */; };
 		AED151EF0BD203BFB56AD1CB /* MarketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ECC556D87E0451C762ED2BB /* MarketView.swift */; };
-		C07E4FC3D9D894C1DD49EB72 /* EpiphanyWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */; };
+		D0B4731E1333CCC6F66DC803 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9159DF7D45D1506251995F /* ContentView.swift */; };
 		D1B6DBF6AB0B083794E836CE /* Ontology.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63B7CAD4FB4DFE9F0235F90 /* Ontology.swift */; };
-		DB6A0D3249AD10A70388C7A0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01973E26C4F6546D2B34FA7F /* Assets.xcassets */; };
-		E0A4A1A3A5D9D8CBDCE84587 /* EpiphanyComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98EFF094501EDDC050DBF271 /* EpiphanyComplication.swift */; };
 		F153037B3DEF960B3152F54C /* EpiphanyComplication.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 906F5A78B1A7264F0F61B536 /* EpiphanyComplication.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FB9F888187D8A72CBFB9F20E /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA88ABC31FB3B303257392BF /* WatchAPI.swift */; };
 /* End PBXBuildFile section */
@@ -50,21 +49,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		01973E26C4F6546D2B34FA7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		161A09815360F68802F7CE3C /* PortfolioGlance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioGlance.swift; sourceTree = "<group>"; };
+		1C9159DF7D45D1506251995F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		906F5A78B1A7264F0F61B536 /* EpiphanyComplication.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EpiphanyComplication.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		98EFF094501EDDC050DBF271 /* EpiphanyComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpiphanyComplication.swift; sourceTree = "<group>"; };
-		9D1FAC340E9ED93F595CAD18 /* Epiphany.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Epiphany.icon; sourceTree = "<group>"; };
 		9ECC556D87E0451C762ED2BB /* MarketView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketView.swift; sourceTree = "<group>"; };
-		A3677C73F7619C5604216695 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A63B7CAD4FB4DFE9F0235F90 /* Ontology.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ontology.swift; sourceTree = "<group>"; };
-		B03B3668652B7ABCD5DEED6D /* 1-main.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "1-main.png"; sourceTree = "<group>"; };
-		BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpiphanyWatchApp.swift; sourceTree = "<group>"; };
 		BA88ABC31FB3B303257392BF /* WatchAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAPI.swift; sourceTree = "<group>"; };
 		BCEFF8E4A8351EE3EFD8E14E /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
-		C9AAE21DA6FC948D9F627AD6 /* Fastfile */ = {isa = PBXFileReference; path = Fastfile; sourceTree = "<group>"; };
+		C0127884247AFD0586C63AF1 /* Epiphany.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Epiphany.icon; sourceTree = "<group>"; };
 		CBF25DB0B1B81A44CA20A707 /* WatchlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistView.swift; sourceTree = "<group>"; };
 		D147F8F2B6DA68CEC014AF25 /* EpiphanyWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EpiphanyWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4AF4639CD79AF7937B9FE75 /* EpiphanyWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpiphanyWatchApp.swift; sourceTree = "<group>"; };
+		D781ABE86CC6C68F99A10FAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DFD0BC976EBF61B19ABD57A5 /* EpiphanyComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpiphanyComplication.swift; sourceTree = "<group>"; };
 		FC220DBC4759D9A806F864D7 /* WatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,12 +76,12 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-		49276B5E02728E705ECE3F06 /* watch */ = {
+		1FCBA9EE2D702CF7702D2E5D /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				B03B3668652B7ABCD5DEED6D /* 1-main.png */,
+				D0D56210611C7C9C6FD75ABD /* watchos-widgets */,
 			);
-			path = watch;
+			name = Shared;
 			sourceTree = "<group>";
 		};
 		4B21E5263A1FA7294B5A0220 /* Views */ = {
@@ -98,57 +95,27 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		5CFF922A5A407297473929F3 /* screenshots */ = {
-			isa = PBXGroup;
-			children = (
-				49276B5E02728E705ECE3F06 /* watch */,
-			);
-			path = screenshots;
-			sourceTree = "<group>";
-		};
-		95A76748A63FF0D9D652358C /* watchos-widgets */ = {
-			isa = PBXGroup;
-			children = (
-				98EFF094501EDDC050DBF271 /* EpiphanyComplication.swift */,
-			);
-			name = "watchos-widgets";
-			path = "../watchos-widgets";
-			sourceTree = "<group>";
-		};
 		B3DE59B9DDDC7B3B0C5E7EB4 = {
 			isa = PBXGroup;
 			children = (
-				DCC26338A045575DC63C5324 /* fastlane */,
+				D781ABE86CC6C68F99A10FAD /* Assets.xcassets */,
+				1C9159DF7D45D1506251995F /* ContentView.swift */,
+				C0127884247AFD0586C63AF1 /* Epiphany.icon */,
+				D4AF4639CD79AF7937B9FE75 /* EpiphanyWatchApp.swift */,
 				106E53F353E2B4D2B7323800 /* Models */,
+				1FCBA9EE2D702CF7702D2E5D /* Shared */,
 				4B21E5263A1FA7294B5A0220 /* Views */,
-				D2A821F629F41751B8504089 /* watchos */,
-				95A76748A63FF0D9D652358C /* watchos-widgets */,
 				EBEE247B42F1763899BB6AD0 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		D2A821F629F41751B8504089 /* watchos */ = {
+		D0D56210611C7C9C6FD75ABD /* watchos-widgets */ = {
 			isa = PBXGroup;
 			children = (
-				01973E26C4F6546D2B34FA7F /* Assets.xcassets */,
-				A3677C73F7619C5604216695 /* ContentView.swift */,
-				9D1FAC340E9ED93F595CAD18 /* Epiphany.icon */,
-				BA533A3D437A23A148926EF9 /* EpiphanyWatchApp.swift */,
-				DCC26338A045575DC63C5324 /* fastlane */,
-				106E53F353E2B4D2B7323800 /* Models */,
-				4B21E5263A1FA7294B5A0220 /* Views */,
+				DFD0BC976EBF61B19ABD57A5 /* EpiphanyComplication.swift */,
 			);
-			name = watchos;
-			path = .;
-			sourceTree = "<group>";
-		};
-		DCC26338A045575DC63C5324 /* fastlane */ = {
-			isa = PBXGroup;
-			children = (
-				C9AAE21DA6FC948D9F627AD6 /* Fastfile */,
-				5CFF922A5A407297473929F3 /* screenshots */,
-			);
-			path = fastlane;
+			name = "watchos-widgets";
+			path = "../watchos-widgets";
 			sourceTree = "<group>";
 		};
 		EBEE247B42F1763899BB6AD0 /* Products */ = {
@@ -244,9 +211,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C7ED4525247250570791322 /* 1-main.png in Resources */,
-				DB6A0D3249AD10A70388C7A0 /* Assets.xcassets in Resources */,
-				9FD365B7652563ADD7C21A24 /* Epiphany.icon in Resources */,
+				A78AB9C8F8B846A65760A6BC /* Assets.xcassets in Resources */,
+				1BD35F17ADD4A87C9F627DAE /* Epiphany.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,7 +223,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E0A4A1A3A5D9D8CBDCE84587 /* EpiphanyComplication.swift in Sources */,
+				94FDE1C5CB23FCEABBA65DF0 /* EpiphanyComplication.swift in Sources */,
 				FB9F888187D8A72CBFB9F20E /* WatchAPI.swift in Sources */,
 				3AAA93E40E2D1A8DFBCD2BF7 /* WatchModels.swift in Sources */,
 			);
@@ -268,8 +234,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A2500869A821B6B5D596C1B9 /* AlertsView.swift in Sources */,
-				207E9C30E7398B59A8E9D1CC /* ContentView.swift in Sources */,
-				C07E4FC3D9D894C1DD49EB72 /* EpiphanyWatchApp.swift in Sources */,
+				D0B4731E1333CCC6F66DC803 /* ContentView.swift in Sources */,
+				8397FCD8EA891A21D4A8C480 /* EpiphanyWatchApp.swift in Sources */,
 				AED151EF0BD203BFB56AD1CB /* MarketView.swift in Sources */,
 				D1B6DBF6AB0B083794E836CE /* Ontology.swift in Sources */,
 				3BC1C9EC9193F955AA45058C /* PortfolioGlance.swift in Sources */,

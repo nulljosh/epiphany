@@ -14,13 +14,12 @@ targets:
     type: application
     platform: watchOS
     sources:
-      - path: .
-        excludes:
-          - "*.xcodeproj"
-          - "*.yml"
-          - "*.md"
-          - "*.svg"
-          - MonicaWatchApp.swift
+      - ContentView.swift
+      - EpiphanyWatchApp.swift
+      - Models
+      - Views
+      - Assets.xcassets
+      - Epiphany.icon
     settings:
       INFOPLIST_FILE: ""
       GENERATE_INFOPLIST_FILE: YES
@@ -35,6 +34,7 @@ targets:
     platform: watchOS
     sources:
       - path: ../watchos-widgets
+        group: Shared
         excludes:
           - Info.plist
       - path: Models/WatchAPI.swift
