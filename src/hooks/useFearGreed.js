@@ -17,5 +17,5 @@ export default function useFearGreed() {
 
   useVisibilityPolling(fetchFearGreed, 5 * 60 * 1000);
 
-  return { score: data?.score ?? null, rating: data?.rating ?? null, loading };
+  return { score: data?.score ?? null, rating: data?.rating ?? null, source: data?.source ?? null, loading };
 }

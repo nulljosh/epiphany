@@ -61,20 +61,26 @@ function getFearGreedColor(score) {
   return '#34C759';
 }
 
-function FearGreedBanner({ score, rating, t }) {
+function FearGreedBanner({ score, rating, source, t }) {
   if (score === null) return null;
   const color = getFearGreedColor(score);
+  // CNN's index links to CNN; our own gauge (server falls back when CNN blocks us) says so instead.
+  const ours = source === 'epiphany';
+  const Wrap = ours ? 'div' : 'a';
+  const wrapProps = ours
+    ? { title: 'Our gauge: S&P 500 vs its 125-day average and VIX vs its 50-day average' }
+    : { href: 'https://www.cnn.com/markets/fear-and-greed', target: '_blank', rel: 'noopener noreferrer' };
   return (
     // Matches iOS: no card fill or border, label/score/rating on one baseline,
     // full-width bar flush beneath it rather than a small gauge off to the side.
-    <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block', margin: '0 -16px 12px -16px' }}>
+    <Wrap {...wrapProps} style={{ textDecoration: 'none', color: 'inherit', display: 'block', margin: '0 -16px 12px -16px' }}>
       <div style={{ padding: '12px 16px', cursor: 'pointer', transition: 'opacity 0.15s' }}
         onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
         onMouseLeave={e => e.currentTarget.style.opacity = '1'}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Fear & Greed
+            {ours ? 'Market Mood' : 'Fear & Greed'}
           </span>
           <span style={{ fontSize: 15, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{score}</span>
           <span style={{ fontSize: 12, fontWeight: 600, color }}>{rating}</span>
@@ -86,7 +92,7 @@ function FearGreedBanner({ score, rating, t }) {
           }} />
         </div>
       </div>
-    </a>
+    </Wrap>
   );
 }
 
@@ -358,7 +364,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
   const [showNewsDrawer, setShowNewsDrawer] = useState(false);
   const searchInputRef = useRef(null);
   const [searchResults, setSearchResults] = useState([]);
-  const { score: fgScore, rating: fgRating } = useFearGreed();
+  const { score: fgScore, rating: fgRating, source: fgSource } = useFearGreed();
 
   // Any ticker or company, not just the loaded list (/api/search, Yahoo).
   useEffect(() => {
@@ -634,7 +640,7 @@ export default function MarketsPanel({ dark, t, stocks, liveAssets, watchlist, t
         />
       )}
 
-      <FearGreedBanner score={fgScore} rating={fgRating} t={t} />
+      <FearGreedBanner score={fgScore} rating={fgRating} source={fgSource} t={t} />
 
       {/* The three big indexes, as their ETFs, from their own quotes above. */}
       {!search && (() => {
