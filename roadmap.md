@@ -224,7 +224,6 @@ One theme per major, built from the open items below. Each major ships on web, i
 
 ## 2026-10-04 map QA leftovers (open)
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
-- [x] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file. 2026-11-07: ported to Machaon iOS+Mac; Temida and Kernel use their own onboarding, the portfolio copy is the older signed-out design on purpose.
 
 ## Revenue check, 2026-09-11
 
@@ -344,13 +343,11 @@ Pass 2: Map B+ (no emoji, incidents and traffic cluster, venues merge into one g
 - [ ] Refresh screenshots: App Store (fastlane, UITEST_DEMO), README, landing, after the icon and map land
 - [ ] Statements: April 2026 is still missing from the account, upload it from the Wealthsimple Cash account; verify an upload from the phone after 2.5.15 ships
 - [ ] Statements: teach the parser the TFSA statement (contributions, withdrawals, buys, sells) so it feeds holdings instead of being skipped
-- [x] (2026-11-07: already fixed 10-03, store has 5 iPhone 6.5 and 5 iPad shots) App Store screenshot lane: fastlane green but only 1 of 5 shots per device land (UI test stops after the map); fix PreviewScreenshot.swift then rerun
 Pass 5: icon A (SF-weight uniform stroke, no glow, flat near-black, hub with white dot, systemTeal hub colour removed; regular heptagon tried and rejected as a ship's wheel). Map in NYC at four zoom levels A- (one badge per block, local events clustered). Markets A-.
 Pass 6: Liquid Glass icon via Apple's Icon Composer (ios/Epiphany.icon, macos/Epiphany.icon): hub, nodes and lines as separate glass groups over a flat dark fill; Default, Dark, Tinted and Clear all render with ictool; flat AppIcon set stays as the fallback below iOS 26. Grade A+ pending Joshua's eye on a real phone.
 
 ## Cloudflare audit 2026-10-01
 Fixed and deployed tonight: /api/latest self-fetched its own domain (522 every time, cron snapshot never served); defuddle used redirect "error" which workerd rejects (every article extract 500ed); statement PDFs were served unauthenticated and publicly cacheable via /api/blob and could never be re-read server-side (stream vs bytes); stocks-free fanned out two FMP calls per symbol for the 70-symbol Watch and widget list (19s then 500), now Yahoo batch for long lists.
-- [x] 2026-11-07: Fear and Greed falls back to our own gauge (S&P 500 vs 125-day average plus VIX vs 50-day, source "epiphany") when CNN refuses; live check 16 vs CNN 22, both extreme fear. Was: (11-01: macro is fixed, /api/macro returns CPI and the rest live. Fear and Greed still answers unavailable: CNN refuses Cloudflare egress by IP and the KV fallback has nothing to serve. Options: our own mood gauge from VIX and SPX momentum, labelled ours not CNN's, or drop the widget. Joshua's call) macro returns [] and fear-greed is unavailable live: upstreams refuse Cloudflare egress (server/api/macro.js:36, fear-greed.js); find sources that allow it or proxy
 
 ## Competitor gaps (sweep 2026-10-01: Copilot, Monarch, Apple Stocks, Yahoo, Robinhood, Citizen, Google Maps)
 Bigger, parked:
@@ -366,7 +363,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] [P2] Map: places render on the map. What other details could we be displaying? (sheet today shows hours, phone, website, address, Get Directions) (notes/attachments/2026-10-21/epiphany-4.png)
 
 ## QA pass 2026-10-21 (web, iOS)
-- [ ] (same decision as the macro and fear-greed line above, Joshua's call 11-01) Web Fear & Greed is still empty: CNN blocks Workers egress (418). iOS and macOS now fetch CNN from the device when the server has nothing; web needs another source.
 
 ## Ingested 2026-10-25
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
