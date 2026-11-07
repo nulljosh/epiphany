@@ -453,7 +453,7 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
         let request = URLRequest(url: url)
         let data = try await perform(request)
         let wrapper = try decode(NewsWrapper.self, from: data)
-        setCache("news", wrapper.articles)
+        if !wrapper.articles.isEmpty { setCache("news", wrapper.articles) }
         return wrapper.articles
     }
 

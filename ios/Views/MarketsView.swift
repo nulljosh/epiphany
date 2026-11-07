@@ -181,14 +181,21 @@ struct MarketsView: View {
     }
 
     private func loadNewsIfNeeded() {
-        guard !hasLoadedNews, selectedStockForNews == nil else { return }
-        hasLoadedNews = true
+        guard !hasLoadedNews, !isLoadingNews, selectedStockForNews == nil else { return }
         Task {
             isLoadingNews = true
-            do {
-                newsArticles = try await EpiphanyAPI.shared.fetchNews()
-            } catch {
-                print("News load failed: \(error)")
+            // Only real articles count as loaded, so one slow GDELT call cannot blank news until relaunch.
+            for _ in 0..<2 {
+                do {
+                    let articles = try await EpiphanyAPI.shared.fetchNews()
+                    if !articles.isEmpty {
+                        newsArticles = articles
+                        hasLoadedNews = true
+                        break
+                    }
+                } catch {
+                    print("News load failed: \(error)")
+                }
             }
             isLoadingNews = false
         }
