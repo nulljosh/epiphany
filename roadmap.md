@@ -380,4 +380,3 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Sync statements from Wealthsimple instead of uploading PDFs by hand (Joshua 2026-11-01: "a way to sync with Wealthsimple to get those statements, or a way to upload them"). Upload already exists on the web (Portfolio, statement PDFs) and September 2026 was loaded for him on 11-01 by script. Sync path: SnapTrade's `getActivities` in src/utils/brokers/snaptrade.js already pulls brokerage activity; Wealthsimple Cash (the prepaid card the statements come from) may not be on SnapTrade, so check that first, then map activities to statement rows with the same categorizer. Also make the upload easy to find on iPhone and Mac.
 
 ## Ingested 2026-11-06
-- [ ] X API pay-per-use bills expansion objects from 2026-11-22 (posts $0.005, users $0.010, media $0.005). Review the expansions Epiphany requests and drop what it does not need.
