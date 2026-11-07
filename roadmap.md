@@ -224,7 +224,7 @@ One theme per major, built from the open items below. Each major ships on web, i
 
 ## 2026-10-04 map QA leftovers (open)
 - [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
-- [ ] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file.
+- [x] The onboarding stamp fix in `OnboardingView.swift` (session restored inside the settle window never got marked as seen) applies to every app that carries a copy of that file. 2026-11-07: ported to Machaon iOS+Mac; Temida and Kernel use their own onboarding, the portfolio copy is the older signed-out design on purpose.
 
 ## Revenue check, 2026-09-11
 
