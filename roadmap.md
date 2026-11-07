@@ -296,8 +296,6 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 
 ## Design debt, standing colour rule violations
 
-## Ingested 2026-08-18
-
 ## Braindump 2026-08-19
 - [ ] Predictions feature: integrate or build prediction markets in the spirit of Wealthsimple Predict / Polymarket / Kalshi. Decide integrate-vs-build; check each for a public API.
 
@@ -378,11 +376,8 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 ## Ingested 2026-10-30
 - [ ] (11-01: tag v6.3.0 pushed; blocked: gh release create needs Joshua's permission rule, 2026-11-01) GitHub version out of sync with README tag
 
-## Ingested 2026-10-31
-
 ## Ingested 2026-11-01
 - [ ] Sync statements from Wealthsimple instead of uploading PDFs by hand (Joshua 2026-11-01: "a way to sync with Wealthsimple to get those statements, or a way to upload them"). Upload already exists on the web (Portfolio, statement PDFs) and September 2026 was loaded for him on 11-01 by script. Sync path: SnapTrade's `getActivities` in src/utils/brokers/snaptrade.js already pulls brokerage activity; Wealthsimple Cash (the prepaid card the statements come from) may not be on SnapTrade, so check that first, then map activities to statement rows with the same categorizer. Also make the upload easy to find on iPhone and Mac.
 
 ## Ingested 2026-11-06
-- [x] News went blank after one failed load: iOS marked it loaded before the fetch and could cache an empty list. Not Cloudflare; news runs on Upstash and did not touch Workers KV.
 - [ ] X API pay-per-use bills expansion objects from 2026-11-22 (posts $0.005, users $0.010, media $0.005). Review the expansions Epiphany requests and drop what it does not need.
