@@ -1540,17 +1540,17 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
         disabled={isLocating}
         aria-label="Recenter to my location"
         title="Recenter to my location"
-        style={{ position: 'absolute', right: 14, top: 100, zIndex: 2, width: 34, height: 34, border: `1px solid ${P.line}`, borderRadius: 9999, background: P.panel, color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
+        style={{ position: 'absolute', right: 14, top: 124, zIndex: 2, width: 36, height: 36, border: `1px solid ${P.line}`, borderRadius: 9999, background: P.panel, color: '#ff5a52', font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isLocating ? 'wait' : 'pointer', opacity: isLocating ? 0.55 : 1, animation: isLocating ? 'pulse-red 0.9s ease-in-out infinite' : 'none' }}
       >
         ⌖
       </button>)}
       {chrome && (<button
         onClick={() => { setShowPlaces(value => !value); if (!showPlaces) loadPlaces(); }}
         aria-label="Browse nearby places"
-        style={{ position: 'absolute', right: 14, top: 140, zIndex: 3, minHeight: 34, padding: '0 11px', border: `1px solid ${P.line}`, borderRadius: 8, background: P.panel, color: P.ink, font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
+        style={{ position: 'absolute', right: 14, top: 166, zIndex: 3, minHeight: 36, padding: '0 11px', border: `1px solid ${P.line}`, borderRadius: 8, background: P.panel, color: P.ink, font: `12px ${SYSTEM_FONT}`, cursor: 'pointer' }}
       >Places</button>)}
       {chrome && showPlaces && (
-        <section aria-label="Nearby places" style={{ position: 'absolute', top: 98, right: 14, bottom: 14, zIndex: 3, width: 'min(350px, calc(100% - 28px))', background: P.solid, border: `1px solid ${P.line}`, borderRadius: 12, color: P.ink, display: 'flex', flexDirection: 'column', fontFamily: SYSTEM_FONT, boxShadow: P.shadow }}>
+        <section aria-label="Nearby places" style={{ position: 'absolute', top: 124, right: 14, bottom: 14, zIndex: 3, width: 'min(350px, calc(100% - 28px))', background: P.solid, border: `1px solid ${P.line}`, borderRadius: 12, color: P.ink, display: 'flex', flexDirection: 'column', fontFamily: SYSTEM_FONT, boxShadow: P.shadow }}>
           <div style={{ padding: 12, borderBottom: `1px solid ${P.line}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <strong>Places near map center</strong>
@@ -1595,7 +1595,7 @@ function LiveMapBackdrop({ dark, mapLayers, onLayersChange, onMapReady, autoGeo 
         // A weather warning whose area covers the map's centre, worst first.
         const here = mapLayers.weather !== false ? alertHere(payload.weatherAlerts, center.lon, center.lat) : null;
         return here && (
-          <div role="status" style={{ position: 'absolute', top: 96, left: '50%', transform: 'translateX(-50%)', zIndex: 3, pointerEvents: 'none', maxWidth: 'calc(100% - 32px)' }}>
+          <div role="status" style={{ position: 'absolute', top: 124, left: 14, zIndex: 3, pointerEvents: 'none', maxWidth: 'calc(100% - 78px)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(2,6,23,0.78)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, padding: '6px 14px', color: '#f8fafc', fontSize: 12, fontFamily: '-apple-system,BlinkMacSystemFont,system-ui,sans-serif' }}>
               <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 4, flex: 'none', background: ALERT_FILL[here.colour] || ALERT_FILL.yellow }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{here.event} here{here.area ? ` · ${here.area}` : ''}</span>

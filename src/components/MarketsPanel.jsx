@@ -183,7 +183,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
         <span style={{ width: 14 }} />
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: 17, color: t.text }}>{symbol}</div>
+        <div style={{ fontWeight: 700, fontSize: 17, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{symbol}</div>
         <div style={{ fontSize: 15, color: t.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{name}</div>
       </div>
       <SparklineChart symbol={symbol} changePercent={changePercent} t={t} onSignal={handleSignal} />
@@ -210,6 +210,7 @@ function MarketRow({ symbol, name, price, changePercent, isWatchlisted, onToggle
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}
         title={`View ${symbol} on TradingView`}
+        className="market-row-tv"
         style={{ color: t.textTertiary, flexShrink: 0, display: 'flex', alignItems: 'center', paddingLeft: 6 }}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

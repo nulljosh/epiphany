@@ -220,10 +220,8 @@ One theme per major, built from the open items below. Each major ships on web, i
 
 ## 2026-10-01 brain dump (open)
 - [ ] Menu bar second-by-second P&L: needs IB's streaming P&L feed, the 60 second poll only refreshes what Gateway already updates every few minutes.
-- [ ] Offline mode
 
 ## 2026-10-04 map QA leftovers (open)
-- [ ] Open Places once OpenStreetMap is back and watch the list swap from Apple Maps to the fuller list. Overpass was down all of 2026-10-04, so that swap shipped in iOS 2.5.17 without ever running.
 
 ## Revenue check, 2026-09-11
 
@@ -310,7 +308,6 @@ Scope: large UI change, do in a dedicated session.
 
 ## From Apple Notes (imported 2026-08-25)
 
-- [ ] Mobile web UI/UX is spotty overall, general pass needed.
 
 ## From Apple Notes (imported 2026-08-27)
 - [ ] (11-01: the only top bar is Safari's own smart banner from `apple-itunes-app` in index.html; InstallAnywhere is unused. Q: a screen recording of the glitch?) Loading glitch in the top App Store bar on web.
@@ -365,7 +362,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-25
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
-- [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
 
