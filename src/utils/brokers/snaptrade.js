@@ -179,6 +179,8 @@ export class SnapTradeAdapter {
       id: a.id,
       brokerName: a.brokerage?.display_name || a.brokerage?.name || a.name || 'Brokerage',
       disabled: Boolean(a.disabled),
+      // Either side being delayed means SnapTrade refreshes this connection about once a day.
+      delayed: [a.data_freshness_mode?.institution, a.data_freshness_mode?.snaptrade].includes('delayed'),
     }));
   }
 
@@ -341,6 +343,7 @@ export class SnapTradeAdapter {
         balance: cash + holdingsValue,
         cash,
         currency: usdPerCad > 0 ? 'CAD' : null,
+        holdingsAsOf: acct.sync_status?.holdings?.last_successful_sync ?? null,
       });
     }
     return out;

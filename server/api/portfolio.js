@@ -174,6 +174,11 @@ export default async function handler(req, res) {
 // Overlay the latest broker snapshot so native clients (and the daily value snapshot) always see fresh
 // SnapTrade holdings, even if the web app hasn't re-persisted them yet. Mutates and returns data.
 export function withBrokerOverlay(data, snapshot) {
+  // Rebuilt on every read: a copy saved back by a native client must not outlive the snapshot.
+  delete data.brokerStatus;
+  if (snapshot?.syncedAt) {
+    data.brokerStatus = { syncedAt: snapshot.syncedAt, dataAsOf: snapshot.dataAsOf ?? null, dailyOnly: snapshot.dailyOnly === true };
+  }
   if (Array.isArray(snapshot?.holdings) && snapshot.holdings.length > 0
       && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
     data.holdings = snapshot.holdings.map(h => ({

@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import handler from '../../server/api/broker/sync.js';
+import handler, { oldestSync } from '../../server/api/broker/sync.js';
+import { withBrokerOverlay } from '../../server/api/portfolio.js';
+import { brokerAgeLine } from '../../src/utils/formatting.js';
 import { SnapTradeAdapter, toBaseCad, withCadTotals } from '../../src/utils/brokers/snaptrade.js';
 
 function mockRes() {
@@ -211,5 +213,31 @@ describe('snapshot currency conversion', () => {
     expect(r.holdings[1].marketValueCad).toBeNull();
     expect(r.holdings[1].marketValue).toBe(500); // native amount kept
     expect(toBaseCad(5, 'EUR', 0.7)).toBeNull();
+  });
+});
+
+describe('broker data age', () => {
+  it('reports the oldest account sync, normalized, ignoring accounts with none', () => {
+    expect(oldestSync([
+      { holdingsAsOf: '2026-11-08T10:00:00.992256Z' },
+      { holdingsAsOf: null },
+      { holdingsAsOf: '2026-11-06T10:00:00Z' },
+    ])).toBe('2026-11-06T10:00:00.000Z');
+    expect(oldestSync([{ holdingsAsOf: null }])).toBeNull();
+  });
+
+  it('overlay rebuilds brokerStatus and drops a saved copy when there is no snapshot', () => {
+    const data = withBrokerOverlay({ holdings: [], brokerStatus: { syncedAt: 'old' } },
+      { syncedAt: '2026-11-08T10:00:00.000Z', dataAsOf: '2026-11-07T10:00:00.000Z', dailyOnly: true });
+    expect(data.brokerStatus).toEqual({ syncedAt: '2026-11-08T10:00:00.000Z', dataAsOf: '2026-11-07T10:00:00.000Z', dailyOnly: true });
+    expect(withBrokerOverlay({ brokerStatus: { syncedAt: 'old' } }, null).brokerStatus).toBeUndefined();
+  });
+
+  it('labels the data age, falling back to our own sync time on old snapshots', () => {
+    const hoursAgo = (h) => new Date(Date.now() - h * 3600e3).toISOString();
+    expect(brokerAgeLine({ dataAsOf: hoursAgo(3), dailyOnly: true })).toBe('Broker data: 3h ago, updates daily');
+    expect(brokerAgeLine({ dataAsOf: hoursAgo(3) })).toBe('Broker data: 3h ago');
+    expect(brokerAgeLine({ syncedAt: hoursAgo(2) })).toBe('Synced 2h ago');
+    expect(brokerAgeLine({})).toBe('');
   });
 });

@@ -38,6 +38,12 @@ export function relativeTime(dateStr) {
   return new Date(dateStr).toLocaleDateString();
 }
 
+// How old the brokerage numbers really are. Mirrors BrokerStatus.line in Shared/FinanceData.swift.
+export function brokerAgeLine({ dataAsOf, syncedAt, dailyOnly } = {}) {
+  if (!dataAsOf) return syncedAt ? `Synced ${relativeTime(syncedAt)}` : '';
+  return `Broker data: ${relativeTime(dataAsOf)}${dailyOnly ? ', updates daily' : ''}`;
+}
+
 export function formatVolume(v) {
   if (!v && v !== 0) return '--';
   if (v >= 1e9) return `${(v / 1e9).toFixed(2)}B`;

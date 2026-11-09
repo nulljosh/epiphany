@@ -339,6 +339,14 @@ struct PortfolioView: View {
                 if portfolio.holdings.isEmpty {
                     emptyState("No holdings in portfolio")
                 } else {
+                    if let line = appState.financeData?.brokerStatus?.line() {
+                        Text(line)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                    }
                     if Allocation.filterNames(portfolio.holdings).count > 1 {
                         Picker("Show", selection: $holdingFilter) {
                             ForEach(Allocation.filterNames(portfolio.holdings), id: \.self) { Text($0).tag($0) }

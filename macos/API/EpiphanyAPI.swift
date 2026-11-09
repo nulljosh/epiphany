@@ -386,18 +386,20 @@ final class EpiphanyAPI {
         let linkUrl: String?
         let upgradeRequired: Bool?
         let connections: [Connection]?
+        let cached: Bool?
     }
 
     /// POST /api/broker/sync, returns linkUrl when no brokerage is linked yet,
     /// otherwise refreshes and returns the linked snapshot. Pass action:
     /// "connect-additional" to link a second brokerage (Pro-gated).
-    func syncBroker(action: String? = nil) async throws -> BrokerSyncResponse {
+    func syncBroker(action: String? = nil, force: Bool? = nil) async throws -> BrokerSyncResponse {
         let url = try makeURL("/api/broker/sync")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        if let action {
+        if action != nil || force != nil {
+            struct Body: Encodable { let action: String?, force: Bool? }
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(["action": action])
+            request.httpBody = try JSONEncoder().encode(Body(action: action, force: force))
         }
         let data = try await perform(request)
         return try decode(BrokerSyncResponse.self, from: data)

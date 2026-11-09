@@ -10,9 +10,10 @@ struct FinanceData: Codable {
     var incomePhases: [IncomePhase]
 
     var subscriptions: [Subscription] = []
+    var brokerStatus: BrokerStatus?
 
     private enum CodingKeys: String, CodingKey {
-        case holdings, accounts, budget, debt, goals, spending, incomePhases, subscriptions
+        case holdings, accounts, budget, debt, goals, spending, incomePhases, subscriptions, brokerStatus
     }
 
     init(holdings: [Holding] = [], accounts: [Account] = [], budget: Budget? = nil, debt: [DebtItem] = [], goals: [Goal] = [], spending: [SpendingMonth] = [], incomePhases: [IncomePhase] = [], subscriptions: [Subscription] = []) {
@@ -36,6 +37,25 @@ struct FinanceData: Codable {
         spending = (try? container.decode([SpendingMonth].self, forKey: .spending)) ?? []
         incomePhases = (try? container.decode([IncomePhase].self, forKey: .incomePhases)) ?? []
         subscriptions = (try? container.decode([Subscription].self, forKey: .subscriptions)) ?? []
+        brokerStatus = try? container.decode(BrokerStatus.self, forKey: .brokerStatus)
+    }
+
+    /// Present once a brokerage is linked. `line` mirrors brokerAgeLine in src/utils/formatting.js.
+    struct BrokerStatus: Codable {
+        var syncedAt: String?
+        var dataAsOf: String?
+        var dailyOnly: Bool?
+
+        func line(now: Date = .now) -> String? {
+            let parser = ISO8601DateFormatter()
+            parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            let age = RelativeDateTimeFormatter()
+            age.unitsStyle = .abbreviated
+            if let date = dataAsOf.flatMap(parser.date(from:)) {
+                return "Broker data: \(age.localizedString(for: date, relativeTo: now))\(dailyOnly == true ? ", updates daily" : "")"
+            }
+            return syncedAt.flatMap(parser.date(from:)).map { "Synced \(age.localizedString(for: $0, relativeTo: now))" }
+        }
     }
 
     struct Subscription: Codable, Identifiable {

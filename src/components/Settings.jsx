@@ -288,8 +288,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
                   {brokerSyncing ? '...' : 'Connect another brokerage'}
                 </button>
                 {/* Holdings live in Portfolio, not Settings. Connection state only here. */}
-                <Row label="Last synced" t={t}>
-                  <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{brokerSnapshot.syncedAt ? new Date(brokerSnapshot.syncedAt).toLocaleString() : '—'}</span>
+                <Row label="Broker data from" t={t}>
+                  <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{(brokerSnapshot.dataAsOf || brokerSnapshot.syncedAt) ? new Date(brokerSnapshot.dataAsOf || brokerSnapshot.syncedAt).toLocaleString() : '—'}</span>
                 </Row>
                 <Row label="Dividends, last 12 months" t={t}>
                   <span style={{ fontSize: 12, color: t.textSecondary, fontFamily: font }}>{(brokerSnapshot.dividends12m ?? 0).toLocaleString(undefined, { style: 'currency', currency: 'CAD' })}</span>

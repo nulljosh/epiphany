@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Card } from './ui';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useVisibilityPolling } from '../hooks/useVisibilityPolling';
-import { formatCurrency, compactCurrency, capitalize, CAT_COLORS } from '../utils/formatting';
+import { formatCurrency, compactCurrency, capitalize, CAT_COLORS, brokerAgeLine } from '../utils/formatting';
 import { quoteCurrency, toCad } from '../utils/currency';
 import { normalizeSpendingMonths, UPCOMING_PAYMENTS } from '../utils/financeData';
 import { fileToBase64 } from '../utils/helpers';
@@ -1195,7 +1195,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                   <div style={labelStyle}>Stocks</div>
                   {brokerSnapshot?.linked && brokerSnapshot.syncedAt && (
                     <div style={{ fontSize: 10, color: t.textTertiary }}>
-                      Synced {Math.max(0, Math.round((Date.now() - new Date(brokerSnapshot.syncedAt).getTime()) / 60000))}m ago
+                      {brokerAgeLine(brokerSnapshot)}
                     </div>
                   )}
                 </div>

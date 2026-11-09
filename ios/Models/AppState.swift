@@ -513,6 +513,17 @@ final class AppState {
             handleError(error)
         }
         portfolioFetchedAt = .now
+        Task { await refreshBrokerSnapshot() }
+    }
+
+    /// Opening the app only reads the server's last broker snapshot, so ask for a new one once the
+    /// screen has numbers. The server caches 25 minutes; reload only when it really fetched.
+    private func refreshBrokerSnapshot() async {
+        guard financeData?.brokerStatus != nil,
+              let sync = try? await EpiphanyAPI.shared.syncBroker(), sync.linked == true, sync.cached != true,
+              let fresh = try? await EpiphanyAPI.shared.fetchFinanceData() else { return }
+        financeData = fresh
+        portfolio = Portfolio(financeData: fresh, stocks: stocks)
     }
 
     /// Widgets cannot use the app's session, so hand them the two budget numbers via the App Group.
@@ -680,8 +691,8 @@ final class AppState {
     // MARK: - Refresh Operations (throwing for .refreshable)
 
     func refreshPortfolio() async throws {
-        // Trigger a broker re-sync so holdings aren't weeks stale (server caches 25 min)
-        if isLoggedIn { _ = try? await EpiphanyAPI.shared.syncBroker() }
+        // Pulling to refresh means now, so skip the server's 25 minute cache.
+        if isLoggedIn { _ = try? await EpiphanyAPI.shared.syncBroker(force: true) }
         async let f: Void = _loadFinanceDataThrowing()
         async let s: Void = _loadStatementsThrowing()
         _ = try await (f, s)

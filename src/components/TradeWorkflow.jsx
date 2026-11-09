@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card } from './ui';
-import { formatCurrency } from '../utils/formatting';
+import { formatCurrency, brokerAgeLine } from '../utils/formatting';
 import { generateRecommendations } from '../utils/recommendations';
 
 const STEPS = ['Connect', 'Sync', 'Recommend', 'Review'];
@@ -257,7 +257,7 @@ export default function TradeWorkflow({ dark, t, holdings, cashValue, accounts, 
               </div>
               {brokerSnapshot && brokerSnapshot.syncedAt && (
                 <div style={{ fontSize: 11, color: t.textTertiary, marginBottom: 8 }}>
-                  Last synced {Math.max(0, Math.round((Date.now() - new Date(brokerSnapshot.syncedAt).getTime()) / 60000))}m ago
+                  {brokerAgeLine(brokerSnapshot)}
                 </div>
               )}
               {holdings.map((h) => (

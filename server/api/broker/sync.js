@@ -6,6 +6,7 @@
 //   1. Ensures a SnapTrade user exists for the session (registers + caches secret in KV)
 //   2. If no brokerage is linked yet, returns { linkUrl } for the connection portal
 //   3. Otherwise returns + persists { holdings, balance }
+import { checkRateLimit } from '../_ratelimit.js';
 import { getKv } from '../_kv.js';
 import { getSessionUser, errorResponse } from '../auth-helpers.js';
 import { isPro } from '../gates.js';
@@ -35,6 +36,13 @@ async function registerFresh(adapter, userId) {
   }
 }
 
+// When the broker's data was last pulled by SnapTrade, oldest account first: one stuck
+// account should show, not hide behind the fresh ones. syncedAt is only when we asked.
+export function oldestSync(accounts = []) {
+  const times = accounts.map(a => Date.parse(a.holdingsAsOf)).filter(Number.isFinite);
+  return times.length ? new Date(Math.min(...times)).toISOString() : null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -48,7 +56,8 @@ export default async function handler(req, res) {
   const kv = await getKv();
   const secretKey = `snaptrade:user:${session.userId}`;
   const snapshotKey = `broker:snapshot:${session.userId}`;
-  const force = req.body?.force === true;
+  // ponytail: per IP, matching every other limit here. Over the limit just reads the cached snapshot.
+  const force = req.body?.force === true && await checkRateLimit(req, { prefix: 'rl:broker-sync', max: 10 });
   const connectAdditional = req.body?.action === 'connect-additional';
 
   try {
@@ -113,6 +122,7 @@ export default async function handler(req, res) {
     const snapshot = {
       holdings, balance, accounts: snapAccounts, currency, usdPerCad: rate, fxMissing, netWorthCad, connections,
       activities: activities.slice(0, 50), dividends12m, syncedAt: new Date().toISOString(),
+      dataAsOf: oldestSync(snapAccounts), dailyOnly: connections.some(c => c.delayed),
     };
     if (kv) await kv.set(snapshotKey, snapshot);
 

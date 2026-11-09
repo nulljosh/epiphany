@@ -310,7 +310,7 @@ export function usePortfolio(stocks, isAuthenticated) {
         ...base,
         holdings: nextHoldings,
         accounts: nextAccounts,
-        brokerSnapshot: { linked: true, syncedAt: data.syncedAt, dividends12m: data.dividends12m ?? 0, activities: data.activities ?? [] },
+        brokerSnapshot: { linked: true, syncedAt: data.syncedAt, dataAsOf: data.dataAsOf ?? null, dailyOnly: data.dailyOnly === true, dividends12m: data.dividends12m ?? 0, activities: data.activities ?? [] },
       });
       return { success: true, linked: true };
     } catch (err) {
