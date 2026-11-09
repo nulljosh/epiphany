@@ -358,7 +358,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] (blocked: a free FRED API key needs a signup, Joshua, 2026-11-01) Only the BLS and Yahoo backed macro series come back live (CPI, unemployment, payrolls, 10Y, 30Y). Fed Funds, GDP, jobless claims, consumer confidence, PCE, retail sales and the 2Y read the FRED CSV, which refuses Cloudflare egress. A FRED API key (free, fred.stlouisfed.org) as FRED_API_KEY plus api.stlouisfed.org in macro.js would bring all seven back.
 
 ## Ingested 2026-10-21
-- [ ] (11-01: native fixed, 3.0.0+ live on jaybulb; blocked: Google and GitHub OAuth console callbacks need Joshua's console login) Login broken after the new domain change. Sign-in sheet sits on a spinner. (screenshot: notes/attachments/2026-10-21/epiphany-1.png) Cause: iOS 2.5.17 calls the dead heyitsmejosh host; 3.0.0 (in review) already uses jaybulb. Web: SITE_URL secret moved to jaybulb 2026-10-21. Left: add https://epiphany.jaybulb.com/api/auth?action=google-callback to Google client 455155642136 (project epiphany-501805) and the github-callback to the GitHub OAuth app. Native Apple and Google buttons go in 3.0.1.
 - [ ] [P1] Stale App Store links. (2026-10-21: every epiphany link in code already points at id6779522175, so the stale ones are elsewhere. Which page or app? Need the URL.)
 - [ ] [P2] Map: places render on the map. What other details could we be displaying? (sheet today shows hours, phone, website, address, Get Directions) (notes/attachments/2026-10-21/epiphany-4.png)
 
@@ -366,7 +365,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-10-25
 - [ ] Custom map UI overlay and similar, based off our design kit, and hide all settings inside Settings.
-- [ ] Configure with Alpaca, finally. The project is a year old; it should be able to buy and sell and even auto trade. SPCX detail screen currently says "Trading is temporarily disabled, back soon" (screenshot ~/Documents/Code/notes/attachments/2026-10-25/epiphany-1.png); Settings shows Autopilot on paper money, last trade sell XLV. Note: Alpaca rejects Canadian residents, see the IBKR/brokerage item above, so this needs a decision on which broker.
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
