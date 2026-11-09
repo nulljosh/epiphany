@@ -233,6 +233,12 @@ describe('broker data age', () => {
     expect(withBrokerOverlay({ brokerStatus: { syncedAt: 'old' } }, null).brokerStatus).toBeUndefined();
   });
 
+  it('overlay keeps the cost basis from the snapshot', () => {
+    const holdings = [{ symbol: 'XEQT', shares: 2, costBasis: 25, marketValue: 60 }, { symbol: 'VFV', shares: 1, marketValue: 9 }];
+    const data = withBrokerOverlay({}, { syncedAt: '2026-11-08T10:00:00.000Z', holdings });
+    expect(data.holdings.map((h) => h.costBasis)).toEqual([25, null]);
+  });
+
   it('labels the data age, falling back to our own sync time on old snapshots', () => {
     const hoursAgo = (h) => new Date(Date.now() - h * 3600e3).toISOString();
     expect(brokerAgeLine({ dataAsOf: hoursAgo(3), dailyOnly: true })).toBe('Broker data: 3h ago, updates daily');

@@ -182,7 +182,7 @@ export function withBrokerOverlay(data, snapshot) {
   if (Array.isArray(snapshot?.holdings) && snapshot.holdings.length > 0
       && (!data.updatedAt || snapshot.syncedAt > data.updatedAt)) {
     data.holdings = snapshot.holdings.map(h => ({
-      symbol: h.symbol, shares: h.shares, costBasis: null,
+      symbol: h.symbol, shares: h.shares, costBasis: h.costBasis ?? null,
       marketValue: h.marketValue, account: h.account, source: 'broker',
     }));
   }
