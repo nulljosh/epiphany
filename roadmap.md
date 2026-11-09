@@ -370,7 +370,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Live updating price, change and change percent like TradingView, red on numbers going down, green going up. Reference watchlist (VIX, WTI, NAS100, BTCUSD...) with per-digit colouring: ~/Documents/Code/notes/attachments/2026-10-25/epiphany-3.png
 
 ## Ingested 2026-10-30
-- [ ] (11-01: tag v6.3.0 pushed; blocked: gh release create needs Joshua's permission rule, 2026-11-01) GitHub version out of sync with README tag
 
 ## Ingested 2026-11-01
 - [ ] Sync statements from Wealthsimple instead of uploading PDFs by hand (Joshua 2026-11-01: "a way to sync with Wealthsimple to get those statements, or a way to upload them"). Upload already exists on the web (Portfolio, statement PDFs) and September 2026 was loaded for him on 11-01 by script. Sync path: SnapTrade's `getActivities` in src/utils/brokers/snaptrade.js already pulls brokerage activity; Wealthsimple Cash (the prepaid card the statements come from) may not be on SnapTrade, so check that first, then map activities to statement rows with the same categorizer. Also make the upload easy to find on iPhone and Mac.
