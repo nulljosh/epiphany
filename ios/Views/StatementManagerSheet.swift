@@ -20,6 +20,12 @@ struct StatementManagerSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                // ponytail: a row, not an alert. The alert was asked to present while the file
+                // picker was still closing, which iOS can drop, so a failed upload looked like nothing.
+                if let uploadError {
+                    Label(uploadError, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.red)
+                }
                 if isUploading {
                     HStack(spacing: 10) {
                         ProgressView()
@@ -70,7 +76,7 @@ struct StatementManagerSheet: View {
                     Button("Done") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showFilePicker = true }) {
+                    Button(action: { uploadError = nil; showFilePicker = true }) {
                         Image(systemName: "arrow.up.doc")
                     }
                     .disabled(isUploading)
@@ -83,18 +89,6 @@ struct StatementManagerSheet: View {
             }
             .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf], onCompletion: { result in
                 handleFileSelection(result)
-            })
-            // ponytail: a real two-way binding, `.constant(uploadError != nil)` swallowed
-            // SwiftUI's dismissal write, so every upload failure was invisible.
-            .alert("Upload Error", isPresented: Binding(
-                get: { uploadError != nil },
-                set: { if !$0 { uploadError = nil } }
-            ), actions: {
-                Button("OK") { uploadError = nil }
-            }, message: {
-                if let error = uploadError {
-                    Text(error)
-                }
             })
             .sheet(item: $selectedStatement) { statement in
                 StatementTransactionsView(statement: statement) { updatedStatements in
@@ -137,17 +131,24 @@ struct StatementManagerSheet: View {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
 
-            do {
-                let data = try Data(contentsOf: url)
-                guard data.count <= Self.maxStatementBytes else {
-                    let mb = Double(data.count) / 1024 / 1024
-                    uploadError = String(format: "%@ is too large (%.1fMB), statements must be under 3MB", url.lastPathComponent, mb)
-                    return
-                }
-                upload(data: data, filename: url.lastPathComponent)
-            } catch {
-                uploadError = "Failed to read file: \(error.localizedDescription)"
+            // A picked iCloud file has to be read through a file coordinator, which also
+            // waits for the download; a bare Data(contentsOf:) can fail on one.
+            var data: Data?
+            var readError: Error?
+            var coordinatorError: NSError?
+            NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinatorError) { readable in
+                do { data = try Data(contentsOf: readable) } catch { readError = error }
             }
+            guard let data else {
+                uploadError = "Failed to read file: \((coordinatorError ?? readError)?.localizedDescription ?? "unknown error")"
+                return
+            }
+            guard data.count <= Self.maxStatementBytes else {
+                let mb = Double(data.count) / 1024 / 1024
+                uploadError = String(format: "%@ is too large (%.1fMB), statements must be under 3MB", url.lastPathComponent, mb)
+                return
+            }
+            upload(data: data, filename: url.lastPathComponent)
         }
     }
 
