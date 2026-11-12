@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Shared first-run onboarding. Copy this file verbatim into any app that needs it,
-/// then hang it off the root view:
+/// Shared first-run welcome screen, in the Apple Stocks style: "Welcome to / AppName",
+/// up to three feature rows, one Continue button. Copy this file verbatim into any app
+/// that needs it, then hang it off the root view:
 ///
 ///     ContentView()
 ///         .onboarding(key: "spark", signedIn: appState.isLoggedIn, slides: Onboarding.spark)
@@ -14,80 +15,64 @@ struct OnboardingSlide: Identifiable {
     let symbol: String
     let title: String
     let body: String
-    /// An asset image shown instead of the SF Symbol (the Spark mascot).
-    var image: String? = nil
 }
 
 struct OnboardingView: View {
     let slides: [OnboardingSlide]
     let finishLabel: String
     let onFinish: () -> Void
-    let onSkip: () -> Void
 
-    @State private var index = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var isLast: Bool { index == slides.count - 1 }
+    private var appName: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? ""
+    }
 
     var body: some View {
-        VStack(spacing: 24) {
-            TabView(selection: $index) {
-                ForEach(Array(slides.enumerated()), id: \.element.id) { i, slide in
-                    VStack(spacing: 16) {
-                        if let image = slide.image {
-                            Image(image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 140)
-                        } else {
-                            Image(systemName: slide.symbol)
-                                .font(.system(size: 72, weight: .light))
-                                .foregroundStyle(.tint)
-                                .frame(height: 140)
+        VStack(alignment: .leading, spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 48) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Welcome to").foregroundStyle(.tint)
+                        Text(appName)
+                    }
+                    .font(.largeTitle.bold())
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
+
+                    VStack(alignment: .leading, spacing: 32) {
+                        ForEach(slides.prefix(3)) { slide in
+                            HStack(alignment: .top, spacing: 16) {
+                                Image(systemName: slide.symbol)
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.tint)
+                                    .frame(width: 44)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(slide.title).fontWeight(.semibold)
+                                    Text(slide.body).foregroundStyle(.secondary)
+                                }
+                                .font(.title3)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .accessibilityElement(children: .combine)
                         }
-                        Text(slide.title)
-                            .font(.title.bold())
-                            .multilineTextAlignment(.center)
-                        Text(slide.body)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
                     }
-                    .padding(.horizontal, 32)
-                    .tag(i)
                 }
+                .padding(.top, 96)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            #if os(iOS)
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            #endif
+            .scrollBounceBehavior(.basedOnSize)
 
-            VStack(spacing: 8) {
-                Button {
-                    if isLast {
-                        onFinish()
-                    } else {
-                        // ponytail: animation is the only motion here, so gating it is the whole
-                        // reduce-motion story. No separate static path needed.
-                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) { index += 1 }
-                    }
-                } label: {
-                    Text(isLast ? finishLabel : "Next")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.capsule)
-
-                Button("Skip", action: onSkip)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .opacity(isLast ? 0 : 1)
-                    .disabled(isLast)
+            Button(action: onFinish) {
+                Text(finishLabel)
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 24)
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
+            .padding(.vertical, 16)
         }
+        .padding(.horizontal, 32)
         #if os(iOS)
         .background(Color(.systemBackground).ignoresSafeArea())
         #else
@@ -139,9 +124,6 @@ private struct OnboardingModifier: ViewModifier {
                     seen = true
                     showing = false
                     onFinish()
-                } onSkip: {
-                    seen = true
-                    showing = false
                 }
                 .interactiveDismissDisabled()
             }
@@ -163,7 +145,7 @@ extension View {
     func onboarding(key: String,
                     signedIn: Bool,
                     slides: [OnboardingSlide],
-                    finishLabel: String = "Get started",
+                    finishLabel: String = "Continue",
                     onFinish: @escaping () -> Void = {}) -> some View {
         modifier(OnboardingModifier(key: key, signedIn: signedIn, slides: slides,
                                     finishLabel: finishLabel, onFinish: onFinish))
