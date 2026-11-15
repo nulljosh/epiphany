@@ -148,8 +148,18 @@ struct MarketsView: View {
                         .padding(.bottom, 8)
 
                         HStack {
-                            TextField("Search markets", text: $searchText)
-                                .textFieldStyle(.roundedBorder)
+                            HStack(spacing: 8) {
+                                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                                TextField("Search markets", text: $searchText)
+                                if !searchText.isEmpty {
+                                    Button { searchText = "" } label: {
+                                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("Clear search")
+                                }
+                            }
+                            .searchCapsule()
                             if appState.isLoggedIn {
                                 WatchlistListPicker(lists: appState.watchlistLists, active: $activeList,
                                                     onCreate: { appState.updateWatchlistLists(appState.watchlistLists + [WatchlistList(name: $0, symbols: [])]) },

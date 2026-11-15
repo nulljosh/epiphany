@@ -156,9 +156,7 @@ struct PeopleView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .searchCapsule()
 
             if !query.isEmpty {
                 Button("Search") { performSearch() }

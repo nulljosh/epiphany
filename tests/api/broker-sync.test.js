@@ -152,6 +152,7 @@ describe('broker/sync stale-userSecret self-heal', () => {
     await freshHandler({ method: 'POST', body: { action: 'reconnect' } }, res);
     expect(res.body.linkUrl).toBe('https://broker.example/reconnect/dead');
     expect(loginLink).toHaveBeenCalledWith(null, 'dead');
+    expect(kvStore.get('broker:snapshot:u1').syncedAt).toBeNull();
   });
 });
 

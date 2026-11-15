@@ -25,10 +25,17 @@ struct SettingsView: View {
             appState.loadAvatar()
             appState.restoreBrokerageSelection()
         }
-        .task {
-            guard appState.brokerLinked, let r = try? await EpiphanyAPI.shared.syncBroker() else { return }
-            staleBroker = r.connections?.first { $0.disabled == true }?.brokerName
+        .task { await checkStaleBroker() }
+        // The reconnect portal runs in the browser; coming back to the app is the cue to look again.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if staleBroker != nil { Task { await checkStaleBroker() } }
         }
+    }
+
+    private func checkStaleBroker() async {
+        guard appState.brokerLinked, let r = try? await EpiphanyAPI.shared.syncBroker() else { return }
+        staleBroker = r.connections?.first { $0.disabled == true }?.brokerName
+        if staleBroker == nil, brokerStatus?.hasPrefix("Finish linking") == true { brokerStatus = "Reconnected" }
     }
 
     private func connectBrokerage(action: String? = nil) async {
@@ -41,7 +48,7 @@ struct SettingsView: View {
                 return
             }
             if let link = result.linkUrl, let url = URL(string: link) {
-                brokerStatus = "Finish linking in the browser, then click Sync again."
+                brokerStatus = "Finish linking in the browser, then come back here."
                 openURL(url)
             } else if result.linked == true {
                 staleBroker = result.connections?.first { $0.disabled == true }?.brokerName

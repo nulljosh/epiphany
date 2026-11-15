@@ -99,7 +99,12 @@ export default async function handler(req, res) {
     // in the snapshot looking current. Reconnect re-auths that connection in the portal.
     if (reconnect) {
       const dead = (await adapter.listConnections().catch(() => [])).find(c => c.disabled);
-      if (dead) return res.status(200).json({ ok: true, linked: true, linkUrl: await adapter.loginLink(null, dead.id) });
+      if (dead) {
+        // Expire the cached snapshot so the first sync after the portal pulls fresh numbers.
+        const snap = kv ? await kv.get(snapshotKey) : null;
+        if (snap) await kv.set(snapshotKey, { ...snap, syncedAt: null });
+        return res.status(200).json({ ok: true, linked: true, linkUrl: await adapter.loginLink(null, dead.id) });
+      }
     }
     if (!accounts || accounts.length === 0 || connectAdditional) {
       if (connectAdditional && !(await isPro(session, req))) {

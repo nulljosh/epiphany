@@ -205,3 +205,17 @@ private struct SharedErrorBanner: View {
         .padding(.horizontal)
     }
 }
+
+extension View {
+    /// The one Mac search field: system font, 36pt capsule, like the iPhone's search bar.
+    /// Apply to the HStack holding the magnifier, the TextField and the clear button.
+    func searchCapsule() -> some View {
+        self
+            .textFieldStyle(.plain)
+            .font(.body)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 36)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.08)))
+    }
+}

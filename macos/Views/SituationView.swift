@@ -593,21 +593,19 @@ struct SituationView: View {
     private func clearMapSearch() { mapSearch = "" }
 
     private var searchField: some View {
-        HStack(spacing: 6) {
-            TextField("Search location…", text: $mapSearch)
-                .textFieldStyle(.plain)
-                .font(.system(size: 12, design: .monospaced))
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+            TextField("Search location", text: $mapSearch)
                 .foregroundStyle(.primary)
                 .onSubmit { Task { await geocodeAndFly() } }
                 .onChange(of: mapSearch) { _, query in
                     searchCompleter.update(query: query, region: visibleRegion)
                 }
-                .frame(width: 160)
+                .frame(width: 240)
                 .onExitCommand { clearMapSearch() }
             if !mapSearch.isEmpty {
                 Button { clearMapSearch() } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
@@ -615,14 +613,12 @@ struct SituationView: View {
             }
             Button { Task { await geocodeAndFly() } } label: {
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 11, weight: .bold))
+                    .fontWeight(.bold)
                     .foregroundStyle(mapSearchError ? .red : .secondary)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .searchCapsule()
     }
 
     private var searchSuggestions: some View {
