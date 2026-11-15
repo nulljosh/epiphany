@@ -26,7 +26,7 @@ const MIRRORS = (process.env.OVERPASS_MIRRORS ||
 /**
  * Run an Overpass QL query, trying each mirror until one answers.
  * @param {string} query      Overpass QL
- * @param {number} timeoutMs  per-mirror timeout
+ * @param {number} timeoutMs  total budget across every mirror, so a stalled mirror can't chain timeouts
  * @returns {Promise<object>} parsed Overpass JSON
  * @throws if every mirror fails
  */
@@ -34,9 +34,12 @@ export async function overpassQuery(query, timeoutMs = 12000) {
   const body = `data=${encodeURIComponent(query)}`;
   const failures = [];
 
+  const deadline = Date.now() + timeoutMs;
   for (const url of MIRRORS) {
+    const left = deadline - Date.now();
+    if (left <= 0) { failures.push('out of time'); break; }
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timer = setTimeout(() => controller.abort(), left);
     try {
       const res = await fetch(url, {
         method: 'POST',

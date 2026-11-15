@@ -210,7 +210,8 @@ export default async function handler(req, res) {
   }
   let result = await fetchIncidents(bbox);
   const totalCount = result.data.incidents.length + result.data.infrastructure.length;
-  if (totalCount === 0 && lat && lon) {
+  // Widen only when Overpass actually answered with nothing; after a failure it would just fail again, slower.
+  if (totalCount === 0 && lat && lon && result.state !== 'degraded') {
     const dWide = 1.0;
     const wideBbox = { lamin: +lat - dWide, lomin: +lon - dWide, lamax: +lat + dWide, lomax: +lon + dWide };
     result = await fetchIncidents(wideBbox);

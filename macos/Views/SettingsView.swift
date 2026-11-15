@@ -7,8 +7,7 @@ struct SettingsView: View {
     @AppStorage("epiphany_menu_bar_ticker") private var showMenuBar = true
     @AppStorage("showRainRadar") private var showRainRadar = false
     @AppStorage("showStorms") private var showStorms = true
-    @State private var showUpgradeAlert = false
-    @State private var upgradeTarget: SubscriptionTier?
+    @State private var isUploadingAvatar = false
     @State private var showChangeEmail = false
     @State private var showChangePassword = false
     @State private var showDeleteAccount = false
@@ -130,17 +129,17 @@ struct SettingsView: View {
     private var settingsContent: some View {
         ScrollView {
             VStack(spacing: 18) {
-                appearanceCard
                 if appState.isLoggedIn {
                     profileCard
-                    subscriptionCard
                     accountCard
                     brokerageCard
                     mapSourcesCard
+                    appearanceCard
                     signOutCard
                     dangerZoneCard
                 } else {
                     signedOutCard
+                    appearanceCard
                 }
             }
             // A settings column, not a billboard: System Settings width, centred.
@@ -149,16 +148,6 @@ struct SettingsView: View {
             .padding(.top, 16)
             .padding(.bottom, 96)
             .frame(maxWidth: .infinity)
-        }
-        .alert("Upgrade to \(upgradeTarget?.title ?? "")", isPresented: $showUpgradeAlert) {
-            Button("Open Web Upgrade") {
-                if let url = URL(string: "https://epiphany.jaybulb.com") {
-                    openURL(url)
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Subscription upgrades are handled on the web. You will be redirected to Epiphany on the web to complete the upgrade.")
         }
         .sheet(isPresented: $showChangeEmail) {
             ChangeEmailSheet()
@@ -181,100 +170,54 @@ struct SettingsView: View {
     }
 
     private var profileCard: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.primary.opacity(0.05))
 
             VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 14) {
-                    ZStack {
+                HStack(spacing: 18) {
+                    Button { Task { await newAvatar() } } label: { ZStack {
                         if let data = appState.avatarImageData,
                            let nsImage = NSImage(data: data) {
                             Image(nsImage: nsImage)
                                 .resizable()
                                 .scaledToFill()
-                                .frame(width: 62, height: 62)
+                                .frame(width: 80, height: 80)
                                 .clipShape(Circle())
                         } else {
                             Circle()
                                 .fill(Color.primary.opacity(0.12))
-                                .frame(width: 62, height: 62)
+                                .frame(width: 80, height: 80)
                             Text(avatarInitial)
                                 .font(.title2.weight(.bold))
                                 .foregroundStyle(.primary)
                         }
-                    }
+                        if isUploadingAvatar {
+                            Circle().fill(.black.opacity(0.45)).frame(width: 80, height: 80)
+                            ProgressView().controlSize(.small)
+                        }
+                    } }
+                    .buttonStyle(.plain)
+                    .help("New avatar")
+                    .accessibilityLabel("New avatar")
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(appState.user?.email ?? "")
-                            .font(.headline)
-                        Text("Epiphany \(tierLabel)")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(tierColor)
+                            .font(.title2.weight(.semibold))
+                        Text("Click your picture for a new one")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
-                }
-
-                HStack(spacing: 10) {
-                    statPill(title: "Plan", value: tierLabel)
-                    statPill(title: "Sources", value: "\(enabledSourceCount)/7 on")
-                    statPill(title: "Shell", value: "macOS")
+                    Spacer(minLength: 0)
                 }
             }
             .padding(Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color.primary.opacity(0.08), lineWidth: 1)
         )
-    }
-
-    private var subscriptionCard: some View {
-        settingsCard("Subscription", subtitle: "Manage what plan you are on and where upgrades happen.") {
-            VStack(spacing: 10) {
-                ForEach(SubscriptionTier.allCases) { tier in
-                    Button {
-                        guard tier != normalizedTier, tier != .free else { return }
-                        upgradeTarget = tier
-                        showUpgradeAlert = true
-                    } label: {
-                        HStack(spacing: 14) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(tier.title)
-                                    .font(.subheadline.weight(.semibold))
-                                if let price = tier.price {
-                                    Text(price)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            Spacer()
-
-                            if normalizedTier == tier {
-                                Label("Current", systemImage: "checkmark.circle.fill")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Palette.paleBlueAlt)
-                            } else if tier != .free {
-                                Text("Upgrade")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Palette.linkBlue)
-                            }
-                        }
-                        .padding(Spacing.smPlus)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(normalizedTier == tier ? Color.primary.opacity(0.08) : Color.primary.opacity(0.04))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(normalizedTier == tier ? Palette.linkBlue.opacity(0.35) : Color.primary.opacity(0.05), lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
     }
 
     private var accountCard: some View {
@@ -438,47 +381,16 @@ struct SettingsView: View {
         )
     }
 
-    private var tierLabel: String {
-        switch appState.user?.tier {
-        case "starter": return "Starter"
-        case "pro": return "Pro"
-        case "ultra": return "Ultra"
-        default: return "Free"
-        }
-    }
-
-    private var tierColor: Color {
-        switch appState.user?.tier {
-        case "starter": return Palette.appleBlue
-        case "pro": return Palette.warningAmberAlt
-        case "ultra": return Palette.slateDeep
-        default: return .secondary
-        }
-    }
-
-    private var normalizedTier: SubscriptionTier {
-        switch appState.user?.tier?.lowercased() {
-        case "starter", "pro":
-            return .pro
-        case "ultra":
-            return .ultra
-        default:
-            return .free
-        }
-    }
-
-    private var enabledSourceCount: Int {
-        [
-            appState.situationEarthquakesEnabled,
-            appState.situationFlightsEnabled,
-            appState.situationIncidentsEnabled,
-            appState.situationWeatherEnabled,
-            appState.situationCrimeEnabled,
-            appState.situationLocalEventsEnabled,
-            appState.situationTrafficEnabled,
-        ]
-        .filter { $0 }
-        .count
+    private func newAvatar() async {
+        guard !isUploadingAvatar else { return }
+        isUploadingAvatar = true
+        defer { isUploadingAvatar = false }
+        // 9 Greek gods x 12 duotones, the same files the iPhone and web pick from.
+        let gods = ["aphrodite", "ares", "artemis", "athena", "demeter", "dionysus", "hera", "hermes", "zeus"]
+        guard let url = URL(string: "https://epiphany.jaybulb.com/avatars/gods/\(gods.randomElement()!)-\(Int.random(in: 0..<12)).jpg"),
+              let (data, _) = try? await URLSession.shared.data(from: url), NSImage(data: data) != nil else { return }
+        appState.saveAvatarData(data)
+        try? await EpiphanyAPI.shared.uploadAvatar(imageData: data)
     }
 
     private func settingsCard<Content: View>(
@@ -506,23 +418,6 @@ struct SettingsView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(Color.primary.opacity(0.06), lineWidth: 1)
-        )
-    }
-
-    private func statPill(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title.uppercased())
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.primary.opacity(0.55))
-            Text(value)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.primary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(
-            Capsule()
-                .fill(Color.primary.opacity(0.08))
         )
     }
 
@@ -830,32 +725,3 @@ private struct AppearancePicker: View {
     }
 }
 
-private enum SubscriptionTier: String, CaseIterable, Identifiable {
-    case free
-    case pro
-    case ultra
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .free:
-            return "Free"
-        case .pro:
-            return "Pro"
-        case .ultra:
-            return "Ultra"
-        }
-    }
-
-    var price: String? {
-        switch self {
-        case .free:
-            return "Free"
-        case .pro:
-            return "$20/mo"
-        case .ultra:
-            return "$50/mo"
-        }
-    }
-}

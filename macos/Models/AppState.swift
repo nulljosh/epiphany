@@ -434,6 +434,10 @@ final class AppState {
             cashflow = EpiphanyAPI.shared.lastCashflow
             insights = EpiphanyAPI.shared.lastInsights
             publishBudgetSnapshot()
+            if let merged = FinanceData.merging(financeData, statements: statements) {
+                financeData = merged
+                portfolio = Portfolio(financeData: merged, stocks: stocks)
+            }
         } catch {
             handleError(error)
         }

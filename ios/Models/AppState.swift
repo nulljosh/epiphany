@@ -568,29 +568,9 @@ final class AppState {
             cashflow = EpiphanyAPI.shared.lastCashflow
             insights = EpiphanyAPI.shared.lastInsights
             publishBudgetSnapshot()
-            let allTransactions = statements.flatMap(\.transactions)
-            if !allTransactions.isEmpty {
-                let spendingMonths = statements.compactMap(\.spendingMonth)
-                let income = allTransactions.filter { $0.amount > 0 }.reduce(0) { $0 + $1.amount }
-                let expenses = allTransactions.filter { $0.amount < 0 }.reduce(0) { $0 + abs($1.amount) }
-                let monthCount = max(Double(Set(allTransactions.map { String($0.date.prefix(7)) }).count), 1)
-                let avgMonthlyIncome = income / monthCount
-                let avgMonthlyExpenses = expenses / monthCount
-
-                let derivedBudget = FinanceData.Budget(
-                    income: [FinanceData.Budget.BudgetLine(name: "Monthly Income", amount: avgMonthlyIncome, frequency: "monthly", note: nil)],
-                    expenses: [FinanceData.Budget.BudgetLine(name: "Monthly Expenses", amount: avgMonthlyExpenses, frequency: "monthly", note: nil)]
-                )
-
-                if financeData != nil {
-                    if financeData?.spending.isEmpty == true { financeData?.spending = spendingMonths }
-                    if financeData?.budget == nil { financeData?.budget = derivedBudget }
-                } else {
-                    financeData = FinanceData(budget: derivedBudget, spending: spendingMonths)
-                }
-                if let financeData {
-                    portfolio = Portfolio(financeData: financeData, stocks: stocks)
-                }
+            if let merged = FinanceData.merging(financeData, statements: statements) {
+                financeData = merged
+                portfolio = Portfolio(financeData: merged, stocks: stocks)
             }
         } catch {
             handleError(error)
@@ -722,29 +702,9 @@ final class AppState {
         recurring = EpiphanyAPI.shared.lastRecurring
         cashflow = EpiphanyAPI.shared.lastCashflow
         insights = EpiphanyAPI.shared.lastInsights
-        let allTransactions = statements.flatMap(\.transactions)
-        if !allTransactions.isEmpty {
-            let spendingMonths = statements.compactMap(\.spendingMonth)
-            let income = allTransactions.filter { $0.amount > 0 }.reduce(0) { $0 + $1.amount }
-            let expenses = allTransactions.filter { $0.amount < 0 }.reduce(0) { $0 + abs($1.amount) }
-            let monthCount = max(Double(Set(allTransactions.map { String($0.date.prefix(7)) }).count), 1)
-            let avgMonthlyIncome = income / monthCount
-            let avgMonthlyExpenses = expenses / monthCount
-
-            let derivedBudget = FinanceData.Budget(
-                income: [FinanceData.Budget.BudgetLine(name: "Monthly Income", amount: avgMonthlyIncome, frequency: "monthly", note: nil)],
-                expenses: [FinanceData.Budget.BudgetLine(name: "Monthly Expenses", amount: avgMonthlyExpenses, frequency: "monthly", note: nil)]
-            )
-
-            if financeData != nil {
-                if financeData?.spending.isEmpty == true { financeData?.spending = spendingMonths }
-                if financeData?.budget == nil { financeData?.budget = derivedBudget }
-            } else {
-                financeData = FinanceData(budget: derivedBudget, spending: spendingMonths)
-            }
-            if let financeData {
-                portfolio = Portfolio(financeData: financeData, stocks: stocks)
-            }
+        if let merged = FinanceData.merging(financeData, statements: statements) {
+            financeData = merged
+            portfolio = Portfolio(financeData: merged, stocks: stocks)
         }
     }
 

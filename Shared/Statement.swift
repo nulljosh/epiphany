@@ -74,3 +74,24 @@ struct Transaction: Codable, Identifiable {
     /// In the review queue: nothing categorized it and nobody waved it through. Mirrors needsReview on the server.
     var needsReview: Bool { category == "uncategorized" && reviewed != true } // nil is a deposit, payment or transfer, not spending
 }
+
+extension FinanceData {
+    /// Spending months and an average monthly budget from uploaded statements, filling only what
+    /// the account lacks. Nil when there are no transactions, so the caller keeps what it has.
+    static func merging(_ current: FinanceData?, statements: [Statement]) -> FinanceData? {
+        let all = statements.flatMap(\.transactions)
+        guard !all.isEmpty else { return nil }
+        let months = statements.compactMap(\.spendingMonth)
+        let income = all.filter { $0.amount > 0 }.reduce(0) { $0 + $1.amount }
+        let expenses = all.filter { $0.amount < 0 }.reduce(0) { $0 + abs($1.amount) }
+        let monthCount = max(Double(Set(all.map { String($0.date.prefix(7)) }).count), 1)
+        let budget = Budget(
+            income: [Budget.BudgetLine(name: "Monthly Income", amount: income / monthCount, frequency: "monthly", note: nil)],
+            expenses: [Budget.BudgetLine(name: "Monthly Expenses", amount: expenses / monthCount, frequency: "monthly", note: nil)]
+        )
+        guard var data = current else { return FinanceData(budget: budget, spending: months) }
+        if data.spending.isEmpty { data.spending = months }
+        if data.budget == nil { data.budget = budget }
+        return data
+    }
+}

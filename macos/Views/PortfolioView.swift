@@ -70,7 +70,6 @@ private let categoryColors: [String: Color] = [
 
 struct PortfolioView: View {
     @Environment(AppState.self) private var appState
-    @State private var selectedTab: FinanceTab = .spending
     @State private var hasLoaded = false
     @State private var holdingFilter = "All"
     @State private var selectedSpendingMonth: String?
@@ -84,18 +83,6 @@ struct PortfolioView: View {
     @State private var showStatementImporter = false
     @State private var isUploadingStatement = false
     @State private var statementUploadError: String?
-
-    private enum FinanceTab: String, CaseIterable, Identifiable {
-        case spending = "Spending"
-        case holdings = "Holdings"
-        case budget = "Budget"
-        case debt = "Debt"
-        case goals = "Goals"
-        case subscriptions = "Subscriptions"
-        case statements = "Statements"
-
-        var id: String { rawValue }
-    }
 
     private var currencyCode: String {
         Locale.current.currency?.identifier ?? "USD"
@@ -184,15 +171,12 @@ struct PortfolioView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 16) {
-                            tabSelector
-                                .padding(.top, 12)
-
                             if (appState.financeData?.accounts ?? []).isEmpty, (resolvedPortfolio?.holdings ?? []).isEmpty, appState.statements.isEmpty {
-                                FirstRunCard { selectedTab = .statements }
+                                FirstRunCard { showStatementImporter = true }
                                     .padding(.horizontal)
                             }
 
-                            tabContent
+                            allSections
 
                             Spacer(minLength: 24)
                         }
@@ -225,32 +209,20 @@ struct PortfolioView: View {
         }
     }
 
+    /// One page, top to bottom like the iPhone: what you have, what you spend, then the plan.
     @ViewBuilder
-    private var tabContent: some View {
-        switch selectedTab {
-        case .spending:
-            spendingContent
-        case .holdings:
-            if let portfolio = resolvedPortfolio {
-                holdingsContent(portfolio)
-            } else {
-                sectionCard("Holdings") {
-                    emptyState("No holdings data available")
-                }
-            }
-        case .budget:
-            budgetContent
-        case .debt:
-            debtContent
-            debtBreakdownBars
-            incomeTimelineView
-        case .goals:
-            goalsContent
-        case .subscriptions:
-            subscriptionsContent
-        case .statements:
-            statementsContent
+    private var allSections: some View {
+        if let portfolio = resolvedPortfolio {
+            holdingsContent(portfolio)
         }
+        spendingContent
+        budgetContent
+        subscriptionsContent
+        goalsContent
+        debtContent
+        debtBreakdownBars
+        incomeTimelineView
+        statementsContent
     }
 
     private var signInPrompt: some View {
@@ -267,30 +239,6 @@ struct PortfolioView: View {
             .tint(Palette.appleBlue)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var tabSelector: some View {
-        ScrollView(.horizontal, showsIndicators: true) {
-            HStack(spacing: 8) {
-                ForEach(FinanceTab.allCases) { tab in
-                    Button {
-                        selectedTab = tab
-                    } label: {
-                        Text(tab.rawValue)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(selectedTab == tab ? Color(nsColor: .windowBackgroundColor) : .primary.opacity(0.86))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(selectedTab == tab ? Color.primary : Color.primary.opacity(0.08))
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal)
-        }
     }
 
     private func holdingsContent(_ portfolio: Portfolio) -> some View {

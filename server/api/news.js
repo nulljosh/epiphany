@@ -521,7 +521,8 @@ export default async function handler(req, res) {
   }
 
   // Build cache key
-  const cacheKey = `${category}:${lat ?? ''}:${lon ?? ''}`;
+  const near = lat && lon ? nearestCity(parseFloat(lat), parseFloat(lon)) : null;
+  const cacheKey = near ? `${category}:city:${near.name}` : `${category}::`; // general key unchanged, its cache stays warm
   const kvKey = `news:geo:v2:${cacheKey}`;
 
   // L1 in-memory
@@ -649,6 +650,17 @@ export default async function handler(req, res) {
           cacheAgeMs: Date.now() - kvHit.ts,
           warning: 'GDELT unavailable; serving stale cached news',
         }),
+      });
+    }
+
+    // A city with no fresh news still gets headlines: fall back to the general feed's cache.
+    const general = near ? await kvReadNews(`news:geo:v2:${category}::`) : null;
+    if (general?.data) {
+      res.setHeader('Cache-Control', 's-maxage=60');
+      return res.status(200).json({
+        ...general.data,
+        meta: buildMeta('stale', { cached: true, source: 'kv', degraded: true, cacheAgeMs: Date.now() - general.ts,
+          warning: 'No local news right now; serving general headlines' }),
       });
     }
 

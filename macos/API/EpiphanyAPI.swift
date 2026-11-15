@@ -816,6 +816,15 @@ final class EpiphanyAPI {
         return try decode([Stock].self, from: try await perform(request))
     }
 
+    /// POST /api/avatar with a base64 JPEG; the server stores it and the account carries it everywhere.
+    func uploadAvatar(imageData: Data) async throws {
+        var request = URLRequest(url: try makeURL("/api/avatar"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["image": imageData.base64EncodedString()])
+        _ = try await perform(request)
+    }
+
     private func makeURL(_ path: String, query: [String: String] = [:]) throws -> URL {
         var components = URLComponents(string: baseURL + path)
         if !query.isEmpty {
