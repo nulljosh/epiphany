@@ -22,7 +22,7 @@ fi
 echo "==> Running fastlane snapshot"
 fastlane snapshot
 
-DEVICE="iPhone 11 Pro Max"
+DEVICE="iPhone 17 Pro Max"
 SHOTS=("1-situation" "2-markets" "3-stock-detail" "4-portfolio" "5-settings")
 
 echo "==> Copying screenshots into screenshots/appstore"
@@ -44,13 +44,19 @@ for shot in "${SHOTS[@]}"; do
 done
 
 echo "==> Blurring personal data (balances, email) in the committed copies"
-# ponytail: regions are pixel boxes on the 1242x2688 iPhone 11 Pro Max shots. If the Portfolio or Settings layout moves, redo them.
-blur() { magick "$1" -region "$2" -blur 0x20 "$1"; }
+# ponytail: pixel boxes on the 1320x2868 iPhone 17 Pro Max shots. The snapshot login is Joshua's real
+# account, so every dollar figure and the email must be covered. If the Portfolio or Settings layout moves,
+# or the device changes, redo them and look at the result before it can be committed.
+blur() { magick "$1" -region "$2" -blur 0x30 "$1"; }
 for f in screenshots/appstore/4-portfolio.png ../public/screenshots/screenshot-portfolio-new.png; do
-  blur "$f" 560x230+40+475; blur "$f" 250x680+915+880; blur "$f" 380x110+90+1815
+  magick "$f" -region 1040x260+0+520 -blur 0x90 "$f"   # total value: big type needs a much heavier blur
+  blur "$f" 430x180+880+1040    # account balances
+  blur "$f" 1180x200+70+2040    # "October vs September $x by day 31, $y less"
+  blur "$f" 230x330+1050+2180   # spending chart dollar axis
+  blur "$f" 1320x120+0+2760     # category totals at the bottom
 done
 for f in screenshots/appstore/5-settings.png ../public/screenshots/screenshot-settings-new.png; do
-  blur "$f" 520x70+300+585
+  blur "$f" 860x200+260+540     # name and email
 done
 
 echo "==> Uploading to App Store Connect"
