@@ -374,3 +374,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Account portfolio still stale.
 - [ ] Epiphany + Cloudflare: need to upgrade for Epiphany. SnapTrade too. And get actual trading, even if we only match the S&P 500. (Vault note 2026-11-06 says Epiphany does not need Workers Paid, and SnapTrade's $1 charge is failing on the card. Check both before upgrading.)
 - [ ] There's a gas line fire near Joshua, it's in the news, and the map shows nothing there. Could we add support for incidents like it? Screenshot: ~/Documents/Code/notes/attachments/2026-11-13/epiphany-1.png (map tab, area circled in red, "226 events nearby" pill).
+
+## Ingested 2026-11-14
+- [ ] (Note "Harp icon") Co-Stanza and Epiphany both have duplicate harp icons. Make them more unique (`/icon`).
+- [ ] (Note "Epiphany") Business News drawer still not rendering reliably: Daily Brief shows one line then a spinner forever. Note says "need to upgrade to Cloudflare plus", question: is it actually a Workers limit, or the fetch? Screenshot: ~/Documents/Code/notes/attachments/2026-11-14/epiphany-1.png
