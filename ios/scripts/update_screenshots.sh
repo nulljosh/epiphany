@@ -48,6 +48,9 @@ echo "==> Blurring personal data (balances, email) in the committed copies"
 # account, so every dollar figure and the email must be covered. If the Portfolio or Settings layout moves,
 # or the device changes, redo them and look at the result before it can be committed.
 blur() { magick "$1" -region "$2" -blur 0x30 "$1"; }
+for f in screenshots/appstore/4-portfolio.png screenshots/appstore/5-settings.png; do
+  [ "$(magick identify -format '%wx%h' "$f")" = 1320x2868 ] || { echo "blur boxes only fit 1320x2868, $f differs; redo them" >&2; exit 1; }
+done
 for f in screenshots/appstore/4-portfolio.png ../public/screenshots/screenshot-portfolio-new.png; do
   magick "$f" -region 1040x260+0+520 -blur 0x90 "$f"   # total value: big type needs a much heavier blur
   blur "$f" 430x180+880+1040    # account balances

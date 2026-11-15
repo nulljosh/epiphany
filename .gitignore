@@ -192,3 +192,6 @@ tradingview/menubar.lock
 tradingview/edge-state.json
 tradingview/edge-state.json.tmp
 docs/ad/*.mp4
+
+# raw fastlane snapshots are unblurred (real account), never commit them
+ios/fastlane/screenshots/
