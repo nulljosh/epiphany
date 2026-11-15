@@ -379,6 +379,7 @@ final class EpiphanyAPI {
         struct Connection: Decodable {
             let id: String
             let brokerName: String?
+            let disabled: Bool?
         }
         let ok: Bool
         let linked: Bool?

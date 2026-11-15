@@ -59,9 +59,10 @@ export default async function handler(req, res) {
   // ponytail: per IP, matching every other limit here. Over the limit just reads the cached snapshot.
   const force = req.body?.force === true && await checkRateLimit(req, { prefix: 'rl:broker-sync', max: 10 });
   const connectAdditional = req.body?.action === 'connect-additional';
+  const reconnect = req.body?.action === 'reconnect';
 
   try {
-    if (!force && !connectAdditional && kv) {
+    if (!force && !connectAdditional && !reconnect && kv) {
       const cached = await kv.get(snapshotKey);
       if (cached?.syncedAt && (Date.now() - new Date(cached.syncedAt).getTime()) < 25 * 60 * 1000) {
         return res.status(200).json({ ok: true, linked: true, ...cached, cached: true });
@@ -93,6 +94,12 @@ export default async function handler(req, res) {
       } else {
         throw err;
       }
+    }
+    // A broker that stopped sending data (expired login) shows as disabled; its old numbers sit
+    // in the snapshot looking current. Reconnect re-auths that connection in the portal.
+    if (reconnect) {
+      const dead = (await adapter.listConnections().catch(() => [])).find(c => c.disabled);
+      if (dead) return res.status(200).json({ ok: true, linked: true, linkUrl: await adapter.loginLink(null, dead.id) });
     }
     if (!accounts || accounts.length === 0 || connectAdditional) {
       if (connectAdditional && !(await isPro(session, req))) {

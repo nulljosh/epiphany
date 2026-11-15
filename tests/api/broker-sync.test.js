@@ -133,6 +133,26 @@ describe('broker/sync stale-userSecret self-heal', () => {
     expect(loginLink).toHaveBeenCalledOnce();
     expect(kvStore.get('broker:snapshot:u1')).toEqual(snapshot);
   });
+
+  it('reconnect skips the cache and opens the portal on the disabled connection only', async () => {
+    mockKv();
+    kvStore.set('broker:snapshot:u1', { syncedAt: new Date().toISOString(), holdings: [] });
+    const loginLink = vi.fn(async (_b, id) => `https://broker.example/reconnect/${id}`);
+    let conns = [{ id: 'live', disabled: false }, { id: 'dead', disabled: true }];
+    vi.doMock('../../src/utils/brokers/snaptrade.js', () => ({
+      SnapTradeAdapter: class {
+        static isConfigured() { return true; }
+        listAccounts = async () => [{ id: 'acct1' }];
+        listConnections = async () => conns;
+        loginLink = loginLink;
+      },
+    }));
+    const { default: freshHandler } = await import('../../server/api/broker/sync.js');
+    const res = mockRes();
+    await freshHandler({ method: 'POST', body: { action: 'reconnect' } }, res);
+    expect(res.body.linkUrl).toBe('https://broker.example/reconnect/dead');
+    expect(loginLink).toHaveBeenCalledWith(null, 'dead');
+  });
 });
 
 describe('broker/sync', () => {

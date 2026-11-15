@@ -134,7 +134,8 @@ export class SnapTradeAdapter {
   // Hosted connection portal URL for the user to link a brokerage.
   // Pass a SnapTrade broker slug (e.g. WEALTHSIMPLE, QUESTRADE) to deep-link
   // that brokerage's login; omit to let the user choose in the portal.
-  async loginLink(broker = null) {
+  // `reconnect` is a disabled connection's id: the portal re-auths that one instead of adding a new one.
+  async loginLink(broker = null, reconnect = null) {
     this._requireUser();
     const data = await this._request('POST', '/snapTrade/login', {
       query: { userId: this.userId, userSecret: this.userSecret },
@@ -142,7 +143,7 @@ export class SnapTradeAdapter {
       // showed only a handful and "More" fell back to Wealthsimple.
       // connectionType 'trade' so autopilot can place orders — read-only
       // connections 403 (code 3007) on /trade/impact.
-      body: { connectionType: 'trade', connectionPortalVersion: 'v4', ...(broker ? { broker } : {}) },
+      body: { connectionType: 'trade', connectionPortalVersion: 'v4', ...(broker ? { broker } : {}), ...(reconnect ? { reconnect } : {}) },
     });
     return data.redirectURI;
   }

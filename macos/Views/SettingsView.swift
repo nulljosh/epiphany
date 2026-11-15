@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var showDeleteAccount = false
     @State private var brokerConnecting = false
     @State private var brokerStatus: String?
+    @State private var staleBroker: String?
 
     var body: some View {
         NavigationStack {
@@ -23,6 +24,10 @@ struct SettingsView: View {
         .onAppear {
             appState.loadAvatar()
             appState.restoreBrokerageSelection()
+        }
+        .task {
+            guard appState.brokerLinked, let r = try? await EpiphanyAPI.shared.syncBroker() else { return }
+            staleBroker = r.connections?.first { $0.disabled == true }?.brokerName
         }
     }
 
@@ -39,6 +44,7 @@ struct SettingsView: View {
                 brokerStatus = "Finish linking in the browser, then click Sync again."
                 openURL(url)
             } else if result.linked == true {
+                staleBroker = result.connections?.first { $0.disabled == true }?.brokerName
                 let names = (result.connections ?? []).compactMap { $0.brokerName }.filter { !$0.isEmpty }
                 let brokerName = names.isEmpty ? appState.brokerName : names.joined(separator: ", ")
                 appState.saveBrokerageSelection(linked: true, name: brokerName)
@@ -67,7 +73,15 @@ struct SettingsView: View {
         settingsCard("Brokerage", subtitle: "Connect a brokerage through SnapTrade to sync holdings and cash.") {
             VStack(alignment: .leading, spacing: 10) {
                 if appState.brokerLinked {
-                    if !appState.brokerName.isEmpty {
+                    if let stale = staleBroker {
+                        Button {
+                            Task { await connectBrokerage(action: "reconnect") }
+                        } label: {
+                            Label("Reconnect \(stale), it stopped syncing", systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                        }
+                        .disabled(brokerConnecting)
+                    } else if !appState.brokerName.isEmpty {
                         Label(appState.brokerName, systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.secondary)
                     }

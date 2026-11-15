@@ -24,6 +24,9 @@ struct MarketsView: View {
     @State private var tickerSelectedStock: Stock?
     @State private var newsArticles: [NewsArticle] = []
     @State private var isLoadingNews = true
+    // Starts true so the drawer opens on a spinner, not a flash of "No News"; the in-flight
+    // guard needs its own flag or loadNewsIfNeeded() bails on that first true forever.
+    @State private var isFetchingNews = false
     @State private var selectedStockForNews: Stock?
     @State private var isSearching = false
     @State private var searchResults: [EpiphanyAPI.SymbolSearchResult] = []
@@ -181,7 +184,8 @@ struct MarketsView: View {
     }
 
     private func loadNewsIfNeeded() {
-        guard !hasLoadedNews, !isLoadingNews, selectedStockForNews == nil else { return }
+        guard !hasLoadedNews, !isFetchingNews, selectedStockForNews == nil else { return }
+        isFetchingNews = true
         Task {
             isLoadingNews = true
             // Only real articles count as loaded, so one slow GDELT call cannot blank news until relaunch.
@@ -198,6 +202,7 @@ struct MarketsView: View {
                 }
             }
             isLoadingNews = false
+            isFetchingNews = false
         }
     }
 
