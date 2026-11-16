@@ -1,4 +1,5 @@
 import { getKv } from './_kv.js';
+import { refreshAppleSub } from './iap.js';
 
 // Read at call time: on the Worker, secrets land in process.env per request, not at import.
 function adminEmails() {
@@ -14,10 +15,15 @@ export function isAdmin(email) {
   return adminEmails().includes(email);
 }
 
-// The iOS, Mac and Watch apps are a $1 App Store purchase that unlocks everything, and the server has
-// no receipt for that. URLSession's default User-Agent ("Epiphany/2.5 CFNetwork/... Darwin/...") is how
-// they are told apart from a browser, which always says Mozilla. A header the app sets itself also counts.
-// ponytail: a script can fake this; that buys $1 of features, so no receipt check until it matters.
+// EPIPHANY_FREE_SINCE is the moment the App Store price went to $0 (ISO date). Before it the
+// apps were a $1 full unlock; anyone who bought before it keeps Pro for life.
+export function paidAppEra(now = Date.now()) {
+  const since = Date.parse(process.env.EPIPHANY_FREE_SINCE || '');
+  return Number.isNaN(since) || now < since;
+}
+
+// URLSession's default User-Agent ("Epiphany/2.5 CFNetwork/... Darwin/...") tells the apps from a
+// browser, which always says Mozilla. A header the app sets itself also counts.
 export function isNativeClient(req) {
   const h = req?.headers || {};
   if (/^(ios|macos|watchos)$/i.test(String(h['x-epiphany-client'] || ''))) return true;
@@ -25,9 +31,12 @@ export function isNativeClient(req) {
   return /CFNetwork/.test(ua) && !/Mozilla/.test(ua);
 }
 
-// Web gate: Free is the default, Premium is a Stripe purchase, the apps and admins are comped.
-// `req` is the request being served; the autopilot cron has none, so it relies on the `nativeApp`
-// mark left on the account the first time the app passed this gate.
+// Stripe statuses that still mean "paying" (a trial is Pro; past_due keeps Pro while Stripe retries).
+const STRIPE_LIVE = new Set(['active', 'trialing', 'past_due']);
+
+// Pro is: admin, a lifetime unlock ($1 web purchase, $1 App Store app, comp), or a live subscription
+// (Stripe on web, App Store in the apps). Everything lives on KV records so the autopilot cron, which
+// has no request, resolves the same way.
 export async function isProByEmail(email, req) {
   if (!email) return false;
   if (isAdmin(email)) return true;
@@ -37,22 +46,30 @@ export async function isProByEmail(email, req) {
   const kv = await getKv();
   if (!kv) return false;
   const user = await kv.get(`user:${email}`);
+  if (!user) return false;
 
-  if (req && isNativeClient(req)) {
-    if (user && !user.nativeApp) {
+  // While the app still costs $1, the app itself is the receipt. The mark it leaves is lifetime Pro.
+  // ponytail: a script can fake the User-Agent until EPIPHANY_FREE_SINCE; after it no new marks are made.
+  if (req && isNativeClient(req) && paidAppEra()) {
+    if (!user.nativeApp) {
       try { await kv.set(`user:${email}`, { ...user, nativeApp: true }); } catch { /* the mark is a convenience */ }
     }
     return true;
   }
-  if (!req && user?.nativeApp) return true;
+  if (user.nativeApp) return true;
+  if (user.tier === 'pro' || user.tier === 'premium') return true;
 
-  // A paid `tier` on the account record grants Pro directly (comped/grandfathered
-  // accounts have no Stripe customer). Stripe is the fallback path.
-  if (user?.tier === 'pro' || user?.tier === 'premium') return true;
-  if (!user?.stripe_customer_id) return false;
+  if (user.appleOriginalTransactionId && user.appleExpiresAt) {
+    if (Date.parse(user.appleExpiresAt) > Date.now()) return true;
+    if (await refreshAppleSub(kv, email, user)) return true;
+  }
 
+  if (!user.stripe_customer_id) return false;
   const sub = await kv.get(`sub:${user.stripe_customer_id}`);
-  return sub?.status === 'active';
+  if (!sub) return false;
+  // The old $1 one-time purchase has no subscription id: it is for life.
+  if (!sub.subscriptionId) return sub.status === 'active';
+  return STRIPE_LIVE.has(sub.status);
 }
 
 export async function isPro(session, req) {

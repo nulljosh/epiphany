@@ -34,4 +34,4 @@ Semver, honestly. A feature is a minor (5.1.0), a fix is a patch (5.1.1), a majo
 Handoff and restart prompt: [docs/LOOP-HANDOFF.md](docs/LOOP-HANDOFF.md).
 
 ## Money
-Web is free with a $1 Stripe Premium. The apps are a $1 App Store purchase. The server tells the app from a browser by its User-Agent and marks the account `nativeApp`.
+Free, with Epiphany Pro at $1.99 a month or $14.99 a year and a 7-day trial, same on Stripe (web) and the App Store (apps). Everyone who paid $1 before keeps Pro for life: the old Stripe one-time `sub:` record (no `subscriptionId`), the `nativeApp` mark, or an App Store download from before `EPIPHANY_FREE_SINCE` (verified through `/api/iap { appTransactionId }`). `server/api/gates.js` is the one Pro check; `/api/auth?action=me` reports it as `tier: 'pro'`. Funnel counters live at `event:<name>:<day>` in KV.

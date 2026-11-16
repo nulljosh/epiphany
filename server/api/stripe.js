@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { getKv } from './_kv.js';
+import { isProByEmail } from './gates.js';
 
 let stripe;
 function getStripe() {
@@ -7,94 +8,72 @@ function getStripe() {
   return stripe;
 }
 
-// Single paid tier — $1 one-time purchase. Any completed purchase counts as 'starter'.
-function getTierFromPriceId() {
-  return 'starter';
+const BASE_URL = 'https://epiphany.jaybulb.com';
+const TRIAL_DAYS = 7;
+
+// Epiphany Pro: $1.99 a month or $14.99 a year, same as the App Store. The server owns the price ids.
+function priceFor(plan) {
+  return plan === 'yearly' ? process.env.STRIPE_PRICE_ID_YEARLY : process.env.STRIPE_PRICE_ID_MONTHLY;
 }
 
-// Helper: extract session token from cookie header
 function getSessionToken(req) {
   const cookie = req.headers?.cookie || '';
   const match = cookie.match(/(?:^|;\s*)session=([^;]+)/);
   return match ? match[1] : null;
 }
 
-// Routes:
-//   POST ?action=checkout         { priceId }    → create checkout session
-//   POST ?action=portal           { customerId } → create billing portal session
-//   POST ?action=resolve-session  { sessionId }  → resolve checkout session → customerId
-//   GET  ?action=status&customerId=...           → subscription status
+// Every action works on the signed-in account only; nothing trusts a customer id from the client.
+async function sessionUser(kv, req) {
+  const token = getSessionToken(req);
+  const session = token ? await kv.get(`session:${token}`) : null;
+  if (!session?.email) return null;
+  return { email: session.email, user: (await kv.get(`user:${session.email}`)) || { email: session.email } };
+}
 
+// Routes (all need a signed-in session):
+//   POST ?action=checkout         { plan: 'monthly'|'yearly' } → Stripe Checkout URL
+//   POST ?action=portal                                       → billing portal URL (cancel, change card)
+//   POST ?action=resolve-session  { sessionId }               → links a finished checkout to this account
+//   GET  ?action=status                                       → this account's subscription record
 export default async function handler(req, res) {
   const kv = await getKv();
-  const { action, customerId } = req.query;
-  const allowedPriceIds = new Set(
-    [process.env.STRIPE_PRICE_ID_STARTER].filter(Boolean)
-  );
+  if (!kv) return res.status(503).json({ error: 'Storage unavailable' });
+  const { action } = req.query;
+  const me = await sessionUser(kv, req);
 
-  // GET: subscription status
   if (req.method === 'GET' && action === 'status') {
-    try {
-      if (!customerId) {
-        return res.status(200).json({ status: null, tier: 'free' });
-      }
-      const subscription = await kv.get(`sub:${customerId}`);
-      if (!subscription) {
-        return res.status(200).json({ status: null, tier: 'free' });
-      }
-      const tier = subscription.status === 'active' ? getTierFromPriceId() : 'free';
-      return res.status(200).json({ ...subscription, tier });
-    } catch (err) {
-      console.error('[STRIPE/status] Error:', err.message);
-      return res.status(500).json({ error: 'Failed to check subscription status' });
-    }
+    const cid = me?.user?.stripe_customer_id;
+    const sub = cid ? await kv.get(`sub:${cid}`) : null;
+    const pro = me ? await isProByEmail(me.email, req) : false;
+    return res.status(200).json({ ...(sub || { status: null }), tier: pro ? 'pro' : 'free' });
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!me) return res.status(401).json({ error: 'Sign in first' });
 
-  // POST: checkout
   if (action === 'checkout') {
     try {
-      // The server owns the price: the client never has it (Worker secrets are not
-      // visible to the Vite build), so a missing/absent priceId means "the one product".
-      const priceId = req.body?.priceId || process.env.STRIPE_PRICE_ID_STARTER;
-      if (!priceId) return res.status(500).json({ error: 'STRIPE_PRICE_ID_STARTER not configured' });
-      if (allowedPriceIds.size > 0 && !allowedPriceIds.has(priceId)) {
-        return res.status(400).json({ error: 'Invalid price ID' });
-      }
-      const baseUrl = 'https://epiphany.jaybulb.com';
-
-      // Link checkout to authenticated user if session cookie exists
-      const sessionToken = getSessionToken(req);
-      let clientReferenceId;
-      if (sessionToken) {
-        const sessionData = await kv.get(`session:${sessionToken}`);
-        if (sessionData?.email) {
-          clientReferenceId = sessionData.email;
-        }
-      }
-
-      const sessionParams = {
-        mode: 'payment',
-        payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
-        success_url: `${baseUrl}?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: baseUrl,
-        customer_creation: 'always',
+      if (await isProByEmail(me.email, req)) return res.status(409).json({ error: 'Already Pro' });
+      const price = priceFor(req.body?.plan);
+      if (!price) return res.status(500).json({ error: 'Stripe prices not configured' });
+      const cid = me.user.stripe_customer_id;
+      const params = {
+        mode: 'subscription',
+        line_items: [{ price, quantity: 1 }],
+        success_url: `${BASE_URL}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: BASE_URL,
+        client_reference_id: me.email,
         allow_promotion_codes: true,
+        // One free week per account, ever.
+        subscription_data: me.user.stripeTrialUsed ? {} : { trial_period_days: TRIAL_DAYS },
+        ...(cid ? { customer: cid } : { customer_email: me.email }),
       };
-      if (clientReferenceId) {
-        sessionParams.client_reference_id = clientReferenceId;
-      }
-      // Optional promo applied server-side (comp links, e2e). Stripe's own promo box stays on.
+      // Optional promo applied server-side (comp links, e2e). Stripe's own promo box stays on otherwise.
       if (req.body?.promo) {
         const codes = await getStripe().promotionCodes.list({ code: String(req.body.promo), active: true, limit: 1 });
-        if (codes.data[0]) { sessionParams.discounts = [{ promotion_code: codes.data[0].id }]; delete sessionParams.allow_promotion_codes; }
+        if (codes.data[0]) { params.discounts = [{ promotion_code: codes.data[0].id }]; delete params.allow_promotion_codes; }
       }
-
-      const session = await getStripe().checkout.sessions.create(sessionParams);
+      const session = await getStripe().checkout.sessions.create(params);
       return res.status(200).json({ sessionId: session.id, url: session.url });
     } catch (err) {
       console.error('[STRIPE/checkout] Error:', err.message);
@@ -102,47 +81,28 @@ export default async function handler(req, res) {
     }
   }
 
-  // POST: resolve-session (after checkout redirect)
   if (action === 'resolve-session') {
     try {
-      const { sessionId } = req.body;
+      const { sessionId } = req.body || {};
       if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
-
-      const session = await getStripe().checkout.sessions.retrieve(sessionId);
-      const stripeCustomerId = session.customer;
-
-      // Persist stripe_customer_id to user's KV record if authenticated
-      const sessionToken = getSessionToken(req);
-      if (sessionToken) {
-        const sessionData = await kv.get(`session:${sessionToken}`);
-        if (sessionData?.email) {
-          const user = await kv.get(`user:${sessionData.email}`);
-          if (user) {
-            await kv.set(`user:${sessionData.email}`, {
-              ...user,
-              stripe_customer_id: stripeCustomerId,
-            });
-          }
-        }
+      const session = await getStripe().checkout.sessions.retrieve(String(sessionId));
+      // Only the account that started the checkout can claim it.
+      if (session.client_reference_id !== me.email) return res.status(403).json({ error: 'Checkout belongs to another account' });
+      if (session.customer && me.user.stripe_customer_id !== session.customer) {
+        await kv.set(`user:${me.email}`, { ...me.user, stripe_customer_id: session.customer });
       }
-
-      return res.status(200).json({ customerId: stripeCustomerId });
+      return res.status(200).json({ customerId: session.customer });
     } catch (err) {
       console.error('[STRIPE/resolve-session] Error:', err.message);
       return res.status(500).json({ error: 'Failed to resolve session' });
     }
   }
 
-  // POST: portal
   if (action === 'portal') {
     try {
-      const { customerId: cid } = req.body;
-      if (!cid) return res.status(400).json({ error: 'Customer ID required' });
-      const baseUrl = 'https://epiphany.jaybulb.com';
-      const session = await getStripe().billingPortal.sessions.create({
-        customer: cid,
-        return_url: baseUrl,
-      });
+      const cid = me.user.stripe_customer_id;
+      if (!cid) return res.status(404).json({ error: 'No billing account' });
+      const session = await getStripe().billingPortal.sessions.create({ customer: cid, return_url: BASE_URL });
       return res.status(200).json({ url: session.url });
     } catch (err) {
       console.error('[STRIPE/portal] Error:', err.message);

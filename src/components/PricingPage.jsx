@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SYSTEM_FONT as font } from '../utils/formatting';
 
-const PRICE_IDS = {
-  starter: import.meta.env.VITE_STRIPE_PRICE_ID_STARTER || import.meta.env.VITE_STRIPE_PRICE_ID_WEEKLY,
-};
-
 const Check = () => <span style={{ color: '#34c759', marginRight: 8, fontWeight: 700 }}>&#10003;</span>;
 const Cross = () => <span style={{ color: '#86868b', marginRight: 8, fontWeight: 700 }}>&#10005;</span>;
 
@@ -21,8 +17,11 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [handleEscape]);
 
+  useEffect(() => {
+    fetch('/api/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'paywall_shown' }) }).catch(() => {});
+  }, []);
+
   const handleUpgrade = async (plan) => {
-    const priceId = PRICE_IDS[plan]; // optional: the server falls back to its own price
     setLoadingPlan(plan);
 
     try {
@@ -30,9 +29,10 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ plan }),
       });
 
+      if (response.status === 401) { alert('Sign in first, then start your free week.'); setLoadingPlan(null); return; }
       const { url } = await response.json();
 
       if (url) {
@@ -47,7 +47,7 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
     }
   };
 
-  const tierRank = { free: 0, starter: 1, weekly: 1 };
+  const tierRank = { free: 0, monthly: 1, yearly: 1, pro: 1, premium: 1, starter: 1 };
   const isCurrentOrLower = (plan) => tierRank[plan] <= tierRank[currentTier];
 
   const glassCard = {
@@ -175,7 +175,8 @@ export default function PricingPage({ dark, t, onClose, subscription }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
           {[
             { key: 'free', name: 'Free', price: '$0', period: 'forever', plan: null, features: ['Live map and news', '1 portfolio', 'Delayed market data', 'Basic Buy / Hold / Sell signals'] },
-            { key: 'starter', name: 'Premium', price: '$1', period: 'one-time', plan: 'starter', label: 'Get Premium for $1, once', recommended: true, features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Price alerts', 'Autopilot on paper money', 'Daily Brief', 'People tracker'] },
+            { key: 'monthly', name: 'Pro', price: '$1.99', period: 'a month', plan: 'monthly', label: 'Try Pro free for 7 days', features: ['Everything in Free', 'Real-time market data', 'Full indicator suite', 'Read-only brokerage sync', 'Price alerts', 'Autopilot on paper money', 'Daily Brief', 'People tracker', 'Home screen widgets'] },
+            { key: 'yearly', name: 'Pro yearly', price: '$14.99', period: 'a year', plan: 'yearly', label: 'Try Pro free for 7 days', recommended: true, features: ['Everything in Pro', 'Save 37% over monthly', 'Cancel any time from Billing'] },
           ].map(tier => (
             <div key={tier.key} style={{
               ...glassCard,

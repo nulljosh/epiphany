@@ -1,3 +1,12 @@
+## Now: free + Pro subscriptions (started 2026-11-15)
+Server and web done and tested, not deployed. Ship in this order, or free downloads get Pro in the gap:
+1. Stripe: create Pro product with prices $1.99/mo and $14.99/yr, set `STRIPE_PRICE_ID_MONTHLY`/`_YEARLY` Worker secrets, add `customer.subscription.created/updated/deleted` to the webhook endpoint's events. Then deploy the Worker.
+2. ASC: subscription group "Epiphany Pro" with `com.heyitsmejosh.epiphany.pro.monthly` ($1.99) and `.pro.yearly` ($14.99), 7-day free trial intro offer on both.
+3. Native 6.4.0 (not built yet): `Shared/ProStore.swift` (StoreKit 2: `Transaction.updates` listener, `currentEntitlements`, `AppTransaction` grandfather, POST `/api/iap` with the transaction id or `appTransactionID` on iOS 18.4+/macOS 15.4+, write `isPro` to app group `group.com.heyitsmejosh.epiphany` for widgets), `Shared/ProPaywall.swift` (`SubscriptionStoreView`, restore, Terms + Privacy links, POST `/api/event paywall_shown`), show it on 402 from daily brief / people / autopilot and on adding past 10 watchlist symbols or 3 alerts. Watch reads Pro from `me`. Add a `.storekit` config, build iOS and macOS, attach the subs to the 6.4.0 submission.
+4. After 6.4.0 is approved: set `EPIPHANY_FREE_SINCE` to the moment the price drops, then set the App Store price to $0.
+5. Sweep `metadata/` every locale, README and LandingPage for "$1" and "one-time".
+Skipped on purpose: an AI briefing (the daily brief is Yahoo movers, not AI), multiple portfolios, CSV export.
+
 > Open work for Epiphany. The Mobbin table sets the order through 10.0; see docs/LOOP-HANDOFF.md.
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.

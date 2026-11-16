@@ -5,7 +5,7 @@ import { parseCookies, getSessionUser, errorResponse } from './auth-helpers.js';
 import { sparkRequest, sparkConfigured } from './spark.js';
 import { verifyAppleIdentityToken } from './_apple-jwt.js';
 import { sendEmail } from './_email.js';
-import { effectiveTier } from './gates.js';
+import { effectiveTier, isProByEmail } from './gates.js';
 import { checkRateLimit } from './_ratelimit.js';
 
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
@@ -475,9 +475,11 @@ export default async function handler(req, res) {
         return res.status(200).json({ authenticated: false });
       }
       const user = await kv.get(`user:${session.email}`);
+      // One answer for "is this account Pro", from the same gate the paid endpoints use.
+      const pro = await isProByEmail(session.email, req);
       return res.status(200).json({
         authenticated: true,
-        user: publicUser(user || { email: session.email, tier: session.tier }),
+        user: { ...publicUser(user || { email: session.email, tier: session.tier }), ...(pro ? { tier: 'pro' } : {}) },
       });
     } catch (err) {
       console.error('[AUTH] Session check failed:', err.message);

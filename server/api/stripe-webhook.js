@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { getKv } from './_kv.js';
+import { bump } from './event.js';
 
 let stripe;
 const getStripe = () => stripe || (stripe = new Stripe(process.env.STRIPE_SECRET_KEY));
@@ -54,23 +55,52 @@ export default async function handler(req, res) {
         const customerId = session.customer;
         if (!customerId || !kv) throw new Error('Payment customer or storage missing');
 
-        // One-time payment ($1) — access is permanent, no subscription to track.
-        await kv.setStrict(`sub:${customerId}`, {
-          status: 'active',
-          customerId,
-          priceId: session.line_items?.data?.[0]?.price?.id || process.env.STRIPE_PRICE_ID_STARTER,
-          createdAt: new Date().toISOString(),
-        });
+        // The old $1 one-time payment: access is permanent. A subscription's state comes from
+        // customer.subscription.* below instead.
+        if (session.mode !== 'subscription') {
+          await kv.setStrict(`sub:${customerId}`, {
+            status: 'active',
+            customerId,
+            priceId: session.line_items?.data?.[0]?.price?.id || process.env.STRIPE_PRICE_ID_STARTER,
+            createdAt: new Date().toISOString(),
+          });
+        }
 
         // Tie the purchase to the account that started checkout, so closing the tab before the redirect
         // back still unlocks it. client_reference_id is the signed-in email (see stripe.js checkout).
         const email = session.client_reference_id;
         if (email) {
           const user = await kv.getStrict(`user:${email}`);
-          if (user && !user.stripe_customer_id) await kv.setStrict(`user:${email}`, { ...user, stripe_customer_id: customerId });
+          const isSub = session.mode === 'subscription';
+          if (user && (!user.stripe_customer_id || (isSub && !user.stripeTrialUsed))) {
+            await kv.setStrict(`user:${email}`, {
+              ...user,
+              stripe_customer_id: user.stripe_customer_id || customerId,
+              ...(isSub ? { stripeTrialUsed: true } : {}),
+            });
+          }
         }
 
-        console.log('[WEBHOOK] One-time purchase completed:', customerId);
+        console.log('[WEBHOOK] Checkout completed:', customerId, session.mode || 'payment');
+        break;
+      }
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object;
+        if (!sub.customer || !kv) throw new Error('Subscription customer or storage missing');
+        await kv.setStrict(`sub:${sub.customer}`, {
+          status: sub.status,
+          subscriptionId: sub.id,
+          customerId: sub.customer,
+          priceId: sub.items?.data?.[0]?.price?.id || null,
+          updatedAt: new Date().toISOString(),
+        });
+        const was = event.data.previous_attributes?.status;
+        if (event.type === 'customer.subscription.created') await bump(kv, sub.status === 'trialing' ? 'trial_started' : 'subscribed');
+        else if (was === 'trialing' && sub.status === 'active') await bump(kv, 'subscribed');
+        console.log('[WEBHOOK] Subscription', sub.status, sub.customer);
         break;
       }
 

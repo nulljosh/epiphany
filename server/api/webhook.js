@@ -2,6 +2,7 @@ import { applyCors } from './_cors.js';
 import { getKv } from './_kv.js';
 import { getSessionUser, errorResponse } from './auth-helpers.js';
 import crypto from 'crypto';
+import { isProByEmail } from './gates.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -31,10 +32,9 @@ export default async function handler(req, res) {
       return errorResponse(res, 403, 'customerId does not match session');
     }
 
-    // Pro gate
+    // Pro gate: the shared one, so trials, App Store subs and lifetime unlocks all count.
     try {
-      const sub = await kv.get(`sub:${customerId}`);
-      if (!sub || sub.status !== 'active') {
+      if (!(await isProByEmail(session.email, req))) {
         return res.status(403).json({ error: 'Pro subscription required', tier: 'free' });
       }
     } catch (err) {

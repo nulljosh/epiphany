@@ -16,7 +16,8 @@ function memoryKv() {
   };
   const del = async (...ks) => ks.reduce((n, k) => n + (m.delete(k) ? 1 : 0), 0);
   const keys = async (pat) => { const re = new RegExp('^' + pat.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'); return [...m.keys()].filter((k) => live(k) && re.test(k)); };
-  return { get, set, del, keys, getStrict: get, setStrict: set };
+  const incr = async (k) => { const n = Number((await get(k)) || 0) + 1; await set(k, n); return n; };
+  return { get, set, del, keys, incr, getStrict: get, setStrict: set };
 }
 
 export async function getKv() {
@@ -46,6 +47,7 @@ export async function getKv() {
         set: wrap('set', (...args) => redis.set(...args)),
         del: wrap('del', (...args) => redis.del(...args)),
         keys: wrap('keys', (...args) => redis.keys(...args)),
+        incr: wrap('incr', (...args) => redis.incr(...args)),
       };
     } catch (err) {
       console.warn('[KV] failed to init:', err.message);

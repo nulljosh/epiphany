@@ -34,13 +34,42 @@ describe('Premium gate', () => {
     expect(await gates.isProByEmail('owner@example.test', web)).toBe(true);
   });
 
-  it('App Store buyers are Premium from the app and the account is marked for the cron', async () => {
+  it('App Store buyers are Premium from the app and the mark is lifetime Pro everywhere', async () => {
     store.set('user:buyer@example.test', { email: 'buyer@example.test' });
     expect(await gates.isProByEmail('buyer@example.test', app)).toBe(true);
     expect(store.get('user:buyer@example.test').nativeApp).toBe(true);
-    // the autopilot cron has no request, so it trusts the mark; a browser still does not
     expect(await gates.isProByEmail('buyer@example.test')).toBe(true);
-    expect(await gates.isProByEmail('buyer@example.test', web)).toBe(false);
+    expect(await gates.isProByEmail('buyer@example.test', web)).toBe(true);
+  });
+
+  it('once the app is free the User-Agent unlocks nothing, but old marks still count', async () => {
+    process.env.EPIPHANY_FREE_SINCE = '2026-01-01T00:00:00Z';
+    store.set('user:new@example.test', { email: 'new@example.test' });
+    store.set('user:old@example.test', { email: 'old@example.test', nativeApp: true });
+    expect(await gates.isProByEmail('new@example.test', app)).toBe(false);
+    expect(store.get('user:new@example.test').nativeApp).toBeUndefined();
+    expect(await gates.isProByEmail('old@example.test', web)).toBe(true);
+    delete process.env.EPIPHANY_FREE_SINCE;
+  });
+
+  it('Stripe: the old $1 purchase is lifetime, a trial is Pro, a canceled sub is not', async () => {
+    store.set('user:life@example.test', { stripe_customer_id: 'cus_l' });
+    store.set('sub:cus_l', { status: 'active' });
+    store.set('user:trial@example.test', { stripe_customer_id: 'cus_t' });
+    store.set('sub:cus_t', { status: 'trialing', subscriptionId: 'sub_t' });
+    store.set('user:gone@example.test', { stripe_customer_id: 'cus_g' });
+    store.set('sub:cus_g', { status: 'canceled', subscriptionId: 'sub_g' });
+    expect(await gates.isProByEmail('life@example.test', web)).toBe(true);
+    expect(await gates.isProByEmail('trial@example.test', web)).toBe(true);
+    expect(await gates.isProByEmail('gone@example.test', web)).toBe(false);
+  });
+
+  it('an App Store sub counts until it expires, then Apple is asked once an hour', async () => {
+    const future = new Date(Date.now() + 86400e3).toISOString();
+    store.set('user:sub@example.test', { appleOriginalTransactionId: '7', appleExpiresAt: future });
+    expect(await gates.isProByEmail('sub@example.test', web)).toBe(true);
+    store.set('user:lapsed@example.test', { appleOriginalTransactionId: '8', appleExpiresAt: '2020-01-01T00:00:00Z', appleCheckedAt: new Date().toISOString() });
+    expect(await gates.isProByEmail('lapsed@example.test', web)).toBe(false);
   });
 
   it('a script claiming to be a browser or sending nothing does not get the app unlock', async () => {
