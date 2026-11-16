@@ -1,6 +1,8 @@
 import { applyCors } from './_cors.js';
 import { getKv } from './_kv.js';
 import crypto from 'crypto';
+import { getSessionUser } from './auth-helpers.js';
+import { isProByEmail } from './gates.js';
 
 export default async function handler(req, res) {
   const kv = await getKv();
@@ -11,21 +13,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Pro tier gate — require customerId header or query param
-  const customerId = req.headers['x-customer-id'] || req.query.customerId;
-  if (!customerId) {
+  // The caller's own account only. A customer id from the client used to be the whole check, so
+  // anyone holding another Pro customer's id could read or post that customer's signals.
+  const session = await getSessionUser(req);
+  if (!session) return res.status(401).json({ error: 'Sign in required' });
+  if (!(await isProByEmail(session.email, req))) {
     return res.status(403).json({ error: 'Pro subscription required', tier: 'free' });
   }
-
-  try {
-    const sub = await kv.get(`sub:${customerId}`);
-    if (!sub || sub.status !== 'active') {
-      return res.status(403).json({ error: 'Pro subscription required', tier: 'free' });
-    }
-  } catch (err) {
-    console.error('[SIGNAL] KV subscription check failed:', err.message);
-    return res.status(500).json({ error: 'Subscription check failed' });
-  }
+  const user = await kv.get(`user:${session.email}`);
+  const customerId = user?.stripe_customer_id;
+  if (!customerId) return res.status(200).json({ signals: [] });
 
   const userId = customerId;
 
