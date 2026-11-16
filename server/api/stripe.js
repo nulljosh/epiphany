@@ -11,9 +11,18 @@ function getStripe() {
 const BASE_URL = 'https://epiphany.jaybulb.com';
 const TRIAL_DAYS = 7;
 
-// Epiphany Pro: $1.99 a month or $14.99 a year, same as the App Store. The server owns the price ids.
-function priceFor(plan) {
-  return plan === 'yearly' ? process.env.STRIPE_PRICE_ID_YEARLY : process.env.STRIPE_PRICE_ID_MONTHLY;
+// Epiphany Pro: $1.99 a month or $14.99 a year, same as the App Store. The Worker finds its own prices
+// by lookup key and creates them the first time, so there is no dashboard step or price-id secret.
+const PLANS = {
+  monthly: { lookup_key: 'epiphany_pro_monthly', unit_amount: 199, recurring: { interval: 'month' } },
+  yearly: { lookup_key: 'epiphany_pro_yearly', unit_amount: 1499, recurring: { interval: 'year' } },
+};
+async function priceFor(plan) {
+  const spec = PLANS[plan] || PLANS.monthly;
+  const found = await getStripe().prices.list({ lookup_keys: [spec.lookup_key], active: true, limit: 1 });
+  if (found.data[0]) return found.data[0].id;
+  const price = await getStripe().prices.create({ ...spec, currency: 'usd', product_data: { name: 'Epiphany Pro' } });
+  return price.id;
 }
 
 function getSessionToken(req) {
@@ -54,8 +63,7 @@ export default async function handler(req, res) {
   if (action === 'checkout') {
     try {
       if (await isProByEmail(me.email, req)) return res.status(409).json({ error: 'Already Pro' });
-      const price = priceFor(req.body?.plan);
-      if (!price) return res.status(500).json({ error: 'Stripe prices not configured' });
+      const price = await priceFor(req.body?.plan);
       const cid = me.user.stripe_customer_id;
       const params = {
         mode: 'subscription',

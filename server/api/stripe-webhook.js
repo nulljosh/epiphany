@@ -19,6 +19,18 @@ async function buffer(readable) {
   return Buffer.concat(chunks);
 }
 
+// The endpoint was set up for one-time payments. Make sure it also sends renewals and cancels.
+const SUB_EVENTS = ['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'];
+async function ensureSubscriptionEvents() {
+  try {
+    const { data } = await getStripe().webhookEndpoints.list({ limit: 100 });
+    for (const ep of data.filter((e) => /\/api\/stripe-webhook/.test(e.url))) {
+      if (ep.enabled_events.includes('*') || SUB_EVENTS.every((e) => ep.enabled_events.includes(e))) continue;
+      await getStripe().webhookEndpoints.update(ep.id, { enabled_events: [...new Set([...ep.enabled_events, ...SUB_EVENTS])] });
+    }
+  } catch (err) { console.error('[WEBHOOK] could not enable subscription events:', err.message); }
+}
+
 export default async function handler(req, res) {
   const kv = await getKv();
   if (req.method !== 'POST') {
@@ -56,7 +68,12 @@ export default async function handler(req, res) {
         if (!customerId || !kv) throw new Error('Payment customer or storage missing');
 
         // The old $1 one-time payment: access is permanent. A subscription's state comes from
-        // customer.subscription.* below instead.
+        // customer.subscription.* below; write the first status here so access never waits on event order.
+        if (session.mode === 'subscription' && session.subscription) {
+          const sub = await getStripe().subscriptions.retrieve(String(session.subscription));
+          await kv.setStrict(`sub:${customerId}`, { status: sub.status, subscriptionId: sub.id, customerId, priceId: sub.items?.data?.[0]?.price?.id || null, updatedAt: new Date().toISOString() });
+          await ensureSubscriptionEvents();
+        }
         if (session.mode !== 'subscription') {
           await kv.setStrict(`sub:${customerId}`, {
             status: 'active',

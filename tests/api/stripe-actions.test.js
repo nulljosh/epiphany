@@ -7,6 +7,7 @@ const create = vi.hoisted(() => vi.fn(async () => ({ id: 'cs_1', url: 'https://c
 vi.mock('stripe', () => ({ default: class {
   billingPortal = { sessions: { create: portal } };
   checkout = { sessions: { retrieve, create } };
+  prices = { list: async ({ lookup_keys }) => ({ data: [{ id: lookup_keys[0] === 'epiphany_pro_yearly' ? 'price_y' : 'price_m' }] }) };
 } }));
 vi.mock('../../server/api/_kv.js', () => ({
   getKv: async () => ({ get: async (k) => store.get(k) ?? null, set: async (k, v) => { store.set(k, v); } }),
