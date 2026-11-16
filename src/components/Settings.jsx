@@ -68,7 +68,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
 
   const handleBrokerSync = async ({ auto = false, force = false, action = null } = {}) => {
     // Free keeps one portfolio; linking another is Premium.
-    if (action === 'connect-additional' && !isPro) { setBrokerMsg({ error: false, text: 'Connecting another brokerage is a Premium feature. $1, once.' }); showPricing(); return; }
+    if (action === 'connect-additional' && !isPro) { setBrokerMsg({ error: false, text: 'Connecting another brokerage is part of Pro. Free for 7 days, then $1.99 a month.' }); showPricing(); return; }
     setBrokerSyncing(true); if (!auto) setBrokerMsg(null);
     try {
       const res = await fetch('/api/broker/sync', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force, ...(action ? { action } : {}) }) });

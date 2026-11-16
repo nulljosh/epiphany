@@ -25,7 +25,7 @@ describe('web freemium: price alerts are Premium', () => {
     const { onAdd, pricing } = setup(false);
     expect(onAdd).not.toHaveBeenCalled();
     expect(pricing).toHaveBeenCalled();
-    expect(screen.getByText(/part of Premium/)).toBeTruthy();
+    expect(screen.getByText(/part of Pro/)).toBeTruthy();
   });
 
   it('a Premium account creates the alert', () => {

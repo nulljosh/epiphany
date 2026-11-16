@@ -22,7 +22,7 @@ const CELLS = [
 
 const PLANS = [
   { tier: 'Web', price: '$0', note: 'in your browser', body: 'The map, markets and one portfolio.', cta: 'Start free', action: 'register' },
-  { tier: 'Premium', price: '$1', note: 'once, on the web', body: 'Real-time data, alerts, Autopilot, brokerage sync and every update.', cta: 'Unlock for $1', action: 'paid', solid: true },
+  { tier: 'Pro', price: '$1.99', note: 'a month, or $14.99 a year', body: 'Real-time data, alerts, Autopilot, brokerage sync and every update.', cta: 'Try Pro free for 7 days', action: 'paid', solid: true },
   { tier: 'The app', price: '$1', note: 'on the App Store', body: 'iPhone, Mac and Apple Watch, with widgets.', cta: 'Get the app', href: APP_STORE },
 ];
 
@@ -95,7 +95,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
             <button className="btn btn-solid" type="button" onClick={act('register')}>Open the web app</button>
             <a className="btn btn-ghost" href={APP_STORE}>Get it on the App Store</a>
           </div>
-          <p className="fine">Web, iPhone, Mac and Apple Watch. Free on the web, $1 for everything.</p>
+          <p className="fine">Web, iPhone, Mac and Apple Watch. Free on the web, Pro from $1.99 a month.</p>
           <p className="hint">The map behind this is live.</p>
         </section>
 
@@ -137,7 +137,7 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
 
         <section className="sec" id="pricing">
           <p className="label reveal">Pricing</p>
-          <h2 className="reveal">Free on the web. $1 for the rest.</h2>
+          <h2 className="reveal">Free on the web. Pro for the rest.</h2>
           <p className="body reveal">No subscription, no ads.</p>
           <div className="plans">
             {PLANS.map((p) => (

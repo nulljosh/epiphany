@@ -53,7 +53,13 @@ export default async function handler(req, res) {
   if (req.method === 'GET' && action === 'status') {
     const cid = me?.user?.stripe_customer_id;
     const sub = cid ? await kv.get(`sub:${cid}`) : null;
-    const pro = me ? await isProByEmail(me.email, req) : false;
+    let pro = me ? await isProByEmail(me.email, req) : false;
+    // Old $1 buyers who checked out with no account only hold a customer id in their browser.
+    // Honour that for the lifetime one-time record only (no subscriptionId), as the old endpoint did.
+    if (!pro && req.query.customerId) {
+      const legacy = await kv.get(`sub:${String(req.query.customerId)}`);
+      pro = legacy?.status === 'active' && !legacy.subscriptionId;
+    }
     return res.status(200).json({ ...(sub || { status: null }), tier: pro ? 'pro' : 'free' });
   }
 

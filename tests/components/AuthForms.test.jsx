@@ -10,10 +10,10 @@ describe('RegisterPage', () => {
     expect(screen.getByLabelText('Confirm Password').autocomplete).toBe('new-password');
   });
 
-  it('shows the real price: one dollar, once', () => {
+  it('shows the real price: $1.99 a month', () => {
     render(<RegisterPage onRegister={vi.fn()} onSwitchToLogin={vi.fn()} />);
-    expect(screen.getByText('$1')).toBeTruthy();
-    expect(screen.getByText('one-time')).toBeTruthy();
+    expect(screen.getByText('$1.99')).toBeTruthy();
+    expect(screen.getByText('a month, first 7 days free')).toBeTruthy();
     expect(screen.queryByText(/\/mo/)).toBeNull();
   });
 

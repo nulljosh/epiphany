@@ -137,7 +137,7 @@ export default function AlertsPanel({ onClose, alerts, onAdd, onRemove, onClearT
           <button style={styles.close} onClick={onClose}>&times;</button>
         </div>
 
-        {!isPro && <div style={{ ...styles.empty, paddingTop: 0 }}>Price alerts are part of Premium. $1, once.</div>}
+        {!isPro && <div style={{ ...styles.empty, paddingTop: 0 }}>Price alerts are part of Pro. Free for 7 days, then $1.99 a month.</div>}
 
         <div style={{ ...styles.form, marginBottom: 8 }}>
           {KINDS.map(([k, label]) => (
