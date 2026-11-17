@@ -387,3 +387,6 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 ## Ingested 2026-11-14
 - [ ] (Note "Harp icon") Co-Stanza and Epiphany both have duplicate harp icons. Make them more unique (`/icon`).
 - [ ] (Note "Epiphany") Business News drawer still not rendering reliably: Daily Brief shows one line then a spinner forever. Note says "need to upgrade to Cloudflare plus", question: is it actually a Workers limit, or the fetch? Screenshot: ~/Documents/Code/notes/attachments/2026-11-14/epiphany-1.png
+
+## Ingested 2026-11-16
+- [ ] (Note "Epiphany", "More Apple bullshit") App Store Connect emailed "There's an issue with your Epiphany (iOS) submission": version 6.3.3 for iOS, submitted Nov 14 2026 9:39 PM PST by API key, submission ID da46c543-01ad-4d4b-8f4c-eae5eaac5d96. Read the issue with asc and fix. Screenshot: notes/attachments/2026-11-16/22120-1.png.
