@@ -390,3 +390,13 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-11-16
 - [ ] (Note "Epiphany", "More Apple bullshit") App Store Connect emailed "There's an issue with your Epiphany (iOS) submission": version 6.3.3 for iOS, submitted Nov 14 2026 9:39 PM PST by API key, submission ID da46c543-01ad-4d4b-8f4c-eae5eaac5d96. Read the issue with asc and fix. Screenshot: notes/attachments/2026-11-16/22120-1.png.
+
+## Ingested 2026-11-18
+- [ ] How do we get trading working? Do we need Alpaca? SnapTrade is read-only. (Note: Alpaca blocks Canada.)
+- [ ] Plane on the map animates choppily; make it smooth.
+- [ ] Horizontal scrolling ticker bar needs proper iOS-style scroll physics. QA glitchiness: tapping opens a stock by accident while trying to scroll.
+- [ ] Stocks view: default to Live. Clean up the 1m-to-All range buttons without removing them.
+- [ ] Remove Greek god avatars in Settings; match the app's own theme. No Greek gods.
+- [ ] Appearance should be at the bottom of Settings (notes/attachments/2026-11-18/22384-1.png).
+- [ ] Business News still doesn't load reliably; the feature is about a year old (notes/attachments/2026-11-18/22384-2.png, stuck spinner under Daily Brief).
+- [ ] Portfolio is way too bulky/spammy. Simplify to one page, little to no scrolling.
