@@ -291,7 +291,8 @@ const earningsSoon = (ts) => {
 };
 
 export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount, marketPE }) {
-  const [range, setRange] = useState('1mo');
+  // Opens on Live (Joshua, 2026-11-20): today's minutes with the price ticking.
+  const [range, setRange] = useState('live');
   // Candles by default like TradingView: Heikin Ashi plots averaged prices, not the real ones.
   const [chartType, setChartTypeState] = useState(() => {
     try { return localStorage.getItem('epiphany-chart-type') || 'candles'; } catch { return 'candles'; }
@@ -962,25 +963,24 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
           </div>
         )}
 
-        {/* Range Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 8, overflowX: 'auto', flexWrap: 'wrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
+        {/* Range Picker: every range kept, in one segmented bar that scrolls sideways instead of wrapping into two rows of pills. */}
+        <div role="tablist" aria-label="Chart range" style={{ display: 'flex', gap: 2, padding: 3, marginBottom: 8, borderRadius: 10, overflowX: 'auto', flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}>
           {RANGES.map(r => (
             <button
               key={r.key}
+              role="tab"
+              aria-selected={range === r.key}
               onClick={() => setRange(r.key)}
               style={{
-                padding: '6px 10px', borderRadius: 8, border: 'none', whiteSpace: 'nowrap',
-                background: range === r.key
-                  ? (t.accent || '#0071e3')
-                  : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                color: range === r.key ? '#fff' : t.textSecondary,
+                flex: '1 0 auto', padding: '5px 9px', borderRadius: 7, border: 'none', whiteSpace: 'nowrap',
+                background: range === r.key ? (dark ? 'rgba(255,255,255,0.16)' : '#fff') : 'transparent',
+                boxShadow: range === r.key && !dark ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
+                color: range === r.key ? t.text : t.textSecondary,
                 fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: font,
-                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                flexShrink: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 5,
               }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
+              {r.key === 'live' && <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 3, background: '#FF453A' }} />}
               {r.label}
             </button>
           ))}

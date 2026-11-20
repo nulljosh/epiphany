@@ -13,6 +13,7 @@ Skipped on purpose: an AI briefing (the daily brief is Yahoo movers, not AI), mu
 
 
 ## Shipped 2026-11-20
+- [x] 6.8.0 Stock view opens on Live (web, iOS, Mac); the 14 ranges sit in one segmented bar on web. iOS Appearance moved down above Sign Out.
 - [x] 6.4.0 Anthropic (ANT) in the default watchlist, market lists and Tech sector.
 - [x] 6.4.2 A tab open across a deploy reloads once instead of crashing on a missing chunk.
 - [x] 6.4.3 Fear & Greed fallback on a curve: a hard selloff read a flat 0, now about 3.

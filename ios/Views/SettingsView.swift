@@ -179,11 +179,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Appearance") {
-                    AppearancePicker(rawTheme: $rawTheme)
-                        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-                }
-
                 Section("Account") {
                     Button("Change Name") {
                         showChangeName = true
@@ -194,6 +189,11 @@ struct SettingsView: View {
                     }
                 }
 
+                // Appearance at the bottom of the settings, above Sign Out and Danger Zone (Joshua, 2026-11-18).
+                Section("Appearance") {
+                    AppearancePicker(rawTheme: $rawTheme)
+                        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                }
 
                 Section {
                     Button(role: .destructive) {

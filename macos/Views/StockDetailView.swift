@@ -17,7 +17,7 @@ struct StockDetailView: View {
         case columns = "Columns"
     }
 
-    @State private var selectedRange = "1y"
+    @State private var selectedRange = "live"  // opens on Live, like the web (2026-11-20)
     @State private var chartType: ChartType = .heikinAshi
     @State private var isLoading = true
     @State private var error: String?

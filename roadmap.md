@@ -28,7 +28,6 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] Gain chart toggles (value, invested, cost basis): needs a value history.
 
 ## Markets and stocks
-- [ ] Stocks view: default to Live, tidy the 1m to All range buttons.
 - [ ] Ticker bar: iOS scroll physics; a scroll should not open a stock.
 - [ ] Push notifications with the phone locked: price alerts, severe weather nearby, M4+ quakes, wildfires, bill reminders.
 - [ ] Earnings results alert for stocks you follow (reuse the alerts email).
@@ -48,6 +47,5 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] Map overlay UI from the design kit, with the settings moved into Settings.
 
 ## Apps and settings
-- [ ] Appearance at the bottom of Settings.
 - [ ] Mac app: a full end-to-end test pass.
 - [ ] Refresh screenshots (App Store via fastlane UITEST_DEMO, README, landing) once the icon lands.
