@@ -15,7 +15,8 @@ export const PILOTS = [
 ];
 
 const SEC_UA = { 'User-Agent': 'Epiphany info@jaybulb.com', Accept: 'application/json, text/xml' };
-const KV_KEY = 'pilots:v1';
+const KV_KEY = 'pilots:v2';
+const FIGI_KEY = 'pilots:figi';
 const TTL_SEC = 12 * 3600;
 const TOP = 10;
 
@@ -71,14 +72,12 @@ async function latestFiling(cik) {
   return { filedAt: f.filingDate[i], quarterEnd: f.reportDate[i], url: `${dir}/`, ...parseInfoTable(await r.text()) };
 }
 
-// CUSIP to US ticker through OpenFIGI (no key: 10 per request), remembered in KV for good.
-async function tickers(kv, cusips) {
+// CUSIP to US ticker through OpenFIGI (no key: 10 per request). The answers live in one KV map, read
+// once and written once per build: KV is a REST call here, and one call per CUSIP blew the Worker's
+// 50 subrequests after three pilots.
+async function tickers(known, cusips) {
   const out = {};
-  const missing = [];
-  for (const c of cusips) {
-    const hit = kv ? await kv.get(`figi:${c}`).catch(() => null) : null;
-    if (hit) out[c] = hit; else missing.push(c);
-  }
+  const missing = cusips.filter(c => { if (known[c]) { out[c] = known[c]; return false; } return true; });
   for (let i = 0; i < missing.length; i += 10) {
     const batch = missing.slice(i, i + 10);
     const res = await json('https://api.openfigi.com/v3/mapping', {
@@ -87,7 +86,7 @@ async function tickers(kv, cusips) {
     }).catch(() => []);
     batch.forEach((c, j) => {
       const t = res[j]?.data?.find(x => x.ticker && /Common|ADR|ETP|REIT/i.test(x.securityType || ''))?.ticker || res[j]?.data?.[0]?.ticker;
-      if (t) { out[c] = t.replace('/', '-'); kv?.set(`figi:${c}`, out[c]).catch(() => {}); }
+      if (t) { out[c] = t.replace('/', '-'); known[c] = out[c]; }
     });
   }
   return out;
@@ -113,11 +112,13 @@ async function closes(symbols, date) {
 
 async function build(kv) {
   const pilots = [];
+  const known = (kv ? await kv.get(FIGI_KEY).catch(() => null) : null) || {};
+  const before = Object.keys(known).length;
   for (const p of PILOTS) {
     const f = await latestFiling(p.cik).catch(() => null);
     if (!f || !f.rows.length) continue;
     const top = f.rows.slice(0, TOP);
-    const map = await tickers(kv, top.map(r => r.cusip));
+    const map = await tickers(known, top.map(r => r.cusip));
     const holdings = top.map(r => ({ ticker: map[r.cusip] || null, name: r.name, weight: r.weight }));
     const syms = [...new Set([...holdings.map(h => h.ticker).filter(Boolean), 'SPY'])];
     const { start, end } = await closes(syms, f.quarterEnd);
@@ -128,6 +129,7 @@ async function build(kv) {
       spySince: start.SPY > 0 && end.SPY > 0 ? end.SPY / start.SPY - 1 : null,
     });
   }
+  if (kv && Object.keys(known).length > before) await kv.set(FIGI_KEY, known).catch(() => {});
   return { pilots, builtAt: new Date().toISOString() };
 }
 
@@ -138,7 +140,8 @@ export default async function handler(req, res) {
   if (cached?.pilots?.length) return res.status(200).json(cached);
   try {
     const data = await build(kv);
-    if (kv && data.pilots.length) await kv.set(KV_KEY, data, { ex: TTL_SEC }).catch(() => {});
+    // A partial build (a filing timed out) is kept for 10 minutes, not 12 hours.
+    if (kv && data.pilots.length) await kv.set(KV_KEY, data, { ex: data.pilots.length === PILOTS.length ? TTL_SEC : 600 }).catch(() => {});
     return res.status(200).json(data);
   } catch (err) {
     console.error('[PILOTS]', err?.message || err);
