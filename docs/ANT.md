@@ -46,6 +46,8 @@ Selling now means selling right on the floor, after a two-day drop. If $83 holds
 2. **Buy more** if it closes back above $97.17 (the day-1 close) on heavy volume, or holds between $83 and $90 for a week or more.
 3. **Otherwise do nothing.** Check it once a week, and again before the lockup ends.
 
+`scripts/close-alert.py ANT --below 83 --above 97.17 --base-high 90` checks these rules on the last close and sends a Mac notification when one hits. Add `--install` to run it every weekday after the close.
+
 ## Fractional shares
 
 - **Interactive Brokers:** yes, for most US stocks.
