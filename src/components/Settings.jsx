@@ -109,7 +109,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
     : `${baseAvatarUrl}?v=${avatarVersion || user?.avatarUpdatedAt || '1'}`;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
-  // 9 Greek gods from public-domain museum busts x 12 duotones = 108 avatars, served from /avatars/gods. Same set as iOS.
+  // 9 Epiphany glyphs x 12 duotones = 108 avatars at /avatars/gods (old file names kept so every client keeps working).
   const GODS = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
   const randomGodAvatar = () => `/avatars/gods/${GODS[Math.floor(Math.random() * GODS.length)]}-${Math.floor(Math.random() * 12)}.jpg`;
 

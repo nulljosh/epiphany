@@ -1,4 +1,5 @@
-Avatar busts are cropped and toned from public-domain and CC0 photos on Wikimedia Commons:
-Zeus of Otricoli (Vatican), Minerva bust (Musee national de la Renaissance), Hera Ludovisi (Palazzo Altemps),
-Head of Artemis (Istanbul Archaeology Museums), Head of Aphrodite, Knidos type, Head of Dionysus (Beth Shean),
-Colossal Head of Demeter (Lykosoura), Head of Ares (Glyptothek Munich), Hermes of Alkamenes (Chiaramonti).
+# Avatars
+
+Epiphany's own glyphs (map pin, candles, plane, globe, weather, coin, chart, compass, wallet) in 12 duotones,
+drawn for Epiphany in 2026-11 and released with the project under Apache 2.0. They replaced the Greek god busts
+at the same file names, so every client that links `/avatars/gods/<name>-<n>.jpg` picks them up without an update.
