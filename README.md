@@ -1,8 +1,8 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
-[![web](https://img.shields.io/badge/web-v6.3.3-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v6.3.3-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![macos](https://img.shields.io/badge/macOS-v6.3.3-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![web](https://img.shields.io/badge/web-v6.6.2-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v6.6.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Everything happening in your world, on one screen. The map, the markets, the people.
+Your world on one screen: the map, the markets and your money.
 
 <p align="center">
   <img src="public/screenshots/screenshot-situation-new.png" width="170">
@@ -11,27 +11,14 @@ Everything happening in your world, on one screen. The map, the markets, the peo
   <img src="public/screenshots/screenshot-portfolio-new.png" width="170">
 </p>
 
-## Features
+- **Map:** flights, weather, news and incidents around you, live.
+- **Markets:** stocks, crypto and commodities with full-screen charts and alerts.
+- **Portfolio:** your brokerage synced read only, net worth and spending.
+- **Autopilot:** the trading rule on paper money, scored against the S&P 500 ([whitepaper](WHITEPAPER.md)).
 
-- **Situation.** A live map of flights, weather, news and incidents, plus a daily brief.
-- **Markets.** Stocks, crypto and commodities, each with a Buy, Hold or Sell read. Index cards, top movers, full-screen charts and price alerts.
-- **Portfolio.** Holdings, net worth and where the money went.
-- **People.** Search anyone and see how they connect.
-- **Autopilot.** The trading algorithm, on paper money, scored against the S&P 500.
+Web, iPhone, Mac and Apple Watch. Free, Pro from $1.99 a month.
 
-Web, iPhone, iPad, Mac and Apple Watch. Free to start, $1 once for everything.
-
-## Does the trading work?
-
-One rule survived years of data it had never seen: **Double 7s.** In a rising market, buy a 10 day low and sell a 10 day high. About 70% of its trades make money, across 429 stocks, 16 index funds and Bitcoin.
-
-It still does not beat buying and holding. Run as one account it grew about 3% a year against 15% for SPY. The full test, failures included, is in the [whitepaper](WHITEPAPER.md#5-benchmark-does-it-work).
-
-<p align="center">
-  <img src="docs/double7s-spy.gif" width="720" alt="The trading algorithm replaying SPY day by day: green arrows buy, red arrows sell">
-</p>
-
-## Run it
+## Run
 
 ```bash
 npm install && npm run dev
@@ -39,8 +26,4 @@ npm test -- --run
 npm run build && npx wrangler deploy
 ```
 
-Docs live in [docs/](docs/). Chart control builds on [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) (MIT), see [THIRD_PARTY.md](THIRD_PARTY.md).
-
-## License
-
-Apache 2.0, 2026, Joshua Trommel
+Docs are in [docs/](docs/), open work in [roadmap.md](roadmap.md). Apache 2.0, Joshua Trommel.
