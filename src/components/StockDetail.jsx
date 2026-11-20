@@ -292,7 +292,11 @@ const earningsSoon = (ts) => {
 
 export default function StockDetail({ stock, onClose, dark, t, onNavigate, currentIndex, totalCount, marketPE }) {
   const [range, setRange] = useState('1mo');
-  const [chartType, setChartType] = useState('heikinAshi');
+  // Candles by default like TradingView: Heikin Ashi plots averaged prices, not the real ones.
+  const [chartType, setChartTypeState] = useState(() => {
+    try { return localStorage.getItem('epiphany-chart-type') || 'candles'; } catch { return 'candles'; }
+  });
+  const setChartType = (k) => { setChartTypeState(k); try { localStorage.setItem('epiphany-chart-type', k); } catch { /* private mode */ } };
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const chartContainerRef = useRef(null);
@@ -309,7 +313,8 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const [editingIndicator, setEditingIndicator] = useState(null);
   // Default to fullscreen on mobile — a short bottom sheet overflows and lets the
   // underlying watchlist/quote panels bleed through. Full screen + opaque bg fixes it.
-  const [fullscreen, setFullscreen] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  // Joshua (2026-11-20): the stock view uses the whole screen on desktop too; ⤡ still shrinks it.
+  const [fullscreen, setFullscreen] = useState(true);
   const oscillatorContainerRef = useRef(null);
   const oscillatorChartRef = useRef(null);
   const scrollRef = useRef(null);
@@ -490,7 +495,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
       crosshair: { mode: CrosshairMode.Magnet },
       rightPriceScale: {
         borderVisible: false,
-        scaleMargins: { top: 0.05, bottom: 0.05 },
+        scaleMargins: { top: 0.05, bottom: history.some(d => d.volume > 0) ? 0.22 : 0.05 },
       },
       timeScale: {
         borderVisible: false,
@@ -571,6 +576,17 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
         time: d.time,
         value: d.close,
         color: i > 0 && d.close < history[i - 1].close ? downColor : upColor,
+      })));
+    }
+
+    // --- Volume: bars along the bottom of the price pane, green on up bars, red on down (TradingView) ---
+    if (history.some(d => d.volume > 0)) {
+      const vol = chart.addSeries(HistogramSeries, { priceScaleId: 'volume', priceFormat: { type: 'volume' }, priceLineVisible: false, lastValueVisible: false });
+      chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 }, visible: false });
+      vol.setData(history.filter(d => d.volume > 0).map(d => ({
+        time: d.time,
+        value: d.volume,
+        color: d.close >= d.open ? 'rgba(48,209,88,0.35)' : 'rgba(255,69,58,0.35)',
       })));
     }
 
@@ -1149,7 +1165,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
           onClick={e => e.stopPropagation()}
           style={fullChart
             ? { position: 'fixed', inset: 0, zIndex: 10000, background: t.bg, padding: '56px 12px 24px' }
-            : { ...glass, position: 'relative', padding: '12px 8px 8px', marginBottom: oscillators.length > 0 ? 4 : 12, height: 200 }}
+            : { ...glass, position: 'relative', padding: '12px 8px 8px', marginBottom: oscillators.length > 0 ? 4 : 12, height: fullscreen ? 'clamp(280px, 58dvh, 760px)' : 260 }}
         >
           {history.length > 0 && (
             <button

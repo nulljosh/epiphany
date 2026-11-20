@@ -101,9 +101,19 @@ export default function LandingPage({ onRegister, onRegisterPaid, onLogin, zoomi
 
         <section className="band" id="features">
           <div className="band-head reveal">
-            <img className="band-art" src="/brand/prometheus.webp" alt="" loading="lazy" />
+            {/* Joshua (2026-11-20): no Greek gods. The three things the screen holds, as glyphs: map, market, money. */}
+            <svg className="band-art band-glyphs" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M62 30c-14 0-25 11-25 25 0 19 25 43 25 43s25-24 25-43c0-14-11-25-25-25z" />
+              <circle cx="62" cy="55" r="9" />
+              <path d="M112 40v56M112 52h-8v30h8M112 52h8v30h-8" />
+              <path d="M142 34v40M142 44h-8v20h8M142 44h8v20h-8" />
+              <path d="M172 48v44M172 60h-8v22h8M172 60h8v22h-8" />
+              <rect x="40" y="124" width="120" height="50" rx="12" />
+              <path d="M40 140h120" />
+              <circle cx="138" cy="157" r="6" fill="currentColor" stroke="none" />
+            </svg>
             <div>
-              <p className="label">Forethought</p>
+              <p className="label">Map, markets, money</p>
               <h2>One screen for all of it</h2>
               <p>Most apps do one of these. Epiphany puts the map, the markets and your money side by side.</p>
             </div>
