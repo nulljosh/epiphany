@@ -11,7 +11,7 @@ import { debtMonthsToPayoff, debtPayoffLabel, owedDebts, debtFreeBy } from '../u
 import FinanceDashboard from './FinanceDashboard';
 import EpiphanyFinance from './EpiphanyFinance';
 import ReviewQueue from './ReviewQueue';
-import { allocation, vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, earningsDates, earningsIcs, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
+import { vsMarket, holdingFilters, filterHoldings, yearlyDividends, unrealizedGain, dividendCalendar, earningsDates, earningsIcs, todayGain, groupAccounts, holdingsByCountry, concentration } from '../utils/allocation';
 import { holdingsBySector } from '../utils/sectors';
 import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, sinceLastVisit, billsByMonth, spendRace, recurringKey, biggestExpense, lastSevenDays, monthlyPay } from '../utils/moneyGlance';
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
@@ -1067,7 +1067,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
           const sign = (n, cur) => `${n >= 0 ? '+' : '-'}${formatCurrency(Math.abs(n), cur)}`;
           return (
             <div style={{ fontSize: 12, fontWeight: 600, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap', fontVariantNumeric: 'tabular-nums' }}>
-              {Math.abs(day) >= 0.005 && <span style={{ color: day >= 0 ? t.green : t.red }}>{sign(day, 'CAD')} ({(day / Math.max(stocksValue - day, 0.01) * 100).toFixed(2)}%) today</span>}
+              {/* The percent sits under net worth, so it is of net worth, not of the stocks alone. */}
+              {Math.abs(day) >= 0.005 && <span style={{ color: day >= 0 ? t.green : t.red }}>{sign(day, 'CAD')} ({(day / Math.max(netWorth - day, 0.01) * 100).toFixed(2)}%) today</span>}
               {total && <span style={{ color: total.gain >= 0 ? t.green : t.red }}>{sign(total.gain)} total</span>}
               {(() => {
                 const vs = Math.abs(day) >= 0.005 ? vsMarket(day / Math.max(stocksValue - day, 0.01) * 100, stocks?.SPY?.changePercent) : null;
@@ -1180,12 +1181,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               <div style={labelStyle}>Holdings</div>
               <PieChart data={pieData} t={t} currency="CAD" />
             </Card>
-            {allocation(holdingsCad, cashValue).length > 1 && (
-              <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-                <div style={labelStyle}>Allocation</div>
-                <PieChart data={allocation(holdingsCad, cashValue)} t={t} currency="CAD" />
-              </Card>
-            )}
             <ShareBars title="By Sector" rows={holdingsBySector(holdingsCad)} dark={dark} t={t} labelStyle={labelStyle} />
             <ShareBars title="By Country" rows={holdingsByCountry(holdingsCad)} dark={dark} t={t} labelStyle={labelStyle} />
 
@@ -1224,7 +1219,7 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                       <div style={{ fontSize: 11, color: t.textTertiary }}>
                         {holding.costBasis != null
                           ? <>{holding.shares.toFixed(4)} shares @ {formatCurrency(holding.costBasis)}</>
-                          : <>{holding.shares} shares</>}
+                          : <>{holding.shares} {Number(holding.shares) === 1 ? 'share' : 'shares'}</>}
                         {stocks?.[holding.symbol]?.yield > 0 && <> · {stocks[holding.symbol].yield.toFixed(2)}% yield</>}
                       </div>
                       {holding.value > 0 && holding.changePercent ? (
@@ -1235,7 +1230,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
-                        {holding.value != null ? formatCurrency(holding.value) : '—'}
+                        {/* In CAD, like the Total under it; the listing-currency value read as the wrong number. */}
+                        {holding.value != null ? formatCurrency(toCad(holding.value, quoteCurrency(holding.symbol), usdPerCad) ?? holding.value, 'CAD') : '—'}
                       </div>
                       {holding.gain == null ? (
                         <div style={{ fontSize: 11, color: t.textTertiary }}>Synced via SnapTrade</div>
