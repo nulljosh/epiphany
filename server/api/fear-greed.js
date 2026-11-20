@@ -31,7 +31,10 @@ export function moodScore(spx, vix) {
   if (spx.length < 125 || vix.length < 50) return null;
   const momentum = spx.at(-1) / mean(spx.slice(-125)) - 1;
   const vol = vix.at(-1) / mean(vix.slice(-50)) - 1;
-  return Math.round((clamp(50 + momentum * 625) + clamp(50 - vol * 200)) / 2);
+  // tanh, not a clamped line: the line pinned both halves at 0 on a hard selloff (S&P -8% under
+  // its average, VIX +76%), so the gauge read a flat 0 like it was broken. The curve still lands
+  // near the bottom on days like that but keeps their order. ~6% momentum or ~30% VIX = 3/4 scale.
+  return Math.round((clamp(50 + 50 * Math.tanh(momentum / 0.06)) + clamp(50 - 50 * Math.tanh(vol / 0.3))) / 2);
 }
 
 async function closes(symbol) {
