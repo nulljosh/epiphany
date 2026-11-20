@@ -5,6 +5,18 @@ import App from './App.jsx'
 import { ErrorBoundary } from './ErrorBoundary.jsx'
 import { migrateStorageKeys } from './utils/migrateStorageKey.js'
 
+// A deploy replaces the hashed chunks, so a tab opened on the old build fails to lazy-load a panel
+// ("Failed to fetch dynamically imported module") and showed "Something went wrong". Reload once
+// to pick up the new build; the timestamp guard stops a loop if the chunk is really missing.
+window.addEventListener('vite:preloadError', (event) => {
+  let last = 0;
+  try { last = Number(sessionStorage.getItem('epiphany_chunk_reload')) || 0; } catch { /* private mode */ }
+  if (Date.now() - last < 30000) return;
+  try { sessionStorage.setItem('epiphany_chunk_reload', String(Date.now())); } catch { /* private mode */ }
+  event.preventDefault();
+  window.location.reload();
+});
+
 window.__EPIPHANY_BUILD__ = __EPIPHANY_BUILD__;
 
 migrateStorageKeys();

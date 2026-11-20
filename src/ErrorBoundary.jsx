@@ -12,6 +12,16 @@ export class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('React Error Boundary caught:', error, errorInfo);
+    // A chunk from the previous deploy is gone: reload once onto the new build (same guard as main.jsx).
+    if (/dynamically imported module|Importing a module script failed/i.test(String(error?.message))) {
+      let last = 0;
+      try { last = Number(sessionStorage.getItem('epiphany_chunk_reload')) || 0; } catch { /* private mode */ }
+      if (Date.now() - last > 30000) {
+        try { sessionStorage.setItem('epiphany_chunk_reload', String(Date.now())); } catch { /* private mode */ }
+        window.location.reload();
+        return;
+      }
+    }
     this.setState({ error, errorInfo });
   }
 
