@@ -192,7 +192,7 @@ def null_pass_rate(ms, rule, hold, draws=4000, block=12, seed=11):
 # ---------- trial count ----------
 
 def count_trials():
-    txt = open(os.path.join(HERE, "..", "WHITEPAPER.md")).read()
+    txt = open(os.path.join(HERE, "..", "docs", "reference", "whitepaper-full.md")).read()
     sb = txt.split("#### Scoreboard")[1].split("### Broker abstraction")[0]
     rows = [l for l in sb.splitlines() if l.startswith("| ") and not l.startswith("| Edge") and not l.startswith("|---")]
     return len(rows)

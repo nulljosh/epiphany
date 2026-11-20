@@ -679,7 +679,7 @@ def walk_forward():
 
 
 RESULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results.json")
-WHITEPAPER = os.path.join(os.path.dirname(RESULTS), "..", "WHITEPAPER.md")
+WHITEPAPER = os.path.join(os.path.dirname(RESULTS), "..", "docs", "reference", "whitepaper-full.md")  # the short WHITEPAPER.md has no generated tables
 
 
 def save_results(key, value):
