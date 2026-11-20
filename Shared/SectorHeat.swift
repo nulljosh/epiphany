@@ -6,7 +6,7 @@ import SwiftUI
 enum SectorHeat {
     static let order = ["Tech", "Financials", "Healthcare", "Energy", "Industrials", "Consumer", "Telecom", "Utilities", "REITs"]
     static let members: [String: [String]] = [
-        "Tech": ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "AVGO", "AMD", "ADBE", "CRM", "NFLX", "CSCO", "ORCL", "ACN", "INTC", "TXN", "QCOM", "INTU", "IBM", "PLTR", "COIN", "HOOD", "HIMS", "SHOP", "RKLB", "SOFI", "XYZ", "APP", "DUOL", "DELL", "PENG", "SNDK", "IREN", "MU", "NBIS", "CRDO"],
+        "Tech": ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "AVGO", "AMD", "ADBE", "CRM", "NFLX", "CSCO", "ORCL", "ACN", "INTC", "TXN", "QCOM", "INTU", "IBM", "PLTR", "ANT", "COIN", "HOOD", "HIMS", "SHOP", "RKLB", "SOFI", "XYZ", "APP", "DUOL", "DELL", "PENG", "SNDK", "IREN", "MU", "NBIS", "CRDO"],
         "Financials": ["BRK-B", "V", "JPM", "MA", "BAC", "GS", "MS", "C", "WFC", "BLK", "SCHW", "AXP", "SPGI", "CME", "RY", "TD", "BNS", "BMO", "CM"],
         "Healthcare": ["LLY", "UNH", "JNJ", "MRK", "ABBV", "TMO", "DHR", "PFE", "AMGN", "BMY", "MDT", "BSX", "ELV", "CVS", "MRNA"],
         "Energy": ["XOM", "CVX"],

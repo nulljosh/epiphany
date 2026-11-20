@@ -4,7 +4,7 @@ const STORAGE_KEY = 'epiphany_watchlist';
 
 const DEFAULT_WATCHLIST = [
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA',
-  'SPY', 'JPM', 'V', 'NFLX', 'PLTR', 'COIN',
+  'SPY', 'JPM', 'V', 'NFLX', 'PLTR', 'ANT', 'COIN',
 ];
 
 export function useWatchlist(authUser) {

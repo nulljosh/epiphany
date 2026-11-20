@@ -37,7 +37,7 @@ export const DEFAULT_SYMBOLS = [
   // REITs & Other
   'AMT', 'PLD', 'CME', 'WM', 'XYZ',
   // Popular / high-vol
-  'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP', 'DUOL',
+  'COIN', 'PLTR', 'ANT', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM', 'SHOO', 'APP', 'DUOL',
   // AI / memory & infra
   'DELL', 'PENG', 'DRAM', 'SNDK', 'IREN', 'MU', 'NBIS', 'CRDO',
   // Commodity futures
@@ -55,7 +55,7 @@ export const SECTOR_MAP = {
   AAPL: 'Tech', MSFT: 'Tech', GOOGL: 'Tech', AMZN: 'Tech', NVDA: 'Tech', META: 'Tech', TSLA: 'Tech',
   // Tech
   AVGO: 'Tech', AMD: 'Tech', ADBE: 'Tech', CRM: 'Tech', NFLX: 'Tech', CSCO: 'Tech', ORCL: 'Tech',
-  ACN: 'Tech', INTC: 'Tech', TXN: 'Tech', QCOM: 'Tech', INTU: 'Tech', IBM: 'Tech', PLTR: 'Tech',
+  ACN: 'Tech', INTC: 'Tech', TXN: 'Tech', QCOM: 'Tech', INTU: 'Tech', IBM: 'Tech', PLTR: 'Tech', ANT: 'Tech',
   COIN: 'Tech', HOOD: 'Tech', HIMS: 'Tech', SHOP: 'Tech', RKLB: 'Tech', SOFI: 'Tech', XYZ: 'Tech', APP: 'Tech', SHOO: 'Consumer', DUOL: 'Tech',
   DELL: 'Tech', PENG: 'Tech', SNDK: 'Tech', IREN: 'Tech', MU: 'Tech', NBIS: 'Tech', CRDO: 'Tech', DRAM: 'ETFs',
   // Financials
