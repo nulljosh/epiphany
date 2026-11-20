@@ -44,7 +44,8 @@ struct NewsDrawerView: View {
                     .padding(.vertical, 12)
             }
 
-            if isLoading {
+            // Articles already in hand show while a refresh runs; the spinner is only for an empty drawer.
+            if isLoading && articles.isEmpty {
                 if isExpanded {
                     ProgressView()
                 }

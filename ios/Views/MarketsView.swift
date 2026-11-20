@@ -184,7 +184,10 @@ struct MarketsView: View {
     }
 
     private func loadNewsIfNeeded() {
-        guard !hasLoadedNews, !isFetchingNews, selectedStockForNews == nil else { return }
+        guard !isFetchingNews else { return }
+        // Skipping the fetch must also clear the spinner: isLoadingNews starts true, so an early
+        // return here left Business News spinning forever (Joshua, 2026-11-20).
+        guard !hasLoadedNews, selectedStockForNews == nil else { isLoadingNews = false; return }
         isFetchingNews = true
         Task {
             isLoadingNews = true
