@@ -54,7 +54,8 @@ export default function PilotsCard({ dark, t, holdings = [] }) {
                 <div style={{ paddingBottom: 12 }}>
                   {p.holdings.map(h => (
                     <div key={h.name + h.ticker} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, padding: '4px 0' }}>
-                      <span style={{ width: 52, fontWeight: 600, color: h.ticker && mine.has(h.ticker) ? (t.accent || t.blue) : t.text }}>{h.ticker || '–'}</span>
+                      {/* No ticker from OpenFIGI: the filing's issuer name, cut to fit, beats a dash. */}
+                      <span title={h.name} style={{ width: 52, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: h.ticker && mine.has(h.ticker) ? (t.accent || t.blue) : t.text }}>{h.ticker || h.name}</span>
                       <div style={{ flex: 1, height: 6, borderRadius: 3, background: t.border, overflow: 'hidden' }} aria-hidden="true">
                         <div style={{ width: `${Math.min(100, h.weight * 100 / Math.max(p.holdings[0].weight, 0.01))}%`, height: '100%', background: t.accent || t.blue }} />
                       </div>
