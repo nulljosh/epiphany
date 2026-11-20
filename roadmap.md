@@ -18,7 +18,7 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] **Promo video** like the Joshua Tree one, for the README and landing: which video is the model?
 
 ## Portfolio and money
-- [ ] Pilots: famous-investor portfolios from public 13F filings and congress trades, read only, with performance against yours and new-trade alerts. Web first.
+- [ ] Pilots, next: congress trades, new-filing alerts, and iOS/Mac (web v1 shipped 6.7.0: six investors' top 10 from their latest 13F, return since the quarter ended against the S&P 500, holdings you share).
 - [ ] Sync statements from Wealthsimple instead of uploading PDFs.
 - [ ] Teach the statement parser the TFSA statement (contributions, withdrawals, buys, sells).
 - [ ] Verify an iOS statement upload with a real PDF.

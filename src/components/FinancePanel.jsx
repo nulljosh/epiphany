@@ -17,6 +17,7 @@ import { topSpending, SPEND_COLORS, yearToDate, recentActivity, earnedThisYear, 
 // The Trade tab shows Autopilot only (paper by default, live capped). The manual recommend-and-review flow in
 // TradeWorkflow stays off: it adds USD trade values to CAD cash and needs the same currency conversion first.
 import { AutopilotCard } from './TradeWorkflow';
+import PilotsCard from './PilotsCard';
 import MoneyGlance from './MoneyGlance';
 import { budgetActual, perDayLeft, coverPlan, moveBudget, budgetLeft, monthPace, projectedSpend } from '../utils/budgetActual';
 
@@ -1272,6 +1273,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 ))}
               </div>
             </Card>
+
+            <PilotsCard dark={dark} t={t} holdings={holdings} />
 
             {SHOW_GOALS && goals.length > 0 && (
             <Card dark={dark} t={t} style={{ marginBottom: 16 }}>
