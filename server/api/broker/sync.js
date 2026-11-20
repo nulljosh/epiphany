@@ -102,7 +102,11 @@ export default async function handler(req, res) {
     // A broker that stopped sending data (expired login) shows as disabled; its old numbers sit
     // in the snapshot looking current. Reconnect re-auths that connection in the portal.
     if (reconnect) {
-      const dead = (await adapter.listConnections().catch(() => [])).find(c => c.disabled);
+      // SnapTrade can leave an expired Wealthsimple login marked live: data over two days old counts as dead too.
+      const conns = await adapter.listConnections().catch(() => []);
+      const prior = kv ? await kv.get(snapshotKey) : null;
+      const stuck = prior?.dataAsOf && Date.now() - Date.parse(prior.dataAsOf) > 48 * 3600 * 1000;
+      const dead = conns.find(c => c.disabled) || (stuck ? conns[0] : null);
       if (dead) {
         // Expire the cached snapshot so the first sync after the portal pulls fresh numbers.
         const snap = kv ? await kv.get(snapshotKey) : null;
@@ -158,6 +162,7 @@ export default async function handler(req, res) {
     }
     if (kv) await kv.set(snapshotKey, snapshot);
 
+    console.log(`[BROKER/SYNC] ${session.userId}: data as of ${snapshot.dataAsOf}, connections ${JSON.stringify(connections.map(c => ({ b: c.brokerName, off: c.disabled, daily: c.delayed })))}, refresh ${snapshot.refreshQueuedAt ? 'queued' : 'not queued'}`);
     console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.totalCad.toFixed(2)} CAD cash${fxMissing ? ' (FX missing, flagged)' : ''}`);
     return res.status(200).json({ ok: true, linked: true, ...snapshot });
   } catch (err) {

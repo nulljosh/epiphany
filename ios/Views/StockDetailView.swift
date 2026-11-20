@@ -53,7 +53,7 @@ struct StockDetailView: View {
     }
 
     private var changeColor: Color {
-        stock.change >= 0 ? Palette.successGreen : Palette.dangerRed
+        (liveStock ?? stock).change >= 0 ? Palette.successGreen : Palette.dangerRed
     }
 
     var body: some View {
@@ -65,7 +65,7 @@ struct StockDetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    let displayPrice = scrubPrice?.price ?? stock.price
+                    let displayPrice = scrubPrice?.price ?? (liveStock ?? stock).price
                     Text(CurrencyFormatter.formatPrice(displayPrice))
                         .font(.system(size: 44, weight: .semibold).monospacedDigit())
                         .contentTransition(.numericText())
@@ -75,8 +75,8 @@ struct StockDetailView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         HStack(spacing: 6) {
-                            Text(String(format: "%@%.2f", stock.change >= 0 ? "+" : "", stock.change))
-                            Text(String(format: "(%.2f%%)", stock.changePercent))
+                            Text(String(format: "%@%.2f", (liveStock ?? stock).change >= 0 ? "+" : "", (liveStock ?? stock).change))
+                            Text(String(format: "(%.2f%%)", (liveStock ?? stock).changePercent))
                         }
                         .font(.callout.weight(.medium))
                         .foregroundStyle(changeColor)
@@ -612,7 +612,7 @@ struct StockDetailView: View {
             }
             .chartLegend(.hidden)
             .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
-            .modifier(IntradayXScaleModifier(selectedRange: selectedRange, firstDate: points.first?.0))
+            .modifier(IntradayXScaleModifier(selectedRange: selectedRange, firstDate: points.first?.0, lastDate: points.last?.0))
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) {
                     AxisValueLabel(format: xAxisFormat)
@@ -664,11 +664,11 @@ struct StockDetailView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(stock.symbol)
                         .font(.headline)
-                    Text(CurrencyFormatter.formatPrice(scrubPrice?.price ?? stock.price))
+                    Text(CurrencyFormatter.formatPrice(scrubPrice?.price ?? (liveStock ?? stock).price))
                         .font(.title.weight(.bold).monospacedDigit())
                         .contentTransition(.numericText())
                     Text(scrubPrice.map { $0.date.formatted(intraday ? .dateTime.month(.abbreviated).day().hour().minute() : .dateTime.month(.abbreviated).day().year()) }
-                         ?? CurrencyFormatter.formatSignedPercent(stock.changePercent))
+                         ?? CurrencyFormatter.formatSignedPercent((liveStock ?? stock).changePercent))
                         .font(.callout.weight(.medium))
                         .foregroundStyle(scrubPrice == nil ? changeColor : Color.secondary)
                 }
@@ -895,6 +895,7 @@ struct WatchlistStarButton: View {
 private struct IntradayXScaleModifier: ViewModifier {
     let selectedRange: String
     let firstDate: Date?
+    var lastDate: Date? = nil
 
     private static let easternCalendar: Calendar = {
         var cal = Calendar(identifier: .gregorian)
@@ -907,7 +908,13 @@ private struct IntradayXScaleModifier: ViewModifier {
             let cal = Self.easternCalendar
             let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
             let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first
-            content.chartXScale(domain: marketOpen...marketClose)
+            // Fill the width like TradingView: end a little past the last bar, not at 4pm, so a morning
+            // chart isn't squeezed into the left half. At least an hour wide so the open isn't a vertical line.
+            let end = lastDate.map { last in
+                let span = max(last.timeIntervalSince(marketOpen), 3600)
+                return min(marketClose, marketOpen.addingTimeInterval(span * 1.05))
+            } ?? marketClose
+            content.chartXScale(domain: marketOpen...max(end, marketOpen.addingTimeInterval(3600)))
         } else {
             content
         }

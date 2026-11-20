@@ -279,12 +279,16 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
             {brokerMsg && <div style={msgStyle(brokerMsg.error)}>{brokerMsg.text}</div>}
             {brokerSnapshot?.linked && (
               <div style={{ marginTop: 16 }}>
-                {Array.from(new Map((brokerSnapshot.connections ?? []).map(c => [c.brokerName, c])).values()).map(c => (
-                  <Row key={c.id} label={c.disabled ? `${c.brokerName} stopped syncing, numbers are old` : `Connected: ${c.brokerName}`} t={t}>
-                    {c.disabled && <button onClick={() => handleBrokerSync({ action: 'reconnect' })} disabled={brokerSyncing} style={{ ...btnStyle(true), marginRight: 8 }}>{brokerSyncing ? '...' : 'Reconnect'}</button>}
+                {Array.from(new Map((brokerSnapshot.connections ?? []).map(c => [c.brokerName, c])).values()).map(c => {
+                  // SnapTrade often keeps a dead Wealthsimple login marked live; two days without new data counts as stopped.
+                  const stuck = c.disabled || (brokerSnapshot.dataAsOf && Date.now() - Date.parse(brokerSnapshot.dataAsOf) > 48 * 3600 * 1000);
+                  return (
+                  <Row key={c.id} label={stuck ? `${c.brokerName} stopped syncing, numbers are old` : `Connected: ${c.brokerName}`} t={t}>
+                    {stuck && <button onClick={() => handleBrokerSync({ action: 'reconnect' })} disabled={brokerSyncing} style={{ ...btnStyle(true), marginRight: 8 }}>{brokerSyncing ? '...' : 'Reconnect'}</button>}
                     <button onClick={() => handleBrokerDisconnect(c.id)} disabled={brokerDisconnecting} style={{ ...btnStyle(false), color: '#ef4444', borderColor: '#ef444433' }}>{brokerDisconnecting ? '...' : 'Disconnect'}</button>
                   </Row>
-                ))}
+                  );
+                })}
                 <button onClick={() => handleBrokerSync({ action: 'connect-additional' })} disabled={brokerSyncing} style={{ ...btnStyle(false), marginTop: 8 }}>
                   {brokerSyncing ? '...' : 'Connect another brokerage'}
                 </button>

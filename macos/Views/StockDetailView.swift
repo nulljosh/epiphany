@@ -403,7 +403,7 @@ struct StockDetailView: View {
         }
         .chartLegend(.hidden)
         .chartYScale(domain: (minPrice - padding)...(maxPrice + padding))
-        .modifier(IntradayXScaleModifier(selectedRange: selectedRange, firstDate: points.first?.0))
+        .modifier(IntradayXScaleModifier(selectedRange: selectedRange, firstDate: points.first?.0, lastDate: points.last?.0))
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 5)) {
                 AxisValueLabel(format: xAxisFormat)
@@ -527,6 +527,7 @@ struct StockDetailView: View {
 private struct IntradayXScaleModifier: ViewModifier {
     let selectedRange: String
     let firstDate: Date?
+    var lastDate: Date? = nil
 
     private static let easternCalendar: Calendar = {
         var cal = Calendar(identifier: .gregorian)
@@ -539,7 +540,13 @@ private struct IntradayXScaleModifier: ViewModifier {
             let cal = Self.easternCalendar
             let marketOpen = cal.date(bySettingHour: 9, minute: 30, second: 0, of: first) ?? first
             let marketClose = cal.date(bySettingHour: 16, minute: 0, second: 0, of: first) ?? first
-            content.chartXScale(domain: marketOpen...marketClose)
+            // Fill the width like TradingView: end a little past the last bar, not at 4pm, so a morning
+            // chart isn't squeezed into the left half. At least an hour wide so the open isn't a vertical line.
+            let end = lastDate.map { last in
+                let span = max(last.timeIntervalSince(marketOpen), 3600)
+                return min(marketClose, marketOpen.addingTimeInterval(span * 1.05))
+            } ?? marketClose
+            content.chartXScale(domain: marketOpen...max(end, marketOpen.addingTimeInterval(3600)))
         } else {
             content
         }

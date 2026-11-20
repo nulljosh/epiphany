@@ -320,7 +320,9 @@ final class EpiphanyAPI: @unchecked Sendable, AuthAPI {
             "range": finalRange,
             "interval": finalInterval
         ])
-        let request = URLRequest(url: url)
+        var request = URLRequest(url: url)
+        // Intraday must be today's bars: the URL cache served yesterday's session as "Live".
+        if ["live", "1m", "15m", "1d", "5d"].contains(range) { request.cachePolicy = .reloadIgnoringLocalCacheData }
         let data = try await perform(request)
         return try decode(PriceHistory.self, from: data)
     }

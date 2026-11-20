@@ -1097,8 +1097,9 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={labelStyle}>Stocks</div>
                   {brokerSnapshot?.linked && brokerSnapshot.syncedAt && (
-                    <div style={{ fontSize: 10, color: t.textTertiary }}>
+                    <div style={{ fontSize: 10, color: brokerSnapshot.dataAsOf && Date.now() - Date.parse(brokerSnapshot.dataAsOf) > 48 * 3600 * 1000 ? t.red : t.textTertiary, textAlign: 'right' }}>
                       {brokerAgeLine(brokerSnapshot)}
+                      {brokerSnapshot.dataAsOf && Date.now() - Date.parse(brokerSnapshot.dataAsOf) > 48 * 3600 * 1000 && <div>Stopped updating: Settings, Brokerage, Reconnect</div>}
                     </div>
                   )}
                 </div>
