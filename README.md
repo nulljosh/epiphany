@@ -1,6 +1,6 @@
 <img src="icon.svg" width="80" style="border-radius:18px">
 
-[![web](https://img.shields.io/badge/web-v6.6.2-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v6.6.2-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![web](https://img.shields.io/badge/web-v6.10.0-blue)](https://epiphany.jaybulb.com) [![ios](https://img.shields.io/badge/iOS-v6.10.0-blue)](https://apps.apple.com/app/epiphany/id6779522175) [![license](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Your world on one screen: the map, the markets and your money.
 

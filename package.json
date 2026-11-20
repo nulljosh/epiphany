@@ -25,7 +25,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "shots": "bash ios/scripts/update_screenshots.sh",
-    "test:speed": "playwright test tests/speed.spec.js"
+    "test:speed": "playwright test tests/speed.spec.js",
+    "version": "bash scripts/sync-version.sh && node scripts/sync-version-badges.js && git add README.md ios/project.yml macos/project.yml"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
