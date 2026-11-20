@@ -43,6 +43,8 @@ export function oldestSync(accounts = []) {
   return times.length ? new Date(Math.min(...times)).toISOString() : null;
 }
 
+const STALE_MS = 3 * 60 * 60 * 1000;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -64,7 +66,9 @@ export default async function handler(req, res) {
   try {
     if (!force && !connectAdditional && !reconnect && kv) {
       const cached = await kv.get(snapshotKey);
-      if (cached?.syncedAt && (Date.now() - new Date(cached.syncedAt).getTime()) < 25 * 60 * 1000) {
+      // A refresh queued at SnapTrade has had two minutes to land: read through instead of the cache.
+      const refreshLanded = cached?.refreshQueuedAt && Date.now() - Date.parse(cached.refreshQueuedAt) > 2 * 60 * 1000;
+      if (!refreshLanded && cached?.syncedAt && (Date.now() - new Date(cached.syncedAt).getTime()) < 25 * 60 * 1000) {
         return res.status(200).json({ ok: true, linked: true, ...cached, cached: true });
       }
     }
@@ -136,6 +140,22 @@ export default async function handler(req, res) {
       activities: activities.slice(0, 50), dividends12m, syncedAt: new Date().toISOString(),
       dataAsOf: oldestSync(snapAccounts), dailyOnly: connections.some(c => c.delayed),
     };
+    // SnapTrade only re-reads a daily connection (Wealthsimple) about once a day, so balances sat a
+    // day or more behind. When the broker data is over STALE_MS old, ask for a refresh, at most once
+    // per STALE_MS per user; the next sync after it lands reads the new numbers.
+    const staleKey = `snaptrade:refreshed:${session.userId}`;
+    const dataAge = snapshot.dataAsOf ? Date.now() - Date.parse(snapshot.dataAsOf) : Infinity;
+    if (kv && (force || dataAge > STALE_MS) && !(await kv.get(staleKey))) {
+      const live = connections.filter(c => !c.disabled);
+      const queued = await Promise.all(live.map(c => adapter.refreshConnection(c.id).then(() => true, (e) => {
+        console.warn(`[BROKER/SYNC] refresh ${c.id} failed:`, e?.message || e);
+        return false;
+      })));
+      if (queued.some(Boolean)) {
+        snapshot.refreshQueuedAt = new Date().toISOString();
+        await kv.set(staleKey, 1, { ex: Math.round(STALE_MS / 1000) });
+      }
+    }
     if (kv) await kv.set(snapshotKey, snapshot);
 
     console.log(`[BROKER/SYNC] ${session.userId}: ${holdings.length} holdings, $${balance.totalCad.toFixed(2)} CAD cash${fxMissing ? ' (FX missing, flagged)' : ''}`);

@@ -185,6 +185,15 @@ export class SnapTradeAdapter {
     }));
   }
 
+  // Ask SnapTrade to pull fresh numbers from the broker now instead of waiting for its daily
+  // refresh. Queued on their side; the new balances land a minute or two later.
+  async refreshConnection(authorizationId) {
+    this._requireUser();
+    return this._request('POST', `/authorizations/${authorizationId}/refresh`, {
+      query: { userId: this.userId, userSecret: this.userSecret },
+    });
+  }
+
   async removeConnection(authorizationId) {
     this._requireUser();
     return this._request('DELETE', `/authorizations/${authorizationId}`, {

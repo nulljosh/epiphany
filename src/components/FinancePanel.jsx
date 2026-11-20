@@ -134,89 +134,6 @@ function ActionMenu({ t, font, actions }) {
   );
 }
 
-function PieChart({ data, size = 160, t, currency }) {
-  const [hovered, setHovered] = useState(null);
-  if (!data || data.length === 0) return null;
-  const total = data.reduce((sum, entry) => sum + entry.value, 0);
-  if (total <= 0) return null;
-
-  const colors = Object.values(CAT_COLORS);
-  let angle = 0;
-
-  const slices = data.map((entry, index) => {
-    const pct = entry.value / total;
-    const startAngle = angle;
-    angle += pct * 360;
-    const endAngle = angle;
-    const largeArc = pct > 0.5 ? 1 : 0;
-    const radius = size / 2 - 4;
-    const cx = size / 2;
-    const cy = size / 2;
-    const startRad = (startAngle - 90) * Math.PI / 180;
-    const endRad = (endAngle - 90) * Math.PI / 180;
-    const x1 = cx + radius * Math.cos(startRad);
-    const y1 = cy + radius * Math.sin(startRad);
-    const x2 = cx + radius * Math.cos(endRad);
-    const y2 = cy + radius * Math.sin(endRad);
-    const isHovered = hovered === index;
-    // Offset slice outward along bisector when hovered
-    const midRad = ((startAngle + endAngle) / 2 - 90) * Math.PI / 180;
-    const tx = isHovered ? Math.cos(midRad) * 5 : 0;
-    const ty = isHovered ? Math.sin(midRad) * 5 : 0;
-
-    if (pct >= 0.999) {
-      return <circle key={entry.label} cx={cx} cy={cy} r={radius} fill={colors[index % colors.length]}
-        style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
-        opacity={isHovered ? 1 : 0.85}
-        onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)} />;
-    }
-
-    return (
-      <path
-        key={entry.label}
-        d={`M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`}
-        fill={colors[index % colors.length]}
-        opacity={isHovered ? 1 : 0.85}
-        style={{ cursor: 'pointer', transition: 'transform 0.15s ease, opacity 0.15s', transform: `translate(${tx}px, ${ty}px)` }}
-        onMouseEnter={() => setHovered(index)}
-        onMouseLeave={() => setHovered(null)}
-      />
-    );
-  });
-
-  const hoveredEntry = hovered !== null ? data[hovered] : null;
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-      <div style={{ position: 'relative' }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {slices}
-          <circle cx={size / 2} cy={size / 2} r={size / 2 - 30} fill={t.bg} />
-          <text x={size / 2} y={size / 2 - 6} textAnchor="middle" fill={t.text} fontSize="14" fontWeight="700" fontFamily="-apple-system, system-ui, sans-serif">
-            {formatCurrency(hoveredEntry ? hoveredEntry.value : total, currency)}
-          </text>
-          <text x={size / 2} y={size / 2 + 10} textAnchor="middle" fill={t.textTertiary} fontSize="9" fontFamily="-apple-system, system-ui, sans-serif">
-            {hoveredEntry ? `${hoveredEntry.label} (${(hoveredEntry.value / total * 100).toFixed(1)}%)` : 'TOTAL'}
-          </text>
-        </svg>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
-        {data.map((entry, index) => (
-          <div key={entry.label}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', opacity: hovered !== null && hovered !== index ? 0.5 : 1, transition: 'opacity 0.15s' }}
-            onMouseEnter={() => setHovered(index)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: colors[index % colors.length] }} />
-            <span style={{ color: t.textSecondary }}>{entry.label}</span>
-            <span style={{ color: t.text, fontWeight: 600, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(entry.value, currency)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ProgressBar({ value, max, color, t }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
@@ -800,11 +717,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
     try { localStorage.setItem('epiphany_last_visit', JSON.stringify({ value: netWorth, at: Date.now() })); } catch { /* private mode */ }
   }, [netWorth, isDemo, portfolioFetchedAt]);
   const holdingsCad = holdings.map((h) => ({ ...h, value: toCad(h.value, quoteCurrency(h.symbol), usdPerCad) ?? 0 }));
-  const pieData = [
-    ...holdingsCad.filter((holding) => holding.value > 0).map((holding) => ({ label: holding.symbol, value: holding.value })),
-    ...accounts.filter((account) => (account.cash ?? account.balance) > 0).map((account) => ({ label: account.name, value: account.cash ?? account.balance })),
-  ];
-
   const statementMonths = useMemo(
     () => normalizeSpendingMonths(statementFiles.map((item) => item?.spendingMonth)),
     [statementFiles]
@@ -1177,10 +1089,6 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
         {tab === 'trade' && <AutopilotCard dark={dark} t={t} />}
         {tab === 'portfolio' && !isEditingPortfolio && (
           <>
-            <Card dark={dark} t={t} style={{ marginBottom: 16, padding: 20 }}>
-              <div style={labelStyle}>Holdings</div>
-              <PieChart data={pieData} t={t} currency="CAD" />
-            </Card>
             <ShareBars title="By Sector" rows={holdingsBySector(holdingsCad)} dark={dark} t={t} labelStyle={labelStyle} />
             <ShareBars title="By Country" rows={holdingsByCountry(holdingsCad)} dark={dark} t={t} labelStyle={labelStyle} />
 
