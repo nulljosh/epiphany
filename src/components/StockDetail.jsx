@@ -383,6 +383,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
             high: p.high ?? p.close,
             low: p.low ?? p.close,
             close: p.close,
+            volume: p.volume ?? 0, // the volume bars read this; it was dropped here, so 6.5.0 drew none
           })));
       }
     } catch (err) { if (err.name !== 'AbortError') setHistory([]); }
