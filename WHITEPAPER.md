@@ -63,6 +63,12 @@ One adapter interface (`connect`, `placeOrder`, `getPositions`, `getBalance`) in
 
 Feeds load in parallel and pause when the tab is hidden. Each has its own error boundary, so one dead feed leaves one empty layer, not a blank map. Markers only draw at real coordinates; there is no placeholder data.
 
+## Case: ANT (Anthropic), November 2026
+
+One share held. IPO priced at $83 on Nov 18 (above the $70 to $78 range), opened at $111.50, closed day one at $97.17, then gave it all back on day two to a low of $83.05. The rule can't read it yet: Trend 2x needs 200 days of history.
+
+**Hold.** Sell on two closes in a row under $83, the IPO floor. Buy more on a close above $97.17 on heavy volume, or a week holding between $83 and $90. `scripts/close-alert.py ANT --below 83 --above 97.17 --base-high 90` sends a Mac notification when one hits (`--install` runs it every weekday after the close). Not financial advice.
+
 ## Under the hood
 
 - **Web:** React and MapLibre GL on Cloudflare Workers, with Upstash Redis for sessions and cache.

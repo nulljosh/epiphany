@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Daily close alerts for one stock: a macOS notification when a hold, sell or buy-more rule hits. Read only,
-standard library only, never places orders. The ANT rules come from docs/ANT.md.
+standard library only, never places orders. The ANT rules are in WHITEPAPER.md (Case: ANT).
 
     python3 scripts/close-alert.py ANT --below 83 --above 97.17 --base-high 90            # check the last close
     python3 scripts/close-alert.py ANT --below 83 --above 97.17 --base-high 90 --test     # same, plus a test notification

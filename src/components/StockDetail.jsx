@@ -964,52 +964,40 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
           </div>
         )}
 
-        {/* Range Picker: every range kept, in one segmented bar that scrolls sideways instead of wrapping into two rows of pills. */}
-        <div role="tablist" aria-label="Chart range" style={{ display: 'flex', gap: 2, padding: 3, marginBottom: 8, borderRadius: 10, overflowX: 'auto', flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}>
-          {RANGES.map(r => (
-            <button
-              key={r.key}
-              role="tab"
-              aria-selected={range === r.key}
-              onClick={() => setRange(r.key)}
-              style={{
-                flex: '1 0 auto', padding: '5px 9px', borderRadius: 7, border: 'none', whiteSpace: 'nowrap',
-                background: range === r.key ? (dark ? 'rgba(255,255,255,0.16)' : '#fff') : 'transparent',
-                boxShadow: range === r.key && !dark ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
-                color: range === r.key ? t.text : t.textSecondary,
-                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: font,
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-              }}
-            >
-              {r.key === 'live' && <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 3, background: '#FF453A' }} />}
-              {r.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Chart Type Picker */}
-        <div style={{ display: 'flex', gap: 3, marginBottom: 12, overflowX: 'auto', flexWrap: 'wrap', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
-          {CHART_TYPES.map(ct => (
-            <button
-              key={ct.key}
-              onClick={() => setChartType(ct.key)}
-              style={{
-                padding: '5px 8px', borderRadius: 8, border: 'none', whiteSpace: 'nowrap',
-                background: chartType === ct.key
-                  ? (dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)')
-                  : (dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
-                color: chartType === ct.key ? t.text : t.textTertiary,
-                fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: font,
-                transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                flexShrink: 0,
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              {ct.label}
-            </button>
-          ))}
-        </div>
+        {/* Range + chart type in one row: six main ranges as a segmented bar, the other ranges and the
+            chart types in two menus (Joshua, 2026-11-20: too many buttons). Every option is still there. */}
+        {(() => {
+          const MAIN = ['live', '1d', '5d', '1mo', '1y', 'max'];
+          const more = RANGES.filter(r => !MAIN.includes(r.key));
+          const inMore = more.some(r => r.key === range);
+          const seg = (on) => ({
+            flex: '1 0 auto', padding: '5px 10px', borderRadius: 7, border: 'none', whiteSpace: 'nowrap',
+            background: on ? (dark ? 'rgba(255,255,255,0.16)' : '#fff') : 'transparent',
+            boxShadow: on && !dark ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
+            color: on ? t.text : t.textSecondary, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: font,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+          });
+          const menu = { padding: '6px 8px', borderRadius: 8, border: `1px solid ${t.border}`, background: 'transparent', color: t.text, fontSize: 12, fontWeight: 600, fontFamily: font, cursor: 'pointer' };
+          return (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+              <div role="tablist" aria-label="Chart range" style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 10, flex: '1 1 260px', background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}>
+                {RANGES.filter(r => MAIN.includes(r.key)).map(r => (
+                  <button key={r.key} role="tab" aria-selected={range === r.key} onClick={() => setRange(r.key)} style={seg(range === r.key)}>
+                    {r.key === 'live' && <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 3, background: '#FF453A' }} />}
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+              <select aria-label="More ranges" value={inMore ? range : ''} onChange={e => e.target.value && setRange(e.target.value)} style={{ ...menu, color: inMore ? t.text : t.textSecondary }}>
+                <option value="">More</option>
+                {more.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+              </select>
+              <select aria-label="Chart type" value={chartType} onChange={e => setChartType(e.target.value)} style={menu}>
+                {CHART_TYPES.map(ct => <option key={ct.key} value={ct.key}>{ct.label}</option>)}
+              </select>
+            </div>
+          );
+        })()}
 
         {/* Indicators Button + Active Tags */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
