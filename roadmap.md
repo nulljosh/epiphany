@@ -38,6 +38,15 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] Untangle `ASSETS` in `src/App.jsx` and the watchlist from the 978-line trading simulator (own session).
 - [ ] Move the other WHITEPAPER benchmark tables into results.json when each is rerun.
 
+## Mobbin: stock view (2026-11-20: Robinhood, TradingView, Yahoo Finance, Apple Stocks, Webull, Public, Stock Events, moomoo)
+| Gap | Apps | Size | Status |
+|---|---|---|---|
+| Drag the chart and the header price, change and date follow the finger | Robinhood, Apple Stocks, Public, Webull | S |done 6.10.0 |
+| Change line matches the range: "+$X (Y%) past year", not always today | Public, Robinhood | S |done 6.10.0 |
+| Previous close as a dotted line on intraday charts; market status line (open, at close, after hours) | Apple Stocks, Yahoo, TradingView | S | open |
+| Who holds it: Pilots investors that own the stock, with their weight | moomoo (13F insights) | S | open |
+| Sections as tabs (Overview, News, About) instead of one long scroll | TradingView, moomoo, Yahoo | M | open |
+
 ## Map
 - [ ] Incidents like a local gas line fire: find a feed that carries them.
 - [ ] Incident status on pins (active or resolved): needs a status field in the feeds.

@@ -306,6 +306,7 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const [news, setNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [hoveredDate, setHoveredDate] = useState(null);
+  const [hoverBar, setHoverBar] = useState(null); // the bar under the crosshair; the header follows it
   const newsRef = useRef(null);
   const [showSignalWhy, setShowSignalWhy] = useState(false);
   const [fullChart, setFullChart] = useState(false);
@@ -632,11 +633,14 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
     chart.timeScale().fitContent();
 
     // Crosshair scrub -- filter Related News to the hovered period
+    const barAt = new Map(history.map(b => [b.time, b]));
     chart.subscribeCrosshairMove((param) => {
       if (!param || param.time == null) {
         setHoveredDate(null);
+        setHoverBar(null);
         return;
       }
+      setHoverBar(barAt.get(param.time) || null);
       setHoveredDate(typeof param.time === 'number' ? new Date(param.time * 1000) : new Date(param.time));
     });
 
@@ -753,7 +757,19 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
   const change = d.change ?? (stock?.changePercent != null ? (price * stock.changePercent / 100) : 0);
   const changePercent = d.changePercent ?? stock?.changePercent ?? 0;
   const positive = changePercent >= 0;
-  const changeColor = positive ? '#30D158' : '#FF453A';
+
+  // Header follows the finger and the range (Robinhood, Apple Stocks): drag the chart and the price,
+  // change and date are that bar's; pick 1Y and the change is over the year, not today.
+  const intradayRange = ['live', '1m', '1d'].includes(range);
+  const RANGE_WORDS = { '15m': 'past 5 days', '5d': 'past week', '1mo': 'past month', '3mo': 'past 3 months', '6mo': 'past 6 months', ytd: 'this year', '1y': 'past year', '2y': 'past 2 years', '5y': 'past 5 years', '10y': 'past 10 years', max: 'all time' };
+  const shownPrice = hoverBar?.close ?? price;
+  const rangeBase = intradayRange ? (price != null ? price - change : null) : (history[0]?.close ?? null);
+  const shownChange = rangeBase ? shownPrice - rangeBase : change;
+  const shownPct = rangeBase ? (shownPrice / rangeBase - 1) * 100 : changePercent;
+  const shownUp = shownPct >= 0;
+  const shownWhen = hoverBar
+    ? new Date(typeof hoverBar.time === 'number' ? hoverBar.time * 1000 : hoverBar.time).toLocaleString(undefined, intradayRange || range === '5d' || range === '15m' ? { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' } : { month: 'short', day: 'numeric', year: 'numeric' })
+    : (intradayRange ? 'today' : RANGE_WORDS[range]);
   const pos = useMemo(() => position(storedHoldings(), stock?.symbol, price, changePercent), [stock?.symbol, price, changePercent]);
   const [earnings, setEarnings] = useState([]);
   const [analysts, setAnalysts] = useState(null);
@@ -911,16 +927,17 @@ export default function StockDetail({ stock, onClose, dark, t, onNavigate, curre
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: t.text }}>
-              {formatCurrency(price)}
+              {formatCurrency(shownPrice)}
             </span>
             <span style={{
               display: 'inline-block', padding: '3px 10px', borderRadius: 100,
-              fontSize: 13, fontWeight: 600,
-              background: positive ? 'rgba(48,209,88,0.15)' : 'rgba(255,69,58,0.15)',
-              color: changeColor,
+              fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+              background: shownUp ? 'rgba(48,209,88,0.15)' : 'rgba(255,69,58,0.15)',
+              color: shownUp ? '#30D158' : '#FF453A',
             }}>
-              {positive ? '+' : ''}{change.toFixed(2)} ({positive ? '+' : ''}{changePercent.toFixed(2)}%)
+              {shownUp ? '+' : ''}{shownChange.toFixed(2)} ({shownUp ? '+' : ''}{shownPct.toFixed(2)}%)
             </span>
+            {shownWhen && <span style={{ fontSize: 12, color: t.textTertiary }}>{shownWhen}</span>}
             {tradeSignal && (
               <button
                 onClick={() => setShowSignalWhy(v => !v)}
