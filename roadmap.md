@@ -11,6 +11,14 @@ Skipped on purpose: an AI briefing (the daily brief is Yahoo movers, not AI), mu
 
 - [ ] Live autopilot for other users is blocked by its own caps, **needs Joshua**: `morning-run.js` live mode caps each trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys zero shares. Paper mode has the same problem at the $1 default cap. Past live attempts failed with SnapTrade 1076 (signature), 1068 (no cash), 1121 (rate limit); local CRON_SECRET is stale so `impact-test` could not be rerun. Size by `allocation` % of balance instead of a flat cap, then run impact-test.
 
+
+## Shipped 2026-11-20
+- [x] 6.4.0 Anthropic (ANT) in the default watchlist, market lists and Tech sector.
+- [x] 6.4.2 A tab open across a deploy reloads once instead of crashing on a missing chunk.
+- [x] 6.4.3 Fear & Greed fallback on a curve: a hard selloff read a flat 0, now about 3.
+- [x] 6.5.0 Stock view opens full screen, candles by default (Heikin Ashi one tap away), TradingView-style volume bars. Landing: the Prometheus art is now map, market and money glyphs.
+- [x] iOS/Mac (pushed, ships with the next native build): stock header uses the live quote, intraday history skips the URL cache (it showed yesterday's session as Live), the intraday chart fills the width instead of stopping at 4pm.
+
 ## Mobbin gaps (2026-10-29: Robinhood, Yahoo Finance, TradingView, Copilot, Monarch, Citizen)
 One row per minor version, daily-use first. Borrow the idea, never the look.
 
@@ -313,7 +321,7 @@ app and the marketing chrome (Log in / Get Epiphany / Get started) hides.
 Scope: large UI change, do in a dedicated session.
 
 ## Ingested 2026-08-22
-- [ ] Portfolio syncing is laggy and unreliable, "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end.
+- [x] Portfolio syncing is laggy and unreliable, "It's working but not reliably, or very fast. I deposited into my chequing account, Epiphany took days to reflect it." Investigate sync freshness/latency end to end. **Done 6.3.x/6.4.1 (2026-11-20):** SnapTrade only re-reads Wealthsimple daily; sync now queues a SnapTrade refresh when data is over 3h old, and Settings shows Reconnect after 2 days stale.
 
 ## From Apple Notes (imported 2026-08-25)
 
@@ -386,7 +394,7 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 
 ## Ingested 2026-11-14
 - [ ] (Note "Harp icon") Co-Stanza and Epiphany both have duplicate harp icons. Make them more unique (`/icon`).
-- [ ] (Note "Epiphany") Business News drawer still not rendering reliably: Daily Brief shows one line then a spinner forever. Note says "need to upgrade to Cloudflare plus", question: is it actually a Workers limit, or the fetch? Screenshot: ~/Documents/Code/notes/attachments/2026-11-14/epiphany-1.png
+- [x] (Note "Epiphany") Business News drawer still not rendering reliably: Daily Brief shows one line then a spinner forever. Note says "need to upgrade to Cloudflare plus", question: is it actually a Workers limit, or the fetch? Screenshot: ~/Documents/Code/notes/attachments/2026-11-14/epiphany-1.png **Fixed in code 6.5.1 (2026-11-20), ships with the next iOS build:** the server was fine (33 articles in 0.1s); a skipped fetch left the iOS spinner on.
 
 ## Ingested 2026-11-16
 - [ ] (Note "Epiphany", "More Apple bullshit") App Store Connect emailed "There's an issue with your Epiphany (iOS) submission": version 6.3.3 for iOS, submitted Nov 14 2026 9:39 PM PST by API key, submission ID da46c543-01ad-4d4b-8f4c-eae5eaac5d96. Read the issue with asc and fix. Screenshot: notes/attachments/2026-11-16/22120-1.png.
@@ -398,5 +406,5 @@ Dropped on purpose: Copilot-style ML category prediction from amount, weekday an
 - [ ] Stocks view: default to Live. Clean up the 1m-to-All range buttons without removing them.
 - [ ] Remove Greek god avatars in Settings; match the app's own theme. No Greek gods.
 - [ ] Appearance should be at the bottom of Settings (notes/attachments/2026-11-18/22384-1.png).
-- [ ] Business News still doesn't load reliably; the feature is about a year old (notes/attachments/2026-11-18/22384-2.png, stuck spinner under Daily Brief).
+- [x] Business News still doesn't load reliably; the feature is about a year old (notes/attachments/2026-11-18/22384-2.png, stuck spinner under Daily Brief). **Same fix, 6.5.1.**
 - [ ] Portfolio is way too bulky/spammy. Simplify to one page, little to no scrolling.
