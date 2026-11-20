@@ -983,7 +983,8 @@ export default function FinancePanel({ dark, t, stocks, isAuthenticated }) {
               {Math.abs(day) >= 0.005 && <span style={{ color: day >= 0 ? t.green : t.red }}>{sign(day, 'CAD')} ({(day / Math.max(netWorth - day, 0.01) * 100).toFixed(2)}%) today</span>}
               {total && <span style={{ color: total.gain >= 0 ? t.green : t.red }}>{sign(total.gain)} total</span>}
               {(() => {
-                const vs = Math.abs(day) >= 0.005 ? vsMarket(day / Math.max(stocksValue - day, 0.01) * 100, stocks?.SPY?.changePercent) : null;
+                // Against the S&P only reads as a portfolio once there are a few holdings; with one stock it just restates that stock.
+                const vs = Math.abs(day) >= 0.005 && holdings.filter(h => h.value > 0).length >= 3 ? vsMarket(day / Math.max(stocksValue - day, 0.01) * 100, stocks?.SPY?.changePercent) : null;
                 return vs && <span style={{ flexBasis: '100%', fontWeight: 500, color: t.textSecondary }}>{vs.text}</span>;
               })()}
             </div>

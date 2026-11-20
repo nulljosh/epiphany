@@ -294,7 +294,7 @@ User confirmed live on-device it's not as fluid as native iOS Stocks, across thr
 - [ ] `src/App.jsx` `ASSETS` const (~180 tickers, fallback-only) and the Watchlist, both tightly coupled to the 978-line trading simulator, used in 6+ places. Not safe to blind-edit; needs its own dedicated session for both together.
 
 ## Other open items
-- [ ] Portfolio/Settings tab audit, getting cluttered, decide what stays. Calendar view specifically flagged as possibly unnecessary.
+- [x] Portfolio/Settings tab audit, getting cluttered, decide what stays. **Done 2026-11-20 (6.3-6.6):** web Portfolio is net worth, Stocks, Accounts, then Dividend Calendar/Goals/Upcoming Payments only when they have data; both donuts cut (they repeated Accounts); 'vs the S&P 500' only with 3+ holdings; Settings is Account, Security, Brokerage, About; god avatars replaced by glyphs. Native Portfolio keeps one donut, left as is. Calendar view specifically flagged as possibly unnecessary.
 
 ## From Apple Notes (imported 2026-08-11)
 - [ ] **Needs Joshua: re-upload the June 2026 statement.** Consequence of the month-labelling
