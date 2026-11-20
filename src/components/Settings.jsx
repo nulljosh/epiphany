@@ -110,8 +110,8 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   useEffect(() => { setImgError(false); }, [avatarUrl]);
 
   // 9 Epiphany glyphs x 12 duotones = 108 avatars at /avatars/gods (old file names kept so every client keeps working).
-  const GODS = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
-  const randomGodAvatar = () => `/avatars/gods/${GODS[Math.floor(Math.random() * GODS.length)]}-${Math.floor(Math.random() * 12)}.jpg`;
+  const GLYPH_FILES = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
+  const randomGlyphAvatar = () => `/avatars/gods/${GLYPH_FILES[Math.floor(Math.random() * GLYPH_FILES.length)]}-${Math.floor(Math.random() * 12)}.jpg`;
 
   const showAvatarMsg = useCallback((msg) => {
     if (avatarMsgTimerRef.current) clearTimeout(avatarMsgTimerRef.current);
@@ -120,7 +120,7 @@ export default function Settings({ dark, setDark, t, mapLayers, setMapLayers, ti
   }, []);
 
   const handleGenerateAvatar = async () => {
-    const path = randomGodAvatar();
+    const path = randomGlyphAvatar();
     setLocalAvatarUrl(path);
     setAvatarUploading(true);
     try {

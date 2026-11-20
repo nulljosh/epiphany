@@ -385,7 +385,7 @@ struct SettingsView: View {
         guard !isUploadingAvatar else { return }
         isUploadingAvatar = true
         defer { isUploadingAvatar = false }
-        // 9 Greek gods x 12 duotones, the same files the iPhone and web pick from.
+        // 9 Epiphany glyphs x 12 duotones (old file names), the same files the iPhone and web pick from.
         let gods = ["aphrodite", "ares", "artemis", "athena", "demeter", "dionysus", "hera", "hermes", "zeus"]
         guard let url = URL(string: "https://epiphany.jaybulb.com/avatars/gods/\(gods.randomElement()!)-\(Int.random(in: 0..<12)).jpg"),
               let (data, _) = try? await URLSession.shared.data(from: url), NSImage(data: data) != nil else { return }

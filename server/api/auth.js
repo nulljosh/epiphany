@@ -72,11 +72,11 @@ function getBaseUrl() {
 // Accounts with no avatar get a Greek-god bust, the same one per email every time
 // (Talli does the same). Absolute so the native apps can load it; avatarUpdatedAt 1
 // gives their disk cache a stable key.
-const GODS = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
+const GLYPH_FILES = ['aphrodite', 'ares', 'artemis', 'athena', 'demeter', 'dionysus', 'hera', 'hermes', 'zeus'];
 export function defaultAvatarUrl(email) {
   let h = 2166136261;
   for (const ch of String(email || '')) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
-  return `https://epiphany.jaybulb.com/avatars/gods/${GODS[h % GODS.length]}-${Math.floor(h / GODS.length) % 12}.jpg`;
+  return `https://epiphany.jaybulb.com/avatars/gods/${GLYPH_FILES[h % GLYPH_FILES.length]}-${Math.floor(h / GLYPH_FILES.length) % 12}.jpg`;
 }
 
 function publicUser(user) {

@@ -325,7 +325,7 @@ struct SettingsView: View {
         isUploadingAvatar = false
     }
 
-    // 9 Greek gods from public-domain museum busts x 12 duotones, the same files the web app serves.
+    // 9 Epiphany glyphs x 12 duotones at the old file names, the same files the web app serves.
     private static func randomGodAvatarURL() -> URL {
         let gods = ["aphrodite", "ares", "artemis", "athena", "demeter", "dionysus", "hera", "hermes", "zeus"]
         return URL(string: "https://epiphany.jaybulb.com/avatars/gods/\(gods.randomElement()!)-\(Int.random(in: 0..<12)).jpg")!

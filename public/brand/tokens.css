@@ -1,4 +1,4 @@
-/* Epiphany brand tokens. Apollo theme: one blue accent, night surfaces, Epiphany Sans for reading, Epiphany Display caps for headlines. */
+/* Epiphany brand tokens. One blue accent, night surfaces, Epiphany Sans for reading, Epiphany Display caps for headlines. */
 @font-face { font-family: "Epiphany Sans"; font-weight: 400; font-display: swap; src: url("/fonts/EpiphanySans-Regular.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 500; font-display: swap; src: url("/fonts/EpiphanySans-Medium.woff2") format("woff2"); }
 @font-face { font-family: "Epiphany Sans"; font-weight: 600; font-display: swap; src: url("/fonts/EpiphanySans-Semibold.woff2") format("woff2"); }
