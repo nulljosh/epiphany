@@ -212,7 +212,7 @@ export default async function handler(req, res) {
       ]);
       const ghUser = await providerJson(ghUserRes, 'github/user');
       const ghEmails = await providerJson(ghEmailRes, 'github/emails');
-      const primaryEmail = (Array.isArray(ghEmails) ? (ghEmails.find(e => e.primary && e.verified) || ghEmails[0]) : null)?.email || ghUser.email;
+      const primaryEmail = (Array.isArray(ghEmails) ? ghEmails.find(e => e.primary && e.verified) : null)?.email || ghUser.email;
       if (!primaryEmail) { res.writeHead(302, { Location: `${base}/?auth_error=github_email` }); return res.end(); }
 
       const githubId = String(ghUser.id);
