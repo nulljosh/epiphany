@@ -77,7 +77,7 @@ struct StatementManagerSheet: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: { uploadError = nil; showFilePicker = true }) {
-                        Image(systemName: "arrow.up.doc")
+                        Image(systemName: "arrow.up.doc").accessibilityLabel("Upload")
                     }
                     .disabled(isUploading)
                 }

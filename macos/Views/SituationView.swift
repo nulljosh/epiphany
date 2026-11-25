@@ -339,7 +339,7 @@ struct SituationView: View {
                 ForEach(wildfires) { fire in
                     Annotation("Wildfire", coordinate: CLLocationCoordinate2D(latitude: fire.lat, longitude: fire.lon)) {
                         Image(systemName: "flame.fill")
-                            .font(.system(size: 12))
+                            .font(.callout)
                             .foregroundStyle(Palette.dangerRed)
                     }
                 }
@@ -612,7 +612,7 @@ struct SituationView: View {
                 .accessibilityLabel("Clear search")
             }
             Button { Task { await geocodeAndFly() } } label: {
-                Image(systemName: "arrow.right")
+                Image(systemName: "arrow.right").accessibilityLabel("Forward")
                     .fontWeight(.bold)
                     .foregroundStyle(mapSearchError ? .red : .secondary)
             }
@@ -629,11 +629,11 @@ struct SituationView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(completion.title)
-                            .font(.system(size: 12))
+                            .font(.callout)
                             .foregroundStyle(.primary)
                         if !completion.subtitle.isEmpty {
                             Text(completion.subtitle)
-                                .font(.system(size: 10))
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -1361,7 +1361,7 @@ private struct VenueDetailSheet: View {
                     Spacer()
                     SavePlaceButton(name: item.name ?? "Place", coordinate: item.placemark.coordinate)
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark.circle.fill")
+                        Image(systemName: "xmark.circle.fill").accessibilityLabel("Clear")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                     }

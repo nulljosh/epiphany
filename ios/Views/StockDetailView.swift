@@ -266,7 +266,7 @@ struct StockDetailView: View {
                         .font(.headline.weight(.semibold))
                     Spacer()
                     Button(action: { showTradeSheet = false }) {
-                        Image(systemName: "xmark.circle.fill")
+                        Image(systemName: "xmark.circle.fill").accessibilityLabel("Clear")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                             .frame(minWidth: 44, minHeight: 44)
@@ -702,14 +702,14 @@ struct StockDetailView: View {
             Button {
                 showIndicatorConfig = true
             } label: {
-                Image(systemName: "slider.horizontal.3")
+                Image(systemName: "slider.horizontal.3").accessibilityLabel("Options")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Button {
                 fullChart = true
             } label: {
-                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                Image(systemName: "arrow.up.left.and.arrow.down.right").accessibilityLabel("Expand")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

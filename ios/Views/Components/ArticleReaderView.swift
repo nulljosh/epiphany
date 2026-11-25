@@ -34,7 +34,7 @@ struct ArticleReaderView: View {
                         }
                         ShareLink(item: url)
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "ellipsis.circle").accessibilityLabel("More")
                     }
                 }
             }

@@ -473,7 +473,7 @@ struct SituationView: View {
                                 .strokeBorder(aqiSwiftColor(reading.displayAQI), lineWidth: 1.5)
                                 .frame(width: 32, height: 32)
                             Text("\(reading.displayAQI)")
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.system(.caption2, weight: .bold))
                                 .foregroundStyle(aqiSwiftColor(reading.displayAQI))
                         }
                     }
@@ -903,7 +903,7 @@ struct SituationView: View {
                 withAnimation { mapPosition = .userLocation(fallback: .automatic) }
             }
         } label: {
-            Image(systemName: "location.fill")
+            Image(systemName: "location.fill").accessibilityLabel("Current location")
                 .font(.body.weight(.medium))
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
@@ -1269,11 +1269,11 @@ struct SituationView: View {
     private var searchField: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(.footnote, weight: .medium))
                 .foregroundStyle(mapSearchError ? .red : .secondary)
             TextField("Search", text: $mapSearch)
                 .textFieldStyle(.plain)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(.primary)
                 .submitLabel(.search)
                 .autocorrectionDisabled()
@@ -1296,8 +1296,8 @@ struct SituationView: View {
                     mapSearch = ""
                     searchCompleter.clear()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 14))
+                    Image(systemName: "xmark.circle.fill").accessibilityLabel("Clear")
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
                         // 14pt glyph, 44pt target: padded out for the hit shape, pulled back in so the bar keeps its height.
                         .padding(15).contentShape(Rectangle()).padding(-15)
@@ -1323,17 +1323,17 @@ struct SituationView: View {
                     Task { await flyTo(completion) }
                 } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: "mappin.circle.fill")
-                            .font(.system(size: 20))
+                        Image(systemName: "mappin.circle.fill").accessibilityLabel("Show on map")
+                            .font(.title3)
                             .foregroundStyle(.white, .red)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(completion.title)
-                                .font(.system(size: 15, weight: .medium))
+                                .font(.system(.subheadline, weight: .medium))
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
                             if !completion.subtitle.isEmpty {
                                 Text(completion.subtitle)
-                                    .font(.system(size: 12))
+                                    .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                             }
@@ -2013,7 +2013,7 @@ private struct VenueDetailSheet: View {
                         Spacer()
                         SavePlaceButton(name: item.name ?? "Place", coordinate: item.placemark.coordinate)
                         Button { dismiss() } label: {
-                            Image(systemName: "xmark.circle.fill")
+                            Image(systemName: "xmark.circle.fill").accessibilityLabel("Clear")
                                 .font(.title3)
                                 .foregroundStyle(.secondary)
                         }

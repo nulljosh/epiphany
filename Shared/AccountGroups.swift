@@ -40,7 +40,7 @@ struct AccountGroupsList: View {
                         } label: {
                             HStack {
                                 if canOpen {
-                                    Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+                                    Image(systemName: "chevron.right").accessibilityLabel("Next").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
                                         .rotationEffect(.degrees(open == account.name ? 90 : 0))
                                 }
                                 Text(account.displayName).font(.callout.weight(.semibold))

@@ -451,7 +451,7 @@ struct PersonDetailView: View {
                                 Button {
                                     removeTag(tag)
                                 } label: {
-                                    Image(systemName: "xmark")
+                                    Image(systemName: "xmark").accessibilityLabel("Close")
                                         .font(.system(size: 8, weight: .bold))
                                 }
                                 .buttonStyle(.plain)

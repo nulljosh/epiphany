@@ -33,7 +33,7 @@ struct AlertsView: View {
                         Button {
                             showCreateSheet = true
                         } label: {
-                            Image(systemName: "plus")
+                            Image(systemName: "plus").accessibilityLabel("Add")
                         }
                     }
                 }

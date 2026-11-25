@@ -278,7 +278,7 @@ struct MarketsView: View {
                         isSearching = true
                         searchFieldFocused = true
                     } label: {
-                        Image(systemName: "magnifyingglass")
+                        Image(systemName: "magnifyingglass").accessibilityLabel("Search")
                             .frame(minWidth: 44, minHeight: 44)
                             .contentShape(Rectangle())
                     }
@@ -375,7 +375,7 @@ struct MarketsView: View {
                 searchText = ""
                 isSearching = false
             } label: {
-                Image(systemName: "xmark")
+                Image(systemName: "xmark").accessibilityLabel("Close")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
                     .frame(width: 28, height: 28)
@@ -898,7 +898,7 @@ private struct MarketItemDetailView: View {
                     Button {
                         fullChart = true
                     } label: {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        Image(systemName: "arrow.up.left.and.arrow.down.right").accessibilityLabel("Expand")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

@@ -140,7 +140,7 @@ private struct BottomTabBar: View {
             Image(systemName: section.icon)
                 .font(.system(size: 14, weight: .semibold))
             Text(section.rawValue)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(.caption, weight: .semibold))
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity, minHeight: 44)

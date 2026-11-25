@@ -150,7 +150,7 @@ struct PeopleView: View {
                         profile = nil
                         error = nil
                     } label: {
-                        Image(systemName: "xmark.circle.fill")
+                        Image(systemName: "xmark.circle.fill").accessibilityLabel("Clear")
                             .foregroundStyle(.tertiary)
                     }
                     .buttonStyle(.plain)

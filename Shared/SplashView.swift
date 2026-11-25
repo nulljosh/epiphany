@@ -49,7 +49,7 @@ struct SplashView: View {
                 .opacity(tileOpacity)
 
                 Text("EPIPHANY")
-                    .font(.system(size: 16, weight: .light))
+                    .font(.system(.callout, weight: .light))
                     .tracking(8)
                     .foregroundStyle(.primary.opacity(0.5))
                     .opacity(textOpacity)

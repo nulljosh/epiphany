@@ -872,7 +872,7 @@ struct PortfolioView: View {
                                 Button {
                                     Task { await deleteStatement(statement) }
                                 } label: {
-                                    Image(systemName: "trash")
+                                    Image(systemName: "trash").accessibilityLabel("Delete")
                                         .foregroundStyle(.secondary)
                                 }
                                 .buttonStyle(.plain)

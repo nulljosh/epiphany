@@ -251,7 +251,7 @@ struct MarketsView: View {
                             _ = await (s, c, k)
                         }
                     } label: {
-                        Image(systemName: "arrow.clockwise")
+                        Image(systemName: "arrow.clockwise").accessibilityLabel("Refresh")
                     }
                     .buttonStyle(.borderless)
                 }

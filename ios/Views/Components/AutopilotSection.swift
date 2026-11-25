@@ -40,7 +40,7 @@ struct AutopilotSection: View {
                             .font(.caption.weight(.semibold))
                         Spacer()
                         Button(action: { showManualOrder = false }) {
-                            Image(systemName: "xmark.circle.fill")
+                            Image(systemName: "xmark.circle.fill").accessibilityLabel("Clear")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
