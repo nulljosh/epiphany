@@ -57,6 +57,7 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] Place sheet: what else to show beyond hours, phone, website, address and directions.
 - [ ] Map overlay UI from the design kit, with the settings moved into Settings.
 - [ ] Mac map: a go-to-my-location button like iOS; search bar in the app font and bigger; filters at the top by search, not the bottom; event sheets close on a click outside, not only Escape; a better map sources panel.
+- [ ] Mac 6.3.3 QA (2026-11-25): filter chips sit on the Apple Maps logo and Legal link; the selected tab label is blue on blue, hard to read.
 - [ ] Places of interest: one tap to the busiest cities (Tokyo, New York, Los Angeles, London, Paris, Milan, Hong Kong).
 
 ## Apps and settings
