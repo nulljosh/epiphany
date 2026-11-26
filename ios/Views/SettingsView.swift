@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 import UIKit
 
 struct SettingsView: View {
@@ -7,6 +8,8 @@ struct SettingsView: View {
     @AppStorage("app_theme") private var rawTheme = "system"
     @State private var showDeleteAccount = false
     @State private var isUploadingAvatar = false
+    // Apple allows a link to outside checkout only on the US storefront; elsewhere Pro needs IAP.
+    @State private var isUSStorefront = false
     @State private var avatarError: String?
     @State private var showChangeName = false
     @State private var brokerConnecting = false
@@ -179,6 +182,14 @@ struct SettingsView: View {
                     }
                 }
 
+                if appState.user?.tier != "pro" && isUSStorefront {
+                    Section {
+                        Link("Get Epiphany Pro", destination: URL(string: "https://epiphany.jaybulb.com/?pro=1")!)
+                    } footer: {
+                        Text("Portfolio, ontology and deep data. $1.99 a month or $14.99 a year, billed on the web.")
+                    }
+                }
+
                 Section("Account") {
                     Button("Change Name") {
                         showChangeName = true
@@ -188,6 +199,7 @@ struct SettingsView: View {
                             .environment(appState)
                     }
                 }
+                .task { isUSStorefront = await Storefront.current?.countryCode == "USA" }
 
                 // Appearance at the bottom of the settings, above Sign Out and Danger Zone (Joshua, 2026-11-18).
                 Section("Appearance") {

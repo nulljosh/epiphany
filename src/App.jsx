@@ -192,6 +192,8 @@ export default function App() {
   // registration; once they're authenticated, drop them straight into
   // checkout instead of the free app.
   useEffect(() => {
+    // The iPhone and Mac apps' Get Pro button (US storefront) lands on /?pro=1.
+    try { if (new URLSearchParams(location.search).has('pro')) sessionStorage.setItem('epiphany_pending_plan', 'starter'); } catch { /* private mode */ }
     if (!isAuthenticated) return;
     if (sessionStorage.getItem('epiphany_pending_plan') !== 'starter') return;
     sessionStorage.removeItem('epiphany_pending_plan');

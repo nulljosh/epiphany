@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
@@ -8,6 +9,8 @@ struct SettingsView: View {
     @AppStorage("showRainRadar") private var showRainRadar = false
     @AppStorage("showStorms") private var showStorms = true
     @State private var isUploadingAvatar = false
+    // Apple allows a link to outside checkout only on the US storefront; elsewhere Pro needs IAP.
+    @State private var isUSStorefront = false
     @State private var showChangeEmail = false
     @State private var showChangePassword = false
     @State private var showDeleteAccount = false
@@ -131,6 +134,7 @@ struct SettingsView: View {
             VStack(spacing: 18) {
                 if appState.isLoggedIn {
                     profileCard
+                    if appState.user?.tier != "pro" && isUSStorefront { proCard }
                     accountCard
                     brokerageCard
                     mapSourcesCard
@@ -142,6 +146,7 @@ struct SettingsView: View {
                     appearanceCard
                 }
             }
+            .task { isUSStorefront = await Storefront.current?.countryCode == "USA" }
             // A settings column, not a billboard: System Settings width, centred.
             .frame(maxWidth: 680)
             .padding(.horizontal, 20)
@@ -317,6 +322,13 @@ struct SettingsView: View {
                     isOn: $showStorms
                 )
             }
+        }
+    }
+
+    private var proCard: some View {
+        settingsCard("Epiphany Pro", subtitle: "Portfolio, ontology and deep data. $1.99 a month or $14.99 a year, billed on the web.") {
+            Link("Get Epiphany Pro", destination: URL(string: "https://epiphany.jaybulb.com/?pro=1")!)
+                .buttonStyle(.borderedProminent)
         }
     }
 
