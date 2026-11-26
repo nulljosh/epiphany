@@ -197,7 +197,7 @@ function isEnglishTitle(title) {
   return matches >= 2;
 }
 
-function dedup(articles) {
+export function dedup(articles) {
   const seen = [];
   const seenUrls = new Set();
   const result = [];
@@ -220,7 +220,17 @@ function dedup(articles) {
       result.push(article);
     }
   }
-  return result;
+  // Round-robin by source so one feed (CNBC posts the most) can't fill the top of the list.
+  const bySource = new Map();
+  for (const a of result) {
+    const k = a.source || a.newsSource || '';
+    if (!bySource.has(k)) bySource.set(k, []);
+    bySource.get(k).push(a);
+  }
+  const queues = [...bySource.values()];
+  const mixed = [];
+  for (let i = 0; mixed.length < result.length; i++) for (const q of queues) if (q[i]) mixed.push(q[i]);
+  return mixed;
 }
 
 function extractGeo(article) {
@@ -523,7 +533,7 @@ export default async function handler(req, res) {
   // Build cache key
   const near = lat && lon ? nearestCity(parseFloat(lat), parseFloat(lon)) : null;
   const cacheKey = near ? `${category}:city:${near.name}` : `${category}::`; // general key unchanged, its cache stays warm
-  const kvKey = `news:geo:v2:${cacheKey}`;
+  const kvKey = `news:geo:v3:${cacheKey}`;
 
   // L1 in-memory
   const hit = cache.get(cacheKey);
@@ -654,7 +664,7 @@ export default async function handler(req, res) {
     }
 
     // A city with no fresh news still gets headlines: fall back to the general feed's cache.
-    const general = near ? await kvReadNews(`news:geo:v2:${category}::`) : null;
+    const general = near ? await kvReadNews(`news:geo:v3:${category}::`) : null;
     if (general?.data) {
       res.setHeader('Cache-Control', 's-maxage=60');
       return res.status(200).json({

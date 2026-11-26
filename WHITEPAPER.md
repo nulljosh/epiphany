@@ -69,6 +69,8 @@ One share held. IPO priced at $83 on Nov 18 (above the $70 to $78 range), opened
 
 **Hold.** Sell on two closes in a row under $83, the IPO floor. Buy more on a close above $97.17 on heavy volume, or a week holding between $83 and $90. `scripts/close-alert.py ANT --below 83 --above 97.17 --base-high 90` sends a Mac notification when one hits (`--install` runs it every weekday after the close). Not financial advice.
 
+**Nov 25: the sell rule hit.** ANT closed at $81.91 on Nov 24 and $82.79 on Nov 25, two closes in a row under the floor. Against NVDA the numbers agree: NVDA earns $9.31 a share at a P/E of 16, 39% under its high, on a day Fear and Greed read 11. ANT loses $9.49 a share, and its lockup ends in May. Both are bets on AI, so holding both is one bet sized twice. Hold NVDA: earnings carry a stock when the market is scared, and a story doesn't.
+
 ## Under the hood
 
 - **Web:** React and MapLibre GL on Cloudflare Workers, with Upstash Redis for sessions and cache.

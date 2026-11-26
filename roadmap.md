@@ -16,6 +16,7 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] **Landing light mode** conflicts with the "web is dark only" rule: retire the rule or drop the item.
 - [ ] **Stale App Store links** (P1): every link in code points at id6779522175. Which page has an old one?
 - [ ] **Promo video** like the Joshua Tree one, for the README and landing: which video is the model?
+- [ ] **Main feature:** Markets or the map? (notes 2026-11-23; screenshots `notes/attachments/2026-11-23/22738-*.png` not yet read)
 
 ## Portfolio and money
 - [ ] Pilots, next: congress trades, new-filing alerts, and iOS/Mac (web v1 shipped 6.7.0: six investors' top 10 from their latest 13F, return since the quarter ended against the S&P 500, holdings you share).
@@ -28,7 +29,8 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] Gain chart toggles (value, invested, cost basis): needs a value history.
 
 ## Markets and stocks
-- [ ] Ticker bar: iOS scroll physics; a scroll should not open a stock.
+- [ ] Ticker bar: iOS scroll physics; a scroll should not open a stock. Slower, tappable, Wall Street tape look (dotted font).
+- [ ] Mac Markets: drop the portfolio section (it lives in Portfolio); Liquid Glass and a Mobbin pass on the Mac markets UI.
 - [ ] Push notifications with the phone locked: price alerts, severe weather nearby, M4+ quakes, wildfires, bill reminders.
 - [ ] Earnings results alert for stocks you follow (reuse the alerts email).
 - [ ] "N recent updates" on a stock page: news since you last opened it.
@@ -54,7 +56,11 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 - [ ] Plane animation is choppy; make it smooth.
 - [ ] Place sheet: what else to show beyond hours, phone, website, address and directions.
 - [ ] Map overlay UI from the design kit, with the settings moved into Settings.
+- [ ] Mac map: a go-to-my-location button like iOS; search bar in the app font and bigger; filters at the top by search, not the bottom; event sheets close on a click outside, not only Escape; a better map sources panel.
+- [ ] Places of interest: one tap to the busiest cities (Tokyo, New York, Los Angeles, London, Paris, Milan, Hong Kong).
 
 ## Apps and settings
-- [ ] Mac app: a full end-to-end test pass.
+- [ ] Mac app: a full end-to-end test pass. Confirm Pro checkout works and shows the right price.
+- [ ] Mac Settings: Appearance at the bottom (iOS done 6.8.0); profile block spacing, it sits all to the right.
+- [ ] People: better examples than Taylor Swift, and a real photo per person instead of the default icon.
 - [ ] Refresh screenshots (App Store via fastlane UITEST_DEMO, README, landing) once the icon lands.
