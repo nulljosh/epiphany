@@ -4,6 +4,7 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 [docs/reference/roadmap-history.md](docs/reference/roadmap-history.md). Versions follow CLAUDE.md: a feature is a minor, a fix is a patch.
 
 ## Needs Joshua (an account, a key or a decision)
+- [ ] **Free app + Stripe Pro in app** (Joshua, 2026-11-25): Apple allows a Stripe link-out only on the US storefront; elsewhere Pro needs a StoreKit subscription (no subscription group exists in ASC yet). Plan: price to $0, set EPIPHANY_FREE_SINCE, US gets the Stripe link, other storefronts get IAP or no purchase button.
 - [ ] **Trading:** IBKR Canada login lost (application started 2026-09-06, approval never recorded). Recover it, then write `server/api/broker/ibkr.js` like `alpaca.js` and swap it into `morning-run.js:runLive()`. Alpaca rejects Canadians; SnapTrade and Wealthsimple stay read only.
 - [ ] **Live autopilot caps:** live mode caps a trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys nothing. Size by `allocation` % of balance, then rerun `impact-test` (local CRON_SECRET is stale).
 - [ ] **App Store:** 6.3.3 is live on iOS and Mac (checked 2026-11-25), web is 6.10. Ship 6.10 native (stock view, news spinner, glyph avatars). iOS 6.10.0 build 202611251941 is archived at `.asc/artifacts/Epiphany.ipa`, not uploaded yet. The week gate is closed until 2026-11-29 (six submissions on 11-22); submit then, Mac too. Never use `asc workflow run ship-*` for a dry run: it defaults to SUBMIT=true.
