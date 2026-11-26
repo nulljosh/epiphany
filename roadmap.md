@@ -6,7 +6,7 @@ Open work only, grouped by area. Finished work, the Mobbin passes and the old in
 ## Needs Joshua (an account, a key or a decision)
 - [ ] **Trading:** IBKR Canada login lost (application started 2026-09-06, approval never recorded). Recover it, then write `server/api/broker/ibkr.js` like `alpaca.js` and swap it into `morning-run.js:runLive()`. Alpaca rejects Canadians; SnapTrade and Wealthsimple stay read only.
 - [ ] **Live autopilot caps:** live mode caps a trade at $50 but SSO is about $70 and BIL about $91, so Trend 2x buys nothing. Size by `allocation` % of balance, then rerun `impact-test` (local CRON_SECRET is stale).
-- [ ] **App Store:** 6.3.3 is live on iOS and Mac (checked 2026-11-25), web is 6.10. Ship 6.10 native (stock view, news spinner, glyph avatars) with `asc workflow run ship-ios` / `ship-mac` once Joshua says go.
+- [ ] **App Store:** 6.3.3 is live on iOS and Mac (checked 2026-11-25), web is 6.10. Ship 6.10 native (stock view, news spinner, glyph avatars). iOS 6.10.0 build 202611251941 is archived at `.asc/artifacts/Epiphany.ipa`, not uploaded yet. The week gate is closed until 2026-11-29 (six submissions on 11-22); submit then, Mac too. Never use `asc workflow run ship-*` for a dry run: it defaults to SUBMIT=true.
 - [ ] **App icon:** the lyre is the last of the god theme, and Co-Stanza uses the same harp. Pick a new mark (`/icon`).
 - [ ] **Keys:** Brave Search or Google CSE (People finds only Wikipedia names), FRED (macro series), a new Yelp key (Fusion went paid).
 - [ ] **SnapTrade:** confirm billing in the dashboard; manual refreshes may be billed per call (sync asks at most every 3 hours per user).
